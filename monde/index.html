@@ -44,7 +44,7 @@ const couleur = (() => { const m = new Map(); return id => { if (!m.has(id)) m.s
 const nb = v => Math.round(v).toLocaleString('fr-FR');
 const fx = (v, d = 2) => typeof v === 'number' ? v.toLocaleString('fr-FR', { maximumFractionDigits: d }) : (v ?? '—');
 const tend = v => Math.abs(v || 0) < .005 ? '<span class="sourd">stable</span>' : `<span class="${v > 0 ? 'vif' : 'declin'}">${v > 0 ? '+' : '−'}${Math.round(Math.abs(v) * 100) || '<1'} %</span>`;
-const PART_K = { herbivore: 1, omnivore: 1, detritivore: .3, filtreur: .3, carnivore: 0 };   // ce que chaque régime pèse sur le sol (moteur/orvane.js)
+const PART_K = { herbivore: 1, omnivore: 1, detritivore: .3, filtreur: .3, carnivore: 0, synthetique: 0 };   // ce que chaque régime pèse sur le sol (moteur/orvane.js)
 const pct = v => v == null ? '—' : (v * 100).toLocaleString('fr-FR', { maximumFractionDigits: v > 0 && v < .01 ? 2 : v < .1 ? 1 : 0 }) + ' %';
 const effectif = t => t.populations.reduce((a, p) => a + p.effectif, 0);
 const tendance = t => { const W = effectif(t); return W ? t.populations.reduce((a, p) => a + p.effectif * (p.tendance || 0), 0) / W : 0; };
@@ -52,10 +52,11 @@ const vivants = I => I.taxons.filter(t => !t.eteint);
 const nomEsp = t => t ? (t.nom || t.id) : '';
 const nomBiome = id => inst()?.biomes.find(b => b.id === id)?.nom || id;
 const STATUT = { croissance: ['en croissance', 'vif'], stable: ['stable', ''], declin: ['en déclin', 'declin'], menace: ['menacée', 'declin'], eteint: ['éteinte', 'declin'] };
-const REGIME = { herbivore: 'herbivore', omnivore: 'omnivore', carnivore: 'carnivore', filtreur: 'filtreur', detritivore: 'détritivore' };
+const REGIME = { herbivore: 'herbivore', omnivore: 'omnivore', carnivore: 'carnivore', filtreur: 'filtreur', detritivore: 'détritivore', synthetique: 'machine' };   // (docs/16 : une machine)
 const EVT = { apparition: ['apparition', 'apparitions'], extinction: ['extinction', 'extinctions'], separation: ['nouvelle lignée', 'nouvelles lignées'], migration: ['population installée ailleurs', 'populations installées ailleurs'],
   effondrement: ['effondrement', 'effondrements'], explosion: ['explosion démographique', 'explosions démographiques'], nouveau_trait: ['trait nouveau', 'traits nouveaux'],
-  epidemie: ['épidémie', 'épidémies'], remission: ['épidémie éteinte', 'épidémies éteintes'], catastrophe: ['catastrophe', 'catastrophes'], hybridation: ['zone hybride', 'zones hybrides'], mefiance: ['méfiance', 'méfiances'] };
+  epidemie: ['épidémie', 'épidémies'], remission: ['épidémie éteinte', 'épidémies éteintes'], catastrophe: ['catastrophe', 'catastrophes'], hybridation: ['zone hybride', 'zones hybrides'], mefiance: ['méfiance', 'méfiances'],
+  eveil: ['éveil de la Mère', 'éveils de la Mère'], conception: ['plan conçu par la Mère', 'plans conçus par la Mère'], transfert: ['module adopté', 'modules adoptés'] };
 const evtNom = (type, n = 1) => (EVT[type] || [type, type])[n > 1 ? 1 : 0];
 const bandeau = (html, cls = '') => { $('#bandeau').innerHTML = html ? `<p class="${cls}">${html}</p>` : ''; };
 
@@ -223,13 +224,15 @@ function fiche() {
   const dom = (() => { const n = {}; for (const q of t.phenotypes) for (const id of q.traits) n[id] = (n[id] || 0) + q.frequence; return Object.keys(n).filter(k => n[k] >= .5); })();
   let h = `<button class="lien retour" id="retour">‹ Toutes les espèces</button>
     <header class="species-plate">${p.corps && globalThis.OrvaneCorps ? `<div class="silhouette-plate"><span>SILHOUETTE CALCULÉE</span>${croquis(p.corps, dom)}<small>PLAN CORPOREL · ${ESC(t.id)}</small></div>` : ''}<div><p class="atlas-kicker">FICHE NATURALISTE</p><h2 class="species-name">${ESC(nomEsp(t))}</h2>
-      <div class="ident"><span class="etiq ${cl}">${st}</span> ${nb(effectif(t))} bêtes · apparue au cycle ${t.apparu}${t.eteint ? `, éteinte au cycle ${t.eteint}` : ''}${par ? ` · issue de <button data-esp="${ESC(par.id)}">${ESC(nomEsp(par))}</button>` : ''}</div>
+      <div class="ident"><span class="etiq ${cl}">${st}</span> ${nb(effectif(t))} ${t.plan.regime === 'synthetique' ? 'machines' : 'bêtes'} · apparue au cycle ${t.apparu}${t.plan.regime === 'synthetique' && !t.parent ? ` · assemblée par ${ESC(I.monde.mere?.nom || 'la Mère')}` : ''}${t.eteint ? `, éteinte au cycle ${t.eteint}` : ''}${par ? ` · issue de <button data-esp="${ESC(par.id)}">${ESC(nomEsp(par))}</button>` : ''}${t.origine ? ` · arrivée de ${ESC(t.origine.nom || t.origine.monde)} par une fusion (là-bas : ${ESC(t.origine.id || t.id)}, apparue au cycle ${t.origine.apparu ?? '?'})` : ''}</div>
       ${p.corps && globalThis.OrvaneCorps ? `<p class="note">${ESC(OrvaneCorps.decrire(OrvaneCorps.normaliser(p.corps)))}</p>` : ''}</div></header>
     <dl class="faits">${[['Régime', REGIME[p.regime] || p.regime], ['Masse', fx(p.masse_kg, 3) + ' kg'], ['Taille', fx(p.taille_m, 3) + ' m'], ['Vitesse', p.vitesse_rel != null ? fx(p.vitesse_rel) + ' corps/s' : '—'], ['Activité', p.activite || '—'], ['Se déplace', (p.locomotion || []).join(', ')],
-      ['Longévité', fx(p.longevite) + ' cycles'], ['Maturité', fx(p.maturite) + ' cycles'], ['Portée', p.portee != null ? fx(p.portee) : '—'], ['Sociabilité', fx(p.sociabilite)], ['Tempérament', fx(p.temperament)]].map(([k, v]) => `<div><dt>${k}</dt><dd>${ESC(v)}</dd></div>`).join('')}</dl>`;
+      ['Longévité', fx(p.longevite) + ' cycles'], ...(p.modules ? [['Rôle', { regulateur: 'régulatrice', foreuse: 'foreuse', recycleur: 'recycleuse', capteur: 'capteuse' }[p.role] || p.role || '—'],   // (docs/16) une machine : ses modules
+        ['Modules', Object.entries(p.modules).filter(([, v]) => v >= .05).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${fx(v, 2)}`).join(', ')]]
+        : [['Maturité', fx(p.maturite) + ' cycles'], ['Portée', p.portee != null ? fx(p.portee) : '—']]), ['Sociabilité', fx(p.sociabilite)], ['Tempérament', fx(p.temperament)]].map(([k, v]) => `<div><dt>${k}</dt><dd>${ESC(v)}</dd></div>`).join('')}</dl>`;
   // les populations
   h += `<h2>Où elle vit</h2><div class="defile"><table><tr><th>biome</th><th class="n">bêtes</th><th class="n">sur le cycle</th><th class="n">morts dues aux joueurs</th><th class="n">aux prédateurs</th><th class="n">satiété</th><th>épidémie</th></tr>
-    ${t.populations.slice().sort((a, b) => b.effectif - a.effectif).map(q => `<tr><td>${ESC(nomBiome(q.biome))}</td><td class="n">${nb(q.effectif)}</td><td class="n">${tend(q.tendance)}</td><td class="n">${pct(q.pression)}</td><td class="n">${pct(q.predation)}</td><td class="n ${q.satiete != null && q.satiete < .4 ? 'declin' : ''}">${pct(q.satiete)}</td><td class="${q.maladie ? 'declin' : 'sourd'}">${q.maladie ? `${pct(q.maladie.part || 0)} des morts, encore ${q.maladie.reste} cycles` : '—'}</td></tr>`).join('')}</table></div>
+    ${t.populations.slice().sort((a, b) => b.effectif - a.effectif).map(q => `<tr><td>${ESC(nomBiome(q.biome))}${q.parcelles ? ` <span class="sourd">· ${Object.values(q.parcelles).filter(n => n >= 1).length}/${(inst().parcelles || []).filter(x => x.type === q.biome).length || '?'} parcelles</span>` : ''}</td><td class="n">${nb(q.effectif)}</td><td class="n">${tend(q.tendance)}</td><td class="n">${pct(q.pression)}</td><td class="n">${pct(q.predation)}</td><td class="n ${q.satiete != null && q.satiete < .4 ? 'declin' : ''}">${pct(q.satiete)}</td><td class="${q.maladie ? 'declin' : 'sourd'}">${q.maladie ? `${pct(q.maladie.part || 0)} des morts, encore ${q.maladie.reste} cycles` : '—'}</td></tr>`).join('')}</table></div>
     ${t.populations.some(q => q.satiete != null) ? '<p class="note">La satiété dit si les proies suffisent à un prédateur : sous 40 %, il a faim, naît moins, meurt plus et s\'en va.</p>' : ''}`;
   // l'isolement et les hybrides (docs/10)
   const isol = t.populations.filter(q => q.flux != null || q.divergence != null || q.hybride);

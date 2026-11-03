@@ -84,6 +84,9 @@ Ce que porte une lignée (`inst.taxons[i]`) :
 - `plan` : `regime`, `masse_kg`, `taille_m`, `locomotion` (`marche`, `course`, `vol`, `nage`, `grimpe`…), `activite`, `temperament`, `sociabilite`, `vitesse_rel`, `perception`, `longevite`, et `corps`, sa silhouette : forme, pattes, proportions, organes, couleurs (`moteur/corps.js`).
 - `populations` : par biome, `effectif`, `tendance` et les traits continus `quant` (taille, vitesse, audace, sociabilité : une moyenne et une variance, chapitre 8).
 - `phenotypes` : les variantes, chacune avec ses `traits` et sa `frequence` (globale et par biome).
+- `origine` (rare) : la lignée est arrivée d'un autre monde par une fusion ; elle paraît comme une lignée nouvelle ([docs/14](docs/14-fusion.md)).
+- `populations[].parcelles` (si le monde a des parcelles) : la répartition de la population entre les parcelles de son biome ; la liste des parcelles est dans `inst.parcelles` ([docs/15](docs/15-parcelles.md)). Un jeu peut l'ignorer.
+- **les machines** (si la Mère est éveillée, `inst.monde.mere`) : une lignée dont `plan.regime` vaut `synthetique` est une machine. Ses `plan.modules` (panneau, pince, blindage, arme…) disent à quoi elle ressemble et ce qu'elle fait, `plan.role` son rôle (`regulateur`, `foreuse`, `recycleur`, `capteur`) ; chaque population dit sa `posture` face aux joueurs (`neutre`, `defensive`, `fuyante`, `hostile`) et son `energie`. Chez les bêtes, `populations[].regulation` dit la part de leurs morts que les machines ont faites : c'est ce qu'un régulateur chasse. Une machine détruite se renvoie comme un prélèvement. Un jeu qui ne sait pas jouer une machine l'ignore ([docs/16](docs/16-vie-synthetique.md)).
 
 `cycle.n` est le numéro du cycle, `cycle.saison` la saison du monde. Le détail champ par champ : [docs/1](docs/1-lire-un-instantane.md) et `schemas/instantane.schema.json`.
 
@@ -144,6 +147,7 @@ Le jeu compte ce que font ses joueurs, sans rien conclure, et dépose ces compte
   - `habitat_perdu`, `habitat_gagne` : de l'habitat a été détruit ou créé, en `n` unités.
 - Ne comptez ni les morts naturelles, ni les proies des autres bêtes, ni les bêtes d'un autre joueur. Comptez une mort au moment où le jeu la cause, pas en surveillant les points de vie.
 - `q` (facultatif) donne la valeur moyenne des traits continus des bêtes prises : c'est ce qui dit à Orvane si les joueurs prennent les plus grandes.
+- `parcelle` (facultatif, si le monde a des parcelles) : la parcelle où l'événement a eu lieu, prise dans `inst.parcelles` parmi celles de son biome. La chasse y est posée, au lieu d'être répartie sur tout le biome ([docs/15](docs/15-parcelles.md)).
 
 Puis le dépôt :
 

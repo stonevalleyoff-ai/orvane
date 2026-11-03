@@ -19,6 +19,9 @@ Pour s'inscrire, recevoir ses clés et faire ses premiers appels au Supabase d'O
 | [11. Les organes](11-organes.md) | une liste ouverte d'organes à leur place et à leur taille, une innovation rare, leurs dessins et les conduites qu'ils prêtent au jeu |
 | [12. La méfiance et l'habituation](12-mefiance.md) | ce qu'une population apprend des joueurs, comment elle l'oublie, et comment le jeu le rend en distance de fuite |
 | [13. La stabilité](13-stabilite.md) | ce que le moteur tient sur mille cycles, avec et sans joueurs ; ce que les bancs ont corrigé ; comment les relancer |
+| [14. La fusion de mondes](14-fusion.md) | verser un monde dans un autre : une genèse sur une partie des biomes, la fusion biome par biome, sa commande dans le profil, ce que le monde en fait |
+| [15. Les parcelles](15-parcelles.md) | un monde qui a une géographie : chaque biome en parcelles voisines, la dispersion et la fuite, un contrat inchangé pour les jeux, ce que le monde en fait |
+| [16. La vie synthétique](16-vie-synthetique.md) | des machines et leur Mère : l'énergie, l'assemblage, la régulation des espèces qui débordent, ce que la Mère conçoit, la défense face aux joueurs, ce que le monde en fait |
 
 ## En une page
 

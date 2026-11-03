@@ -24,10 +24,11 @@ Points essentiels :
 
 ## Écrire un traducteur
 
-- [Le mode d'emploi](https://raw.githubusercontent.com/stonevalleyoff-ai/orvane/main/docs/LISEZ-MOI.md) : 13 chapitres
+- [Le mode d'emploi](https://raw.githubusercontent.com/stonevalleyoff-ai/orvane/main/docs/LISEZ-MOI.md) : 16 chapitres
 - [Lire un instantané](https://raw.githubusercontent.com/stonevalleyoff-ai/orvane/main/docs/1-lire-un-instantane.md)
 - [Renvoyer des pressions](https://raw.githubusercontent.com/stonevalleyoff-ai/orvane/main/docs/4-renvoyer-des-pressions.md)
 - [L'exemple Stone Valley](https://raw.githubusercontent.com/stonevalleyoff-ai/orvane/main/docs/6-exemple-stone-valley.md)
+- [La vie synthétique](https://raw.githubusercontent.com/stonevalleyoff-ai/orvane/main/docs/16-vie-synthetique.md) : les machines (`plan.regime` = `synthetique`), leur Mère, leur posture face aux joueurs ; un jeu qui ne sait pas les jouer les ignore
 
 ## Optional
 

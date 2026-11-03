@@ -49,6 +49,7 @@
 'use strict';
 const CAT = typeof require === 'function' ? require('./catalogue.js') : racine.OrvaneCatalogue;
 const CORPS = typeof require === 'function' ? require('./corps.js') : racine.OrvaneCorps;   // la silhouette (moteur/corps.js)
+const SYN = typeof require === 'function' ? require('./synthetique.js') : racine.OrvaneSynthetique;   // la vie synthétique (moteur/synthetique.js, docs/16)
 const AXES = ['temperature', 'humidite', 'altitude', 'lumiere', 'couvert'];
 const REGLES = {
   mutation: .004,            // part des naissances qui changent de phénotype (vers un phénotype existant)
@@ -71,7 +72,16 @@ const REGLES = {
   predation_max: .3,         // part d'une population de proies qu'un cycle de prédation peut retirer
   chasse_omnivore: .4,       // un omnivore chasse moins bien qu'un carnivore
   omnivore_vegetal: .4,      // un carnivore devenu omnivore (estomac-large) tire des plantes moins qu'un herbivore : 40 %
+  omnivore_vegetal_base: 1,  // un omnivore de naissance (essais : moins d'un herbivore)
+  longevite_predateur: 0,    // (essais) un carnivore né de la dérive vit au moins autant de fois ce que sa viande lui permet de remplacer
+  viande_omnivore: 1,        // la part de viande dans ce que mange un omnivore : son besoin de proies (essais)
+  faim_carnivore: 3,         // un carnivore affamé meurt plus : × (1 + faim × (1 − satiété)²)
+  detritivore_vegetal: 1,    // ce qu'un détritivore tire de la place, rapporté à un herbivore (essais)
+  vers_carnivore: .35,       // à la dérive du régime, la chance qu'un omnivore devienne carnivore (sinon herbivore)
   faim_migration: .4,        // satiété sous laquelle un prédateur s'en va chercher ailleurs
+  // (docs/15) deux règles des mondes à parcelles, nulles ailleurs (moteur/parcelles.js les pose dans monde.regles) :
+  dispersion: 0,             // part de chaque population qui s'en va chaque cycle vers les parcelles voisines du même biome, quoi qu'il arrive
+  fuite: 0,                  // au-delà de la capacité (un défrichage, une catastrophe), part de l'excès qui fuit vers les voisins : fuite × (1 − 1/saturation)
   report_proies: 1.5,        // exposant du report sur la proie abondante (1 : au prorata ; 2 : fort)
   // les saisons (si le monde a une année) : amplitudes par défaut d'un biome, sur les axes et sur la production
   saisons: { temperature: .15, lumiere: .1, humidite: .08, capacite: .25 },
@@ -272,7 +282,7 @@ function axesSaison(b, phase) {
   return a;
 }
 const productionSaison = (b, phase) => phase == null || b.saisons === false || b.saisons === null ? 1 : 1 + ({ ...REGLES.saisons, ...(b.saisons || {}) }).capacite * -Math.cos(2 * Math.PI * phase);
-const PART_K = { herbivore: 1, omnivore: 1, detritivore: .3, filtreur: .3, carnivore: 0 };   // ce que chaque régime pèse sur la capacité du biome (l'omnivore : moins s'il trouve des proies)
+const PART_K = { herbivore: 1, omnivore: 1, detritivore: .3, filtreur: .3, carnivore: 0, synthetique: 0 };   // ce que chaque régime pèse sur la capacité du biome (l'omnivore : moins s'il trouve des proies)
 const facteur = (traits, cat, k) => traits.reduce((f, id) => f * (cat[id]?.[k] ?? 1), 1);
 // Une lignée qui se sépare dérive : sa masse (et avec elle maturité et longévité, allométriquement), son tempérament, sa
 // sociabilité, et sous REGLES.derive plus marqué (la genèse) son régime, sa locomotion, son heure — la niche devient le biome.
@@ -284,16 +294,20 @@ function deriver(plan, b, R) {
     niche: { ...b.axes }, tolerance: plan.tolerance || .35, locomotion: [...(plan.locomotion || ['marche'])] };
   // le régime passe par l'omnivore ; un omnivore redevient plus souvent herbivore que carnivore (il y a plus à brouter qu'à chasser)
   // (un filtreur, un détritivore gardent le leur : ce n'est pas un pas de plus ou de moins vers la viande)
-  if (R() < D.regime && ['herbivore', 'omnivore', 'carnivore'].includes(plan.regime)) p.regime = plan.regime === 'herbivore' ? 'omnivore' : plan.regime === 'carnivore' ? 'omnivore' : R() < .35 ? 'carnivore' : 'herbivore';
+  if (R() < D.regime && ['herbivore', 'omnivore', 'carnivore'].includes(plan.regime)) p.regime = plan.regime === 'herbivore' ? 'omnivore' : plan.regime === 'carnivore' ? 'omnivore' : R() < (REGLES.vers_carnivore ?? .35) ? 'carnivore' : 'herbivore';
   // un mode de déplacement se gagne (ce que le biome favorise) ou se perd (un accessoire dont le biome n'a pas l'usage) : sans
   // cela, toutes les lignées finiraient par tout savoir faire
   const VOL = REGLES.vol_masse_max ?? Infinity, eau = b.milieu === 'amphibie' || b.milieu === 'aquatique' || b.milieu === 'marin';
+  // (en pleine eau, lac, rivière ou mer, on ne gagne ni course, ni saut, ni grimpe, et on les perd : un poisson ne court pas ;
+  // marcher ou ramper sur le fond, fouir la vase restent possibles)
+  const pleineEau = b.milieu === 'aquatique' || b.milieu === 'marin';
   if (R() < D.locomotion) {
-    const inutiles = p.locomotion.filter(l => (l === 'grimpe' && b.axes.couvert < .4) || (l === 'nage' && !eau && p.regime !== 'filtreur') || (l === 'course' && b.axes.couvert > .8) || (l === 'saut' && R() < .5) || (l === 'fouissage' && R() < .3));
-    if (inutiles.length && p.locomotion.length > 1 && R() < .45) { const x = inutiles[Math.floor(R() * inutiles.length)]; p.locomotion = p.locomotion.filter(l => l !== x); }
+    const inutiles = p.locomotion.filter(l => (l === 'grimpe' && (b.axes.couvert < .4 || pleineEau)) || (l === 'nage' && !eau && p.regime !== 'filtreur') || (l === 'course' && (b.axes.couvert > .8 || pleineEau)) || (l === 'saut' && (pleineEau || R() < .5)) || (l === 'fouissage' && R() < .3));
+    if (inutiles.length && p.locomotion.length > 1 && R() < (pleineEau ? .9 : .45)) { const x = inutiles[Math.floor(R() * inutiles.length)]; p.locomotion = p.locomotion.filter(l => l !== x); }
     else { const c = []; if (eau && !p.locomotion.includes('nage')) c.push('nage');
-      if (b.axes.couvert > .6 && !p.locomotion.includes('grimpe')) c.push('grimpe'); if (!p.locomotion.includes('course')) c.push('course'); if (!p.locomotion.includes('saut')) c.push('saut');
-      if (b.axes.altitude > .5 && !p.locomotion.includes('vol') && p.masse_kg <= VOL && R() < .25) c.push('vol'); if (c.length) p.locomotion.push(c[Math.floor(R() * c.length)]); }
+      if (!pleineEau) { if (b.axes.couvert > .6 && !p.locomotion.includes('grimpe')) c.push('grimpe'); if (!p.locomotion.includes('course')) c.push('course'); if (!p.locomotion.includes('saut')) c.push('saut');
+        if (b.axes.altitude > .5 && !p.locomotion.includes('vol') && p.masse_kg <= VOL && R() < .25) c.push('vol'); }
+      if (c.length) p.locomotion.push(c[Math.floor(R() * c.length)]); }
   }
   const volait = p.locomotion.includes('vol') && p.masse_kg > VOL;
   if (volait) { p.locomotion = p.locomotion.filter(l => l !== 'vol'); if (!p.locomotion.some(l => l !== 'nage') || !p.locomotion.length) p.locomotion.unshift('marche'); }
@@ -303,6 +317,11 @@ function deriver(plan, b, R) {
     p.eau = b.milieu === 'marin' ? (e === 'douce' ? 'mixte' : R() < .3 ? 'salee' : e) : b.milieu === 'aquatique' ? (e === 'salee' ? 'mixte' : R() < .3 ? 'douce' : e)
       : b.milieu === 'amphibie' && R() < .25 ? 'mixte' : e; }
   if (p.regime === 'carnivore' && R() < .5) { p.vitesse_rel = +(p.vitesse_rel * 1.15).toFixed(2); p.perception = clamp((p.perception || .5) + .1, 0, 1); }
+  // un prédateur vit assez pour se nourrir : ses petits naissent de la viande mangée (REGLES.conversion), au plus
+  // conversion × besoin × masse^-0,25 par tête et par cycle ; il lui faut une mort plus lente que cela, avec de la marge
+  // (un carnivore né d'un petit omnivore à vie brève, sinon, n'a aucune chance)
+  if (p.regime === 'carnivore' && REGLES.longevite_predateur) { const Lmin = REGLES.longevite_predateur / (REGLES.conversion * REGLES.besoin * Math.pow(Math.max(.001, p.masse_kg), -.25));
+    if (p.longevite < Lmin) { p.maturite = +(p.maturite * Math.min(2, Lmin / p.longevite) ** .5).toFixed(2); p.longevite = +Lmin.toFixed(2); } }
   // le corps suit : la silhouette dérive vers ce que le biome favorise, et garde la marque d'un mode de déplacement gagné
   if (plan.corps && CORPS) { const avant = new Set(plan.locomotion || ['marche']);
     p.corps = CORPS.deriver(plan.corps, p, b, R, D.corps ?? 1, p.locomotion.filter(l => !avant.has(l)), k);
@@ -374,7 +393,13 @@ function convenance(plan, biome) {
 const biomasse = (plans, N) => N.reduce((s, n, i) => s + n * (plans[i].masse_kg || 1), 0);
 
 // --- un cycle ---
+// un monde peut porter ses propres règles (monde.regles : celles que sa genèse a choisies) ; elles valent le temps de son cycle
 function cycle(inst, pressions = {}, opt = {}) {
+  const propres = inst?.monde?.regles; if (!propres || typeof propres !== 'object') return cycleBrut(inst, pressions, opt);
+  const avant = {}; for (const k in propres) avant[k] = REGLES[k];
+  Object.assign(REGLES, propres); try { return cycleBrut(inst, pressions, opt); } finally { Object.assign(REGLES, avant); }
+}
+function cycleBrut(inst, pressions = {}, opt = {}) {
   const n = inst.cycle.n + 1, R = rng(inst.monde.graine, n);
   const cat = { ...(inst.catalogue?.traits || {}), ...CAT.TRAITS };   // la biologie d'un trait connu est celle du moteur ; un trait propre au monde garde la sienne
   const biomes = Object.fromEntries(inst.biomes.map(b => [b.id, clone(b)]));
@@ -417,13 +442,13 @@ function cycle(inst, pressions = {}, opt = {}) {
   for (const t of taxons) {
     if (t.eteint) continue;
     const plans = t.phenotypes.map(p => planDe(t.plan, p.traits, cat));
-    const pops = {};
+    const pops = {}, syn = t.plan.regime === 'synthetique';   // (une machine n'a ni allèles ni traits continus : docs/16)
     for (const pop of t.populations) {
       const N = t.phenotypes.map(p => pop.effectif * (p.frequence_par_biome?.[pop.biome] ?? p.frequence));
       pops[pop.biome] = { N, depuis: pop.depuis ?? t.apparu, avant: pop.effectif, predation: new Array(N.length).fill(0), ration: new Array(N.length).fill(0), satiete: null, maladie: pop.maladie ? { ...pop.maladie } : null };
-      if (SEX) pops[pop.biome].A = allelesDe(t.phenotypes, N, cat, pop.alleles);   // les fréquences d'allèles (un monde d'avant : déduites des phénotypes)
+      if (SEX && !syn) pops[pop.biome].A = allelesDe(t.phenotypes, N, cat, pop.alleles);   // les fréquences d'allèles (un monde d'avant : déduites des phénotypes)
       Object.assign(pops[pop.biome], { flux0: pop.flux ?? 0, hyb0: pop.hybride?.part ?? 0, immig: 0, mef0: pop.mefiance ?? 0, hab0: pop.habituation ?? 0 });
-      if (GEN) { const P = pops[pop.biome], Q = P.Q = lireQ(pop.quant);   // ce que ses traits continus pèsent : risque d'être mangé, naissances, maladie
+      if (GEN && !syn) { const P = pops[pop.biome], Q = P.Q = lireQ(pop.quant);   // ce que ses traits continus pèsent : risque d'être mangé, naissances, maladie
         P.fp = penteQ(Q, 'predation'); P.ff = penteQ(Q, 'fecondite') * chargeQ(Q, t.plan, biomes[pop.biome]); P.fm = penteQ(Q, 'maladie'); }
       const s0 = pop.satiete ?? 0;   // (la satiété du cycle précédent : un omnivore qui trouve des proies pèse moins sur la place)
       (B[pop.biome] ??= []).push({ masse: t.plan.masse_kg || 1, biomasse: N.reduce((s, n, i) => s + n * (plans[i].masse_kg || 1) * (plans[i].regime === 'omnivore' ? 1 - .3 * s0 : PART_K[plans[i].regime] ?? 1), 0) });
@@ -433,11 +458,14 @@ function cycle(inst, pressions = {}, opt = {}) {
       resist: t.phenotypes.map(p => facteur(p.traits, cat, 'resistance')) });
   }
 
+  // 2c. la vie synthétique (docs/16) : rien, s'il n'y a ni Mère ni machine
+  const SY = SYN ? SYN.preparer({ inst, n, biomes, taxons, etat, phase, axesSaison, charge, BANDE, PART_K, REGLES, ev, convenance }) : null;
+
   // 2b. qui vit où, et ce que chacun porte au début du cycle (les croisements entre lignées lisent cet état-là : l'ordre des
   //     taxons ne change rien)
   const HYB = SEX && REGLES.hybride?.actif !== false && opt.hybride !== false, Tmap = new Map(taxons.map(t => [t.id, t])), presents = {}, isoCache = new Map();
   const isoDe = (a, b) => { const k = a.id < b.id ? a.id + '|' + b.id : b.id + '|' + a.id; if (!isoCache.has(k)) isoCache.set(k, isolement(a, b, Tmap, n)); return isoCache.get(k); };
-  if (HYB) for (const t of taxons) { if (t.eteint) continue; for (const [bid, P] of Object.entries(etat.get(t.id).pops)) { const Nt = P.N.reduce((a, x) => a + x, 0); if (Nt < 1) continue;
+  if (HYB) for (const t of taxons) { if (t.eteint || t.plan.regime === 'synthetique') continue; for (const [bid, P] of Object.entries(etat.get(t.id).pops)) { const Nt = P.N.reduce((a, x) => a + x, 0); if (Nt < 1) continue;
     (presents[bid] ??= []).push({ t, N: Nt, A0: P.A ? { ...P.A } : null, Q0: P.Q ? copieQ(P.Q) : null }); } }
 
   // 3. la chaîne alimentaire, biome par biome : chaque prédateur prélève des proies selon ce qui est à sa portée ;
@@ -445,7 +473,7 @@ function cycle(inst, pressions = {}, opt = {}) {
   //    L'appétence se calcule entre taxons (plan de base) ; les phénotypes se partagent ensuite au prorata de ce qu'ils pèsent.
   for (const bid of Object.keys(biomes)) {
     const T = [];   // un taxon présent : ses phénotypes, leur poids de proie (N × masse × vulnérabilité), son appétit
-    for (const t of taxons) { if (t.eteint) continue; const E = etat.get(t.id), pop = E.pops[bid]; if (!pop) continue;
+    for (const t of taxons) { if (t.eteint || t.plan.regime === 'synthetique') continue; const E = etat.get(t.id), pop = E.pops[bid]; if (!pop) continue;   // (une machine ne se mange pas)
       const Nt = pop.N.reduce((a, x) => a + x, 0); if (Nt <= 0) continue;
       const poids = pop.N.map((N, i) => N * (E.plans[i].masse_kg || 1) * E.vuln[i] * (pop.fp ?? 1));
       T.push({ t, E, pop, Nt, poids, Bv: poids.reduce((a, x) => a + x, 0), regime: t.plan.regime }); }
@@ -456,7 +484,8 @@ function cycle(inst, pressions = {}, opt = {}) {
       const puiss = x.map(v => v > 0 ? Math.pow(v, REGLES.report_proies) : 0), z = puiss.reduce((a, v) => a + v, 0);
       p.part = puiss.map(v => z ? v / z : 0); p.x = x; p.A = A;                       // la part de chaque proie dans ce que ce prédateur prélève
       p.eff = p.E.chasse.map((c, i) => c * (.7 + .6 * (p.E.plans[i].perception ?? .5)) * (p.regime === 'omnivore' ? REGLES.chasse_omnivore : 1));
-      p.besoin = p.E.plans.map(pl => REGLES.besoin * Math.pow(pl.masse_kg || 1, .75));
+      // (un omnivore ne cherche en viande qu'une part de ce qu'il mange : il ne dispute aux carnivores que cette part)
+      p.besoin = p.E.plans.map(pl => REGLES.besoin * Math.pow(pl.masse_kg || 1, .75) * (p.regime === 'omnivore' ? REGLES.viande_omnivore ?? 1 : 1));
       p.effMoy = p.pop.N.reduce((a, N, i) => a + N * p.eff[i], 0) / p.Nt; p.besoinMoy = p.pop.N.reduce((a, N, i) => a + N * p.besoin[i], 0) / p.Nt;
     }
     // les prédateurs se partagent les proies : chacun compte, en concurrents, ceux qui mangent les mêmes, au prorata de leur besoin
@@ -468,6 +497,7 @@ function cycle(inst, pressions = {}, opt = {}) {
       p.pop.satiete = sN / p.Nt;
       T.forEach((q, k) => { if (!p.part[k]) return; const Rq = R * p.part[k]; q.pop.N.forEach((N, i) => { if (q.poids[i]) q.pop.predation[i] += Rq * (q.poids[i] / q.Bv) / (q.E.plans[i].masse_kg || 1); }); });
     }
+    if (SY) SY.reguler(bid, T, B[bid] || [], biomes[bid].capacite * productionSaison(biomes[bid], phase));   // les machines régulent (docs/16)
     for (const q of T) q.pop.N.forEach((N, i) => { q.pop.predation[i] = Math.min(q.pop.predation[i], N * REGLES.predation_max); });   // nul ne mange plus qu'une part d'une population en un cycle
   }
 
@@ -480,14 +510,15 @@ function cycle(inst, pressions = {}, opt = {}) {
       const b = biomes[bid]; if (!b) { delete E.pops[bid]; continue; }
       const bS = phase == null ? b : { ...b, axes: axesSaison(b, phase) };                    // le biome tel qu'il est en cette saison
       const conv = convenance(t.plan, bS), Keff = b.capacite * productionSaison(b, phase);
-      const sat = Keff > 0 ? charge(B[bid], t.plan.masse_kg || 1) / (Keff * BANDE) : 9;
+      const syn = SY && t.plan.regime === 'synthetique';                                        // (une machine : sa presse est celle de l'énergie, docs/16)
+      const sat = syn ? SY.sat(bid) : Keff > 0 ? charge(B[bid], t.plan.masse_kg || 1) / (Keff * BANDE) : 9;
       const pr = prT[t.id]?.[bid] || {}, ret = pr.retrait || {};
       const tot = pop.N.reduce((a, x) => a + x, 0) || 1;
       // la maladie : une épidémie en cours tue selon la virulence et la résistance de chaque phénotype ; sinon, le surpeuplement
       // (et une épidémie chez les voisins) peut en faire éclore une
       let mal = pop.maladie;
       if (mal) { if (--mal.reste <= 0) { ev.push({ type: 'remission', taxon: t.id, biome: bid, detail: 'l\'épidémie s\'éteint' }); mal = pop.maladie = null; } }
-      else if (tot >= 20) {
+      else if (tot >= 20 && !syn) {
         const M = REGLES.maladie, voisinsMalades = (b.voisins || []).some(v => E.pops[v]?.maladie);
         if (R() < M.chance * Math.max(0, sat - .5) * 2 + (voisinsMalades ? M.contagion * M.chance * 10 : 0)) {
           mal = pop.maladie = { reste: Math.round(M.duree[0] + R() * (M.duree[1] - M.duree[0])), virulence: +(M.virulence[0] + R() * (M.virulence[1] - M.virulence[0])).toFixed(3) };
@@ -499,14 +530,15 @@ function cycle(inst, pressions = {}, opt = {}) {
       for (let i = 0; i < K; i++) {
         const Np = pop.N[i]; if (Np <= 0) continue;
         const reg = E.plans[i].regime, s = pop.satiete ?? 0;
+        if (syn) { const d = SY.vie(t, bid, pop, E.plans[i], Np, sinistres[bid], conv); nais[i] = d.nais; morts[i] = d.morts; mortsNat += d.morts; continue; }
         const r = croissance(E.plans[i]) * (1 - E.couts[i]) * conv * (pop.ff ?? 1); let m = mortalite(E.plans[i]) + (conv < .3 ? .08 : 0);
         const place = Math.max(0, 1 - sat);
         // ce qui nourrit les naissances : la place pour l'herbivore ; la viande mangée pour le carnivore, convertie en petits à
         // REGLES.conversion (l'énergie vient des plantes : un prédateur ne vit pas de prédateurs qui vivent de lui) ; les deux pour l'omnivore
         const viande = REGLES.conversion * pop.ration[i] / (E.plans[i].masse_kg || 1);
-        if (reg === 'carnivore') { nais[i] = Math.min(Np * r * s, viande); m *= 1 + 3 * (1 - s) * (1 - s); faim = Math.max(faim, 1 - s); }   // un carnivore affamé meurt plus
-        else if (reg === 'omnivore') nais[i] = Np * r * place * (1 - .3 * s) * (t.plan.regime === 'carnivore' ? REGLES.omnivore_vegetal ?? 1 : 1) + Math.min(Np * r * .3 * s, viande);
-        else nais[i] = Np * r * place; morts[i] = Np * m; mortsNat += morts[i];
+        if (reg === 'carnivore') { nais[i] = Math.min(Np * r * s, viande); m *= 1 + (REGLES.faim_carnivore ?? 3) * (1 - s) * (1 - s); faim = Math.max(faim, 1 - s); }   // un carnivore affamé meurt plus
+        else if (reg === 'omnivore') nais[i] = Np * r * place * (1 - .3 * s) * (t.plan.regime === 'carnivore' ? REGLES.omnivore_vegetal ?? 1 : REGLES.omnivore_vegetal_base ?? 1) + Math.min(Np * r * .3 * s, viande);
+        else nais[i] = Np * r * place * (reg === 'detritivore' ? REGLES.detritivore_vegetal ?? 1 : 1); morts[i] = Np * m; mortsNat += morts[i];
         if (mal) { const mm = Np * mal.virulence * E.resist[i] * (pop.fm ?? 1) * (.5 + Math.min(1.5, sat)); morts[i] += mm; mortsMal += mm; }   // la maladie frappe les faibles et les entassés
         if (sinistres[bid]) { const loco = E.plans[i].locomotion || [], type = sinistres[bid];                                      // la catastrophe épargne qui peut s'y soustraire
           const echappe = type === 'incendie' ? loco.includes('vol') || loco.includes('fouissage') : type === 'crue' ? loco.includes('vol') || loco.includes('nage') : loco.includes('vol');
@@ -517,7 +549,7 @@ function cycle(inst, pressions = {}, opt = {}) {
       // les croisements avec une lignée apparentée du même biome : une part h des mères a un père de l'autre lignée ; une part
       // I (l'isolement) de ces petits hybrides ne vit pas ; les autres apportent la moitié des gènes de l'autre lignée
       let hyb = null;
-      if (HYB && presents[bid]) { const H = REGLES.hybride; let perte = 0, part = 0, best = null;
+      if (HYB && presents[bid] && !syn) { const H = REGLES.hybride; let perte = 0, part = 0, best = null;
         for (const o of presents[bid]) { if (o.t === t) continue; const I = isoDe(t, o.t); if (I >= .995) continue;
           const h = H.rencontre * (1 - I) * o.N / (tot + o.N); if (h < 1e-5) continue;
           perte += h * I; part += h * (1 - I); const c = { o, I, h: h * (1 - I) }; (hyb ??= []).push(c); if (!best || c.h > best.h) best = c; }
@@ -536,7 +568,7 @@ function cycle(inst, pressions = {}, opt = {}) {
       for (let i = 0; i < K; i++) dispo[i] = Math.max(0, pop.N[i] + nb[i] - morts[i] - pop.predation[i]);
       // les retraits (ou apports) extérieurs ; la demande qu'un phénotype épuisé ne peut servir se reporte sur les autres
       const ext = new Array(K).fill(0); let reste = 0;
-      for (let i = 0; i < K; i++) { const d = (ret[t.phenotypes[i].id] || 0) + (ret['*'] || 0) * pop.N[i] / tot; ext[i] = clamp(d, -pop.N[i], dispo[i]); if (d > dispo[i]) reste += d - dispo[i]; }
+      for (let i = 0; i < K; i++) { const d = ((ret[t.phenotypes[i].id] || 0) + (ret['*'] || 0) * pop.N[i] / tot) * (syn ? SY.reparation(t) : 1); ext[i] = clamp(d, -pop.N[i], dispo[i]); if (d > dispo[i]) reste += d - dispo[i]; }
       if (reste > 0) { const marge = dispo.map((x, i) => Math.max(0, x - ext[i])), tm = marge.reduce((a, x) => a + x, 0); if (tm > 0) for (let i = 0; i < K; i++) ext[i] += Math.min(marge[i], reste * marge[i] / tm); }
       for (let i = 0; i < K; i++) { mortsExt += Math.max(0, ext[i]); suiv[i] = Math.max(0, dispo[i] - ext[i]); }
       // les allèles après le cycle : les adultes survivants gardent les leurs (Hardy-Weinberg à p), les petits survivants
@@ -563,7 +595,7 @@ function cycle(inst, pressions = {}, opt = {}) {
       if (opt.trace) opt.trace({ taxon: t.id, biome: bid, N: tot, sat, conv, satiete: pop.satiete, nais: nais.reduce((a, x) => a + x, 0), mortsNat, mortsPred: pop.mortsPred, mortsExt, mortsMal, saison: saison?.nom });
       // essaimer vers les voisins où l'on peut vivre, chacun à proportion de ce qu'il convient : un flux continu, pas une
       // vague vers un voisin tiré au sort (qui faisait d'une petite population voisine une suite d'explosions et d'effondrements)
-      const essaimer = part => { const cibles = (b.voisins || []).filter(v => biomes[v]).map(v => [v, convenance(t.plan, biomes[v])]).filter(([, c]) => c > 0), W = cibles.reduce((a, [, c]) => a + c, 0);
+      const essaimer = (part, filtre) => { const cibles = (b.voisins || []).filter(v => biomes[v] && (!filtre || filtre(biomes[v]))).map(v => [v, convenance(t.plan, biomes[v])]).filter(([, c]) => c > 0), W = cibles.reduce((a, [, c]) => a + c, 0);
         if (!(W > 0) || !(part > 0)) return;
         for (const [vers, c] of cibles) { const f = part * c / W; migrations.push({ taxon: t.id, vers, N: suiv.map(x => x * f), Q: pop.Q && copieQ(pop.Q), A: pop.A && { ...pop.A } }); }
         for (let i = 0; i < K; i++) suiv[i] *= 1 - part; };
@@ -578,6 +610,11 @@ function cycle(inst, pressions = {}, opt = {}) {
       }
       // migration naturelle : sans place, on essaime (un carnivore, lui, part quand il a faim : plus haut)
       if (t.plan.regime !== 'carnivore' && sat > REGLES.seuil_surpeuple) essaimer(REGLES.migration * clamp((sat - REGLES.seuil_surpeuple) / (1 - REGLES.seuil_surpeuple), 0, 2));
+      // (docs/15) dans un monde à parcelles : une petite part s'en va toujours vers les parcelles voisines du même biome (c'est
+      // ainsi qu'une espèce gagne de proche en proche), et une parcelle qui a perdu sa place chasse ses bêtes vers ses voisines
+      if (REGLES.dispersion > 0 && b.type) essaimer(REGLES.dispersion, v => v.type === b.type);
+      if (REGLES.fuite > 0 && sat > 1) essaimer(Math.min(.5, REGLES.fuite * (1 - 1 / sat)));
+      if (syn) essaimer(SY.exploration);                                                         // les machines explorent (docs/16)
       pop.N = suiv;
     }
     // les combinaisons nées cette fois sans phénotype qui les porte (deux parents de phénotypes différents) : au-delà d'un
@@ -590,7 +627,7 @@ function cycle(inst, pressions = {}, opt = {}) {
       for (const [bid, fb, n] of M.parts) { const P = E.pops[bid]; if (!P) continue; const m = Math.min(n, P.N[fb]); P.N[fb] -= m; P.N[j] += m; } }
     delete E.manque; delete E.idx; delete E.proche;
     // un nouveau trait, parfois : sur le phénotype le plus nombreux du biome le plus peuplé
-    if (R() < REGLES.nouveau_trait) {
+    if (t.plan.regime !== 'synthetique' && R() < REGLES.nouveau_trait) {
       const [bid, pop] = Object.entries(E.pops).sort((a, b) => b[1].N.reduce((x, y) => x + y, 0) - a[1].N.reduce((x, y) => x + y, 0))[0] || [];
       if (pop) {
         const i = pop.N.indexOf(Math.max(...pop.N)), base = t.phenotypes[i].traits;
@@ -619,6 +656,8 @@ function cycle(inst, pressions = {}, opt = {}) {
       if (!D.A || na <= 0) D.A = { ...mg.A }; else if (n > 0) { const o = {}; for (const id of new Set([...Object.keys(D.A), ...Object.keys(mg.A)])) o[id] = ((D.A[id] || 0) * na + (mg.A[id] || 0) * nb) / n; D.A = o; } }
     mg.N.forEach((x, i) => { D.N[i] += x; });
   }
+
+  if (SY) SY.apres();   // la ferraille, le minerai, la Mère, les erreurs de copie, les transferts (docs/16)
 
   // 6. séparation de lignées, extinctions, écriture des taxons
   const nouveaux = []; let vivantsN = taxons.filter(t => !t.eteint).length;
@@ -673,7 +712,8 @@ function cycle(inst, pressions = {}, opt = {}) {
       if (REGLES.mefiance.actif && opt.mefiance !== false) {                 // ce que la population a appris des joueurs (docs/12)
         const [m, h] = apprendre(pop.mef0 || 0, pop.hab0 || 0, prT[t.id]?.[bid]?.contact, GEN ? pop.Q?.audace?.m || 0 : 0);
         if (m >= 1e-3) p.mefiance = +m.toFixed(3); if (h >= 1e-3) p.habituation = +h.toFixed(3);
-        if (m >= REGLES.mefiance.alerte && (pop.mef0 || 0) < REGLES.mefiance.alerte) ev.push({ type: 'mefiance', taxon: t.id, biome: bid, detail: `les bêtes se méfient des joueurs (${Math.round(m * 100)} %)` }); }
+        if (m >= REGLES.mefiance.alerte && (pop.mef0 || 0) < REGLES.mefiance.alerte) ev.push({ type: 'mefiance', taxon: t.id, biome: bid, detail: (SY && SY.texteMefiance(t, m)) || `les bêtes se méfient des joueurs (${Math.round(m * 100)} %)` }); }
+      if (SY) SY.publier(t, bid, pop, p, morts);
       if (pop.div) p.divergence = +pop.div.toFixed(4);
       if (pop.hyb && pop.hyb.part >= 1e-4) { p.hybride = { avec: pop.hyb.avec, part: +pop.hyb.part.toFixed(4), isolement: +pop.hyb.isolement.toFixed(3) };
         if (pop.hyb.part >= REGLES.hybride.zone && (pop.hyb0 ?? 0) < REGLES.hybride.zone / 2) ev.push({ type: 'hybridation', taxon: t.id, biome: bid, detail: `zone hybride avec ${pop.hyb.avec} : ${(pop.hyb.part * 100).toFixed(1)} % des naissances` }); }
@@ -713,7 +753,7 @@ function cycle(inst, pressions = {}, opt = {}) {
   const ORD = Object.keys(CAT.TRAITS), traits = {}; for (const id of [...portes].sort((x, y) => ((ORD.indexOf(x) + 1) || 999) - ((ORD.indexOf(y) + 1) || 999) || (x < y ? -1 : 1))) traits[id] = cat[id];
   const duree = opt.duree_ms ?? 86400000, d0 = Date.parse(inst.cycle.date);
   return {
-    orvane: inst.orvane || '0.1', monde: inst.monde,
+    orvane: inst.orvane || '0.1', monde: SY ? SY.monde(inst.monde) : inst.monde,
     cycle: { n, date: new Date(Number.isFinite(d0) ? d0 + duree : Date.now()).toISOString(), pressions_recues: pressions.nombre ?? 0, ...(saison ? { saison } : {}) },
     biomes: Object.values(biomes).map(b => phase == null ? b : { ...b, axes_saison: axesSaison(b, phase) }), catalogue: { version: inst.catalogue?.version || '0.1', traits, ...(GEN ? { quantitatifs: QUANT } : {}), organes: CORPS.catalogueOrganes() },
     taxons: sortie, evenements: ev

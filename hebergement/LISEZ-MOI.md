@@ -64,7 +64,7 @@ node hebergement/cycle.js orvane --sans-reseau          # un cycle, lots du doss
 node hebergement/cycle.js orvane --cycles 7             # rattraper une semaine (lots en ligne + dossier)
 ```
 
-Le premier cycle part de l'amorce du profil (`monde.amorce`), et pose la naissance du monde (`monde.ne`). Pour repartir de zéro : supprimer `etat.json`, `generation-0.json`, `instantane.json`, `historique.json`, `tampon.json`. Les traducteurs verront un monde neuf (autre naissance) et repartiront de sa génération 0.
+Le premier cycle part de l'amorce du profil (`monde.amorce`), et pose la naissance du monde (`monde.ne`). Une **fusion** se commande dans le profil (`monde.fusions : [{ id, source, part }]`) : le cycle de la nuit suivante verse la source dans le monde, une seule fois (docs/14). C'est ainsi que la mer d'Orvane (`mondes/marin/`) rejoint le monde d'Orvane (`mer-1`). De même, `monde.parcelles : { par: 4 }` découpe le monde en parcelles au cycle suivant, une fois pour toutes (docs/15) : l'état tourne alors par parcelle, l'instantané publié et l'historique restent par biome. Et `monde.synthetique : true` éveille la Mère au cycle suivant, une fois pour toutes : la vie synthétique (docs/16). Pour repartir de zéro : supprimer `etat.json`, `generation-0.json`, `instantane.json`, `historique.json`, `tampon.json`. Les traducteurs verront un monde neuf (autre naissance) et repartiront de sa génération 0.
 
 ## Les mondes d'avant
 

@@ -6,7 +6,10 @@ Un moteur d'écosystème et d'évolution, indépendant de tout jeu. Il fait vivr
 moteur/orvane.js      le moteur : instantané + pressions → instantané suivant (Node ou navigateur, zéro dépendance)
 moteur/catalogue.js   l'univers des traits : organe, coût, effet, écarts sur le plan corporel, contraintes, conduite (ce qu'il fait faire)
 moteur/corps.js       la silhouette d'une lignée (forme, proportions, organes, couleurs) et sa dérive à chaque séparation
-moteur/genese.js      la genèse : des biomes, des ancêtres très simples, des milliers de cycles → un monde de lignées inventées, nommées
+moteur/genese.js      la genèse : des biomes, des ancêtres très simples, des milliers de cycles → un monde de lignées inventées, nommées (--milieux, --ancetres : une partie des biomes, d'autres ancêtres)
+moteur/fusion.js      la fusion : verser un monde dans un autre, biome par biome (docs/14)
+moteur/parcelles.js   les parcelles : chaque biome découpé en parcelles voisines, et la vue par biome que lisent les jeux (docs/15)
+moteur/synthetique.js la vie synthétique : la Mère, ses machines, leur énergie, leur régulation, leur défense (docs/16)
 moteur/biomes-universels.json  les 24 biomes neutres du monde d'Orvane : terre, eau douce, mer, sous-sol
 tampon/tampon.js      exposer() Orvane → jeu ; agreger() jeu → Orvane (dénormalisation, plafonds, lissage)
 monde/index.html      l’observatoire : ce que vit un monde (espèces, biomes, lignées, chaîne alimentaire, journal), et une simulation locale
@@ -17,12 +20,16 @@ README.md, llms.txt   la présentation du dépôt (GitHub l'affiche en page d'ac
 schemas/              le contrat : instantane, pression, profil — avec exemples (crapaud buffle)
 traducteurs/stone-valley/   le premier client, de bout en bout : correspondances, traducteur, génération 0, banc, SQL
 bancs/stabilite.js    les bancs de stabilité : mille cycles sans joueurs et avec, le jour un, la réponse à la sélection, le déterminisme
+bancs/fusion.js       le banc de la fusion : la mer d'Orvane versée dans le monde d'Orvane, contre un témoin sans fusion
+bancs/parcelles.js    le banc des parcelles : le monde d'Orvane découpé, contre le même par biomes ; l'invasion de proche en proche, le défrichage
+bancs/synthetique.js  le banc de la vie synthétique : la Mère éveillée, contre le même monde sans elle ; une espèce qui explose, des joueurs qui harcèlent
 hebergement/cycle.js  le cycle nocturne : lots de tous les jeux → tampon → moteur → instantané publié (action GitHub .github/workflows/cycle.yml)
 hebergement/supabase.sql  le Supabase d'Orvane : les jeux s'y inscrivent et y déposent les pressions de leurs joueurs
 mondes/orvane/        le monde d'Orvane, où tous les jeux se branchent : né de la genèse universelle, Stone Valley y joue depuis le 29 octobre 2026
+mondes/marin/         la mer d'Orvane : une genèse sur les seuls biomes d'eau (vingt ancêtres, 29 lignées), versée dans le monde d'Orvane par une fusion (profil.monde.fusions)
 mondes/sv-1/          le premier monde de Stone Valley (sa faune), archivé
 mondes/genese-7/      un monde né de la genèse (graine 7, 3 000 cycles) : 97 lignées que personne n'a dessinées, archivé
-docs/                 le mode d'emploi : brancher son jeu, écrire son traducteur, jouer les conduites, tirer les traits continus, l'hérédité, les hybrides, les organes, la méfiance, la stabilité (13 chapitres)
+docs/                 le mode d'emploi : brancher son jeu, écrire son traducteur, jouer les conduites, tirer les traits continus, l'hérédité, les hybrides, les organes, la méfiance, la stabilité, la fusion, les parcelles, la vie synthétique (16 chapitres)
 ```
 
 ## Essayer
@@ -74,9 +81,11 @@ Un monde publié part d'un **rodage** (`profil.monde.rodage`, 400 cycles pour St
 node moteur/genese.js moteur/biomes-universels.json --cycles 900 --graine 1 --lignees 200 --etage 30 --nom "Le monde d'Orvane" \
      --regles '{"omnivore_vegetal_base":0.6,"detritivore_vegetal":0.5,"viande_omnivore":0.3,"longevite_predateur":1.6,"omnivore_vegetal":0.2,"vers_carnivore":0.5}' --sortie amorce.json
 node moteur/genese.js mondes/sv-1 --cycles 3000 --graine 7 --nom "Monde né d'Orvane" --sortie amorce.json
+node moteur/genese.js moteur/biomes-universels.json --milieux marin,aquatique,amphibie --ancetres mondes/marin/ancetres.json --cycles 1200 --graine 23 …   # la mer d'Orvane (docs/14)
+node moteur/fusion.js mondes/orvane/etat.json mondes/marin/amorce.json --part 0.5 --sortie essai.json                                   # une fusion à la main
 ```
 
-Des biomes (ceux d'un monde existant, ou un fichier), des ancêtres très simples (sur terre un brouteur, un grand brouteur, un fouisseur, un rôdeur, un insecte, un oiseau, un serpent ; en eau douce un filtreur, un brouteur des berges, un chasseur ; en mer un filtreur, un brouteur des récifs, un chasseur du large, un crabe), chacun avec sa silhouette, et une évolution accélérée : les lignées se séparent et dérivent (masse, régime, locomotion, heure, eau douce ou salée, traits, silhouette — deux fois et demie plus vite que dans un monde qui tourne), la place se gagne par extinction, au plus cent lignées vivantes par défaut (`--lignees`). Une longue genèse se reprend là où elle s'est arrêtée (`--point 200`, puis `--reprise <sortie>.reprise.json`). À la fin, chaque lignée reçoit un nom inventé (« Angraume chasseur de prairie, 76 kg, nocturne »). Le résultat est une amorce de monde : `mondes/genese-7/` en est un, à ouvrir dans l'observatoire (`monde/?monde=genese-7`, onglets Lignées et Chaîne). C'est le mode « Orvane crée la vie » : un jeu qui sait assembler un corps par morceaux peut le dessiner — Stone Valley le fait (`lignees.js`, voir `traducteurs/stone-valley/`). L'observatoire montre la silhouette de chaque lignée à côté de celle de son parent (onglet Taxons).
+Des biomes (ceux d'un monde existant, ou un fichier), des ancêtres très simples (sur terre un brouteur, un grand brouteur, un fouisseur, un rôdeur, un insecte, un oiseau, un serpent ; en eau douce un filtreur, un brouteur des berges, un chasseur ; en mer un filtreur, un brouteur des récifs, un chasseur du large, un crabe), chacun avec sa silhouette, et une évolution accélérée : les lignées se séparent et dérivent (masse, régime, locomotion, heure, eau douce ou salée, traits, silhouette — deux fois et demie plus vite que dans un monde qui tourne), la place se gagne par extinction, au plus cent lignées vivantes par défaut (`--lignees`). Une longue genèse se reprend là où elle s'est arrêtée (`--point 200`, puis `--reprise <sortie>.reprise.json`). Elle peut ne prendre qu'une partie des biomes (`--milieux`) et d'autres ancêtres (`--ancetres`) : un monde marin, qu'on verse ensuite dans un autre par une **fusion** (`moteur/fusion.js`, commandée par `profil.monde.fusions`, docs/14). À la fin, chaque lignée reçoit un nom inventé (« Angraume chasseur de prairie, 76 kg, nocturne »). Le résultat est une amorce de monde : `mondes/genese-7/` en est un, à ouvrir dans l'observatoire (`monde/?monde=genese-7`, onglets Lignées et Chaîne). C'est le mode « Orvane crée la vie » : un jeu qui sait assembler un corps par morceaux peut le dessiner — Stone Valley le fait (`lignees.js`, voir `traducteurs/stone-valley/`). L'observatoire montre la silhouette de chaque lignée à côté de celle de son parent (onglet Taxons).
 
 ## Pas encore
 

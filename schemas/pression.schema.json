@@ -28,6 +28,7 @@
         "type": "object", "required": ["taxon", "biome", "action", "n"], "additionalProperties": false,
         "properties": {
           "taxon": { "type": "string" },
+          "parcelle": { "type": "string", "description": "Facultatif, dans un monde à parcelles (docs/15) : la parcelle où l'événement a eu lieu, une parcelle de son biome (« prairie~2 »). La pression y est posée ; sans elle, elle est répartie selon les effectifs." },
           "phenotype": { "type": "string", "description": "Omis si le jeu ne distingue pas les phénotypes pour cette action." },
           "biome": { "type": "string", "description": "Biome Orvane (déjà traduit par le traducteur, pas le biome du jeu)." },
           "action": {

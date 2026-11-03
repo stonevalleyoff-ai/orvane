@@ -49,16 +49,16 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v)), r2 = v => Math.round(v *
 // cache du navigateur : un monde de cent lignées pèse deux mégaoctets, de quoi remplir le stockage local où le jeu sauve).
 // Le stockage local en garde un abrégé (qui vit où, combien), assez pour peupler la première île avant que le monde arrive ---
 const CACHE_MONDE = 'stone-valley:orvane-monde';
-const abreger = I => I && { monde: I.monde, cycle: { n: I.cycle?.n }, abrege: true,
-  taxons: I.taxons.map(t => ({ id: t.id, parent: t.parent, eteint: t.eteint, plan: { regime: Tampon?.regimeDe ? Tampon.regimeDe(t, I.catalogue?.traits) : t.plan?.regime, masse_kg: t.plan?.masse_kg }, populations: t.populations.map(p => ({ biome: p.biome, effectif: p.effectif })) })) };
+const abreger = I => I && { monde: I.monde, cycle: { n: I.cycle?.n }, abrege: true, ...(I.parcelles ? { parcelles: I.parcelles.map(p => ({ id: p.id, type: p.type })) } : {}),
+  taxons: I.taxons.map(t => ({ id: t.id, parent: t.parent, eteint: t.eteint, plan: { regime: Tampon?.regimeDe ? Tampon.regimeDe(t, I.catalogue?.traits) : t.plan?.regime, masse_kg: t.plan?.masse_kg }, populations: t.populations.map(p => ({ biome: p.biome, effectif: p.effectif, ...(p.parcelles ? { parcelles: p.parcelles } : {}) })) })) };
 function lire() { try { const m = JSON.parse(localStorage.getItem(CLE) || '{}'); S.courant = m.courant || null; S.gen0 = m.gen0 || null; S.profil = m.profil || null; S.abrege = m.abrege || null;
-  S.monde = m.monde || null; S.lot = m.lot || {}; S.depuis = m.depuis || null; S.dernierEnvoi = m.dernierEnvoi || 0; S.lignees = m.lignees || {}; S.lotQ = m.lotQ || {}; } catch (e) { }
+  S.monde = m.monde || null; S.lot = m.lot || {}; S.depuis = m.depuis || null; S.dernierEnvoi = m.dernierEnvoi || 0; S.lignees = m.lignees || {}; S.lotQ = m.lotQ || {}; S.fusionsVues = m.fusionsVues || []; S.mereVue = m.mereVue || null; } catch (e) { }
   carte(); S.rangs = rangsRarete(); }
 // les biomes du monde décident de la carte des sols du jeu (sv-1 a les siens ; le monde d'Orvane, les siens : Corr.choisirCarte)
 function carte() { const I = S.courant || S.abrege?.courant; if (I && Corr.choisirCarte) Corr.choisirCarte(I.biomes?.length ? I.biomes.map(b => b.id) : I.taxons.flatMap(t => t.populations.map(p => p.biome))); }
 function ecrire() { if (S.courant && !S.courant.abrege) S.abrege = { courant: abreger(S.courant), gen0: abreger(S.gen0) };
   try { localStorage.setItem(CLE, JSON.stringify({ abrege: S.abrege, profil: S.profil, monde: S.monde, lot: S.lot, depuis: S.depuis,
-  dernierEnvoi: S.dernierEnvoi, lignees: S.lignees, lotQ: S.lotQ })); } catch (e) { } }
+  dernierEnvoi: S.dernierEnvoi, lignees: S.lignees, lotQ: S.lotQ, fusionsVues: S.fusionsVues, mereVue: S.mereVue })); } catch (e) { } }
 // l'identité d'un monde : son id et sa naissance (un monde refait de zéro garde son id, pas sa date)
 const identite = inst => inst?.monde ? inst.monde.id + '|' + (inst.monde.ne || inst.monde.graine) : null;
 async function charger() {
@@ -125,7 +125,23 @@ const taxon = (inst, tid) => inst?.taxons.find(x => x.id === tid) || null;
 // la présence d'une lignée sur l'île, telle qu'un joueur la croise : ses bêtes, pesées par leur taille (masse^0,75) — dix
 // millions d'insectes ne se voient pas plus qu'un troupeau
 function presenceSur(inst, tid, biomes) { const t = taxon(inst, tid); return effectifSur(inst, tid, biomes) * Math.pow(Math.max(.001, t?.plan?.masse_kg || 1), .75); }
-function effectifSur(inst, tid, biomes) { const t = taxon(inst, tid); if (!t || t.eteint) return 0; return t.populations.filter(p => biomes.has(p.biome)).reduce((a, p) => a + p.effectif, 0); }
+function effectifSur(inst, tid, biomes) { const t = taxon(inst, tid); if (!t || t.eteint) return 0; return t.populations.filter(p => biomes.has(p.biome)).reduce((a, p) => a + effectifIci(inst, p), 0); }
+// (§222) UNE ÎLE = UNE PARCELLE PAR BIOME. Dans un monde à parcelles (Orvane docs/15), chaque île tire de sa graine, pour
+// chacun de ses biomes, l'une de ses parcelles : sa faune suit ce qui vit dans cette parcelle (une espèce qui n'y est pas
+// encore arrivée n'y paraît pas), et ses lots la disent (« parcelle ») pour que la chasse et le défrichage y restent.
+// L'effectif d'une parcelle est ramené à l'échelle du biome (× le nombre de ses parcelles) : la génération 0, par biome,
+// reste la référence. Sans parcelles (ou hors ligne sans elles), rien ne change.
+function parcelleIle(type, inst, graine) {
+  const L = ((inst || S.courant || S.abrege?.courant)?.parcelles || []).filter(p => p.type === type); if (!L.length) return null; if (L.length === 1) return L[0].id;
+  let g = graine >>> 0; if (graine == null) try { g = typeof SEED !== 'undefined' ? SEED >>> 0 : 0; } catch (e) { }
+  let h = (g ^ 0x2545f491) >>> 0; for (let i = 0; i < type.length; i++) h = Math.imul(h ^ type.charCodeAt(i), 16777619) >>> 0;
+  return L[h % L.length].id;
+}
+function effectifIci(inst, p) {
+  if (!p.parcelles || !inst?.parcelles) return p.effectif;
+  const id = parcelleIle(p.biome, inst); if (!id) return p.effectif;
+  return (p.parcelles[id] || 0) * (inst.parcelles.filter(x => x.type === p.biome).length || 1);
+}
 function solsIle() {   // les sols de l'île, numéros du jeu
   let rares = []; try { rares = typeof RaresIle !== 'undefined' ? RaresIle : []; } catch (e) { }
   if (!rares.length) try { rares = typeof biomesGraine === 'function' && typeof SEED !== 'undefined' ? biomesGraine(SEED) : []; } catch (e) { }
@@ -160,7 +176,8 @@ function definir(t) {
   const bio = [...new Set(t.populations.filter(p => p.effectif >= 1).flatMap(p => Corr.biomesSV ? Corr.biomesSV(p.biome) : [Corr.biomeSV(p.biome)]).filter(Boolean))];
   return { id: t.id, nom: nomJeu(t.nom, t.id), base: baseId, gabarit: !anc, genere, corps, traits: traitsDominants(t), bio,
     masse: t.plan.masse_kg, masseRef: ref?.plan?.masse_kg || 25 * base.sz ** 3, vit: t.plan.vitesse_rel, vitRef: ref?.plan?.vitesse_rel || base.spd * 2,
-    nocturne: t.plan.activite === 'nocturne', locomotion: t.plan.locomotion || [], regime: regime(t), vu: Date.now() };
+    nocturne: t.plan.activite === 'nocturne', locomotion: t.plan.locomotion || [], regime: regime(t), vu: Date.now(),
+    ...(t.plan.regime === 'synthetique' ? { machine: { role: t.plan.role, modules: { ...(t.plan.modules || {}) } } } : {}) };   // (§223) une machine d'Orvane
 }
 // la fiche du jeu : une copie de celle de l'ancêtre (sa conduite), à la mesure de la lignée
 function appliquerDef(sp, def, base) {
@@ -173,6 +190,8 @@ function appliquerDef(sp, def, base) {
     sp.grimpe = loco.includes('grimpe') ? Math.max(base.grimpe || 0, .6) : 0;
     sp.orvane.vol = loco.includes('vol');
   }
+  sp.orvane.nage = nageurPur(def.locomotion);                         // (§221) une lignée qui ne vit que dans l'eau : on ne la lie pas,
+  if (sp.orvane.nage) { sp.lien = 0; sp.grimpe = 0; }                 //   elle ne grimpe pas
   const k = def.gabarit ? 1 : clamp(Math.cbrt((def.masse || 1) / (def.masseRef || 1)), .6, 1.7);
   // (une lignée sans ancêtre du jeu : sa taille suit le logarithme de sa masse, de 0,5 pour un insecte de 10 g à 1,6 pour une bête
   // de 100 kg — à la racine cubique, presque tout le monde d'Orvane, qui pèse de 20 g à 5 kg, aurait la taille d'un caillou)
@@ -182,13 +201,40 @@ function appliquerDef(sp, def, base) {
   if (rang) { sp.rarete = rang; sp.dur = r2((base.dur || 1) * (1 + .3 * (rang - 2))); } else { delete sp.rarete; if (base.dur) sp.dur = base.dur; else delete sp.dur; }
   if (def.corps) { const C = def.corps.couleurs; sp.shell = C.robe.slice(); sp.dark = C.sombre.slice(); sp.leg = C.sombre.map(v => v * .8 | 0); sp.oeil = C.oeil.slice(); sp.ventre = C.ventre.slice(); }
   if (def.nocturne) sp.nuit = true;
-  if (def.bio && def.bio.length) sp.bio = def.bio.slice();
+  if (def.machine) machineDef(sp, def, base);                         // (§223) une machine d'Orvane : un automate à la mesure de ses modules
+  if (def.gabarit) sp.bio = (def.bio || []).slice();                  // (§221) une lignée sans ancêtre ne vit que sur les sols où elle a un effectif :
+  else if (def.bio && def.bio.length) sp.bio = def.bio.slice();       //   sans aucun, elle ne paraît pas (elle ne prend plus les sols de sa fiche)
   if (base.biome) {                                                   // un Tellurien : son sol rare, s'il en a un ; sinon, les sols ordinaires
     let rares = []; try { rares = typeof RARES !== 'undefined' ? RARES : []; } catch (e) { }
     const r = (def.bio || []).find(b => rares.some(x => x.b === b));
     if (r) { sp.biome = r; const h = rares.find(x => x.b === r).coul; sp.pierre = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)); } else delete sp.biome;
   }
   return sp;
+}
+// (§223) une machine d'Orvane (Orvane docs/16) devient un automate du jeu : sa fiche (traceur, moissonneur) lui prête sa
+// conduite ; son blindage la rend plus dure, son arme lui donne un tir (le moissonneur n'en a pas), et sans pince ni arme elle
+// ne tire pas. Ce qu'elle chasse et sa posture dépendent de l'île (machineIle)
+function machineDef(sp, def, base) {
+  const M = def.machine.modules || {}, arme = M.arme || 0;
+  sp.orvane.machine = { role: def.machine.role, modules: { ...M } };
+  sp.dur = r2((base.dur || 1) * (1 + (M.blindage || 0)) * (sp.rarete ? 1 + .3 * (sp.rarete - 2) : 1));
+  if (arme >= .15 && !base.tir) sp.tir = { deg: r2(.05 + .12 * arme), portee: r2(6 + 6 * arme), cadence: 1.8, vit: 15, precision: .7 };
+  else if (!((M.pince || 0) > .1) && arme < .15) sp.tir = null; else if (base.tir) sp.tir = { ...base.tir };
+  sp.chasse = []; sp.duel = 0; sp.peur = base.peur || 0; sp.oeil = (base.oeil || [120, 200, 255]).slice();
+}
+// sur une île : la machine chasse les lignées que les machines régulent sur ces sols (à sa taille : Orvane vise des bêtes trois
+// fois plus légères qu'elle, à un facteur 35 près), et prend la posture de sa population là (Orvane : posture) ; ses yeux la disent
+const YEUX = { neutre: [120, 200, 255], defensive: [255, 196, 80], fuyante: [150, 240, 120], hostile: [255, 60, 50] };
+function machineIle(sp, ile) {
+  const I = S.courant, t = taxon(I, sp.orvane.taxon); if (!I || !t) return;
+  const ici = t.populations.filter(p => ile.has(p.biome)).sort((a, b) => effectifIci(I, b) - effectifIci(I, a))[0], posture = ici?.posture || 'neutre';
+  const m = t.plan.masse_kg || 1, chasse = [];
+  if (sp.tir && (t.plan.modules?.pince || 0) > .1) for (const u of I.taxons) { if (u.eteint || u.plan?.regime === 'synthetique' || !specById[u.id]?.orvane) continue;
+    const lg = Math.abs(Math.log10((u.plan.masse_kg || 1) * 3 / m)); if (lg > 1.55) continue;
+    if (u.populations.some(p => ile.has(p.biome) && (p.regulation || 0) >= .02)) chasse.push(u.id); }
+  sp.chasse = chasse; sp.duel = posture === 'hostile' && sp.tir ? 1 : 0;
+  const p0 = especeJeu(sp.orvane.base)?.peur || 0; sp.peur = posture === 'fuyante' ? .95 : posture === 'hostile' ? 0 : posture === 'defensive' ? Math.max(p0, .4) : p0;   // (défensive : elle se tient à distance)
+  sp.oeil = YEUX[posture].slice(); sp.orvane.posture = posture;
 }
 function enregistrer(def) {
   if (typeof SPEC === 'undefined' || typeof specById === 'undefined') return null;
@@ -277,7 +323,8 @@ function appliquerIle() {
   const ORV = X.bestiaire === 'orvane' ? bestiaireOrvane(ile) : null;
   for (const sp of SPEC) {
     if (ORV && ORV.retire(sp)) { sp.cap = 0; delete POIDS_ESPECE[sp.id]; continue; }
-    if (ORV && sp.orvane?.gabarit) { const r = ORV.part(sp) || placeTrophee(sp, ile); if (!r) { sp.cap = 0; delete POIDS_ESPECE[sp.id]; } else { sp.cap = r.cap; POIDS_ESPECE[sp.id] = r.poids; } chasseurLoin(sp); continue; }
+    if (ORV && sp.orvane?.gabarit) { const r = ORV.part(sp) || (sp.orvane.machine ? null : placeTrophee(sp, ile)); if (!r) { sp.cap = 0; delete POIDS_ESPECE[sp.id]; } else { sp.cap = r.cap; POIDS_ESPECE[sp.id] = r.poids; }
+      if (sp.orvane.machine) machineIle(sp, ile); else chasseurLoin(sp); continue; }
     const tid = taxonDe(sp); if (!tid) continue;
     const L = sp.orvane, baseId = L ? L.base : sp.id;
     let ref = L && L.gabarit ? moyen : effectifSur(S.gen0, baseId, ile);
@@ -293,7 +340,7 @@ function appliquerIle() {
 }
 
 // === (§218) l'exploration : des chasseurs garantis, des lignées rares en trophées, le carnet des lignées ===
-const NIV_CHASSEURS = 3, NIV_MEUTES = 8;
+const NIV_CHASSEURS = 3, NIV_MEUTES = 8, NIV_MACHINES = 3;   // (§223) les machines d'Orvane, avec les chasseurs
 const prof = () => { try { return typeof profondeur === 'function' ? profondeur() : 0; } catch (e) { return 0; } };
 const nomRang = r => { try { return typeof RARETES !== 'undefined' ? RARETES[r - 1] : ''; } catch (e) { return ''; } };
 // les lignées que le jeu peut montrer : celles qui vivent sur ses sols (dans le monde d'Orvane, BIOMES_SV[k].u)
@@ -371,6 +418,49 @@ function orvaneVol(b, dt) {
   if (b.z < fl) { b.z = fl; if (b.vz < 0) b.vz = 0; }
   return true;
 }
+// (§221) UNE LIGNÉE QUI NE VIT QUE DANS L'EAU : elle nage, et ne marche, ne court, ne saute, ne rampe, ne fouit, ne grimpe ni ne
+// vole. Le jeu la fait naître dans l'eau qui borde ses sols (la mer au bord du rivage, les lacs et les rivières de la tourbière),
+// et elle n'en sort pas : elle y nage, s'éloigne de qui l'approche, fuit plus vite si on la touche. Morte, elle flotte. Un
+// chasseur du sol ne la poursuit pas. orvaneNage rend true quand sa vie de l'image s'est passée ici (toujours, dans l'eau).
+const TERRESTRES = ['marche', 'course', 'saut', 'reptation', 'fouissage', 'grimpe', 'vol'];
+const nageurPur = loco => (loco || []).includes('nage') && !(loco || []).some(l => TERRESTRES.includes(l));
+function surfaceEau(x, y) {                                           // la hauteur de l'eau en (x, y), ou null sur la terre
+  x |= 0; y |= 0; if (typeof Hgt === 'undefined' || x < 3 || y < 3 || x >= WS - 3 || y >= WS - 3) return null;
+  const i = y * WS + x; if (typeof Eau !== 'undefined' && Eau[i] > Hgt[i]) return Eau[i];
+  return Hgt[i] <= SEA && !(typeof PlT !== 'undefined' && PlT[i]) ? SEA : null;
+}
+function orvanePlaceEau(sp) {                                         // une case d'eau à moins de cinq cases d'un de ses sols
+  const bio = sp.bio || []; if (!bio.length || typeof WS === 'undefined') return null;
+  for (let k = 0; k < 800; k++) {
+    const x = 8 + Math.random() * (WS - 16), y = 8 + Math.random() * (WS - 16), s = surfaceEau(x, y); if (s == null) continue;
+    for (let r = 1; r <= 5; r++) for (let a = 0; a < 8; a++) { const u = (x + Math.cos(a * .7854) * r) | 0, v = (y + Math.sin(a * .7854) * r) | 0;
+      if (hAt(u, v) > SEA && !(Eau[v * WS + u] > Hgt[v * WS + u]) && bio.includes(bAt(u, v))) return [x, y, s - .12]; }
+  }
+  return null;
+}
+function orvaneNage(b, dt) {
+  const sp = b.sp, s = surfaceEau(b.x, b.y);
+  if (b.dead) { b.dead += dt; b.vit = 0; if (s != null) { b.z += ((s - .04) - b.z) * Math.min(1, dt * 3); return true; } return false; }   // morte : elle remonte et flotte
+  if (s == null) return false;                                        // hors de l'eau (l'eau a bougé) : la conduite du sol, le temps d'y revenir
+  b.t += dt; b.age += dt; b.bob += dt * (2 + (b.alarm || 0) * 3);
+  if (b.hit > 0) b.hit -= dt;
+  if (b.alarm > 0) b.alarm = Math.max(0, b.alarm - dt * .25);
+  const J = P, dJ = Math.hypot(J.x - b.x, J.y - b.y), loin = (sp.vue || 8) * .5 * (sp.peur ?? 1);
+  if (b.hit > 0) b.alarm = 1; else if (dJ < loin) b.alarm = Math.max(b.alarm || 0, .7);
+  const fuit = (b.alarm || 0) > .4;
+  if (fuit) b.nCap = Math.atan2(b.y - J.y, b.x - J.x);
+  else if (!(b.nCapT > b.t)) { b.nCap = Math.random() * 6.2832; b.nCapT = b.t + 2 + Math.random() * 5; b.nPause = Math.random() < .3 ? b.t + 1 + Math.random() * 2 : 0; }
+  const vd = fuit ? sp.spd * 1.5 : b.nPause > b.t ? 0 : sp.spd * .45;
+  b.v = (b.v || 0) + (vd - (b.v || 0)) * Math.min(1, dt * 3);
+  let dd = (b.nCap ?? b.dir) - b.dir; while (dd > Math.PI) dd -= 6.2832; while (dd < -Math.PI) dd += 6.2832;
+  b.dir += Math.max(-3 * dt, Math.min(3 * dt, dd));
+  const nx = b.x + Math.cos(b.dir) * b.v * dt, ny = b.y + Math.sin(b.dir) * b.v * dt;
+  if (surfaceEau(nx, ny) != null) { b.x = nx; b.y = ny; }
+  else { b.nCap = b.dir + Math.PI * (.6 + Math.random() * .8); b.nCapT = b.t + 1.5; b.v *= .5; }   // le bord de l'eau : elle tourne
+  const so = surfaceEau(b.x, b.y) ?? s; b.z += ((so - .12 + Math.sin(b.bob) * .03) - b.z) * Math.min(1, dt * 4);
+  b.dirT = b.dir; b.vit = b.v; b.vx = b.vy = 0; b.etat = fuit ? 'fuir' : 'errer'; b.tang = 0; b.enVol = false;
+  return true;
+}
 function orvanePoser(b, etat) {
   b.enVol = false; b.z = sol(b.x, b.y); b.vz = 0; b.v = 0; b.vit = 0; b.bat = 0; b.roll = 0; b.tang = 0; b.etat = etat; b.alarm = Math.min(b.alarm || 0, .4);
   return false;
@@ -387,6 +477,12 @@ function orvaneTirage(e, graine, niv, okR) {
     for (; k < reste.length - 1; k++) if ((r -= POIDS_ESPECE[reste[k].id]) <= 0) break;
     e.add(reste[k].id); reste.splice(k, 1); n++;
   }
+  // (§223) les machines d'Orvane : là où elles ont leur part, une au moins (deux dès NIV_MEUTES), tirée selon son poids
+  if (niv >= NIV_MACHINES) { const M = SPEC.filter(sp => sp.orvane?.machine && sp.cap > 0 && (POIDS_ESPECE[sp.id] || 0) > 0 && !e.has(sp.id));
+    for (let m = [...e].filter(id => specById?.[id]?.orvane?.machine).length; m < (niv >= NIV_MEUTES ? 2 : 1) && M.length; m++) {
+      let r = tir() * M.reduce((x, sp) => x + POIDS_ESPECE[sp.id], 0), k = 0;
+      for (; k < M.length - 1; k++) if ((r -= POIDS_ESPECE[M[k].id]) <= 0) break;
+      e.add(M[k].id); M.splice(k, 1); } }
   // un trophée : dès la quatrième exploration, une île sur cinq en porte un, jusqu'à une sur deux à la vingtième
   const T = SPEC.filter(sp => sp.orvane?.gabarit && sp.rarete >= 3 && sp.cap > 0 && !e.has(sp.id) && (!okR || okR(sp.id)));
   if (T.length && niv >= 4 && ![...e].some(id => specById?.[id]?.rarete >= 3) && tir() < Math.min(.5, .2 + .02 * (niv - 4))) {
@@ -397,6 +493,14 @@ function orvaneTirage(e, graine, niv, okR) {
 // à l'arrivée : l'espèce phare de l'île, la plus rare des lignées tirées, sinon la plus grande
 function orvaneArrivee(e) {
   if (S.profil?.exposition?.bestiaire !== 'orvane' || typeof specById === 'undefined' || typeof say !== 'function') return;
+  // (§221) un monde versé dans celui d'Orvane (une fusion, Orvane docs/14) : annoncé une fois, à l'arrivée sur une île
+  const F = ((S.courant || S.abrege?.courant)?.monde?.fusions || []).filter(f => f && !(S.fusionsVues || []).includes(f.id));
+  if (F.length) { S.fusionsVues = [...(S.fusionsVues || []), ...F.map(f => f.id)]; ecrire();
+    setTimeout(() => { try { for (const f of F) say((f.nom || f.monde) + ' a rejoint le monde d\'Orvane · ' + f.lignees + ' lignées nouvelles, au bord des eaux', 5); } catch (er) { } }, 7000); }
+  // (§223) la Mère éveillée (Orvane docs/16) : annoncée une fois
+  const mere = (S.courant || S.abrege?.courant)?.monde?.mere;
+  if (mere && !S.mereVue) { S.mereVue = mere.depuis ?? 1; ecrire();
+    setTimeout(() => { try { say(mere.nom + ' s\'est éveillée au ' + (mere.biome === 'volcan' ? 'volcan' : mere.biome) + ' · des machines peuplent le monde d\'Orvane', 5); } catch (er) { } }, 9500); }
   const L = [...e].map(id => specById[id]).filter(sp => sp && sp.orvane); if (!L.length) return;
   const m = sp => S.lignees[sp.id]?.masse || 0, ph = L.sort((a, b) => (b.rarete || 0) - (a.rarete || 0) || m(b) - m(a))[0];
   setTimeout(() => { try { say('sur cette île : ' + ph.n.toLowerCase() + (ph.rarete ? ' · ' + nomRang(ph.rarete) : ''), 4); } catch (er) { } }, 2500);
@@ -445,9 +549,14 @@ function bestiaireOrvane(ile) {
     const k = Math.min(2, ref[p.g] > 0 ? maintenant[p.g] / ref[p.g] : 1) * p.e / maintenant[p.g], c = b.cap * k;
     return c >= .3 ? { cap: Math.max(1, Math.round(c)), poids: +(b.poids * k).toFixed(4) } : null;   // trop rare pour se montrer sur l'île
   };
+  // (§223) les machines d'Orvane ont leur part à elles, d'après leur nombre sur ces sols, à partir de NIV_MACHINES : deux pour
+  // cent machines, trois pour mille, cinq pour dix mille, six au plus
+  const nMachines = S.courant.taxons.filter(t => !t.eteint && t.plan?.regime === 'synthetique').reduce((a, t) => a + effectifSur(S.courant, t.id, ile), 0);
+  const capM = prof() >= NIV_MACHINES && nMachines >= 30 ? Math.min(6, Math.max(1, Math.round(1.6 * Math.log10(nMachines / 10)))) : 0;
+  const avecMachines = B => { if (capM) B.synthetique = { cap: capM, poids: +(.12 * capM).toFixed(3) }; return B; };
   // les premières îles ne reçoivent que des Doux : si aucune lignée paisible ne peut s'y montrer, les Doux du jeu restent
-  let budget = budgetDe(false); const douxIci = SPEC.some(sp => sp.orvane?.gabarit && sp.fam === 'doux' && partDe(sp, budget));
-  if (!douxIci) budget = budgetDe(true);
+  let budget = avecMachines(budgetDe(false)); const douxIci = SPEC.some(sp => sp.orvane?.gabarit && sp.fam === 'doux' && partDe(sp, budget));
+  if (!douxIci) budget = avecMachines(budgetDe(true));
   return { retire: sp => !sp.orvane && absente(sp.id) && (douxIci || sp.fam !== 'doux'), part: sp => partDe(sp, budget) };
 }
 
@@ -618,7 +727,7 @@ function noter(action, b, variante, extra) {
   const t = taxon(S.courant, tid); if (!t) return false;
   const biome = biomeDe(b) || t.populations[0]?.biome; if (!biome) return false;
   const ph = action === 'rencontre' ? '' : typeof b.phen === 'string' && t.phenotypes.some(p => p.id === b.phen) ? b.phen : phenotypeDe(t, variante);   // le phénotype tiré à la naissance, sinon d'après la robe
-  const cle = [tid, ph, biome, action, extra?.vers || ''].join('|');
+  const cle = [tid, ph, biome, action, extra?.vers || '', parcelleIle(biome) || ''].join('|');   // (§222) et la parcelle de l'île
   S.lot[cle] = (S.lot[cle] || 0) + 1; if (!S.depuis) S.depuis = new Date().toISOString();
   if (action !== 'rencontre' && b.q) { const A = S.lotQ[cle] ??= { n: 0, s: {} }; A.n++;   // la valeur exacte de la bête (§212)
     for (const [k, z] of Object.entries(b.q)) if (Number.isFinite(z)) A.s[k] = r2((A.s[k] || 0) + z); }
@@ -636,7 +745,7 @@ function releverRencontres() {
   if (n) ecrire();
 }
 function orvaneLot(cles) {
-  const ev = []; for (const cle of cles || Object.keys(S.lot)) { const n = S.lot[cle]; if (!n) continue; const [taxon, phenotype, biome, action, vers] = cle.split('|'); const e = { taxon, biome, action, n }; if (phenotype) e.phenotype = phenotype; if (vers) e.vers = vers;
+  const ev = []; for (const cle of cles || Object.keys(S.lot)) { const n = S.lot[cle]; if (!n) continue; const [taxon, phenotype, biome, action, vers, parcelle] = cle.split('|'); const e = { taxon, biome, action, n }; if (parcelle) e.parcelle = parcelle; if (phenotype) e.phenotype = phenotype; if (vers) e.vers = vers;
     const A = S.lotQ[cle]; if (A && A.n > 0) { e.q = {}; for (const [k, s] of Object.entries(A.s)) e.q[k] = r2(s / A.n); }
     ev.push(e); }
   if (!ev.length) return null;
@@ -676,9 +785,9 @@ const hachage = s => { let h = 5381; for (let i = 0; i < s.length; i++) h = (Mat
 // --- mise en place ---
 racine.orvaneEspeces = orvaneEspeces; racine.orvaneAppliquer = orvaneAppliquer; racine.orvaneVariante = orvaneVariante; racine.orvaneEvenement = orvaneEvenement;
 racine.orvaneTirage = orvaneTirage; racine.orvaneArrivee = orvaneArrivee; racine.orvaneTrophee = orvaneTrophee; racine.orvanePhoto = orvanePhoto;
-racine.orvaneRelire = orvaneRelire; racine.orvaneCarnetLignees = orvaneCarnetLignees; racine.orvaneVol = orvaneVol;
+racine.orvaneRelire = orvaneRelire; racine.orvaneCarnetLignees = orvaneCarnetLignees; racine.orvaneVol = orvaneVol; racine.orvaneNage = orvaneNage; racine.orvanePlaceEau = orvanePlaceEau;
 racine.orvaneLot = orvaneLot; racine.orvaneEnvoyer = orvaneEnvoyer; racine.orvaneNaissance = orvaneNaissance;
-racine.OrvaneSV = { S, repeuplerIle, rangsRarete, ligneesDuJeu, garantirChasseur, conduitesPour, loiQ, tirerQuant, quantMots, apprisDe, apprisFuite, heriter, zoneHybride, hybrider, charger, avancement, effectifSur, biomesIle, releverRencontres, inscrireLignees, definir, enregistrer, especeDeSecours, ancetreJeu, nomJeu, CAUSES_JOUEUR, SEUIL_CORPS };
+racine.OrvaneSV = { S, parcelleIle, effectifIci, repeuplerIle, rangsRarete, ligneesDuJeu, garantirChasseur, conduitesPour, loiQ, tirerQuant, quantMots, apprisDe, apprisFuite, heriter, zoneHybride, hybrider, charger, avancement, effectifSur, biomesIle, releverRencontres, inscrireLignees, definir, enregistrer, especeDeSecours, ancetreJeu, nomJeu, CAUSES_JOUEUR, SEUIL_CORPS };
 lire();
 if (typeof window !== 'undefined' && typeof fetch === 'function') { charger(); setInterval(releverRencontres, PERIODE_RENCONTRE); }
 })(globalThis);

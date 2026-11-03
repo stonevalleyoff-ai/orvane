@@ -65,6 +65,125 @@
           "type": "string",
           "format": "date-time",
           "description": "La naissance du monde (le premier cycle, posé par hebergement/cycle.js). Avec l'id, c'est l'identité d'un monde : un monde refait de zéro garde son id mais change de date — les traducteurs repartent alors de sa nouvelle génération 0."
+        },
+        "regles": {
+          "type": "object",
+          "description": "Les règles du moteur propres à ce monde (REGLES de moteur/orvane.js), choisies par sa genèse : elles valent pour chacun de ses cycles, où qu'il tourne."
+        },
+        "fusions": {
+          "type": "array",
+          "description": "Les fusions qu'a reçues ce monde (moteur/fusion.js, docs/14) : d'un autre monde, des lignées sont arrivées dans certains biomes, au cycle dit. Une fusion n'est appliquée qu'une fois.",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "monde",
+              "cycle",
+              "lignees"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Le nom de la fusion (profil.monde.fusions[].id)."
+              },
+              "monde": {
+                "type": "string",
+                "description": "L'id du monde d'où viennent les lignées."
+              },
+              "nom": {
+                "type": "string"
+              },
+              "cycle": {
+                "type": "integer",
+                "description": "Le cycle de la cible où les lignées sont arrivées."
+              },
+              "part": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "La part des effectifs de la source qui est arrivée."
+              },
+              "biomes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "lignees": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "parcelles": {
+          "type": "object",
+          "description": "Le monde tourne par parcelles (moteur/parcelles.js, docs/15) : chaque biome est découpé en parcelles voisines. L'instantané publié reste par biome ; la liste des parcelles est dans « parcelles », et chaque population dit sa répartition.",
+          "properties": {
+            "par": {
+              "type": [
+                "integer",
+                "object"
+              ],
+              "description": "Le nombre de parcelles par biome (ou par biome : { prairie: 6, … })."
+            },
+            "graine": {
+              "type": "integer"
+            },
+            "nombre": {
+              "type": "integer",
+              "description": "Le nombre de parcelles du monde."
+            },
+            "types": {
+              "type": "array",
+              "description": "(dans l'état interne seulement) les biomes d'avant le découpage."
+            }
+          }
+        },
+        "mere": {
+          "type": "object",
+          "description": "La Mère (docs/16) : d'où vient toute la vie synthétique. Elle ne meurt pas.",
+          "properties": {
+            "nom": {
+              "type": "string"
+            },
+            "biome": {
+              "type": "string",
+              "description": "là où elle est (le biome ; « parcelle » dit la parcelle)"
+            },
+            "parcelle": {
+              "type": "string"
+            },
+            "depuis": {
+              "type": "integer"
+            },
+            "conceptions": {
+              "type": "integer",
+              "description": "les plans qu'elle a conçus"
+            },
+            "courant": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "les plans qu'elle assemble"
+            },
+            "prochaine": {
+              "type": "integer"
+            },
+            "derniere": {
+              "type": "object"
+            },
+            "memoire": {
+              "type": "object",
+              "description": "ce qui tue ses machines, par cause (usure, energie, catastrophe, joueurs) : les morts par machine et par cycle ; debord, masse_debord : ce qui déborde sans régulateur, et sa taille",
+              "additionalProperties": {
+                "type": "number"
+              }
+            }
+          },
+          "additionalProperties": false
         }
       }
     },
@@ -143,8 +262,10 @@
               "aquatique",
               "amphibie",
               "aerien",
-              "souterrain"
-            ]
+              "souterrain",
+              "marin"
+            ],
+            "description": "aquatique : l'eau douce (lac, rivière) ; marin : la mer ; amphibie : les deux bords (côte, marais, mangrove), où vivent nageurs et marcheurs."
           },
           "axes": {
             "type": "object",
@@ -231,6 +352,43 @@
           "catastrophes": {
             "type": "boolean",
             "description": "false : ce biome est à l’abri des catastrophes (incendie, crue, sécheresse)."
+          },
+          "type": {
+            "type": "string",
+            "description": "(état interne d'un monde à parcelles, docs/15) le biome dont cette parcelle est une part ; l'instantané publié ne donne que les biomes."
+          },
+          "ressources": {
+            "type": "object",
+            "description": "Ce que le lieu offre aux machines (docs/16), une fois la Mère éveillée.",
+            "properties": {
+              "surface": {
+                "type": "number",
+                "description": "ce qu'il y a à capter (une part de l'étendue du biome)"
+              },
+              "geothermie": {
+                "type": "number",
+                "description": "la chaleur de la terre (le volcan, les abysses, la grotte)"
+              },
+              "lumiere": {
+                "type": "number",
+                "description": "la lumière de ce cycle (saison, durée du jour, moins ce que le couvert cache)"
+              },
+              "chaleur": {
+                "type": "number",
+                "description": "la chaleur de ce cycle (la terre et l'air)"
+              },
+              "minerai": {
+                "type": "number"
+              },
+              "minerai_max": {
+                "type": "number"
+              },
+              "ferraille": {
+                "type": "number",
+                "description": "ce qu'ont laissé les machines mortes ; elle rouille"
+              }
+            },
+            "additionalProperties": false
           }
         }
       }
@@ -559,6 +717,33 @@
             ],
             "description": "Taxon dont celui-ci s'est séparé (lignée)."
           },
+          "origine": {
+            "type": "object",
+            "description": "Une lignée arrivée d'un autre monde par une fusion (docs/14) : son monde, son identifiant et son cycle d'apparition là-bas. Elle n'a aucun ancêtre dans ce monde-ci, et ne s'hybride avec aucune de ses lignées.",
+            "additionalProperties": false,
+            "required": [
+              "monde",
+              "fusion"
+            ],
+            "properties": {
+              "monde": {
+                "type": "string"
+              },
+              "nom": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string",
+                "description": "Son identifiant dans son monde d'origine (il change si le nom y était déjà pris)."
+              },
+              "apparu": {
+                "type": "integer"
+              },
+              "fusion": {
+                "type": "string"
+              }
+            }
+          },
           "apparu": {
             "type": "integer",
             "description": "Cycle d'apparition."
@@ -619,14 +804,24 @@
                   ]
                 }
               },
+              "eau": {
+                "enum": [
+                  "douce",
+                  "salee",
+                  "mixte"
+                ],
+                "description": "Pour un nageur : l'eau où il vit. douce (ou absent) : lacs, rivières ; salee : la mer ; mixte : les deux, comme les poissons qui remontent les fleuves. Un biome amphibie accueille tous les nageurs."
+              },
               "regime": {
                 "enum": [
                   "herbivore",
                   "carnivore",
                   "omnivore",
                   "detritivore",
-                  "filtreur"
-                ]
+                  "filtreur",
+                  "synthetique"
+                ],
+                "description": "« synthetique » : une machine (docs/16), qui ne mange pas et ne se mange pas."
               },
               "longevite": {
                 "type": "number",
@@ -856,6 +1051,24 @@
                   }
                 },
                 "additionalProperties": false
+              },
+              "modules": {
+                "type": "object",
+                "description": "Une machine (regime « synthetique », docs/16) : le niveau de chacun de ses modules, de 0 à 1. panneau, thermique : ce qu'elle capte de la lumière, de la chaleur ; batterie : ce qui la tient sans énergie ; foreuse, recycleur : sa matière, du minerai, de la ferraille ; pince : ce qu'elle prélève des espèces qui débordent ; blindage : ce qui la protège et la fait se réparer ; arme : ce qui la fait riposter ; discretion : ce qui la fait passer inaperçue.",
+                "additionalProperties": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "role": {
+                "enum": [
+                  "regulateur",
+                  "foreuse",
+                  "recycleur",
+                  "capteur"
+                ],
+                "description": "Une machine (docs/16) : ce qu'elle fait d'abord, d'après ses modules."
               }
             }
           },
@@ -1000,6 +1213,33 @@
                   "minimum": 0,
                   "maximum": 1,
                   "description": "L'habituation, nourrie des rencontres sans suite et de l'aide (nourrissage, libération), défaite par ce qui finit mal, retombe de moitié en 15 cycles. Absente : 0."
+                },
+                "parcelles": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "number"
+                  },
+                  "description": "(monde à parcelles, docs/15) l'effectif de la population dans chacune des parcelles de son biome."
+                },
+                "energie": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Une machine (docs/16) : ce qu'elle capte rapporté à ce qu'elle dépense ce cycle ; sous 1, elle est en veille et ne s'assemble plus."
+                },
+                "posture": {
+                  "enum": [
+                    "neutre",
+                    "defensive",
+                    "fuyante",
+                    "hostile"
+                  ],
+                  "description": "Une machine (docs/16) : ce qu'elle fait face aux joueurs, d'après sa méfiance (docs/12) et son arme. neutre : elle les ignore ; defensive : elle se tient à distance et riposte si on l'attaque ; fuyante : méfiante et sans arme, elle fuit ; hostile : méfiante et armée, elle attaque."
+                },
+                "regulation": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "La part des morts de la population dues aux machines régulatrices (docs/16)."
                 }
               }
             }
@@ -1081,7 +1321,10 @@
               "remission",
               "catastrophe",
               "hybridation",
-              "mefiance"
+              "mefiance",
+              "eveil",
+              "conception",
+              "transfert"
             ]
           },
           "taxon": {
@@ -1121,6 +1364,39 @@
             "required": [
               "id"
             ]
+          }
+        }
+      }
+    },
+    "parcelles": {
+      "type": "array",
+      "description": "Les parcelles du monde (docs/15), s'il en a : leur biome (type), leur capacité, leurs voisines. Les populations des taxons sont données par biome, avec leur répartition par parcelle.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "type"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "description": "Le biome dont la parcelle est une part."
+          },
+          "nom": {
+            "type": "string"
+          },
+          "capacite": {
+            "type": "number"
+          },
+          "voisins": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       }

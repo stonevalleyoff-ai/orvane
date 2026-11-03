@@ -8,6 +8,10 @@
     "rodage": 100,
     "annee": 120,
     "historique": 20,
+    "parcelles": { "par": 4 },
+    "fusions": [
+      { "id": "mer-1", "source": "mondes/marin/amorce.json", "part": 0.5 }
+    ],
     "pressions": {
       "url": "https://rospodujiyltmxitykwc.supabase.co",
       "cle": "sb_publishable_F98uYIaPrLTjhj3n7QiBOg_SOtFynn8",
