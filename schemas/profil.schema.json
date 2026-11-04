@@ -71,6 +71,7 @@
               "source": { "type": "string", "description": "Le monde qui arrive : un instantané ou une amorce, chemin depuis la racine du dépôt (ex. mondes/marin/amorce.json)." },
               "biomes": { "type": "array", "items": { "type": "string" }, "description": "Les biomes où ses lignées arrivent (par défaut, tous ceux que les deux mondes partagent)." },
               "part": { "type": "number", "minimum": 0, "maximum": 1, "description": "La part de ses effectifs qui arrive (0,5 par défaut ; 1 pour une fusion par ponts)." },
+              "nom": { "type": "string", "description": "(docs/23) Le nom du continent, dans les noms de ses parcelles et au journal (celui de la source, sinon)." },
               "ponts": { "type": ["integer", "array"], "items": { "type": "array", "items": { "type": "string" }, "minItems": 2, "maxItems": 2 }, "description": "(docs/23) Une fusion par ponts : la source devient un continent du monde, relié par autant de ponts (un nombre), ou par ceux-là ([[biome de la source, biome de la cible], …])." }
             }
           }

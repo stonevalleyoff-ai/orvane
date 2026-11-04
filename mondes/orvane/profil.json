@@ -14,7 +14,8 @@
     "milieu": true,
     "pathogenes": true,
     "fusions": [
-      { "id": "mer-1", "source": "mondes/marin/amorce.json", "part": 0.5 }
+      { "id": "mer-1", "source": "mondes/marin/amorce.json", "part": 0.5 },
+      { "id": "genese-7", "nom": "la genèse 7", "source": "mondes/genese-7/instantane.json", "ponts": 3 }
     ],
     "pressions": {
       "url": "https://rospodujiyltmxitykwc.supabase.co",

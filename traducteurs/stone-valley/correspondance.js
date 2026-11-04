@@ -117,7 +117,10 @@ function corpsDe(s) {
 const GABARITS = { herbivore: 'brouteur', omnivore: 'glaneur', carnivore: 'traqueur', filtreur: 'glaneur', detritivore: 'glaneur' };
 // (§217) un herbivore paisible (tempérament sous 0,4) se conduit comme un Doux, le cotonnier : c'est d'eux que sont faites
 // les premières îles, et le jeu n'y met que des Doux
-const gabaritDe = plan => plan?.regime === 'herbivore' && (plan.temperament ?? .5) < .4 ? 'cotonnier' : GABARITS[plan?.regime] || 'glaneur';
+// (§223) une machine d'Orvane (docs/16) se conduit comme un automate du jeu : un régulateur comme le traceur (il abat le gibier de
+// loin), les autres comme le moissonneur (paisible, il fuit)
+const gabaritDe = plan => plan?.regime === 'synthetique' ? (plan.role === 'regulateur' ? 'traceur' : 'moissonneur')
+  : plan?.regime === 'herbivore' && (plan.temperament ?? .5) < .4 ? 'cotonnier' : GABARITS[plan?.regime] || 'glaneur';
 // la faune du jeu qu'Orvane simule (sa génération 0) et son régime. Dans un monde dont le bestiaire est celui d'Orvane
 // (profil.exposition.bestiaire = 'orvane', un monde né de la genèse), ces trente espèces cèdent leur place aux lignées
 // du monde, régime par régime ; les automates, les boss, les villageois ne changent pas.
@@ -126,7 +129,7 @@ const FAUNE = { brouteur: 'herbivore', bosseu: 'herbivore', glaneur: 'omnivore',
   salamandre: 'omnivore', lentigrade: 'herbivore', cotonnier: 'herbivore', carillonneur: 'herbivore', oglodon: 'herbivore', felin: 'carnivore', bramard: 'herbivore',
   sterne: 'omnivore', dragon: 'carnivore', sika: 'herbivore', renard: 'herbivore', lentisakura: 'herbivore', trottin_menu: 'herbivore', trottin_echasse: 'herbivore',
   trottin_pataud: 'herbivore', trottin_bondeur: 'herbivore', trottin_huppe: 'herbivore' };
-const GROUPE = { herbivore: 'herbivore', carnivore: 'carnivore', omnivore: 'omnivore', filtreur: 'omnivore', detritivore: 'omnivore' };   // les trois parts d'une île
+const GROUPE = { herbivore: 'herbivore', carnivore: 'carnivore', omnivore: 'omnivore', filtreur: 'omnivore', detritivore: 'omnivore', synthetique: 'synthetique' };   // les trois parts d'une île (et les machines, à part : §223)
 
 // --- les conduites (§211) : le vocabulaire d'Orvane (catalogue, conduite.type) → ce que Stone Valley sait jouer (conduites.js) ---
 //     Un trait nouveau dans Orvane, d'un type déjà connu ici, agit dans le jeu sans rien changer : c'est le TYPE qui compte.

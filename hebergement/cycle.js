@@ -127,7 +127,7 @@ const alleger = I => ({ cycle: I.cycle, taxons: I.taxons.map(t => ({ id: t.id, n
     if (!fs.existsSync(src)) { console.log(`::warning title=${monde} · fusion ${ordre.id}::la source ${ordre.source} est introuvable : la fusion attend.`); continue; }
     const S = JSON.parse(fs.readFileSync(src, 'utf8'));
     if (ordre.ponts != null) {   // (docs/23) la fusion par ponts : la source devient un continent, relié par quelques ponts
-      const r = Fusion.relier(etat, S, { id: ordre.id, ponts: ordre.ponts, part: ordre.part, par: profil.monde?.parcelles?.par });
+      const r = Fusion.relier(etat, S, { id: ordre.id, nom: ordre.nom, ponts: ordre.ponts, part: ordre.part, par: profil.monde?.parcelles?.par });
       etat = r.inst; arrivees = [...arrivees, ...r.evenements];
       console.log(`fusion ${r.bilan.id} : le continent de ${r.bilan.monde} (${r.bilan.parcelles} parcelles, ${r.bilan.lignees} lignées) relié par ${r.bilan.ponts.length} ponts : ${r.bilan.ponts.map(x => x.join(' ↔ ')).join(', ')}`);
       continue;

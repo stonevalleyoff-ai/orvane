@@ -99,7 +99,7 @@ function fusionner(cible, source, opt = {}) {
 //   opt.ponts : combien de ponts (3 par défaut), ou lesquels : [[biome de la source, biome de la cible], …] ;
 //   opt.part  : la part des effectifs de la source qui vient (1 par défaut : tout le continent) ;
 //   opt.par   : en combien de parcelles découper un monde qui ne l'est pas encore (celui de la cible, sinon 4) ;
-//   opt.id    : le nom de cette fusion ; une fusion déjà faite n'est pas refaite.
+//   opt.id    : le nom de cette fusion ; une fusion déjà faite n'est pas refaite ; opt.nom : le nom du continent (celui de la source, sinon).
 // Une parcelle de la source garde son type : la prairie de la source est une part de la prairie du monde (l'instantané publié
 // les additionne), un biome que la cible n'a pas devient un biome de plus. Les machines de la source restent chez elle (la Mère
 // est unique) ; ses plantes sont refaites à l'arrivée si la cible a une flore (docs/17), et son milieu prend sa base si la
@@ -109,7 +109,7 @@ function relier(cible, source, opt = {}) {
   const id = opt.id || source.monde?.id || 'source', part = Number.isFinite(opt.part) ? Math.max(0, Math.min(1, opt.part)) : 1;
   if ((cible.monde?.fusions || []).some(f => f.id === id)) return { inst: cible, bilan: { id, deja: true, lignees: 0 }, evenements: [] };
   let inst = clone(cible); if (!P.estParcellaire(inst)) inst = P.decouper(inst, { par: opt.par ?? 4 });
-  const n = inst.cycle?.n ?? 0, par = inst.monde.parcelles.par, monde = source.monde || {}, tag = sansAccent(id).replace(/[^a-z0-9]+/g, '-');
+  const n = inst.cycle?.n ?? 0, par = inst.monde.parcelles.par, monde = { ...(source.monde || {}), ...(opt.nom ? { nom: opt.nom } : {}) }, tag = sansAccent(id).replace(/[^a-z0-9]+/g, '-');
   // 1. le continent : la source découpée comme la cible, ses parcelles renommées (prairie~2 → prairie~<fusion>-2)
   let S = clone(source); S.taxons = S.taxons.filter(t => t.eteint == null && t.plan?.regime !== 'synthetique' && t.plan?.regime !== 'vegetal');
   if (!P.estParcellaire(S)) S = P.decouper(S, { par: typeof par === 'number' ? par : 4, graine: monde.graine ?? 1 });

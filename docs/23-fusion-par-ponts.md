@@ -24,10 +24,10 @@ Un pont est un passage comme ceux qui relient deux parcelles voisines. Les bête
 ## La commande : le profil du monde
 
 ```json
-"monde": { …, "fusions": [ { "id": "genese-7", "source": "mondes/genese-7/instantane.json", "ponts": 3 } ] }
+"monde": { …, "fusions": [ { "id": "genese-7", "nom": "la genèse 7", "source": "mondes/genese-7/instantane.json", "ponts": 3 } ] }
 ```
 
-Au cycle de nuit suivant, le continent rejoint le monde, une seule fois. Le journal porte une `apparition` par lignée arrivée, et `monde.fusions` garde la fusion, avec `mode: "ponts"` et ses ponts. Sans `ponts`, la fusion se fait biome par biome, comme avant (docs/14).
+Au cycle de nuit suivant, le continent rejoint le monde, une seule fois. Le journal porte une `apparition` par lignée arrivée, et `monde.fusions` garde la fusion, avec `mode: "ponts"` et ses ponts. `nom` (facultatif) nomme le continent dans les noms de ses parcelles et au journal. Sans `ponts`, la fusion se fait biome par biome, comme avant (docs/14). Le monde d'Orvane reçoit ainsi la genèse 7 (4 novembre).
 
 ## Ce que le monde en fait
 
