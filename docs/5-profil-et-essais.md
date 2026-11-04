@@ -27,7 +27,7 @@ Dans les deux cas, le bestiaire d'un jeu n'est pas un équilibre écologique : t
     "memoire_cycles": 5 } }
 ```
 
-**Le monde.** `cycle` : la durée réelle d'un cycle (24h) ; `annee` : la durée de l'année en cycles (120 : quatre saisons de trente jours) — 0 pour un monde sans saison ; `rodage` : voir ci-dessus ; `historique` : combien de cycles garder dans `historique.json` (365 par défaut) ; `nocturne: false` : le cycle nocturne passe ce monde.
+**Le monde.** `cycle` : la durée réelle d'un cycle (24h ; de dix minutes à une semaine, docs/19) ; `heure` : l'heure de cycle, en UTC (03:00) ; `milieu: true` : le milieu transformé par les bêtes et les joueurs (docs/22) ; `catalogue` : le catalogue propre du monde, ses axes, ses traits, ses organes, ses formes de corps (docs/20) ; `rattrapage` : combien de cycles dus il rattrape d'un coup (3) ; `annee` : la durée de l'année en cycles (120 : quatre saisons de trente jours) — 0 pour un monde sans saison ; `rodage` : voir ci-dessus ; `historique` : combien de cycles garder dans `historique.json` (365 par défaut) ; `nocturne: false` : le cycle nocturne passe ce monde.
 
 **Exposition (Orvane → jeu).**
 - `mode` : `compression` (par défaut) ou `relatif`. En mode relatif, `taux_jeu` donne, par trait rendu, la chance qu'avait une naissance de le porter avant Orvane ; le jeu garde ces taux à la génération 0 et ne suit que l'écart du monde depuis elle, sur la cote (`cote jeu = cote taux_jeu × cote aujourd'hui / cote génération 0`). Une combinaison absente de la génération 0 garde le taux du jeu jusqu'à ce qu'Orvane l'installe au-delà de `reference_min`. C'est le mode qui garantit qu'un jeu existant ne change pas le jour où il se branche — Stone Valley l'utilise.

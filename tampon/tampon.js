@@ -151,6 +151,21 @@ function regimeDe(t, cat) {
   const c = {}; for (const p of t?.phenotypes || []) for (const id of p.traits || []) c[id] = (c[id] || 0) + (p.frequence || 0);
   let r = t?.plan?.regime; for (const [id, f] of Object.entries(c)) if (f >= .5 && cat?.[id]?.fixe?.regime) r = cat[id].fixe.regime; return r;
 }
+// La famille d'une lignée : animale, synthétique (une machine, docs/16) ou végétale (une plante, docs/17). Un jeu dit les familles
+// qu'il sait jouer (exposition.familles, ou lot.familles dans ses lots ; animale seule par défaut) : il ne reçoit pas les autres
+// (filtrer), et le tampon ne lit pas ses événements sur elles. Une nouveauté du monde n'arrive ainsi chez un jeu que s'il la demande.
+const FAMILLES = ['animale', 'synthetique', 'vegetale'];
+const familleDe = t => t?.plan?.regime === 'synthetique' ? 'synthetique' : t?.plan?.regime === 'vegetal' ? 'vegetale' : t?.plan?.famille || 'animale';
+const famillesDe = X => Array.isArray(X?.familles) && X.familles.length ? X.familles : ['animale'];
+// la vue d'un jeu : l'instantané sans les lignées des familles qu'il ne joue pas (ni, s'il en donne la liste, des biomes où il ne va
+// pas) ; les événements qui les concernent tombent aussi. opt : { familles, biomes } (son exposition, ou ce que son traducteur sait jouer)
+function filtrer(inst, opt = {}) {
+  if (!inst?.taxons) return inst;
+  const F = new Set(famillesDe(opt)), B = Array.isArray(opt.biomes) && opt.biomes.length ? new Set(opt.biomes) : null;
+  const garde = t => F.has(familleDe(t)), dans = p => !B || B.has(p.biome);
+  const taxons = inst.taxons.filter(garde).map(t => B ? { ...t, populations: t.populations.filter(dans) } : t), ids = new Set(taxons.map(t => t.id));
+  return { ...inst, taxons, evenements: (inst.evenements || []).filter(e => e.type === 'eveil' || !e.taxon || ids.has(e.taxon) || inst.biomes?.some(b => b.id === e.taxon)) };   // (un éveil, de la Mère ou de la flore, regarde tout le monde)
+}
 // Chaque jeu montre le monde à sa façon : le tampon lit ses lots avec SON exposition (orvane_regler_jeu, hebergement/LISEZ-MOI.md). Un lot
 // sans jeu connu prend celle du profil du monde, sinon l'exposition neutre : tout est montré tel quel, rien n'est redressé.
 const NEUTRE = { mode: 'compression', compression: { defaut: 1 }, propagation_cycles: 1 };
@@ -159,6 +174,7 @@ function vueJeu(profil, jeux, jeu) {
   return { ...profil, exposition: E.mode === 'relatif' || E.compression ? E : { ...E, compression: NEUTRE.compression } };
 }
 // jeu → Orvane (gen0 : la génération 0 du monde, pour le mode relatif ; jeux : l'exposition de chaque jeu)
+const MILIEU = { defrichage: ['couvert', -1], reboisement: ['couvert', 1], assechement: ['humidite', -1], irrigation: ['humidite', 1], construction: ['couvert', -1] };   // (docs/22)
 function agreger(lots, inst, profil, etat = {}, gen0 = null, jeux = null) {
   const I = profil.influence, poids = I.poids || {}, cat = inst.catalogue?.traits || {};
   const taxons = Object.fromEntries(inst.taxons.map(t => [t.id, t]));
@@ -170,10 +186,19 @@ function agreger(lots, inst, profil, etat = {}, gen0 = null, jeux = null) {
   for (const lot of lots) {
     if (lot.monde !== inst.monde.id || lot.source?.compte == null) continue;
     const C = parCompte[lot.source.compte] ??= {}; jeuDe[lot.source.compte] ??= lot.jeu ?? lot.source.jeu ?? null;
+    // les familles que ce jeu joue : son exposition, et ce que dit le lot (lot.familles) ; animale seule sinon
+    const fams = new Set([...famillesDe((vues[jeuDe[lot.source.compte]] ??= vueJeu(profil, jeux, jeuDe[lot.source.compte])).exposition), ...(Array.isArray(lot.familles) ? lot.familles : [])]);
     for (const e of lot.evenements) {
       nombre++;
       if (e.action === 'habitat_perdu' || e.action === 'habitat_gagne') { (biomes[e.biome] ??= { habitat: 0 }).habitat += e.n * (poids[e.action] ?? (e.action === 'habitat_perdu' ? 5 : -5)) * -1; continue; }
+      // (docs/22) ce que le jeu fait au milieu : défricher, reboiser, assécher, irriguer, construire (qui retire aussi de l'habitat),
+      // ou transformer un axe quelconque (transformation : axe, sens) ; le moteur le lit dans un monde au milieu éveillé
+      const AM = MILIEU[e.action] || (e.action === 'transformation' && e.axe && Math.sign(e.sens || 0) ? [e.axe, Math.sign(e.sens)] : null);
+      if (AM) { const B = biomes[e.biome] ??= { habitat: 0 }; (B.milieu ??= {})[AM[0]] = (B.milieu[AM[0]] || 0) + AM[1] * e.n;
+        if (e.action === 'construction') B.habitat -= e.n * (poids.habitat_perdu ?? 5); continue; }
+      if (e.action === 'transformation') continue;
       if (!taxons[e.taxon]) continue;
+      if (!fams.has(familleDe(taxons[e.taxon]))) continue;   // une famille que ce jeu ne joue pas (filtrer)
       const T = (C[e.taxon] ??= {})[e.biome] ??= { retrait: {}, brut: {}, deplacement: [], rencontres: 0, danger: 0, aide: 0 };
       if (e.action === 'rencontre') { T.rencontres += e.n; continue; }
       // ce que les bêtes vivent des joueurs (docs/12) : une mort ou une capture finit mal (la capture moitié moins : la bête
@@ -256,6 +281,6 @@ function agreger(lots, inst, profil, etat = {}, gen0 = null, jeux = null) {
   return { pressions: { taxons: out, biomes, nombre }, etat: { lisse, lisseQ } };
 }
 
-const API = { regimeDe, vueJeu, NEUTRE, exposer, exposerRelatif, partsRelatif, nonRendus, referenceDe, signature, quantDe, sachantMere, exprimer, agreger, compression };
+const API = { regimeDe, vueJeu, NEUTRE, FAMILLES, familleDe, famillesDe, filtrer, exposer, exposerRelatif, partsRelatif, nonRendus, referenceDe, signature, quantDe, sachantMere, exprimer, agreger, compression };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else racine.OrvaneTampon = API;
 })(globalThis);

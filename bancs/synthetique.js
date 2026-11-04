@@ -16,7 +16,7 @@
 'use strict';
 const fs = require('fs'), path = require('path'), crypto = require('crypto'), vm = require('vm'), { execFileSync } = require('child_process');
 const racine = p => path.join(__dirname, '..', p);
-const Orvane = require(racine('moteur/orvane.js')), Parcelles = require(racine('moteur/parcelles.js')), Syn = require(racine('moteur/synthetique.js'));
+const Orvane = require(racine('moteur/orvane.js')), Parcelles = require(racine('moteur/parcelles.js')), Syn = require(racine('moteur/synthetique.js')), Tampon = require(racine('tampon/tampon.js'));
 const a = process.argv.slice(2), court = a.includes('--court');
 const AVANT = court ? 60 : 80, APRES = court ? 30 : 40, GUERRE = court ? 30 : 40, PAIX = court ? 30 : 40;
 const lireJ = f => JSON.parse(fs.readFileSync(racine(f), 'utf8'));
@@ -134,6 +134,13 @@ console.log(`7. Le contrat`);
   P = tourner(P, court ? 8 : 15); const V = Parcelles.regrouper(P), ev = val(S, V, '$');
   verif(m.biome.startsWith('volcan~') && V.monde.mere.biome === 'volcan' && V.monde.mere.parcelle === m.biome && V.biomes.every(b => b.ressources && b.ressources.surface > 0) && !ev.length,
     `dans un monde à parcelles, la Mère s'éveille dans une parcelle du volcan (${m.biome}) ; la vue par biome dit son biome et additionne les ressources` + (ev.length ? ' : ' + ev.slice(0, 3).join(' ; ') : ''));
+  // les familles : un jeu qui ne joue que les bêtes ne reçoit pas les machines, et ce qu'il en renverrait ne compte pas
+  const F = Tampon.filtrer(W, { familles: ['animale'] }), M = syn(W)[0], B0 = betes(W)[0], prof = lireJ('mondes/orvane/profil.json');
+  const lot = fam => ({ monde: W.monde.id, source: { jeu: 'essai', compte: 'c1' }, ...(fam ? { familles: fam } : {}), evenements: [
+    { taxon: M.id, biome: M.populations[0].biome, action: 'prelevement', n: 5 }, { taxon: B0.id, biome: B0.populations[0].biome, action: 'prelevement', n: 5 }] });
+  const vus = L => Object.keys(Tampon.agreger([L], W, prof).pressions.taxons || {});
+  verif(!syn(F).length && betes(F).length === betes(W).length && !vus(lot(null)).includes(M.id) && vus(lot(null)).includes(B0.id) && vus(lot(['animale', 'synthetique'])).includes(M.id),
+    `les familles : un jeu qui ne joue que les bêtes ne reçoit aucune des ${syn(W).length} lignées de machines (Tampon.filtrer), et ses prélèvements sur elles ne comptent pas ; un lot qui dit « synthetique » les fait compter`);
   // le cycle de nuit : un monde d'essai dont le profil demande la vie synthétique
   const dossier = racine('mondes/essai-synthetique'); fs.rmSync(dossier, { recursive: true, force: true }); fs.mkdirSync(dossier, { recursive: true });
   try {

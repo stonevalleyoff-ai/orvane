@@ -130,10 +130,12 @@ const sp = id => SPEC.find(s => s.id === id);
   ctx.orvaneEvenement('prelevement', b(null), 'compagne'); ctx.orvaneEvenement('capture', b('geant-cornes', 'brouteur'));
   ctx.orvaneEvenement('prelevement', { sp: L2, variante: null, x: 1, y: 1 }, 'flèche');
   ctx.beasts = [b(null), b('dore'), { sp: sp('brouteur'), x: 40, y: 40, tame: false, dead: 0 }, { sp: sp('traceur'), x: 1, y: 1 }]; ctx.OrvaneSV.releverRencontres(); ctx.OrvaneSV.releverRencontres();
+  ctx.orvaneLieu('defrichage', 1, 1); ctx.orvaneLieu('defrichage', 2, 1);   // (§226) deux pieds abattus pour de bon
   const lot = ctx.orvaneLot(); console.log('  lot :', lot.evenements.map(e => `${e.taxon}:${e.action}${e.phenotype ? '/' + e.phenotype : ''}×${e.n}`).join(' '));
   verif(lot.evenements.find(e => e.taxon === 'crapaud' && e.action === 'prelevement' && e.phenotype === 'base')?.n === 15, '15 prélèvements de base : 14 au joueur, 1 à sa compagne ; ni la faim ni la proie d\'un chasseur');
   verif(lot.evenements.find(e => e.action === 'prelevement' && e.phenotype === 'albinisme')?.n === 1 && lot.evenements.find(e => e.action === 'capture' && e.phenotype === 'gigantisme')?.n === 1, 'variantes reconnues : albinos → albinisme, geant-cornes → gigantisme');
   verif(lot.evenements.find(e => e.taxon === 'brouteur.tourbiere')?.n === 1, 'un prélèvement sur une lignée va à la lignée');
+  verif(lot.evenements.some(e => e.action === 'defrichage' && e.n === 2 && !e.taxon && e.biome), 'deux pieds abattus pour de bon : un défrichage de 2, dans le biome de la case, sans lignée (Orvane, docs/22)');
   verif(lot.evenements.find(e => e.action === 'rencontre')?.n === 2, '2 rencontres (le lointain et l\'automate exclus, pas de double compte)');
   const S = lireJ(racine('schemas/pression.schema.json'));
   const val = (s, v, p) => { const t = Array.isArray(s.type) ? s.type : [s.type], ty = v === null ? 'null' : Array.isArray(v) ? 'array' : typeof v;

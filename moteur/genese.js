@@ -6,6 +6,7 @@
 //   node moteur/genese.js <biomes.json | mondes/<id>> [--cycles 3000] [--graine 7] [--lignees 100] [--nom "Monde"] [--sortie genese.json]
 //                         [--point 200] [--reprise genese.json.reprise.json]   (par tranches : un point de reprise tous les N cycles)
 //                         [--milieux marin,aquatique,amphibie] [--ancetres ancetres.json]   (un monde d'une partie des biomes, d'autres ancêtres)
+//                         [--catalogue catalogue.json]   (le catalogue propre du monde : ses axes, ses traits, ses organes, ses formes, docs/20)
 // lignees : le nombre de lignées vivantes au-delà duquel plus rien ne se sépare — la place se gagne alors par extinction.
 // biomes.json : un tableau de biomes au format de l'instantané (ou un monde existant : on reprend ses biomes, vides).
 'use strict';
@@ -21,8 +22,10 @@ biomes = (Array.isArray(lu) ? lu : lu.biomes).map(b => ({ id: b.id, nom: b.nom, 
 // --milieux : seuls les biomes de ces milieux (un monde marin, un monde souterrain…) ; leurs voisins hors du monde sont oubliés
 if (arg('--milieux', null)) { const M = new Set(arg('--milieux').split(',').map(x => x.trim())); biomes = biomes.filter(b => M.has(b.milieu));
   const ids = new Set(biomes.map(b => b.id)); for (const b of biomes) b.voisins = b.voisins.filter(v => ids.has(v)); if (!biomes.length) throw new Error('--milieux : aucun biome'); }
-const AX = ['temperature', 'humidite', 'altitude', 'lumiere', 'couvert'];
-const centre = liste => { const c = {}; for (const k of AX) c[k] = +(liste.reduce((s, b) => s + b.axes[k], 0) / liste.length).toFixed(2); return c; };
+// (docs/20) le catalogue propre du monde : ses axes comptent dans la niche des ancêtres, ses traits peuvent apparaître
+const catMonde = arg('--catalogue', null) ? JSON.parse(fs.readFileSync(arg('--catalogue'), 'utf8')) : null, TR = { ...(catMonde?.traits || {}), ...CAT.TRAITS };
+const AX = ['temperature', 'humidite', 'altitude', 'lumiere', 'couvert', ...Object.keys(catMonde?.axes || {})];
+const centre = liste => { const c = {}; for (const k of AX) c[k] = +(liste.reduce((s, b) => s + (b.axes[k] ?? .5), 0) / liste.length).toFixed(2); return c; };
 
 // --- les ancêtres : sur terre, un petit et un grand brouteur, un insecte, un fouisseur, un oiseau, un rôdeur, un serpent ;
 // en eau douce, un filtreur, un brouteur des berges, un chasseur ; en mer, un filtreur, un brouteur des récifs, un
@@ -93,7 +96,7 @@ for (const [g, liste] of Object.entries(groupes)) { if (!liste.length) continue;
   }
 }
 let inst = { orvane: '0.1', monde: { id: 'genese', graine, nom, annee: lu.monde?.annee || 120 }, cycle: { n: 0, date: new Date().toISOString(), pressions_recues: 0 },
-  biomes, catalogue: { version: '0.1', traits: {} }, taxons, evenements: [] };
+  biomes, catalogue: { version: '0.1', traits: {}, ...(catMonde ? { monde: catMonde } : {}) }, taxons, evenements: [] };
 
 // --- l'évolution accélérée ---
 const R0 = JSON.parse(JSON.stringify(Orvane.REGLES));
@@ -109,7 +112,7 @@ const rarete = +arg('--rarete', .0005);   // une lignée installée qui reste so
 // (la rareté se juge à l'étage de la chaîne : un prédateur ne pèse naturellement qu'un dixième de ses proies — Lindeman)
 const ETAGE = { carnivore: +arg('--etage', 10), omnivore: 2 };
 const biomasseDe = t => t.populations.reduce((s, p) => s + p.effectif, 0) * (t.plan.masse_kg || 1);
-const poidsRarete = t => biomasseDe(t) * (ETAGE[Tampon.regimeDe(t, CAT.TRAITS)] || 1);
+const poidsRarete = t => biomasseDe(t) * (ETAGE[Tampon.regimeDe(t, TR)] || 1);
 let bilan = { separation: 0, extinction: 0, nouveau_trait: 0 }, vivantsMax = 0, k0 = 0;
 const TRACE = process.env.ORVANE_TRACE ? { nes: {}, fin: {}, rarete: {}, vus: new Set(), morts: new Set() } : null;   // (essais : qui naît, qui meurt, par régime de fait)
 // une genèse longue tourne par tranches : un point de reprise tous les --point cycles (sortie.reprise.json) ; --reprise
@@ -120,8 +123,8 @@ for (let k = k0; k < cycles; k++) {
   inst = Orvane.cycle(inst, {}, { duree_ms: 0 });
   for (const e of inst.evenements) if (e.type in bilan) bilan[e.type]++;
   if ((k + 1) % 25 === 0) { const total = inst.taxons.reduce((s, t) => s + (t.eteint ? 0 : biomasseDe(t)), 0);
-    for (const t of inst.taxons) if (!t.eteint && t.apparu < inst.cycle.n - 100 && poidsRarete(t) < rarete * total) { if (TRACE) TRACE.rarete[Tampon.regimeDe(t, CAT.TRAITS)] = (TRACE.rarete[Tampon.regimeDe(t, CAT.TRAITS)] || 0) + 1; t.eteint = inst.cycle.n; t.statut = 'eteint'; t.populations = []; bilan.extinction++; } }
-  if (TRACE) for (const t of inst.taxons) { const r = Tampon.regimeDe(t, CAT.TRAITS); if (!TRACE.vus.has(t.id)) { TRACE.vus.add(t.id); TRACE.nes[r] = (TRACE.nes[r] || 0) + 1; }
+    for (const t of inst.taxons) if (!t.eteint && t.apparu < inst.cycle.n - 100 && poidsRarete(t) < rarete * total) { if (TRACE) TRACE.rarete[Tampon.regimeDe(t, TR)] = (TRACE.rarete[Tampon.regimeDe(t, TR)] || 0) + 1; t.eteint = inst.cycle.n; t.statut = 'eteint'; t.populations = []; bilan.extinction++; } }
+  if (TRACE) for (const t of inst.taxons) { const r = Tampon.regimeDe(t, TR); if (!TRACE.vus.has(t.id)) { TRACE.vus.add(t.id); TRACE.nes[r] = (TRACE.nes[r] || 0) + 1; }
     if (t.eteint && !TRACE.morts.has(t.id)) { TRACE.morts.add(t.id); TRACE.fin[r] = (TRACE.fin[r] || 0) + 1; } }
   const vivants = inst.taxons.filter(t => !t.eteint).length; vivantsMax = Math.max(vivantsMax, vivants);
   if (point > 0 && (k + 1) % point === 0 && k + 1 < cycles) fs.writeFileSync(fichierReprise, JSON.stringify({ k: k + 1, inst, bilan, vivantsMax }));
@@ -143,13 +146,13 @@ const vivants = inst.taxons.filter(t => !t.eteint), ids = new Map();
 // (le régime de fait, Tampon.regimeDe : un carnivore qui digère les plantes est nommé en omnivore)
 for (const t of vivants) { const base = nommer(), principal = t.populations.slice().sort((x, y) => y.effectif - x.effectif)[0], b = biomes.find(x => x.id === principal?.biome);
   const L = t.plan.locomotion || [], E = L.includes('nage') && !L.some(l => TERRE.includes(l)) ? EPI_EAU : L.includes('vol') ? EPI_AIR : EPI;
-  const reg = Tampon.regimeDe(t, CAT.TRAITS), epi = E[reg] || EPI[reg] || ['créature']; t.nom = `${base} ${epi[Math.floor(R() * epi.length)]}${b ? ' ' + (/^[aeiouyéè]/i.test(b.nom || b.id) ? 'd\'' : 'de ') + (b.nom || b.id).toLowerCase() : ''}`;
+  const reg = Tampon.regimeDe(t, TR), epi = E[reg] || EPI[reg] || ['créature']; t.nom = `${base} ${epi[Math.floor(R() * epi.length)]}${b ? ' ' + (/^[aeiouyéè]/i.test(b.nom || b.id) ? 'd\'' : 'de ') + (b.nom || b.id).toLowerCase() : ''}`;
   ids.set(t.id, base.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')); }
 for (const t of vivants) { const ancien = t.id; t.id = ids.get(ancien); t.parent = t.parent && ids.has(t.parent) ? ids.get(t.parent) : (t.parent ? ancetreVivant(t.parent) : null); }
 function ancetreVivant(id) { let p = inst.taxons.find(x => x.id === id); while (p && p.eteint) p = inst.taxons.find(x => x.id === p.parent); return p ? ids.get(p.id) || null : null; }
 inst.taxons = vivants; inst.cycle = { n: inst.cycle.n, date: new Date().toISOString(), pressions_recues: 0 }; inst.evenements = []; inst.monde.genese = { cycles, graine, ancetres: Object.values(ANCETRES).flat().map(m => m.id) }; if (reglesMonde) inst.monde.regles = reglesMonde;
 // (les cycles d'apparition sont gardés : l'arbre des lignées raconte la genèse ; le monde publié commence à ce cycle-là)
-const traits = {}; for (const t of inst.taxons) for (const p of t.phenotypes) for (const id of p.traits) traits[id] = CAT.TRAITS[id]; inst.catalogue.traits = traits;
+const traits = {}; for (const t of inst.taxons) for (const p of t.phenotypes) for (const id of p.traits) traits[id] = TR[id]; inst.catalogue.traits = traits;
 fs.writeFileSync(sortie, JSON.stringify(inst, null, 1));
 
 // --- le bilan ---

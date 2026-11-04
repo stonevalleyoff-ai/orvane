@@ -66,8 +66,17 @@ const FORME_MOT = { recourbees: ['recourbée', 'recourbé'], droites: ['droite',
 const accord = (forme, fem, plur) => { const m = FORME_MOT[forme]; if (!m) return ''; const f = m[fem || m.length < 2 ? 0 : 1];
   return !plur || f.startsWith('en ') || /[sx]$/.test(f) ? f : f + 's'; };
 // un organe propre, quoi qu'on lui donne (null : un type inconnu)
+// (docs/20) le catalogue propre d'un monde (catalogue.monde) : ses organes et ses formes de corps s'ajoutent à ceux-ci, sans les
+// remplacer. Le moteur l'étend le temps d'un cycle ; un traducteur l'étend une fois, à la lecture de l'instantané
+// (OrvaneCorps.etendre(inst.catalogue.monde)). Un organe du monde : { places, nombre, formes, fonction, mot, fem, conduite,
+// poids (sa chance d'apparaître, 0,8 par défaut) } ; une forme : { nom, pattes, depuis (les formes dont elle peut naître), chance }.
+let EXT = null, OCAT = ORGANES_CAT, FX = {};
+function etendre(M) { const avant = EXT; EXT = M && (M.organes || M.formes) ? M : null; FX = EXT?.formes || {}; OCAT = ORGANES_CAT;
+  if (EXT?.organes) { OCAT = {}; for (const [k, T] of Object.entries(EXT.organes)) if (!ORGANES_CAT[k]) OCAT[k] = { places: ['dos'], nombre: [1, 1], formes: ['simple'], fonction: 'parade', mot: [k, k + 's'], fem: 0, ...T };
+    for (const k in OCAT) OCAT[k].defaut ??= OCAT[k].nombre[0]; OCAT = { ...ORGANES_CAT, ...OCAT }; }
+  return avant; }
 function organe(o) {
-  const T = ORGANES_CAT[o?.type]; if (!T) return null;
+  const T = OCAT[o?.type]; if (!T) return null;
   const nb = Number.isFinite(o.nombre) ? Math.round(o.nombre) : T.defaut;
   return { type: o.type, taille: r2(clamp(Number.isFinite(o.taille) ? o.taille : .5, .05, 1)), nombre: Math.max(T.nombre[0], Math.min(T.nombre[1], nb)),
     place: T.places.includes(o.place) ? o.place : T.places[0], forme: T.formes.includes(o.forme) ? o.forme : T.formes[0] };
@@ -77,7 +86,7 @@ function synchroniser(n) { for (const k of ORGANES) n[k] = r2(Math.max(0, ...n.o
 function poser(n, type, taille, R, place) {   // un organe de ce type, à cette taille (le crée s'il manque)
   const o = n.organes.find(x => x.type === type && (!place || x.place === place));
   if (o) o.taille = r2(clamp(taille, .05, 1));
-  else { const T = ORGANES_CAT[type], u = R ? R() : 0; n.organes.push(organe({ type, taille, place: place || T.places[0], nombre: T.nombre[0] + Math.floor(u * (T.nombre[1] - T.nombre[0] + 1)), forme: T.formes[Math.floor((R ? R() : 0) * T.formes.length)] })); }
+  else { const T = OCAT[type], u = R ? R() : 0; n.organes.push(organe({ type, taille, place: place || T.places[0], nombre: T.nombre[0] + Math.floor(u * (T.nombre[1] - T.nombre[0] + 1)), forme: T.formes[Math.floor((R ? R() : 0) * T.formes.length)] })); }
 }
 const DEFAUT = { forme: 'quadrupede', pattes: 4, long: .5, haut: .45, cou: .3, tete: .45, museau: .4, oreilles: .3, queue: .4, cornes: 0, crete: 0,
   ailes: 0, carapace: 0, antennes: 0, motif: 'uni', couleurs: { robe: [150, 130, 100], sombre: [100, 86, 66], ventre: [190, 176, 150], oeil: [40, 34, 30] } };
@@ -89,8 +98,9 @@ const mix = (a, b, k) => a.map((v, i) => Math.round(clamp(v + (b[i] - v) * k, 0,
 // un corps complet et propre, quoi qu'on lui donne (champs manquants : ceux du défaut)
 function normaliser(c) {
   c = c || {};
-  const n = { forme: FORMES.includes(c.forme) ? c.forme : DEFAUT.forme };
-  n.pattes = Number.isFinite(c.pattes) ? Math.max(0, Math.min(8, Math.round(c.pattes / 2) * 2)) : PATTES[n.forme];
+  const n = { forme: FORMES.includes(c.forme) || FX[c.forme] ? c.forme : DEFAUT.forme };
+  n.pattes = FX[n.forme] ? (Number.isFinite(c.pattes) ? Math.max(0, Math.min(12, Math.round(c.pattes))) : FX[n.forme].pattes ?? 4)
+    : Number.isFinite(c.pattes) ? Math.max(0, Math.min(8, Math.round(c.pattes / 2) * 2)) : PATTES[n.forme];
   for (const k of NUM) n[k] = r2(clamp(Number.isFinite(c[k]) ? c[k] : DEFAUT[k]));
   n.motif = MOTIFS.includes(c.motif) ? c.motif : 'uni';
   // les organes : la liste si elle est là ; sinon, ceux qu'un corps d'avant marque en proportions (au-delà de 0,2)
@@ -142,7 +152,7 @@ function deriver(c, plan, b, R, A = 1, gagnes = [], k = 1) {
   // sont là — leur taille, rarement leur nombre ou leur forme — et se perdent en dessous de 0,2 : ils naissent par
   // innovation (plus bas), pas par accumulation de hasards
   for (const key of NUM) if (!ORGANES.includes(key)) n[key] = clamp(n[key] + j(.07) + (DEFAUT[key] - n[key]) * .04 * A);
-  for (const o of n.organes) { const T = ORGANES_CAT[o.type];
+  for (const o of n.organes) { const T = OCAT[o.type];
     o.taille = clamp(o.taille + j(.08));
     if (R() < .1 * A && T.nombre[1] > T.nombre[0]) o.nombre = Math.max(T.nombre[0], Math.min(T.nombre[1], o.nombre + (R() < .5 ? -1 : 1) * Math.max(1, Math.round((T.nombre[1] - T.nombre[0]) / 4))));
     if (R() < .05 * A && T.formes.length > 1) o.forme = T.formes[Math.floor(R() * T.formes.length)]; }
@@ -154,10 +164,11 @@ function deriver(c, plan, b, R, A = 1, gagnes = [], k = 1) {
     antennes: (ax0.lumiere ?? .5) < .4 ? 2 : .7, trompe: reg === 'herbivore' || reg === 'omnivore' ? .8 : .2, nageoires: b?.milieu === 'aquatique' || b?.milieu === 'amphibie' || (plan?.locomotion || []).includes('nage') ? 2.5 : .1,
     carapace: reg === 'carnivore' ? .5 : 1.3, plaques: reg === 'carnivore' ? .5 : 1.2, epines: reg === 'carnivore' ? .4 : 1.3, massue: .7, aiguillon: n.forme === 'hexapode' ? 1.5 : .6,
     panache: (ax0.couvert ?? .5) < .4 ? 1.2 : .6, pinces: n.forme === 'hexapode' ? 1.8 : .2 };
+  if (EXT?.organes) for (const k in EXT.organes) if (!(k in poids) && !ORGANES_CAT[k]) poids[k] = EXT.organes[k].poids ?? .8;   // (docs/20) ceux du monde
   if (R() < .06 * A) {
     const C2 = Object.keys(poids).filter(k => !n.organes.some(o => o.type === k) && !(n.forme === 'serpent' && ['pinces', 'massue', 'panache'].includes(k)));
     const z = C2.reduce((a, k) => a + poids[k], 0); let u = R() * z;
-    for (const k of C2) { u -= poids[k]; if (u <= 0) { const T = ORGANES_CAT[k];
+    for (const k of C2) { u -= poids[k]; if (u <= 0) { const T = OCAT[k];
       n.organes.push(organe({ type: k, taille: .3 + .35 * R(), nombre: T.nombre[0] + Math.floor(R() * (T.nombre[1] - T.nombre[0] + 1)), place: T.places[Math.floor(R() * T.places.length)], forme: T.formes[Math.floor(R() * T.formes.length)] })); break; } }
   } else if (R() < .03 * A) { const o = n.organes.filter(x => x.type !== 'ailes'); if (o.length) { const x = o[Math.floor(R() * o.length)]; n.organes = n.organes.filter(y => y !== x); } }
   synchroniser(n);
@@ -188,6 +199,9 @@ function deriver(c, plan, b, R, A = 1, gagnes = [], k = 1) {
       else if (u < .5) n.pattes = n.pattes === 8 ? 6 : 8;
     } else if (n.forme === 'bipede' && u < .3) { n.forme = 'quadrupede'; n.pattes = 4; }
     else if (n.forme === 'serpent' && u < .35) { n.forme = 'quadrupede'; n.pattes = 4; n.haut = .12; }
+    // (docs/20) une forme du monde naît d'une de celles qu'elle nomme (depuis), à sa chance
+    const C3 = Object.entries(FX).filter(([id, F]) => id !== n.forme && (F.depuis || []).includes(n.forme));
+    if (C3.length) { const [id, F] = C3[Math.floor(R() * C3.length)]; if (R() < (F.chance ?? .3)) { n.forme = id; n.pattes = F.pattes ?? n.pattes; } }
   }
   if (n.forme === 'serpent') { n.pattes = 0; n.long = Math.max(n.long, .8); }
   // la masse : une lignée plus grande a une tête plus petite, à proportion (et l'inverse)
@@ -222,12 +236,12 @@ function distance(a, b) {
 function decrire(c) {
   c = normaliser(c);
   const F = { quadrupede: 'quadrupède', hexapode: 'hexapode', bipede: 'bipède', oiseau: 'oiseau', serpent: 'serpentiforme' };
-  const L = [F[c.forme] + (c.forme === 'hexapode' && c.pattes !== 6 ? ` à ${c.pattes} pattes` : '') + (c.long > .7 ? ' allongé' : c.long < .3 ? ' trapu' : '')];
+  const L = [(F[c.forme] || FX[c.forme]?.nom || c.forme) + (c.forme === 'hexapode' && c.pattes !== 6 || FX[c.forme] && c.pattes ? ` à ${c.pattes} pattes` : '') + (c.long > .7 ? ' allongé' : c.long < .3 ? ' trapu' : '')];
   if (c.forme !== 'serpent') L.push(c.haut > .7 ? 'haut sur pattes' : c.haut < .2 ? 'ras du sol' : '');
   const q = (k, mots) => { const v = c[k]; return v >= .7 ? mots[1] : v >= .35 ? mots[0] : ''; };
   L.push(q('cou', ['cou dégagé', 'long cou']), q('queue', ['queue', 'longue queue']), q('oreilles', ['oreilles', 'grandes oreilles']), q('museau', ['museau', 'long museau']));
   const CHIFFRES = ['', 'un', 'deux', 'trois', 'quatre'];
-  for (const o of c.organes) { const T = ORGANES_CAT[o.type], plur = o.nombre > 1, fs = accord(o.forme, T.fem, plur);
+  for (const o of c.organes) { const T = OCAT[o.type], plur = o.nombre > 1, fs = accord(o.forme, T.fem, plur);
     const n = o.nombre > 4 ? 'des' : o.nombre === 1 ? (T.fem ? 'une' : 'un') : CHIFFRES[o.nombre], grand = o.taille >= .7 ? (T.fem ? (plur ? 'grandes ' : 'grande ') : (plur ? 'grands ' : 'grand ')) : '';
     L.push(`${n === 'des' && grand ? 'de' : n} ${grand}${T.mot[plur ? 1 : 0]}${fs ? ' ' + fs : ''}${['dos', 'queue', 'avant'].includes(o.place) ? ' ' + (o.type === 'epines' && o.place === 'queue' ? 'sur la queue' : PLACE_MOT[o.place]) : ''}`); }
   if (c.motif !== 'uni') L.push(c.motif === 'masque' ? 'masque sombre' : c.motif);
@@ -236,7 +250,7 @@ function decrire(c) {
 
 // le catalogue tel qu'il part dans l'instantané (catalogue.organes) : un jeu y lit les places, les formes et les conduites
 // des organes sans connaître ce fichier ; un type ajouté ici y paraît sans toucher au schéma
-const catalogueOrganes = () => JSON.parse(JSON.stringify(ORGANES_CAT));
-const API = { FORMES, MOTIFS, NUM, PATTES, ORGANES, ORGANES_CAT, DEFAUT, normaliser, deriver, distance, decrire, teinteBiome, tourner, organe, catalogueOrganes };
+const catalogueOrganes = () => JSON.parse(JSON.stringify(OCAT));
+const API = { FORMES, MOTIFS, NUM, PATTES, ORGANES, ORGANES_CAT, DEFAUT, normaliser, deriver, distance, decrire, teinteBiome, tourner, organe, catalogueOrganes, etendre };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else racine.OrvaneCorps = API;
 })(globalThis);

@@ -101,6 +101,7 @@ function regrouper(inst) {
   out.biomes = types.map(b => { const L = inst.biomes.filter(p => typeDe(p) === b.id), x = { ...clone(b) };
     if (L.length) { x.capacite = +L.reduce((s, p) => s + (p.capacite || 0), 0).toFixed(2); if (b.capacite_base != null) x.capacite_base = +L.reduce((s, p) => s + (p.capacite_base || 0), 0).toFixed(2);
       if (L[0].axes_saison) x.axes_saison = moyenne(L.map(p => p.axes_saison), L.map(p => p.capacite || 1));
+      if (L[0].transforme) { const w = L.map(p => p.capacite || 1); x.axes = moyenne(L.map(p => p.axes), w); const W = w.reduce((a, v) => a + v, 0) || 1, J = {}; L.forEach((p, i) => { for (const [k, v] of Object.entries(p.transforme.jeu || {})) J[k] = (J[k] || 0) + v * w[i] / W; }); for (const k in J) J[k] = +J[k].toFixed(3); x.transforme = { base: L[0].transforme.base, jeu: J }; }   // (docs/22) le milieu d'aujourd'hui, en moyenne sur ses parcelles
       if (L[0].ressources) { const S = L.map(p => p.ressources?.surface || 1), r = moyenne(L.map(p => p.ressources), S);   // (docs/16) les stocks s'additionnent
         for (const k of ['surface', 'minerai', 'minerai_max', 'ferraille']) r[k] = +L.reduce((s, p) => s + (p.ressources?.[k] || 0), 0).toFixed(1); x.ressources = r; } }
     return x; });
@@ -158,12 +159,13 @@ function repartir(pressions, inst, loc) {
 
 // --- localiser : ce que les lots des jeux disent des parcelles (un événement peut porter « parcelle », une parcelle du biome de
 // l'événement) : par taxon et par biome, combien a été compté dans chaque parcelle ; de même pour l'habitat ---
+const LIEU = new Set(['habitat_perdu', 'habitat_gagne', 'defrichage', 'reboisement', 'assechement', 'irrigation', 'construction', 'transformation']);
 function localiser(lots, inst) {
   if (!estParcellaire(inst)) return null;
   const type = new Map(inst.biomes.map(b => [b.id, typeDe(b)])), loc = { taxons: {}, biomes: {} }; let n = 0;
   for (const lot of lots || []) for (const e of lot.evenements || []) {
     if (!e.parcelle || type.get(e.parcelle) !== e.biome || !(e.n > 0)) continue; n++;
-    if (e.action === 'habitat_perdu' || e.action === 'habitat_gagne') { const B = loc.biomes[e.biome] ??= {}; B[e.parcelle] = (B[e.parcelle] || 0) + e.n; }
+    if (LIEU.has(e.action)) { const B = loc.biomes[e.biome] ??= {}; B[e.parcelle] = (B[e.parcelle] || 0) + e.n; }   // l'habitat, le milieu (docs/22)
     else { const B = (loc.taxons[e.taxon] ??= {})[e.biome] ??= {}; B[e.parcelle] = (B[e.parcelle] || 0) + e.n; }
   }
   return n ? loc : null;

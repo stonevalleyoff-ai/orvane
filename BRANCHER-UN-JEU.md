@@ -61,6 +61,7 @@ Le cycle nocturne tourne à 03:17 UTC, puis publie dans `https://stonevalleyoff-
 | fichier | ce que le jeu en fait |
 | --- | --- |
 | `instantane.json` | **le monde du jour** : ses biomes, ses lignées, leurs populations par biome et leurs variantes ; avec `precedent`, le cycle d'avant allégé, pour étaler un changement |
+| `morceaux/` | le même monde par morceaux : `index.json` (quelques dizaines de Ko), puis un fichier par biome et un par lignée (ci-dessous) |
 | `generation-0.json` | le monde à sa naissance : la référence du mode relatif (chapitre 5) |
 | `jeux.json` | les jeux branchés et l'exposition de chacun |
 | `historique.json` | les derniers cycles allégés (pour tracer des courbes) |
@@ -79,6 +80,12 @@ for (const t of inst.taxons) {
 }
 ```
 
+**Seulement les biomes qu'on joue.** `instantane.json` fait plus d'un mégaoctet. Avec `tampon/morceaux.js`, un jeu lit l'index et ses biomes, et reçoit un instantané au même contrat, réduit à ces biomes ([docs/21](docs/21-morceaux-et-anglais.md)) :
+
+```js
+const inst = await OrvaneMorceaux.lire(MONDE, { biomes: ['prairie', 'foret'] });   // 50 lignées au lieu de 112
+```
+
 Ce que porte une lignée (`inst.taxons[i]`) :
 - `id` est stable : c'est la clé de votre table de correspondance. `nom` est son nom. `parent` dit de quelle lignée elle s'est séparée. `statut` vaut `croissance`, `stable`, `declin`, `menace` ou `eteint`.
 - `plan` : `regime`, `masse_kg`, `taille_m`, `locomotion` (`marche`, `course`, `vol`, `nage`, `grimpe`…), `activite`, `temperament`, `sociabilite`, `vitesse_rel`, `perception`, `longevite`, et `corps`, sa silhouette : forme, pattes, proportions, organes, couleurs (`moteur/corps.js`).
@@ -87,6 +94,10 @@ Ce que porte une lignée (`inst.taxons[i]`) :
 - `origine` (rare) : la lignée est arrivée d'un autre monde par une fusion ; elle paraît comme une lignée nouvelle ([docs/14](docs/14-fusion.md)).
 - `populations[].parcelles` (si le monde a des parcelles) : la répartition de la population entre les parcelles de son biome ; la liste des parcelles est dans `inst.parcelles` ([docs/15](docs/15-parcelles.md)). Un jeu peut l'ignorer.
 - **les machines** (si la Mère est éveillée, `inst.monde.mere`) : une lignée dont `plan.regime` vaut `synthetique` est une machine. Ses `plan.modules` (panneau, pince, blindage, arme…) disent à quoi elle ressemble et ce qu'elle fait, `plan.role` son rôle (`regulateur`, `foreuse`, `recycleur`, `capteur`) ; chaque population dit sa `posture` face aux joueurs (`neutre`, `defensive`, `fuyante`, `hostile`) et son `energie`. Chez les bêtes, `populations[].regulation` dit la part de leurs morts que les machines ont faites : c'est ce qu'un régulateur chasse. Une machine détruite se renvoie comme un prélèvement. Un jeu qui ne sait pas jouer une machine l'ignore ([docs/16](docs/16-vie-synthetique.md)).
+
+**Un monde qui n'est pas la Terre.** Un monde peut porter son propre catalogue (`inst.catalogue.monde`) : des axes de biome (la magie), des traits, des organes et des formes de corps à lui. Leurs définitions sont dans l'instantané ; pour dessiner ses silhouettes, appelez `OrvaneCorps.etendre(inst.catalogue.monde)` une fois, à la lecture ([docs/20](docs/20-catalogues-ouverts.md)). Le monde d'Orvane n'en a pas.
+
+**Un monde à soi, solo ou hors ligne.** `moteur/solo.js` fait vivre dans le jeu une copie du monde, partie de l'instantané : elle avance avec le temps réel (un cycle toutes les dix minutes, par exemple) ou en accéléré, ce que fait le joueur y pèse, et elle se sauvegarde. Rien n'en part vers le monde partagé ([docs/19](docs/19-le-temps.md)).
 
 `cycle.n` est le numéro du cycle, `cycle.saison` la saison du monde. Le détail champ par champ : [docs/1](docs/1-lire-un-instantane.md) et `schemas/instantane.schema.json`.
 
@@ -102,6 +113,15 @@ Ce que porte une lignée (`inst.taxons[i]`) :
 | mer | `cote` `recif` `large` `mer-froide` `abysses` |
 
 **Les lignées.** Une lignée vit là où elle a un effectif. Faites-la apparaître dans les terrains qui correspondent à ses biomes, en proportion de son effectif ; tirez son comportement de `plan.regime`, `temperament`, `sociabilite` et `activite`, sa taille de `masse_kg`, ses déplacements de `locomotion`, son dessin de `plan.corps`. Une lignée qui disparaît de l'instantané, ou dont `eteint` n'est plus `null`, quitte le jeu.
+
+**Ce que représente une créature du jeu.** C'est la règle qui garde le monde juste :
+- **Une créature tirée d'une lignée est un membre de sa population**, dans le biome où elle paraît. Ce qui lui arrive se renvoie : une rencontre, une mort, une capture. Elle peut être transformée par le jeu (un animal infecté, une monture, une bête dressée) : tant que c'est elle, ce qui lui arrive compte.
+- **Une créature propre au jeu ne se renvoie pas** : un humain, un monstre, un boss, un villageois, même si le jeu tire son allure ou ses traits d'une lignée (un humain infecté par une souche tirée d'une lignée animale n'est pas une bête de cette lignée). Sa mort n'est pas un prélèvement sur la lignée : au plus, ne renvoyez rien.
+- **Un événement par chose réelle**, compté une fois, dans le biome où il a eu lieu. Ni démonstration, ni galerie, ni partie d'essai : seulement ce que les joueurs ont vraiment fait dans le monde partagé.
+
+**Les familles.** Une lignée est d'une famille : `animale`, `synthetique` (une machine, [docs/16](docs/16-vie-synthetique.md)) ou `vegetale` (une plante, [docs/17](docs/17-flore.md) ; les plantes sont publiées à part, dans `flore.json`, à côté de l'instantané). Chez les bêtes, `populations[].nourriture` dit ce qu'un brouteur trouve à brouter, rapporté à l'éveil de la flore : un jeu peut le montrer sans jouer les plantes. Et `populations[].infection` dit, pour chaque souche qui circule (`inst.monde.pathogenes`), la part des bêtes infectées et immunisées : de quoi montrer des bêtes malades ([docs/18](docs/18-souches-et-symbioses.md)). Un jeu dit les familles qu'il sait jouer, et ne reçoit pas les autres : une nouveauté du monde n'arrive chez lui que s'il la demande.
+- **à la lecture** : `Tampon.filtrer(inst, { familles: ['animale'] })` rend l'instantané sans les lignées des autres familles (et, avec `biomes`, sans les biomes où le jeu ne va pas) ;
+- **à l'envoi** : le lot dit ses familles (`"familles": ["animale", "synthetique"]`), ou l'exposition du jeu les dit une fois pour toutes (`exposition.familles`). Sans rien, c'est `animale` seule, et le tampon ne lit pas les événements d'un jeu sur une famille qu'il ne joue pas.
 
 **Les variantes.** Le tampon (`tampon/tampon.js`, à copier dans le jeu) transforme les fréquences réelles en fréquences montrées selon l'exposition du jeu : il comprime les raretés, étale les changements sur plusieurs jours et masque ce que le jeu ne sait pas dessiner.
 
@@ -144,7 +164,8 @@ Le jeu compte ce que font ses joueurs, sans rien conclure, et dépose ces compte
   - `capture` : elle a été apprivoisée ; `liberation` : elle a été relâchée ;
   - `nourrissage`, `reproduction` : le joueur l'a aidée ;
   - `deplacement` : elle a été emportée ailleurs, avec `vers` ;
-  - `habitat_perdu`, `habitat_gagne` : de l'habitat a été détruit ou créé, en `n` unités.
+  - `habitat_perdu`, `habitat_gagne` : de l'habitat a été détruit ou créé, en `n` unités ;
+  - `defrichage`, `reboisement`, `assechement`, `irrigation`, `construction`, ou `transformation` avec `axe` et `sens` : le joueur a changé le milieu, en `n` unités de surface. Ces actions n'ont pas de `taxon`. Construire retire aussi de l'habitat ([docs/22](docs/22-milieu-transforme.md)).
 - Ne comptez ni les morts naturelles, ni les proies des autres bêtes, ni les bêtes d'un autre joueur. Comptez une mort au moment où le jeu la cause, pas en surveillant les points de vie.
 - `q` (facultatif) donne la valeur moyenne des traits continus des bêtes prises : c'est ce qui dit à Orvane si les joueurs prennent les plus grandes.
 - `parcelle` (facultatif, si le monde a des parcelles) : la parcelle où l'événement a eu lieu, prise dans `inst.parcelles` parmi celles de son biome. La chasse y est posée, au lieu d'être répartie sur tout le biome ([docs/15](docs/15-parcelles.md)).
@@ -195,16 +216,19 @@ La nuit suivante, le cycle lit les lots de tous les jeux et les rapporte à l'ex
 - [ ] Le jeu lit `instantane.json`, garde `monde.ne` et repart de `generation-0.json` quand il change.
 - [ ] Chaque terrain du jeu correspond à au moins un biome d'Orvane.
 - [ ] Les lignées apparaissent selon leurs effectifs, et une lignée éteinte quitte le jeu.
-- [ ] Chaque événement est compté une seule fois, dans le biome d'Orvane où il a eu lieu.
+- [ ] Chaque événement est compté une seule fois, dans le biome d'Orvane où il a eu lieu, et seulement pour une créature qui est un membre de sa lignée (pas pour un humain, un monstre ou un boss du jeu).
+- [ ] Le jeu filtre les familles qu'il ne sait pas jouer (`Tampon.filtrer`) et dit dans ses lots celles qu'il joue.
 - [ ] Un lot déposé répond `ok: true` ; sinon, il est gardé et renvoyé plus tard.
 - [ ] Le lendemain, `pressions_recues` monte dans `cycle` de l'instantané.
 
 ## In English, briefly
 
-Orvane runs one shared ecosystem world that any game can plug into.
+Orvane runs one shared ecosystem world that any game can plug into. **The full guide in English is [CONNECT-A-GAME.md](CONNECT-A-GAME.md)**, and every French field name is translated in [docs/glossary.md](docs/glossary.md).
 1. **Register** on the [sign-up page](https://stonevalleyoff-ai.github.io/orvane/inscription/), or call the `orvane_inscrire_jeu` RPC described below. You get a public **game key** (`orv_…`, it goes in your game) and a secret **admin key** (`orvadm_…`, never ship it).
 2. **Read** the world once a day from `https://stonevalleyoff-ai.github.io/orvane/mondes/orvane/instantane.json`: its 24 biomes, and lineages (`taxons`) with a body plan (`plan`), populations per biome (`populations[].effectif`) and variants (`phenotypes`). It is published nightly at 03:17 UTC.
-3. **Translate**: map your terrains to Orvane biomes, and spawn each lineage where it lives, in proportion to its population. The reference translator is `traducteurs/stone-valley/`.
+   A world may carry its own catalogue (`catalogue.monde`: extra biome axes, traits, organs, body forms); their definitions are in the snapshot, and `OrvaneCorps.etendre(inst.catalogue.monde)` lets `corps.js` draw them (docs/20).
+   For a solo or offline game, `moteur/solo.js` runs a private copy of the world inside the game, in real time or accelerated, and nothing goes back to the shared world (docs/19).
+3. **Translate**: map your terrains to Orvane biomes, and spawn each lineage where it lives, in proportion to its population. The reference translator is `traducteurs/stone-valley/`. A creature drawn from a lineage is a member of that population: report what happens to it. A creature that belongs to your game (a human, a monster, a boss), even if its looks come from a lineage, is not: report nothing for it. Lineages come in families (`animale`, `synthetique` for machines); keep only those your game can play with `Tampon.filtrer(inst, { familles: ['animale'] })`, and list them in each batch (`"familles": [...]`). By default a game plays animals only, so new kinds of life never reach it unasked.
 4. **Report** what players do as raw counts (encounters, kills, captures…) in batches. Use `orvane_deposer(p_cle, p_compte, p_lot)`, where `p_compte` is an opaque player id. A batch holds at most 500 events and 64 KB, and each player can send 48 batches a day. The batch format is in `schemas/pression.schema.json`.
 
 Every RPC is `POST https://rospodujiyltmxitykwc.supabase.co/rest/v1/rpc/<function>`, with headers `apikey: sb_publishable_F98uYIaPrLTjhj3n7QiBOg_SOtFynn8` and `Content-Type: application/json`. The JSON body holds the `p_…` parameters. Every answer is `{"ok": true, …}` or `{"ok": false, "erreur": "…"}`, with HTTP 200 in both cases.

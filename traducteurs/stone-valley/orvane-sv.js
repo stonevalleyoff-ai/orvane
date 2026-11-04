@@ -10,6 +10,7 @@
 //                                 ses traits continus — taille, allure, audace — tirés dans la loi de sa population (§212) ;
 //                                 née d'une mère connue, elle lui ressemble (§213, hérédité mendélienne) ;
 //  - orvaneEvenement(action, b, cause)  dans mourirBete() ('prelevement') et lier() ('capture') ;
+//  - orvaneLieu(action, x, y)     dans retirerPied() ('defrichage') : ce que le joueur fait à la terre (§226) ;
 //  - orvaneLot()                  le lot de pressions accumulé (schemas/pression.schema.json) ;
 //  - orvaneEnvoyer(rpc, compte)   après une sauvegarde réussie : pousse le lot vers le Supabase d'Orvane (orvane_deposer,
 //                                 avec la clé du jeu : ORVANE_DEPOT), sinon par le rpc du jeu (vp_orvane_pression, sv-1) ;
@@ -37,6 +38,8 @@
 const CLE = 'stone_valley:orvane', CHEMIN = racine.ORVANE_CHEMIN || 'orvane/', JEU = 'stone-valley', LOT_MAX = 400;
 // les morts qui comptent comme prélèvements du joueur : ses armes, ses sorts, ses tours, ses compagnes.
 // Pas « faim », pas « proie » (une bête de l'île qui en tue une autre : Orvane simule déjà la prédation), pas « défense ».
+// (§224) les familles de lignées que le jeu sait jouer (Orvane : Tampon.filtrer, lot.familles) : les bêtes, et les machines (§223)
+const FAMILLES_SV = ['animale', 'synthetique'];
 const CAUSES_JOUEUR = new Set(['chassé', 'flèche', 'combat', 'piétiné', 'explosé', 'tour', 'satellite', 'brisé', 'tir', 'bêta', 'compagne']);
 const RAYON_RENCONTRE = 12, PERIODE_RENCONTRE = 10000, COMMUNS = [1, 2, 3, 4, 5, 6, 7];
 const ENVOI_MIN = 30 * 60e3, REESSAI = 5 * 60e3, LIGNEES_MAX = 200, SEUIL_CORPS = .3;
@@ -70,7 +73,7 @@ async function charger() {
       try { const c = await cache(); if (c && typeof Response !== 'undefined') await c.put(CHEMIN + f, new Response(JSON.stringify(j), { headers: { 'Content-Type': 'application/json' } })); } catch (e) { }
       return j; } } catch (e) { }
     try { const c = await cache(), r = c && await c.match(CHEMIN + f); return r ? await r.json() : null; } catch (e) { return null; } };
-  const [inst, profil, jeux] = await Promise.all([prendre('instantane.json'), prendre('profil.json'), prendre('jeux.json')]);
+  let [inst, profil, jeux] = await Promise.all([prendre('instantane.json'), prendre('profil.json'), prendre('jeux.json')]);
   // le réglage : le profil du monde, et ce que le jeu en montre (jeux.json, sinon Corr.EXPOSITION ; un monde fait pour le jeu
   // comme sv-1 porte encore le sien)
   const X = (Array.isArray(jeux) ? jeux : []).find(j => j.id === JEU)?.exposition;
@@ -79,6 +82,7 @@ async function charger() {
   if (inst) {
     const id = identite(inst);
     if (id !== S.monde) { S.monde = id; S.courant = null; S.gen0 = null; }             // un autre monde, ou le même refait : on repart de sa génération 0
+    if (Tampon?.filtrer) inst = Tampon.filtrer(inst, { familles: FAMILLES_SV });    // (§224) les familles que le jeu sait jouer : les autres ne lui parviennent pas
     if (!S.courant || inst.cycle.n > S.courant.cycle.n) S.courant = inst;
   }
   if (S.courant && !S.gen0) S.gen0 = await prendre('generation-0.json') || S.courant;   // faute de génération 0, le premier instantané vu
@@ -738,6 +742,13 @@ function orvaneEvenement(action, b, cause) {
   if (action === 'prelevement' && cause && !CAUSES_JOUEUR.has(cause)) return;   // morte de faim, ou sous un prédateur de l'île : ce n'est pas le joueur
   if (noter(action, b, b.variante)) ecrire();
 }
+// (§226) ce que le joueur fait à la terre (docs/22 d'Orvane) : un pied abattu pour de bon au campement est un défrichage, dans le
+// biome d'Orvane de la case, sans lignée (chaque case ne s'abat qu'une fois : rien ne se compte deux fois)
+function orvaneLieu(action, x, y) {
+  if (!S.courant) return; let k = null; try { if (typeof bAt === 'function') k = bAt(x | 0, y | 0); } catch (e) { }
+  const biome = Corr.biomeOrvane(k); if (!biome) return;
+  const cle = ['', '', biome, action, '', parcelleIle(biome) || ''].join('|'); S.lot[cle] = (S.lot[cle] || 0) + 1; if (!S.depuis) S.depuis = new Date().toISOString(); ecrire();
+}
 function releverRencontres() {
   if (typeof beasts === 'undefined' || typeof P === 'undefined' || !S.courant) return;
   let n = 0;
@@ -745,12 +756,12 @@ function releverRencontres() {
   if (n) ecrire();
 }
 function orvaneLot(cles) {
-  const ev = []; for (const cle of cles || Object.keys(S.lot)) { const n = S.lot[cle]; if (!n) continue; const [taxon, phenotype, biome, action, vers, parcelle] = cle.split('|'); const e = { taxon, biome, action, n }; if (parcelle) e.parcelle = parcelle; if (phenotype) e.phenotype = phenotype; if (vers) e.vers = vers;
+  const ev = []; for (const cle of cles || Object.keys(S.lot)) { const n = S.lot[cle]; if (!n) continue; const [taxon, phenotype, biome, action, vers, parcelle] = cle.split('|'); const e = taxon ? { taxon, biome, action, n } : { biome, action, n }; if (parcelle) e.parcelle = parcelle; if (phenotype) e.phenotype = phenotype; if (vers) e.vers = vers;
     const A = S.lotQ[cle]; if (A && A.n > 0) { e.q = {}; for (const [k, s] of Object.entries(A.s)) e.q[k] = r2(s / A.n); }
     ev.push(e); }
   if (!ev.length) return null;
   let zone; try { zone = typeof SEED !== 'undefined' ? 'ile:' + SEED : undefined; } catch (e) { }
-  return { orvane: S.courant?.orvane || '0.1', monde: S.courant?.monde?.id || 'orvane', instantane: S.courant?.cycle?.n ?? 0,
+  return { orvane: S.courant?.orvane || '0.1', monde: S.courant?.monde?.id || 'orvane', instantane: S.courant?.cycle?.n ?? 0, familles: FAMILLES_SV,
     source: { jeu: JEU, compte: S.compte || 'anonyme', zone }, periode: { debut: S.depuis || new Date().toISOString(), fin: new Date().toISOString() }, evenements: ev };
 }
 // le dépôt dans le Supabase d'Orvane : sa clé publique (apikey) et celle du jeu (p_cle) ; le compte y est pseudonymisé
@@ -783,7 +794,7 @@ async function orvaneEnvoyer(rpc, compte, forcer) {
 const hachage = s => { let h = 5381; for (let i = 0; i < s.length; i++) h = (Math.imul(h, 33) ^ s.charCodeAt(i)) >>> 0; return h.toString(36); };
 
 // --- mise en place ---
-racine.orvaneEspeces = orvaneEspeces; racine.orvaneAppliquer = orvaneAppliquer; racine.orvaneVariante = orvaneVariante; racine.orvaneEvenement = orvaneEvenement;
+racine.orvaneEspeces = orvaneEspeces; racine.orvaneAppliquer = orvaneAppliquer; racine.orvaneVariante = orvaneVariante; racine.orvaneEvenement = orvaneEvenement; racine.orvaneLieu = orvaneLieu;
 racine.orvaneTirage = orvaneTirage; racine.orvaneArrivee = orvaneArrivee; racine.orvaneTrophee = orvaneTrophee; racine.orvanePhoto = orvanePhoto;
 racine.orvaneRelire = orvaneRelire; racine.orvaneCarnetLignees = orvaneCarnetLignees; racine.orvaneVol = orvaneVol; racine.orvaneNage = orvaneNage; racine.orvanePlaceEau = orvanePlaceEau;
 racine.orvaneLot = orvaneLot; racine.orvaneEnvoyer = orvaneEnvoyer; racine.orvaneNaissance = orvaneNaissance;

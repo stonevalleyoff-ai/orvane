@@ -93,5 +93,5 @@ Stone Valley n'a de sols que pour la côte et le marais (`rivage`, `tourbière`)
 
 ## Ce qui vient ensuite
 
-- **La fusion par parcelles**, avec l'étape 2.1 : deux cartes reliées par quelques ponts, une invasion de proche en proche, comme lors du grand échange entre les deux Amériques.
+- **La fusion par ponts** : faite, docs/23. Deux cartes reliées par quelques ponts, une invasion de proche en proche, comme lors du grand échange entre les deux Amériques.
 - **D'autres sources** : un monde souterrain, et les machines de la vie synthétique (phase 2 bis), qui arriveront elles aussi par une fusion.

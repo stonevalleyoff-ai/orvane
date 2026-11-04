@@ -118,7 +118,7 @@ En plus, dans l'instantané (`schemas/instantane.schema.json`) :
 - `monde.mere` : son nom, son biome (et sa parcelle), depuis quand, ses plans, sa mémoire ;
 - trois événements : `eveil`, `conception` (un plan neuf ; il dit pourquoi), `transfert` (un module adopté). Une erreur de copie est une `separation`.
 
-Un jeu qui ne sait pas jouer une machine l'ignore. La vue par biome d'un monde à parcelles additionne les ressources et dit le biome de la Mère (et sa parcelle).
+Un jeu qui ne sait pas jouer une machine ne la reçoit pas : les machines sont de la famille `synthetique`, et un jeu ne joue que la famille `animale` s'il ne demande rien (`Tampon.filtrer`, `lot.familles` : `BRANCHER-UN-JEU.md`, Les familles). La vue par biome d'un monde à parcelles additionne les ressources et dit le biome de la Mère (et sa parcelle).
 
 ## La commande : le profil du monde
 

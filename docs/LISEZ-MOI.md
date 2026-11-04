@@ -22,6 +22,13 @@ Pour s'inscrire, recevoir ses clés et faire ses premiers appels au Supabase d'O
 | [14. La fusion de mondes](14-fusion.md) | verser un monde dans un autre : une genèse sur une partie des biomes, la fusion biome par biome, sa commande dans le profil, ce que le monde en fait |
 | [15. Les parcelles](15-parcelles.md) | un monde qui a une géographie : chaque biome en parcelles voisines, la dispersion et la fuite, un contrat inchangé pour les jeux, ce que le monde en fait |
 | [16. La vie synthétique](16-vie-synthetique.md) | des machines et leur Mère : l'énergie, l'assemblage, la régulation des espèces qui débordent, ce que la Mère conçoit, la défense face aux joueurs, ce que le monde en fait |
+| [17. La flore](17-flore.md) | les plantes deviennent des lignées : ce que chaque brouteur atteint et supporte, sa nourriture à lui, la coévolution des défenses et des résistances, ce que le monde en fait |
+| [18. Les souches et les symbioses](18-souches-et-symbioses.md) | des maladies qui ont une identité : la contagion, les sauts entre lignées apparentées, l'immunité, le compromis entre virulence et contagion ; les butineurs et les fleurs ; ce que le monde en fait |
+| [19. Le temps](19-le-temps.md) | un monde à son rythme : la durée d'un cycle, de dix minutes à une semaine ; l'action horaire et le rattrapage ; un monde solo, dans le jeu, en temps réel ou en accéléré |
+| [20. Les catalogues ouverts](20-catalogues-ouverts.md) | un monde qui n'est pas la Terre : ses axes de biome, ses traits, ses organes et ses formes de corps, qui s'ajoutent à ceux du moteur ; Lumen, le monde imaginaire du banc |
+| [21. Le monde par morceaux, et en anglais](21-morceaux-et-anglais.md) | lire seulement les biomes qu'on joue (l'index, un fichier par biome, un par lignée, `tampon/morceaux.js`) ; le guide en anglais et le glossaire des champs |
+| [22. Le milieu transformé](22-milieu-transforme.md) | le pâturage, les terriers, les barrages des bâtisseurs ; défricher, reboiser, assécher, irriguer, construire ; les axes de chaque lieu bougent, la flore et la niche suivent |
+| [23. La fusion par ponts](23-fusion-par-ponts.md) | un monde devient un continent d'un autre : ses parcelles, quelques ponts, et chaque faune gagne l'autre de proche en proche |
 
 ## En une page
 

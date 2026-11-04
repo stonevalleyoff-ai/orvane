@@ -24,10 +24,13 @@ Le jeu renvoie des **comptes bruts**, jamais des conclusions. Le tampon fait le 
 | `reproduction` | des petits nés en captivité puis relâchés, ou un élevage sélectif | aide, et oriente les phénotypes |
 | `deplacement` (+ `vers`) | emportée sur un autre biome | fonde ou renforce une population ailleurs |
 | `habitat_perdu` / `habitat_gagne` | surface détruite / créée (en unités de votre jeu : cases, arbres…) | la capacité du biome bouge |
+| `defrichage`, `reboisement`, `assechement`, `irrigation`, `construction` ; `transformation` (+ `axe`, `sens`) | le joueur change le milieu, en `n` unités de surface ; sans `taxon` | dans un monde au milieu éveillé, les axes du lieu bougent ; construire retire aussi de l'habitat (docs/22) |
 
 **La valeur des bêtes.** Si votre jeu tire les traits continus (chapitre 8), joignez à un prélèvement ou à une capture `q` : la valeur moyenne z, par trait, des bêtes de l'événement, telle qu'elles l'ont tirée à la naissance (`"q": { "taille": 1.3 }`). C'est ainsi qu'Orvane sait si vos joueurs prennent les plus grandes ou les plus audacieuses ; sans `q`, il suppose qu'ils prennent au hasard.
 
 **Ne comptez pas** : les morts naturelles (faim, vieillesse), les proies d'autres bêtes, les bêtes d'un autre joueur (c'est son lot), les compagnons.
+
+**Ne comptez que les membres du monde.** Une créature tirée d'une lignée est un membre de sa population : ce qui lui arrive compte, même transformée par le jeu (un animal infecté, une monture). Une créature propre au jeu (un humain, un monstre, un boss) ne compte pas, même si son allure vient d'une lignée : un humain infecté par une souche tirée d'une lignée animale n'est pas une bête de cette lignée. Et seulement les familles que le jeu joue : le lot les dit (`"familles": ["animale"]`, la valeur par défaut), le tampon ne lit pas les autres (`BRANCHER-UN-JEU.md`, Les familles).
 
 ## Comment ne pas compter deux fois
 

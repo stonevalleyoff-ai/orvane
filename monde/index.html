@@ -48,7 +48,8 @@ const PART_K = { herbivore: 1, omnivore: 1, detritivore: .3, filtreur: .3, carni
 const pct = v => v == null ? '—' : (v * 100).toLocaleString('fr-FR', { maximumFractionDigits: v > 0 && v < .01 ? 2 : v < .1 ? 1 : 0 }) + ' %';
 const effectif = t => t.populations.reduce((a, p) => a + p.effectif, 0);
 const tendance = t => { const W = effectif(t); return W ? t.populations.reduce((a, p) => a + p.effectif * (p.tendance || 0), 0) / W : 0; };
-const vivants = I => I.taxons.filter(t => !t.eteint);
+const vivants = I => I.taxons.filter(t => !t.eteint && t.plan?.regime !== 'vegetal');   // (docs/17 : les plantes à part)
+const plantesDe = I => [...I.taxons, ...(I === inst() && E.flore?.taxons || [])].filter(t => !t.eteint && t.plan?.regime === 'vegetal');
 const nomEsp = t => t ? (t.nom || t.id) : '';
 const nomBiome = id => inst()?.biomes.find(b => b.id === id)?.nom || id;
 const STATUT = { croissance: ['en croissance', 'vif'], stable: ['stable', ''], declin: ['en déclin', 'declin'], menace: ['menacée', 'declin'], eteint: ['éteinte', 'declin'] };
@@ -87,6 +88,8 @@ async function monde(id) {
   $('#contenu').innerHTML = '<p class="vide">Chargement du monde…</p>';
   try {
     const courant = await json(`../mondes/${encodeURIComponent(id)}/instantane.json`);
+    E.flore = await json(`../mondes/${id}/flore.json`).catch(() => null);   // (docs/17) les plantes, publiées à part
+    globalThis.OrvaneCorps?.etendre?.(courant.catalogue?.monde);   // (docs/20) les organes et les formes de corps propres au monde
     const [hist, P, gen0, jeux] = await Promise.all([json(`../mondes/${id}/historique.json`).catch(() => []), json(`../mondes/${id}/profil.json`).catch(() => null), json(`../mondes/${id}/generation-0.json`).catch(() => null), json(`../mondes/${id}/jeux.json`).catch(() => [])]);
     // un monde pour tous les jeux : « dans le jeu », c'est ce qu'en montre le premier jeu branché (jeux.json)
     const J = Array.isArray(jeux) ? jeux.find(j => j.actif !== false && j.exposition && Object.keys(j.exposition).length) : null;
@@ -157,7 +160,9 @@ function vueEnsemble() {
   const parType = {}; for (const e of ev) (parType[e.type] ??= []).push(e);
   const resumeEv = Object.entries(parType).sort((a, b) => b[1].length - a[1].length).map(([t, L]) => `${L.length} ${evtNom(t, L.length)}`);
   const nees = V.filter(t => t.parent).length, s = I.cycle.saison;
-  const phrase = `Au cycle ${I.cycle.n}${s ? `, en ${s.nom}` : ''}, ${V.length} espèces vivent sur ${I.biomes.length} biomes : ${nb(tot)} bêtes en tout${nees ? `, dont ${nees} lignée${nees > 1 ? 's' : ''} née${nees > 1 ? 's' : ''} dans Orvane` : ''}. ${resumeEv.length ? 'Ce cycle : ' + resumeEv.slice(0, 3).join(', ') + (resumeEv.length > 3 ? '…' : '.') : 'Ce cycle a été calme.'}`;
+  const phrase = `Au cycle ${I.cycle.n}${s ? `, en ${s.nom}` : ''}, ${V.length} espèces vivent sur ${I.biomes.length} biomes : ${nb(tot)} bêtes en tout${nees ? `, dont ${nees} lignée${nees > 1 ? 's' : ''} née${nees > 1 ? 's' : ''} dans Orvane` : ''}. ${resumeEv.length ? 'Ce cycle : ' + resumeEv.slice(0, 3).join(', ') + (resumeEv.length > 3 ? '…' : '.') : 'Ce cycle a été calme.'}${(() => { const F = plantesDe(I); if (!F.length) return '';
+    const f = id => { let s = 0, w = 0; for (const t of F) for (const p of t.populations) { const b = p.effectif * (t.plan.masse_kg || 1); w += b; s += b * t.phenotypes.reduce((a, ph, k) => a + (ph.traits.includes(id) ? p.frequences?.[k] ?? ph.frequence : 0), 0); } return w ? s / w : 0; };
+    return ` La flore compte ${F.length} lignées de plantes : ${pct(f('toxique'))} de feuillage toxique, ${pct(f('epineux'))} d'épineux.`; })()}`;
   const date = Date.parse(I.cycle.date), quand = Number.isFinite(date) ? new Date(date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : '';
   const tri = V.slice().sort((a, b) => effectif(b) - effectif(a)), max = effectif(tri[0] || { populations: [] }) || 1;
   const ligneEsp = t => { const e = effectif(t), d = tendance(t);

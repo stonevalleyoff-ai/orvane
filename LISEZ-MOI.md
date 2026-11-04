@@ -4,16 +4,22 @@ Un moteur d'écosystème et d'évolution, indépendant de tout jeu. Il fait vivr
 
 ```
 moteur/orvane.js      le moteur : instantané + pressions → instantané suivant (Node ou navigateur, zéro dépendance)
-moteur/catalogue.js   l'univers des traits : organe, coût, effet, écarts sur le plan corporel, contraintes, conduite (ce qu'il fait faire)
+moteur/catalogue.js   l'univers des traits : organe, coût, effet, écarts sur le plan corporel, contraintes, conduite (ce qu'il fait faire), ce qu'il fait devant les plantes ; un monde y ajoute les siens (catalogue.monde, docs/20)
 moteur/corps.js       la silhouette d'une lignée (forme, proportions, organes, couleurs) et sa dérive à chaque séparation
 moteur/genese.js      la genèse : des biomes, des ancêtres très simples, des milliers de cycles → un monde de lignées inventées, nommées (--milieux, --ancetres : une partie des biomes, d'autres ancêtres)
-moteur/fusion.js      la fusion : verser un monde dans un autre, biome par biome (docs/14)
+moteur/fusion.js      la fusion : verser un monde dans un autre, biome par biome (docs/14), ou le relier par quelques ponts, comme un continent (docs/23)
 moteur/parcelles.js   les parcelles : chaque biome découpé en parcelles voisines, et la vue par biome que lisent les jeux (docs/15)
 moteur/synthetique.js la vie synthétique : la Mère, ses machines, leur énergie, leur régulation, leur défense (docs/16)
+moteur/flore.js       la flore : les plantes, ce que chaque brouteur atteint et supporte, la coévolution des défenses, la pollinisation (docs/17, 18)
+moteur/pathogenes.js  les souches : des maladies qui circulent, sautent aux lignées apparentées, immunisent (docs/18)
+moteur/milieu.js      le milieu transformé : le pâturage, les terriers, les barrages, et ce que les jeux font aux lieux (docs/22)
+moteur/solo.js        un monde solo, dans le jeu : parti de l'instantané publié, il avance en temps réel ou en accéléré (docs/19)
 moteur/biomes-universels.json  les 24 biomes neutres du monde d'Orvane : terre, eau douce, mer, sous-sol
 tampon/tampon.js      exposer() Orvane → jeu ; agreger() jeu → Orvane (dénormalisation, plafonds, lissage)
+tampon/morceaux.js    le monde par morceaux : découper l'instantané (l'index, chaque biome, chaque lignée), et lire seulement les biomes d'un jeu (docs/21)
 monde/index.html      l’observatoire : ce que vit un monde (espèces, biomes, lignées, chaîne alimentaire, journal), et une simulation locale
 BRANCHER-UN-JEU.md    brancher un jeu, pas à pas : s'inscrire, lire le monde, traduire, régler l'exposition, déposer des lots, les erreurs
+CONNECT-A-GAME.md     le même guide, en anglais ; docs/glossary.md : chaque champ, traduit en anglais
 inscription/          la page d'inscription : inscrire un jeu et recevoir ses clés, régler son exposition, vérifier une clé
 index.html            la page d'accueil du site publié : ce qu'est Orvane, l'état du monde, l'observatoire, l'inscription, le guide ; mondes/liste.json : les mondes que l'observatoire propose
 README.md, llms.txt   la présentation du dépôt (GitHub l'affiche en page d'accueil) et son résumé pour les IA (liens vers le guide et les schémas)
@@ -23,13 +29,20 @@ bancs/stabilite.js    les bancs de stabilité : mille cycles sans joueurs et ave
 bancs/fusion.js       le banc de la fusion : la mer d'Orvane versée dans le monde d'Orvane, contre un témoin sans fusion
 bancs/parcelles.js    le banc des parcelles : le monde d'Orvane découpé, contre le même par biomes ; l'invasion de proche en proche, le défrichage
 bancs/synthetique.js  le banc de la vie synthétique : la Mère éveillée, contre le même monde sans elle ; une espèce qui explose, des joueurs qui harcèlent
-hebergement/cycle.js  le cycle nocturne : lots de tous les jeux → tampon → moteur → instantané publié (action GitHub .github/workflows/cycle.yml)
+bancs/flore.js        le banc de la flore : la flore éveillée, contre le même monde sans elle ; la coévolution, une prairie surbroutée
+bancs/pathogenes.js   le banc des souches et des symbioses : la contagion de proche en proche, les hôtes, l'immunité, le compromis, les butineurs
+bancs/catalogues.js   le banc des catalogues ouverts : Lumen (bancs/lumen/), un monde imaginaire à ses axes, ses traits, ses organes, ses formes de corps
+bancs/morceaux.js     le banc du monde par morceaux : le découpage, les biomes réunis, le navigateur, le cycle de nuit
+bancs/ponts.js        le banc de la fusion par ponts : la genèse 7 devient un continent du monde d'Orvane, ses faunes passent les ponts de proche en proche
+bancs/milieu.js       le banc du milieu transformé : la savane sans brouteurs, les terriers, les barrages, la forêt défrichée, les parcelles
+bancs/temps.js        le banc du temps : le rythme de chaque monde (l'action horaire, le rattrapage), le monde solo (temps réel, accéléré, sauvegarde, navigateur)
+hebergement/cycle.js  le cycle, chaque monde à son rythme (docs/19) : lots de tous les jeux → tampon → moteur → instantané publié (action GitHub .github/workflows/cycle.yml)
 hebergement/supabase.sql  le Supabase d'Orvane : les jeux s'y inscrivent et y déposent les pressions de leurs joueurs
 mondes/orvane/        le monde d'Orvane, où tous les jeux se branchent : né de la genèse universelle, Stone Valley y joue depuis le 29 octobre 2026
 mondes/marin/         la mer d'Orvane : une genèse sur les seuls biomes d'eau (vingt ancêtres, 29 lignées), versée dans le monde d'Orvane par une fusion (profil.monde.fusions)
 mondes/sv-1/          le premier monde de Stone Valley (sa faune), archivé
 mondes/genese-7/      un monde né de la genèse (graine 7, 3 000 cycles) : 97 lignées que personne n'a dessinées, archivé
-docs/                 le mode d'emploi : brancher son jeu, écrire son traducteur, jouer les conduites, tirer les traits continus, l'hérédité, les hybrides, les organes, la méfiance, la stabilité, la fusion, les parcelles, la vie synthétique (16 chapitres)
+docs/                 le mode d'emploi : brancher son jeu, écrire son traducteur, jouer les conduites, tirer les traits continus, l'hérédité, les hybrides, les organes, la méfiance, la stabilité, la fusion, les parcelles, la vie synthétique, la flore, les souches et les symbioses, le temps, les catalogues ouverts, le monde par morceaux, le milieu transformé, la fusion par ponts (23 chapitres)
 ```
 
 ## Essayer

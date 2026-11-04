@@ -1,6 +1,6 @@
 # L'hébergement : un monde pour tous les jeux, sans serveur
 
-Orvane fait vivre **un seul monde**, `mondes/orvane/`, et tous les jeux s'y branchent. Chaque jeu le montre à sa façon (ses espèces, ses sols, ses variantes) et y renvoie ce que font ses joueurs. Chaque nuit, l'action GitHub `cycle` fait avancer le monde d'un cycle et commite le résultat ; GitHub Pages le sert, avec CORS ouvert, à tous les traducteurs. Les pressions des joueurs passent par **le Supabase d'Orvane**, qui n'appartient à aucun jeu.
+Orvane fait vivre **un seul monde**, `mondes/orvane/`, et tous les jeux s'y branchent. Chaque jeu le montre à sa façon (ses espèces, ses sols, ses variantes) et y renvoie ce que font ses joueurs. Chaque heure, l'action GitHub `cycle` regarde chaque monde : celui dont l'heure est venue avance (une fois par jour pour le monde d'Orvane, `monde.cycle`, docs/19), et le résultat est commité ; GitHub Pages le sert, avec CORS ouvert, à tous les traducteurs. Les pressions des joueurs passent par **le Supabase d'Orvane**, qui n'appartient à aucun jeu.
 
 ```
 mondes/orvane/
@@ -23,7 +23,7 @@ Il est né de la genèse « universelle » : 24 biomes neutres (de la banquise a
 
 1. Le joueur chasse, lie, croise des bêtes : le traducteur du jeu accumule un lot (`schemas/pression.schema.json`).
 2. De temps en temps (pour Stone Valley, à une sauvegarde, une fois par demi-heure au plus), le jeu appelle `orvane_deposer(cle, compte, lot)` sur le Supabase d'Orvane, avec la clé publique du projet et **la clé de son jeu**. Le compte est l'identifiant du joueur dans le jeu ; Orvane n'en garde qu'une empreinte.
-3. À 03:17 UTC, `hebergement/cycle.js` lit les jeux (`orvane_lire_jeux`) et les lots nouveaux (`orvane_lire_lots`), avec le secret de lecture d'Orvane. Le tampon lit chaque lot avec **l'exposition de son jeu** : une variante que le jeu montre à 2 % mais qui vit à 20 % voit ses pertes redressées, et un jeu qui montre tout tel quel n'est pas redressé. Puis les plafonds (par compte, part d'un seul compte, **part d'un seul jeu**, part d'une population), le lissage, le moteur ; `instantane.json`, `historique.json` et `jeux.json` sont écrits, puis commités.
+3. Quand le cycle du monde est dû (l'action passe à la 17ᵉ minute de chaque heure ; le monde d'Orvane, réglé à `24h`, tourne chaque jour vers 03:17 UTC), `hebergement/cycle.js --auto` lit les jeux (`orvane_lire_jeux`) et les lots nouveaux (`orvane_lire_lots`), avec le secret de lecture d'Orvane. Le tampon lit chaque lot avec **l'exposition de son jeu** : une variante que le jeu montre à 2 % mais qui vit à 20 % voit ses pertes redressées, et un jeu qui montre tout tel quel n'est pas redressé. Puis les plafonds (par compte, part d'un seul compte, **part d'un seul jeu**, part d'une population), le lissage, le moteur ; `instantane.json`, `historique.json` et `jeux.json` sont écrits, puis commités.
 4. Au prochain lancement du jeu, le traducteur lit `instantane.json` et `jeux.json`, et étale le changement sur `propagation_cycles`.
 
 ## Le Supabase d'Orvane
@@ -54,7 +54,7 @@ Le guide pas à pas, avec les adresses, les appels et les erreurs : [BRANCHER-UN
 
 - **Supabase** : coller `hebergement/supabase.sql`, puis le script d'installation (qu'on ne publie pas : il pose l'empreinte du secret de lecture, et peut inscrire les premiers jeux). Le profil du monde dit où lire : `monde.pressions` (l'adresse du projet, sa clé **publique**, les deux fonctions de lecture).
 - **Secret du dépôt** (Settings › Secrets and variables › Actions) : `ORVANE_LECTURE_SECRET`, le secret de lecture. Il n'ouvre que la lecture des lots et des jeux.
-- **L'action** : `.github/workflows/cycle.yml`, qui fait tourner chaque dossier de `mondes/` dont le profil ne dit pas `monde.nocturne = false`. Un dossier qui commence par un point ne passe pas par « Add files › Upload files » : créer le fichier par « Add file › Create new file », en tapant le chemin `.github/workflows/cycle.yml`.
+- **L'action** : `.github/workflows/cycle.yml`, qui fait tourner chaque dossier de `mondes/` dont le profil ne dit pas `monde.nocturne = false`, à son rythme (`monde.cycle` et `monde.heure`, au plus `monde.rattrapage` cycles d'un coup : docs/19). « Run workflow » fait tourner chaque monde du nombre de cycles demandé (1 par défaut), sans regarder l'heure. Un dossier qui commence par un point ne passe pas par « Add files › Upload files » : créer le fichier par « Add file › Create new file », en tapant le chemin `.github/workflows/cycle.yml`.
 - **Pages** : Settings › Pages, branche `main`, dossier `/`.
 
 ## À la main
@@ -64,7 +64,7 @@ node hebergement/cycle.js orvane --sans-reseau          # un cycle, lots du doss
 node hebergement/cycle.js orvane --cycles 7             # rattraper une semaine (lots en ligne + dossier)
 ```
 
-Le premier cycle part de l'amorce du profil (`monde.amorce`), et pose la naissance du monde (`monde.ne`). Une **fusion** se commande dans le profil (`monde.fusions : [{ id, source, part }]`) : le cycle de la nuit suivante verse la source dans le monde, une seule fois (docs/14). C'est ainsi que la mer d'Orvane (`mondes/marin/`) rejoint le monde d'Orvane (`mer-1`). De même, `monde.parcelles : { par: 4 }` découpe le monde en parcelles au cycle suivant, une fois pour toutes (docs/15) : l'état tourne alors par parcelle, l'instantané publié et l'historique restent par biome. Et `monde.synthetique : true` éveille la Mère au cycle suivant, une fois pour toutes : la vie synthétique (docs/16). Pour repartir de zéro : supprimer `etat.json`, `generation-0.json`, `instantane.json`, `historique.json`, `tampon.json`. Les traducteurs verront un monde neuf (autre naissance) et repartiront de sa génération 0.
+Le premier cycle part de l'amorce du profil (`monde.amorce`), et pose la naissance du monde (`monde.ne`). Une **fusion** se commande dans le profil (`monde.fusions : [{ id, source, part }]`) : le cycle de la nuit suivante verse la source dans le monde, une seule fois (docs/14). C'est ainsi que la mer d'Orvane (`mondes/marin/`) rejoint le monde d'Orvane (`mer-1`). Avec `ponts` (`{ id, source, ponts: 3 }`), la source devient plutôt un continent du monde, relié par quelques ponts (docs/23). De même, `monde.parcelles : { par: 4 }` découpe le monde en parcelles au cycle suivant, une fois pour toutes (docs/15) : l'état tourne alors par parcelle, l'instantané publié et l'historique restent par biome. Et `monde.synthetique : true` éveille la Mère au cycle suivant, une fois pour toutes : la vie synthétique (docs/16) ; `monde.flore : true`, la flore (docs/17), dont les plantes sont publiées à part (`flore.json`) ; `monde.pathogenes : true`, les souches (docs/18). Pour repartir de zéro : supprimer `etat.json`, `generation-0.json`, `instantane.json`, `historique.json`, `tampon.json`. Les traducteurs verront un monde neuf (autre naissance) et repartiront de sa génération 0.
 
 ## Les mondes d'avant
 

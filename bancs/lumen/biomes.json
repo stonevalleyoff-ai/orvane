@@ -1,0 +1,9 @@
+[
+ { "id": "foret-de-cristal", "nom": "Forêt de cristal", "milieu": "terrestre", "axes": { "temperature": 0.55, "humidite": 0.6, "altitude": 0.3, "lumiere": 0.5, "couvert": 0.7, "magie": 0.9 }, "capacite": 200000, "voisins": ["plaine-de-cendres", "cavernes-luisantes", "lac-d-argent", "marais-de-spores", "mer-de-brume"] },
+ { "id": "plaine-de-cendres", "nom": "Plaine de cendres", "milieu": "terrestre", "axes": { "temperature": 0.8, "humidite": 0.2, "altitude": 0.2, "lumiere": 0.9, "couvert": 0.05, "magie": 0.1 }, "capacite": 150000, "voisins": ["foret-de-cristal", "pics-venteux", "lac-d-argent"] },
+ { "id": "cavernes-luisantes", "nom": "Cavernes luisantes", "milieu": "souterrain", "axes": { "temperature": 0.5, "humidite": 0.8, "altitude": 0.1, "lumiere": 0.1, "couvert": 0.9, "magie": 0.7 }, "capacite": 60000, "voisins": ["foret-de-cristal", "pics-venteux"] },
+ { "id": "pics-venteux", "nom": "Pics venteux", "milieu": "terrestre", "axes": { "temperature": 0.2, "humidite": 0.4, "altitude": 0.9, "lumiere": 0.8, "couvert": 0.1, "magie": 0.4 }, "capacite": 50000, "voisins": ["plaine-de-cendres", "cavernes-luisantes", "mer-de-brume"] },
+ { "id": "mer-de-brume", "nom": "Mer de brume", "milieu": "aerien", "axes": { "temperature": 0.4, "humidite": 0.9, "altitude": 0.8, "lumiere": 0.6, "couvert": 0.3, "magie": 0.6 }, "capacite": 80000, "voisins": ["pics-venteux", "foret-de-cristal"] },
+ { "id": "lac-d-argent", "nom": "Lac d'argent", "milieu": "aquatique", "axes": { "temperature": 0.5, "humidite": 1, "altitude": 0.2, "lumiere": 0.6, "couvert": 0.1, "magie": 0.5 }, "capacite": 120000, "voisins": ["foret-de-cristal", "plaine-de-cendres", "marais-de-spores"] },
+ { "id": "marais-de-spores", "nom": "Marais de spores", "milieu": "amphibie", "axes": { "temperature": 0.6, "humidite": 0.9, "altitude": 0.1, "lumiere": 0.3, "couvert": 0.5, "magie": 0.8 }, "capacite": 100000, "voisins": ["lac-d-argent", "foret-de-cristal"] }
+]

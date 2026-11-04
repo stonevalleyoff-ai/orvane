@@ -9,6 +9,7 @@
   "properties": {
     "orvane": { "type": "string" },
     "monde": { "type": "string", "description": "Doit être l'id du monde de l'instantané lu." },
+    "familles": { "type": "array", "items": { "enum": ["animale", "synthetique", "vegetale"] }, "description": "Les familles de lignées que ce jeu joue (animale seule si rien n'est dit, ni ici ni dans son exposition). Le tampon ne lit pas ses événements sur les autres : une nouveauté du monde (les machines, docs/16) ne compte pour un jeu que s'il la demande." },
     "instantane": { "type": "integer", "description": "Numéro du cycle que le jeu utilisait quand ces événements ont eu lieu (sert à dénormaliser avec les bonnes fréquences)." },
     "source": {
       "type": "object", "required": ["jeu", "compte"], "additionalProperties": false,
@@ -25,18 +26,20 @@
     "evenements": {
       "type": "array",
       "items": {
-        "type": "object", "required": ["taxon", "biome", "action", "n"], "additionalProperties": false,
+        "type": "object", "required": ["biome", "action", "n"], "additionalProperties": false,
         "properties": {
           "taxon": { "type": "string" },
           "parcelle": { "type": "string", "description": "Facultatif, dans un monde à parcelles (docs/15) : la parcelle où l'événement a eu lieu, une parcelle de son biome (« prairie~2 »). La pression y est posée ; sans elle, elle est répartie selon les effectifs." },
           "phenotype": { "type": "string", "description": "Omis si le jeu ne distingue pas les phénotypes pour cette action." },
           "biome": { "type": "string", "description": "Biome Orvane (déjà traduit par le traducteur, pas le biome du jeu)." },
           "action": {
-            "enum": ["rencontre", "prelevement", "capture", "liberation", "nourrissage", "reproduction", "deplacement", "habitat_perdu", "habitat_gagne"],
-            "description": "rencontre : vu/approché, sans conséquence (mesure l'exposition). prelevement : mort causée par le joueur. capture : retiré du sauvage (apprivoisé). liberation : rendu au sauvage. nourrissage/reproduction : aide à la population. deplacement : emporté vers un autre biome (voir « vers »). habitat_* : surface d'habitat détruite/créée, en « n » unités."
+            "enum": ["rencontre", "prelevement", "capture", "liberation", "nourrissage", "reproduction", "deplacement", "habitat_perdu", "habitat_gagne", "defrichage", "reboisement", "assechement", "irrigation", "construction", "transformation"],
+            "description": "rencontre : vu/approché, sans conséquence (mesure l'exposition). prelevement : mort causée par le joueur. capture : retiré du sauvage (apprivoisé). liberation : rendu au sauvage. nourrissage/reproduction : aide à la population. deplacement : emporté vers un autre biome (voir « vers »). defrichage, reboisement, assechement, irrigation, construction, transformation : le jeu change le milieu, en « n » unités de surface (docs/22) ; construction retire aussi de l'habitat ; transformation dit son axe et son sens. Ces actions, comme habitat_*, n'ont pas de taxon. habitat_* : surface d'habitat détruite/créée, en « n » unités."
           },
           "n": { "type": "number", "minimum": 0, "description": "Compte brut sur la période." },
           "vers": { "type": "string", "description": "Biome de destination pour « deplacement »." },
+          "axe": { "type": "string", "description": "(docs/22) Pour « transformation » : l'axe du lieu que le jeu change (couvert, humidite, temperature… ou un axe du monde, catalogue.monde.axes)." },
+          "sens": { "type": "number", "description": "(docs/22) Pour « transformation » : 1, l'axe monte ; −1, il baisse." },
           "age": { "enum": ["jeune", "adulte", "vieux"], "description": "Si le jeu le sait : prélever des adultes reproducteurs pèse plus." },
           "q": { "type": "object", "additionalProperties": { "type": "number" }, "description": "Traits continus (docs/8) : la valeur moyenne z des bêtes de cet événement, telle qu'elles l'ont tirée à la naissance. C'est ce qui dit à Orvane si les joueurs prennent les plus grandes, les plus audacieuses…" }
         }

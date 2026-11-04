@@ -113,6 +113,23 @@
               "lignees": {
                 "type": "integer",
                 "minimum": 0
+              },
+              "mode": {
+                "enum": [
+                  "biomes",
+                  "ponts"
+                ],
+                "description": "(docs/23) ponts : la source est devenue un continent du monde, relié par quelques ponts ; absent : biome par biome (docs/14)."
+              },
+              "ponts": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "description": "(docs/23) Les ponts : [parcelle de la source, parcelle de la cible]."
               }
             }
           }
@@ -184,6 +201,92 @@
             }
           },
           "additionalProperties": false
+        },
+        "flore": {
+          "type": "object",
+          "description": "La flore (docs/17) : depuis quand, combien de lignées à l'éveil.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            },
+            "lignees": {
+              "type": "integer"
+            }
+          },
+          "additionalProperties": false
+        },
+        "pathogenes": {
+          "type": "object",
+          "description": "Les souches du monde (docs/18).",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            },
+            "prochain": {
+              "type": "integer"
+            },
+            "souches": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "nom": {
+                    "type": "string"
+                  },
+                  "virulence": {
+                    "type": "number",
+                    "description": "la part des infectés qui meurent chaque cycle"
+                  },
+                  "transmission": {
+                    "type": "number"
+                  },
+                  "origine": {
+                    "type": "string",
+                    "description": "la lignée où elle est née"
+                  },
+                  "apparu": {
+                    "type": "integer"
+                  },
+                  "hotes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "les lignées où elle a pris"
+                  },
+                  "infectes": {
+                    "type": "integer"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "solo": {
+          "type": "object",
+          "description": "Un monde solo (moteur/solo.js, docs/19) : le monde partagé dont il est parti, et à quel cycle. Il vit sa vie ; rien n'en revient au monde partagé.",
+          "properties": {
+            "depuis": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "cycle": {
+              "type": "integer"
+            }
+          }
+        },
+        "milieu": {
+          "type": "object",
+          "description": "Le milieu transformé (docs/22) : depuis quand les bêtes et les joueurs changent les axes des lieux.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            }
+          }
         }
       }
     },
@@ -276,8 +379,10 @@
               "lumiere",
               "couvert"
             ],
-            "additionalProperties": false,
-            "description": "Chaque axe va de 0 à 1 : 0 = froid/sec/bas/sombre/nu, 1 = chaud/humide/haut/lumineux/dense.",
+            "additionalProperties": {
+              "$ref": "#/$defs/unite"
+            },
+            "description": "Chaque axe va de 0 à 1 : 0 = froid/sec/bas/sombre/nu, 1 = chaud/humide/haut/lumineux/dense. Un monde peut en ajouter (catalogue.monde.axes, docs/20).",
             "properties": {
               "temperature": {
                 "$ref": "#/$defs/unite"
@@ -389,6 +494,10 @@
               }
             },
             "additionalProperties": false
+          },
+          "transforme": {
+            "type": "object",
+            "description": "Le milieu transformé (docs/22) : base, les axes du lieu à l'éveil du milieu (axes donne ceux d'aujourd'hui) ; jeu, ce que les joueurs y ont changé, qui s'efface lentement ; etat, ref, signale : la mémoire du moteur."
           }
         }
       }
@@ -534,6 +643,29 @@
                 "type": "number",
                 "minimum": 0,
                 "description": "Ce que le trait pèse dans le choix du partenaire : 1,6, un porteur a 60 % de chances en plus d’être choisi pour père (docs/9)."
+              },
+              "flore": {
+                "type": "object",
+                "additionalProperties": false,
+                "description": "Ce que le trait fait devant les plantes (docs/17) : portee (la hauteur atteinte, en part de la taille), haut (il atteint les arbres), toxique et epineux (la part des défenses qu'il supporte, de 0 à 1).",
+                "properties": {
+                  "portee": {
+                    "type": "number"
+                  },
+                  "haut": {
+                    "type": "boolean"
+                  },
+                  "toxique": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "epineux": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                }
               }
             }
           }
@@ -685,6 +817,230 @@
               }
             }
           }
+        },
+        "flore": {
+          "type": "object",
+          "description": "Les traits des plantes (docs/17) : toxique, epineux.",
+          "additionalProperties": {
+            "type": "object"
+          }
+        },
+        "monde": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Le catalogue propre du monde (docs/20) : ses axes, ses traits, ses organes, ses formes de corps. Ils s'ajoutent à ceux du moteur, sans les remplacer. Un traducteur y lit ce que le monde a de plus que les autres.",
+          "properties": {
+            "nom": {
+              "type": "string"
+            },
+            "axes": {
+              "type": "object",
+              "description": "Les axes de biome propres au monde (la magie, le rayonnement…) : ils comptent dans la niche comme les cinq du moteur.",
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "nom": {
+                    "type": "string"
+                  },
+                  "effet": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "traits": {
+              "type": "object",
+              "description": "Les traits propres au monde, au format de catalogue.traits : ils apparaissent par mutation comme ceux du moteur.",
+              "additionalProperties": {
+                "type": "object",
+                "required": [
+                  "domaine",
+                  "organe",
+                  "cout",
+                  "effet"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "domaine": {
+                    "enum": [
+                      "morphologie",
+                      "locomotion",
+                      "sens",
+                      "offense",
+                      "defense",
+                      "metabolisme",
+                      "reproduction",
+                      "social",
+                      "activite"
+                    ]
+                  },
+                  "organe": {
+                    "type": "string",
+                    "description": "Ce que le corps porte pour ce trait (glande, carapace, membrane…)."
+                  },
+                  "cout": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Surcoût énergétique relatif par rapport au plan de base (0.15 = +15 %)."
+                  },
+                  "effet": {
+                    "type": "string",
+                    "description": "Ce que le trait permet, en langage biologique (« projette une sécrétion irritante à 3 longueurs de corps »)."
+                  },
+                  "comportement": {
+                    "type": "string",
+                    "description": "Conduite induite, si le trait en impose une (« embuscade, riposte à distance »)."
+                  },
+                  "exige": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Traits requis pour que celui-ci existe (cohérence des combinaisons)."
+                  },
+                  "exclut": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "fournit": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Matières que l'organe laisse derrière lui (pour les traducteurs : objets, récolte)."
+                  },
+                  "ecarts": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "number"
+                    },
+                    "description": "Multiplicateurs appliqués au plan corporel (masse_kg, longevite, portee…)."
+                  },
+                  "fixe": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Valeurs imposées au plan (activite, regime)."
+                  },
+                  "vulnerabilite": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Multiplicateur de la chance d’être mangé (0.55 = une carapace divise presque par deux). 1 = neutre."
+                  },
+                  "chasse": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Multiplicateur de l’efficacité de chasse (1.25 = crocs allongés). 1 = neutre."
+                  },
+                  "resistance": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Multiplicateur de la mortalité par maladie (0.85 résiste ; 1.25 : le groupe propage). 1 = neutre."
+                  },
+                  "conduite": {
+                    "type": "object",
+                    "description": "Ce que l'organe fait faire à la bête, en vocabulaire abstrait (docs/7-conduites.md). type : riposte-distance, riposte-contact, defense-contact, repli, protection, immobilite, alerte-groupe, defense-petits, vol-plane, vision-nocturne, perception-proche, vue-diurne-faible, morsure, sprint, lenteur, escalade, nage, avertissement, activite-crepuscule. presage : ce qu'un joueur attentif voit avant qu'elle ne se déclenche.",
+                    "properties": {
+                      "type": {
+                        "type": "string"
+                      },
+                      "effet": {
+                        "type": "string"
+                      },
+                      "portee": {
+                        "type": "number"
+                      },
+                      "recharge": {
+                        "type": "number"
+                      },
+                      "force": {
+                        "type": "number"
+                      },
+                      "presage": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "type"
+                    ]
+                  },
+                  "heredite": {
+                    "enum": [
+                      "dominant",
+                      "recessif"
+                    ],
+                    "description": "Dominant (par défaut) : une copie de l’allèle suffit à montrer le trait. Récessif : il en faut deux ; deux parents qui ne le montrent pas peuvent le transmettre (docs/9)."
+                  },
+                  "attrait": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Ce que le trait pèse dans le choix du partenaire : 1,6, un porteur a 60 % de chances en plus d’être choisi pour père (docs/9)."
+                  },
+                  "flore": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "description": "Ce que le trait fait devant les plantes (docs/17) : portee (la hauteur atteinte, en part de la taille), haut (il atteint les arbres), toxique et epineux (la part des défenses qu'il supporte, de 0 à 1).",
+                    "properties": {
+                      "portee": {
+                        "type": "number"
+                      },
+                      "haut": {
+                        "type": "boolean"
+                      },
+                      "toxique": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "epineux": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "organes": {
+              "type": "object",
+              "description": "Les types d'organes propres au monde, au format de catalogue.organes, avec poids (leur chance d'apparaître, 0,8 par défaut).",
+              "additionalProperties": {
+                "type": "object"
+              }
+            },
+            "formes": {
+              "type": "object",
+              "description": "Les formes de corps propres au monde : { nom, pattes, depuis (les formes dont elle peut naître), chance }.",
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "nom": {
+                    "type": "string"
+                  },
+                  "pattes": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 12
+                  },
+                  "depuis": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "chance": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -819,9 +1175,10 @@
                   "omnivore",
                   "detritivore",
                   "filtreur",
-                  "synthetique"
+                  "synthetique",
+                  "vegetal"
                 ],
-                "description": "« synthetique » : une machine (docs/16), qui ne mange pas et ne se mange pas."
+                "description": "« synthetique » : une machine (docs/16), qui ne mange pas et ne se mange pas. « vegetal » : une plante (docs/17), qui pousse et se fait brouter."
               },
               "longevite": {
                 "type": "number",
@@ -878,18 +1235,14 @@
                 "description": "La silhouette (moteur/corps.js) : des proportions de 0 à 1 et des couleurs, pour qu'un jeu dessine une lignée qu'il n'a jamais vue. Dérive à chaque séparation. Les organes (cornes, massue, aiguillon…) apparaissent, grandissent et se perdent ; les scalaires cornes, crête, ailes, carapace, antennes en sont le résumé (la plus grande taille du type), pour les lecteurs anciens. Facultatif.",
                 "properties": {
                   "forme": {
-                    "enum": [
-                      "quadrupede",
-                      "hexapode",
-                      "bipede",
-                      "oiseau",
-                      "serpent"
-                    ]
+                    "type": "string",
+                    "pattern": "^[a-z][a-z-]*$",
+                    "description": "quadrupede, hexapode, bipede, oiseau, serpent, ou une forme propre au monde (catalogue.monde.formes, docs/20)."
                   },
                   "pattes": {
                     "type": "integer",
                     "minimum": 0,
-                    "maximum": 8
+                    "maximum": 12
                   },
                   "long": {
                     "type": "number",
@@ -1069,6 +1422,37 @@
                   "capteur"
                 ],
                 "description": "Une machine (docs/16) : ce qu'elle fait d'abord, d'après ses modules."
+              },
+              "famille": {
+                "enum": [
+                  "animale",
+                  "synthetique",
+                  "vegetale"
+                ],
+                "description": "La famille de la lignée, si elle n'est pas animale (docs/16, docs/17). Un jeu ne reçoit que les familles qu'il demande (Tampon.filtrer)."
+              },
+              "forme": {
+                "enum": [
+                  "herbe",
+                  "buisson",
+                  "arbre",
+                  "roseau",
+                  "algue",
+                  "lichen",
+                  "succulente",
+                  "champignon"
+                ],
+                "description": "Une plante (docs/17) : sa forme, qui dit qui l'atteint."
+              },
+              "hauteur_m": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Une plante : sa hauteur."
+              },
+              "croissance": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Une plante : sa repousse par cycle, quand elle a de la place."
               }
             }
           },
@@ -1240,6 +1624,59 @@
                   "minimum": 0,
                   "maximum": 1,
                   "description": "La part des morts de la population dues aux machines régulatrices (docs/16)."
+                },
+                "nourriture": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Un brouteur (docs/17) : ce qu'il trouve à brouter ici, rapporté à ce qu'il trouvait à l'éveil de la flore ; absent quand il n'a pas changé."
+                },
+                "potentiel": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Une plante : la place qu'elle a ici (en unités de capacité)."
+                },
+                "frequences": {
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "description": "Une plante : la fréquence de chacun de ses phénotypes ici, dans l'ordre de ses phenotypes."
+                },
+                "reference": {
+                  "type": "object",
+                  "description": "Une plante : ce qu'elle était à l'éveil de la flore (effectif, frequences) ; la nourriture des brouteurs s'y rapporte."
+                },
+                "recouvrement": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Un brouteur (docs/17) : ce qu'il mangeait en commun avec sa bande de taille à son arrivée ; la place qu'il trouve s'y rapporte."
+                },
+                "infection": {
+                  "type": "object",
+                  "description": "Les souches qui circulent dans la population (docs/18) : pour chacune, la part des bêtes infectées (i) et celle des immunisées (r).",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "i": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "r": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "pollinisation": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Une plante à fleurs (docs/18) : ce que les butineurs du lieu faisaient à son arrivée ; sa repousse s'y rapporte."
                 }
               }
             }
@@ -1324,7 +1761,8 @@
               "mefiance",
               "eveil",
               "conception",
-              "transfert"
+              "transfert",
+              "transformation"
             ]
           },
           "taxon": {

@@ -35,7 +35,21 @@
         },
         "cycle": {
           "type": "string",
-          "description": "Durée réelle d'un cycle : « 24h », « 6h », « 7d ». Le moteur tourne une fois par cycle."
+          "description": "Durée réelle d'un cycle : « 24h », « 6h », « 1h », « 30min », « 7d » (docs/19). Le workflow passe chaque heure et ne fait tourner le monde qu'à ses heures de cycle (monde.heure, cycle.js --auto)."
+        },
+        "heure": {
+          "type": "string",
+          "pattern": "^[0-2][0-9]:[0-5][0-9]$",
+          "description": "L'heure de cycle, en UTC (« 03:00 » par défaut) : les heures de cycle en partent et reviennent toutes les monde.cycle (docs/19)."
+        },
+        "catalogue": {
+          "type": "string",
+          "description": "Chemin du catalogue propre du monde (axes, traits, organes, formes de corps), relu à chaque cycle (docs/20)."
+        },
+        "rattrapage": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Combien de cycles dus le monde rattrape d'un coup, au plus, après une absence (3 par défaut, docs/19)."
         },
         "biomes": {
           "type": "string",
@@ -56,9 +70,18 @@
               "id": { "type": "string", "description": "Le nom de la fusion : une fusion faite ne se refait pas." },
               "source": { "type": "string", "description": "Le monde qui arrive : un instantané ou une amorce, chemin depuis la racine du dépôt (ex. mondes/marin/amorce.json)." },
               "biomes": { "type": "array", "items": { "type": "string" }, "description": "Les biomes où ses lignées arrivent (par défaut, tous ceux que les deux mondes partagent)." },
-              "part": { "type": "number", "minimum": 0, "maximum": 1, "description": "La part de ses effectifs qui arrive (0,5 par défaut)." }
+              "part": { "type": "number", "minimum": 0, "maximum": 1, "description": "La part de ses effectifs qui arrive (0,5 par défaut ; 1 pour une fusion par ponts)." },
+              "ponts": { "type": ["integer", "array"], "items": { "type": "array", "items": { "type": "string" }, "minItems": 2, "maxItems": 2 }, "description": "(docs/23) Une fusion par ponts : la source devient un continent du monde, relié par autant de ponts (un nombre), ou par ceux-là ([[biome de la source, biome de la cible], …])." }
             }
           }
+        },
+        "pathogenes": {
+          "description": "Les souches (docs/18) : le cycle de nuit donne au monde ses souches, une fois ; les épidémies sont désormais les leurs.",
+          "type": "boolean"
+        },
+        "flore": {
+          "description": "La flore (docs/17) : le cycle de nuit éveille la flore, une fois : une lignée de plantes par forme et par biome, à l'équilibre avec les brouteurs du moment.",
+          "type": "boolean"
         },
         "synthetique": {
           "description": "La vie synthétique (docs/16) : le cycle de nuit éveille la Mère, une fois, dans le biome dit (le volcan par défaut). true : avec ses réglages par défaut.",
@@ -134,6 +157,11 @@
       ],
       "additionalProperties": false,
       "properties": {
+        "familles": {
+          "type": "array",
+          "items": { "enum": ["animale", "synthetique", "vegetale"] },
+          "description": "Les familles de lignées que ce jeu sait jouer (animale seule par défaut). Il ne reçoit pas les autres (Tampon.filtrer), et le tampon ne lit pas ses événements sur elles : une nouveauté du monde n'arrive chez un jeu que s'il la demande."
+        },
         "compression": {
           "type": "object",
           "required": [

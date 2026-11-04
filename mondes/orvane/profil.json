@@ -9,6 +9,10 @@
     "annee": 120,
     "historique": 20,
     "parcelles": { "par": 4 },
+    "synthetique": true,
+    "flore": true,
+    "milieu": true,
+    "pathogenes": true,
     "fusions": [
       { "id": "mer-1", "source": "mondes/marin/amorce.json", "part": 0.5 }
     ],

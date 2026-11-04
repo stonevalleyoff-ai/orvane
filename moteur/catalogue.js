@@ -17,18 +17,22 @@
 //    qui ne le montrent pas peuvent le transmettre — docs/9-reproduction.md)
 //  - attrait : ce qu'il pèse dans le choix du partenaire (1,6 : un porteur a 60 % de chances en plus d'être choisi pour
 //    père) ; une robe voyante attire les partenaires et les prédateurs à la fois
+//  - flore : ce que le trait fait devant les plantes (docs/17) : portee (la hauteur atteinte, en part de la taille), haut (il
+//    atteint les arbres), toxique et epineux (la part des défenses des plantes qu'il supporte, de 0 à 1)
 //  L'ordre du catalogue décide qui masque qui (épistasie) : l'albinisme, avant les autres robes, les efface.
+//  Un monde peut porter ses propres traits (catalogue.monde.traits, docs/20), avec ce même vocabulaire : ils s'ajoutent à
+//  ceux-ci, sans jamais les remplacer.
 (function (racine) {
 'use strict';
 const TRAITS = {
   // --- morphologie ---
-  'gigantisme':     { domaine: 'morphologie', organe: 'squelette et masse musculaire', cout: .25,
+  'gigantisme':     { flore: { portee: .3 }, domaine: 'morphologie', organe: 'squelette et masse musculaire', cout: .25,
                       effet: 'masse ×1.8, taille ×1.3 ; plus lent, mûrit plus tard', exclut: ['nanisme'],
                       ecarts: { masse_kg: 1.8, taille_m: 1.3, vitesse_rel: .8, maturite: 1.4, longevite: 1.15, resistance: 0.95 }, vulnerabilite: 0.85, chasse: 1.1, attrait: 1.3 },
   'nanisme':        { domaine: 'morphologie', organe: 'squelette réduit', cout: .04,
                       effet: 'masse ×0.45, taille ×0.75 ; mûrit plus tôt, vit moins longtemps', exclut: ['gigantisme'],
                       ecarts: { masse_kg: .45, taille_m: .75, maturite: .7, longevite: .8, portee: .85, resistance: 1.1 }, vulnerabilite: 1.15, chasse: 0.9, heredite: 'recessif', attrait: .8 },
-  'queue-prehensile': { domaine: 'morphologie', organe: 'queue musclée et préhensile', cout: .06,
+  'queue-prehensile': { flore: { haut: true }, domaine: 'morphologie', organe: 'queue musclée et préhensile', cout: .06,
                       effet: 'saisit, grimpe, se suspend', ecarts: { vitesse_rel: .95 }, vulnerabilite: 0.9 ,
                       conduite: { type: 'escalade', presage: 'la queue enroulée à une prise' } },
   // --- pigmentation (les robes) ---
@@ -40,13 +44,13 @@ const TRAITS = {
   'robe-doree':     { domaine: 'morphologie', organe: 'pigments caroténoïdes', cout: .03,
                       effet: 'robe dorée, voyante ; attire les partenaires', exclut: ['albinisme', 'melanisme'], ecarts: { temperament: 1.1 }, vulnerabilite: 1.1, heredite: 'recessif', attrait: 1.6 },
   // --- locomotion ---
-  'pattes-longues': { domaine: 'locomotion', organe: 'membres postérieurs allongés', cout: .07,
+  'pattes-longues': { flore: { portee: .3 }, domaine: 'locomotion', organe: 'membres postérieurs allongés', cout: .07,
                       effet: 'vitesse de pointe ×1.3', ecarts: { vitesse_rel: 1.3 }, vulnerabilite: 0.8, chasse: 1.15 ,
                       conduite: { type: 'sprint', presage: 'haut sur ses pattes arrière' } },
   'palmes':         { domaine: 'locomotion', organe: 'membranes interdigitales', cout: .03,
                       effet: 'nage ×1.4, marche un peu gênée', ecarts: { vitesse_rel: 1.05 }, vulnerabilite: 0.9 ,
                       conduite: { type: 'nage', presage: 'les doigts palmés' } },
-  'membrane-planante': { domaine: 'locomotion', organe: 'repli de peau entre les membres', cout: .12,
+  'membrane-planante': { flore: { haut: true }, domaine: 'locomotion', organe: 'repli de peau entre les membres', cout: .12,
                       effet: 'plane depuis une hauteur sur plusieurs longueurs de corps', exclut: ['gigantisme'], vulnerabilite: 0.75 ,
                       conduite: { type: 'vol-plane', presage: 'un repli de peau entre les pattes' } },
   // --- sens ---
@@ -71,10 +75,10 @@ const TRAITS = {
                       effet: 'piqûre venimeuse de contact', exige: ['glande-irritante'], fournit: ['dard'], vulnerabilite: 0.8, chasse: 1.1 ,
                       conduite: { type: 'riposte-contact', effet: 'venin', presage: 'la queue armée d\'un aiguillon' } },
   // --- défense ---
-  'peau-epaisse':   { domaine: 'defense', organe: 'derme kératinisé', cout: .05,
+  'peau-epaisse':   { flore: { epineux: .6 }, domaine: 'defense', organe: 'derme kératinisé', cout: .05,
                       effet: 'résiste aux morsures et aux chocs légers', fournit: ['cuir'], vulnerabilite: 0.8, resistance: 0.9 ,
                       conduite: { type: 'protection', force: 1.25, presage: 'un cuir épais' } },
-  'carapace':       { domaine: 'defense', organe: 'plaques osseuses dermiques', cout: .18,
+  'carapace':       { flore: { epineux: .4 }, domaine: 'defense', organe: 'plaques osseuses dermiques', cout: .18,
                       effet: 'protège le dos et les flancs ; ralentit', exige: ['peau-epaisse'], exclut: ['membrane-planante'],
                       ecarts: { vitesse_rel: .85, masse_kg: 1.2, vulnerabilite: 0.55, resistance: 0.9 }, fournit: ['plaque-osseuse'] ,
                       conduite: { type: 'repli', force: 1.6, presage: 'des plaques osseuses sur le dos' } },
@@ -85,10 +89,10 @@ const TRAITS = {
                       effet: 'annonce sa toxicité ; dissuade', exige: ['glande-irritante'], exclut: ['camouflage'], ecarts: { temperament: 1.2 }, vulnerabilite: 0.6 ,
                       conduite: { type: 'avertissement', presage: 'des couleurs vives, comme un avertissement' } },
   // --- métabolisme ---
-  'metabolisme-lent': { domaine: 'metabolisme', organe: 'thyroïde peu active', cout: .0,
+  'metabolisme-lent': { flore: { toxique: .6 }, domaine: 'metabolisme', organe: 'thyroïde peu active', cout: .0,
                       effet: 'vit plus longtemps, bouge moins, mûrit plus tard', ecarts: { longevite: 1.35, vitesse_rel: .85, maturite: 1.2, resistance: 0.85 }, vulnerabilite: 1.1 ,
                       conduite: { type: 'lenteur', force: .85, presage: 'des gestes lents' } },
-  'estomac-large':  { domaine: 'metabolisme', organe: 'tube digestif allongé', cout: .2,
+  'estomac-large':  { flore: { toxique: .5 }, domaine: 'metabolisme', organe: 'tube digestif allongé', cout: .2,
                       effet: 'digère végétaux et proies', fixe: { regime: 'omnivore' }, resistance: 0.95 },
   // --- reproduction ---
   'ponte-abondante': { domaine: 'reproduction', organe: 'gonades hypertrophiées', cout: .10,
@@ -123,11 +127,12 @@ const QUANT = {
                  effet: 'cohésion du groupe ; le groupe protège des prédateurs et propage les maladies' }
 };
 // Un trait peut-il s'ajouter à cette liste de traits ?
-function admissible(id, traits) {
-  const t = TRAITS[id]; if (!t || traits.includes(id)) return false;
+// (cat : le catalogue du monde, ses traits propres compris, docs/20)
+function admissible(id, traits, cat = TRAITS) {
+  const t = cat[id]; if (!t || traits.includes(id)) return false;
   if ((t.exige || []).some(x => !traits.includes(x))) return false;
   if ((t.exclut || []).some(x => traits.includes(x))) return false;
-  return !traits.some(x => (TRAITS[x]?.exclut || []).includes(id));
+  return !traits.some(x => (cat[x]?.exclut || []).includes(id));
 }
 // Ce qui se voit d'une bête qui porte ces allèles exprimés : dans l'ordre du catalogue, on garde un trait si ce qu'il exige
 // est déjà là et si rien de gardé ne l'exclut (l'albinisme efface le mélanisme ; un jet sans glande ne se voit pas).
