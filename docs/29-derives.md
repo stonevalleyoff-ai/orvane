@@ -24,7 +24,7 @@ La sélection fait le reste : un omnivore né là où les proies abondent prosp�
 Les plantes broutées gagnent des défenses, des toxines ou des épines (docs/17). Là où une défense a gagné une partie d'une population sans l'avoir toute (entre 30 et 70 % des pieds), la part défendue devient parfois une lignée à elle (0,2 % de chances par cycle) :
 - « Bate herbe épineuse (Prairie) », issue de l'herbe de la prairie : épineuse à 90 % ;
 - sa mère garde le reste de ses pieds, et n'est presque plus épineuse ;
-- elles se partagent la place de la mère : ensemble, elles font les pieds qu'aurait faits la mère seule, et la nourriture des brouteurs du lieu ne change pas.
+- elles se partagent la place de la mère : ensemble, elles font les pieds qu'aurait faits la mère seule, et la nourriture des brouteurs du lieu ne change pas. La place de référence (`reference.potentiel`, d'où le milieu recalcule la place à chaque cycle, docs/22) se partage elle aussi : avant le 5 novembre 2026, la mère et la fille la reprenaient chacune toute au cycle suivant.
 
 Une lignée de plantes a trois filles au plus, et tout le monde en a au plus la moitié du nombre de lignées qu'avait la flore à son éveil. Une population doit peser 50 unités de biomasse au moins.
 

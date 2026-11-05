@@ -12,8 +12,13 @@
 'use strict';
 const fs = require('fs'), path = require('path');
 const Orvane = require('./orvane.js'), CAT = require('./catalogue.js'), CORPS = require('./corps.js'), Tampon = require('../tampon/tampon.js');
-const a = process.argv.slice(2), arg = (k, d) => { const i = a.indexOf(k); return i >= 0 && a[i + 1] != null ? a[i + 1] : d; };
-const src = a.find(x => !x.startsWith('--')) || 'mondes/sv-1', cycles = +arg('--cycles', 3000), graine = +arg('--graine', 7), nom = arg('--nom', 'Monde né d\'Orvane'), sortie = arg('--sortie', 'genese.json');
+// (une reprise retrouve les arguments de la genèse qu'elle continue : ceux qu'on redonne l'emportent, les autres viennent du point
+// de reprise — sans cela, une reprise sans ses --regles ou ses --lignees continuait un autre monde)
+const a = process.argv.slice(2), iR = a.indexOf('--reprise'), ARGS0 = iR >= 0 && a[iR + 1] ? JSON.parse(fs.readFileSync(a[iR + 1], 'utf8')).args || {} : {};
+const arg = (k, d) => { const i = a.indexOf(k); return i >= 0 && a[i + 1] != null ? a[i + 1] : k in ARGS0 ? ARGS0[k] : d; };
+const DRAPEAUX = ['--cycles', '--graine', '--nom', '--sortie', '--lignees', '--rarete', '--etage', '--regles', '--milieux', '--ancetres', '--catalogue', '--point'];
+const src = a.find((x, i) => !x.startsWith('--') && !(i > 0 && a[i - 1].startsWith('--'))) || ARGS0._src || 'mondes/sv-1', cycles = +arg('--cycles', 3000), graine = +arg('--graine', 7), nom = arg('--nom', 'Monde né d\'Orvane'), sortie = arg('--sortie', 'genese.json');
+const ARGS = { _src: src, ...Object.fromEntries(DRAPEAUX.map(k => [k, arg(k, undefined)]).filter(([, v]) => v !== undefined)) };
 
 // --- les biomes ---
 let biomes;
@@ -107,7 +112,7 @@ Object.assign(Orvane.REGLES, { mutation: .01, nouveau_trait: .08, menace: 20, ma
   derive: { masse: [.4, 3], regime: .25, locomotion: .3, activite: .2, corps: 2.5 } });   // corps : la silhouette dérive deux fois et demie plus vite
 // --regles '{"cle": valeur}' : des règles du moteur propres à ce monde
 const reglesMonde = arg('--regles', null) ? JSON.parse(arg('--regles', '{}')) : null;   // gardées par le monde (monde.regles) : elles valent ensuite à chacun de ses cycles
-if (reglesMonde) Object.assign(Orvane.REGLES, reglesMonde);
+if (reglesMonde) for (const [k, v] of Object.entries(reglesMonde)) { const b = Orvane.REGLES[k]; Orvane.REGLES[k] = v && typeof v === 'object' && !Array.isArray(v) && b && typeof b === 'object' && !Array.isArray(b) ? { ...b, ...v } : v; }   // (d'un niveau, comme le moteur : { derive: { tolerance: .3 } } garde le reste de la dérive)
 const rarete = +arg('--rarete', .0005);   // une lignée installée qui reste sous cette part de la BIOMASSE du monde est rayée : la place se libère
 // (la rareté se juge à l'étage de la chaîne : un prédateur ne pèse naturellement qu'un dixième de ses proies — Lindeman)
 const ETAGE = { carnivore: +arg('--etage', 10), omnivore: 2 };
@@ -118,16 +123,20 @@ const TRACE = process.env.ORVANE_TRACE ? { nes: {}, fin: {}, rarete: {}, vus: ne
 // une genèse longue tourne par tranches : un point de reprise tous les --point cycles (sortie.reprise.json) ; --reprise
 // <fichier> repart de là, au cycle près (le hasard de chaque cycle ne dépend que de la graine et du numéro du cycle)
 const point = +arg('--point', 200), reprise = arg('--reprise', null), fichierReprise = sortie + '.reprise.json';
-if (reprise) { const r = JSON.parse(fs.readFileSync(reprise, 'utf8')); inst = r.inst; bilan = r.bilan; vivantsMax = r.vivantsMax; k0 = r.k; console.log(`reprise au cycle ${k0}`); }
+// (la parenté de chaque lignée, gardée toute la genèse : le moteur oublie une lignée éteinte dix cycles après sa mort, mais ses filles
+// vivantes doivent pouvoir remonter jusqu'à leur plus proche ancêtre vivant)
+let PARENTS = new Map();
+if (reprise) { const r = JSON.parse(fs.readFileSync(reprise, 'utf8')); inst = r.inst; bilan = r.bilan; vivantsMax = r.vivantsMax; k0 = r.k; PARENTS = new Map(r.parents || []); console.log(`reprise au cycle ${k0}`); }
 for (let k = k0; k < cycles; k++) {
   inst = Orvane.cycle(inst, {}, { duree_ms: 0 });
+  for (const t of inst.taxons) if (!PARENTS.has(t.id)) PARENTS.set(t.id, t.parent ?? null);
   for (const e of inst.evenements) if (e.type in bilan) bilan[e.type]++;
   if ((k + 1) % 25 === 0) { const total = inst.taxons.reduce((s, t) => s + (t.eteint ? 0 : biomasseDe(t)), 0);
     for (const t of inst.taxons) if (!t.eteint && t.apparu < inst.cycle.n - 100 && poidsRarete(t) < rarete * total) { if (TRACE) TRACE.rarete[Tampon.regimeDe(t, TR)] = (TRACE.rarete[Tampon.regimeDe(t, TR)] || 0) + 1; t.eteint = inst.cycle.n; t.statut = 'eteint'; t.populations = []; bilan.extinction++; } }
   if (TRACE) for (const t of inst.taxons) { const r = Tampon.regimeDe(t, TR); if (!TRACE.vus.has(t.id)) { TRACE.vus.add(t.id); TRACE.nes[r] = (TRACE.nes[r] || 0) + 1; }
     if (t.eteint && !TRACE.morts.has(t.id)) { TRACE.morts.add(t.id); TRACE.fin[r] = (TRACE.fin[r] || 0) + 1; } }
   const vivants = inst.taxons.filter(t => !t.eteint).length; vivantsMax = Math.max(vivantsMax, vivants);
-  if (point > 0 && (k + 1) % point === 0 && k + 1 < cycles) fs.writeFileSync(fichierReprise, JSON.stringify({ k: k + 1, inst, bilan, vivantsMax }));
+  if (point > 0 && (k + 1) % point === 0 && k + 1 < cycles) fs.writeFileSync(fichierReprise, JSON.stringify({ k: k + 1, inst, bilan, vivantsMax, parents: [...PARENTS], args: ARGS }));
   if ((k + 1) % Math.max(1, Math.round(cycles / 10)) === 0) console.log(`c${k + 1} · ${vivants} lignées vivantes · ${bilan.separation} séparations, ${bilan.extinction} extinctions, ${bilan.nouveau_trait} traits apparus`);
 }
 if (TRACE) console.log('trace', JSON.stringify({ nes: TRACE.nes, eteints: TRACE.fin, rayes_pour_rarete: TRACE.rarete }));
@@ -148,8 +157,12 @@ for (const t of vivants) { const base = nommer(), principal = t.populations.slic
   const L = t.plan.locomotion || [], E = L.includes('nage') && !L.some(l => TERRE.includes(l)) ? EPI_EAU : L.includes('vol') ? EPI_AIR : EPI;
   const reg = Tampon.regimeDe(t, TR), epi = E[reg] || EPI[reg] || ['créature']; t.nom = `${base} ${epi[Math.floor(R() * epi.length)]}${b ? ' ' + (/^[aeiouyéè]/i.test(b.nom || b.id) ? 'd\'' : 'de ') + (b.nom || b.id).toLowerCase() : ''}`;
   ids.set(t.id, base.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')); }
-for (const t of vivants) { const ancien = t.id; t.id = ids.get(ancien); t.parent = t.parent && ids.has(t.parent) ? ids.get(t.parent) : (t.parent ? ancetreVivant(t.parent) : null); }
-function ancetreVivant(id) { let p = inst.taxons.find(x => x.id === id); while (p && p.eteint) p = inst.taxons.find(x => x.id === p.parent); return p ? ids.get(p.id) || null : null; }
+// (le plus proche ancêtre vivant, cherché avec les anciens identifiants avant qu'on ne renomme : le parent d'une lignée dont le parent
+// s'est éteint n'est plus perdu)
+for (const t of inst.taxons) if (!PARENTS.has(t.id)) PARENTS.set(t.id, t.parent ?? null);
+const ancetreVivant = id => { const vus = new Set(); let p = PARENTS.has(id) ? PARENTS.get(id) : null; while (p != null && !ids.has(p) && !vus.has(p)) { vus.add(p); p = PARENTS.get(p) ?? null; } return p != null && ids.has(p) ? ids.get(p) : null; };
+const parents = new Map(vivants.map(t => [t.id, ancetreVivant(t.id)]));
+for (const t of vivants) { const ancien = t.id; t.id = ids.get(ancien); t.parent = parents.get(ancien); }
 inst.taxons = vivants; inst.cycle = { n: inst.cycle.n, date: new Date().toISOString(), pressions_recues: 0 }; inst.evenements = []; inst.monde.genese = { cycles, graine, ancetres: Object.values(ANCETRES).flat().map(m => m.id) }; if (reglesMonde) inst.monde.regles = reglesMonde;
 // (les cycles d'apparition sont gardés : l'arbre des lignées raconte la genèse ; le monde publié commence à ce cycle-là)
 const traits = {}; for (const t of inst.taxons) for (const p of t.phenotypes) for (const id of p.traits) traits[id] = TR[id]; inst.catalogue.traits = traits;

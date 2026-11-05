@@ -7,11 +7,13 @@ Jusqu'ici, seuls les bêtes et les joueurs faisaient bouger les lieux (docs/22).
 ## Le climat
 
 L'écart de température de tout le monde, depuis l'éveil du climat (`monde.climat.temperature`), suit trois choses :
-- **un grand cycle glaciaire** de 1 500 cycles, à 0,08 près ;
-- **un petit cycle** de 400 cycles, à 0,03 près ;
+- **un grand cycle glaciaire** de 1 500 cycles, à 0,08 près, qui commence par refroidir ;
+- **un petit cycle** de 400 cycles, à 0,03 près, qui commence par réchauffer ;
 - **une marche au hasard**, qui revient lentement vers zéro.
 
-À un cycle par heure, le premier âge glaciaire vient en trois semaines environ. Sur 125 jours, l'écart va de −0,23 à +0,06.
+Les deux cycles partent de zéro et y reviennent en moyenne : le monde passe à peu près autant de temps au chaud qu'au froid. Sur 3 000 cycles (quatre graines) : la moyenne reste à ±0,01, l'écart va d'environ −0,16 à +0,15, le monde est en âge glaciaire (sous −0,06) un cinquième du temps, en âge chaud (au-dessus de +0,06) un quart du temps, et ses ponts de terre émergent trois à cinq fois. À un cycle par heure, le premier âge glaciaire vient en dix jours environ.
+
+(Avant le 5 novembre 2026, les deux cycles partaient de leur sommet : le monde ne faisait que refroidir, de −0,23 à +0,06, en âge glaciaire plus de la moitié du temps.)
 
 Chaque lieu le sent à sa façon :
 - un lieu de terre le sent tout entier ;
@@ -32,7 +34,7 @@ Un lieu que le milieu transforme (docs/22) suit le climat avec retard, comme il 
 
 Très rarement, une fois par millier de cycles environ et trois fois au plus, une île naît sous la mer, au large d'un rivage :
 - **sa terre est d'abord pauvre** (5 % de la moitié de la place de son rivage), puis s'enrichit en 300 cycles ;
-- **ses plantes viennent du rivage** : 5 % de chaque lignée de plantes du rivage dont la forme y pousse ;
+- **ses plantes viennent du rivage** : 5 % de chaque lignée de plantes du rivage dont la forme y pousse ; leur place est celle de l'île du moment, et grandit avec elle ;
 - **seules les bêtes qui volent, nagent ou dérivent y passent** (les toutes petites, de 10 g au plus, sur des radeaux de branches). Elles la gagnent peu à peu : chaque cycle, 0,2 % de celles du rivage, ou de temps en temps un petit groupe de deux.
 
 Une île est un lieu nouveau, qui dit son rivage dans `traversees`. Dans un monde par parcelles, c'est un type de lieu à elle, que le monde publié montre comme un biome.
@@ -56,7 +58,7 @@ Au cycle de nuit suivant, le climat s'éveille, une fois pour toutes. Le jour de
 `bancs/climat.js`, en trois minutes, sur le monde d'Orvane :
 - **Le jour un.** Un monde sans climat tourne exactement comme le moteur sans ce fichier. Le jour de l'éveil, rien ne bouge.
 - **Le climat.**
-  - Sur 3 000 cycles, un premier âge glaciaire au cycle 475.
+  - Sur 3 000 cycles, un premier âge glaciaire au cycle 201, de −0,18 au plus froid à +0,13 au plus chaud.
   - Avec une onde de banc, la forêt passe de 0,5 à 0,35 de température et de 0,65 à 0,73 d'humidité. La mer n'en sent que la moitié.
   - Dans un monde au milieu transformé, le milieu suit avec retard.
 - **La vie suit.** 40 cycles d'un âge glaciaire imposé (−0,12) : les populations dont le lieu convient mieux à leur niche pèsent 3,5 % de plus qu'au climat stable, celles dont il convient moins 6,5 % de moins.

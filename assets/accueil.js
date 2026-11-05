@@ -21,6 +21,7 @@
       document.getElementById('lignees').textContent = String(inst.taxons.filter(t => t.eteint == null).length);
       document.getElementById('lignees-label').textContent = 'lignées vivantes à ce cycle';
     }
+    if (Array.isArray(inst.biomes) && document.getElementById('biomes')) document.getElementById('biomes').textContent = String(inst.biomes.length);
   } catch (_) {
     status.textContent = 'État courant disponible dans l’Observatoire';
   }

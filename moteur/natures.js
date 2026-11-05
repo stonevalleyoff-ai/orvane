@@ -29,12 +29,16 @@ const article = nom => { const w = String(nom).split(' ')[0].toLowerCase(), e = 
 // la distance de deux lieux, sur les axes du type (pondérés : la lumière suit le couvert, l'altitude ne bouge guère)
 function distance(a, ref) { let s = 0, w = 0; for (const k in ref) { if (typeof ref[k] !== 'number' || typeof a[k] !== 'number') continue; const p = REGLES.poids[k] ?? .5; s += p * (a[k] - ref[k]) ** 2; w += p; } return w ? Math.sqrt(s / w) : 0; }
 
+const continentDe = id => { const m = /~(.+)-\d+$/.exec(String(id)); return m ? m[1] : ''; };
 // l'éveil : les types de lieux du monde, tels qu'ils sont (les biomes d'avant les parcelles, leurs axes d'avant le milieu transformé)
 function eveiller(inst) {
   const out = JSON.parse(JSON.stringify(inst)); if (out.monde?.natures) return { inst: out, evenements: [] };
   const src = out.monde?.parcelles?.types || out.biomes, types = {};
-  for (const b of src) { const ici = out.biomes.find(x => x.id === b.id) || b;
-    types[b.id] = { nom: b.nom || b.id, milieu: b.milieu, axes: { ...(ici.transforme?.base || b.axes) }, ...(b.saisons !== undefined ? { saisons: b.saisons } : {}) }; }
+  // (le continent d'un type : celui de ses parcelles, quand une fusion par ponts en a fait un continent à part, docs/23 —
+  // « lande~genese-7-1 » est de la genèse 7 ; un monde par biomes, ou d'un seul tenant, n'en a qu'un)
+  const conts = {}; for (const p of out.biomes) { const t = String(p.id).split('~')[0], c = continentDe(p.id); (conts[t] ||= new Set()).add(c); }
+  for (const b of src) { const ici = out.biomes.find(x => x.id === b.id) || b, C = [...(conts[b.id] || [])];
+    types[b.id] = { nom: b.nom || b.id, milieu: b.milieu, axes: { ...(ici.transforme?.base || b.axes) }, ...(b.saisons !== undefined ? { saisons: b.saisons } : {}), ...(C.length === 1 && C[0] ? { continent: C[0] } : {}) }; }
   out.monde = { ...out.monde, natures: { depuis: out.cycle?.n ?? 0, types } };
   return { inst: out, evenements: [{ type: 'eveil', taxon: out.biomes[0]?.id, detail: `les lieux peuvent changer de nature : ${Object.keys(types).length} types de lieux, et ceux que le monde inventera` }] };
 }
@@ -46,7 +50,10 @@ function preparer(monde, n) {
     const own = typeDe(b), cur = b.nature?.type || own, C = T[cur] || T[own]; if (!C || !T[own]) return;
     // sa nature d'origine se mesure à ce qu'il était (une parcelle n'est pas tout à fait son biome) ; les autres, à leur type
     const ref = id => id === own && b.transforme?.base ? b.transforme.base : T[id].axes;
-    const ok = VOISINS[C.milieu] || [C.milieu], cands = Object.keys(T).filter(id => ok.includes(T[id].milieu));
+    // (un lieu prend d'abord les natures de son continent : une forêt défrichée du continent d'Orvane devient une prairie, pas les
+    // « terres creuses » du continent de la genèse 7 ; les natures inventées sont à tous)
+    const ok = VOISINS[C.milieu] || [C.milieu], co = continentDe(b.id), duMien = id => T[id].inedit || (T[id].continent || '') === co;
+    let cands = Object.keys(T).filter(id => ok.includes(T[id].milieu)); if (cands.some(duMien)) cands = cands.filter(duMien);
     let best = cur, db = distance(b.axes, ref(cur)), dc = db; for (const id of cands) { const d = distance(b.axes, ref(id)); if (d < db - 1e-9) { best = id; db = d; } }
     let vers = null;
     // (loin de tout : de ce qu'il peut devenir d'un pas, et de ce qu'il pourrait devenir en plusieurs ; sinon, il fait un pas)

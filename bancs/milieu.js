@@ -18,7 +18,8 @@ const val = (s, v, p, R = S) => { if (!s) return []; if (s.$ref) s = R.$defs[s.$
   if (s.type && !t.includes(ty === 'number' && t.includes('integer') && Number.isInteger(v) ? 'integer' : ty)) return [p + ': type ' + ty]; if (s.enum && !s.enum.includes(v)) return [p + ': hors enum ' + v]; const e = [];
   if (ty === 'object') { for (const r of s.required || []) if (!(r in v)) e.push(p + ': manque ' + r); for (const k in v) { const ps = s.properties?.[k] || (typeof s.additionalProperties === 'object' ? s.additionalProperties : null); if (ps) e.push(...val(ps, v[k], p + '.' + k, R)); else if (s.additionalProperties === false) e.push(p + ': en trop ' + k); } }
   if (ty === 'array' && s.items) v.forEach((x, i) => e.push(...val(s.items, x, p + '[' + i + ']', R))); return e; };
-const I0 = lireJ('mondes/orvane/etat.json'), profil = lireJ('mondes/orvane/profil.json'), t0 = Date.now();
+// (le monde d'Orvane avant ses éveils — sa génération 0 —, celui que ce banc suppose : etat.json a depuis éveillé la flore, la Mère et le milieu)
+const I0 = lireJ('mondes/orvane/generation-0.json'), profil = lireJ('mondes/orvane/profil.json'), t0 = Date.now();
 const animaux = I => I.taxons.filter(t => t.plan?.regime !== 'vegetal').map(t => ({ id: t.id, populations: t.populations.map(p => [p.biome, p.effectif]) }));
 const biome = (I, id) => I.biomes.find(b => b.id === id);
 const place = (I, b, f) => somme(I.taxons.filter(t => t.plan?.regime === 'vegetal' && t.plan.forme === f).flatMap(t => t.populations.filter(p => p.biome === b).map(p => p.potentiel || 0)));
@@ -63,8 +64,10 @@ console.log('3. Les terriers, les barrages');
 }
 
 console.log('4. Le jeu');
-{ const lot = (action, n, extra = {}) => ({ monde: I0.monde.id, source: { jeu: 'essai', compte: 'j1' }, evenements: [{ biome: 'foret', action, n, ...extra }] });
-  const pres = (I, L) => Tampon.agreger(L, I, profil, {}).pressions;
+// (un compte ne pèse pas plus de par_compte_cycle unités de milieu par cycle, tampon/tampon.js : le défrichage d'un lieu est l'affaire
+//  de nombreux joueurs, 30 unités chacun au plus)
+{ const C = profil.influence?.plafonds?.par_compte_cycle || 30, lot = (action, n, extra = {}) => Array.from({ length: Math.ceil(n / C) }, (_, i) => ({ monde: I0.monde.id, source: { jeu: 'essai', compte: 'j' + i }, evenements: [{ biome: 'foret', action, n: Math.min(C, n - C * i), ...extra }] }));
+  const pres = (I, L) => Tampon.agreger(L.flat(), I, profil, {}).pressions;
   const c0 = biome(F, 'foret').axes.couvert, ar0 = place(F, 'foret', 'arbre'), he0 = place(F, 'foret', 'herbe');
   const tr = [], ev = []; let X = clone(F), Y;
   for (let k = 0; k < 60; k++) { X = Orvane.cycle(X, k < 20 ? pres(X, [lot('defrichage', 2000)]) : {}); ev.push(...X.evenements); if (k === 19) { tr.push(biome(X, 'foret').axes.couvert); Y = clone(X); } if (k === 59) tr.push(biome(X, 'foret').axes.couvert); }
@@ -81,7 +84,7 @@ console.log('4. Le jeu');
 
 console.log('5. Les parcelles, le contrat, le cycle de nuit');
 { const P = Mi.eveiller(Parcelles.decouper(clone(I0), { par: 4 })).inst, ps = P.biomes.filter(b => (b.type || b.id) === 'foret'), cible = ps[0].id;
-  const L = [{ monde: I0.monde.id, source: { jeu: 'essai', compte: 'j1' }, evenements: [{ biome: 'foret', parcelle: cible, action: 'defrichage', n: 400 }] }];
+  const L = Array.from({ length: 14 }, (_, i) => ({ monde: I0.monde.id, source: { jeu: 'essai', compte: 'j' + i }, evenements: [{ biome: 'foret', parcelle: cible, action: 'defrichage', n: Math.min(30, 400 - 30 * i) }] }));   // (400 unités, entre 14 joueurs)
   let X = P; for (let k = 0; k < 10; k++) { const r = Tampon.agreger(L, Parcelles.regrouper(X), profil, {}); X = Orvane.cycle(X, Parcelles.repartir(r.pressions, X, Parcelles.localiser(L, X))); }
   const c = id => X.biomes.find(b => b.id === id).axes.couvert, autres = ps.slice(1).map(b => c(b.id)), V = Parcelles.regrouper(X);
   verif(c(cible) < ps[0].axes.couvert - .03 && autres.every(v => Math.abs(v - ps[1].axes.couvert) < .02) && biome(V, 'foret').axes.couvert < biome(I0, 'foret').axes.couvert && biome(V, 'foret').axes.couvert > c(cible),

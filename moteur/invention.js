@@ -34,19 +34,24 @@ function accorder(base, [m, f]) { const w = String(base).toLowerCase(), plur = /
 function generateur(graine) { let g = (graine >>> 0) || 1; return () => { g = (Math.imul(g, 1664525) + 1013904223) >>> 0; return g / 4294967296; }; }
 
 // la duplication d'un trait : un organe qui l'exige et l'accentue
+// (le mot de l'organe, sans son article : « un esprit curieux » donne « esprit », pas « un »)
+const ARTICLES = new Set(['un', 'une', 'des', 'le', 'la', 'les', 'l', 'du', 'de', 'd']);
+const motDe = (organe, id) => String(organe || id).split(/[ ,;(’']/).filter(Boolean).find(w => !ARTICLES.has(w.toLowerCase())) || String(id);
 function dupliquer(id, T, R, pris = new Set()) {
-  const base = (T.organe || id).split(/[ ,;(]/)[0], epi = accorder(base, epitheteDe(T, R, e => !pris.has(sansAccent(`${base} ${accorder(base, e)}`))));
+  const base = motDe(T.organe, id), epi = accorder(base, epitheteDe(T, R, e => !pris.has(sansAccent(`${base} ${accorder(base, e)}`))));
   const t = { domaine: T.domaine, organe: `${T.organe || id}, ${epi}`, cout: +((T.cout || .05) * .6 + .02).toFixed(3), exige: [id],
     effet: `${base} ${epi} : ce que fait « ${id} », en plus marqué (${T.effet || ''})` };
   if (T.ecarts) t.ecarts = Object.fromEntries(Object.entries(T.ecarts).map(([k, v]) => [k, accent(v, REGLES.accent - 1)]));
   for (const k of ['vulnerabilite', 'chasse', 'resistance', 'attrait']) if (typeof T[k] === 'number' && T[k] !== 1) t[k] = accent(T[k], REGLES.accent - 1);
   if (T.flore) t.flore = Object.fromEntries(Object.entries(T.flore).map(([k, v]) => [k, typeof v === 'number' ? +clamp(v * .3, 0, 1).toFixed(2) : v]));
   if (T.conduite) t.conduite = { ...T.conduite, force: +((T.conduite.force || 1) * 1.15).toFixed(2), presage: `${T.conduite.presage || ''}, en plus marqué`.replace(/^, /, '') };
+  // (une phrase de la grammaire, docs/32 : la copie dit la même phrase, plus fort — sans cela, elle coûtait sans rien faire)
+  if (T.grammaire) t.grammaire = { ...T.grammaire, force: +clamp((T.grammaire.force || 1) * 1.15, 0, 2).toFixed(3) };
   return { t, nom: `${base} ${epi}` };
 }
 // la fusion de deux traits : un organe neuf, qui les exige tous deux et les renforce l'un par l'autre
 function fusionner(a, A, b, B, R, pris = new Set()) {
-  const base = (A.organe || a).split(/[ ,;(]/)[0], epi = accorder(base, epitheteDe(A, R, e => !pris.has(sansAccent(`${base} ${accorder(base, e)}`))));
+  const base = motDe(A.organe, a), epi = accorder(base, epitheteDe(A, R, e => !pris.has(sansAccent(`${base} ${accorder(base, e)}`))));
   const t = { domaine: A.domaine, organe: `${A.organe || a} et ${B.organe || b}, liés`, cout: +(((A.cout || .05) + (B.cout || .05)) * .35).toFixed(3), exige: [a, b],
     effet: `${base} ${epi} : « ${a} » et « ${b} » ne font plus qu'un organe, chacun renforçant l'autre` };
   const E = {}; for (const T of [A, B]) for (const [k, v] of Object.entries(T.ecarts || {})) E[k] = +((E[k] ?? 1) * accent(v, .3)).toFixed(3); if (Object.keys(E).length) t.ecarts = E;
@@ -58,7 +63,8 @@ function fusionner(a, A, b, B, R, pris = new Set()) {
 // un cycle : parfois, une lignée invente un trait ; il entre au catalogue du monde et naît chez quelques-unes de ses bêtes
 function inventer(ctx) {
   const { sortie, cat, n, graine, inventes = {} } = ctx, R = generateur(((graine >>> 0) ^ 0x2545f491) ^ Math.imul(n + 7, 0x9e3779b1)), ev = [], neufs = {};
-  if (Object.keys(inventes).length >= REGLES.max || R() >= REGLES.chance) return { traits: neufs, evenements: ev };
+  // (le plafond ne compte que les traits que le monde a inventés lui-même : ni ses phrases de grammaire, ni les traits de son auteur)
+  if (Object.values(inventes).filter(x => x?.origine && !x.grammaire).length >= REGLES.max || R() >= REGLES.chance) return { traits: neufs, evenements: ev };
   // les couples (lignée, trait répandu chez au moins 30 % de ses bêtes) ; un trait rare dans le monde, et peu repris jusqu'ici, invente plus
   // volontiers : le monde n'invente pas cent fois la même chose
   const cand = [], porteurs = {}, usage = id => Object.values(inventes).filter(x => x.origine?.de?.includes(id)).length;

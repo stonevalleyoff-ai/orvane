@@ -55,7 +55,8 @@ console.log('3. Les plantes');
   const brout = X => X.taxons.filter(h => (h.plan.regime === 'herbivore') && h.populations.some(q => q.biome === p.biome)).map(h => [h.id, h.populations.find(q => q.biome === p.biome)?.nourriture ?? 1]);
   const A = muet(() => Orvane.cycle(X0, {})), B = avec({ plantes: { chance: 1 } }, () => Orvane.cycle(X0, {}));
   const f = B.taxons.find(x => x.parent === t.id && x.plan.regime === 'vegetal'), m = B.taxons.find(x => x.id === t.id), a = A.taxons.find(x => x.id === t.id);
-  const e = B.evenements.find(x => x.taxon === f?.id), fp = f?.phenotypes.find(x => x.id === 'epineux')?.frequence, mp = m?.phenotypes.find(x => x.id === 'epineux')?.frequence;
+  // (dans le lieu où elles se séparent : le monde d'Orvane est en parcelles, et la mère vit aussi dans les autres, où rien ne change)
+  const ici = x => x?.populations.find(q => q.biome === p.biome)?.frequences?.[2], e = B.evenements.find(x => x.taxon === f?.id), fp = ici(f), mp = ici(m);
   verif(f && fp > .8 && mp < .2 && Math.abs(tot(f, p.biome) + tot(m, p.biome) - tot(a, p.biome)) / tot(a, p.biome) < .02 && e,
     `« ${e?.detail} » : la fille est épineuse à ${fx(fp * 100)} %, sa mère ne l'est plus qu'à ${fx(mp * 100)} % ; ensemble, elles font les pieds qu'aurait faits la mère seule`);
   const na = brout(A), nb = brout(B), ecart = Math.max(0, ...na.map(([id, r]) => Math.abs(r - (nb.find(x => x[0] === id)?.[1] ?? 1))));

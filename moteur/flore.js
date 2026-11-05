@@ -27,6 +27,7 @@ const REGLES = {
   mutation: .002,            // la part des pousses qui changent de défense
   pollinisation: { gain: .3, demi: .05 },    // (docs/18) jusqu'à 30 % de repousse en plus ; à moitié atteint quand les butineurs pèsent 5 % de la place
   renouveau: .03,            // la part des pieds qui meurent et repoussent chaque cycle : même sans dent, les défenses coûtent
+  declin: -1,                // la place la plus négative : une plante au-dessus de sa place ne perd au plus que sa repousse par cycle
   rodage: 400,               // les cycles d'équilibre à l'éveil (les plantes seules, sous les brouteurs du moment)
   ratio: [.2, 2],            // la nourriture d'un brouteur, rapportée à celle de l'éveil : bornée
   concurrence: [.3, 1.5],    // la charge de sa bande, pesée par le régime commun et rapportée à son arrivée : bornée
@@ -135,26 +136,43 @@ function parLieu(inst) { const L = {}; for (const t of inst.taxons) if (estPlant
 
 // --- la pousse : la repousse (selon la saison et ce qui reste de place), le broutage, la sélection, la mutation ---
 // H : par lieu, les brouteurs [{ plan, traits, bio }] ; prod : par lieu, le facteur de saison (null : 1)
+// (docs/30) la perte d'une plante sous les régimes en spectre est rapportée à l'éveil des régimes : la première fois qu'une plante
+// est broutée part par part, on note, phénotype par phénotype, le rapport entre ce que lui prenaient les brouteurs d'hier (toute
+// bouchée vaut une feuille) et ce que leur spectre lui prend ; ce calage la suit ensuite. Le jour de l'éveil, rien ne change ; après,
+// ce sont les écarts qui comptent : plus de mangeurs de fruits, moins d'arbres tués. (Gardé dans reference_diete.perte, sinon
+// reference.perte_diete.)
+const calageDe = p => p.reference_diete ? p.reference_diete.perte : p.reference?.perte_diete;
+const caler = (p, c) => { if (p.reference_diete) p.reference_diete.perte = c; else if (p.reference) p.reference.perte_diete = c; };
 function pousser(inst, H, prod, disp) {
   const L = parLieu(inst);
   for (const [bid, plantes] of Object.entries(L)) {
     const herb = H[bid] || [], perte = plantes.map(() => [0, 0, 0, 0]);
+    const parts_ = DIE && herb.some(h => h.plan.diete), perteC = parts_ && plantes.some(({ p }) => !calageDe(p) && (p.reference_diete || p.reference)) ? plantes.map(() => [0, 0, 0, 0]) : null;
+    // (toute bouchée vaut une feuille : la mesure d'avant les régimes en spectre)
+    const classique = (h, R, P) => { const part = h.nectar ? .5 : 1, u = plantes.map(({ t, p }) => { const A = atteinte(h.plan, h.traits, t.plan.forme); return [0, 1, 2, 3].map(k => p.effectif * t.plan.masse_kg * (p.frequences[k] || 0) * A * gout(R, k)); });
+      const S = somme(u.map(somme)); if (!(S > 0)) return; const I = REGLES.broutage * h.bio * part;   // (un butineur ne broute que la moitié de ce qu'il mange)
+      u.forEach((v, i) => v.forEach((x, k) => { P[i][k] += I * x / S; })); };
     for (const h of herb) { const R = resistances(h.plan, h.traits);
       if (h.plan.diete && DIE) {   // (docs/30) une bouchée de fruit, de nectar, de graine ne prend pas à la plante ce que prend une feuille
+        if (perteC) classique(h, R, perteC);
         const u = plantes.map(({ t, p }) => { const A = atteinte(h.plan, h.traits, t.plan.forme); return [0, 1, 2, 3].map(k => { const B = p.effectif * t.plan.masse_kg * (p.frequences[k] || 0); if (!(B > 0)) return [0, 0]; const [x, l] = parts(h.plan, R, A, t.plan.forme, k); return [B * x, B * l]; }); });
         const S = somme(u.map(v => somme(v.map(x => x[0])))); if (!(S > 0)) continue; const I = REGLES.broutage * h.bio;
         u.forEach((v, i) => v.forEach(([, l], k) => { perte[i][k] += I * l / S; })); continue; }
-      const part = h.nectar ? .5 : 1, u = plantes.map(({ t, p }) => { const A = atteinte(h.plan, h.traits, t.plan.forme); return [0, 1, 2, 3].map(k => p.effectif * t.plan.masse_kg * (p.frequences[k] || 0) * A * gout(R, k)); });
-      const S = somme(u.map(somme)); if (!(S > 0)) continue; const I = REGLES.broutage * h.bio * part;   // (un butineur ne broute que la moitié de ce qu'il mange)
-      u.forEach((v, i) => v.forEach((x, k) => { perte[i][k] += I * x / S; })); }
+      classique(h, R, perte); if (perteC) classique(h, R, perteC); }
+    if (parts_) plantes.forEach(({ p }, i) => { let c = calageDe(p);
+      if (!c && perteC && (p.reference_diete || p.reference)) { caler(p, perte[i].map((x, k) => x > 0 ? perteC[i][k] / x : 1)); perte[i] = perteC[i]; return; }   // (ce jour-là, la mesure d'hier telle quelle)
+      if (c) perte[i] = perte[i].map((x, k) => x * (c[k] ?? 1)); });
     plantes.forEach(({ t, p }, i) => {
-      const m = t.plan.masse_kg, B = p.effectif * m, K = p.potentiel || B, r = t.plan.croissance * (FLEURS.has(t.plan.forme) ? prod?.[bid] ?? 1 : 1) * (disp && DIE?.FRUITS.has(t.plan.forme) ? disp[bid] ?? 1 : 1);   // (docs/30 : qui mange les fruits sème)
-      const Bk = [0, 1, 2, 3].map(k => B * (p.frequences[k] || 0)), place = 1 - B / K;
+      const m = t.plan.masse_kg, B = p.effectif * m, K = p.potentiel ?? B, r = t.plan.croissance * (FLEURS.has(t.plan.forme) ? prod?.[bid] ?? 1 : 1) * (disp && DIE?.FRUITS.has(t.plan.forme) ? disp[bid] ?? 1 : 1);   // (docs/30 : qui mange les fruits sème)
+      // (une place qui fond ne tue pas une plante d'un coup : au pire elle perd sa repousse chaque cycle, jusqu'à sa nouvelle place ;
+      //  une place nulle — la forme n'a plus sa place ici — la fait décliner de même)
+      const Bk = [0, 1, 2, 3].map(k => B * (p.frequences[k] || 0)), place = K > 0 ? Math.max(REGLES.declin, 1 - B / K) : REGLES.declin;
       const nv = Bk.map((x, k) => { const cout = PHENOS[k][1].reduce((c, d) => c + REGLES.defenses[d].cout, 0);
         return Math.max(0, x + (r * place + REGLES.renouveau) * (1 - cout) * x - REGLES.renouveau * x - Math.min(perte[i][k], REGLES.prise_max * x)); });
-      const tot = somme(nv); if (!(tot > 0)) { p.effectif = 0; return; }
+      const tot = somme(nv), semer = () => { if (p.graines > 0) p.effectif = +(p.effectif + p.graines).toFixed(m >= 1 ? 4 : 2); delete p.graines; };   // (docs/22 : les graines venues d'un voisin)
+      if (!(tot > 0)) { p.effectif = 0; semer(); return; }
       const f = nv.map(x => x / tot).map(x => (1 - REGLES.mutation) * x + REGLES.mutation / 4);
-      p.tendance = +(B > 0 ? (tot - B) / B : 0).toFixed(3); p.effectif = +(tot / m).toFixed(2); p.frequences = f.map(x => +x.toFixed(5));
+      p.tendance = +(B > 0 ? (tot - B) / B : 0).toFixed(3); p.effectif = +(tot / m).toFixed(m >= 1 ? 4 : 2); p.frequences = f.map(x => +x.toFixed(5)); semer();
     });
   }
 }
@@ -176,8 +194,12 @@ function preparer(ctx) {
       // (le facteur de chaque phénotype : l'inverse de sa nourriture, ramené à une moyenne de 1 sur la population : la sélection
       //  déplace les naissances d'un phénotype à l'autre sans changer leur total)
       const Sx = D ? S.map((s, i) => S0[i] > 0 ? offre(pl, E.plans[i], t.phenotypes[i].traits, false, nec) * s / S0[i] : s) : S;   // (docs/30 : raccordée à l'éveil, elle aussi)
-      const inv = Sx.map(s => s > 0 ? 1 / s : 0), mi = somme(P.N.map((x, i) => x * inv[i])) / N;
-      r = { ratio: m0 > 0 ? clamp(m / m0, REGLES.ratio[0], REGLES.ratio[1]) : 1, facteur: inv.map(v => mi > 0 && v > 0 ? clamp(v / mi, .5, 2) : 1) }; }
+      // (la moyenne se prend avec le poids de chaque phénotype dans les naissances, son effectif et ce que ses traits lui coûtent ;
+      //  elle est refaite après les bornes : la somme pondérée des facteurs reste celle des effectifs)
+      const w = P.N.map((x, i) => x * (1 - (E.couts?.[i] || 0))), W = somme(w) || 1, inv = Sx.map(s => s > 0 ? 1 / s : 0), mi = somme(w.map((x, i) => x * inv[i])) / W;
+      let fa = inv.map(v => mi > 0 && v > 0 ? clamp(v / mi, .5, 2) : 1);
+      for (let k = 0; k < 3; k++) { const m1 = somme(w.map((x, i) => x * fa[i])) / W; if (!(m1 > 0) || Math.abs(m1 - 1) < 1e-12) break; fa = fa.map(v => clamp(v / m1, .5, 2)); }
+      r = { ratio: m0 > 0 ? clamp(m / m0, REGLES.ratio[0], REGLES.ratio[1]) : 1, facteur: fa }; }
     cache.set(k, r); return r; };
   // la concurrence par ce qu'on mange en commun : par lieu, chaque bête qui pèse sur la place, son régime de plantes (ce qu'elle
   // atteint et supporte de chacune) ; deux brouteurs qui ne mangent pas les mêmes plantes se gênent peu
@@ -220,7 +242,7 @@ function preparer(ctx) {
       for (const t of taxons) { if (t.eteint || !estButineur(t)) continue; const E = etat.get(t.id); if (!E) continue;
         for (const [bid, P] of Object.entries(E.pops)) poll[bid] = (poll[bid] || 0) + somme(P.N.map((x, i) => x * (E.plans[i].masse_kg || 1))); }
       for (const [bid, pl] of Object.entries(L)) { const K = somme(pl.map(({ p }) => p.potentiel || 0)), pi = K > 0 ? (poll[bid] || 0) / ((poll[bid] || 0) + REGLES.pollinisation.demi * K) : 0;
-        let ref = null; for (const { t, p } of pl) if (FLEURS.has(t.plan.forme)) { if (p.pollinisation == null) p.pollinisation = +pi.toPrecision(4); ref ??= p.pollinisation; }
+        let ref = null; for (const { t, p } of pl) if (FLEURS.has(t.plan.forme)) { if (p.pollinisation == null) { p.pollinisation = +pi.toPrecision(4); ref ??= pi; } ref ??= p.pollinisation; }   // (la première fois : exactement 1)
         prod[bid] = ref == null ? 1 : (1 + REGLES.pollinisation.gain * pi) / (1 + REGLES.pollinisation.gain * ref); }
       // (docs/30) la dispersion : qui mange les fruits sème les graines ; les arbres, les buissons, les succulentes repoussent jusqu'à
       // 20 % de plus là où l'on en mange beaucoup, rapporté à leur première fois (le jour un ne change rien)
@@ -229,7 +251,7 @@ function preparer(ctx) {
         for (const t of taxons) { if (t.eteint || !broute(t)) continue; const E = etat.get(t.id), fr = E?.plans[0]?.diete?.fruits || 0; if (!(fr > 0)) continue;
           for (const [bid, P] of Object.entries(E.pops)) F[bid] = (F[bid] || 0) + fr * somme(P.N.map((x, i) => x * (E.plans[i].masse_kg || 1))); }
         for (const [bid, pl] of Object.entries(L)) { const K = somme(pl.map(({ p }) => p.potentiel || 0)), pi = K > 0 ? (F[bid] || 0) / ((F[bid] || 0) + DIE.REGLES.dispersion.demi * K) : 0;
-          let ref = null; for (const { t, p } of pl) if (DIE.FRUITS.has(t.plan.forme)) { if (p.dispersion == null) p.dispersion = +pi.toPrecision(4); ref ??= p.dispersion; }
+          let ref = null; for (const { t, p } of pl) if (DIE.FRUITS.has(t.plan.forme)) { if (p.dispersion == null) { p.dispersion = +pi.toPrecision(4); ref ??= pi; } ref ??= p.dispersion; }   // (la première fois : exactement 1)
           disp[bid] = ref == null ? 1 : (1 + DIE.REGLES.dispersion.gain * pi) / (1 + DIE.REGLES.dispersion.gain * ref); } }
       pousser(inst, H, prod, disp);   // (la saison est déjà dans la place des brouteurs : la repousse n'en tient pas compte une seconde fois)
     },

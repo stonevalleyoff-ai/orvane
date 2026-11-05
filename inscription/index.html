@@ -47,7 +47,7 @@
   <ol class="etapes">
     <li><b>Lire le monde</b> <span>: chaque jour, sans clé. Il est publié à 03:17 UTC.</span>
 <pre id="pLire"></pre></li>
-    <li><b>Traduire</b> <span>: relier les terrains du jeu aux 24 biomes d'Orvane, et faire de chaque lignée une créature, là où elle vit et en proportion de son effectif.</span></li>
+    <li><b>Traduire</b> <span>: relier les terrains du jeu aux biomes d'Orvane, et faire de chaque lignée une créature, là où elle vit et en proportion de son effectif.</span></li>
     <li><b>Renvoyer des pressions</b> <span>: ce que font les joueurs, en comptes bruts, avec la clé du jeu.</span>
 <pre id="pDeposer"></pre></li>
     <li><b>Régler l'exposition</b> <span>: facultatif, plus bas, avec la clé d'administration.</span></li>
@@ -63,13 +63,14 @@
     <input type="password" id="iAdmin" autocomplete="off" spellcheck="false" placeholder="orvadm_…">
     <label for="iRenommer"><b>Nouveau nom</b> · facultatif</label>
     <input type="text" id="iRenommer" maxlength="60" autocomplete="off">
-    <label for="iExpo"><b>Exposition</b> · un objet JSON, 32 Ko au plus</label>
-    <textarea id="iExpo" spellcheck="false">{
+    <label for="iExpo"><b>Exposition</b> · un objet JSON, 32 Ko au plus ; laissée vide, l'exposition enregistrée ne change pas</label>
+    <textarea id="iExpo" spellcheck="false" placeholder='Par exemple :
+{
   "compression": { "defaut": 0.1 },
   "propagation_cycles": 3,
   "inertie_max": 0.05,
   "traits_rendus": ["albinisme", "melanisme", "gigantisme"]
-}</textarea>
+}'></textarea>
     <div class="actions"><button type="submit" id="bRegler">Enregistrer</button><span class="etat" id="eRegler" role="status" aria-live="polite"></span></div>
   </form>
 </section>
@@ -172,7 +173,8 @@ for (const t of inst.taxons) for (const p of t.populations) console.log(t.nom, p
     $('bRegler').disabled = true; dire(e, 'Enregistrement…');
     const r = await rpc('orvane_regler_jeu', { p_cle_admin: adm, p_exposition: expo, p_nom: nom || null });
     $('bRegler').disabled = false;
-    dire(e, r.ok ? 'Enregistré pour ' + r.jeu + ' : la nuit prochaine, le cycle lira vos lots avec cette exposition.' : r.erreur || 'L\'enregistrement a échoué.', !!r.ok);
+    // (un simple changement de nom n'envoie pas d'exposition : celle qui est enregistrée reste)
+    dire(e, r.ok ? (expo ? 'Enregistré pour ' + r.jeu + ' : la nuit prochaine, le cycle lira vos lots avec cette exposition.' : 'Le jeu ' + r.jeu + ' est renommé ; son exposition ne change pas.') : r.erreur || 'L\'enregistrement a échoué.', !!r.ok);
   });
 
   $('fVerifier').addEventListener('submit', async ev => {
@@ -185,7 +187,7 @@ for (const t of inst.taxons) for (const p of t.populations) console.log(t.nom, p
     $('bVerifier').disabled = false;
     if (!r.ok) { dire(e, r.erreur || 'La vérification a échoué.', false); return; }
     dire(e, 'Clé reconnue.', true);
-    const expo = r.exposition && typeof r.exposition === 'object' ? Object.keys(r.exposition).join(', ') : 'aucune : ses lots sont lus tels quels';
+    const expo = r.exposition && typeof r.exposition === 'object' && Object.keys(r.exposition).length ? Object.keys(r.exposition).join(', ') : 'aucune : ses lots sont lus tels quels';
     for (const [k, v] of [['Identifiant', r.jeu], ['Nom', r.nom], ['État', r.actif ? 'actif' : 'suspendu'], ['Exposition', expo]]) {
       const dt = document.createElement('dt'), dd = document.createElement('dd'); dt.textContent = k; dd.textContent = v == null ? '' : String(v); d.append(dt, dd);
     }

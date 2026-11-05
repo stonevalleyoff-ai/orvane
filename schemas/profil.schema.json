@@ -104,6 +104,14 @@
           "description": "L'esprit (docs/34) : le cycle de nuit l'éveille, une fois ; les bêtes apprennent, transmettent, se servent d'outils ; chaque population a ses savoirs.",
           "type": "boolean"
         },
+        "regles": {
+          "type": "object",
+          "description": "Des règles du moteur (REGLES de moteur/orvane.js) réglées pour ce monde vivant : elles complètent, d'un niveau, celles de sa genèse (monde.regles de l'instantané) et ne valent que pour ce qui arrive ensuite. Exemple : { \"derive\": { \"tolerance\": 0.35 } } laisse la largeur de la niche dériver à la séparation."
+        },
+        "collectif": {
+          "description": "La vie en groupe (docs/38) : le monde publie, pour chaque population, son groupe (troupeau, meute, banc…), sa hiérarchie et ses migrations saisonnières. Une lecture de l'état : rien ne change dans la simulation.",
+          "type": "boolean"
+        },
         "castes": {
           "description": "Les castes (docs/33) : le cycle de nuit les éveille, une fois ; de petits hexapodes grégaires peuvent devenir des colonies (une reine, des ouvrières, des soldats).",
           "type": "boolean"
@@ -187,6 +195,10 @@
             "jeux": {
               "type": "string",
               "description": "La fonction qui liste les jeux et leur exposition (orvane_lire_jeux). Sans elle, les lots sont lus avec l'exposition du profil."
+            },
+            "noms": {
+              "type": "string",
+              "description": "La fonction qui lit les noms proposés par les joueurs (orvane_lire_noms, docs/37). Sans elle, seuls les noms du dossier noms/ du monde comptent."
             }
           },
           "required": [

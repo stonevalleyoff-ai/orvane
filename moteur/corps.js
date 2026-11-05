@@ -103,9 +103,10 @@ const mix = (a, b, k) => a.map((v, i) => Math.round(clamp(v + (b[i] - v) * k, 0,
 // un corps complet et propre, quoi qu'on lui donne (champs manquants : ceux du défaut)
 function normaliser(c) {
   c = c || {};
-  const n = { forme: FORMES.includes(c.forme) || FX[c.forme] ? c.forme : DEFAUT.forme };
+  // (une forme que ce catalogue ne connaît pas : son repli si elle le dit, sinon le serpent, comme le veut docs/33 — pas un quadrupède)
+  const n = { forme: FORMES.includes(c.forme) || FX[c.forme] ? c.forme : c.forme && typeof c.forme === 'string' ? (FORMES.includes(c.repli) ? c.repli : 'serpent') : DEFAUT.forme };
   n.pattes = FX[n.forme] ? (Number.isFinite(c.pattes) ? Math.max(0, Math.min(FX[n.forme].pattes > 12 ? 60 : 12, Math.round(c.pattes))) : FX[n.forme].pattes ?? 4)   // (docs/33 : un corps segmenté porte jusqu'à soixante pattes)
-    : Number.isFinite(c.pattes) ? Math.max(0, Math.min(8, Math.round(c.pattes / 2) * 2)) : PATTES[n.forme];
+    : Number.isFinite(c.pattes) && c.forme === n.forme ? Math.max(0, Math.min(8, Math.round(c.pattes / 2) * 2)) : PATTES[n.forme];   // (une forme repliée prend les pattes de son repli)
   // (docs/24) la posture : 0 à quatre pattes (ou au ras du sol), 0,5 se dresse, 1 debout ; un bipède, un oiseau sont debout
   n.posture = Number.isFinite(c.posture) ? r2(clamp(c.posture)) : n.forme === 'bipede' || n.forme === 'oiseau' ? 1 : 0;
   for (const k of NUM) n[k] = r2(clamp(Number.isFinite(c[k]) ? c[k] : DEFAUT[k]));

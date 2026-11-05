@@ -23,7 +23,8 @@ const val = (s, v, p) => { if (!s) return []; const t = Array.isArray(s.type) ? 
   if (s.type && !t.includes(ty === 'number' && t.includes('integer') && Number.isInteger(v) ? 'integer' : ty)) return [p + ': type ' + ty]; if (s.enum && !s.enum.includes(v)) return [p + ': hors enum ' + v]; const e = [];
   if (ty === 'object') { for (const r of s.required || []) if (!(r in v)) e.push(p + ': manque ' + r); for (const k in v) { const ps = s.properties?.[k] || (typeof s.additionalProperties === 'object' ? s.additionalProperties : null); if (ps) e.push(...val(ps, v[k], p + '.' + k)); else if (s.additionalProperties === false) e.push(p + ': en trop ' + k); } }
   if (ty === 'array' && s.items) v.forEach((x, i) => e.push(...val(s.items, x, p + '[' + i + ']'))); return e; };
-const I0 = lireJ('mondes/orvane/etat.json'), t0 = Date.now();
+// (le monde d'Orvane d'avant ses souches — sa génération 0 — : etat.json les a éveillées le 4 novembre)
+const I0 = lireJ('mondes/orvane/generation-0.json'), t0 = Date.now();
 // une souche posée à la main dans une population
 const poser = (I, tid, bid, v, i = .05, id = 'souche-essai') => { I = clone(I); if (!I.monde.pathogenes) I = Pa.eveiller(I).inst;
   I.monde.pathogenes.souches[id] = { nom: 'Essaiose', virulence: v, transmission: Pa.transmission(v), origine: tid, apparu: I.cycle.n, hotes: [tid] };

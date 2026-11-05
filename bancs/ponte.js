@@ -18,7 +18,7 @@ const val = (s, v, p) => { if (!s) return []; if (s.$ref) s = S.$defs[s.$ref.spl
   if (s.type && !t.includes(ty === 'number' && t.includes('integer') && Number.isInteger(v) ? 'integer' : ty)) return [p + ': type ' + ty]; if (s.enum && !s.enum.includes(v)) return [p + ': hors enum ' + v]; const e = [];
   if (ty === 'object') { for (const r of s.required || []) if (!(r in v)) e.push(p + ': manque ' + r); for (const k in v) { const ps = s.properties?.[k] || (typeof s.additionalProperties === 'object' ? s.additionalProperties : null); if (ps) e.push(...val(ps, v[k], p + '.' + k)); else if (s.additionalProperties === false) e.push(p + ': en trop ' + k); } }
   if (ty === 'array' && s.items) v.forEach((x, i) => e.push(...val(s.items, x, p + '[' + i + ']'))); return e; };
-const I0 = lireJ('mondes/orvane/etat.json'), animaux = I => I.taxons.map(t => [t.id, t.populations.map(p => [p.biome, p.effectif])]);
+const I0 = require('./monde.js').orvane(), animaux = I => I.taxons.map(t => [t.id, t.populations.map(p => [p.biome, p.effectif])]);
 const W = Po.eveiller(I0).inst, B = Object.fromEntries(W.biomes.map(b => [b.id, b]));
 
 console.log('1. Le jour un');
@@ -73,7 +73,7 @@ console.log('5. Les joueurs, le contrat, le cycle de nuit');
   try { const P = lireJ('mondes/orvane/profil.json'); fs.writeFileSync(path.join(dossier, 'profil.json'), JSON.stringify({ ...P, monde: { ...P.monde, id: 'essai-ponte', ponte: true, synthetique: false, flore: false, milieu: false, pathogenes: false, fusions: [], parcelles: undefined, pressions: undefined } }));
     fs.writeFileSync(path.join(dossier, 'etat.json'), JSON.stringify(I0)); fs.writeFileSync(path.join(dossier, 'instantane.json'), JSON.stringify(I0));
     const sortie = execFileSync('node', [racine('hebergement/cycle.js'), 'essai-ponte', '--sans-reseau', '--cycles', '2'], { encoding: 'utf8' }), Ip = JSON.parse(fs.readFileSync(path.join(dossier, 'instantane.json'), 'utf8'));
-    verif((sortie.match(/^ponte : /gm) || []).length === 1 && Ip.monde.ponte && Ip.taxons.every(t => t.plan.reproduction), 'le cycle de nuit : le profil demande la ponte (monde.ponte), elle s\'éveille une fois, et chaque lignée publie son mode');
+    verif((sortie.match(/^ponte : /gm) || []).length === 1 && Ip.monde.ponte && Ip.taxons.filter(t => t.plan.regime !== 'synthetique').every(t => t.plan.reproduction), 'le cycle de nuit : le profil demande la ponte (monde.ponte), elle s\'éveille une fois, et chaque lignée publie son mode');
   } finally { fs.rmSync(dossier, { recursive: true, force: true }); }
 }
 console.log(`\n${ok ? 'tout passe' : 'ÉCHEC'} (${fx((Date.now() - t0) / 60000, 1)} min)`);

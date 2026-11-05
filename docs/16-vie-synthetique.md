@@ -56,9 +56,9 @@ Le prélèvement ne nourrit pas les machines : il ne dépend que de leur énergi
 
 ## La Mère
 
-`monde.mere`. Elle s'éveille une fois, dans le lieu le plus riche en minerai du biome demandé, et assemble les deux plans fondateurs, la Vigie (un régulateur solaire de 40 kg) et le Ferrailleur (un recycleur de 10 kg). Elle ne meurt pas : quoi qu'il arrive aux machines, elle en assemble encore.
+`monde.mere`. Elle s'éveille une fois, dans le lieu le plus riche en minerai du biome demandé, et assemble les deux plans fondateurs, la Vigie (un régulateur solaire de 40 kg) et le Ferrailleur (un recycleur de 10 kg). Elle ne meurt pas : quoi qu'il arrive aux machines, elle en assemble encore. Si toutes tombent, elle réassemble, d'après ses plans fondateurs (la Vigie, puis le Ferrailleur), dès que son minerai le permet.
 
-**Elle assemble.** Chaque cycle, elle assemble ses deux derniers plans (deux tiers, un tiers), jusqu'à 30 machines, autant que son minerai le permet.
+**Elle assemble.** Chaque cycle, elle assemble ses deux derniers plans (deux tiers, un tiers), jusqu'à 30 machines, autant que son minerai le permet. Un plan neuf se paie sur sa propre masse : un régulateur dix fois plus lourd que son modèle coûte dix fois plus, et faute de minerai elle attend, sans rien démonter.
 
 **Elle se souvient.** Par cause, ce qui tue ses machines, en morts par machine et par cycle :
 - l'usure ;

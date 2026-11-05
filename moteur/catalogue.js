@@ -138,12 +138,16 @@ function admissible(id, traits, cat = TRAITS) {
 // est déjà là et si rien de gardé ne l'exclut (l'albinisme efface le mélanisme ; un jet sans glande ne se voit pas).
 const ORDRE = Object.keys(TRAITS);
 const rang = id => { const i = ORDRE.indexOf(id); return i < 0 ? 999 : i; };
+// (plusieurs passes, jusqu'à ce que rien ne s'ajoute : un trait inventé qui en exige un autre hors du catalogue, rangé après lui,
+// s'exprime dès que celui-ci est gardé — en une seule passe, il ne s'exprimait jamais)
 function exprimer(porte, cat = TRAITS) {
-  const garde = [], de = id => cat[id] || TRAITS[id];
-  for (const id of [...porte].sort((a, b) => rang(a) - rang(b) || (a < b ? -1 : 1))) { const t = de(id); if (!t) continue;
-    if ((t.exige || []).some(x => !garde.includes(x))) continue;
-    if ((t.exclut || []).some(x => garde.includes(x)) || garde.some(x => (de(x)?.exclut || []).includes(id))) continue;
-    garde.push(id); }
+  const garde = [], de = id => cat[id] || TRAITS[id], reste = [...porte].sort((a, b) => rang(a) - rang(b) || (a < b ? -1 : 1));
+  for (let ajoute = true; ajoute;) { ajoute = false;
+    for (let i = 0; i < reste.length; i++) { const id = reste[i], t = de(id); if (!t) { reste.splice(i--, 1); continue; }
+      if ((t.exige || []).some(x => !garde.includes(x))) continue;
+      reste.splice(i--, 1);
+      if ((t.exclut || []).some(x => garde.includes(x)) || garde.some(x => (de(x)?.exclut || []).includes(id))) continue;
+      garde.push(id); ajoute = true; } }
   return garde.sort();
 }
 const API = { TRAITS, QUANT, admissible, exprimer };

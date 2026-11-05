@@ -15,6 +15,8 @@ La fusion biome par biome (docs/14) versait les bêtes d'un monde dans les biome
 - **Ce qui est refait à l'arrivée.** Si la cible a une flore, celle du continent est refaite à l'arrivée, à l'équilibre avec ses bêtes (docs/17). Si la cible a un milieu transformé, chaque parcelle du continent prend sa base (docs/22).
 - **Son catalogue.** Celui de la source s'ajoute à celui de la cible (docs/20).
 
+Ses parcelles oublient ce qui ne valait que dans son monde (son milieu, ses ressources, ses traversées vers des îles de là-bas, sa nature, son climat) ; leurs identifiants sont uniques, même si deux fusions portent des noms voisins (« Mer 9 », « mer-9 »). Un type de lieu que les deux mondes ont en commun prend les voisins des deux côtés.
+
 ## Les ponts
 
 `ponts: 3` relie le continent par trois ponts. Chaque pont relie les deux parcelles les plus semblables : le même biome, les mêmes axes, le même milieu. Deux ponts ne partent jamais du même biome, ni n'arrivent au même biome. Pour choisir ses ponts, on les nomme : `ponts: [["prairie", "prairie"], ["bois", "foret"]]`.

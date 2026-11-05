@@ -45,12 +45,17 @@ function nommer(inst, source, arrivent, n) {
 //   opt.biomes : les biomes où la source arrive (par défaut, tous ceux qu'elle a et que la cible a aussi) ;
 //   opt.part   : la part des effectifs de la source qui arrive (0,5 par défaut) : sous un individu, la population ne vient pas ;
 //   opt.id     : le nom de cette fusion (par défaut « <id de la source> ») ; une fusion déjà faite n'est pas refaite.
-function fusionner(cible, source, opt = {}) {
+// Seules les bêtes viennent : les plantes et les machines de la source restent chez elle (comme dans relier), et ses souches ne
+// voyagent pas (une souche ne passe jamais d'un arbre à l'autre, docs/18). Une source découpée en parcelles arrive par ses types.
+// Une fusion qui n'apporte rien (aucun biome commun, aucune lignée) n'est pas inscrite : elle n'est pas faite (bilan.echec).
+function fusionner(cible, source0, opt = {}) {
   const part = Number.isFinite(opt.part) ? Math.max(0, Math.min(1, opt.part)) : .5;
-  const id = opt.id || source.monde?.id || 'source';
+  const id = opt.id || source0.monde?.id || 'source';
   const deja = (cible.monde?.fusions || []).some(f => f.id === id);
   if (deja) return { inst: cible, bilan: { id, deja: true, lignees: 0 }, evenements: [] };
+  const P = Mod('./parcelles.js', 'OrvaneParcelles'), source = P && P.estParcellaire(source0) ? P.regrouper(source0) : source0;
   const inst = clone(cible), n = inst.cycle?.n ?? 0;
+  const rien = echec => ({ inst: cible, bilan: { id, monde: source.monde?.id || id, cycle: n, part, biomes: [], lignees: 0, individus: 0, renommees: 0, renommes: [], echec }, evenements: [] });
   // (docs/15) une cible découpée en parcelles : on choisit ses biomes (ses types), et une population arrive répartie entre
   // les parcelles de son biome, selon leur capacité
   const parcelles = inst.monde?.parcelles?.types ? inst.biomes : null, parType = {};
@@ -61,15 +66,16 @@ function fusionner(cible, source, opt = {}) {
     let reste = 0; const parts = L.map(b => { const e = q.effectif * (b.capacite || 0) / W; if (e < 1 && b !== best) { reste += e; return [b, 0]; } return [b, e]; });
     return parts.map(([b, e]) => [b, b === best ? e + reste : e]).filter(([, e]) => e >= 1).map(([b, e]) => ({ ...q, biome: b.id, effectif: Math.round(e) })); };
   const choisis = new Set((opt.biomes && opt.biomes.length ? opt.biomes : source.biomes.map(b => b.id)).filter(b => biomesCible.has(b)));
-  if (!choisis.size) throw new Error('fusion : aucun biome commun aux deux mondes');
+  if (!choisis.size) return rien('aucun biome commun aux deux mondes');
 
   // 1. ce qui arrive : les lignées vivantes de la source, leurs populations des biomes choisis, à la part dite
   const arrivent = [];
   for (const t of source.taxons) {
-    if (t.eteint != null) continue;
-    const pops = t.populations.filter(p => choisis.has(p.biome)).map(p => { const q = { ...clone(p), effectif: Math.round(p.effectif * part) }; delete q.hybride; return q; }).filter(p => p.effectif >= 1).flatMap(etaler).filter(p => p.effectif >= 1);   // (une zone hybride de la source n'a plus de sens ici)
+    if (t.eteint != null || t.plan?.regime === 'vegetal' || t.plan?.regime === 'synthetique') continue;
+    const pops = t.populations.filter(p => choisis.has(p.biome)).map(p => { const q = { ...clone(p), effectif: Math.round(p.effectif * part) }; delete q.hybride; delete q.infection; delete q.parcelles; return q; }).filter(p => p.effectif >= 1).flatMap(etaler).filter(p => p.effectif >= 1);   // (une zone hybride de la source n'a plus de sens ici)
     if (pops.length) arrivent.push({ t, pops });
   }
+  if (!arrivent.length) return rien('aucune lignée de la source ne vit dans ces biomes');
   // 2. les noms, 3. les parents
   const { ids, renommes, nomDe, parentArrive } = nommer(inst, source, arrivent, n);
   // 4. les lignées arrivées, ajoutées à la cible
@@ -109,15 +115,23 @@ function relier(cible, source, opt = {}) {
   const id = opt.id || source.monde?.id || 'source', part = Number.isFinite(opt.part) ? Math.max(0, Math.min(1, opt.part)) : 1;
   if ((cible.monde?.fusions || []).some(f => f.id === id)) return { inst: cible, bilan: { id, deja: true, lignees: 0 }, evenements: [] };
   let inst = clone(cible); if (!P.estParcellaire(inst)) inst = P.decouper(inst, { par: opt.par ?? 4 });
-  const n = inst.cycle?.n ?? 0, par = inst.monde.parcelles.par, monde = { ...(source.monde || {}), ...(opt.nom ? { nom: opt.nom } : {}) }, tag = sansAccent(id).replace(/[^a-z0-9]+/g, '-');
+  const n = inst.cycle?.n ?? 0, par = inst.monde.parcelles.par, monde = { ...(source.monde || {}), ...(opt.nom ? { nom: opt.nom } : {}) }, idsB = new Set(inst.biomes.map(b => b.id));
+  // (le tag des parcelles du continent : celui de la fusion, suffixé s'il est déjà porté — deux fusions « Mer 9 » et « mer-9 »)
+  const tag0 = sansAccent(id).replace(/[^a-z0-9]+/g, '-'); let tag = tag0; for (let k = 2; inst.biomes.some(b => b.id.includes(`~${tag}-`)); k++) tag = `${tag0}-${k}`;
   // 1. le continent : la source découpée comme la cible, ses parcelles renommées (prairie~2 → prairie~<fusion>-2)
   let S = clone(source); S.taxons = S.taxons.filter(t => t.eteint == null && t.plan?.regime !== 'synthetique' && t.plan?.regime !== 'vegetal');
   if (!P.estParcellaire(S)) S = P.decouper(S, { par: typeof par === 'number' ? par : 4, graine: monde.graine ?? 1 });
-  const typeDe = b => b.type || b.id, neuf = new Map(S.biomes.map(b => [b.id, `${typeDe(b)}${P.SEP}${tag}-${b.id.split(P.SEP)[1] || 1}`]));
+  const typeDe = b => b.type || b.id, neuf = new Map(); for (const b of S.biomes) { let x = `${typeDe(b)}${P.SEP}${tag}-${b.id.split(P.SEP)[1] || 1}`; while (idsB.has(x)) x += 'b'; idsB.add(x); neuf.set(b.id, x); }
+  // (une parcelle du continent oublie ce qui ne valait que dans son monde : son milieu, ses ressources, ses traversées vers des îles
+  //  de là-bas, sa nature, son climat ; le climat de la cible lui donne sa base si la cible en a un sans milieu)
   const places = S.biomes.map(b => { const q = { ...clone(b), id: neuf.get(b.id), nom: `${b.nom || b.id} (${monde.nom || monde.id || id})`, voisins: (b.voisins || []).map(v => neuf.get(v)).filter(Boolean) };
-    delete q.transforme; delete q.ressources; return q; });
+    delete q.transforme; delete q.ressources; delete q.traversees; delete q.nature; delete q.climat; delete q.jeune;
+    if (inst.monde.climat && !inst.monde.milieu) q.climat = { base: { ...q.axes } }; return q; });
   const types = inst.monde.parcelles.types, ty = new Set(types.map(b => b.id));
+  // (un type que les deux mondes ont : ses voisins sont ceux des deux côtés)
   for (const b of S.monde.parcelles.types) if (!ty.has(b.id)) { types.push({ ...clone(b), voisins: [...(b.voisins || [])] }); ty.add(b.id); }
+    else { const A = types.find(x => x.id === b.id); for (const v of b.voisins || []) if (v !== A.id && !(A.voisins ??= []).includes(v)) A.voisins.push(v); }
+  for (const A of types) for (const v of A.voisins || []) { const V = types.find(x => x.id === v); if (V && V !== A && !(V.voisins ??= []).includes(A.id)) V.voisins.push(A.id); }
   // 2. les ponts : les paires de parcelles les plus semblables (même type, mêmes axes, même milieu), sur des types différents ;
   //    ou ceux que dit opt.ponts
   const AX = ['temperature', 'humidite', 'altitude', 'lumiere', 'couvert'], d = (a, b) => Math.sqrt(AX.reduce((x, k) => x + ((a.axes?.[k] ?? .5) - (b.axes?.[k] ?? .5)) ** 2, 0));
@@ -148,7 +162,7 @@ function relier(cible, source, opt = {}) {
     if (inst.monde.flore && Fl) { T = Fl.eveiller(T).inst; plantes = T.taxons.filter(t => t.plan?.regime === 'vegetal'); }
     if (inst.monde.milieu && Mi) T = Mi.eveiller(T).inst;
     places.splice(0, places.length, ...T.biomes.map(b => { const q = places.find(p => p.id === b.id); return { ...b, voisins: q.voisins }; }));
-    const pid = new Set(inst.taxons.map(t => t.id)); for (const t of plantes) { if (pid.has(t.id)) t.id = `${t.id}-${tag}`; t.origine = { monde: monde.id || id, fusion: id }; }
+    const pid = new Set([...inst.taxons, ...nouveaux].map(t => t.id)); for (const t of plantes) { if (pid.has(t.id)) { let x = `${t.id}-${tag}`; for (let k = 2; pid.has(x); k++) x = `${t.id}-${tag}-${k}`; t.id = x; } pid.add(t.id); t.origine = { monde: monde.id || id, fusion: id }; }
   }
   inst.biomes.push(...places); inst.taxons.push(...nouveaux, ...plantes);
   for (const t of nouveaux) evenements.push({ type: 'apparition', taxon: t.id, biome: t.populations.slice().sort((a, b) => b.effectif - a.effectif)[0].biome, detail: `arrivée de ${monde.nom || monde.id || id}, un continent relié par ${ponts.length} pont${ponts.length > 1 ? 's' : ''} (fusion ${id})` });

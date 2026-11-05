@@ -29,7 +29,8 @@ const val = (s, v, p) => { if (!s) return []; const t = Array.isArray(s.type) ? 
   if (s.type && !t.includes(ty === 'number' && t.includes('integer') && Number.isInteger(v) ? 'integer' : ty)) return [p + ': type ' + ty]; if (s.enum && !s.enum.includes(v)) return [p + ': hors enum ' + v]; const e = [];
   if (ty === 'object') { for (const r of s.required || []) if (!(r in v)) e.push(p + ': manque ' + r); for (const k in v) { const ps = s.properties?.[k] || (typeof s.additionalProperties === 'object' ? s.additionalProperties : null); if (ps) e.push(...val(ps, v[k], p + '.' + k)); else if (s.additionalProperties === false) e.push(p + ': en trop ' + k); } }
   if (ty === 'array' && s.items) v.forEach((x, i) => e.push(...val(s.items, x, p + '[' + i + ']'))); return e; };
-const I0 = lireJ('mondes/orvane/etat.json'), t0 = Date.now();
+// (le monde d'Orvane avant ses éveils — sa génération 0 —, celui que ce banc suppose : etat.json a depuis éveillé la flore, la Mère et le milieu)
+const I0 = lireJ('mondes/orvane/generation-0.json'), t0 = Date.now();
 
 console.log('1. Le jour un');
 { const src = fs.readFileSync(racine('moteur/orvane.js'), 'utf8'), mod = { exports: {} };

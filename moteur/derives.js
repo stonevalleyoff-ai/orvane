@@ -59,12 +59,17 @@ function diviser(plantes, ctx) {
       const q = f[k], fq = [0, 0, 0, 0].map((_, i) => i === k ? .9 : .1 / 3), reste = f.map((x, i) => i === k ? 0 : x), sr = reste.reduce((a, x) => a + x, 0) || 1;
       let id = `${t.id}-${k === 1 ? 'tox' : k === 2 ? 'epi' : 'def'}`, j = 2; while (ids.has(id)) id = `${t.id}-${k === 1 ? 'tox' : k === 2 ? 'epi' : 'def'}-${j++}`; ids.add(id);
       const forme = t.plan.forme, nom = (SYL[Math.floor(R() * SYL.length)] + SYL[Math.floor(R() * SYL.length)]).replace(/^./, c => c.toUpperCase()), d = DEF[k][FEM.has(forme) ? 1 : 0];
+      // (tout ce qui mesure une place se partage : l'effectif, le potentiel, et ceux de la référence — le milieu recalcule chaque
+      //  cycle le potentiel d'après reference.potentiel ; sans ce partage, la mère et la fille reprenaient chacune toute la place.
+      //  Les fréquences de la référence restent celles de la mère : la nourriture de référence des brouteurs ne bouge pas)
+      const part = (o, x) => { if (!o) return o; const r = { ...o }; for (const k of ['effectif', 'potentiel']) if (Number.isFinite(o[k])) r[k] = +(o[k] * x).toFixed(2); return r; };
+      const ref0 = p.reference ? { effectif: p.effectif, ...p.reference } : null;
       const lieu = noms[p.biome] || p.biome, pf = { ...p, effectif: +(p.effectif * q).toFixed(2), tendance: 0, depuis: n, potentiel: +((p.potentiel || 0) * q).toFixed(2), frequences: fq.map(x => +x.toFixed(5)) };
-      if (p.reference) pf.reference = { ...p.reference, effectif: +((p.reference.effectif ?? p.effectif) * q).toFixed(2) };
-      if (p.reference_diete) pf.reference_diete = { ...p.reference_diete, effectif: +(p.reference_diete.effectif * q).toFixed(2) };   // (docs/30)
+      if (ref0) pf.reference = part(ref0, q);
+      if (p.reference_diete) pf.reference_diete = part(p.reference_diete, q);   // (docs/30)
       p.effectif = +(p.effectif * (1 - q)).toFixed(2); p.potentiel = +((p.potentiel || 0) * (1 - q)).toFixed(2); p.frequences = reste.map(x => +(x / sr).toFixed(5));
-      if (p.reference) p.reference = { ...p.reference, effectif: +((p.reference.effectif ?? p.effectif) * (1 - q)).toFixed(2) };
-      if (p.reference_diete) p.reference_diete = { ...p.reference_diete, effectif: +(p.reference_diete.effectif * (1 - q)).toFixed(2) };
+      if (ref0) p.reference = part(ref0, 1 - q);
+      if (p.reference_diete) p.reference_diete = part(p.reference_diete, 1 - q);
       const fille = { ...JSON.parse(JSON.stringify({ ...t, populations: [] })), id, nom: `${nom} ${forme} ${d} (${lieu})`, parent: t.id, apparu: n, eteint: null, statut: 'croissance', populations: [pf] };
       neuves.push(fille);
       ev.push({ type: 'separation', taxon: id, biome: p.biome, detail: `lignée de plantes issue de ${t.id} : ses pieds ${PIEDS[k]} (${Math.round(q * 100)} %) deviennent une lignée à elle, ${fille.nom}` });

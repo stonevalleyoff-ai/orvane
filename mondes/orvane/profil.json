@@ -24,6 +24,8 @@
     "castes": true,
     "formes": true,
     "esprit": true,
+    "collectif": true,
+    "regles": { "derive": { "tolerance": 0.35 } },
     "fusions": [
       { "id": "mer-1", "source": "mondes/marin/amorce.json", "part": 0.5 },
       { "id": "genese-7", "nom": "la genèse 7", "source": "mondes/genese-7/instantane.json", "ponts": 3 }
@@ -33,6 +35,7 @@
       "cle": "sb_publishable_F98uYIaPrLTjhj3n7QiBOg_SOtFynn8",
       "fonction": "orvane_lire_lots",
       "jeux": "orvane_lire_jeux",
+      "noms": "orvane_lire_noms",
       "secret": "ORVANE_LECTURE_SECRET"
     }
   },

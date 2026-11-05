@@ -15,15 +15,19 @@
 //   les fusions que commande le profil, profil.monde.fusions, sont appliquées une fois chacune, avant le cycle : docs/14 ;
 //   un profil qui demande des parcelles (profil.monde.parcelles) découpe le monde une fois ; il tourne ensuite par parcelle,
 //   et l'instantané publié reste par biome (docs/15) ; un profil qui demande la vie synthétique (profil.monde.synthetique)
-//   éveille la Mère une fois : docs/16 ; la flore (profil.monde.flore) : docs/17 ; les souches (profil.monde.pathogenes) : docs/18 ; le milieu (profil.monde.milieu) : docs/22 ; la ponte (profil.monde.ponte) : docs/25 ; les cycles de vie (profil.monde.stades) : docs/26 ; l'invention (profil.monde.invention) : docs/27 ; les natures des lieux (profil.monde.natures) : docs/28 ; les dérives (profil.monde.derives) : docs/29 ; les régimes en spectre (profil.monde.dietes) : docs/30 ; le climat (profil.monde.climat) : docs/31 ; la grammaire (profil.monde.grammaire) : docs/32 ; les castes et les formes nouvelles (profil.monde.castes, profil.monde.formes) : docs/33 ; l'esprit (profil.monde.esprit) : docs/34 ;
+//   éveille la Mère une fois : docs/16 ; la flore (profil.monde.flore) : docs/17 ; les souches (profil.monde.pathogenes) : docs/18 ; le milieu (profil.monde.milieu) : docs/22 ; la ponte (profil.monde.ponte) : docs/25 ; les cycles de vie (profil.monde.stades) : docs/26 ; l'invention (profil.monde.invention) : docs/27 ; les natures des lieux (profil.monde.natures) : docs/28 ; les dérives (profil.monde.derives) : docs/29 ; les régimes en spectre (profil.monde.dietes) : docs/30 ; le climat (profil.monde.climat) : docs/31 ; la grammaire (profil.monde.grammaire) : docs/32 ; les castes et les formes nouvelles (profil.monde.castes, profil.monde.formes) : docs/33 ; l'esprit (profil.monde.esprit) : docs/34 ; la vie en groupe (profil.monde.collectif) : docs/38 ;
 //   --forcer : faire tourner un monde dont le profil dit monde.nocturne = false, comme une genèse à observer)
+// L'histoire du monde (docs/37) : après chaque cycle, la chronique (chronique/index.json et chronique/<année>.json) note ce qui
+// compte, le muséum (museum.json) décrit chaque lignée nouvelle et garde les éteintes ; les noms proposés par les joueurs (lus par
+// orvane_lire_noms, profil.monde.pressions.noms, et dans le dossier noms/) sont retenus dans l'ordre d'arrivée, sauf ceux de
+// noms-refuses.json (la modération). Rien de cela ne touche à la simulation.
 // Les lots en ligne viennent du Supabase d'Orvane (hebergement/supabase.sql, hebergement/LISEZ-MOI.md), où tous les jeux déposent : lus par
 // la fonction orvane_lire_lots avec le secret de lecture d'Orvane (profil.monde.pressions, voir lotsEnLigne), avec les
 // jeux et leur exposition (orvane_lire_jeux). Sans le secret, ou avec --sans-reseau, seuls les lots du dossier comptent,
 // lus avec les expositions du dernier jeux.json.
 'use strict';
 const fs = require('fs'), path = require('path');
-const Orvane = require('../moteur/orvane.js'), Tampon = require('../tampon/tampon.js'), Morceaux = require('../tampon/morceaux.js'), Milieu = require('../moteur/milieu.js'), Ponte = require('../moteur/ponte.js'), Stades = require('../moteur/stades.js'), Invention = require('../moteur/invention.js'), Natures = require('../moteur/natures.js'), Derives = require('../moteur/derives.js'), Dietes = require('../moteur/dietes.js'), Climat = require('../moteur/climat.js'), Grammaire = require('../moteur/grammaire.js'), Castes = require('../moteur/castes.js'), Formes = require('../moteur/formes.js'), Esprit = require('../moteur/esprit.js'), Fusion = require('../moteur/fusion.js'), Parcelles = require('../moteur/parcelles.js'), Synthetique = require('../moteur/synthetique.js'), Flore = require('../moteur/flore.js'), Pathogenes = require('../moteur/pathogenes.js');
+const Orvane = require('../moteur/orvane.js'), Tampon = require('../tampon/tampon.js'), Morceaux = require('../tampon/morceaux.js'), Milieu = require('../moteur/milieu.js'), Ponte = require('../moteur/ponte.js'), Stades = require('../moteur/stades.js'), Invention = require('../moteur/invention.js'), Natures = require('../moteur/natures.js'), Derives = require('../moteur/derives.js'), Dietes = require('../moteur/dietes.js'), Climat = require('../moteur/climat.js'), Grammaire = require('../moteur/grammaire.js'), Castes = require('../moteur/castes.js'), Formes = require('../moteur/formes.js'), Esprit = require('../moteur/esprit.js'), Fusion = require('../moteur/fusion.js'), Parcelles = require('../moteur/parcelles.js'), Synthetique = require('../moteur/synthetique.js'), Flore = require('../moteur/flore.js'), Pathogenes = require('../moteur/pathogenes.js'), Chronique = require('../moteur/chronique.js'), Collectif = require('../moteur/collectif.js');
 const a = process.argv.slice(2), monde = a.find(x => !x.startsWith('--')) || 'sv-1', sansReseau = a.includes('--sans-reseau');
 const arg = (k, defaut) => { const i = a.indexOf(k); return i >= 0 && a[i + 1] != null ? +a[i + 1] : defaut; };
 let nCycles = arg('--cycles', 1) || 1;
@@ -35,7 +39,10 @@ const rpc = async (Pp, fn, corps) => { const r = await fetch(`${Pp.url.replace(/
   headers: { apikey: Pp.cle, 'Content-Type': 'application/json' }, body: JSON.stringify(corps) });
   if (!r.ok) throw new Error(`Supabase ${r.status} : ${await r.text()}`); return r.json(); };
 const lire = (n, defaut) => fs.existsSync(f(n)) ? JSON.parse(fs.readFileSync(f(n), 'utf8')) : defaut;
-const ecrire = (n, o, compact) => fs.writeFileSync(f(n), compact ? JSON.stringify(o) : JSON.stringify(o, null, 1));
+// (chaque fichier s'écrit à côté, puis prend sa place d'un coup : un cycle interrompu ne laisse pas de fichier à moitié écrit ; et
+// l'action rend le dossier d'un monde interrompu tel qu'il était, .github/workflows/cycle.yml)
+const ecrireTexte = (n, t) => { const c = f(n), tmp = c + '.tmp'; fs.writeFileSync(tmp, t); fs.renameSync(tmp, c); };
+const ecrire = (n, o, compact) => ecrireTexte(n, compact ? JSON.stringify(o) : JSON.stringify(o, null, 1));
 
 // Les lots en ligne. Deux chemins :
 //  - le monde dit où lire (profil.monde.pressions : { url, cle, secret }) : la fonction orvane_lire_lots du projet
@@ -44,13 +51,16 @@ const ecrire = (n, o, compact) => fs.writeFileSync(f(n), compact ? JSON.stringif
 //    service. Lu par pages de 1000, d'après l'identifiant de la dernière ligne lue (tampon.dernier_id) ; chaque ligne dit
 //    son jeu, le compte arrive pseudonymisé. Avec « jeux » (orvane_lire_jeux), la liste des jeux est lue aussi.
 //  - à l'ancienne : SUPABASE_URL et SUPABASE_SERVICE_KEY dans l'environnement, lecture directe de la table.
+const PAGES = 50;
 async function lotsEnLigne(tampon, profil) {
   if (sansReseau) return [];
   // (le secret tel qu'on l'a collé : sans les espaces, retours à la ligne ou guillemets qui s'y glissent souvent)
   const Pp = profil.monde?.pressions, secret = secretDe(Pp), id = profil.monde?.id || monde;
   if (Pp && Pp.url && Pp.cle && secret) {
     const out = []; let apres = tampon.dernier_id || 0;
-    for (let page = 0; page < 200; page++) {
+    // (au plus PAGES pages de 1000 lots par cycle : le reste attend le cycle suivant, dans l'ordre ; un afflux ne fait pas sauter la mémoire)
+    for (let page = 0; page < PAGES; page++) {
+      if (page === PAGES - 1) console.log(`::warning title=${id} · lots::plus de ${PAGES * 1000} lots en attente : le reste sera lu au prochain cycle.`);
       const rows = await rpc(Pp, Pp.fonction || 'orvane_lire_lots', { p_secret: secret, p_monde: id, p_apres: apres, p_limite: 1000 });
       for (const x of rows) { const lot = x.lot || {}; lot.monde ??= id; if (x.jeu) lot.jeu = x.jeu; lot.source = { ...(lot.source || {}), compte: x.compte };
         lot._id = x.id; lot._recu = x.recu; out.push(lot); }
@@ -73,9 +83,28 @@ async function jeuxEnLigne(profil) {
   if (sansReseau || !Pp?.jeux || !Pp.url || !Pp.cle || !secret) return null;
   return (await rpc(Pp, Pp.jeux, { p_secret: secret })).map(j => ({ id: j.id, nom: j.nom, actif: j.actif, exposition: j.exposition || {} }));
 }
+// (docs/37) les noms proposés par les joueurs depuis la dernière lecture (orvane_lire_noms) ; une lecture qui échoue (la migration des
+// noms pas encore appliquée, par exemple) n'arrête rien : un avertissement, et les noms attendront
+async function nomsEnLigne(tampon, profil) {
+  const Pp = profil.monde?.pressions, secret = secretDe(Pp), id = profil.monde?.id || monde;
+  if (sansReseau || !Pp?.noms || !Pp.url || !Pp.cle || !secret) return [];
+  const out = []; let apres = tampon.dernier_nom || 0;
+  for (let page = 0; page < 50; page++) {
+    const rows = await rpc(Pp, Pp.noms, { p_secret: secret, p_monde: id, p_apres: apres, p_limite: 1000 });
+    for (const x of rows) out.push({ id: x.id, jeu: x.jeu, compte: x.compte, auteur: x.auteur, taxon: x.taxon, nom: x.nom, recu: x.recu });
+    if (rows.length < 1000) break; apres = rows[rows.length - 1].id;
+  }
+  return out;
+}
+function nomsLocaux() {
+  const d = f('noms'); if (!fs.existsSync(d)) return [];
+  const out = []; for (const n of fs.readdirSync(d).sort()) if (n.endsWith('.json')) { try { const x = JSON.parse(fs.readFileSync(path.join(d, n), 'utf8'));
+    for (const [i, p] of (Array.isArray(x) ? x : [x]).entries()) out.push({ id: `${n}#${i}`, recu: new Date(maintenant).toISOString(), ...p, _fichier: n }); } catch (e) { console.warn('nom illisible :', n); } }
+  return out;
+}
 function lotsLocaux() {
   const d = f('lots'); if (!fs.existsSync(d)) return [];
-  const out = []; for (const n of fs.readdirSync(d)) if (n.endsWith('.json')) { try { out.push({ ...JSON.parse(fs.readFileSync(path.join(d, n), 'utf8')), _fichier: n }); } catch (e) { console.warn('lot illisible :', n); } }
+  const out = []; for (const n of fs.readdirSync(d).sort()) if (n.endsWith('.json')) { try { out.push({ ...JSON.parse(fs.readFileSync(path.join(d, n), 'utf8')), _fichier: n }); } catch (e) { console.warn('lot illisible :', n); } }   // (triés : le même dossier rejoue le même monde)
   return out;
 }
 function ranger(lots) {
@@ -111,13 +140,23 @@ const alleger = I => ({ cycle: I.cycle, taxons: I.taxons.map(t => ({ id: t.id, n
     // (la génération 0 garde la saison où le rodage s'est arrêté : un monde qui a une année repart au même point de l'année, pas
     // en plein hiver d'un coup — le cycle est ramené dans sa première année)
     const an = profil.monde?.annee ?? etat.monde.annee;
-    if (rodage) { etat.cycle.n = an ? etat.cycle.n % an : 0; etat.evenements = []; for (const t of etat.taxons) for (const p of t.populations) p.depuis = Math.min(p.depuis ?? 0, 0); console.log(`rodage : ${rodage} cycles ; la génération 0 est l'équilibre atteint`); }
+    // (les lignées nées pendant la genèse et le rodage gardent leur rang : leur cycle d'apparition est recalé du même écart, et
+    // devient négatif — nées avant la génération 0 ; sans cela, une lignée paraîtrait née dans l'avenir du monde publié)
+    if (rodage) { const n1 = an ? etat.cycle.n % an : 0, d = etat.cycle.n - n1; etat.cycle.n = n1; etat.evenements = [];
+      for (const t of etat.taxons) { if (t.apparu != null) t.apparu -= d; if (t.eteint != null) t.eteint -= d; for (const p of t.populations) p.depuis = Math.min(p.depuis ?? 0, 0); }
+      if (etat.monde.genese) etat.monde.genese = { ...etat.monde.genese, recale: d };
+      console.log(`rodage : ${rodage} cycles ; la génération 0 est l'équilibre atteint`); }
     etat.monde.ne = new Date().toISOString();   // la naissance du monde : avec son id, c'est son identité (un monde refait de zéro change de date)
     etat.monde.id = profil.monde?.id || monde;   // une amorce née de la genèse s'appelle « genese » : le monde prend le nom de son dossier (les lots du jeu le portent)
     if (profil.monde?.graine != null) etat.monde.graine = profil.monde.graine;
     ecrire('generation-0.json', etat, true);
   }
   if (profil.monde?.annee != null) etat.monde.annee = profil.monde.annee;   // la durée de l'année suit le profil
+  // (équilibrage) des règles du moteur réglées pour un monde vivant (profil.monde.regles) : elles complètent celles de sa genèse
+  // (monde.regles), d'un niveau ; elles ne valent que pour ce qui arrive ensuite — le jour où on les pose, rien ne bouge
+  if (profil.monde?.regles && typeof profil.monde.regles === 'object') { const R = { ...(etat.monde.regles || {}) };
+    for (const [k, v] of Object.entries(profil.monde.regles)) R[k] = v && typeof v === 'object' && !Array.isArray(v) && R[k] && typeof R[k] === 'object' ? { ...R[k], ...v } : v;
+    etat.monde.regles = R; }
   // (docs/14) les fusions que commande le profil (monde.fusions : [{ id, source, biomes?, part?, ponts? }], docs/23 pour les ponts) : chacune est appliquée une
   // seule fois, avant le cycle, et l'état en garde la trace (monde.fusions) ; les arrivées vont au journal de ce cycle
   let arrivees = [];
@@ -138,10 +177,16 @@ const alleger = I => ({ cycle: I.cycle, taxons: I.taxons.map(t => ({ id: t.id, n
   }
   const tampon = lire('tampon.json', { lisse: {}, dernier_id: 0 });
   let lectureEchouee = false, jeux = lire('jeux.json', []);
-  try { const j = await jeuxEnLigne(profil); if (j) { jeux = j; ecrire('jeux.json', jeux); } }
+  try { const j = await jeuxEnLigne(profil); if (j) { jeux = j.filter(x => x.actif !== false); ecrire('jeux.json', jeux); } }   // (seuls les jeux actifs sont publiés)
   catch (e) { lectureEchouee = true; console.log(`::error title=${monde} · lecture des jeux::${e.message || e}. Le cycle lit les lots avec les expositions de la dernière fois.`); }
   const expositions = Object.fromEntries(jeux.map(j => [j.id, j]));
   const gen0 = lire('generation-0.json', null);   // la référence du mode relatif (profil.exposition.mode)
+  // (un monde publié avant ce recalage, comme le monde d'Orvane : une fois, ses lignées de la genèse retrouvent leur rang)
+  if (etat.monde?.genese && etat.monde.genese.recale == null && gen0 && profil.monde?.amorce && fs.existsSync(path.join(__dirname, '..', profil.monde.amorce))) {
+    const n0 = JSON.parse(fs.readFileSync(path.join(__dirname, '..', profil.monde.amorce), 'utf8')).cycle?.n ?? 0, d = n0 + (profil.monde.rodage || 0) - (gen0.cycle?.n ?? 0), ids = new Set(gen0.taxons.map(t => t.id));
+    let k = 0; if (d > 0) for (const t of etat.taxons) if (ids.has(t.id) && !t.origine && t.apparu != null) { t.apparu -= d; k++; }
+    etat.monde.genese = { ...etat.monde.genese, recale: d }; console.log(`recalage : ${k} lignées de la genèse retrouvent leur rang (−${d} cycles)`);
+  }
   // (docs/15) les parcelles : un profil qui en demande découpe le monde, une fois ; le moteur tourne par parcelle, mais le
   // tampon, l'historique et l'instantané publié voient le monde par biome (Parcelles.regrouper) : le contrat ne change pas
   if (profil.monde?.parcelles && !Parcelles.estParcellaire(etat)) {
@@ -185,6 +230,8 @@ const alleger = I => ({ cycle: I.cycle, taxons: I.taxons.map(t => ({ id: t.id, n
   if (profil.monde?.formes && !etat.monde.formes) { const r = Formes.eveiller(etat); etat = r.inst; arrivees = [...arrivees, ...r.evenements]; console.log('formes : des formes nouvelles peuvent naître'); }
   // (docs/34) l'esprit : un profil qui le demande (monde.esprit : true) l'éveille, une fois
   if (profil.monde?.esprit && !etat.monde.esprit) { const r = Esprit.eveiller(etat); etat = r.inst; arrivees = [...arrivees, ...r.evenements]; console.log(`esprit : ${r.evenements[0].detail}`); }
+  // (docs/38) la vie en groupe : un profil qui la demande (monde.collectif : true) la fait publier ; elle ne change rien au monde
+  if (profil.monde?.collectif && !etat.monde.collectif) { const r = Collectif.eveiller(etat, { vue: Parcelles.regrouper }); etat = r.inst; arrivees = [...arrivees, ...r.evenements]; console.log(`collectif : ${r.evenements[0].detail}`); }
   if (profil.monde?.pathogenes && !etat.monde.pathogenes) { const r = Pathogenes.eveiller(etat); etat = r.inst; arrivees = [...arrivees, ...r.evenements]; console.log('souches : les maladies ont désormais leurs souches'); }
   // (docs/20) le catalogue propre du monde (profil.monde.catalogue) : relu à chaque cycle, un auteur de monde peut y ajouter un trait,
   // un organe, une forme de corps, un axe ; ce qui est déjà né reste
@@ -195,10 +242,15 @@ const alleger = I => ({ cycle: I.cycle, taxons: I.taxons.map(t => ({ id: t.id, n
   const vue = I => Parcelles.regrouper(I);
   // (docs/17) ce qui est publié : les bêtes et les machines dans instantane.json, les plantes à part dans flore.json (des millions
   // de pieds : un jeu qui ne les attend pas n'en voit rien) ; le moteur et le tampon, eux, voient tout
-  const publie = I => Tampon.filtrer(vue(I), { familles: ['animale', 'synthetique'] });
+  const filtre = V => Collectif.decrire(Tampon.filtrer(V, { familles: ['animale', 'synthetique'] })), publie = I => filtre(vue(I));   // (docs/38) le groupe de chaque population, s'il est éveillé
   const flore = I => { const V = vue(I), P = V.taxons.filter(t => t.plan?.regime === 'vegetal'); return P.length ? { orvane: V.orvane, monde: { id: V.monde.id, ne: V.monde.ne, flore: V.monde.flore }, cycle: V.cycle, catalogue: { flore: V.catalogue?.flore || Flore.TRAITS }, taxons: P } : null; };
   let avant = etat;
   let historique = lire('historique.json', []);
+  // (docs/37) l'histoire du monde : la chronique et le muséum s'éveillent au premier cycle qui ne les trouve pas ; ce jour-là, la
+  // chronique prend acte de ce qui existe (les souches, les records) sans le raconter, et le muséum décrit chaque lignée vivante
+  let Vavant = vue(etat); const entrees = [];
+  const { annees: annees0 = [], derniers: derniers0 = [], ...chron0 } = lire('chronique/index.json', null) || Chronique.noter(Chronique.vide(Vavant), Vavant, { ...Vavant, evenements: [] }, { premier: true }).etat;
+  let chron = chron0, museum = lire('museum.json', null) || Chronique.decrire(null, Vavant).museum;
   const ms = periodeDe(profil.monde?.cycle);
   for (let k = 0; k < nCycles; k++) {
     // une lecture qui échoue n'arrête pas le monde : il tourne sans les lots en ligne (ils restent dans Supabase et seront lus
@@ -211,20 +263,49 @@ const alleger = I => ({ cycle: I.cycle, taxons: I.taxons.map(t => ({ id: t.id, n
       console.log(`::error title=${monde} · lecture des pressions::${pourquoi}. Le cycle tourne sans les lots en ligne ; ils seront lus la prochaine fois.`); }
     const locaux = lotsLocaux().map(l => ({ monde: profil.monde?.id || monde, ...l })), lots = [...enLigne, ...locaux];
     const r = Tampon.agreger(lots, vue(etat), profil, tampon, gen0, expositions);
+    if (r.rejetes && (r.rejetes.lots || r.rejetes.evenements)) console.log(`::warning title=${monde} · lots::${r.rejetes.lots || 0} lot(s) et ${r.rejetes.evenements || 0} événement(s) écartés (hors du contrat : schemas/pression.schema.json) ; le reste compte.`);
     const suivant = Orvane.cycle(etat, Parcelles.repartir(r.pressions, etat, Parcelles.localiser(lots, etat)), { duree_ms: ms });   // (docs/15) là où les jeux l'ont dit
     if (k === nCycles - 1) suivant.cycle.date = new Date(maintenant).toISOString();   // le dernier cycle est daté de son départ : les traducteurs s'y réfèrent
     if (k === 0 && arrivees.length) suivant.evenements = [...arrivees, ...(suivant.evenements || [])];   // les arrivées d'une fusion, au journal
     tampon.lisse = r.etat.lisse; tampon.lisseQ = r.etat.lisseQ; if (enLigne.length) { tampon.dernier_id = enLigne[enLigne.length - 1]._id; tampon.derniere_lecture = enLigne[enLigne.length - 1]._recu; }
-    historique = [...historique.filter(h => h.cycle.n < suivant.cycle.n), alleger(publie(suivant))].slice(-(profil.monde?.historique || 365));   // profil.monde.historique : combien de cycles garder (365 par défaut)
+    // (docs/37) une lignée neuve qui reprend l'identifiant d'une lignée éteinte (oubliée du moteur, gardée au muséum) en prend un à elle
+    const ren = Chronique.dedoublonner(suivant, museum); if (ren.renommees.length) console.log(`identifiants : ${ren.renommees.map(x => `${x.de} → ${x.vers}`).join(', ')}`);
+    const Vsuivant = vue(suivant);
+    historique = [...historique.filter(h => h.cycle.n < suivant.cycle.n), alleger(filtre(Vsuivant))].slice(-(profil.monde?.historique || 365));   // profil.monde.historique : combien de cycles garder (365 par défaut)
+    // (docs/37) la chronique note ce qui compte ; le muséum garde les éteintes et décrit les nouvelles
+    const rc = Chronique.noter(chron, Vavant, Vsuivant); chron = rc.etat; entrees.push(...rc.entrees);
+    museum = Chronique.decrire(Chronique.fossiliser(museum, Vavant, Vsuivant).museum, Vsuivant).museum; Vavant = Vsuivant;
     avant = etat; etat = suivant; ranger(locaux);
     const vivants = etat.taxons.filter(t => !t.eteint).length, ind = Math.round(etat.taxons.reduce((s, t) => s + t.populations.reduce((x, p) => x + p.effectif, 0), 0));
     console.log(`${monde} · cycle ${etat.cycle.n} · ${lots.length} lot(s) (${enLigne.length} en ligne, ${locaux.length} du dossier), ${r.pressions.nombre} événement(s) · ${vivants} taxons vivants, ${ind} individus · ${etat.evenements.length} événement(s) du vivant`);
     for (const e of etat.evenements) console.log(`   ★ ${e.type} — ${e.taxon}${e.biome ? ' @' + e.biome : ''}${e.detail ? ' : ' + e.detail : ''}`);
   }
+  // (docs/37) les noms proposés par les joueurs : le premier nom valable de chaque lignée est retenu
+  let nomsL = [], nomsN = [];
+  try { nomsN = await nomsEnLigne(tampon, profil); }
+  catch (e) { console.log(`::warning title=${monde} · noms::${e.message || e}. Les noms proposés attendront (la partie « les noms » de hebergement/supabase.sql est-elle appliquée ?).`); }
+  nomsL = nomsLocaux();
+  if (nomsN.length || nomsL.length) {
+    const rn = Chronique.nommer(museum, [...nomsN, ...nomsL], { n: etat.cycle.n, date: etat.cycle.date, refuses: lire('noms-refuses.json', []) });
+    museum = rn.museum; entrees.push(...rn.entrees); if (nomsN.length) tampon.dernier_nom = nomsN[nomsN.length - 1].id;
+    for (const x of rn.retenus) console.log(`   ✎ ${x.taxon} : « ${x.nom} »`); for (const x of rn.refuses) console.log(`   ✗ nom ${x.id} (${x.taxon}) : ${x.pourquoi}`);
+    const t = f('noms/traites'); for (const n of new Set(nomsL.map(x => x._fichier))) { fs.mkdirSync(t, { recursive: true }); fs.renameSync(path.join(f('noms'), n), path.join(t, n)); }
+  }
+  // (docs/37) la chronique, rangée par année du monde (seul le fichier de l'année en cours change), et le muséum
+  fs.mkdirSync(f('chronique'), { recursive: true });
+  const annees = annees0.slice();
+  for (const an of [...new Set(entrees.map(e => Chronique.annee(e.n, etat)))]) {
+    const E = entrees.filter(e => Chronique.annee(e.n, etat) === an), A = lire(`chronique/${an}.json`, { an, entrees: [] }); A.entrees.push(...E); ecrireTexte(`chronique/${an}.json`, Chronique.ecrire(A, 'entrees'));
+    const i = annees.findIndex(x => x.an === an), x = { an, de: A.entrees[0]?.n ?? null, a: A.entrees[A.entrees.length - 1]?.n ?? null, entrees: A.entrees.length };
+    if (i >= 0) annees[i] = x; else annees.push(x); }
+  annees.sort((x, y) => x.an - y.an);
+  ecrire('chronique/index.json', { ...chron, annees, derniers: [...derniers0, ...entrees].slice(-Chronique.REGLES.derniers) });   // (l'index porte aussi ce que la chronique a déjà vu)
+  ecrireTexte('museum.json', Chronique.ecrire(museum, 'specimens'));
+  if (entrees.length) console.log(`chronique : ${entrees.length} entrée(s) ; muséum : ${Object.keys(museum.specimens).length} spécimens`);
   // l'instantané publié porte le cycle d'avant, allégé : tous les traducteurs interpolent entre les deux de la même façon
   const pr = alleger(publie(avant)), F = flore(etat);
-  ecrire('etat.json', etat); if (F) ecrire('flore.json', F, true);
-  const P = { ...publie(etat), precedent: { cycle: pr.cycle.n, taxons: pr.taxons.map(t => ({ id: t.id, populations: t.populations, phenotypes: t.phenotypes.map(p => ({ id: p.id, frequence: p.frequence })) })) } };
+  ecrire('etat.json', etat, true); if (F) ecrire('flore.json', F, true);
+  const P = Chronique.publier({ ...publie(etat), precedent: { cycle: pr.cycle.n, taxons: pr.taxons.map(t => ({ id: t.id, populations: t.populations, phenotypes: t.phenotypes.map(p => ({ id: p.id, frequence: p.frequence })) })) } }, museum);
   ecrire('instantane.json', P, true);
   // (docs/21) le même monde par morceaux : l'index, chaque biome, chaque lignée (mondes/<id>/morceaux/) ; refaits à chaque cycle
   fs.rmSync(f('morceaux'), { recursive: true, force: true });

@@ -15,7 +15,9 @@
 const FLO = (typeof require === 'function' ? require('./flore.js') : racine.OrvaneFlore) || null;
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v)), r4 = v => +(+v).toFixed(4);
 const REGLES = {
-  ondes: [{ periode: 1500, ampleur: .08, phase: .7 }, { periode: 400, ampleur: .03, phase: 2.1 }],   // en cycles ; l'écart de température (de 0 à 1)
+  // en cycles ; l'écart de température (de 0 à 1). Les ondes partent de zéro et y reviennent en moyenne : le grand cycle commence par
+  // refroidir (un âge glaciaire vers le cycle 375), le petit par réchauffer ; le monde passe autant de temps au-dessus qu'en dessous
+  ondes: [{ periode: 1500, ampleur: .08, phase: Math.PI }, { periode: 400, ampleur: .03, phase: 0 }],
   marche: { pas: .003, retour: .01 },          // la marche au hasard : un pas par cycle, et un rappel vers zéro
   humidite: -.5,                               // le froid est sec : l'humidité bouge de −0,5 fois la température
   sentis: { marin: .5, souterrain: .3 },       // ce qu'un lieu sent de l'écart (1 par défaut)
@@ -43,7 +45,7 @@ function ecart(C, n, graine) {
   if (n - C.depuis <= 1) return { marche: 0, temperature: 0 };   // (le premier cycle après l'éveil : rien ne bouge encore)
   if (typeof REGLES.force === 'number') return { marche: 0, temperature: REGLES.force };   // (un écart imposé : un banc, un auteur de monde qui veut son âge glaciaire)
   const t = (n - C.depuis) * REGLES.vitesse; let o = 0;
-  for (const w of REGLES.ondes) o += w.ampleur * (Math.sin(2 * Math.PI * t / w.periode + w.phase) - Math.sin(w.phase));
+  for (const w of REGLES.ondes) o += w.ampleur * (Math.sin(2 * Math.PI * t / w.periode + w.phase) - Math.sin(w.phase));   // (nulles à l'éveil ; de moyenne nulle si sin(phase) = 0)
   const R = generateur(hacher(graine, n)), g = Math.sqrt(-2 * Math.log(1 - R())) * Math.cos(2 * Math.PI * R());
   const m = C.marche * (1 - REGLES.marche.retour * REGLES.vitesse) + REGLES.marche.pas * Math.sqrt(REGLES.vitesse) * g;
   return { marche: m, temperature: clamp(o + m, -.3, .3) };
@@ -88,14 +90,17 @@ function preparer(ctx) {
     // ses plantes viennent du rivage : 5 % de chaque lignée de plantes du rivage dont la forme pousse sur l'île
     if (FLO) { const parts = Object.fromEntries(FLO.compositionDe(b));
       for (const t of taxons) { if (t.plan?.regime !== 'vegetal' || t.eteint) continue; const p = t.populations.find(x => x.biome === c.id), w = parts[t.plan.forme]; if (!p || !w) continue;
-        const ef = +(p.effectif * REGLES.iles.plantes).toFixed(2), pot = +(cible * w).toFixed(2);
-        t.populations.push({ biome: id, effectif: ef, tendance: 0, depuis: n, potentiel: pot, frequences: (p.frequences || []).slice(), reference: { effectif: ef, frequences: (p.frequences || []).slice() },
+        // (sa place est celle de l'île d'aujourd'hui, pas celle de l'île mûre : elle grandit avec la terre, par le milieu s'il est
+        //  éveillé — reference.potentiel et reference.capacite —, sinon à mesure que l'île mûrit)
+        const ef = +(p.effectif * REGLES.iles.plantes).toFixed(2), pot = +(b.capacite * w).toFixed(2);
+        t.populations.push({ biome: id, effectif: ef, tendance: 0, depuis: n, potentiel: pot, frequences: (p.frequences || []).slice(), reference: { effectif: ef, frequences: (p.frequences || []).slice(), potentiel: pot, capacite: b.capacite, part: +w.toFixed(4) },
           ...(p.reference_diete ? { reference_diete: { effectif: ef, frequences: (p.frequences || []).slice() } } : {}) }); } }
     ev.push({ type: 'climat', taxon: id, biome: id, detail: `un volcan sous la mer : une île naît au large de ${c.nom || c.id}, ${b.nom} ; seules les bêtes qui volent, nagent ou dérivent y passeront` });
   };
   // une île jeune : sa terre s'enrichit
   const murir = () => { for (const b of Object.values(B)) if (b.jeune) { const k = Math.min(1, REGLES.iles.depart + (1 - REGLES.iles.depart) * (n - b.jeune.nee) * REGLES.vitesse / REGLES.iles.maturite);
-    b.capacite_base = r4(b.jeune.cible * k); if (k >= 1) delete b.jeune; } };
+    const avant = b.capacite_base || 0; b.capacite_base = r4(b.jeune.cible * k); if (k >= 1) delete b.jeune;
+    if (!monde.milieu && avant > 0) for (const t of taxons) if (t.plan?.regime === 'vegetal') for (const p of t.populations) if (p.biome === b.id && p.potentiel > 0) p.potentiel = r4(p.potentiel * b.capacite_base / avant); } };   // (sans milieu, la place de ses plantes mûrit avec elle)
   return {
     decalage, appliquer, avant: () => { ile(); ponts(); murir(); }, evenements: ev, traverse,
     monde: m => ({ ...m, climat: C, ...(types ? { parcelles: { ...m.parcelles, types } } : {}) })

@@ -16,7 +16,8 @@ const Orvane = require(racine('moteur/orvane.js')), Fusion = require(racine('mot
 const a = process.argv.slice(2), arg = (k, d) => { const i = a.indexOf(k); return i >= 0 && a[i + 1] != null ? a[i + 1] : d; }, court = a.includes('--court');
 const CYCLES = court ? 60 : +arg('--cycles', 240), CIBLE = arg('--cible', 'orvane'), SOURCE = arg('--source', 'marin'), PART = +arg('--part', .5);
 const lireJ = f => JSON.parse(fs.readFileSync(racine(f), 'utf8'));
-const cible = lireJ(`mondes/${CIBLE}/etat.json`), source = lireJ(lireJ(`mondes/${SOURCE}/profil.json`).monde.amorce);
+// (la cible d'avant ses fusions — sa génération 0 — : etat.json a déjà reçu la mer d'Orvane et la genèse 7)
+const cible = lireJ(fs.existsSync(racine(`mondes/${CIBLE}/generation-0.json`)) ? `mondes/${CIBLE}/generation-0.json` : `mondes/${CIBLE}/etat.json`), source = lireJ(lireJ(`mondes/${SOURCE}/profil.json`).monde.amorce);
 let ok = true; const verif = (c, m) => { ok = ok && !!c; console.log((c ? '  ✓ ' : '  ✗ ') + m); };
 const empreinte = I => crypto.createHash('sha256').update(JSON.stringify(I)).digest('hex').slice(0, 16);
 const vivants = I => I.taxons.filter(t => t.eteint == null);
@@ -93,7 +94,7 @@ console.log('\n4. Le cycle de nuit');
 const dossier = racine('mondes/.banc-fusion'), dossierNom = '.banc-fusion';
 try {
   fs.rmSync(dossier, { recursive: true, force: true }); fs.mkdirSync(dossier);
-  for (const f of ['etat.json', 'generation-0.json', 'tampon.json', 'jeux.json']) if (fs.existsSync(racine(`mondes/${CIBLE}/${f}`))) fs.copyFileSync(racine(`mondes/${CIBLE}/${f}`), path.join(dossier, f));
+  for (const f of ['etat.json', 'generation-0.json', 'tampon.json', 'jeux.json']) if (fs.existsSync(racine(`mondes/${CIBLE}/${f}`))) fs.copyFileSync(racine(`mondes/${CIBLE}/${f === 'etat.json' && fs.existsSync(racine(`mondes/${CIBLE}/generation-0.json`)) ? 'generation-0.json' : f}`), path.join(dossier, f));   // (l'état d'avant les fusions)
   const profil = lireJ(`mondes/${CIBLE}/profil.json`); profil.monde.id = dossierNom; profil.monde.fusions = [{ id: 'banc-nuit', source: `mondes/${SOURCE}/amorce.json`, part: PART }];
   fs.writeFileSync(path.join(dossier, 'profil.json'), JSON.stringify(profil));
   const out1 = execFileSync('node', [racine('hebergement/cycle.js'), dossierNom, '--sans-reseau'], { encoding: 'utf8' });

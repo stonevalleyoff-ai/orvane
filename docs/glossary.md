@@ -67,6 +67,7 @@ Orvane's files use French field names. This page translates them all, object by 
 | `apparu`, `eteint` | appeared, extinct | the cycle of its birth, of its extinction (`null` while alive) |
 | `statut` | status | `croissance` growing, `stable`, `declin` declining, `menace` threatened, `eteint` extinct |
 | `origine` | origin | it arrived from another world through a merger |
+| `nom_commun`, `decrit` | common name, described | the common name the first player who described the lineage gave it, and who (`par` by, `jeu` game, `cycle`, `date`) (docs/37); the engine's `nom` stays |
 | `plan` | body plan | below |
 | `populations` | populations | one per biome where it lives, below |
 | `phenotypes` | variants | below |
@@ -114,6 +115,8 @@ Orvane's files use French field names. This page translates them all, object by 
 | `parcelles` | plots | the head count in each plot of the biome |
 | `nourriture`, `recouvrement` | food, overlap | a grazer: what it finds to eat, relative to the awakening of the flora; what it shares with its size band |
 | `savoirs` | knowledge | for each piece of knowledge (`catalogue.savoirs`), the share of the population that knows it: a local tradition |
+| `groupe` | group (docs/38) | how its animals live: `forme` (`solitaire` alone, `famille` family, `troupeau` herd, `bande` band, `meute` pack, `banc` school, `volee` flock, `essaim` swarm, `colonie` colony), `taille` (`min`, `typ` usual, `max`), `hierarchie` (`egalitaire`, `dominance`, `despotique`, `castes`), `meneur` leader, `sentinelles` sentinels, `chasse` (`ensemble` together, `encercle` encircling), `avec` (mixed herds) |
+| `migration` | migration (docs/38) | a seasonal migration: `vers` the wintering place, `part` the share that leaves, `depart`/`retour` phases of the year, `etat` (`au depart` leaving, `partie` away, `au retour` coming back, `au pays` at home); the animals stay counted here |
 | `infection` | infection | per strain: `i` infected share, `r` immune share |
 | `energie`, `posture`, `regulation` | energy, posture, regulation | a machine: what it captures over what it spends; `neutre` neutral, `defensive`, `fuyante` fleeing, `hostile`; among animals, the share of deaths caused by machines |
 | `potentiel`, `frequences`, `reference`, `pollinisation` | potential, frequencies, reference, pollination | a plant |
@@ -192,3 +195,6 @@ Orvane's files use French field names. This page translates them all, object by 
 | parcelle | plot |
 | genèse | genesis |
 | fusion | merger |
+| chronique | chronicle (docs/37): `chronique/index.json` and `chronique/<year>.json`, what mattered, with an `importance` from 1 to 3 |
+| muséum | museum (docs/37): `museum.json`, one type specimen per lineage, kept after it dies out, with its `cause` |
+| visiteurs | visitors (docs/38): `biomes[].visiteurs`, the neighbouring populations wintering here |

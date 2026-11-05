@@ -57,13 +57,17 @@ const monde = OrvaneSolo.vue(S);                                // ce que le jeu
 
 **Il est déterministe.** Le même monde, avec les mêmes notes et les mêmes cycles, donne le même résultat, sous Node comme dans un navigateur. Une partie sauvée et reprise continue exactement comme si elle ne s'était pas arrêtée.
 
-**Dans un navigateur**, chargez les fichiers du moteur dans cet ordre, avant le vôtre :
+**Dans un navigateur**, chargez les fichiers du moteur dans cet ordre, avant le vôtre. Tous les modules passent avant `orvane.js` : il les cherche au chargement. Un module qui manque, pour un mécanisme que le monde a éveillé, est ignoré, et le monde solo ne tourne plus comme sous Node ; `orvane.js` le dit alors une fois dans la console.
 
 ```html
 <script src="moteur/catalogue.js"></script> <script src="moteur/corps.js"></script>
-<script src="moteur/synthetique.js"></script> <script src="moteur/flore.js"></script> <script src="moteur/pathogenes.js"></script>
+<script src="moteur/dietes.js"></script> <script src="moteur/flore.js"></script> <script src="moteur/derives.js"></script>
+<script src="moteur/pathogenes.js"></script> <script src="moteur/milieu.js"></script> <script src="moteur/synthetique.js"></script>
+<script src="moteur/ponte.js"></script> <script src="moteur/stades.js"></script> <script src="moteur/invention.js"></script>
+<script src="moteur/natures.js"></script> <script src="moteur/climat.js"></script> <script src="moteur/grammaire.js"></script>
+<script src="moteur/castes.js"></script> <script src="moteur/formes.js"></script> <script src="moteur/esprit.js"></script>
 <script src="moteur/orvane.js"></script> <script src="tampon/tampon.js"></script> <script src="moteur/parcelles.js"></script>
-<script src="moteur/solo.js"></script>
+<script src="moteur/collectif.js"></script> <script src="moteur/solo.js"></script>
 ```
 
 **Ce qu'il coûte.** Le monde d'Orvane (112 lignées) prend environ 0,6 seconde par cycle sur un ordinateur, et 1 Mo une fois sauvé. Un monde sur un téléphone gagne à tourner peu de cycles à la fois : un `rattrapage` de 5 à 10, ou un `avancer` lancé pendant un écran de chargement.

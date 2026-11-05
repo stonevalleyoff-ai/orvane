@@ -57,6 +57,10 @@
               "items": {
                 "type": "string"
               }
+            },
+            "recale": {
+              "type": "integer",
+              "description": "L'écart dont les cycles de la genèse et du rodage ont été recalés : une lignée née avant la génération 0 a un cycle d'apparition négatif."
             }
           },
           "description": "Si le monde est né de la genèse (moteur/genese.js) : combien de cycles, quelle graine, quels ancêtres."
@@ -332,6 +336,15 @@
             }
           }
         },
+        "collectif": {
+          "type": "object",
+          "description": "(docs/38) La vie en groupe est publiée (populations[].groupe, populations[].migration, biomes[].visiteurs) : depuis quand.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            }
+          }
+        },
         "castes": {
           "type": "object",
           "description": "(docs/33) Les castes : depuis quand.",
@@ -383,7 +396,7 @@
         },
         "natures": {
           "type": "object",
-          "description": "(docs/28) Les lieux qui changent de nature : depuis quand, et les types de lieux du monde (nom, milieu, axes, saisons), ceux d'origine et ceux qu'il a inventés (inedit, de : le type le plus proche, apparu : le cycle).",
+          "description": "(docs/28) Les lieux qui changent de nature : depuis quand, et les types de lieux du monde (nom, milieu, axes, saisons), ceux d'origine et ceux qu'il a inventés (inedit, de : le type le plus proche, apparu : le cycle) ; continent : celui d'un type venu d'une fusion par ponts (docs/23), dont les lieux prennent d'abord les natures.",
           "properties": {
             "depuis": {
               "type": "integer"
@@ -641,6 +654,11 @@
             "items": {
               "type": "object"
             }
+          },
+          "visiteurs": {
+            "type": "array",
+            "description": "(docs/38) Les populations voisines venues hiverner ici (taxon, de : leur lieu, effectif, forme du groupe). Elles restent comptées chez elles.",
+            "items": { "type": "object", "properties": { "taxon": { "type": "string" }, "de": { "type": "string" }, "effectif": { "type": "integer" }, "forme": { "type": "string" } } }
           }
         }
       }
@@ -1270,6 +1288,21 @@
             "type": "string",
             "description": "Nom donné par le moteur (ou gardé si le jeu en a proposé un)."
           },
+          "nom_commun": {
+            "type": "string",
+            "description": "Le nom commun que lui a donné le premier joueur qui l'a décrite (docs/37). Le nom du moteur (nom) reste ; un jeu montre celui qu'il préfère."
+          },
+          "decrit": {
+            "type": "object",
+            "description": "Qui a nommé la lignée (docs/37) : le nom public du joueur s'il l'a donné, son jeu, le cycle où le nom a été retenu, la date de la proposition.",
+            "additionalProperties": false,
+            "properties": {
+              "par": { "type": "string" },
+              "jeu": { "type": ["string", "null"] },
+              "cycle": { "type": ["integer", "null"] },
+              "date": { "type": ["string", "null"] }
+            }
+          },
           "parent": {
             "type": [
               "string",
@@ -1306,7 +1339,7 @@
           },
           "apparu": {
             "type": "integer",
-            "description": "Cycle d'apparition."
+            "description": "Cycle d'apparition. Négatif : née pendant la genèse ou le rodage, avant la génération 0 (monde.genese.recale)."
           },
           "eteint": {
             "type": [
@@ -1997,6 +2030,31 @@
                   "type": "object",
                   "description": "(docs/34) Ce que sait la population : pour chaque savoir (catalogue.savoirs), la part de ses bêtes qui le savent. Une tradition : une autre population de la même lignée peut ne pas le savoir.",
                   "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 }
+                },
+                "groupe": {
+                  "type": "object",
+                  "description": "(docs/38) Comment vivent ses bêtes : seules, en famille, en troupeau, en bande, en meute, en banc, en volée, en essaim, en colonie ; la taille d'un groupe ; sa hiérarchie, qui le mène, ses sentinelles, sa chasse, les lignées qui paissent avec elle. Une lecture de l'état : elle ne change rien à la simulation.",
+                  "required": ["forme", "taille"],
+                  "properties": {
+                    "forme": { "enum": ["solitaire", "famille", "troupeau", "bande", "meute", "banc", "volee", "essaim", "colonie"] },
+                    "nom": { "type": "string" },
+                    "sociabilite": { "type": "number", "minimum": 0 },
+                    "taille": { "type": "object", "properties": { "min": { "type": "integer", "minimum": 1 }, "typ": { "type": "integer", "minimum": 1 }, "max": { "type": "integer", "minimum": 1 } } },
+                    "hierarchie": { "type": "object", "properties": { "niveau": { "type": "number" }, "type": { "enum": ["egalitaire", "dominance", "despotique", "castes"] } } },
+                    "meneur": { "type": ["string", "null"] },
+                    "sentinelles": { "type": "boolean" },
+                    "chasse": { "enum": ["ensemble", "encercle"] },
+                    "avec": { "type": "array", "items": { "type": "string" }, "description": "Des lignées qui paissent avec elle (un troupeau mêlé)." }
+                  }
+                },
+                "migration": {
+                  "type": "object",
+                  "description": "(docs/38) Une population qui migre avec les saisons : le lieu voisin où elle hiverne, la part qui part, les phases de l'année du départ et du retour (0 : le cœur de l'hiver), l'état du moment. Ses bêtes restent comptées ici : un jeu qui en prend une là-bas la renvoie avec ce lieu-ci.",
+                  "properties": {
+                    "vers": { "type": "string" }, "vers_nom": { "type": "string" }, "saison": { "type": "string" },
+                    "part": { "type": "number", "minimum": 0, "maximum": 1 }, "depart": { "type": "number" }, "retour": { "type": "number" },
+                    "etat": { "enum": ["au depart", "partie", "au retour", "au pays"] }, "guide": { "type": "string" }
+                  }
                 },
                 "recouvrement_avant": {
                   "type": "number",

@@ -6,9 +6,9 @@ Orvane fait vivre un seul monde, le monde d'Orvane, et tous les jeux s'y branche
 
 1. **S'inscrire** sur la [page d'inscription](https://stonevalleyoff-ai.github.io/orvane/inscription/) (ou par un appel) : on reçoit la **clé du jeu**, publique, et la **clé d'administration**, secrète.
 2. **Lire le monde** : `instantane.json`, une fois par jour, depuis GitHub Pages. Aucune clé n'est nécessaire.
-3. **Traduire** : relier les terrains du jeu aux 24 biomes d'Orvane, et faire de chaque lignée une créature.
+3. **Traduire** : relier les terrains du jeu aux biomes d'Orvane, et faire de chaque lignée une créature. En TypeScript, `types/orvane.d.ts` donne chaque champ (docs/39).
 4. **Régler l'exposition** (facultatif) : dire à Orvane ce que le jeu sait montrer, avec la clé d'administration.
-5. **Renvoyer des pressions** : compter ce que font les joueurs et déposer des lots avec `orvane_deposer` et la clé du jeu.
+5. **Renvoyer des pressions** : compter ce que font les joueurs et déposer des lots avec `orvane_deposer` et la clé du jeu. `node outils/verifier.js mon-lot.json` dit, avant le premier dépôt, si le lot sera accepté.
 
 ## Les adresses
 
@@ -20,7 +20,7 @@ Orvane fait vivre un seul monde, le monde d'Orvane, et tous les jeux s'y branche
 | la clé publique du projet (en-tête `apikey`) | `sb_publishable_F98uYIaPrLTjhj3n7QiBOg_SOtFynn8` |
 | l'observatoire (voir le monde vivre) | `https://stonevalleyoff-ai.github.io/orvane/` |
 
-La clé publique du projet peut figurer dans le code d'un jeu : elle n'ouvre que les quatre fonctions ci-dessous, et aucune table n'est lisible directement.
+La clé publique du projet peut figurer dans le code d'un jeu : elle n'ouvre que les cinq fonctions ci-dessous, et aucune table n'est lisible directement.
 
 Toutes les fonctions s'appellent de la même façon : `POST https://rospodujiyltmxitykwc.supabase.co/rest/v1/rpc/<fonction>`, avec les en-têtes `apikey: <clé publique du projet>` et `Content-Type: application/json`, et pour corps un objet JSON de paramètres `p_…`. La réponse est toujours un objet JSON avec `ok` : `{"ok": true, …}` ou `{"ok": false, "erreur": "…"}`. Le code HTTP est 200 dans les deux cas : **c'est `ok` qu'il faut lire**.
 
@@ -30,6 +30,7 @@ Toutes les fonctions s'appellent de la même façon : `POST https://rospodujiylt
 | `orvane_regler_jeu` | `p_cle_admin`, `p_exposition` (objet, 32 Ko au plus ; `null` le laisse tel quel), `p_nom` (facultatif) | régler ce que le jeu montre, renommer le jeu |
 | `orvane_deposer` | `p_cle`, `p_compte`, `p_lot` | déposer un lot de pressions |
 | `orvane_jeu` | `p_cle` | vérifier une clé : ce qu'Orvane sait du jeu |
+| `orvane_nommer` | `p_cle`, `p_compte`, `p_monde`, `p_taxon`, `p_nom` (2 à 40 lettres), `p_auteur` (facultatif) | un joueur propose le nom commun d'une lignée ; le premier valable l'emporte au cycle suivant (docs/37) |
 
 ## 1. S'inscrire
 
@@ -182,7 +183,7 @@ if (rep.ok) oublierLeLot(); else garderPourPlusTard(rep.erreur);
 
 - `p_compte` est un identifiant opaque du joueur, par exemple un hachage de son identifiant de compte. Orvane n'en garde qu'un pseudonyme et ne s'en sert que pour les plafonds par joueur.
 - Gardez le lot en mémoire et dans le stockage local jusqu'à `ok: true`, puis envoyez-le à un moment naturel : une sauvegarde, une déconnexion, un changement de zone.
-- Limites : 500 événements et 64 Ko par lot ; 48 lots par joueur et par jour ; 20 000 lots par jour pour le jeu.
+- Limites : 500 événements et 64 Ko par lot ; chaque événement au contrat (une action connue, `n` entre 0 et 10 000) ; 48 lots par joueur et par jour ; 500 lots par jour pour un jeu neuf (relevé sur demande : Stone Valley en a 20 000).
 
 La nuit suivante, le cycle lit les lots de tous les jeux et les rapporte à l'exposition de chacun. Il les plafonne : un joueur ne pèse pas plus qu'un autre, et un même jeu ne fait au plus que la moitié de la pression sur une espèce. Puis il les lisse et fait avancer le monde. L'effet se lit dans l'instantané du lendemain. Le détail est dans [docs/4](docs/4-renvoyer-des-pressions.md) et `schemas/pression.schema.json`.
 
@@ -199,8 +200,11 @@ La nuit suivante, le cycle lit les lots de tous les jeux et les rapporte à l'ex
 | `compte : 1 à 128 caractères` | `p_compte` vide ou trop long | hacher l'identifiant du joueur |
 | `lot mal formé` | `p_lot` n'est pas un objet, ou n'a pas de tableau `evenements` | suivre le schéma |
 | `lot trop gros` | plus de 500 événements ou de 64 Ko | couper le lot |
+| `événement mal formé (schemas/pression.schema.json)` | un événement qui n'est pas un objet, une action inconnue, un `n` négatif, absent ou au-delà de 10 000, un nom qui n'est pas une chaîne | suivre le schéma |
+| `nom : 2 à 40 lettres, espaces, apostrophes ou traits d'union` | un nom commun qui n'en est pas un (`orvane_nommer`) | corriger le nom |
+| `dix noms par jour et par joueur` | `orvane_nommer` | attendre demain |
 | `trop de dépôts aujourd'hui pour ce joueur` | 48 lots dans les 24 dernières heures | regrouper, garder le lot pour demain |
-| `quota du jeu atteint pour aujourd'hui` | 20 000 lots en 24 heures | garder les lots pour demain |
+| `quota du jeu atteint pour aujourd'hui` | le quota du jeu en 24 heures (500 pour un jeu neuf) | garder les lots pour demain ; un jeu qui a besoin de plus écrit au projet |
 
 ## Règles
 

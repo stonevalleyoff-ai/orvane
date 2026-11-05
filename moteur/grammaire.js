@@ -103,9 +103,11 @@ function inventer(ctx) {
   const R = generateur(((graine >>> 0) ^ 0x6c8e9cf5) ^ Math.imul(n + 11, 0x2545f491));
   const dits = Object.values(inventes).filter(x => x.grammaire); if (dits.length >= REGLES.max || R() >= REGLES.chance) return { traits: neufs, evenements: ev };
   const usage = k => dits.filter(x => x.grammaire.phrase === k).length, cand = [];
+  // (les lieux où vit un modèle, comme dans preparer : sans eux, le bluff ne pouvait jamais naître)
+  const M = new Set(); for (const t of sortie) { if (t.eteint) continue; const f = t.phenotypes.reduce((a, p) => a + (p.traits.some(x => MODELES.has(x)) ? p.frequence || 0 : 0), 0); if (f >= .1) for (const p of t.populations) if (p.effectif > 0) M.add(p.biome); }
   for (const t of sortie) { if (t.eteint || ['vegetal', 'synthetique'].includes(t.plan?.regime)) continue; const N = t.populations.reduce((a, p) => a + p.effectif, 0); if (!(N > 0)) continue;
     const b = biomes[t.populations.slice().sort((x, y) => y.effectif - x.effectif)[0]?.biome];
-    for (const [k, P] of Object.entries(PHRASES)) if (P.peut(t.plan) && P.ou(t.plan, b, null) >= .3 && !t.phenotypes.some(p => p.traits.some(x => inventes[x]?.grammaire?.phrase === k))) cand.push({ t, k, w: Math.sqrt(N) / (1 + 3 * usage(k)) }); }
+    for (const [k, P] of Object.entries(PHRASES)) if (P.peut(t.plan) && P.ou(t.plan, b, M) >= .3 && !t.phenotypes.some(p => p.traits.some(x => inventes[x]?.grammaire?.phrase === k))) cand.push({ t, k, w: Math.sqrt(N) / (1 + 3 * usage(k)) }); }
   if (!cand.length) return { traits: neufs, evenements: ev };
   let u = R() * cand.reduce((a, c) => a + c.w, 0), c = cand[0]; for (const x of cand) { u -= x.w; if (u <= 0) { c = x; break; } }
   const f = REGLES.force[0] + (REGLES.force[1] - REGLES.force[0]) * R(), def = definir(c.k, f, R, new Set([...Object.keys(inventes), ...Object.keys(ctx.cat || {})]));   // (un nom libre, si l'organe en a)

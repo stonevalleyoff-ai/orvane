@@ -35,12 +35,12 @@ La séparation est plus facile que sur terre (`flux` 0,25 au lieu de 0,05) : en 
 ## La fusion
 
 `moteur/fusion.js`, `Fusion.fusionner(cible, source, { id, biomes, part })` :
-- **qui arrive** : chaque lignée vivante de la source, avec ses populations des biomes choisis (par défaut, tous ceux que les deux mondes partagent) et une **part** de leurs effectifs (0,5 par défaut). Une population qui n'aurait pas un individu ne vient pas ;
+- **qui arrive** : chaque lignée de bêtes vivante de la source, avec ses populations des biomes choisis (par défaut, tous ceux que les deux mondes partagent) et une **part** de leurs effectifs (0,5 par défaut). Une population qui n'aurait pas un individu ne vient pas. Les plantes et les machines de la source restent chez elle (la flore de la cible et sa Mère sont les siennes), et ses souches ne voyagent pas : une arrivée vient sans ses maladies (docs/18). Une source découpée en parcelles (docs/15) arrive par ses biomes ;
 - **les noms** : un identifiant, ou le premier mot d'un nom, déjà porté dans la cible (même par une lignée éteinte) est remplacé par un nom neuf, tiré des syllabes de la genèse ; les parents suivent ;
 - **les arbres** : le parent d'une arrivée est une autre arrivée, ou aucun. Chaque monde garde ses racines ;
 - **pas d'hybrides** : le moteur ne croise que des lignées apparentées (`Orvane.parente`, un ancêtre commun). Deux mondes n'en ont aucun : leur isolement est total ;
 - **l'histoire** : une arrivée apparaît au cycle de la fusion (`apparu`) et garde son passé dans `origine` (son monde, son identifiant et son cycle d'apparition là-bas) ; le journal du cycle porte une `apparition` par lignée ;
-- **la trace** : la cible note la fusion dans `monde.fusions`, et la même fusion n'est jamais faite deux fois ;
+- **la trace** : la cible note la fusion dans `monde.fusions`, et la même fusion n'est jamais faite deux fois. Une fusion qui n'apporterait rien (aucun biome commun, aucune lignée) n'est pas notée : elle rend `bilan.echec`, et le cycle de nuit la retentera ;
 - **déterministe** : mêmes mondes, mêmes options, même résultat.
 
 En ligne de commande : `node moteur/fusion.js <cible.json> <source.json> [--biomes recif,large] [--part 0.5] [--id mer-1] [--sortie fusion.json]`.

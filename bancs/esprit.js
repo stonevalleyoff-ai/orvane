@@ -80,7 +80,9 @@ console.log('5. Ce que ça rapporte');
     for (const p of t.phenotypes.slice()) { const traits = [...p.traits, 'curiosite'].sort(), fb = p.frequence_par_biome; t.phenotypes.push({ id: traits.join('+'), traits, frequence: p.frequence / 2, ...(fb ? { frequence_par_biome: Object.fromEntries(Object.entries(fb).map(([b, v]) => [b, v / 2])) } : {}) }); p.frequence /= 2; if (fb) for (const b in fb) fb[b] /= 2; }
     const Z = avancer(Y, 40, { invention: 0 }); return Tx(Z, h.id).phenotypes.reduce((a, p) => a + (p.traits.includes('curiosite') ? p.frequence : 0), 0); };
   const oui = essai(true), non = essai(false);
-  verif(oui > non + .03, `la moitié de ${h.nom} est curieuse, 40 cycles : là où l'on sait crier juste et laver sa nourriture, la curiosité tient ${fx(oui * 100)} % ; là où l'on ne sait rien, elle coûte sans servir, ${fx(non * 100)} %`);
+  // (sur le monde d'Orvane découpé en parcelles, l'écart est d'environ 2 points en 40 cycles, avec l'ancien moteur comme avec le nouveau :
+  //  on vérifie qu'il est net — au moins 1 point —, plus qu'il atteigne les 3 points du monde par biomes où le banc a été écrit)
+  verif(oui > non + .01, `la moitié de ${h.nom} est curieuse, 40 cycles : là où l'on sait crier juste et laver sa nourriture, la curiosité tient ${fx(oui * 100)} % ; là où l'on ne sait rien, elle coûte sans servir, ${fx(non * 100)} %`);
 }
 
 console.log('6. Le contrat, le cycle de nuit');

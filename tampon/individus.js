@@ -18,7 +18,7 @@ const REGLES = {
   profondeur: 6,          // les générations d'ascendance gardées (de quoi calculer la consanguinité ; au-delà, des fondateurs)
   depression: .6,         // la vigueur perdue à consanguinité 1 : un petit de frère et sœur (0,25) a 85 % de vigueur
   apprendre_mere: .9,     // un petit sait ce que sait sa mère, neuf fois sur dix (docs/34)
-  hybride: { distance: 2, fertilite: [1, .5, .25], sterile: .5 }   // deux lignées à 1 ou 2 séparations : un petit, une fois sur 2 ou 4 ; un hybride, moitié moins fertile
+  hybride: { distance: 2, fertilite: [1, .5, .25], sterile: .5, oubli: 1 / 16 }   // deux lignées à 1 ou 2 séparations : un petit, une fois sur 2 ou 4 ; un hybride, moitié moins fertile ; sous 1/16 d'ascendance étrangère, plus hybride
 };
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const r3 = v => Math.round(v * 1000) / 1000, r4 = v => Math.round(v * 1e4) / 1e4;
@@ -29,12 +29,14 @@ const ident = r => { let s = ''; for (let i = 0; i < 8; i++) s += '0123456789abc
 
 // ce qui se voit d'un jeu de traits portés (tampon.exprimer, docs/9) : dans l'ordre du catalogue, un trait reste si ce qu'il
 // exige est là et si rien de gardé ne l'exclut
-function exprimer(porte, cat) {
-  const ordre = Object.keys(cat || {}), rang = id => { const i = ordre.indexOf(id); return i < 0 ? 999 : i; }, garde = [];
-  for (const id of [...porte].sort((a, b) => rang(a) - rang(b) || (a < b ? -1 : 1))) { const t = cat?.[id] || {};
-    if ((t.exige || []).some(x => !garde.includes(x))) continue;
-    if ((t.exclut || []).some(x => garde.includes(x)) || garde.some(x => (cat?.[x]?.exclut || []).includes(id))) continue;
-    garde.push(id); }
+function exprimer(porte, cat) {   // (plusieurs passes, comme moteur/catalogue.js : un trait qui exige un trait rangé après lui s'exprime aussi)
+  const ordre = Object.keys(cat || {}), rang = id => { const i = ordre.indexOf(id); return i < 0 ? 999 : i; }, garde = [], reste = [...porte].sort((a, b) => rang(a) - rang(b) || (a < b ? -1 : 1));
+  for (let ajoute = true; ajoute;) { ajoute = false;
+    for (let i = 0; i < reste.length; i++) { const id = reste[i], t = cat?.[id] || {};
+      if ((t.exige || []).some(x => !garde.includes(x))) continue;
+      reste.splice(i--, 1);
+      if ((t.exclut || []).some(x => garde.includes(x)) || garde.some(x => (cat?.[x]?.exclut || []).includes(id))) continue;
+      garde.push(id); ajoute = true; } }
   return garde.sort();
 }
 // ce que montre une bête, et ce qu'elle porte sans le montrer (un récessif à une copie, un trait masqué par un autre)
@@ -104,6 +106,7 @@ function parente(x, y) {
   const f = (i, j) => {
     if (!i || !j) return 0;
     const k = i < j ? i + '|' + j : j + '|' + i; if (memo.has(k)) return memo.get(k);
+    memo.set(k, 0);   // (une ascendance en boucle, dans une sauvegarde abîmée : on ne remonte pas deux fois par le même chemin)
     let v;
     if (i === j) v = (1 + (A[i] ? f(A[i][0], A[i][1]) : 0)) / 2;
     else { const gi = A[i]?.[2] ?? -1, gj = A[j]?.[2] ?? -1, [u, w] = gi >= gj ? [i, j] : [j, i], P = A[u];
@@ -141,14 +144,16 @@ function distanceLignees(inst, ta, tb) {
 }
 
 // === le petit de deux bêtes ===
-// → { ok: true, petit } ou { ok: false, raison } : 'meme-sexe', 'sterile' (une ouvrière, un soldat), 'ne-se-croise-pas' (une
+// → { ok: true, petit } ou { ok: false, raison } : 'elle-meme', 'sexe-inconnu', 'meme-sexe', 'sterile' (une ouvrière, un soldat), 'ne-se-croise-pas' (une
 // machine, une plante), 'trop-eloignees' (plus de REGLES.hybride.distance séparations), 'pas-de-petit' (deux lignées proches,
 // ou un hybride : ça n'a pas pris cette fois)
 function croiser(m0, p0, inst, opt = {}) {
   const r = opt.r || Math.random, cat = inst?.catalogue?.traits || {}, H = REGLES.hybride;
   if (!m0 || !p0) return { ok: false, raison: 'absent' };
   let [mere, pere] = m0.sexe === 'm' && p0.sexe === 'f' ? [p0, m0] : [m0, p0];
-  if (mere.sexe && pere.sexe && mere.sexe === pere.sexe) return { ok: false, raison: 'meme-sexe' };
+  if (m0 === p0 || (m0.id != null && m0.id === p0.id)) return { ok: false, raison: 'elle-meme' };
+  if (!['f', 'm'].includes(mere.sexe) || !['f', 'm'].includes(pere.sexe)) return { ok: false, raison: 'sexe-inconnu' };
+  if (mere.sexe === pere.sexe) return { ok: false, raison: 'meme-sexe' };
   if (['ouvriere', 'soldat'].includes(mere.caste) || ['ouvriere', 'soldat'].includes(pere.caste)) return { ok: false, raison: 'sterile' };
   const t = taxonDe(inst, mere.taxon); if (['synthetique', 'vegetal'].includes(t?.plan?.regime)) return { ok: false, raison: 'ne-se-croise-pas' };
   const d = distanceLignees(inst, mere.taxon, pere.taxon); if (!(d <= H.distance)) return { ok: false, raison: 'trop-eloignees' };
@@ -163,9 +168,15 @@ function croiser(m0, p0, inst, opt = {}) {
     const am = mere.a?.[k] ?? pere.a?.[k] ?? x.m, ap = pere.a?.[k] ?? am, ak = (am + ap) / 2 + Math.sqrt(Math.max(0, x.g / 2 * (1 - Fp))) * gauss(r);
     a[k] = r3(ak); z[k] = r3(ak + Math.sqrt(Math.max(0, x.v - x.g)) * gauss(r)); }
   const F = r4(parente(mere, pere)), sav = (mere.savoirs || []).filter(() => r() < REGLES.apprendre_mere);
+  // l'hybride : la part de son génome venue de l'autre lignée (la moitié chez un hybride de première génération ; un rétrocroisement
+  // la divise par deux). Sous REGLES.hybride.oubli (1/16), la bête n'est plus comptée hybride : quatre rétrocroisements effacent le
+  // drapeau et la fertilité réduite qui va avec. (Une bête sauvegardée avant, hybride sans part, compte pour moitié.)
+  const partDe = b => b.hybride ? (Number.isFinite(b.part_hybride) ? b.part_hybride : .5) : 0;
+  const etrangere = pere.taxon === mere.taxon ? partDe(pere) : 1 - (pere.hybride === mere.taxon ? partDe(pere) : 0);
+  const part = (partDe(mere) + etrangere) / 2, autre = d > 0 ? pere.taxon : mere.hybride || pere.hybride || null, hyb = autre && part >= H.oubli;
   const petit = { id: opt.id || ident(r), nom: opt.nom || nommer(t?.nom || mere.nom, r), sexe: opt.sexe || (r() < .5 ? 'f' : 'm'), taxon: mere.taxon, biome: opt.biome ?? mere.biome ?? null,
     ne: inst?.cycle?.n ?? null, gen: Math.max(mere.gen || 0, pere.gen || 0) + 1, parents: [mere.id, pere.id], F, vigueur: r4(1 - REGLES.depression * F), alleles, a, z,
-    ...(sav.length ? { savoirs: sav } : {}), ...(d > 0 || mere.hybride || pere.hybride ? { hybride: d > 0 ? pere.taxon : mere.hybride || pere.hybride } : {}), ascendance: ascendanceDe(mere, pere) };
+    ...(sav.length ? { savoirs: sav } : {}), ...(hyb ? { hybride: autre, part_hybride: r4(part) } : {}), ascendance: ascendanceDe(mere, pere) };
   return { ok: true, petit };
 }
 

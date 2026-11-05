@@ -24,6 +24,8 @@ moteur/grammaire.js   la grammaire des effets et des conduites : une lueur qui a
 moteur/castes.js      les castes : des colonies, une reine, des ouvrières, des soldats (docs/33)
 moteur/formes.js      les formes nouvelles : le corps segmenté, rayonné, à tentacules (docs/33)
 moteur/esprit.js      l'esprit : des savoirs qui s'apprennent, se transmettent, se perdent ; des outils ; la curiosité (docs/34)
+moteur/chronique.js   l'histoire du monde : la chronique (ce qui compte, par année), le muséum (un spécimen par lignée, gardé après sa mort), les noms que donnent les joueurs (docs/37)
+moteur/collectif.js   la vie en groupe : troupeaux, meutes, bancs, colonies, hiérarchie, migrations des saisons, lue dans l'état à la publication (docs/38)
 moteur/solo.js        un monde solo, dans le jeu : parti de l'instantané publié, il avance en temps réel ou en accéléré (docs/19)
 moteur/biomes-universels.json  les 24 biomes neutres du monde d'Orvane : terre, eau douce, mer, sous-sol
 tampon/tampon.js      exposer() Orvane → jeu ; agreger() jeu → Orvane (dénormalisation, plafonds, lissage)
@@ -35,6 +37,8 @@ CONNECT-A-GAME.md     le même guide, en anglais ; docs/glossary.md : chaque cha
 inscription/          la page d'inscription : inscrire un jeu et recevoir ses clés, régler son exposition, vérifier une clé
 index.html            la page d'accueil du site publié : ce qu'est Orvane, l'état du monde, l'observatoire, l'inscription, le guide ; mondes/liste.json : les mondes que l'observatoire propose
 README.md, llms.txt   la présentation du dépôt (GitHub l'affiche en page d'accueil) et son résumé pour les IA (liens vers le guide et les schémas)
+types/orvane.d.ts     les types TypeScript du contrat, tirés des schémas par outils/types.js (docs/39)
+outils/verifier.js    vérifier un lot, un instantané ou un profil avant de le déposer : le schéma, et ce que le Supabase refusera (docs/39)
 schemas/              le contrat : instantane, pression, profil — avec exemples (crapaud buffle)
 traducteurs/stone-valley/   le premier client, de bout en bout : correspondances, traducteur, génération 0, banc, SQL
 bancs/stabilite.js    les bancs de stabilité : mille cycles sans joueurs et avec, le jour un, la réponse à la sélection, le déterminisme
@@ -59,14 +63,18 @@ bancs/formes.js       le banc des corps et des vies nouvelles : la colonie qui g
 bancs/esprit.js       le banc de l'esprit : qui apprend, une tradition, la perte, chasser ensemble, la curiosité
 bancs/individus.js    le banc des individus et de l'élevage : Mendel, les porteurs cachés, l'héritabilité, la parenté, les hybrides, l'élevage qui revient au monde
 bancs/milieu.js       le banc du milieu transformé : la savane sans brouteurs, les terriers, les barrages, la forêt défrichée, les parcelles
+bancs/tampon.js       le banc du tampon : chaque attaque de l'audit du 5 novembre (lot mal formé, n infini, déplacements sans plafond, mille comptes d'un jeu, allèle inventé) neutralisée, et le jour un
+bancs/monde.js        le monde d'Orvane vu par biome, pour les bancs qui parlent des lieux par leur nom (etat.json tourne par parcelles)
+bancs/chronique.js    le banc de la chronique : rien ne change, ce qu'elle garde et laisse, le muséum et la cause d'une extinction, les noms, le cycle de nuit
+bancs/collectif.js    le banc de la vie en groupe : qui vit comment, la taille des groupes, la hiérarchie, les troupeaux mêlés, les migrations et les visiteurs
 bancs/temps.js        le banc du temps : le rythme de chaque monde (l'action horaire, le rattrapage), le monde solo (temps réel, accéléré, sauvegarde, navigateur)
 hebergement/cycle.js  le cycle, chaque monde à son rythme (docs/19) : lots de tous les jeux → tampon → moteur → instantané publié (action GitHub .github/workflows/cycle.yml)
-hebergement/supabase.sql  le Supabase d'Orvane : les jeux s'y inscrivent et y déposent les pressions de leurs joueurs
+hebergement/supabase.sql  le Supabase d'Orvane : les jeux s'y inscrivent, y déposent les pressions de leurs joueurs et y proposent des noms
 mondes/orvane/        le monde d'Orvane, où tous les jeux se branchent : né de la genèse universelle, Stone Valley y joue depuis le 29 octobre 2026
 mondes/marin/         la mer d'Orvane : une genèse sur les seuls biomes d'eau (vingt ancêtres, 29 lignées), versée dans le monde d'Orvane par une fusion (profil.monde.fusions)
 mondes/sv-1/          le premier monde de Stone Valley (sa faune), archivé
 mondes/genese-7/      un monde né de la genèse (graine 7, 3 000 cycles) : 97 lignées que personne n'a dessinées, archivé
-docs/                 le mode d'emploi : brancher son jeu, écrire son traducteur, jouer les conduites, tirer les traits continus, l'hérédité, les hybrides, les organes, la méfiance, la stabilité, la fusion, les parcelles, la vie synthétique, la flore, les souches et les symbioses, le temps, les catalogues ouverts, le monde par morceaux, le milieu transformé, la fusion par ponts, les corps assemblés, la ponte, les cycles de vie, les traits inventés, les lieux qui changent de nature, les dérives, les régimes en spectre, le climat, la grammaire, les corps et les vies nouvelles, l'esprit, les individus, l'élevage (36 chapitres)
+docs/                 le mode d'emploi : brancher son jeu, écrire son traducteur, jouer les conduites, tirer les traits continus, l'hérédité, les hybrides, les organes, la méfiance, la stabilité, la fusion, les parcelles, la vie synthétique, la flore, les souches et les symbioses, le temps, les catalogues ouverts, le monde par morceaux, le milieu transformé, la fusion par ponts, les corps assemblés, la ponte, les cycles de vie, les traits inventés, les lieux qui changent de nature, les dérives, les régimes en spectre, le climat, la grammaire, les corps et les vies nouvelles, l'esprit, les individus, l'élevage, la chronique et les noms, la vie en groupe, le kit du traducteur (39 chapitres)
 ```
 
 ## Essayer

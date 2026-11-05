@@ -27,7 +27,7 @@ Points essentiels :
 
 ## Écrire un traducteur
 
-- [Le mode d'emploi](https://raw.githubusercontent.com/stonevalleyoff-ai/orvane/main/docs/LISEZ-MOI.md) : 36 chapitres
+- [Le mode d'emploi](https://raw.githubusercontent.com/stonevalleyoff-ai/orvane/main/docs/LISEZ-MOI.md) : 39 chapitres
 - [Lire un instantané](https://raw.githubusercontent.com/stonevalleyoff-ai/orvane/main/docs/1-lire-un-instantane.md)
 - [Renvoyer des pressions](https://raw.githubusercontent.com/stonevalleyoff-ai/orvane/main/docs/4-renvoyer-des-pressions.md)
 - [L'exemple Stone Valley](https://raw.githubusercontent.com/stonevalleyoff-ai/orvane/main/docs/6-exemple-stone-valley.md)

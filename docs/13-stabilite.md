@@ -77,3 +77,40 @@ Un essai a compté les autres espèces de la bande pour moins que les siens (de 
 **Le monde de genèse ne perd pas de lignées.** En 1 000 cycles, il en gagne sept et n'en perd aucune : les espèces nombreuses ne s'éteignent jamais tout à fait. Le cycle s'allonge avec elles (de 0,87 à 1,16 s), ce qui reste raisonnable pour un cycle par nuit. Un plafond de lignées par monde (`REGLES.max_taxons`, déjà utilisé par la genèse) ou des extinctions de fond seront à décider avec les profils de genre (phase 4).
 
 **Les carnivores de genese-7 ont faim.** Leur satiété est souvent sous 0,2, et les épidémies y sont fréquentes, sans faire de sursauts. Ce sont en fait des omnivores (`estomac-large`, plus haut). Le monde d'Orvane, né après la correction, a de vrais carnivores, rares et nourris. La chasse en meute reste pour la phase 3.
+
+## La genèse 2026 : 3 000 cycles (5 novembre)
+
+Une genèse neuve, sur les 24 biomes universels, avec les 19 ancêtres et les règles du monde d'Orvane (graine 2026, `--lignees 200 --etage 30`), a tourné 3 000 cycles au lieu de 900. Elle a été mesurée tous les dix cycles : 931 séparations, 824 extinctions, 126 lignées vivantes à la fin (jusqu'à 187 en route).
+
+| mesure | cycle 250 | cycle 1 500 | cycle 3 000 |
+| --- | --- | --- | --- |
+| lignées vivantes | 56 | 79 | 126 |
+| carnivores (de fait) | 21 | 7 | 7, tous de 2,8 à 8 kg |
+| biomasse des carnivores / celle des herbivores | 10,7 % | 4,9 % | 3,3 % |
+| biomes sans aucun carnivore | 0 | 4 | 5 (banquise, forêt, volcan, grotte, abysses) |
+| filtreurs | 3 | 5 | 31, autant de biomasse que tous les herbivores |
+| détritivores | 0 | 0 | 0 |
+| masse : médiane, maximum | 1,4 kg, 150 kg | 1,8 kg, 150 kg | 2,4 kg, 72 kg |
+| diversité (Shannon), part de la première lignée | 2,65, 28 % | 3,36, 18 % | 4,03, 6 % |
+
+Ce qu'elle montre :
+- **Les étages se vident par le haut.** Les carnivores se resserrent sur quelques généralistes de taille moyenne, présents partout : ni petits mangeurs d'insectes, ni grands chasseurs.
+- **Toutes les lignées ont la même tolérance**, 0,7, celle des ancêtres : rien ne la faisait varier. Une lignée vit presque partout, et quelques généralistes occupent tout.
+- **Les détritivores disparaissent** avant le cycle 250 et ne reviennent pas : `detritivore_vegetal` à 0,5, et la règle de rareté de la genèse ne les protège pas comme les prédateurs (`--etage`).
+- **Les filtreurs prolifèrent** : ils ne comptent que pour 30 % sur la capacité d'un lieu.
+- **La règle de rareté fauche les jeunes lignées** : l'âge médian à l'extinction est de 115 à 124 cycles, juste après le sursis de 100 cycles.
+
+**La dérive de la tolérance.** `REGLES.derive.tolerance` (0 par défaut : rien ne change) laisse la largeur de la niche dériver à la séparation, plutôt vers l'étroit (entre 0,15 et 0,9) ; son tirage ne se fait que s'il est demandé. Deux genèses de 1 200 cycles, même graine, sans et avec (`"derive": { "tolerance": 0.35 }`) :
+
+| à 1 200 cycles | sans | avec |
+| --- | --- | --- |
+| lignées vivantes | 74 | 119 |
+| lignées par biome (médiane) | 13 | 21 |
+| carnivores | 8 | 10 |
+| biomes sans carnivore | 5 | 3 |
+| diversité (Shannon) | 3,26 | 3,66 |
+| tolérances | 0,7 | de 0,43 à 0,83 (médiane 0,63) |
+
+Des spécialistes régionaux naissent, et les carnivores gagnent des lieux. Le monde d'Orvane la reçoit par son profil (`profil.monde.regles`, que le cycle de nuit ajoute aux règles de sa genèse) : le jour où elle arrive, rien ne bouge ; seules les lignées qui naîtront ensuite en héritent. Pour revenir en arrière, il suffit de retirer la ligne du profil.
+
+Les autres pistes, à mesurer de la même façon : protéger les détritivores dans la genèse (étage 2) ou leur donner les cadavres comme ressource ; faire peser les filtreurs pour 60 % sur la capacité ; juger la rareté lieu par lieu, ou allonger le sursis à 200 cycles.

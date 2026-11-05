@@ -35,6 +35,9 @@ Jusqu'ici, le milieu était un décor. Chaque biome avait ses axes (la températ
 - **Les axes d'aujourd'hui.** `biomes[].axes` donne les axes d'aujourd'hui, et tout le moteur les lit : la niche de chaque lignée, la séparation, les saisons, les silhouettes. Une lignée de forêt vit moins bien dans une forêt défrichée.
 - **La base.** `biomes[].transforme.base` garde les axes du lieu à l'éveil du milieu, et `transforme.jeu` ce que les joueurs y ont changé, qui s'efface.
 - **La flore** (docs/17). La place de chaque plante suit le milieu : la capacité du lieu, et la part que son couvert, son humidité et sa température font à sa forme. Une forêt défrichée fait plus de place à l'herbe et moins aux arbres, et ses brouteurs y gagnent.
+  - La part de référence d'une forme est celle du lieu à l'éveil du milieu, lue avec son milieu d'alors : un lac asséché devenu terre (docs/28) ne garde pas ses algues.
+  - Une forme qui n'a plus sa place décline : au pire, elle perd sa repousse à chaque cycle, sans disparaître d'un coup. Une place qui fond (une catastrophe, un défrichage) ne tue pas une plante en un cycle.
+  - **La recolonisation.** Une forme que le lieu porte aujourd'hui, mais dont il n'a presque plus de pieds (moins de 1 % de sa place), revient d'un lieu voisin : chaque cycle, 0,2 % de sa place en graines, de la lignée de cette forme la plus abondante chez ses voisins. Une prairie qui se referme accueille les arbres de la forêt voisine, un lac asséché les herbes de la prairie. Le journal le dit : « Lac : Bellune herbe (Prairie) y revient, d'un lieu voisin ».
 - **Le journal.** Quand un axe d'un lieu a bougé de 0,05, un événement `transformation` le dit, avec sa cause : « Forêt : le couvert baisse de 0,85 à 0,8 (ce qu'y font les joueurs) ».
 
 ## La commande : le profil du monde
@@ -67,6 +70,6 @@ node bancs/milieu.js            # environ 2 minutes
 
 ## Ce qui reste ouvert
 
-- **Un lieu qui change de nature.** Une forêt défrichée reste une forêt aux axes changés : elle ne devient pas une prairie, et les formes de plantes qu'elle n'avait pas (des arbres dans une prairie reboisée) n'y naissent pas.
+- **Un lieu qui change de nature.** Fait (docs/28). Les formes de plantes qu'un lieu n'avait pas (des arbres dans une prairie reboisée) y reviennent désormais de ses voisins (la recolonisation, plus haut) ; un lieu sans voisin qui les porte les attend.
 - **Les machines qui transforment.** Les foreuses de la Mère pourraient creuser, et les recycleurs nettoyer (docs/16).
 - **Les plantes qui transforment.** Le couvert ne suit pas encore la biomasse des arbres eux-mêmes, mais seulement ce que les brouteurs et les joueurs en font.

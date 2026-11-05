@@ -13,6 +13,9 @@ mondes/orvane/
   jeux.json           les jeux branchés et ce que chacun montre (exposition) : chaque traducteur y lit la sienne
   tampon.json         la mémoire du tampon (lissage) et la dernière ligne lue
   lots/               des lots déposés à la main (lus puis rangés dans lots/traites/)
+  chronique/          l'histoire du monde (docs/37) : index.json (les dernières entrées, les années, les records) et <année>.json
+  museum.json         un spécimen par lignée, gardé après son extinction, avec sa cause et son nom commun (docs/37)
+  noms/               des noms proposés à la main (lus puis rangés dans noms/traites/) ; noms-refuses.json : la modération
 ```
 
 ## Le monde
@@ -28,16 +31,20 @@ Il est né de la genèse « universelle » : 24 biomes neutres (de la banquise a
 
 ## Le Supabase d'Orvane
 
-`hebergement/supabase.sql`, collé une fois dans l'éditeur SQL du projet (il peut être recollé). Aucune table n'est lisible directement ; tout passe par six fonctions :
+`hebergement/supabase.sql`, collé une fois dans l'éditeur SQL du projet (il peut être recollé). Aucune table n'est lisible directement ; tout passe par huit fonctions :
 
 | fonction | qui l'appelle | ce qu'elle fait |
 | --- | --- | --- |
 | `orvane_inscrire_jeu(nom, contact)` | n'importe qui | inscrit un jeu ; rend son identifiant, **sa clé** (publique : elle va dans le code du jeu) et **sa clé d'administration** (secrète). 30 inscriptions par heure au plus |
 | `orvane_regler_jeu(cle_admin, exposition, nom)` | l'auteur du jeu | ce que le jeu sait montrer (`schemas/profil.schema.json`, `exposition` ; 32 Ko au plus) |
-| `orvane_deposer(cle, compte, lot)` | le jeu | un lot : 64 Ko et 500 événements au plus, 48 lots par joueur et par jour, et le quota du jeu (20 000 lots par jour) |
+| `orvane_deposer(cle, compte, lot)` | le jeu | un lot : 64 Ko et 500 événements au plus, chacun au contrat (une action connue, `n` de 0 à 10 000), 48 lots par joueur et par jour, et le quota du jeu (500 lots par jour pour un jeu neuf, relevé à la main ; 20 000 pour Stone Valley) |
+| `orvane_nommer(cle, compte, monde, taxon, nom, auteur)` | le jeu | un joueur propose le nom commun d'une lignée (docs/37) : 2 à 40 lettres, dix par jour et par joueur ; `deja` dit si quelqu'un l'a devancé |
 | `orvane_jeu(cle)` | le jeu | ce qu'Orvane sait du jeu |
 | `orvane_lire_lots(secret, monde, après)` | l'action nocturne | les lots, par pages de 1000, comptes pseudonymisés |
 | `orvane_lire_jeux(secret)` | l'action nocturne | les jeux et leur exposition |
+| `orvane_lire_noms(secret, monde, après)` | l'action nocturne | les noms proposés, dans l'ordre d'arrivée ; le cycle retient le premier valable de chaque lignée (docs/37) |
+
+Les lectures de l'action ne voient que les jeux actifs (suspendre un jeu écarte aussi ses lots en attente), et seulement ce qui est arrivé depuis plus de deux minutes (un dépôt encore en cours n'est jamais sauté). Avec pg_cron, les lots de plus de 14 jours et les noms de plus de 90 jours sont effacés chaque jour ; sans lui, la requête est dans le script, à lancer à la main.
 
 Le secret de lecture n'est gardé que par son empreinte, dans un schéma que l'API ne sert pas. Orvane n'a la clé de service d'aucun jeu, et aucun jeu n'a la sienne.
 

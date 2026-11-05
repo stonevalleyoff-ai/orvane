@@ -16,7 +16,7 @@ let ok = true; const verif = (c, m) => { ok = ok && !!c; console.log((c ? '  ✓
 const fx = (x, d = 1) => (+x).toLocaleString('fr-FR', { maximumFractionDigits: d }), pc = x => fx(100 * x) + ' %', t0 = Date.now();
 const rng = s => () => { s = (s + 0x6D2B79F5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 const r = rng(7), moy = L => L.reduce((a, x) => a + x, 0) / L.length, vari = L => { const m = moy(L); return moy(L.map(x => (x - m) ** 2)); };
-const I = lireJ('mondes/orvane/etat.json'), cat = I.catalogue.traits;
+const I = lireJ('mondes/orvane/instantane.json'), cat = I.catalogue.traits;   // (la vue par biome, celle que lisent les jeux : etat.json est découpé en parcelles)
 // un petit monde réglé à la main, pour les croisements : l'Orvi, deux lignées filles et une petite-fille, et une lignée sans parenté
 const pop = { biome: 'foret', effectif: 5000, alleles: { albinisme: .2, gigantisme: .1 }, quant: { taille: { m: .3, v: 1, g: .5 } }, savoirs: { 'chasse-concertee': .6 } };
 const lign = (id, parent) => ({ id, nom: 'Orvi', parent, plan: { regime: 'carnivore' }, populations: [pop], phenotypes: [{ id: 'base', frequence: 1, traits: [] }] });

@@ -8,7 +8,7 @@ Orvane runs a single world, the world of Orvane, and every game plugs into it. A
 2. **Read the world**: `instantane.json` once a day from GitHub Pages, or only the biomes you play, piece by piece. No key is needed.
 3. **Translate**: map the game's terrains to Orvane's 24 biomes, and turn each lineage into a creature.
 4. **Set your exposure** (optional): tell Orvane what the game can show, with the admin key.
-5. **Report pressures**: count what players do and send batches with `orvane_deposer` and the game key.
+5. **Report pressures**: count what players do and send batches with `orvane_deposer` and the game key. `node outils/verifier.js my-batch.json` tells, before the first deposit, whether the batch will be accepted; `types/orvane.d.ts` gives every field to a TypeScript translator (docs/39).
 
 ## Addresses
 
@@ -20,7 +20,7 @@ Orvane runs a single world, the world of Orvane, and every game plugs into it. A
 | the project's public key (`apikey` header) | `sb_publishable_F98uYIaPrLTjhj3n7QiBOg_SOtFynn8` |
 | the observatory (watch the world live) | `https://stonevalleyoff-ai.github.io/orvane/` |
 
-The project's public key may appear in a game's code. It only opens the four functions below, and no table can be read directly.
+The project's public key may appear in a game's code. It only opens the five functions below, and no table can be read directly.
 
 Every function is called the same way: `POST https://rospodujiyltmxitykwc.supabase.co/rest/v1/rpc/<function>`, with the headers `apikey: <project public key>` and `Content-Type: application/json`, and a JSON body of `p_…` parameters. The answer is always a JSON object with `ok`: `{"ok": true, …}` or `{"ok": false, "erreur": "…"}`. The HTTP status is 200 in both cases: **read `ok`**.
 
@@ -29,6 +29,7 @@ Every function is called the same way: `POST https://rospodujiyltmxitykwc.supaba
 | `orvane_inscrire_jeu` | `p_nom` (2 to 60 characters), `p_contact` (optional, up to 200) | register a game, receive its keys |
 | `orvane_regler_jeu` | `p_cle_admin`, `p_exposition` (object, up to 32 KB; `null` leaves it unchanged), `p_nom` (optional) | set what the game shows, rename the game |
 | `orvane_deposer` | `p_cle`, `p_compte`, `p_lot` | send a batch of pressures |
+| `orvane_nommer` | `p_cle`, `p_compte`, `p_monde`, `p_taxon`, `p_nom` (2 to 40 letters), `p_auteur` (optional) | a player proposes a lineage's common name; the first valid one wins at the next cycle (docs/37) |
 | `orvane_jeu` | `p_cle` | check a key: what Orvane knows about the game |
 
 ## 1. Register
@@ -200,7 +201,7 @@ if (answer.ok) forgetBatch(); else keepForLater(answer.erreur);
 
 - `p_compte` is an opaque player id, for example a hash of their account id. Orvane only keeps a pseudonym of it, and only uses it for the per-player caps.
 - Keep the batch in memory and in local storage until `ok: true`, then send it at a natural moment: a save, a logout, a change of area.
-- Limits: 500 events and 64 KB per batch; 48 batches per player per day; 20,000 batches per day for the game.
+- Limits: 500 events and 64 KB per batch; every event must follow the schema (a known action, `n` between 0 and 10,000); 48 batches per player per day; 500 batches per day for a new game (raised on request: Stone Valley has 20,000).
 
 At the next cycle, the world reads the batches of every game and relates each to that game's exposure. It caps them: one player weighs no more than another, and a single game makes at most half of the pressure on a species. Then it smooths them and moves the world forward. The effect shows in the next instantané. Details: [docs/4](docs/4-renvoyer-des-pressions.md) and `schemas/pression.schema.json`.
 
@@ -220,7 +221,8 @@ The `erreur` strings are in French:
 | `lot mal formé` | `p_lot` is not an object, or has no `evenements` array | follow the schema |
 | `lot trop gros` | more than 500 events or 64 KB | split the batch |
 | `trop de dépôts aujourd'hui pour ce joueur` | 48 batches in the last 24 hours | group them, keep the batch for tomorrow |
-| `quota du jeu atteint pour aujourd'hui` | 20,000 batches in 24 hours | keep the batches for tomorrow |
+| `quota du jeu atteint pour aujourd'hui` | the game's quota in 24 hours (500 for a new game) | keep the batches for tomorrow; a game that needs more writes to the project |
+| `événement mal formé (schemas/pression.schema.json)` | an event that is not an object, an unknown action, `n` missing, negative or above 10,000, a name that is not a string | follow the schema |
 
 ## Rules
 

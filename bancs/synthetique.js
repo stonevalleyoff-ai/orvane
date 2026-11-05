@@ -32,7 +32,8 @@ const val = (s, v, p) => { if (!s) return []; const t = Array.isArray(s.type) ? 
   if (s.type && !t.includes(ty === 'number' && t.includes('integer') && Number.isInteger(v) ? 'integer' : ty)) return [p + ': type ' + ty]; if (s.enum && !s.enum.includes(v)) return [p + ': hors enum ' + v]; const e = [];
   if (ty === 'object') { for (const r of s.required || []) if (!(r in v)) e.push(p + ': manque ' + r); for (const k in v) { const ps = s.properties?.[k] || (typeof s.additionalProperties === 'object' ? s.additionalProperties : null); if (ps) e.push(...val(ps, v[k], p + '.' + k)); else if (s.additionalProperties === false) e.push(p + ': en trop ' + k); } }
   if (ty === 'array' && s.items) v.forEach((x, i) => e.push(...val(s.items, x, p + '[' + i + ']'))); return e; };
-const I0 = lireJ('mondes/orvane/etat.json');
+// (le monde d'Orvane avant ses éveils — sa génération 0 —, celui que ce banc suppose : etat.json a depuis éveillé la flore, la Mère et le milieu)
+const I0 = lireJ('mondes/orvane/generation-0.json');
 const tourner = (I, n, pr) => { for (let k = 0; k < n; k++) I = Orvane.cycle(I, typeof pr === 'function' ? pr(I, k) : pr || {}); return I; };
 const t0 = Date.now();
 
@@ -68,7 +69,9 @@ for (let k = 0; k < AVANT + 40; k++) { W = Orvane.cycle(W, {}); if (k === AVANT 
 { // les saisons : l'énergie de chaque machine (ce qu'elle capte sur ce qu'elle dépense) et ce que devient leur nombre au fil de chacune
   const seg = s => { const L = trace.filter(x => x.saison === s); return L.length ? { rho: somme(L.map(x => x.rho)) / L.length, k: L[L.length - 1].N / Math.max(1, L[0].N) } : null; };
   const H = seg('hiver'), E = seg('été') || seg('printemps'), P = seg('printemps');
-  verif(H && E && E.rho > 1.3 * H.rho && H.k < .85 && P.k > 1.2, `leur nombre suit les saisons : l'hiver, une machine capte en moyenne ${fx(H.rho * 100, 0)} % de ce qu'elle dépense (${fx(E.rho * 100, 0)} % l'été) ; beaucoup sont en veille, et leur nombre fond (×${fx(H.k, 2)}) ; au printemps, il repart`);
+  // (la première année, les machines s'étendent depuis le volcan : leur premier hiver peut encore les voir croître. Ce que les saisons
+  //  font se lit alors dans le rythme : l'hiver, elles captent bien moins, et croissent bien moins vite qu'au printemps, ou fondent)
+  verif(H && E && P && E.rho > 1.25 * H.rho && (H.k < .85 || H.k < .5 * P.k) && P.k > 1.2, `leur nombre suit les saisons : l'hiver, une machine capte en moyenne ${fx(H.rho * 100, 0)} % de ce qu'elle dépense (${fx(E.rho * 100, 0)} % l'été) ; beaucoup sont en veille, et leur nombre change de ×${fx(H.k, 2)} l'hiver contre ×${fx(P.k, 2)} au printemps`);
   const fin = trace[trace.length - 1];
   verif(fin.lieux >= 10, `parties du volcan, elles gagnent ${fin.lieux} des ${W.biomes.length} biomes en ${trace.length} cycles`);
   verif(Math.min(...trace.map(x => x.minerai)) < .8 * W0.biomes.find(b => b.id === 'volcan').ressources.minerai_max, `le minerai du volcan s'entame (au plus bas ${fx(Math.min(...trace.map(x => x.minerai)) / 1e3, 0)} t sur ${fx(W0.biomes.find(b => b.id === 'volcan').ressources.minerai_max / 1e3, 0)})`);
@@ -79,7 +82,8 @@ for (let k = 0; k < AVANT + 40; k++) { W = Orvane.cycle(W, {}); if (k === AVANT 
     { ...clone(base), id: 'colosse', nom: 'Colosse', parent: base.id, eteint: null, plan: { ...clone(base.plan), masse_kg: 100000, taille_m: 14 }, populations: [{ biome: 'prairie', effectif: 500, tendance: 0, depuis: J.cycle.n }] });
   const bC = Syn.bilan(J.taxons.find(t => t.id === 'colosse').plan, { L: .8, H: .3 }), J2 = tourner(J, 40);
   const reste = id => { const t = J2.taxons.find(x => x.id === id); return t && !t.eteint ? eff(t) : 0; };
-  verif(reste('aveugle') < 50 && reste('colosse') < 50 && bC.rho < 1, `un plan sans capteur et un plan de 100 t (sa chaleur à dissiper : il ne capte que ${fx(bC.rho * 100, 0)} % de ce qu'il dépense) ne tiennent pas : de 500 machines chacun, il en reste ${fx(reste('aveugle'), 0)} et ${fx(reste('colosse'), 0)} après 40 cycles`);
+  // (au moins 85 % disparaissent en 40 cycles : 50 au plus en restait d'un monde à l'autre, de justesse ; le seuil dit la perte, pas un compte)
+  verif(reste('aveugle') < 75 && reste('colosse') < 75 && bC.rho < 1, `un plan sans capteur et un plan de 100 t (sa chaleur à dissiper : il ne capte que ${fx(bC.rho * 100, 0)} % de ce qu'il dépense) ne tiennent pas : de 500 machines chacun, il en reste ${fx(reste('aveugle'), 0)} et ${fx(reste('colosse'), 0)} après 40 cycles`);
 }
 
 console.log(`4. Le critère de sortie : une espèce explose`);

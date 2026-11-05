@@ -28,7 +28,8 @@ const FRUITS = new Set(Object.keys(RENDEMENT).filter(f => RENDEMENT[f].fruits));
 // les parts voisines : un spectre glisse de l'une à l'autre
 const VOISINES = { feuilles: ['fruits', 'graines'], fruits: ['feuilles', 'graines', 'nectar', 'insectes'], graines: ['feuilles', 'fruits', 'insectes'], nectar: ['fruits', 'insectes'],
   insectes: ['fruits', 'graines', 'nectar', 'viande', 'sang'], viande: ['insectes', 'sang'], sang: ['insectes', 'viande'] };
-const REGLES = { glissement: { chance: .25, part: .15 }, dispersion: { gain: .2, demi: .05 }, sang: { rapport: 20, appetence: .5, mortel: .1, vecteur: 3 }, seuils: [.1, .9] };
+const REGLES = { glissement: { chance: .25, part: .15 }, dispersion: { gain: .2, demi: .05 }, sang: { rapport: 20, appetence: .5, mortel: .1, vecteur: 3 }, seuils: [.1, .9],
+  chair_reference: .3, affinite_reference: .5 };   // une lignée qui ne mangeait pas de chair à l'éveil se compare à un omnivore type (30 % de chair, partagée à moitié)
 
 const animal = p => p && !['vegetal', 'synthetique', 'filtreur', 'detritivore'].includes(p.regime);
 const chair = d => (d?.insectes || 0) + (d?.viande || 0) + (d?.sang || 0);
@@ -65,19 +66,22 @@ function completer(t) { if (!animal(t.plan) || t.plan.diete) return; const d = d
 function affinite(d, q) { const a = chair(d); if (!(a > 0)) return 0; return ((estInsecte(q) ? d.insectes || 0 : d.viande || 0)) / a; }
 function appetence(pp, qp, f0) {
   const d = pp.diete, d0 = pp.diete0; if (!d || !d0) return f0;
-  let f = f0; if (f0 > 0) f = f0 * (affinite(d, qp) + .1) / (affinite(d0, qp) + .1);   // (rapporté à l'éveil, adouci : une part qui naît compte, une part qui manquait ne coupe rien)
+  // (rapporté à l'éveil, adouci : une part qui naît compte, une part qui manquait ne coupe rien ; une lignée sans chair à l'éveil se
+  // rapporte à un omnivore type, sans quoi la moindre part d'insectes multipliait son appétence par onze)
+  const sans = !(chair(d0) > 0); let f = f0;
+  if (f0 > 0 && !(sans && !(chair(d) > 0))) f = f0 * (affinite(d, qp) + .1) / ((sans ? REGLES.affinite_reference : affinite(d0, qp)) + .1);
   const s = (d.sang || 0) - (d0.sang || 0); if (s > 0 && (qp.masse_kg || 1) >= REGLES.sang.rapport * (pp.masse_kg || 1)) f += REGLES.sang.appetence * s / Math.max(.05, chair(d));
   return f;
 }
 // une piqûre ne tue pas : ce qu'un buveur de sang prend à une bête bien plus grande que lui n'en tue qu'un dixième
 const mortel = (pp, qp) => pp.diete?.sang > 0 && (qp.masse_kg || 1) >= REGLES.sang.rapport * (pp.masse_kg || 1) ? REGLES.sang.mortel : 1;
 // la part de chair et de plantes d'un omnivore, rapportée à l'éveil : ce qu'il cherche en viande, ce qu'il tire des plantes
-const viande = p => { const a0 = chair(p.diete0); return p.diete && a0 > 0 ? chair(p.diete) / a0 : 1; };
+const viande = p => { const a0 = chair(p.diete0); return !p.diete ? 1 : a0 > 0 ? chair(p.diete) / a0 : chair(p.diete) / REGLES.chair_reference; };
 const vegetal = p => { const v0 = 1 - chair(p.diete0); return p.diete && v0 > 0 ? (1 - chair(p.diete)) / v0 : 1; };
 
 // à la séparation : le spectre glisse parfois d'une part vers une voisine ; le régime d'hier suit (son hasard : le nom et le cycle)
 function deriver(parent, plan, nid, n) {
-  if (!plan.diete) return null; let g = 2166136261 >>> 0; for (const c of nid + '|' + n) g = Math.imul(g ^ c.charCodeAt(0), 16777619) >>> 0;
+  if (!plan.diete) return null; let g = 2166136261 >>> 0; for (const c of 'diete|' + nid + '|' + n) g = Math.imul(g ^ c.charCodeAt(0), 16777619) >>> 0;   // (salé : la ponte tire le sien du même nom et du même cycle)
   const R = () => { g = (Math.imul(g, 1664525) + 1013904223) >>> 0; return g / 4294967296; };
   if (R() >= REGLES.glissement.chance) return null;
   const d = { ...plan.diete }, ks = Object.keys(d).filter(k => d[k] > 0); if (!ks.length) return null;

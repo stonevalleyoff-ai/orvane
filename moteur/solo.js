@@ -14,6 +14,7 @@
 (function (racine) {
 const R = n => typeof require === 'function' ? require(n) : null;
 const Orvane = R('./orvane.js') || racine.Orvane, Tampon = R('../tampon/tampon.js') || racine.OrvaneTampon, Parcelles = R('./parcelles.js') || racine.OrvaneParcelles;
+const Collectif = R('./collectif.js') || racine.OrvaneCollectif || null;   // (docs/38) la vie en groupe, si le monde l'a éveillée et si le jeu a chargé collectif.js
 const clone = o => JSON.parse(JSON.stringify(o));
 const periodeDe = c => { if (typeof c === 'number') return c; c = String(c || '24h'); const n = parseFloat(c) || 24; return c.endsWith('d') ? n * 864e5 : c.endsWith('min') || c.endsWith('m') ? n * 6e4 : c.endsWith('s') ? n * 1e3 : n * 36e5; };
 // le profil d'un monde solo : l'exposition neutre (le jeu voit tout tel quel) et une influence à l'échelle d'un seul joueur
@@ -52,7 +53,7 @@ function avancer(S, maintenant = Date.now()) {
   const du = Math.floor((maintenant - S.dernier) * S.acceleration / S.periode); if (du < 1) return [];
   const n = Math.min(du, S.rattrapage); S.dernier += du * S.periode / S.acceleration; return cycles(S, n);
 }
-const vue = S => Tampon.filtrer(Parcelles.regrouper(S.etat), { familles: ['animale', 'synthetique'] });
+const vue = S => { const V = Tampon.filtrer(Parcelles.regrouper(S.etat), { familles: ['animale', 'synthetique'] }); return Collectif ? Collectif.decrire(V) : V; };
 const sauver = S => JSON.stringify(S);
 const charger = j => { const S = typeof j === 'string' ? JSON.parse(j) : clone(j); if (S?.orvane_solo !== 1) throw new Error('pas un monde solo'); return S; };
 

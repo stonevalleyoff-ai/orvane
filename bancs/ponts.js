@@ -20,7 +20,8 @@ const val = (s, v, p) => { if (!s) return []; if (s.$ref) s = S.$defs[s.$ref.spl
   if (s.type && !t.includes(ty === 'number' && t.includes('integer') && Number.isInteger(v) ? 'integer' : ty)) return [p + ': type ' + ty]; if (s.enum && !s.enum.includes(v)) return [p + ': hors enum ' + v]; const e = [];
   if (ty === 'object') { for (const r of s.required || []) if (!(r in v)) e.push(p + ': manque ' + r); for (const k in v) { const ps = s.properties?.[k] || (typeof s.additionalProperties === 'object' ? s.additionalProperties : null); if (ps) e.push(...val(ps, v[k], p + '.' + k)); else if (s.additionalProperties === false) e.push(p + ': en trop ' + k); } }
   if (ty === 'array' && s.items) v.forEach((x, i) => e.push(...val(s.items, x, p + '[' + i + ']'))); return e; };
-const I0 = lireJ('mondes/orvane/etat.json'), G = lireJ('mondes/genese-7/instantane.json'), t0 = Date.now(), T = Parcelles.decouper(I0, { par: 4 });
+// (le monde d'Orvane d'avant ses fusions — sa génération 0 — : etat.json est déjà relié à la genèse 7)
+const I0 = lireJ('mondes/orvane/generation-0.json'), G = lireJ('mondes/genese-7/instantane.json'), t0 = Date.now(), T = Parcelles.decouper(I0, { par: 4 });
 const TAG = '~genese-7-', duContinent = b => b.includes(TAG);
 
 console.log('1. Le continent');

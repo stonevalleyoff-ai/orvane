@@ -19,8 +19,11 @@ const val = (s, v, p) => { if (!s) return []; if (s.$ref) s = S.$defs[s.$ref.spl
   if (s.type && !t.includes(ty === 'number' && t.includes('integer') && Number.isInteger(v) ? 'integer' : ty)) return [p + ': type ' + ty]; if (s.enum && !s.enum.includes(v)) return [p + ': hors enum ' + v]; const e = [];
   if (ty === 'object') { for (const r of s.required || []) if (!(r in v)) e.push(p + ': manque ' + r); for (const k in v) { const ps = s.properties?.[k] || (typeof s.additionalProperties === 'object' ? s.additionalProperties : null); if (ps) e.push(...val(ps, v[k], p + '.' + k)); else if (s.additionalProperties === false) e.push(p + ': en trop ' + k); } }
   if (ty === 'array' && s.items) v.forEach((x, i) => e.push(...val(s.items, x, p + '[' + i + ']'))); return e; };
-const I0 = lireJ('mondes/orvane/etat.json'), W = Cl.eveiller(I0).inst, animaux = I => I.taxons.map(t => [t.id, t.populations.map(p => [p.biome, p.effectif])]);
-const B = (X, id) => X.biomes.find(b => b.id === id), tot = t => t ? t.populations.reduce((a, p) => a + p.effectif, 0) : 0;
+// (le monde d'Orvane a désormais un milieu transformé, qui suit le climat avec retard : le banc part du même monde sans milieu, comme
+//  quand il a été écrit ; la section 2 éveille le milieu pour comparer)
+const I0 = (X => { delete X.monde.milieu; for (const b of X.biomes) { delete b.transforme; for (const k in b.axes) b.axes[k] = Math.round(b.axes[k] * 1e4) / 1e4; } return X; })(require('./monde.js').orvane({ continent: '' })),   // (axes à 4 décimales, comme le climat les écrit)   // (le monde d'Orvane vu par biome, sans le continent de la genèse 7 : bancs/monde.js)
+  W = Cl.eveiller(I0).inst, animaux = I => I.taxons.map(t => [t.id, t.populations.map(p => [p.biome, p.effectif])]);
+const B = (X, id) => X.biomes.find(b => b.id === id) || X.biomes.find(b => (b.type || b.id) === id), tot = t => t ? t.populations.reduce((a, p) => a + p.effectif, 0) : 0;
 // des réglages de banc : une onde courte et forte (le froid au cycle 30, le chaud au cycle 50), sans marche
 const avec = (o, f) => { const g = clone(Cl.REGLES); Object.assign(Cl.REGLES, o); try { return f(); } finally { for (const k of Object.keys(g)) Cl.REGLES[k] = g[k]; } };
 const ONDE = { ondes: [{ periode: 40, ampleur: .15, phase: 0 }], marche: { pas: 0, retour: 0 }, iles: { ...Cl.REGLES.iles, chance: 0 } };

@@ -141,3 +141,18 @@ main>h2+.note{max-width:880px;font-size:12px}.tree-scroll{background:var(--surfa
 
 .atlas-links a{white-space:nowrap}
 @media(max-width:650px){.chiffres dd{font-size:clamp(22px,6.5vw,29px)}}
+/* (audit web n° 11) dans une fiche, une cellule ne coupe un mot que s'il ne tient pas : la colonne garde sa largeur */
+.fiche td, .fiche th { overflow-wrap: break-word; word-break: normal; }
+.fiche td { min-width: 4.5em; }
+/* (docs/37) le nom commun d'une lignée, la chronique et le muséum */
+.nom-commun { font-size: 11px; color: var(--sourd); margin: -6px 0 12px; line-height: 1.6; }
+.chronique h4 { font: 19px/1.3 var(--serif); margin: 26px 0 6px; color: var(--texte); }
+.journal-titre { font: 23px/1.3 var(--serif); margin: 34px 0 0; }
+.chron { list-style: none; padding: 0; margin: 16px 0 6px; max-height: 520px; overflow-y: auto; }
+.chron li { padding: 11px 14px; border-bottom: 1px solid var(--ligne); font-size: 12px; line-height: 1.7; border-left: 2px solid #c1cfb0; overflow-wrap: break-word; }
+.chron li.imp3 { border-left: 3px solid var(--ambre); background: #f6efdf; }
+.chron li.imp3 b { color: #785925; }
+.chron li.imp1 { color: var(--sourd); }
+.chron .quand { display: inline-block; min-width: 86px; font-size: 10px; color: var(--sourd); font-variant-numeric: tabular-nums; }
+.chron b { font-weight: 500; font-size: 11px; color: #4e6841; margin-right: 4px; }
+.chron .lien { font-size: 10px; }

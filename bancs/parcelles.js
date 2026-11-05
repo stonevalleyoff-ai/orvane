@@ -30,13 +30,16 @@ const val = (s, v, p) => { if (!s) return []; const t = Array.isArray(s.type) ? 
 const distances = (I, depart) => { const V = new Map(I.biomes.map(b => [b.id, b.voisins || []])), d = new Map([[depart, 0]]), file = [depart];
   while (file.length) { const x = file.shift(); for (const y of V.get(x) || []) if (!d.has(y)) { d.set(y, d.get(x) + 1); file.push(y); } } return d; };
 
-const I0 = lireJ('mondes/orvane/etat.json');
+// (le monde d'Orvane tourne désormais par parcelles : le banc part de sa vue par biome, celle que lisent les jeux, sans le décompte des parcelles)
+const parBiome = E => { if (!Parcelles.estParcellaire(E)) return E; const V = Parcelles.regrouper(E); delete V.parcelles; V.monde = { ...V.monde }; delete V.monde.parcelles;
+  if (V.monde.mere) { V.monde.mere = { ...V.monde.mere }; delete V.monde.mere.parcelle; } V.taxons = V.taxons.map(t => ({ ...t, populations: t.populations.map(p => { const { parcelles, ...q } = p; return q; }) })); return V; };
+const I0 = parBiome(lireJ('mondes/orvane/etat.json'));
 console.log(`\n1. Le découpage : ${I0.monde.nom || I0.monde.id}, cycle ${I0.cycle.n}, ${I0.biomes.length} biomes en ${PAR} parcelles chacun`);
 const D = Parcelles.decouper(I0, { par: PAR }), types = new Set(I0.biomes.map(b => b.id)), parType = {};
 for (const p of D.biomes) (parType[p.type] ??= []).push(p);
 verif(D.biomes.length === I0.biomes.length * PAR && Object.values(parType).every(L => L.length === PAR), `${D.biomes.length} parcelles, ${PAR} par biome`);
 verif(Math.abs(total(D) - total(I0)) < 1e-6 * total(I0) && Math.abs(D.biomes.reduce((s, b) => s + b.capacite, 0) - I0.biomes.reduce((s, b) => s + b.capacite, 0)) < 1, `rien ne se perd : ${fx(total(I0), 0)} bêtes, la même capacité`);
-const voisinsTypes = new Map(I0.biomes.map(b => [b.id, new Set(b.voisins || [])]));
+const voisinsTypes = new Map(I0.biomes.map(b => [b.id, new Set(b.voisins || [])])); for (const b of I0.biomes) for (const v of b.voisins || []) voisinsTypes.get(v)?.add(b.id);   // (un voisinage écrit d'un seul côté compte des deux)
 const enBoucle = Object.values(parType).every(L => L.every(p => L.filter(q => p.voisins.includes(q.id)).length >= Math.min(2, L.length - 1)));
 const passagesOk = D.biomes.every(p => p.voisins.every(v => { const q = D.biomes.find(x => x.id === v); return q.type === p.type || voisinsTypes.get(p.type).has(q.type); }));
 verif(enBoucle && passagesOk, 'les parcelles d\'un biome se suivent en boucle ; les passages ne mènent qu\'aux biomes voisins');
@@ -57,16 +60,21 @@ console.log('\n2. Les pressions des jeux, réparties entre les parcelles');
 const tP = vivants(I0).find(t => t.populations.filter(p => p.effectif > 1000).length >= 2), bP = tP.populations.slice().sort((x, y) => y.effectif - x.effectif)[0].biome;
 const pr = { taxons: { [tP.id]: { [bP]: { retrait: { base: 120, '*': 30 }, contact: { rencontres: 400, danger: 150, aide: 0 }, q: { taille: 1.2 }, deplacement: [{ vers: bP, n: 10 }] } } }, biomes: { [bP]: { habitat: -500 } }, nombre: 3 };
 const R = Parcelles.repartir(pr, D), somme = (o, k) => Object.values(R.taxons[tP.id]).reduce((s, x) => s + (k === 'retrait' ? x.retrait.base + x.retrait['*'] : x.contact.rencontres), 0);
-verif(Math.abs(somme(0, 'retrait') - 150) < .01 && Math.abs(somme(0, 'contact') - 400) < .01 && Object.keys(R.taxons[tP.id]).every(k => k.startsWith(bP + Parcelles.SEP)), `un retrait et des rencontres sur ${bP} se partagent entre ses parcelles, au total près`);
+verif(Math.abs(somme(0, 'retrait') - 150) < .01 && Object.values(R.taxons[tP.id]).every(x => x.contact.rencontres === 400) && Object.keys(R.taxons[tP.id]).every(k => k.startsWith(bP + Parcelles.SEP)), `un retrait sur ${bP} se partage entre ses parcelles, au total près ; chaque parcelle vit le contact entier (sa méfiance est celle du biome)`);
 verif(Math.abs(Object.values(R.biomes).reduce((s, x) => s + x.habitat, 0) + 500) < .01 && Object.values(R.taxons[tP.id]).every(x => x.q.taille === 1.2), 'une perte d\'habitat se partage selon la capacité ; la valeur des bêtes prises (q) suit telle quelle');
 
 // (§222 du jeu) un jeu qui dit la parcelle de ses joueurs : la pression y va tout entière
 const laP = bP + Parcelles.SEP + '3', ailleurs = bP + Parcelles.SEP + '1';
 const loc = Parcelles.localiser([{ evenements: [{ taxon: tP.id, biome: bP, action: 'prelevement', n: 12, parcelle: laP }, { taxon: tP.id, biome: bP, action: 'rencontre', n: 40, parcelle: laP },
   { taxon: tP.id, biome: bP, action: 'prelevement', n: 5, parcelle: 'savane' + Parcelles.SEP + '1' }, { taxon: tP.id, biome: bP, action: 'habitat_perdu', n: 3, parcelle: ailleurs }] }], D);
-const RL = Parcelles.repartir(pr, D, loc), cles = Object.keys(RL.taxons[tP.id] || {});
-verif(cles.length === 1 && cles[0] === laP && Math.abs(RL.taxons[tP.id][laP].retrait.base + RL.taxons[tP.id][laP].retrait['*'] - 150) < .01 && Object.keys(RL.biomes).join() === ailleurs,
-  `un lot qui dit sa parcelle (${laP}) y pose toute la chasse, et le défrichage dans la sienne (${ailleurs}) ; une parcelle d'un autre biome est ignorée`);
+// (seuls les retraits se localisent, et à proportion de ce qui a été localisé : 12 bêtes sur 17 ici, la prise de 5 dite dans une
+// parcelle d'un autre biome comptant comme non localisée ; la rencontre ne déplace rien)
+const RL = Parcelles.repartir(pr, D, loc), cles = Object.keys(RL.taxons[tP.id] || {}), ret = x => (x?.retrait.base || 0) + (x?.retrait['*'] || 0);
+const effP = D.taxons.find(t => t.id === tP.id).populations.filter(p => p.biome.startsWith(bP + Parcelles.SEP)), WP = effP.reduce((a, p) => a + p.effectif, 0), attendu = 150 * (12 / 17 + 5 / 17 * (effP.find(p => p.biome === laP)?.effectif || 0) / WP);
+const tout = Parcelles.localiser([{ evenements: [{ taxon: tP.id, biome: bP, action: 'prelevement', n: 12, parcelle: laP }] }], D), RT = Parcelles.repartir(pr, D, tout);
+verif(Math.abs(ret(RL.taxons[tP.id][laP]) - attendu) < .01 && Math.abs(cles.reduce((a, k) => a + ret(RL.taxons[tP.id][k]), 0) - 150) < .01 && Object.keys(RL.biomes).join() === ailleurs
+  && Object.keys(RT.taxons[tP.id]).join() === laP && Math.abs(ret(RT.taxons[tP.id][laP]) - 150) < .01,
+  `un lot qui dit sa parcelle (${laP}) y pose sa part de la chasse (${fx(ret(RL.taxons[tP.id][laP]), 0)} sur 150 : 12 bêtes localisées sur 17), toute la chasse quand tout y est dit, et le défrichage dans la sienne (${ailleurs}) ; une parcelle d'un autre biome est ignorée`);
 
 console.log(`\n3. Le monde tourne : ${CYCLES} cycles, par parcelles et par biomes`);
 const tourner = (I, n, pressions) => { let J = I, sauts = 0, mesures = 0, prev = null, sep = 0; const t0 = Date.now();
@@ -102,16 +110,21 @@ console.log('\n5. Un défrichage local déplace les populations');
 const cible = 'prairie' + Parcelles.SEP + '2', capP = D.biomes.find(b => b.id === cible).capacite, voisinsP = D.biomes.find(b => b.id === cible).voisins;
 const ici = (I, ids) => I.taxons.reduce((s, t) => s + t.populations.filter(p => ids.includes(p.biome)).reduce((x, p) => x + p.effectif * (t.plan.masse_kg || 1), 0), 0);
 const N5 = court ? 20 : 30; let Ta = D, Co = D; const serie = {};
+// (la flore suit la place perdue : les brouteurs qui restent manquent d'abord de nourriture, puis tout remonte avec la capacité — la
+//  parcelle se refait depuis son point bas, docs/22)
+let bas = Infinity;
 for (let k = 1; k <= N5; k++) { Ta = Orvane.cycle(Ta, {}, { duree_ms: 0 }); Co = Orvane.cycle(Co, k === 1 ? { biomes: { [cible]: { habitat: -.8 * capP } } } : {}, { duree_ms: 0 });
+  if (k >= 3) bas = Math.min(bas, ici(Co, [cible]) / ici(Ta, [cible]));
   if (k === 3 || k === N5) serie[k] = { P: ici(Co, [cible]) / ici(Ta, [cible]), V: ici(Co, voisinsP) / ici(Ta, voisinsP) }; }
 verif(serie[3].P < .6 && serie[3].V > 1.02, `les quatre cinquièmes de ${cible} défrichés : trois cycles plus tard, elle n'a plus que ${fx(serie[3].P * 100, 0)} % de sa biomasse, et ses ${voisinsP.length} voisines ${fx((serie[3].V - 1) * 100, 1)} % de plus`);
-verif(serie[N5].P > serie[3].P && Math.abs(serie[N5].V - 1) < .03, `${N5} cycles plus tard, les voisines ont absorbé les fuyards (${fx((serie[N5].V - 1) * 100, 1)} %) et la parcelle se refait (${fx(serie[N5].P * 100, 0)} %)`);
+verif(serie[N5].P > 1.1 * bas && Math.abs(serie[N5].V - 1) < .03, `${N5} cycles plus tard, les voisines ont absorbé les fuyards (${fx((serie[N5].V - 1) * 100, 1)} %) et la parcelle se refait (${fx(bas * 100, 0)} % au plus bas, ${fx(serie[N5].P * 100, 0)} % maintenant)`);
 
 console.log('\n6. Le cycle de nuit');
 const dossier = racine('mondes/.banc-parcelles'), nom = '.banc-parcelles';
 try {
   fs.rmSync(dossier, { recursive: true, force: true }); fs.mkdirSync(path.join(dossier, 'lots'), { recursive: true });
-  for (const f of ['etat.json', 'generation-0.json', 'tampon.json', 'jeux.json']) fs.copyFileSync(racine('mondes/orvane/' + f), path.join(dossier, f));
+  for (const f of ['generation-0.json', 'tampon.json', 'jeux.json']) fs.copyFileSync(racine('mondes/orvane/' + f), path.join(dossier, f));
+  fs.writeFileSync(path.join(dossier, 'etat.json'), JSON.stringify(I0));   // (le monde par biomes : c'est le cycle de nuit qui le découpe)
   const profil = lireJ('mondes/orvane/profil.json'); profil.monde.id = nom; profil.monde.parcelles = { par: PAR }; delete profil.monde.fusions;
   fs.writeFileSync(path.join(dossier, 'profil.json'), JSON.stringify(profil));
   fs.writeFileSync(path.join(dossier, 'lots', 'essai.json'), JSON.stringify({ orvane: '0.1', monde: I0.monde.id, instantane: I0.cycle.n, jeu: 'stone-valley', source: { jeu: 'stone-valley', compte: 'h:banc' },

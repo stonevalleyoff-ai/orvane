@@ -92,6 +92,7 @@ function eveiller(inst, cfg = {}) {
   const voulu = cfg.biome || 'volcan', terre = b => b.milieu !== 'aquatique' && b.milieu !== 'marin';
   const lieu = tous.filter(b => (typeDe(b) === voulu || b.id === voulu) && terre(b)).sort((a, b) => (b.ressources.minerai_max - a.ressources.minerai_max) || (a.id < b.id ? -1 : 1))[0]
     || tous.filter(terre).sort((a, b) => (b.axes?.altitude ?? 0) - (a.axes?.altitude ?? 0) || (a.id < b.id ? -1 : 1))[0];
+  if (!lieu) return { inst: clone(inst), evenements: [] };   // (un monde sans terre : la Mère n'a nulle part où s'éveiller)
   const ids = new Set(out.taxons.map(t => t.id)), courant = [], ev = [];
   for (const f of FONDATEURS) {
     let id = f.id, k = 2; while (ids.has(id)) id = `${f.id}-${k++}`; ids.add(id);
@@ -230,11 +231,10 @@ function preparer(ctx) {
       regulation: t => mod(t.plan, 'pince') > .1 ? -Math.abs(Math.log10(t.plan.masse_kg / cibleR)) : -99 }[cause] || (t => masseTotale(t));
     const base = vivants.slice().sort((a, b) => score(b) - score(a) || masseTotale(b) - masseTotale(a) || (a.id < b.id ? -1 : 1))[0];
     if (!base || r.minerai < REGLES.mere.cout * base.plan.masse_kg) { mere.prochaine = n + 3; return; }
-    // trop de plans : elle démonte le plus maigre de ceux qu'elle n'assemble plus (ses machines deviennent ferraille)
+    // trop de plans : elle démontera le plus maigre de ceux qu'elle n'assemble plus (ses machines deviennent ferraille), si le plan neuf se fait
     let demonte = null;
     if (nbVivants() >= REGLES.max_lignees) { demonte = vivants.filter(t => t !== base && !(mere.courant || []).includes(t.id) && n - t.apparu >= 3 * REGLES.mere.intervalle).sort((a, b) => masseTotale(a) - masseTotale(b) || (a.id < b.id ? -1 : 1))[0];
-      if (!demonte) { mere.prochaine = n + 3; return; }
-      for (const [bid, P] of Object.entries(etat.get(demonte.id).pops)) { biomes[bid].ressources.ferraille += somme(P.N) * (demonte.plan.masse_kg || 1) * REGLES.ferraille; P.N = P.N.map(() => 0); } }
+      if (!demonte) { mere.prochaine = n + 3; return; } }
     const plan = clone(base.plan), ch = [];
     const up = (k, d) => { const v0 = mod(plan, k), v = +clamp(v0 + d, 0, 1).toFixed(3); if (v !== v0) { plan.modules[k] = v; ch.push(`${k} ${d > 0 ? '+' : '−'}${Math.abs(v - v0).toFixed(2)}`); } };
     const masse = f => { f = clamp(plan.masse_kg * f, .5, 5000) / plan.masse_kg; plan.masse_kg = +(plan.masse_kg * f).toPrecision(3); ch.push(`masse ×${f < .1 ? f.toPrecision(2) : f.toFixed(2)}`); };
@@ -252,10 +252,14 @@ function preparer(ctx) {
     let lieu = mere.biome; if (ou) { const L = tous.map(b => [b.id, ou(b.id)]).filter(([bid, v]) => v > 0 && ctx.convenance(plan, biomes[bid]) > 0).sort((x, y) => y[1] - x[1] || (x[0] < y[0] ? -1 : 1)); if (L.length) lieu = L[0][0]; }
     for (let k = 0; k < 6 && bilan(plan, M[lieu]).rho < 1.15; k++) { const chaud = M[lieu].H > M[lieu].L; up(chaud ? 'thermique' : 'panneau', .1); if (k % 2) up('batterie', .1); }
     plan.taille_m = +(base.plan.taille_m * Math.cbrt(plan.masse_kg / base.plan.masse_kg)).toFixed(2); plan.role = roleDe(plan);
+    // (le minerai se compte sur le plan neuf, celui qu'elle assemble : un régulateur dix fois plus lourd coûte dix fois plus ;
+    //  faute de quoi elle attend, sans rien démonter)
+    if (r.minerai < REGLES.mere.cout * plan.masse_kg) { mere.prochaine = n + 3; return; }
+    if (demonte) for (const [bid, P] of Object.entries(etat.get(demonte.id).pops)) { biomes[bid].ressources.ferraille += somme(P.N) * (demonte.plan.masse_kg || 1) * REGLES.ferraille; P.N = P.N.map(() => 0); }
     mere.conceptions = (mere.conceptions || 0) + 1;
     // (elle l'envoie là où le besoin est le plus grand : là où ses machines tombent, là où une espèce déborde ; sinon, chez elle)
     const nt = naitre(base, plan, lieu, REGLES.mere.effectif, null, `mere-${mere.conceptions}`);
-    r.minerai -= REGLES.mere.cout * plan.masse_kg;
+    r.minerai = Math.max(0, r.minerai - REGLES.mere.cout * plan.masse_kg);
     mere.courant = [nt.id, ...(mere.courant || []).filter(id => id !== nt.id)].slice(0, 2); mere.prochaine = n + REGLES.mere.intervalle;
     mere.derniere = { taxon: nt.id, cause, cycle: n };
     ev().push({ type: 'conception', taxon: nt.id, biome: lieu, detail: `${mere.nom} conçoit ${nt.nom} d'après ${base.nom} : ${ch.join(', ')} (${RAISON[cause]})${lieu !== mere.biome ? `, et l'envoie ${biomes[lieu].nom || lieu}` : ''}${demonte ? ` ; elle démonte ${demonte.nom}` : ''}` });
@@ -263,7 +267,14 @@ function preparer(ctx) {
   // l'assemblage : chaque cycle, la Mère assemble ses deux derniers plans (deux tiers, un tiers), autant que son minerai le permet
   function assembler() {
     const r = biomes[mere.biome].ressources, ids = (mere.courant || []).filter(id => { const t = taxons.find(x => x.id === id); return t && !t.eteint; });
-    if (!ids.length) { const v = taxons.filter(t => !t.eteint && estSyn(t)).sort((a, b) => total(b) - total(a))[0]; if (v) ids.push(v.id); else return; mere.courant = ids.slice(); }
+    if (!ids.length) { const v = taxons.filter(t => !t.eteint && estSyn(t)).sort((a, b) => total(b) - total(a) || (a.id < b.id ? -1 : 1))[0];
+      if (v) ids.push(v.id);
+      else {   // (plus une seule machine : quoi qu'il arrive aux machines, la Mère en assemble encore, d'après ses plans fondateurs)
+        const F = FONDATEURS[(mere.conceptions || 0) % FONDATEURS.length], plan = planMachine(F.plan); if (r.minerai < REGLES.mere.cout * plan.masse_kg) return;
+        mere.conceptions = (mere.conceptions || 0) + 1; const nt = naitre({ id: F.id, nom: F.nom }, plan, mere.biome, REGLES.mere.effectif, null, F.id);
+        r.minerai = Math.max(0, r.minerai - REGLES.mere.cout * plan.masse_kg); mere.derniere = { taxon: nt.id, cause: 'fondateurs', cycle: n }; ids.push(nt.id);
+        ev().push({ type: 'conception', taxon: nt.id, biome: mere.biome, detail: `${mere.nom} n'a plus une seule machine : elle réassemble ${nt.nom} d'après ses plans fondateurs (${F.nom})` }); }
+      mere.courant = ids.slice(); }
     ids.forEach((id, k) => { const t = taxons.find(x => x.id === id), E = etat.get(t.id), masse = t.plan.masse_kg || 1;
       const voulu = REGLES.mere.production * (ids.length === 1 ? 1 : k === 0 ? 2 / 3 : 1 / 3), nb = Math.min(voulu, r.minerai * REGLES.prise / masse);
       if (!(nb > 0)) return; r.minerai -= nb * masse;

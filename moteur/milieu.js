@@ -21,7 +21,8 @@ const REGLES = {
   terriers: { effet: .1, plancher: .002 },   // la capacité monte de 10 % quand la biomasse des fouisseurs double (comptée au moins à 0,2 % de la capacité)
   barrages: { effet: .25, demi: .02 },  // l'humidité monte jusqu'à 0,25 ; à moitié quand les bâtisseurs pèsent 2 % de la capacité du lieu
   jeu: { unite: 5, max: .05 },          // une unité d'action d'un jeu transforme 5 unités de capacité ; au plus 5 % du lieu par cycle et par axe
-  signal: .05                           // un événement quand un axe a bougé de 0,05 depuis le dernier
+  signal: .05,                          // un événement quand un axe a bougé de 0,05 depuis le dernier
+  recolonisation: { seuil: .01, graines: .002 }   // une forme que le lieu porte mais dont il a moins de 1 % de sa place : 0,2 % de sa place en graines, chaque cycle, depuis un voisin
 };
 const TRAITS = {
   batisseur: { domaine: 'morphologie', organe: 'incisives puissantes, queue plate', cout: .1, vulnerabilite: .75,
@@ -51,7 +52,7 @@ function eveiller(inst) {
   const out = JSON.parse(JSON.stringify(inst)); if (out.monde?.milieu) return { inst: out, evenements: [] };
   const n = out.cycle?.n ?? 0, I = indices(out.taxons), B = Object.fromEntries(out.biomes.map(b => [b.id, b]));
   for (const b of out.biomes) { const X = I[b.id] || { bio: 0, pat: 0, fou: 0, bat: 0 };
-    const cap = Math.max(b.capacite || 0, 1); b.transforme = { base: { ...b.axes }, etat: { ...b.axes }, jeu: {}, ref: { pat: X.pat / cap, fou: X.fou / cap }, signale: { ...b.axes } }; }
+    const cap = Math.max(b.capacite || 0, 1); b.transforme = { base: { ...b.axes }, etat: { ...b.axes }, jeu: {}, ref: { pat: X.pat / cap, fou: X.fou / cap }, signale: { ...b.axes }, milieu: b.milieu }; }   // (milieu : celui de l'éveil, la composition de base des plantes s'y lit)
   for (const t of out.taxons) if (t.plan?.regime === 'vegetal') for (const p of t.populations) { const b = B[p.biome]; if (b && p.potentiel != null) p.reference = { ...(p.reference || {}), potentiel: p.potentiel, capacite: b.capacite }; }
   out.monde = { ...out.monde, milieu: { depuis: n } };
   return { inst: out, evenements: [{ type: 'eveil', taxon: out.biomes[0]?.id, detail: 'le milieu s\'éveille : les brouteurs, les fouisseurs, les bâtisseurs et les joueurs le transforment désormais' }] };
@@ -61,6 +62,7 @@ function eveiller(inst) {
 function preparer(ctx) {
   const { biomes, taxons, prB = {}, n } = ctx, B = biomes, I = indices(taxons), ev = [], fert = {};
   for (const b of Object.values(B)) { const M = b.transforme; if (!M) continue;
+    if (!M.base) continue; M.etat ||= { ...M.base }; M.jeu ||= {}; M.ref ||= { pat: 0, fou: 0 }; M.signale ||= { ...b.axes }; M.milieu ||= b.milieu;   // (un lieu lu dans un instantané publié peut n'avoir que base et jeu)
     const X = I[b.id] || { bio: 0, pat: 0, fou: 0, bat: 0 }, r = M.ref, base = M.base, T = { ...base }, K = Math.max(b.capacite || 0, 1), dc = ctx.climat?.decalage(b);   // (docs/31) le climat déplace la cible
     if (dc && base.temperature != null) T.temperature = clamp(base.temperature + dc.temperature);
     const ep = X.pat / K - r.pat, ef = clamp((X.fou / K - r.fou) / Math.max(r.fou, REGLES.terriers.plancher), -1, 2);   // (les parts de la capacité du lieu)
@@ -83,12 +85,32 @@ function preparer(ctx) {
       ev.push({ type: 'transformation', taxon: b.id, biome: b.id, detail: `${b.nom || b.id} : ${MOTS[k] || k} ${monte ? 'monte' : 'baisse'} de ${String(avant).replace('.', ',')} à ${String(b.axes[k]).replace('.', ',')} (${cause})` });
       M.signale[k] = b.axes[k]; }
   }
-  // la place des plantes suit le milieu : la capacité du lieu, et la part que le milieu fait à leur forme
-  const pc = new Map();
+  // la place des plantes suit le milieu : la capacité du lieu, et la part que le milieu fait à leur forme. La part de référence est
+  // celle du lieu à l'éveil, lue avec son milieu d'alors (un lac asséché ne garde pas ses algues), ou, pour une population revenue
+  // d'un voisin, celle du jour de son retour (reference.part)
+  const pc = new Map(), compo = b => { if (!pc.has(b.id)) pc.set(b.id, { maint: parts(b), base: parts({ ...b, milieu: b.transforme?.milieu || b.milieu, axes: { ...b.axes, ...(b.transforme?.base || {}) } }) }); return pc.get(b.id); };
   for (const t of taxons) if (t.plan?.regime === 'vegetal') for (const p of t.populations) { const b = B[p.biome], R = p.reference; if (!b?.transforme || R?.potentiel == null) continue;
-    if (!pc.has(b.id)) pc.set(b.id, { maint: parts(b), base: parts({ ...b, axes: { ...b.axes, ...b.transforme.base } }) });
-    const { maint, base } = pc.get(b.id), w0 = base[t.plan.forme] || 0, w = maint[t.plan.forme] || 0;
-    p.potentiel = r3(R.potentiel * (R.capacite > 0 ? b.capacite / R.capacite : 1) * (w0 > 0 ? w / w0 : 1)); }
+    const { maint, base } = compo(b), w0 = R.part ?? base[t.plan.forme] ?? 0, w = maint[t.plan.forme] || 0;
+    p.potentiel = r3(R.potentiel * (R.capacite > 0 ? b.capacite / R.capacite : 1) * (w0 > 0 ? w / w0 : w > 0 ? 1 : 0)); }
+  // (la recolonisation) une forme que le lieu porte aujourd'hui, mais dont il n'a presque plus de pieds (une forêt qui se referme
+  // sur une prairie, un lac asséché devenu rive, une herbe broutée jusqu'à la dernière) revient d'un voisin : chaque cycle, quelques
+  // graines de la lignée de cette forme la plus abondante chez ses voisins. Déterministe ; rien ne bouge là où la forme tient.
+  const RC = REGLES.recolonisation, ici = {};
+  for (const t of taxons) if (t.plan?.regime === 'vegetal' && !t.eteint) for (const p of t.populations) (ici[p.biome] ??= []).push({ t, p });
+  for (const b of Object.values(B)) { if (!b.transforme || !(b.capacite > 0)) continue;
+    for (const [forme, w] of Object.entries(compo(b).maint)) { const cible = b.capacite * w, L = (ici[b.id] || []).filter(x => x.t.plan.forme === forme);
+      if (L.reduce((s, x) => s + x.p.effectif * (x.t.plan.masse_kg || 1), 0) >= RC.seuil * cible) continue;
+      let don = null; for (const v of b.voisins || []) for (const x of ici[v] || []) { if (x.t.plan.forme !== forme || !(x.p.effectif > 0)) continue; const bio = x.p.effectif * (x.t.plan.masse_kg || 1);
+        if (!don || bio > don.bio || (bio === don.bio && x.t.id < don.t.id)) don = { ...x, bio }; }
+      if (!don) continue;
+      // (les graines tombent à la fin du cycle, après la pousse — moteur/flore.js, p.graines — : ce que mangent les brouteurs ce cycle-ci
+      //  n'en dépend pas ; une lignée revenue part de rien, sa référence aussi)
+      const g = +(RC.graines * cible / (don.t.plan.masse_kg || 1)).toFixed(4), p = don.t.populations.find(q => q.biome === b.id);
+      if (p) { p.graines = (p.graines || 0) + g; if (!(p.potentiel > 0)) p.potentiel = r3(cible); continue; }
+      const f = (don.p.frequences || [1]).slice(), np = { biome: b.id, effectif: 0, graines: g, tendance: 0, depuis: n, potentiel: r3(cible), frequences: f,
+        reference: { effectif: 0, frequences: f.slice(), potentiel: r3(cible), capacite: b.capacite, part: +w.toFixed(4) }, ...(don.p.reference_diete ? { reference_diete: { effectif: 0, frequences: f.slice() } } : {}) };
+      don.t.populations.push(np); (ici[b.id] ??= []).push({ t: don.t, p: np });
+      ev.push({ type: 'transformation', taxon: don.t.id, biome: b.id, detail: `${b.nom || b.id} : ${don.t.nom || don.t.id} y revient, d'un lieu voisin` }); } }
   return { fertilite: id => fert[id] ?? 1, evenements: ev };
 }
 
