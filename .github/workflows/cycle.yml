@@ -1,15 +1,17 @@
-# Orvane — le cycle nocturne : chaque nuit, chaque monde avance d'un cycle et son instantané est publié.
+# Orvane — le cycle : chaque heure, l'action regarde chaque monde ; celui dont l'heure de cycle est venue avance (docs/19),
+# et son instantané est publié. Un monde au jour (monde.cycle = "24h", le monde d'Orvane) tourne une fois par jour, à son heure
+# (monde.heure, 03:00 UTC par défaut) ; une passe manquée est rattrapée à la suivante (au plus monde.rattrapage cycles d'un coup).
 # Secret du dépôt à renseigner : ORVANE_LECTURE_SECRET (le secret de lecture ; où lire est dans profil.monde.pressions).
 # GitHub Pages (Settings › Pages, branche main, dossier /) sert ensuite mondes/<id>/instantane.json avec CORS *.
 name: cycle
 on:
   schedule:
-    - cron: '17 3 * * *'      # 03:17 UTC, tous les jours
+    - cron: '17 * * * *'      # à la 17ᵉ minute de chaque heure : chaque monde décide s'il est l'heure (hebergement/cycle.js --auto)
   workflow_dispatch:
     inputs:
       cycles:
-        description: 'nombre de cycles à faire tourner'
-        default: '1'
+        description: 'nombre de cycles à faire tourner (vide : les cycles dus)'
+        default: ''
 permissions:
   contents: write
 concurrency: cycle
@@ -25,12 +27,19 @@ jobs:
         continue-on-error: true          # un monde en panne n'empêche pas les autres d'être publiés
         env:
           ORVANE_LECTURE_SECRET: ${{ secrets.ORVANE_LECTURE_SECRET }}   # le secret de lecture (profil.monde.pressions) : pas la clé de service du jeu
+          CYCLES: ${{ github.event.inputs.cycles }}                     # (passé par l'environnement, jamais collé dans le script)
         run: |
           echec=0
           for m in mondes/*/; do
-            c=0; node hebergement/cycle.js "$(basename "$m")" --cycles "${{ github.event.inputs.cycles || '1' }}" || c=$?
+            id="$(basename "$m")"
+            if printf '%s' "$CYCLES" | grep -Eq '^[0-9]{1,4}$'; then set -- --cycles "$CYCLES"; else set -- --auto; fi
+            c=0; node hebergement/cycle.js "$id" "$@" || c=$?
             if [ "$c" = 2 ]; then echec=1                     # le monde a tourné, mais sans les lots en ligne (le message dit pourquoi)
-            elif [ "$c" != 0 ]; then echo "::error::le monde $(basename "$m") n'a pas tourné"; echec=1; fi
+            elif [ "$c" != 0 ]; then
+              # un monde interrompu en route n'est pas publié à moitié : on rend son dossier tel qu'il était
+              git checkout -q -- "$m" 2>/dev/null || true; git clean -fdq -- "$m" 2>/dev/null || true
+              echo "::error::le monde $id n'a pas tourné (son dossier est laissé tel qu'il était)"; echec=1
+            fi
           done
           exit $echec
       - name: publier
@@ -38,7 +47,8 @@ jobs:
           git config user.name "orvane"
           git config user.email "orvane@users.noreply.github.com"
           git add mondes
-          git diff --cached --quiet || git commit -m "cycle $(date -u +%Y-%m-%d)"
+          git diff --cached --quiet && exit 0
+          git commit -q -m "cycle $(date -u +%Y-%m-%dT%H:%M)"
           git pull --rebase --autostash -q || true
           git push || { echo "::error title=publication::GitHub refuse que l'action publie le cycle. Dans Settings › Actions › General › Workflow permissions, choisissez « Read and write permissions », puis relancez."; exit 1; }
       - name: signaler un monde en panne
