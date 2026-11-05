@@ -43,6 +43,26 @@ La séparation le dit : « son corps devient segmenté à 26 pattes, une forme q
 
 Chaque forme dit son **repli**, le serpent, pour un jeu qui ne sait pas encore la dessiner. Un jeu qui veut les reconnaître étend sa copie de `moteur/corps.js` avec le catalogue du monde (`OrvaneCorps.etendre(instantane.catalogue.monde)`).
 
+### Plus souvent : `regles.derive.formes` (5 novembre)
+
+Mesuré le 5 novembre : 120 cycles du monde d'Orvane, formes éveillées, n'en font naître aucune. Une forme ne naissait qu'à travers un grand changement de plan (2 % des séparations), puis à sa chance : de l'ordre d'une séparation sur 250 pour un poisson. Personne ne l'aurait jamais vue.
+
+Un réglage du monde les fait naître aussi à la séparation, sans grand changement de plan : à chaque séparation d'une lignée qui vit là où une forme peut naître, une chance de `formes × la chance de la forme` (0,4 pour le rayonné et le tentaculaire, 0,5 pour le segmenté).
+
+```json
+"monde": { …, "formes": true, "regles": { "derive": { "formes": 1 } } }
+```
+
+- **0, par défaut : rien ne change.** Les mêmes corps, les mêmes tirages qu'avant ; le monde d'Orvane donne exactement le même état.
+- **Le hasard du cycle ne bouge pas.** Ce tirage a son propre hasard, tiré du corps de la lignée (comme les mains, docs/24) : les autres lignées dérivent exactement comme si le réglage n'existait pas.
+- **À 1** (le banc, 3 000 séparations) : d'un poisson de 500 g, 40 % de corps nouveaux, rayonnés ou à tentacules ; de 20 kg, seulement des tentacules ; d'un ver, la moitié de corps segmentés ; d'un brouteur à pattes, jamais.
+
+## Les poissons
+
+Les données n'ont pas de « poisson » : un poisson est un corps sans pattes (le plan `serpent`) d'une lignée qui ne vit que dans l'eau — elle nage, et ne marche, ne court, ne saute, ne rampe, ne fouit, ne grimpe ni ne vole. C'est la définition de docs/25 et de Stone Valley (§221). Jusqu'ici, l'observatoire les dessinait et les décrivait en serpents.
+
+`OrvaneCorps.allure(corps, plan)` dit désormais « poisson » pour eux (et la forme du corps pour tous les autres) ; `OrvaneCorps.decrire(corps, plan)` commence par « poisson » (« poisson allongé » pour une anguille). Rien ne change dans les données ni dans la simulation. L'observatoire dessine un poisson (sa nageoire de queue, celle du dos, son ouïe ; une anguille quand le corps est très long), et les trois formes nouvelles : une pieuvre, une méduse (ou une étoile de mer, si elle ne nage pas), un mille-pattes. Un jeu peut faire de même avec `allure`.
+
 ## Deux vies de plus
 
 | la lignée | sa larve | son adulte | ce qu'elles s'épargnent |

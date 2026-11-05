@@ -106,7 +106,7 @@
         },
         "regles": {
           "type": "object",
-          "description": "Des règles du moteur (REGLES de moteur/orvane.js) réglées pour ce monde vivant : elles complètent, d'un niveau, celles de sa genèse (monde.regles de l'instantané) et ne valent que pour ce qui arrive ensuite. Exemple : { \"derive\": { \"tolerance\": 0.35 } } laisse la largeur de la niche dériver à la séparation."
+          "description": "Des règles du moteur (REGLES de moteur/orvane.js) réglées pour ce monde vivant : elles complètent, d'un niveau, celles de sa genèse (monde.regles de l'instantané) et ne valent que pour ce qui arrive ensuite. Exemple : { \"derive\": { \"tolerance\": 0.35, \"formes\": 1 } } laisse la largeur de la niche dériver à la séparation, et fait naître les formes nouvelles du monde à la séparation (docs/33)."
         },
         "collectif": {
           "description": "La vie en groupe (docs/38) : le monde publie, pour chaque population, son groupe (troupeau, meute, banc…), sa hiérarchie et ses migrations saisonnières. Une lecture de l'état : rien ne change dans la simulation.",

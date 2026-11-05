@@ -110,7 +110,7 @@ const REGLES = {
     secheresse: { chance: .002, capacite: .3, mortalite: .05, detail: 'les points d\'eau tarissent' }        // sols secs, en été
   },
   // la dérive d'une lignée qui se sépare : bornes de masse (×), chances de changer de régime, de locomotion, d'heure
-  derive: { masse: [.7, 1.3], regime: 0, locomotion: .1, activite: .05, corps: 1, tolerance: 0 },   // corps : l'ampleur de la dérive de la silhouette ; tolerance : celle de la largeur de la niche (0 : figée)
+  derive: { masse: [.7, 1.3], regime: 0, locomotion: .1, activite: .05, corps: 1, tolerance: 0, formes: 0 },   // corps : l'ampleur de la dérive de la silhouette ; tolerance : celle de la largeur de la niche (0 : figée) ; formes : la naissance des formes du monde à la séparation, hors des grands changements de plan (0 : seulement par eux, docs/33)
   vol_masse_max: 12,         // au-delà (kg), une lignée ne vole plus : elle perd le vol (et ses ailes) en grandissant
   genetique: true,           // la génétique continue (docs/8) ; false : les populations n'ont pas de traits continus
   // la reproduction sexuée (docs/9) ; actif false : les petits naissent du phénotype de leur parent (clonal, avec REGLES.mutation)
@@ -349,7 +349,7 @@ function deriver(plan, b, R) {
     if (p.longevite < Lmin) { p.maturite = +(p.maturite * Math.min(2, Lmin / p.longevite) ** .5).toFixed(2); p.longevite = +Lmin.toFixed(2); } }
   // le corps suit : la silhouette dérive vers ce que le biome favorise, et garde la marque d'un mode de déplacement gagné
   if (plan.corps && CORPS) { const avant = new Set(plan.locomotion || ['marche']);
-    p.corps = CORPS.deriver(plan.corps, p, b, R, D.corps ?? 1, p.locomotion.filter(l => !avant.has(l)), k);
+    p.corps = CORPS.deriver(plan.corps, p, b, R, D.corps ?? 1, p.locomotion.filter(l => !avant.has(l)), k, D.formes || 0);
     if (volait && p.corps) p.corps = { ...p.corps, ailes: 0, organes: (p.corps.organes || []).filter(o => o.type !== 'ailes'), forme: p.corps.forme === 'oiseau' ? 'bipede' : p.corps.forme }; }
   return p;
 }

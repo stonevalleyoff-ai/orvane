@@ -62,6 +62,29 @@ console.log('3. Les formes');
   const e = val(S, Tampon.filtrer(X, { familles: ['animale'] }), '$'); verif(!e.length, 'l\'instantané respecte le schéma' + (e.length ? ' : ' + e.slice(0, 3).join(' ; ') : ''));
 }
 
+console.log('3 bis. Les poissons ; les formes à la séparation (REGLES.derive.formes)');
+{ const av = Corps.etendre({ formes: Fo.FORMES }), b = { id: 'large', axes: { temperature: .5, humidite: .7, couvert: .3, lumiere: .5 } };
+  const gen = s => { let g = s; return () => { g = (Math.imul(g, 1664525) + 1013904223) >>> 0; return g / 4294967296; }; };
+  // un poisson : un corps sans pattes d'une lignée qui ne vit que dans l'eau ; les données disent toujours « serpent »
+  const P = Corps.normaliser({ forme: 'serpent', queue: .6 }), nage = { locomotion: ['nage'] };
+  verif(Corps.allure(P, nage) === 'poisson' && Corps.allure(P, { locomotion: ['nage', 'reptation'] }) === 'serpent' && Corps.allure(Corps.normaliser({ forme: 'quadrupede' }), nage) === 'quadrupede'
+    && Corps.decrire(P, nage).startsWith('poisson') && Corps.decrire(P).startsWith('serpentiforme') && Corps.normaliser(P).forme === 'serpent',
+    `un corps sans pattes qui ne fait que nager se lit « ${Corps.decrire(P, nage)} » ; s'il rampe aussi, « ${Corps.decrire(P).split(',')[0]} » ; ses données ne changent pas`);
+  // 3 000 séparations sans grand changement de plan (A = 1, comme dans un monde qui tourne)
+  const tirer = (fxv, forme, plan, n = 3000) => { let appels = 0; const R0 = gen(11), R = () => { appels++; return R0(); }, c = {}, sorties = [];
+    for (let i = 0; i < n; i++) { const k = Corps.deriver(Corps.normaliser({ forme, pattes: forme === 'hexapode' ? 6 : 0 }), plan, b, R, 1, [], 1, fxv); c[k.forme] = (c[k.forme] || 0) + 1; if (i < 50) sorties.push(k); }
+    return { c, appels, e: empreinte(sorties) }; };
+  const mer = { masse_kg: .5, locomotion: ['nage'] }, a0 = tirer(0, 'serpent', mer), aSans = (() => { let appels = 0; const R0 = gen(11), R = () => { appels++; return R0(); }, s = [];
+    for (let i = 0; i < 3000; i++) { const k = Corps.deriver(Corps.normaliser({ forme: 'serpent', pattes: 0 }), mer, b, R, 1, [], 1); if (i < 50) s.push(k); } return { appels, e: empreinte(s) }; })();
+  const a1 = tirer(1, 'serpent', mer), lourd = tirer(1, 'serpent', { masse_kg: 20, locomotion: ['nage'] }), ver = tirer(1, 'serpent', { masse_kg: .3, locomotion: ['reptation', 'fouissage'] }), brouteur = tirer(1, 'quadrupede', { masse_kg: 2, locomotion: ['marche', 'nage'] });
+  const nv = x => (x.radiaire || 0) + (x.tentaculaire || 0) + (x.segmente || 0);
+  verif(a0.e === aSans.e && a0.appels === aSans.appels && a1.appels === a0.appels && nv(a0.c) <= 15,
+    `sans le réglage (0, par défaut), les mêmes corps et les mêmes tirages qu'avant ; avec, le hasard du cycle ne bouge pas (${fx(a0.appels)} tirages dans les deux cas) ; sans lui, ${nv(a0.c)} formes nouvelles sur 3 000 séparations`);
+  verif(nv(a1.c) > 900 && nv(a1.c) < 1500 && a1.c.radiaire > 0 && a1.c.tentaculaire > 0 && !lourd.c.radiaire && lourd.c.tentaculaire > 900 && ver.c.segmente > 1200 && !ver.c.radiaire && !nv(brouteur.c),
+    `réglé à 1, sur 3 000 séparations : d'un poisson de 500 g, ${a1.c.radiaire} rayonnés et ${a1.c.tentaculaire} à tentacules ; de 20 kg, ${lourd.c.tentaculaire} à tentacules et aucun rayonné ; d'un ver, ${ver.c.segmente} segmentés ; d'un brouteur à pattes qui nage, aucun`);
+  Corps.etendre(av);
+}
+
 console.log('4. Les vies, le cycle de nuit');
 { const lib = St.stadesDe({ regime: 'carnivore', masse_kg: .02, locomotion: ['vol', 'marche'], corps: { forme: 'hexapode' } }), med = St.stadesDe({ regime: 'carnivore', masse_kg: .3, locomotion: ['nage'], corps: { forme: 'radiaire' } }), pap = St.stadesDe({ regime: 'herbivore', masse_kg: .01, locomotion: ['vol'], corps: { forme: 'hexapode' } });
   verif(lib.larve.nom === 'naïade' && lib.larve.locomotion.includes('nage') && med.larve.nom === 'polype' && med.adulte.nom === 'méduse' && pap.larve.nom === 'chenille' && St.soulagement(lib) > St.soulagement(pap),

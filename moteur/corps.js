@@ -154,7 +154,11 @@ function tourner(c, deg) {
 // La dérive d'une lignée qui se sépare. c : le corps du parent ; plan : le plan de la lignée (déjà dérivé) ; b : le biome
 // où elle naît ; R : le tirage du cycle ; A : l'ampleur (1 dans un monde qui tourne, plus dans la genèse) ; gagnes : les modes
 // de déplacement que la lignée vient d'acquérir ; k : le rapport de masse lignée / parent.
-function deriver(c, plan, b, R, A = 1, gagnes = [], k = 1) {
+// (docs/33) les formes du monde qui peuvent naître d'un corps de cette forme, pour une lignée qui vit ainsi (déplacement, masse)
+function formesIci(forme, plan) { const loco = plan?.locomotion || [], m = plan?.masse_kg ?? 1;
+  return Object.entries(FX).filter(([id, F]) => id !== forme && (F.depuis || []).includes(forme)
+    && (!F.loco || F.loco.some(l => loco.includes(l))) && (F.masse_max == null || m <= F.masse_max) && (F.masse_min == null || m >= F.masse_min)); }
+function deriver(c, plan, b, R, A = 1, gagnes = [], k = 1, fx = 0) {
   const n = normaliser(c), ax = b?.axes || {}, j = s => (R() - .5) * 2 * s * A, ajoute = (key, v) => { n[key] = clamp(n[key] + v * A); }, marque = (key, v) => { n[key] = clamp(n[key] + v); };
   // les proportions dérivent un peu (un léger rappel : elles ne filent pas aux extrêmes) ; les organes ne dérivent que s'ils
   // sont là — leur taille, rarement leur nombre ou leur forme — et se perdent en dessous de 0,2 : ils naissent par
@@ -220,10 +224,15 @@ function deriver(c, plan, b, R, A = 1, gagnes = [], k = 1) {
     } else if (n.forme === 'bipede' && u < .3) { n.forme = 'quadrupede'; n.pattes = 4; }
     else if (n.forme === 'serpent' && u < .35) { n.forme = 'quadrupede'; n.pattes = 4; n.haut = .12; }
     // (docs/20) une forme du monde naît d'une de celles qu'elle nomme (depuis), à sa chance
-    const m = plan?.masse_kg ?? 1, C3 = Object.entries(FX).filter(([id, F]) => id !== n.forme && (F.depuis || []).includes(n.forme)
-      && (!F.loco || F.loco.some(l => loco.includes(l))) && (F.masse_max == null || m <= F.masse_max) && (F.masse_min == null || m >= F.masse_min));   // (docs/33 : là où elle peut naître)
+    const C3 = formesIci(n.forme, plan);
     if (C3.length) { const [id, F] = C3[Math.floor(R() * C3.length)]; if (R() < (F.chance ?? .3)) { n.forme = id; n.pattes = F.pattes ?? n.pattes; } }
   }
+  // (docs/33, équilibrage du 5 novembre) les formes du monde naissent aussi hors des grands changements de plan : à la séparation
+  // d'une lignée qui vit là où l'une d'elles peut naître, à sa chance × fx (REGLES.derive.formes, 0 par défaut : rien ne change).
+  // Avec un hasard tiré du corps lui-même : celui du cycle ne bouge pas, et les autres lignées dérivent exactement comme avant
+  if (fx > 0) { const C4 = formesIci(n.forme, plan);
+    if (C4.length) { const Rf = generateurDe('formes' + JSON.stringify([n.long, n.haut, n.queue, n.museau, n.organes.length, b?.id || '', plan?.masse_kg, plan?.regime]));
+      const [id, F] = C4[Math.floor(Rf() * C4.length)]; if (Rf() < Math.min(1, fx * (F.chance ?? .3))) { n.forme = id; n.pattes = F.pattes ?? n.pattes; } } }
   if (n.forme === 'serpent') { n.pattes = 0; n.long = Math.max(n.long, .8); }
   // (docs/33) un corps segmenté gagne ou perd des anneaux ; un corps rayonné, à tentacules, un bras
   if (FX[n.forme]?.repli && R() < .2 * A) { const S = n.forme === 'segmente' ? [10, 40, 2] : n.forme === 'radiaire' ? [4, 8, 1] : [6, 10, 2], d = R() < .5 ? -S[2] : S[2]; n.pattes = Math.max(S[0], Math.min(S[1], (n.pattes || S[0]) + d)); }
@@ -258,9 +267,16 @@ function distance(a, b) {
 }
 
 // une phrase pour l'observatoire et les fiches : « quadrupède trapu, haut sur pattes, longue queue, cornes »
-function decrire(c) {
+// (docs/11) un poisson : un corps sans pattes (le plan « serpent ») d'une lignée qui ne vit que dans l'eau — elle nage, et ne
+// marche, ne court, ne saute, ne rampe, ne fouit, ne grimpe ni ne vole (docs/25 ; Stone Valley, §221). Ce n'est pas une forme de
+// plus : les données disent « serpent », et rien ne change pour la simulation. C'est ainsi qu'on la lit, qu'on la décrit et qu'on
+// la dessine : allure(corps, plan) dit « poisson », ou la forme du corps
+const TERRESTRES = ['marche', 'course', 'saut', 'reptation', 'fouissage', 'grimpe', 'vol'];
+const nageurPur = loco => (loco || []).includes('nage') && !(loco || []).some(l => TERRESTRES.includes(l));
+function allure(c, plan) { const f = normaliser(c).forme; return f === 'serpent' && nageurPur(plan?.locomotion) ? 'poisson' : f; }
+function decrire(c, plan) {
   c = normaliser(c);
-  const F = { quadrupede: 'quadrupède', hexapode: 'hexapode', bipede: 'bipède', oiseau: 'oiseau', serpent: 'serpentiforme' };
+  const F = { quadrupede: 'quadrupède', hexapode: 'hexapode', bipede: 'bipède', oiseau: 'oiseau', serpent: allure(c, plan) === 'poisson' ? 'poisson' : 'serpentiforme' };
   const simien = c.organes.some(o => o.type === 'mains') && (c.forme === 'quadrupede' || c.forme === 'bipede');   // (docs/24)
   const L = [(simien ? (c.forme === 'bipede' ? 'simien debout' : c.posture >= .4 ? 'simien qui se dresse' : 'simien') : F[c.forme] || FX[c.forme]?.nom || c.forme) + (c.forme === 'hexapode' && c.pattes !== 6 || FX[c.forme] && c.pattes ? ` à ${c.pattes} ${c.forme === 'radiaire' || c.forme === 'tentaculaire' ? 'bras' : 'pattes'}` : '') + (c.long > .7 ? ' allongé' : c.long < .3 ? ' trapu' : '')];
   if (c.forme !== 'serpent') L.push(c.haut > .7 ? 'haut sur pattes' : c.haut < .2 ? 'ras du sol' : '');
@@ -277,6 +293,6 @@ function decrire(c) {
 // le catalogue tel qu'il part dans l'instantané (catalogue.organes) : un jeu y lit les places, les formes et les conduites
 // des organes sans connaître ce fichier ; un type ajouté ici y paraît sans toucher au schéma
 const catalogueOrganes = () => JSON.parse(JSON.stringify(OCAT));
-const API = { FORMES, MOTIFS, NUM, PATTES, ORGANES, ORGANES_CAT, DEFAUT, normaliser, deriver, distance, decrire, teinteBiome, tourner, organe, catalogueOrganes, etendre };
+const API = { FORMES, MOTIFS, NUM, PATTES, ORGANES, ORGANES_CAT, DEFAUT, normaliser, deriver, distance, decrire, allure, nageurPur, teinteBiome, tourner, organe, catalogueOrganes, etendre };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else racine.OrvaneCorps = API;
 })(globalThis);
