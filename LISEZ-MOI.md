@@ -35,7 +35,8 @@ monde/index.html      l’observatoire : ce que vit un monde (espèces, biomes, 
 simulation/           la simulation en direct : le monde d'Orvane en temps réel (un monde solo, docs/19, dans un Web Worker), ses bêtes à l'écran (tirées des populations
                       réelles : génotype, silhouette, groupe, méfiance), les gestes du joueur (observer, nourrir, chasser, capturer, déplacer, relâcher, transformer
                       un lieu), et tous les paramètres d'Orvane à régler : les REGLES de chaque module, les catalogues, le profil, le monde, les biomes, les
-                      mécanismes (simulation/LISEZ-MOI.md)
+                      mécanismes ; et un compagnon à élever, en temps réel, comme un tamagotchi : une vraie bête d'Orvane, à nourrir de ce que mange
+                      sa lignée, qui dort à ses heures, se fie à vous, tombe malade, apprend, a des petits (simulation/LISEZ-MOI.md)
 BRANCHER-UN-JEU.md    brancher un jeu, pas à pas : s'inscrire, lire le monde, traduire, régler l'exposition, déposer des lots, les erreurs
 CONNECT-A-GAME.md     le même guide, en anglais ; docs/glossary.md : chaque champ, traduit en anglais
 inscription/          la page d'inscription : inscrire un jeu et recevoir ses clés, régler son exposition, vérifier une clé
@@ -72,6 +73,7 @@ bancs/monde.js        le monde d'Orvane vu par biome, pour les bancs qui parlent
 bancs/chronique.js    le banc de la chronique : rien ne change, ce qu'elle garde et laisse, le muséum et la cause d'une extinction, les noms, le cycle de nuit
 bancs/collectif.js    le banc de la vie en groupe : qui vit comment, la taille des groupes, la hiérarchie, les troupeaux mêlés, les migrations et les visiteurs
 bancs/temps.js        le banc du temps : le rythme de chaque monde (l'action horaire, le rattrapage), le monde solo (temps réel, accéléré, sauvegarde, navigateur)
+bancs/compagnon.js    le banc du compagnon : son régime, son métabolisme, ses heures, son habitat, soigné ou laissé, le mode doux, la maladie, l'apprentissage, l'âge, les petits
 bancs/simulation.js   le banc de la simulation en direct : chaque réglage relié au moteur (rien ne change à leur valeur d'origine), un réglage qui pèse et se retire, endormir et éveiller, deux mondes, la partie gardée, le navigateur
 hebergement/cycle.js  le cycle, chaque monde à son rythme (docs/19) : lots de tous les jeux → tampon → moteur → instantané publié (action GitHub .github/workflows/cycle.yml)
 hebergement/supabase.sql  le Supabase d'Orvane : les jeux s'y inscrivent, y déposent les pressions de leurs joueurs et y proposent des noms

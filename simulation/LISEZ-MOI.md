@@ -18,6 +18,22 @@ Un cycle est un pas du monde. Le rythme se choisit : un cycle par jour (celui du
 
 Les outils de la scène : **observer** (la fiche d'une bête), **nourrir**, **capturer**, **chasser**. La fiche permet aussi de **déplacer** une bête vers un biome voisin ; la ménagerie, de **relâcher** une bête capturée, où l'on veut, avec ses gènes (docs/36). Le volet *Vos gestes sur ce lieu* : abîmer ou restaurer l'habitat, défricher, reboiser, assécher, irriguer, construire (docs/22). S'approcher des bêtes sans leur nuire compte comme des rencontres : elles s'habituent. Tout cela part au moteur au cycle suivant, au format des lots (docs/4), par le même tampon que le monde partagé. Un geste compte pour une bête, ou pour toutes celles que la bête dessinée représente (le réglage *Ce que pèse un geste*) ; au-delà de 10 000 bêtes, il part en plusieurs événements, que le tampon plafonne.
 
+## Le compagnon
+
+L'onglet *Compagnon* : une bête à soi, à élever et à soigner, en temps réel, comme un tamagotchi, mais une vraie bête d'Orvane (`compagnon.js`, `enclos.js`). On l'adopte sur la scène (« Adopter » dans la fiche d'une bête), on prend un œuf ou un petit d'une lignée du biome, ou on élève une bête de la ménagerie ; le moteur voit une capture. Ce qu'elle est décide de ce dont elle a besoin :
+
+- **Manger** : ce que mange sa lignée (son spectre de régime, docs/30). Un herbivore refuse la viande. Une petite bête a faim plus vite (le métabolisme suit la masse), le métabolisme lent la ralentit.
+- **Dormir** : à ses heures, à l'horloge de l'appareil. Une diurne dort la nuit, une nocturne le jour ; la réveiller la rend grognonne.
+- **Jouer, être caressée** : elle s'ennuie d'autant plus qu'elle est sociable. Elle se fie à vous peu à peu, plus vite si elle est audacieuse ; tant qu'elle se méfie, elle refuse les caresses.
+- **Un enclos propre** : ses repas font des crottes, qu'on ramasse. La saleté la rend malade.
+- **Un habitat qui lui va** : le confort, c'est sa niche contre les axes du lieu (`Orvane.convenance`). Hors de chez elle, elle dépérit.
+- **Les soins** : elle tombe malade, plus souvent quand sa lignée a une épidémie là où elle vit ; un soin la guérit. Sa consanguinité (sa vigueur) l'use plus vite.
+- **Apprendre** : avec assez de confiance, des leçons lui apprennent un savoir d'Orvane (docs/34) ou un tour, plus vite si sa lignée apprend bien.
+- **Grandir, vieillir** : jeune jusqu'à la maturité de sa lignée, vieille au-delà de sa longévité, comptées en cycles de vie (4 heures par défaut).
+- **Des petits** : adulte, en bonne santé et confiante, elle a des petits avec une bête sauvage de sa lignée présente sur la scène (Mendel, `Individus.croiser`). On élève le petit (le parent attend dans la ménagerie) ou on le rend au monde, avec ses gènes (docs/36). On peut aussi rendre le compagnon lui-même au monde.
+
+Le temps passe quand la page est fermée : à la réouverture, il rattrape ce qui s'est passé. En mode doux (par défaut), quelqu'un veille pendant l'absence : ses besoins ne tombent pas sous un plancher. Le compagnon se garde dans le navigateur, à part du monde, et survit à un monde qu'on recommence ; ceux qui sont partis restent dans les souvenirs. Ses réglages (le temps du compagnon, accéléré jusqu'à ×600 et plus, la durée d'un cycle de vie, le mode doux, la faim, le sommeil, la confiance, la maladie…) sont dans le groupe *Le compagnon* des réglages.
+
 ## Les paramètres
 
 Tous ceux d'Orvane, plus de cinq cents, chacun avec son nom, ce qu'il fait, sa valeur d'origine et de quoi y revenir :
@@ -42,8 +58,10 @@ index.html, simulation.css   la page
 simulation.js                l'interface : le temps réel, les onglets, la fiche, les gestes, la sauvegarde
 vivant.js                    les bêtes à l'écran : le décor de chaque biome, les individus, leur conduite, leurs naissances et leurs morts
 parametres.js                le nom et l'explication de chaque paramètre, leurs groupes
+compagnon.js                 le compagnon : ses besoins, son sommeil, ses maladies, son âge, ce qu'on fait pour lui (Node ou navigateur)
+enclos.js                    l'onglet Compagnon : l'enclos, l'adoption, les petits, les souvenirs
 noyau.js                     le monde solo réglable : créer, régler, noter, un cycle, la vue, sauver, charger (Node ou navigateur)
 messagerie.js, travailleur.js le moteur dans un Web Worker ; la même messagerie dans la page si le Worker ne se charge pas
 ```
 
-Le banc : `node bancs/simulation.js`. Il vérifie que chaque réglage est relié au moteur (tous posés à leur valeur d'origine, le cycle est celui du témoin, au bit près), qu'un réglage pèse et se retire, qu'on endort et éveille un mécanisme, que deux mondes ne se mêlent pas, que la partie se garde, et que le noyau donne le même monde dans un navigateur qu'avec Node.
+Les bancs : `node bancs/simulation.js` et `node bancs/compagnon.js` (le compagnon : son régime, son métabolisme, ses heures, son habitat, soigné ou laissé, le mode doux, la maladie, l'apprentissage, l'âge, les petits, l'œuf, la sauvegarde). Le premier vérifie que chaque réglage est relié au moteur (tous posés à leur valeur d'origine, le cycle est celui du témoin, au bit près), qu'un réglage pèse et se retire, qu'on endort et éveille un mécanisme, que deux mondes ne se mêlent pas, que la partie se garde, et que le noyau donne le même monde dans un navigateur qu'avec Node.

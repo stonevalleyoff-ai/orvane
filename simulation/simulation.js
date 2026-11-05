@@ -14,7 +14,7 @@ const fx = (v, d = 3) => typeof v === 'number' ? v.toLocaleString('fr-FR', { max
 const pct = v => v == null ? '—' : (v * 100).toLocaleString('fr-FR', { maximumFractionDigits: v > 0 && v < .1 ? 1 : 0 }) + ' %';
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const sansAccent = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-const P = globalThis.OrvaneParametres, V = globalThis.OrvaneVivant, Individus = globalThis.OrvaneIndividus;
+const P = globalThis.OrvaneParametres, V = globalThis.OrvaneVivant, Individus = globalThis.OrvaneIndividus, Cp = globalThis.OrvaneCompagnon;
 const estObj = v => v && typeof v === 'object' && !Array.isArray(v);
 const copie = o => o === undefined ? undefined : JSON.parse(JSON.stringify(o));
 const fusion = (a, b) => { if (!estObj(a) || !estObj(b)) return b === undefined ? copie(a) : copie(b); const o = copie(a); for (const k of Object.keys(b)) o[k] = estObj(o[k]) && estObj(b[k]) ? fusion(o[k], b[k]) : copie(b[k]); return o; };
@@ -34,7 +34,7 @@ const EVT = { apparition: 'apparitions', extinction: 'extinctions', separation: 
 const PROFIL_PLUS = { influence: { pseudo_comptes: 20, plafonds: { part_max_jeu: null } }, exposition: { seuil_extinction_jeu: 0, mefiance: { rendue: true, fuite: 2.2, habitude: .5 }, quantitatifs: { variation: 1 } } };
 const AFFICHAGE0 = { densite: 1, etiquettes: true, fuite: true, meteo: true, nuit: true, journee: 'cycle', poids: 'part' };
 const TEMPS0 = { rythme: '30s', acceleration: 1, rattrapage: 24, enMarche: true };
-const INDIVIDUS0 = copie(Individus?.REGLES || {});
+const INDIVIDUS0 = copie(Individus?.REGLES || {}), COMPAGNON0 = copie(Cp?.REGLES || {});
 const ORIGINE = 'https://stonevalleyoff-ai.github.io/orvane/';
 
 const lireLS = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } };
@@ -45,7 +45,7 @@ const E = {
   dernier: Date.now(), occupe: false, notes: [], historique: [], totaux: [], journal: [], menagerie: [], onglet: 'biome', outil: 'observer', espece: null,
   filtreJournal: 'important', ouverts: new Set(['temps', 'mecanismes']), recherche: '', biomeReglage: null, cyclesDepuis: 0, derniereSauvegarde: Date.now(), mesure: 2500
 };
-let scene = null;
+let scene = null, enclos = null;
 
 // === le moteur, dans son Worker (ou dans la page, si le Worker ne se charge pas) ===
 let W = null, seq = 0; const attentes = new Map();
@@ -75,11 +75,12 @@ function recevoir(m) {
 function chargement(t) { const el = $('#chargement'); if (!el) return; if (t) { el.hidden = false; el.querySelector('p').textContent = t; } else el.hidden = true; }
 
 // === les réglages : ce qui part au moteur, ce qui reste dans la page ===
-const PAGE = new Set(['individus']);
+const PAGE = new Set(['individus', 'compagnon']);
 function reglagesMoteur() { const o = {}; for (const [g, v] of Object.entries(E.reglages)) if (!PAGE.has(g)) o[g] = v; return o; }
 function profilPage() { let p = fusion(E.defauts?.profil || {}, PROFIL_PLUS); for (const [c, v] of Object.entries(E.reglages.profil || {})) { const S = c.split('.'); let o = p; for (let i = 0; i < S.length - 1; i++) o = o[S[i]] ||= {}; o[S[S.length - 1]] = v; } return p; }
 function appliquerPage() {
   if (Individus?.REGLES) { Object.assign(Individus.REGLES, copie(INDIVIDUS0)); for (const [c, v] of Object.entries(E.reglages.individus || {})) { const S = c.split('.'); let o = Individus.REGLES; for (let i = 0; i < S.length - 1; i++) o = o[S[i]] ||= {}; o[S[S.length - 1]] = v; } }
+  if (Cp?.REGLES) { Object.assign(Cp.REGLES, copie(COMPAGNON0)); for (const [c, v] of Object.entries(E.reglages.compagnon || {})) { const S = c.split('.'); let o = Cp.REGLES; for (let i = 0; i < S.length - 1; i++) o = o[S[i]] ||= {}; o[S[S.length - 1]] = v; } }
   if (scene) { scene.profil = profilPage(); Object.assign(scene.options, E.affichage); }
 }
 // l'arbre des défauts d'un groupe : ce que vaut chaque réglage avant qu'on y touche (pour le moteur : les règles du monde par-dessus)
@@ -87,6 +88,7 @@ function arbre(g) {
   if (g === 'orvane') return fusion(E.defauts.orvane, E.valeurs?.regles0 || {});
   if (g === 'profil') return fusion(E.defauts.profil, PROFIL_PLUS);
   if (g === 'individus') return INDIVIDUS0;
+  if (g === 'compagnon') return COMPAGNON0;
   if (g === 'monde') return E.valeurs?.monde0 || { graine: 1, annee: 0 };
   return E.defauts?.[g];
 }
@@ -136,7 +138,7 @@ async function lancer(n, force) {
     statistiques();
     scene.horloge = { debut: performance.now(), duree: attendu() };
     V.installer(scene, E.vue, E.biome, { duree: attendu(), profil: profilPage() });
-    entete(); if (E.onglet !== 'reglages') rendre(); else rendreTemps();
+    entete(); if (E.onglet === 'reglages') rendreTemps(); else if (E.onglet !== 'compagnon') rendre();
     if (Date.now() - E.derniereSauvegarde > 90000) sauverPartie(false);
   } catch (e) { toast(`Le cycle s’est arrêté : ${e.message}`, 'erreur'); E.notes.unshift(...notes.filter(x => x.action !== 'rencontre')); majNotes(); }
   E.occupe = false;
@@ -176,7 +178,7 @@ async function demarrer() {
     if (partie && partie.page?.monde === E.monde) await reprendre(partie, q.get('biome'));
     else await nouvelle(q.get('biome'));
   } catch (e) { chargement(null); $('#chargement').hidden = false; $('#chargement p').innerHTML = `Le monde ne se charge pas : ${ESC(e.message)}. <a href="?neuf">Réessayer depuis le monde publié</a>`; return; }
-  setInterval(horlogeMoteur, 250); setInterval(entete, 1000);
+  setInterval(horlogeMoteur, 250); setInterval(entete, 1000); setInterval(() => enclos?.tick(), 1000);
 }
 async function nouvelle(biome) {
   const m = encodeURIComponent(E.monde);
@@ -203,6 +205,7 @@ function installer(r, biome) {
   if (!E.historique.length) statistiques();
   scene.horloge = { debut: performance.now(), duree: attendu() };
   V.installer(scene, E.vue, E.biome, { duree: attendu(), profil: profilPage() });
+  if (!enclos && globalThis.OrvaneEnclos) enclos = OrvaneEnclos.creer(hote);   // le compagnon : il rattrape le temps passé, une fois le monde là
   chargement(null); entete(); rendre(); adresse();
 }
 function adresse() { const q = new URLSearchParams(location.search); q.set('monde', E.monde); q.set('biome', E.biome); q.delete('neuf'); history.replaceState(null, '', '?' + q.toString()); }
@@ -246,13 +249,25 @@ function geste(action, a, vers) {
   else if (action === 'deplacement' && vers) { noter({ ...base, action, vers }, a); a.etat = 'partir'; a.cible = { x: a.x < scene.W / 2 ? -40 : scene.W + 40, y: a.y }; carte(null); }
   if (E.onglet === 'biome') rendreMenagerie();
 }
-function relacher(i) {
-  const m = E.menagerie[i]; if (!m) return;
-  const a = V.relacher(scene, { ...m.ind, biome: E.biome });
-  if (!a) { toast('Cette lignée n’existe plus dans ce monde.', 'erreur'); return; }
-  const genome = { alleles: Object.fromEntries(Object.entries(m.ind.alleles || {}).map(([k, c]) => [k, c / 2])), a: m.ind.a || {} };
-  noter({ taxon: m.ind.taxon, biome: E.biome, action: 'liberation', n: 1, genome }, a); E.menagerie.splice(i, 1); rendreMenagerie();
+// rendre une bête au monde, là où l'on est : elle y arrive sur la scène, et le moteur reçoit ses gènes (docs/36)
+function rendreAuMonde(ind) {
+  const a = V.relacher(scene, { ...ind, biome: E.biome });
+  if (!a) { toast('Cette lignée n’existe plus dans ce monde.', 'erreur'); return false; }
+  const genome = { alleles: Object.fromEntries(Object.entries(ind.alleles || {}).map(([k, c]) => [k, c / 2])), a: ind.a || {} };
+  noter({ taxon: ind.taxon, biome: E.biome, action: 'liberation', n: 1, genome }, a); return true;
 }
+function relacher(i) { const m = E.menagerie[i]; if (!m || !rendreAuMonde(m.ind)) return; E.menagerie.splice(i, 1); rendreMenagerie(); }
+function elever(i) { const m = E.menagerie[i], t = m && E.vue.taxons.find(z => z.id === m.ind.taxon); if (!t) { toast('Cette lignée n’existe plus dans ce monde.', 'erreur'); return; }
+  if (enclos?.adopter(m.ind, t, { biome: E.biome, traits: m.traits, age: t.plan.maturite || 3 })) { E.menagerie.splice(i, 1); } }
+// ce que la simulation prête au compagnon (enclos.js)
+const hote = {
+  vue: () => E.vue, biome: () => E.biome, scene: () => scene, toast: (t, c) => toast(t, c === 'refus' ? '' : c), journal: e => { journal({ n: E.vue?.cycle?.n, ...e }); }, nomBiome: id => nomBiome(id),
+  noter: (ev, a, x, y) => noter(ev, a, x, y), relacher: ind => rendreAuMonde(ind),
+  menagerie: (ind, nom, traits) => { E.menagerie.unshift({ ind, nom, biome: E.biome, cycle: E.vue.cycle.n, traits }); if (E.menagerie.length > 40) E.menagerie.length = 40; },
+  ongletActif: () => E.onglet === 'compagnon', ouvrir: () => { E.onglet = 'compagnon'; rendre(); },
+  allerBiome: id => { changerBiome(id); E.onglet = 'compagnon'; rendre(); },
+  ouvrirReglages: g => { E.onglet = 'reglages'; E.ouverts.add(g); rendre(); setTimeout(() => $(`details[data-groupe="${g}"]`)?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 60); }
+};
 function gesteLieu(action, n) { noter({ biome: E.biome, action, n }, null, scene.W / 2, scene.H * .5); }
 function surToucher(a, x, y) {
   const o = E.outil;
@@ -274,13 +289,14 @@ function carte(a) {
     <div class="zs">${barre('taille', 'Taille')}${barre('vitesse', 'Vitesse')}${barre('audace', 'Audace')}${barre('sociabilite', 'Sociabilité')}</div>
     <p class="puces">${a.traits.map(t => `<span class="puce" title="${ESC(cat[t]?.effet || '')}">${ESC(t)}</span>`).join('') || '<span class="sourd">aucun trait visible</span>'}${caches.length ? ` <span class="sourd">porte sans montrer :</span> ${caches.map(t => `<span class="puce cache">${ESC(t)}</span>`).join('')}` : ''}</p>
     <p class="sous">${a.malade ? '<b class="declin">malade</b> · ' : ''}${g ? `${ESC(g.nom || g.forme)}${g.taille?.typ > 1 ? ` (${g.taille.typ} d’habitude)` : ''}${g.meneur ? `, mené par ${ESC(g.meneur)}` : ''} · ` : ''}${ind.savoirs?.length ? `sait : ${ind.savoirs.map(ESC).join(', ')} · ` : ''}méfiance ${pct(p.mefiance || 0)}, habituation ${pct(p.habituation || 0)} · ${ESC(etatLisible(a))}</p>
-    <div class="actions">${e.syn ? '' : `<button data-g="rencontre">Observer</button><button data-g="nourrissage">Nourrir</button><button data-g="prelevement" class="danger">Chasser</button><button data-g="capture">Capturer</button>`}
+    <div class="actions">${e.syn ? '' : `<button data-g="rencontre">Observer</button><button data-g="nourrissage">Nourrir</button><button data-g="prelevement" class="danger">Chasser</button><button data-g="capture">Capturer</button><button data-adopter class="principal">Adopter</button>`}
       ${voisins.length && !e.syn ? `<select data-g="deplacement" aria-label="Déplacer vers un biome voisin"><option value="">Déplacer vers…</option>${voisins.map(id => `<option value="${ESC(id)}">${ESC(nomBiome(id))}</option>`).join('')}</select>` : ''}
       <button data-espece="${ESC(e.id)}" class="lien">L’espèce</button></div>
     <p class="note">Un geste compte pour ${nb(poids(a))} bête${poids(a) > 1 ? 's' : ''} du monde${E.affichage.poids === 'part' ? ' (la part que dessine cette bête)' : ''} ; il passe au moteur au prochain cycle, par le tampon.</p>`;
   el.hidden = false;
   el.querySelector('.fermer').onclick = () => carte(null);
   el.querySelectorAll('button[data-g]').forEach(b => b.onclick = () => { geste(b.dataset.g, a); if (b.dataset.g === 'rencontre' || b.dataset.g === 'nourrissage') carte(a); });
+  const ad = el.querySelector('[data-adopter]'); if (ad) ad.onclick = () => { carte(null); enclos?.adopterBete(a); };
   const s = el.querySelector('select[data-g]'); if (s) s.onchange = () => { if (s.value) geste('deplacement', a, s.value); };
   const be = el.querySelector('[data-espece]'); if (be) be.onclick = () => { E.espece = e.id; E.onglet = 'biome'; scene.surligne = e.id; rendre(); setTimeout(() => $(`[data-esp="${CSS.escape(e.id)}"]`)?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 50); };
 }
@@ -314,7 +330,7 @@ function changerRythme(v) {
 function rendre() {
   $$('#onglets button').forEach(b => b.setAttribute('aria-selected', b.dataset.o === E.onglet));
   const el = $('#panneau'), haut = el.scrollTop;
-  ({ biome: rendreBiome, monde: rendreMonde, journal: rendreJournal, reglages: rendreReglages })[E.onglet]?.();
+  ({ biome: rendreBiome, compagnon: () => enclos ? enclos.rendre($('#panneau')) : ($('#panneau').innerHTML = '<p class="vide bloc">Le monde arrive…</p>'), monde: rendreMonde, journal: rendreJournal, reglages: rendreReglages })[E.onglet]?.();
   if (E._dernierOnglet === E.onglet) el.scrollTop = haut; E._dernierOnglet = E.onglet;
 }
 function barreAxe(v, coul = '#b9c6ab') { return `<span class="axe"><i style="width:${clamp(v, 0, 1) * 100}%;background:${coul}"></i></span>`; }
@@ -356,9 +372,10 @@ function dessinerCourbeEspece() { const c = $('#courbeEspece'); if (!c || !E.esp
 function rendreMenagerie() {
   const el = $('#menagerie'); if (!el) return;
   el.innerHTML = `<h3>Votre ménagerie <small>(${E.menagerie.length})</small></h3>${E.menagerie.length ? `<ul class="menagerie">${E.menagerie.map((m, i) => { const t = E.vue.taxons.find(z => z.id === m.ind.taxon);
-    return `<li>${t?.plan?.corps ? V.croquis(t.plan.corps, m.traits || []) : ''}<span><b>${ESC(m.ind.nom)}</b> ${m.ind.sexe === 'f' ? '♀' : '♂'}<small>${ESC(m.nom)} · prise en ${ESC(nomBiome(m.biome))}, cycle ${m.cycle}</small></span><button data-relacher="${i}">Relâcher ici</button></li>`; }).join('')}</ul>
+    return `<li>${t?.plan?.corps ? V.croquis(t.plan.corps, m.traits || []) : ''}<span><b>${ESC(m.ind.nom)}</b> ${m.ind.sexe === 'f' ? '♀' : '♂'}<small>${ESC(m.nom)} · prise en ${ESC(nomBiome(m.biome))}, cycle ${m.cycle}</small></span><span class="boutons"><button data-elever="${i}">Élever</button><button data-relacher="${i}">Relâcher ici</button></span></li>`; }).join('')}</ul>
     <p class="note">Relâchée, une bête rend au monde ses gènes (docs/36), même loin de chez elle.</p>` : '<p class="note">Choisissez l’outil « Capturer » sur la scène, puis touchez une bête : elle attendra ici que vous la relâchiez, où vous voudrez.</p>'}`;
   el.querySelectorAll('[data-relacher]').forEach(b => b.onclick = () => relacher(+b.dataset.relacher));
+  el.querySelectorAll('[data-elever]').forEach(b => b.onclick = () => elever(+b.dataset.elever));
 }
 function rendreMonde() {
   const I = E.vue, H = E.historique, h = H[H.length - 1] || {}, M = I.monde || {}, souches = Object.values(M.pathogenes?.souches || {}).filter(s => (s.infectes || 0) > 0).sort((a, b) => (b.infectes || 0) - (a.infectes || 0));
@@ -528,6 +545,8 @@ function brancherInterface() {
   $('#rythme').onchange = e => changerRythme(e.target.value);
   $$('#onglets button').forEach(b => b.onclick = () => { E.onglet = b.dataset.o; rendre(); if (innerWidth < 900) $('#panneau').scrollIntoView?.({ block: 'start' }); });
   $$('#outils button').forEach(b => b.onclick = () => { E.outil = b.dataset.outil; scene.outil = E.outil; $$('#outils button').forEach(x => x.setAttribute('aria-pressed', x === b)); $('#toile').dataset.outil = E.outil; });
+  $('#mini').onclick = () => { E.onglet = 'compagnon'; rendre(); if (innerWidth < 900) $('#panneau').scrollIntoView?.({ behavior: 'smooth', block: 'start' }); };
+  addEventListener('visibilitychange', () => { if (document.hidden) enclos?.garder(); else enclos?.rattraper(); });
   $('#hudBiome').onclick = () => { E.onglet = 'monde'; rendre(); if (innerWidth < 900) $('#panneau').scrollIntoView?.({ behavior: 'smooth', block: 'start' }); };
   const p = $('#panneau'); p.addEventListener('input', surReglage); p.addEventListener('change', e => { if (e.target.type === 'checkbox' || e.target.tagName === 'SELECT') surReglage(e); }); p.addEventListener('click', e => { if (e.target.matches('.p-raz')) surReglage(e); });
   $('#fichier').onchange = async e => { const f = e.target.files[0]; e.target.value = ''; if (!f) return;

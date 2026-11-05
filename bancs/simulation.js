@@ -31,7 +31,7 @@ const V0 = N.vue(T); verif(V0.flore?.prairie?.length > 0 && V0.taxons.every(t =>
 const Tt = monde(); N.cycle(Tt); const temoin = effectifs(Tt);
 
 console.log('2. Tous les paramètres');
-const D = N.defauts(), groupes = P.GROUPES.map(g => g.id).filter(g => g !== 'individus');
+const D = N.defauts(), groupes = P.GROUPES.filter(g => !g.page).map(g => g.id);   // (les groupes de la page, les individus, le compagnon, ne passent pas au moteur)
 const manque = groupes.filter(g => !D[g]); verif(!manque.length, `chaque groupe de la page a ses valeurs dans le moteur${manque.length ? ' (manque : ' + manque.join(', ') + ')' : ''}`);
 // (les règles du moteur valent, pour ce monde, celles du module sous les siennes : monde.regles — ce que la page montre comme défaut)
 const base = g => g === 'orvane' ? Object.assign(JSON.parse(JSON.stringify(D.orvane, (k, v) => v === Infinity ? '∞' : v), (k, v) => v === '∞' ? Infinity : v), ...Object.entries(N.valeurs(T).regles0).map(([k, v]) => ({ [k]: v && typeof v === 'object' ? { ...D.orvane[k], ...v } : v }))) : D[g];

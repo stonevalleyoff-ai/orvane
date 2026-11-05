@@ -28,6 +28,7 @@
       <span id="hudProchain" class="hud-pilule sourd">—</span>
     </div>
     <p id="notes" class="hud-notes" hidden></p>
+    <button id="mini" class="mini" hidden aria-label="Votre compagnon"></button>
     <div id="outils" class="outils" role="toolbar" aria-label="Outils du joueur">
       <button data-outil="observer" aria-pressed="true"><span aria-hidden="true">◉</span>Observer</button>
       <button data-outil="nourrir" aria-pressed="false"><span aria-hidden="true">❀</span>Nourrir</button>
@@ -40,7 +41,7 @@
   </section>
   <aside class="sim-panneau">
     <nav id="onglets" class="onglets" aria-label="Vues de la simulation">
-      <button data-o="biome" aria-selected="true">Biome</button><button data-o="monde" aria-selected="false">Monde</button><button data-o="journal" aria-selected="false">Journal</button><button data-o="reglages" aria-selected="false">Réglages</button>
+      <button data-o="biome" aria-selected="true">Biome</button><button data-o="compagnon" aria-selected="false">Compagnon</button><button data-o="monde" aria-selected="false">Monde</button><button data-o="journal" aria-selected="false">Journal</button><button data-o="reglages" aria-selected="false">Réglages</button>
     </nav>
     <div id="panneau" class="panneau"></div>
   </aside>
@@ -50,11 +51,14 @@
 <script src="../moteur/catalogue.js"></script>
 <script src="../moteur/corps.js"></script>
 <script src="../moteur/dietes.js"></script>
+<script src="../moteur/esprit.js"></script>
 <script src="../moteur/orvane.js"></script>
 <script src="../tampon/tampon.js"></script>
 <script src="../tampon/individus.js"></script>
 <script src="parametres.js"></script>
 <script src="vivant.js"></script>
+<script src="compagnon.js"></script>
+<script src="enclos.js"></script>
 <script src="simulation.js"></script>
 </body>
 </html>

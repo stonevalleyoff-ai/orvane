@@ -206,4 +206,79 @@ button:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visi
   .chiffres{grid-template-columns:1fr 1fr}
   .meca{grid-template-columns:1fr}
 }
+/* le compagnon : l'enclos, ses jauges, la petite fenêtre sur la scène */
+.enclos{position:relative;height:250px;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:var(--ciel)}
+.cp-ciel{position:absolute;inset:0 0 42% 0;background:linear-gradient(#ffffff40,transparent),var(--ciel)}
+.cp-sol{position:absolute;inset:58% 0 0 0;background:linear-gradient(color-mix(in srgb,var(--sol) 85%,#fff),var(--sol) 30%,color-mix(in srgb,var(--sol) 70%,#000))}
+.enclos[data-milieu="eau"] .cp-ciel{inset:0 0 88% 0}
+.enclos[data-milieu="eau"] .cp-sol{inset:12% 0 0 0;background:linear-gradient(color-mix(in srgb,var(--eau) 80%,#fff),var(--eau) 40%,color-mix(in srgb,var(--eau) 60%,#000))}
+.enclos[data-milieu="eau"] .cp-sol::after{content:"";position:absolute;left:0;right:0;bottom:0;height:16%;background:color-mix(in srgb,var(--sol) 70%,var(--eau))}
+.enclos[data-milieu="rive"] .cp-sol{background:linear-gradient(var(--sol) 55%,color-mix(in srgb,var(--eau) 85%,#fff) 56%,var(--eau))}
+.enclos[data-milieu="grotte"] .cp-ciel{background:#1d1b1f}
+.enclos[data-milieu="grotte"] .cp-sol{background:linear-gradient(#3a3532,#201d1c)}
+.cp-ombre-nuit{position:absolute;inset:0;background:#0a1228;opacity:0;pointer-events:none;transition:opacity 2s;z-index:3}
+.cp-crottes{position:absolute;inset:0;z-index:2}
+.crotte{position:absolute;width:16px;height:12px;border:0;padding:0;border-radius:50% 50% 45% 45%;background:radial-gradient(circle at 35% 30%,#8a6a45,#4e3826);box-shadow:0 2px 0 #0003;cursor:pointer}
+.crotte::after{content:"";position:absolute;left:5px;top:-5px;width:6px;height:6px;border-radius:50%;background:#5c4430}
+.cp-marche{position:absolute;bottom:8%;left:12%;z-index:2;animation:cp-aller var(--duree,10s) ease-in-out infinite alternate}
+.enclos[data-milieu="eau"] .cp-marche{bottom:34%}
+.cp-tourne{animation:cp-tourne calc(var(--duree,10s) * 2) linear infinite}
+.cp-marche.arret,.cp-marche.arret .cp-tourne{animation-play-state:paused}
+.cp-corps{transform-origin:50% 100%}
+.cp-corps svg{display:block;width:100%;height:auto;filter:drop-shadow(0 4px 2px #0003);animation:cp-pas .55s ease-in-out infinite}
+.cp-marche.arret .cp-corps svg{animation:cp-souffle 3.5s ease-in-out infinite}
+.cp-corps.saute{animation:cp-saute .6s ease-out 2}
+.cp-corps.vieux svg{filter:drop-shadow(0 4px 2px #0003) saturate(.6) brightness(1.08)}
+.nuit-dort .cp-corps svg{transform:scaleY(.86);filter:drop-shadow(0 3px 2px #0003) brightness(.85)}
+.malade .cp-corps svg{filter:drop-shadow(0 4px 2px #0003) saturate(.45) hue-rotate(35deg) brightness(.95)}
+.malade .cp-corps::before{content:"~ ~";position:absolute;top:-14px;left:40%;color:#b7d68a;font-size:15px;animation:cp-flotte 2.4s ease-in-out infinite}
+.cp-effets{position:absolute;left:50%;top:-6px;width:0;height:0;z-index:4}
+.cp-bulle{position:absolute;left:-14px;bottom:0;font-size:22px;white-space:nowrap;animation:cp-monte 1.8s ease-out forwards;color:#fff;text-shadow:0 2px 6px #0007}
+.cp-bulle.coeur{color:#f08aa0} .cp-bulle.refus,.cp-bulle.mefiance{color:#e8e1cf;font-size:18px} .cp-bulle.joie{color:var(--gold)}
+.cp-zzz{position:absolute;left:10px;bottom:6px;font:italic 15px var(--serif);color:#e8eefc;white-space:nowrap;animation:cp-flotte 3s ease-in-out infinite;z-index:4}
+.cp-oeuf{display:block;width:34%;aspect-ratio:.78;margin:auto;border:0;border-radius:50% 50% 46% 46%/60% 60% 40% 40%;cursor:pointer;
+  background:radial-gradient(circle at 35% 30%,#fffaf0,#e6dcc4 55%,#bfae8a);box-shadow:inset -6px -8px 0 #0001,0 6px 8px #0003;position:relative;animation:cp-tremble calc(6s - 5s * var(--p,0)) ease-in-out infinite}
+.cp-oeuf::after{content:"";position:absolute;left:30%;top:38%;width:40%;height:14%;opacity:var(--p,0);background:linear-gradient(135deg,transparent 45%,#7a6a52 46% 54%,transparent 55%),linear-gradient(45deg,transparent 45%,#7a6a52 46% 54%,transparent 55%);background-size:33% 100%}
+@keyframes cp-aller{from{left:4%}to{left:calc(96% - var(--w,160px))}}
+@keyframes cp-tourne{0%,49.99%{transform:scaleX(1)}50%,100%{transform:scaleX(-1)}}
+@keyframes cp-pas{50%{transform:translateY(-4%)}}
+@keyframes cp-souffle{50%{transform:scaleY(.97)}}
+@keyframes cp-saute{40%{transform:translateY(-22%) scale(1.04)}}
+@keyframes cp-monte{from{transform:translateY(0);opacity:1}to{transform:translateY(-60px);opacity:0}}
+@keyframes cp-flotte{50%{transform:translateY(-6px);opacity:.6}}
+@keyframes cp-tremble{0%,86%,100%{transform:rotate(0)}90%{transform:rotate(-6deg)}94%{transform:rotate(5deg)}}
+.cp-tete{display:flex;align-items:center;gap:8px;margin:10px 0 2px}
+.cp-nom{flex:1;min-width:0;background:transparent;border:0;border-bottom:1px dashed #ffffff30;font:600 22px/1.2 var(--serif);color:var(--ivoire);padding:2px 0}
+.cp-nom:focus{outline:none;border-bottom-color:var(--gold)}
+.cp-humeur{font-size:13px;font-weight:600;color:var(--gold);background:#e4bb781f;border-radius:999px;padding:2px 10px;white-space:nowrap}
+.cp-jauges{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;margin:8px 0}
+.cp-jauge{display:grid;grid-template-columns:86px 1fr 26px;gap:6px;align-items:center;font-size:12px}
+.cp-jauge b{text-align:right;font-weight:500;color:var(--sage);font-variant-numeric:tabular-nums}
+.cp-barre{height:7px;border-radius:4px;background:#ffffff14;overflow:hidden} .cp-barre i{display:block;height:100%;border-radius:4px;transition:width .6s}
+.cp-barre i.haut{background:#9fc787} .cp-barre i.moyen{background:#d8b56a} .cp-barre i.bas{background:#d9785f}
+.cp-jauge.reclame span:first-child{color:var(--gold);font-weight:600} .cp-jauge.reclame span:first-child::after{content:" !"}
+.cp-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0 4px}
+.cp-actions button{border:1px solid var(--line);background:#0f1f19;border-radius:10px;padding:9px 4px;font-size:13px}
+.cp-actions button:hover,.cp-actions button[aria-pressed="true"]{border-color:var(--gold);color:var(--gold)}
+.cp-repas{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.cp-repas[hidden]{display:none}
+.cp-repas button{border:1px solid #e4bb7866;background:#e4bb7812;border-radius:999px;padding:6px 11px;font-size:13px}
+.cp-repas button small{margin-left:4px;color:var(--gold);font-size:10px;letter-spacing:-1px}
+.cp-repas button.sourd{border-color:var(--line);background:none}
+.cp-naissance{background:#e4bb7814}
+.cp-petit,.cp-adieu{display:flex;gap:12px;align-items:center}
+.cp-petit svg,.cp-adieu svg{width:110px;height:58px;flex-shrink:0}
+.cp-adieu{opacity:.85;margin-bottom:8px} .cp-adieu svg{filter:grayscale(.8)}
+.actions button.principal,.bouton-or{background:var(--gold)!important;color:#1d2a22!important;border-color:var(--gold)!important;font-weight:600}
+.bouton-or{border:1px solid;border-radius:8px;padding:6px 12px}
+#cpEspece{flex:1;max-width:none}
+.rang select{min-width:0;text-overflow:ellipsis}.rang>button{flex-shrink:0}
+.menagerie .boutons{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.mini{position:absolute;right:12px;top:86px;display:flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border:1px solid #ffffff22;border-radius:999px;background:#11231dd9;backdrop-filter:blur(6px);max-width:200px;z-index:2}
+.mini[hidden]{display:none}
+.mini svg{width:54px;height:29px;flex-shrink:0}
+.mini span{display:flex;flex-direction:column;text-align:left;min-width:0} .mini b{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .mini small{font-size:11px;color:var(--gold)}
+.mini-oeuf{width:22px;height:28px;margin:0 8px;border-radius:50% 50% 46% 46%/60% 60% 40% 40%;background:radial-gradient(circle at 35% 30%,#fffaf0,#d8cba9)}
+.mini-appel{position:absolute;right:-4px;top:-4px;width:18px;height:18px;border-radius:50%;background:#d9785f;color:#fff;font:700 12px/18px var(--sans);text-align:center;font-style:normal;animation:respire 1.4s ease-in-out infinite}
+@media (max-width:560px){.cp-jauges{grid-template-columns:1fr}.cp-actions{grid-template-columns:repeat(4,1fr)}.cp-actions button{font-size:12px;padding:8px 2px}.mini{top:84px}.enclos{height:210px}.onglets button{font-size:12.5px;padding:11px 2px}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}

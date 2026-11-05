@@ -37,6 +37,7 @@ const GROUPES = [
   { id: 'collectif', titre: 'La vie en groupe', sous: 'troupeaux, meutes, bancs, migrations des saisons', doc: 'docs/38', mecanisme: 'collectif' },
   { id: 'chronique', titre: 'La chronique', sous: 'ce que le journal garde, la cause d\'une extinction', doc: 'docs/37' },
   { id: 'individus', titre: 'Les individus', sous: 'la consanguinité, ce qu\'un petit apprend, les hybrides (les bêtes dessinées)', doc: 'docs/35, 36', page: true },
+  { id: 'compagnon', titre: 'Le compagnon', sous: 'la bête que vous élevez : son temps, sa faim, son sommeil, sa confiance, ses maladies', doc: 'simulation/compagnon.js', page: true },
   { id: 'parcelles', titre: 'Les parcelles', sous: 'pour un monde par parcelles (le monde solo tourne par biome)', doc: 'docs/15' },
   { id: 'profil', titre: 'Le tampon : le profil', sous: 'ce que pèsent les gestes du joueur, ses plafonds ; ce que voit le jeu', doc: 'docs/4, 5, 12' }
 ];
@@ -128,6 +129,14 @@ const NOMS = {
   'collectif.seuils.famille': ['Seuil de la famille', 'sociabilité sous laquelle on vit seul'], 'collectif.seuils.groupe': ['Seuil du groupe', 'au-delà, on vit en groupe'],
   'chronique.derniers': ['Entrées gardées', ''], 'chronique.annee': ['Année', 'si le monde n\'en a pas'],
   'individus.profondeur': ['Ascendance gardée', 'générations'], 'individus.depression': ['Dépression de consanguinité', 'vigueur perdue à consanguinité 1'], 'individus.apprendre_mere': ['Apprendre de sa mère', 'chance qu\'un petit sache ce que sait sa mère'],
+  'compagnon.vitesse': ['Le temps du compagnon', '1 : le temps réel ; 60 : une heure par minute'], 'compagnon.heures_par_cycle': ['Un cycle de vie', 'en heures : sa longévité et sa maturité s\'y comptent'],
+  'compagnon.doux': ['Mode doux', 'pendant votre absence, quelqu\'un veille : ses besoins ne tombent pas sous le plancher'], 'compagnon.plancher': ['Plancher du mode doux', ''],
+  'compagnon.faim': ['Faim', 'satiété perdue par heure, à 1 kg (× masse^-0,12)'], 'compagnon.repas': ['Un repas', 'satiété rendue par un repas qu\'il aime'], 'compagnon.fatigue': ['Fatigue', 'énergie perdue par heure éveillé'],
+  'compagnon.repos': ['Repos', 'énergie regagnée par heure de sommeil'], 'compagnon.ennui': ['Ennui', 'humeur perdue par heure, × (1 + sa sociabilité)'], 'compagnon.jeu': ['Un jeu', 'humeur rendue'], 'compagnon.caresse': ['Une caresse', 'humeur rendue'],
+  'compagnon.digestion': ['Digestion', 'heures pour qu\'un repas fasse une crotte'], 'compagnon.crottes_max': ['Crottes au plus', ''], 'compagnon.salete': ['Saleté', 'propreté ôtée par crotte'],
+  'compagnon.guerison': ['Guérison', 'santé regagnée par heure quand tout va bien'], 'compagnon.famine': ['Famine', 'santé perdue par heure, affamé'], 'compagnon.malpropre': ['Malpropreté', 'santé perdue par heure, enclos sale'], 'compagnon.inconfort': ['Inconfort', 'santé perdue par heure, habitat qui ne lui va pas'],
+  'compagnon.maladie': ['Maladie', 'par heure : tomber malade, l\'épidémie de sa lignée, guérir seul, un soin qui réussit'], 'compagnon.confiance': ['Confiance', 'au départ, l\'audace, ce que chaque geste rapporte, l\'abandon'],
+  'compagnon.dressage': ['Dressage', 'une leçon, la confiance qu\'il faut'], 'compagnon.incubation': ['Incubation', 'cycles de vie pour qu\'un œuf éclose'], 'compagnon.vieillesse': ['Vieillesse', 'chance de mourir par heure au-delà de sa longévité'], 'compagnon.pas_max': ['Pas de calcul', 'secondes de son temps calculées d\'un coup'],
   'profil.influence.denormaliser': ['Dénormaliser', 'rapporter les comptes à la fréquence exposée (docs/4)'], 'profil.influence.exposition_ref': ['Activité normale', 'rencontres par compte et par cycle'],
   'profil.influence.memoire_cycles': ['Mémoire', 'cycles sur lesquels les pressions sont lissées'], 'profil.influence.pseudo_comptes': ['Pseudo-comptes', 'lissage de la dénormalisation'],
   'profil.influence.plafonds.par_compte_cycle': ['Plafond par compte', 'pression d\'un compte sur une lignée par cycle (vide : aucun)'], 'profil.influence.plafonds.part_max_compte': ['Part d\'un compte au plus', '(vide : aucune)'],

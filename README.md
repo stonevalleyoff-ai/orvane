@@ -6,7 +6,7 @@ Orvane fait vivre un seul monde, le monde d'Orvane : 24 biomes, de la banquise a
 
 N'importe quel jeu peut s'y brancher. Il lit le monde et en fait ses créatures, chacune à sa façon. Puis il renvoie ce que font ses joueurs (les bêtes croisées, chassées, apprivoisées), et le monde en tient compte la nuit suivante. Une espèce trop chassée se raréfie, devient méfiante, rapetisse si l'on prend toujours les plus grandes, et cela dans tous les jeux à la fois.
 
-- **Voir le monde vivre** : [l'observatoire](https://stonevalleyoff-ai.github.io/orvane/monde/?monde=orvane), et [la simulation en direct](https://stonevalleyoff-ai.github.io/orvane/simulation/) : le monde d'Orvane en temps réel, ses bêtes qui naissent, broutent, chassent et fuient sous vos yeux, et chacun de ses paramètres à régler (`simulation/`)
+- **Voir le monde vivre** : [l'observatoire](https://stonevalleyoff-ai.github.io/orvane/monde/?monde=orvane), et [la simulation en direct](https://stonevalleyoff-ai.github.io/orvane/simulation/) : le monde d'Orvane en temps réel, ses bêtes qui naissent, broutent, chassent et fuient sous vos yeux, chacun de ses paramètres à régler, et un compagnon à élever, comme un tamagotchi (`simulation/`)
 - **Brancher un jeu** : [le guide pas à pas](BRANCHER-UN-JEU.md) et [la page d'inscription](https://stonevalleyoff-ai.github.io/orvane/inscription/) ; in English: [CONNECT-A-GAME.md](CONNECT-A-GAME.md) and [the field glossary](docs/glossary.md)
 - **Écrire son traducteur** : [le mode d'emploi en 39 chapitres](docs/LISEZ-MOI.md)
 - **Le fonctionnement, fichier par fichier** : [LISEZ-MOI.md](LISEZ-MOI.md) et [l'hébergement](hebergement/LISEZ-MOI.md)
