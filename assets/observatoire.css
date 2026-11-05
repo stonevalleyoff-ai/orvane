@@ -156,3 +156,13 @@ main>h2+.note{max-width:880px;font-size:12px}.tree-scroll{background:var(--surfa
 .chron .quand { display: inline-block; min-width: 86px; font-size: 10px; color: var(--sourd); font-variant-numeric: tabular-nums; }
 .chron b { font-weight: 500; font-size: 11px; color: #4e6841; margin-right: 4px; }
 .chron .lien { font-size: 10px; }
+/* ce qui fait ce monde : une carte par mécanisme ; la genèse ; la vie d'une lignée */
+.mecanismes { margin-top: 4px; }
+.meca h3 { font-size: 19px; margin: 0 0 10px; }
+.meca p { font-size: 12px; line-height: 1.7; margin: 0; }
+.meca p.docs { font-size: 9px; letter-spacing: .06em; margin-top: 12px; }
+.mecanismes-panel > .note, .populations-panel > .note { font-size: 10px; line-height: 1.8; margin-top: 16px; }
+.biome-plus { font-size: 10px; line-height: 1.7; margin: 12px 0 0; padding-top: 10px; border-top: 1px solid #e3e7dc; }
+#cGen2 { margin-top: 18px; }
+.faits.vie { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 650px) { .faits.vie { grid-template-columns: minmax(0, 1fr); } .meca h3 { font-size: 20px; } }
