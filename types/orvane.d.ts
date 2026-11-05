@@ -543,6 +543,7 @@ export interface Instantane {
       corps?: {
         /** quadrupede, hexapode, bipede, oiseau, serpent, ou une forme propre au monde (catalogue.monde.formes, docs/20). */
         forme?: string;
+        /** 0, 2, 4, 6 ou 8 pour les cinq formes de base ; un corps segmenté porte de 10 à 40 pattes (60 au plus), un corps rayonné ou à tentacules de 4 à 10 bras (docs/33). */
         pattes?: number;
         long?: number;
         haut?: number;
@@ -628,6 +629,7 @@ export interface Instantane {
         larves?: number;
       };
     };
+    /** Ses populations, une par biome où elle vit. Vide pour une lignée éteinte, qui reste listée 10 cycles ; une lignée vivante en a au moins une (outils/verifier.js le vérifie). */
     populations: {
       biome: string;
       effectif: number;

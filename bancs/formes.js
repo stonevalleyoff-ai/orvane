@@ -18,7 +18,8 @@ const val = (s, v, p) => { if (!s) return []; if (s.$ref) s = S.$defs[s.$ref.spl
   if (s.type && !t.includes(ty === 'number' && t.includes('integer') && Number.isInteger(v) ? 'integer' : ty)) return [p + ': type ' + ty]; if (s.enum && !s.enum.includes(v)) return [p + ': hors enum ' + v]; const e = [];
   if (ty === 'object') { for (const r of s.required || []) if (!(r in v)) e.push(p + ': manque ' + r); for (const k in v) { const ps = s.properties?.[k] || (typeof s.additionalProperties === 'object' ? s.additionalProperties : null); if (ps) e.push(...val(ps, v[k], p + '.' + k)); else if (s.additionalProperties === false) e.push(p + ': en trop ' + k); } }
   if (ty === 'array' && s.items) v.forEach((x, i) => e.push(...val(s.items, x, p + '[' + i + ']'))); return e; };
-const I0 = lireJ('mondes/orvane/etat.json'), W = Fo.eveiller(Ca.eveiller(I0).inst).inst, animaux = I => I.taxons.map(t => [t.id, t.populations.map(p => [p.biome, p.effectif])]);
+// (le monde d'Orvane a éveillé ses castes et ses formes le 5 novembre : le banc part de lui tel qu'il était avant, sans elles)
+const I0 = (X => { delete X.monde.castes; delete X.monde.formes; if (X.catalogue?.monde?.formes) delete X.catalogue.monde.formes; return X; })(lireJ('mondes/orvane/etat.json')), W = Fo.eveiller(Ca.eveiller(I0).inst).inst, animaux = I => I.taxons.map(t => [t.id, t.populations.map(p => [p.biome, p.effectif])]);
 const Tx = (X, id) => X.taxons.find(t => t.id === id), tot = t => t.populations.reduce((a, p) => a + p.effectif, 0);
 const part = (X, tid) => Tx(X, tid).phenotypes.reduce((a, p) => a + (p.traits.includes('eusocialite') ? p.frequence : 0), 0);
 const greffer = (X, tid) => { X = clone(X); const t = Tx(X, tid); for (const p of t.populations) p.alleles = { ...(p.alleles || {}), eusocialite: .29 };
