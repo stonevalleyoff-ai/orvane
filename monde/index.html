@@ -128,6 +128,8 @@ async function monde(id) {
     const jeux = (a('jeux') ?? !!P?.monde?.pressions?.jeux) ? await json(`../mondes/${id}/jeux.json`).catch(() => []) : [];
     // (docs/37) la chronique : son index (les dernières entrées, les années, les records) ; le muséum, lui, s'ouvre à la demande
     E.chronique = (a('chronique') ?? !!(courant.monde?.chronique || P?.monde?.chronique)) ? await json(`../mondes/${id}/chronique/index.json`).catch(() => null) : null;
+    // la genèse dont le monde est né, mesurée tous les dix cycles (mondes/<id>/genese.json) : seulement si liste.json la déclare
+    E.genese = a('genese') ? await json(`../mondes/${id}/genese.json`).catch(() => null) : null;
     // un monde pour tous les jeux : « dans le jeu », c'est ce qu'en montre le premier jeu branché (jeux.json)
     const J = Array.isArray(jeux) ? jeux.find(j => j.actif !== false && j.exposition && Object.keys(j.exposition).length) : null;
     const profil = P && !P.exposition && J ? { ...P, exposition: J.exposition, jeu: J.nom || J.id } : P;
@@ -139,10 +141,10 @@ async function monde(id) {
 }
 async function exemple() {
   let I; try { I = await json('../schemas/exemples/instantane.json'); } catch (e) { I = JSON.parse($('#exemple').textContent); }
-  E.chronique = null; installer([I], { id: null, nom: 'Exemple (fictif)', publie: false, exemple: true }, null, null); bandeau('Un monde inventé pour l\'exemple : deux espèces, deux biomes.', 'local');
+  E.chronique = null; E.genese = null; installer([I], { id: null, nom: 'Exemple (fictif)', publie: false, exemple: true }, null, null); bandeau('Un monde inventé pour l\'exemple : deux espèces, deux biomes.', 'local');
 }
 function lireFichier(input, cb) { input.addEventListener('change', () => { const f = input.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => cb(r.result, f.name); r.readAsText(f); input.value = ''; }); }
-lireFichier($('#fInst'), (t, nom) => { try { const I = JSON.parse(t); if (!I.taxons || !I.biomes) throw new Error('ce n\'est pas un instantané'); E.chronique = null; installer([I], { id: null, nom, publie: false }, null, null); bandeau(`Fichier « ${ESC(nom)} » ouvert.`, 'local'); } catch (e) { bandeau(`« ${ESC(nom)} » ne se lit pas : ${ESC(e.message)}.`, 'erreur'); } });
+lireFichier($('#fInst'), (t, nom) => { try { const I = JSON.parse(t); if (!I.taxons || !I.biomes) throw new Error('ce n\'est pas un instantané'); E.chronique = null; E.genese = null; installer([I], { id: null, nom, publie: false }, null, null); bandeau(`Fichier « ${ESC(nom)} » ouvert.`, 'local'); } catch (e) { bandeau(`« ${ESC(nom)} » ne se lit pas : ${ESC(e.message)}.`, 'erreur'); } });
 lireFichier($('#fLot'), t => { try { E.lot = JSON.parse(t); E.tampon = {}; rendre(); } catch (e) { bandeau('Ce lot ne se lit pas.', 'erreur'); } });
 lireFichier($('#fProfil'), t => { try { E.profil = JSON.parse(t); rendre(); } catch (e) { bandeau('Ce profil ne se lit pas.', 'erreur'); } });
 
@@ -192,6 +194,88 @@ function legende(series, onToggle) {
 function brancherLegende(redessiner) { $$('[data-serie]').forEach(b => b.onclick = () => { const id = b.dataset.serie; E.cache.has(id) ? E.cache.delete(id) : E.cache.add(id); redessiner(); }); }
 
 // === VUE D'ENSEMBLE ===
+// === CE QUI FAIT CE MONDE : chacun de ses mécanismes, au dernier cycle (docs/16 à 38) ===
+const typeLieu = id => String(id ?? '').split('~')[0];
+const nomLieu = id => nomBiome(typeLieu(id));
+const ANIMAL = t => !['vegetal', 'synthetique'].includes(t.plan?.regime);
+const partTrait = (t, id) => t.phenotypes.reduce((a, q) => a + (q.traits.includes(id) ? q.frequence || 0 : 0), 0);
+const accordN = (n, un, des) => `${nb(n)} ${n > 1 ? des : un}`;
+function mecanismesHTML(I) {
+  const M = I.monde || {}, V = vivants(I), A = V.filter(ANIMAL), cartes = [];
+  const carte = (titre, texte, docs) => cartes.push(`<article class="biome meca"><h3>${titre}</h3><p>${texte.charAt(0).toUpperCase() + texte.slice(1)}</p>${docs ? `<p class="docs sourd">${docs}</p>` : ''}</article>`);
+  if (M.climat) { const C = M.climat, T = C.temperature || 0, age = T <= -.06 ? 'un âge glaciaire' : T >= .04 ? 'un âge chaud' : 'un climat tempéré';
+    const ponts = (C.ponts || []).map(([a, b]) => `${ESC(nomLieu(a))} ↔ ${ESC(nomLieu(b))}`);
+    carte('Le climat', `${age} : ${T === 0 ? 'la température de l\'éveil' : `${T > 0 ? 'plus chaud' : 'plus froid'} de ${fx(Math.abs(T), 3)} qu'à l'éveil`}${C.humidite ? `, ${C.humidite > 0 ? 'plus humide' : 'plus sec'}` : ''}. ${ponts.length ? `La mer a baissé : ${ponts.length > 1 ? 'des ponts de terre relient' : 'un pont de terre relie'} ${ponts.join(', ')}.` : 'Aucun pont de terre.'}${C.iles ? ` ${accordN(C.iles, 'île est née', 'îles sont nées')} d'un volcan.` : ''}`, 'docs/31'); }
+  if (M.mere) { const Mq = V.filter(t => t.plan.regime === 'synthetique'), n = Mq.reduce((a, t) => a + effectif(t), 0), mem = M.mere.memoire || {}, cause = Object.entries(mem).filter(([k, v]) => typeof v === 'number' && !k.startsWith('masse')).sort((a, b) => b[1] - a[1])[0];
+    carte('La Mère et ses machines', `${ESC(M.mere.nom || 'La Mère')}, au ${ESC(nomLieu(M.mere.biome))}, a ${accordN(Mq.length, 'plan en service', 'plans en service')} et ${accordN(n, 'machine', 'machines')} ; ${M.mere.conceptions ? `elle en a conçu ${accordN(M.mere.conceptions, 'nouveau', 'nouveaux')}` : 'elle n\'en a encore conçu aucun nouveau'}${M.mere.conceptions && cause && cause[1] > 0 ? `, surtout contre ${({ usure: 'l\'usure', energie: 'le manque d\'énergie', catastrophe: 'les catastrophes', joueurs: 'les joueurs', debord: 'les espèces qui débordent' })[cause[0]] || cause[0]}` : ''}.`, 'docs/16'); }
+  if (M.pathogenes) { const S = Object.entries(M.pathogenes.souches || {}).map(([id, s]) => ({ id, ...s })), act = S.filter(s => (s.infectes || 0) > 0).sort((a, b) => b.infectes - a.infectes);
+    carte('Les souches', act.length ? `${accordN(act.length, 'maladie circule', 'maladies circulent')}. ${act.slice(0, 3).map(s => `${ESC(s.nom)} : ${nb(s.infectes)} infectés, ${pct(s.virulence)} de virulence, chez ${accordN((s.hotes || []).length, 'lignée', 'lignées')}`).join(' ; ')}${act.length > 3 ? '…' : '.'}` : 'Aucune maladie ne circule.', 'docs/18'); }
+  if (M.natures) { const L = I.biomes.flatMap(b => b.natures?.length ? b.natures.map(x => `${ESC(b.nom || b.id)} : ${pct(x.part)} devenu ${ESC(x.nom)}`) : b.nature ? [`${ESC(b.nom || b.id)} : devenu ${ESC(b.nature.nom)}`] : []);
+    carte('Les lieux qui changent', L.length ? L.slice(0, 4).join(' ; ') + (L.length > 4 ? '…' : '.') : 'Tous les lieux ont gardé leur nature.', 'docs/28'); }
+  if (M.milieu) { const J = I.biomes.filter(b => b.transforme?.jeu && Object.values(b.transforme.jeu).some(v => Math.abs(v) >= .005));
+    carte('Le milieu transformé', J.length ? `Les joueurs ont transformé ${accordN(J.length, 'lieu', 'lieux')} : ${J.slice(0, 4).map(b => ESC(b.nom || b.id)).join(', ')}${J.length > 4 ? '…' : ''}. Les brouteurs, les fouisseurs et les bâtisseurs font le reste.` : 'Les brouteurs, les fouisseurs et les bâtisseurs transforment les lieux ; les joueurs n\'en ont encore transformé aucun.', 'docs/22'); }
+  if (M.esprit) { const SAV = I.catalogue?.savoirs || {}, n = {}; for (const t of A) for (const p of t.populations) for (const [k, q] of Object.entries(p.savoirs || {})) if (q >= .1) n[k] = (n[k] || 0) + 1;
+    const L = Object.entries(n).sort((a, b) => b[1] - a[1]);
+    carte('Les savoirs', L.length ? L.slice(0, 4).map(([k, c]) => `${ESC(SAV[k]?.nom || k)} : ${accordN(c, 'population', 'populations')}`).join(' ; ') + '.' : 'Personne ne sait encore rien : les savoirs naissent chez quelques bêtes, puis se répandent.', 'docs/34'); }
+  if (M.invention || M.grammaire) { const T = Object.entries(I.catalogue?.monde?.traits || {}).filter(([, d]) => d?.origine), gr = T.filter(([, d]) => d.grammaire), inv = T.filter(([, d]) => !d.grammaire);
+    const nomT = ([id, d]) => ESC((d.organe || id).split(',')[0]);
+    carte('Ce que le monde invente', T.length ? `${inv.length ? `${accordN(inv.length, 'trait inventé', 'traits inventés')} (${inv.slice(-3).map(nomT).join(', ')})` : ''}${inv.length && gr.length ? ' et ' : ''}${gr.length ? `${accordN(gr.length, 'phrase composée', 'phrases composées')} (${gr.slice(-3).map(nomT).join(', ')})` : ''}.` : 'Rien encore : une fois tous les vingt cycles environ, une lignée invente un trait, et le monde compose des phrases.', 'docs/27, 32'); }
+  if (M.ponte) { const ov = A.filter(t => t.plan.reproduction === 'ovipare').length, vi = A.filter(t => t.plan.reproduction === 'vivipare').length, oo = A.filter(t => partTrait(t, 'oophage') >= .3).length;
+    carte('Pondre ou mettre bas', `${accordN(ov, 'lignée pond', 'lignées pondent')}, ${accordN(vi, 'met bas', 'mettent bas')}${oo ? ` ; ${accordN(oo, 'lignée mange', 'lignées mangent')} les œufs des autres` : ''}.`, 'docs/25'); }
+  if (M.stades || M.castes || M.formes) { const st = A.filter(t => t.plan.stades), ca = A.filter(t => t.plan.castes), fo = A.filter(t => ['segmente', 'radiaire', 'tentaculaire'].includes(t.plan.corps?.forme));
+    carte('Des corps et des vies nouvelles', [st.length ? `${accordN(st.length, 'lignée vit', 'lignées vivent')} deux vies (${[...new Set(st.map(t => `${t.plan.stades.larve?.nom} puis ${t.plan.stades.adulte?.nom}`))].slice(0, 2).map(ESC).join(', ')})` : 'aucune métamorphose', ca.length ? `${accordN(ca.length, 'colonie', 'colonies')} autour d'une reine` : 'aucune colonie', fo.length ? `${accordN(fo.length, 'corps nouveau', 'corps nouveaux')} (segmenté, rayonné ou à tentacules)` : 'aucun corps nouveau'].join(' ; ') + '.', 'docs/26, 33'); }
+  if (M.dietes) { const D = A.filter(t => t.plan.diete), sang = D.filter(t => (t.plan.diete.sang || 0) > 0).length, fruit = D.filter(t => (t.plan.diete.fruits || 0) >= .4).length, ins = D.filter(t => (t.plan.diete.insectes || 0) >= .5).length, nec = D.filter(t => (t.plan.diete.nectar || 0) >= .3).length;
+    carte('Les régimes en spectre', `${accordN(fruit, 'mangeur de fruits', 'mangeurs de fruits')}, ${accordN(ins, 'mangeur d\'insectes', 'mangeurs d\'insectes')}, ${accordN(nec, 'butineur', 'butineurs')}${sang ? `, ${accordN(sang, 'buveur de sang', 'buveurs de sang')}` : ', aucun buveur de sang'}.`, 'docs/30'); }
+  { const G = groupesTous(I); if (G) { const F = {}; let mig = 0; for (const p of G) { F[p.groupe.forme] = (F[p.groupe.forme] || 0) + 1; if (p.migration) mig++; }
+      const MOT = { troupeau: ['troupeau', 'troupeaux'], meute: ['meute', 'meutes'], banc: ['banc', 'bancs'], volee: ['volée', 'volées'], essaim: ['essaim', 'essaims'], colonie: ['colonie', 'colonies'], bande: ['bande', 'bandes'] };
+      const dit = Object.keys(MOT).filter(k => F[k]).map(k => `${nb(F[k])} ${MOT[k][F[k] > 1 ? 1 : 0]}`);
+      carte('La vie en groupe', `${dit.length ? dit.join(', ') : 'Chacun vit seul ou en famille'} ; ${accordN(mig, 'population migre', 'populations migrent')} avec les saisons.${G.calcule ? ' <span class="sourd">(lu ici dans l\'état publié)</span>' : ''}`, 'docs/38'); } }
+  if (M.fusions?.length) carte('Les mondes reliés', `${M.fusions.map(f => `${ESC(f.nom || f.monde || f.id)} (${f.mode === 'ponts' ? `un continent relié par ${accordN((f.ponts || []).length, 'pont', 'ponts')}` : 'versé biome par biome'}, ${accordN(f.lignees || 0, 'lignée', 'lignées')}, au cycle ${f.cycle})`).join(' ; ')}.`, 'docs/14, 23');
+  if (!cartes.length) return '';
+  return `<section class="atlas-panel mecanismes-panel"><div class="panel-heading"><div><p class="atlas-kicker">CE QUI FAIT CE MONDE</p><h2>Ses mécanismes, au dernier cycle</h2></div></div><div class="biomes mecanismes">${cartes.join('')}</div>
+    <p class="note">Chaque mécanisme s'éveille une fois, par le profil du monde ; le jour de son éveil, rien ne bouge. Les chapitres du mode d'emploi (docs/) disent ce que fait chacun.</p></section>`;
+}
+// la vie en groupe de toutes les populations : publiée par le monde, ou lue ici dans l'état publié (docs/38)
+function groupesTous(I) {
+  const P = I.taxons.filter(t => !t.eteint && ANIMAL(t)).flatMap(t => t.populations.filter(p => p.groupe));
+  if (P.length) return Object.assign(P, { calcule: false });
+  if (!globalThis.OrvaneCollectif) return null;
+  let D = CACHE_K.get(I); if (!D) { try { D = OrvaneCollectif.decrire(I, { forcer: true }); } catch (e) { D = I; } CACHE_K.set(I, D); }
+  const Q = D.taxons.filter(t => !t.eteint && ANIMAL(t)).flatMap(t => t.populations.filter(p => p.groupe)); return Q.length ? Object.assign(Q, { calcule: true }) : null;
+}
+// === LA GENÈSE : comment ce monde est né, cycle après cycle (mondes/<id>/genese.json, quand le monde la publie) ===
+function genesePanelHTML() {
+  const G = E.genese; if (!G?.points?.length) return '';
+  const g = G.genese || {}, P = G.points, fin = P[P.length - 1], deb = P[0];
+  return `<section class="atlas-panel populations-panel"><div class="panel-heading"><div><p class="atlas-kicker">LA GENÈSE</p><h2>Comment ce monde est né</h2></div><span class="atlas-chart-label">${nb(g.cycles || fin.n)} cycles · un point tous les dix · graine ${ESC(String(g.graine ?? '?'))}</span></div>
+    <p class="phrase">${accordN((g.ancetres || []).length, 'ancêtre très simple', 'ancêtres très simples')}, ${nb(g.cycles || fin.n)} cycles d'évolution accélérée : ${nb(fin.separations)} séparations, ${nb(fin.extinctions)} extinctions, ${nb(fin.lignees)} lignées vivantes à la fin. Les vrais carnivores passent de ${nb(deb.regimes.carnivore)} à ${nb(fin.regimes.carnivore)} lignées (${nb(Math.max(...P.map(p => p.regimes.carnivore)))} au plus fort) ; leur biomasse, de ${pct(deb.carn_herb)} à ${pct(fin.carn_herb)} de celle des herbivores.</p>
+    <canvas id="cGen" height="260" role="img" aria-label="Les lignées vivantes par régime au fil de la genèse."></canvas><div id="legGen"></div>
+    <canvas id="cGen2" height="170" role="img" aria-label="La biomasse des carnivores rapportée à celle des herbivores au fil de la genèse."></canvas>
+    <p class="note">L'axe du bas compte les cycles de la genèse. En haut, les lignées vivantes, en tout et par régime (le régime de fait : un carnivore qui digère les plantes compte en omnivore) ; en bas, la biomasse des carnivores rapportée à celle des herbivores. Le détail et ce qu'on en tire pour l'équilibrage : docs/13.</p></section>`;
+}
+// des courbes sur un axe de cycles quelconque (la genèse : 3 000 cycles, un point tous les dix)
+function courbesX(c, xs, series, { pourcent = false } = {}) {
+  const [x, w, h] = toile(c), m = { g: 50, d: 12, h: 10, b: 24 }, W = w - m.g - m.d, Hh = h - m.h - m.b, x0 = xs[0], x1 = xs[xs.length - 1];
+  let max = 0; for (const s of series) if (!E.cache.has(s.id)) for (const v of s.pts) if (v > max) max = v; max = max || 1;
+  const pas = v => { const e = 10 ** Math.floor(Math.log10(v)); return [1, 2, 2.5, 5, 10].map(k => k * e).find(k => k >= v); };   // un pas rond
+  const py = pas(max / 4); max = py * Math.ceil(max / py - 1e-9);
+  const X = v => m.g + W * (v - x0) / Math.max(1, x1 - x0), Y = v => m.h + Hh * (1 - v / max);
+  x.strokeStyle = CS.grille; x.fillStyle = CS.sourd; x.textAlign = 'right';
+  for (let v = 0; v <= max + py / 2; v += py) { const y = Y(v); x.beginPath(); x.moveTo(m.g, y); x.lineTo(w - m.d, y); x.stroke(); x.fillText(pourcent ? (v * 100).toLocaleString('fr-FR', { maximumFractionDigits: 1 }) + ' %' : nb(v), m.g - 6, y + 4); }
+  const px = pas((x1 - x0) / (w < 500 ? 3 : 6));
+  for (let v = Math.ceil(x0 / px) * px; v <= x1; v += px) { const xx = X(v); x.textAlign = xx > w - m.d - 24 ? 'right' : 'center'; x.fillText(nb(v), Math.min(xx, w - 2), h - 6); }
+  for (const s of series) { if (E.cache.has(s.id)) continue; x.beginPath(); x.strokeStyle = s.coul; x.lineWidth = 2; s.pts.forEach((v, i) => i ? x.lineTo(X(xs[i]), Y(v)) : x.moveTo(X(xs[i]), Y(v))); x.stroke(); }
+}
+function dessinerGenese() {
+  if (!E.genese?.points?.length || !$('#cGen')) return; const P = E.genese.points, xs = P.map(p => p.n);
+  const COUL = { toutes: '#233c31', herbivore: '#6f9e5a', omnivore: '#c49a3c', carnivore: '#b5523b', filtreur: '#3f8aa8', detritivore: '#8a6f9e' };
+  const series = [{ id: 'gen:toutes', nom: 'toutes les lignées', coul: COUL.toutes, pts: P.map(p => p.lignees) },
+    ...['herbivore', 'omnivore', 'carnivore', 'filtreur', 'detritivore'].filter(k => P.some(p => p.regimes[k])).map(k => ({ id: 'gen:' + k, nom: REGIME[k] + 's', coul: COUL[k], pts: P.map(p => p.regimes[k] || 0) }))];
+  $('#legGen').innerHTML = legende(series);
+  const go = () => { courbesX($('#cGen'), xs, series); courbesX($('#cGen2'), xs, [{ id: 'gen:ch', nom: 'carnivores / herbivores', coul: COUL.carnivore, pts: P.map(p => p.carn_herb) }], { pourcent: true }); };
+  go(); $$('#legGen [data-serie]').forEach(b => b.onclick = () => { const id = b.dataset.serie; E.cache.has(id) ? E.cache.delete(id) : E.cache.add(id); b.setAttribute('aria-pressed', !E.cache.has(id)); go(); });
+}
+
 function vueEnsemble() {
   const I = inst(), V = vivants(I), tot = V.reduce((a, t) => a + effectif(t), 0), ev = I.evenements || [];
   const parType = {}; for (const e of ev) (parType[e.type] ??= []).push(e);
@@ -209,7 +293,12 @@ function vueEnsemble() {
   const ficheBiome = b => { const sat = (masse[b.id] || 0) / Math.max(1, b.capacite), occ = (occupants[b.id] || []).sort((a, c) => c[1] - a[1]), totB = occ.reduce((a, [, n]) => a + n, 0);
     return `<article class="biome"><div class="biome-heading"><span class="biome-icon" aria-hidden="true">${({marin:'≈',aquatique:'≋',amphibie:'〰',souterrain:'◇'})[b.milieu] || '♧'}</span><div><h3>${ESC(b.nom || b.id)}</h3><div class="milieu">${ESC(b.milieu || '')} · ${occ.length} espèce${occ.length > 1 ? 's' : ''}</div></div></div>
       <div class="occ"><span>pression sur la végétation</span><span class="n ${sat > 1 ? 'declin' : ''}">${sat > 2 ? 'plus de 200 %' : pct(sat)}</span></div><div class="jauge"><span style="width:${Math.min(100, sat * 100)}%;background:${sat > 1 ? 'var(--declin)' : sat > .85 ? 'var(--ambre)' : 'var(--vif)'}"></span></div>
-      <ul>${occ.slice(0, 4).map(([t, n]) => `<li><i>${ESC(nomEsp(t))}</i><span class="n sourd">${nb(n)}</span></li>`).join('') || '<li class="sourd">personne</li>'}${occ.length > 4 ? `<li class="sourd">et ${occ.length - 4} autre${occ.length > 5 ? 's' : ''}</li>` : ''}</ul></article>`; };
+      <ul>${occ.slice(0, 4).map(([t, n]) => `<li><i>${ESC(nomEsp(t))}</i><span class="n sourd">${nb(n)}</span></li>`).join('') || '<li class="sourd">personne</li>'}${occ.length > 4 ? `<li class="sourd">et ${occ.length - 4} autre${occ.length > 5 ? 's' : ''}</li>` : ''}</ul>${(() => { const x = [];
+        if (b.natures?.length) x.push(b.natures.map(y => `${pct(y.part)} devenu ${ESC(y.nom)}`).join(', '));   // (docs/28)
+        else if (b.nature) x.push(`devenu ${ESC(b.nature.nom)}`);
+        if (b.visiteurs?.length) x.push(`l'hiver, ${nb(b.visiteurs.reduce((a, v) => a + (v.effectif || 0), 0))} visiteurs`);   // (docs/38)
+        if (b.transforme?.jeu && Object.values(b.transforme.jeu).some(v => Math.abs(v) >= .005)) x.push('transformé par les joueurs');   // (docs/22)
+        return x.length ? `<p class="biome-plus sourd">${x.join(' · ')}</p>` : ''; })()}</article>`; };
   const evts = Object.entries(parType).sort((a, b) => b[1].length - a[1].length).map(([t, L]) => `<li><span class="combien">${L.length}</span><span>${evtNom(t, L.length)}<br><span class="qui">${[...new Set(L.map(e => nomEsp(I.taxons.find(x => x.id === e.taxon)) || nomBiome(e.taxon)))].slice(0, 4).map(ESC).join(', ')}${L.length > 4 ? '…' : ''}</span></span></li>`).join('');
   $('#contenu').innerHTML = `
     <div class="overview-heading"><div><p class="atlas-kicker">01 / ÉTAT DU VIVANT</p><h2>Le monde, au dernier cycle.</h2></div><span class="reading-state">${E.H.length > E.publies ? 'Simulation locale' : E.source?.publie ? 'Instantané publié' : 'Monde local'}</span></div><p class="phrase">${ESC(phrase)}</p>
@@ -222,9 +311,11 @@ function vueEnsemble() {
         <button class="lien" data-aller="journal">Ouvrir le journal</button></section>
     </div>
     <section class="atlas-panel populations-panel"><div class="panel-heading"><div><p class="atlas-kicker">DYNAMIQUE DES POPULATIONS</p><h2>Les effectifs au fil des cycles</h2></div><span class="atlas-chart-label">${E.H.length} cycles connus</span></div><div id="zEff"></div></section>
+    ${mecanismesHTML(I)}
+    ${genesePanelHTML()}
     <section class="biomes-section"><div class="biomes-banner"><img src="../assets/littoral-900.webp" width="900" height="600" loading="lazy" alt="Illustration d’un littoral où se rencontrent plusieurs habitats."><div><p class="atlas-kicker">02 / LES MILIEUX DU MONDE</p><h2>${I.biomes.length} biomes.<br><em>Autant d’équilibres.</em></h2><p>Populations, ressources et pression sur la végétation : chaque milieu raconte une autre histoire.</p></div><small>Illustration d’univers</small></div><div class="biomes">${I.biomes.slice().sort((a, b) => (occupants[b.id] || []).reduce((s, [, n]) => s + n, 0) - (occupants[a.id] || []).reduce((s, [, n]) => s + n, 0)).map(ficheBiome).join('')}</div>
     <p class="note">Les biomes du plus peuplé au moins peuplé. La pression sur la végétation compare ce que les mangeurs de plantes demandent à ce que le sol produit : au-delà de 100 %, la population doit refluer ou partir.</p></section>`;
-  dessinerEffectifs();
+  dessinerEffectifs(); dessinerGenese();
 }
 function dessinerEffectifs() {
   const z = $('#zEff'); if (!z) return;
@@ -292,8 +383,22 @@ function fiche() {
       const plus = [g.sentinelles ? 'des sentinelles' : '', g.chasse ? (g.chasse === 'encercle' ? 'encercle ses proies' : 'chasse ensemble') : '', g.avec?.length ? 'avec ' + g.avec.map(id => nomEsp(I.taxons.find(z => z.id === id)) || id).join(', ') : ''].filter(Boolean);
       return `<tr><td>${ESC(nomBiome(q.biome))}</td><td>${ESC(g.nom || g.forme)}${plus.length ? `<br><span class="sourd">${ESC(plus.join(' · '))}</span>` : ''}</td><td class="n">${g.taille ? `${nb(g.taille.typ)}${g.taille.min !== g.taille.max ? ` <span class="sourd">(${nb(g.taille.min)} à ${nb(g.taille.max)})</span>` : ''}` : '—'}</td><td>${g.hierarchie ? ESC(HIER[g.hierarchie.type] || g.hierarchie.type) : '<span class="sourd">—</span>'}</td><td>${g.meneur ? ESC(g.meneur) : '<span class="sourd">—</span>'}</td><td>${m ? `vers ${ESC(m.vers_nom || nomBiome(m.vers))}, ${pct(m.part)} d'entre elles${m.etat ? ` <span class="${m.etat === 'au pays' ? 'sourd' : 'ambre'}">· ${ESC(ETAT_M[m.etat] || m.etat)}</span>` : ''}` : '<span class="sourd">reste</span>'}</td></tr>`; }).join('')}</table></div>
     <p class="note">Un groupe grandit avec la sociabilité de la population, à découvert et sous la prédation ; sa hiérarchie se durcit quand la nourriture manque. Une population dont l'hiver est rude, et qu'un lieu voisin abrite mieux, y part à la fin de l'automne et revient au printemps.${G.calcule ? ' Ce monde ne publie pas encore sa vie en groupe : elle est lue ici, dans l\'état publié, sans rien y changer.' : ''}</p>`;
+  // (docs/25, 26, 30, 33, 34, 18) sa vie : pondre ou mettre bas, deux vies, une colonie, ce qu'elle mange, ce qu'elle sait, ce qui la rend malade
+  if (ANIMAL(t)) { const vie = [], SAV = I.catalogue?.savoirs || {}, SO = I.monde?.pathogenes?.souches || {};
+    if (p.reproduction) vie.push(['Naître', p.reproduction === 'ovipare' ? `elle pond${partTrait(t, 'oophage') >= .1 ? ' ; elle mange aussi les œufs des autres' : ''}` : `elle met bas${partTrait(t, 'oophage') >= .1 ? ' ; elle mange les œufs des pondeurs' : ''}`]);
+    if (p.stades) vie.push(['Deux vies', `${pct(p.stades.part)} des bêtes naissent ${ESC(p.stades.larve?.nom || 'larve')} (${ESC(REGIME[p.stades.larve?.regime] || p.stades.larve?.regime || '')}), puis deviennent ${ESC(p.stades.adulte?.nom || 'adulte')}`]);
+    if (p.castes) vie.push(['Une colonie', `${pct(p.castes.part)} des bêtes vivent autour d'une reine : des ouvrières, des soldats${p.castes.essaim ? ' ; la colonie essaime' : ''}`]);
+    if (p.diete) { const D = Object.entries(p.diete).filter(([, v]) => v >= .05).sort((a, b) => b[1] - a[1]);
+      if (D.length) vie.push(['Ce qu\'elle mange', D.map(([k, v]) => `${ESC(k)} ${pct(v)}`).join(', ') + (p.diete0 && JSON.stringify(p.diete0) !== JSON.stringify(p.diete) ? ' <span class="sourd">(son régime a changé depuis sa naissance)</span>' : '')]); }
+    const sv = {}; for (const q of t.populations) for (const [k, v] of Object.entries(q.savoirs || {})) if (v >= .01) (sv[k] ??= []).push([q.biome, v]);
+    for (const [k, L] of Object.entries(sv)) vie.push([`Elle sait : ${ESC(SAV[k]?.nom || k)}`, L.sort((a, b) => b[1] - a[1]).map(([b, v]) => `${ESC(nomBiome(b))} ${pct(v)}`).join(', ') + (SAV[k]?.effet ? `<br><span class="sourd">${ESC(SAV[k].effet)}</span>` : '')]);
+    const mal = {}; for (const q of t.populations) for (const [k, v] of Object.entries(q.infection || {})) if ((v.i || 0) >= .001) (mal[k] ??= []).push([q.biome, v]);
+    for (const [k, L] of Object.entries(mal)) vie.push([`Malade : ${ESC(SO[k]?.nom || k)}`, `${L.map(([b, v]) => `${ESC(nomBiome(b))} ${pct(v.i)} d'infectés${v.r ? `, ${pct(v.r)} d'immunisés` : ''}`).join(', ')}${SO[k] ? `<br><span class="sourd">virulence ${pct(SO[k].virulence)}, transmission ${pct(SO[k].transmission)}${SO[k].origine === t.id ? ' ; elle est née chez elle' : ''}</span>` : ''}`]);
+    const inv = [...new Set(t.phenotypes.flatMap(q => q.traits))].filter(id => I.catalogue?.monde?.traits?.[id]?.origine);
+    if (inv.length) vie.push(['Inventé par ce monde', inv.map(id => ESC((I.catalogue.monde.traits[id].organe || id).split(',')[0])).join(', ')]);
+    if (vie.length) h += `<h2>Sa vie</h2><dl class="faits vie">${vie.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>`; }
   // l'isolement et les hybrides (docs/10)
-  const isol = t.populations.filter(q => q.flux != null || q.divergence != null || q.hybride);
+  const isol =t.populations.filter(q => q.flux != null || q.divergence != null || q.hybride);
   if (isol.length && (t.populations.length > 1 || isol.some(q => q.hybride))) h += `<h2>Isolement et hybrides</h2><div class="defile"><table><tr><th>biome</th><th class="n">immigrants par cycle</th><th class="n">écart au reste de l'espèce</th><th>se croise avec</th></tr>
     ${isol.map(q => { const o = q.hybride && I.taxons.find(z => z.id === q.hybride.avec); return `<tr><td>${ESC(nomBiome(q.biome))}</td><td class="n">${q.flux != null ? pct(q.flux) : '—'}</td><td class="n ${q.divergence >= .3 ? 'ambre' : ''}">${q.divergence != null ? fx(q.divergence, 3) : '—'}</td><td>${q.hybride ? `${o ? `<button class="lien" data-esp="${ESC(o.id)}" style="padding:0"><i>${ESC(nomEsp(o))}</i></button>` : ESC(q.hybride.avec)} <span class="sourd">${pct(q.hybride.part)} des naissances, isolement ${fx(q.hybride.isolement)}</span>` : '<span class="sourd">—</span>'}</td></tr>`; }).join('')}</table></div>
     <p class="note">Une population qui ne reçoit presque plus d'immigrants diverge ; au-delà de 0,3 d'écart, elle peut devenir une lignée. Deux lignées apparentées qui partagent un biome se croisent d'autant plus qu'elles sont peu isolées ; leurs hybrides, moins viables, mêlent les gènes des deux.</p>`;

@@ -1,0 +1,57 @@
+{
+  "orvane": "0.1",
+  "jeu": "(aucun : un monde né de la genèse, à observer)",
+  "monde": {
+    "id": "genese-2026",
+    "graine": 2026,
+    "cycle": "24h",
+    "annee": 120,
+    "amorce": "mondes/genese-2026/amorce.json",
+    "historique": 30,
+    "nocturne": false,
+    "collectif": true
+  },
+  "exposition": {
+    "compression": {
+      "defaut": 0.3
+    },
+    "propagation_cycles": 3,
+    "traits_rendus": [
+      "albinisme",
+      "camouflage",
+      "carapace",
+      "crepuscularite",
+      "crocs-allonges",
+      "estomac-large",
+      "gigantisme",
+      "glande-irritante",
+      "gregarisme",
+      "melanisme",
+      "membrane-planante",
+      "metabolisme-lent",
+      "nanisme",
+      "palmes",
+      "pattes-longues",
+      "peau-epaisse",
+      "ponte-abondante",
+      "queue-prehensile",
+      "robe-doree",
+      "soins-parentaux",
+      "vibrisses",
+      "yeux-nocturnes"
+    ],
+    "seuil_extinction_jeu": 20
+  },
+  "influence": {
+    "poids": {
+      "prelevement": 1,
+      "capture": 1
+    },
+    "plafonds": {
+      "par_compte_cycle": 30,
+      "part_max_compte": 0.15,
+      "part_max_population": 0.2
+    },
+    "memoire_cycles": 5
+  }
+}

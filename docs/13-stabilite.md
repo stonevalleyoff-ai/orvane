@@ -82,6 +82,8 @@ Un essai a compté les autres espèces de la bande pour moins que les siens (de 
 
 Une genèse neuve, sur les 24 biomes universels, avec les 19 ancêtres et les règles du monde d'Orvane (graine 2026, `--lignees 200 --etage 30`), a tourné 3 000 cycles au lieu de 900. Elle a été mesurée tous les dix cycles : 931 séparations, 824 extinctions, 126 lignées vivantes à la fin (jusqu'à 187 en route).
 
+Le monde qui en est né est publié, figé, dans `mondes/genese-2026/` ; ses mesures sont dans `mondes/genese-2026/genese.json` (un point tous les dix cycles : lignées par régime, biomasses, rapport carnivores/herbivores, diversité, masses, séparations et extinctions cumulées), et l'observatoire en trace les courbes (`monde/?monde=genese-2026`).
+
 | mesure | cycle 250 | cycle 1 500 | cycle 3 000 |
 | --- | --- | --- | --- |
 | lignées vivantes | 56 | 79 | 126 |

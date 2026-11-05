@@ -1,0 +1,96 @@
+{
+ "hotes": {},
+ "orvane": "0.1",
+ "monde": {
+  "id": "genese-2026",
+  "ne": "2026-11-05T15:17:35.988Z"
+ },
+ "depuis": 3000,
+ "souches": [],
+ "hybrides": [
+  "serpent-primitif.desert×yskaor",
+  "linrogra×oiseau-primitif.jungle.savane.montagne",
+  "brouteur-des-berges.toundra.taiga.prairie.desert-froid×kavane",
+  "belanphe×filtreur-marin.mer-froide.recif.cote",
+  "filtreur-marin.mer-froide.cote.marais×janou",
+  "grane×oiseau-primitif.jungle.savane.foret.prairie.desert",
+  "filtreur-marin.mer-froide.cote.mer-froide.cote.recif.large×kimune",
+  "filtreur-marin.mer-froide.cote.mer-froide.cote.mangrove×kimune",
+  "filtreur-marin.mer-froide.cote.mer-froide.cote×kimune",
+  "oiseau-primitif.jungle.taiga.montagne.desert-froid×renmu",
+  "oiseau-primitif.jungle.taiga.montagne.foret×renmu",
+  "dunsoja×oiseau-primitif.jungle.taiga.toundra.sommets",
+  "dunsoja×oiseau-primitif.jungle.taiga.toundra.desert-froid",
+  "belro×fouisseur-primitif.desert.steppe.desert.prairie.taiga.montagne",
+  "filtreur-marin.mer-froide.cote.mer-froide.recif×ortor",
+  "filtreur-marin.mer-froide.cote.mer-froide×ortor",
+  "filtreur-marin.mer-froide.cote.mer-froide.mangrove.cote×oror",
+  "corgra×filtreur-marin.mer-froide.cote.recif.large.abysses",
+  "filtreur-marin.mer-froide.cote.mer-froide×muka",
+  "filtreur-marin.mer-froide.cote.mer-froide.recif×muka",
+  "filtreur-marin.mer-froide.cote.recif.large×jadun",
+  "fouisseur-primitif.desert.steppe.desert.prairie.taiga×kaysnou",
+  "filtreur-marin.abysses.large.recif×nousil",
+  "oiseau-primitif.jungle.taiga.toundra×orneva",
+  "anphevi×filtreur-marin.mer-froide.cote.mer-froide",
+  "anphevi×filtreur-marin.mer-froide.cote.mer-froide.riviere",
+  "filtreur-marin.mer-froide.recif×grava",
+  "oiseau-primitif.jungle.savane.foret.prairie×rodun",
+  "dunren×oiseau-primitif.jungle.taiga.montagne",
+  "oiseau-primitif.jungle.savane×vanenou",
+  "filtreur-marin.mer-froide.cote×tasilta",
+  "oiseau-primitif.jungle.taiga.montagne×ousil",
+  "brouteur-des-berges.toundra.taiga.prairie×yska",
+  "filtreur-marin.mer-froide.cote.mer-froide.cote×vaume",
+  "linlo×serpent-primitif",
+  "jaou×oiseau-primitif.jungle.taiga.toundra",
+  "oume×ysys"
+ ],
+ "records": {
+  "lourd": {
+   "id": "mevi",
+   "nom": "Mévi fureteur de lac",
+   "masse_kg": 72.109,
+   "n": 3000
+  },
+  "leger": {
+   "id": "kabelvi",
+   "nom": "Kabelvi broutard de mangrove",
+   "masse_kg": 0.016,
+   "n": 3000
+  }
+ },
+ "compte": {
+  "eveil": 1,
+  "hybridation": 1
+ },
+ "annees": [
+  {
+   "an": 25,
+   "de": 3001,
+   "a": 3001,
+   "entrees": 2
+  }
+ ],
+ "derniers": [
+  {
+   "n": 3001,
+   "date": "2026-11-06T08:52:04.921Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "la vie en groupe se voit : 32 troupeaux, 140 bancs, 9 volées ; 32 populations migrent avec les saisons",
+   "taxon": "kiva"
+  },
+  {
+   "n": 3001,
+   "date": "2026-11-06T08:52:04.921Z",
+   "type": "hybridation",
+   "importance": 1,
+   "titre": "Une zone hybride",
+   "texte": "Oumé tamiseur de récif et Ysys tamiseur de côte se croisent (Côte)",
+   "taxon": "oume",
+   "biome": "cote"
+  }
+ ]
+}
