@@ -279,7 +279,7 @@ function decrire(c, plan) {
   const F = { quadrupede: 'quadrupède', hexapode: 'hexapode', bipede: 'bipède', oiseau: 'oiseau', serpent: allure(c, plan) === 'poisson' ? 'poisson' : 'serpentiforme' };
   const simien = c.organes.some(o => o.type === 'mains') && (c.forme === 'quadrupede' || c.forme === 'bipede');   // (docs/24)
   const L = [(simien ? (c.forme === 'bipede' ? 'simien debout' : c.posture >= .4 ? 'simien qui se dresse' : 'simien') : F[c.forme] || FX[c.forme]?.nom || c.forme) + (c.forme === 'hexapode' && c.pattes !== 6 || FX[c.forme] && c.pattes ? ` à ${c.pattes} ${c.forme === 'radiaire' || c.forme === 'tentaculaire' ? 'bras' : 'pattes'}` : '') + (c.long > .7 ? ' allongé' : c.long < .3 ? ' trapu' : '')];
-  if (c.forme !== 'serpent') L.push(c.haut > .7 ? 'haut sur pattes' : c.haut < .2 ? 'ras du sol' : '');
+  if (c.forme !== 'serpent' && !FX[c.forme]?.repli) L.push(c.haut > .7 ? 'haut sur pattes' : c.haut < .2 ? 'ras du sol' : '');   // (une pieuvre, une méduse n'ont pas de pattes à mesurer)
   const q = (k, mots) => { const v = c[k]; return v >= .7 ? mots[1] : v >= .35 ? mots[0] : ''; };
   L.push(q('cou', ['cou dégagé', 'long cou']), q('queue', ['queue', 'longue queue']), q('oreilles', ['oreilles', 'grandes oreilles']), q('museau', ['museau', 'long museau']));
   const CHIFFRES = ['', 'un', 'deux', 'trois', 'quatre'];
