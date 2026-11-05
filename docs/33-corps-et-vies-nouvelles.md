@@ -54,7 +54,7 @@ Un réglage du monde les fait naître aussi à la séparation, sans grand change
 ```
 
 - **0, par défaut : rien ne change.** Les mêmes corps, les mêmes tirages qu'avant ; le monde d'Orvane donne exactement le même état.
-- **Le hasard du cycle ne bouge pas.** Ce tirage a son propre hasard, tiré du corps de la lignée (comme les mains, docs/24) : les autres lignées dérivent exactement comme si le réglage n'existait pas.
+- **La dérive ne tire rien de plus du hasard du cycle.** Ce tirage vient tout à la fin, avec son propre hasard, tiré du corps de la lignée (comme les mains, docs/24) : sur 3 000 dérives, autant de tirages avec le réglage que sans lui. Seule la lignée qui change de forme vit ensuite autrement (un mille-pattes peut vivre en colonie, une pieuvre ne s'hybride pas avec un poisson).
 - **À 1** (le banc, 3 000 séparations) : d'un poisson de 500 g, 40 % de corps nouveaux, rayonnés ou à tentacules ; de 20 kg, seulement des tentacules ; d'un ver, la moitié de corps segmentés ; d'un brouteur à pattes, jamais.
 
 ## Les poissons

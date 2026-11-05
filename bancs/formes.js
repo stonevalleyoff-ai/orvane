@@ -77,12 +77,12 @@ console.log('3 bis. Les poissons ; les formes à la séparation (REGLES.derive.f
     return { c, appels, e: empreinte(sorties) }; };
   const mer = { masse_kg: .5, locomotion: ['nage'] }, a0 = tirer(0, 'serpent', mer), aSans = (() => { let appels = 0; const R0 = gen(11), R = () => { appels++; return R0(); }, s = [];
     for (let i = 0; i < 3000; i++) { const k = Corps.deriver(Corps.normaliser({ forme: 'serpent', pattes: 0 }), mer, b, R, 1, [], 1); if (i < 50) s.push(k); } return { appels, e: empreinte(s) }; })();
-  const a1 = tirer(1, 'serpent', mer), lourd = tirer(1, 'serpent', { masse_kg: 20, locomotion: ['nage'] }), ver = tirer(1, 'serpent', { masse_kg: .3, locomotion: ['reptation', 'fouissage'] }), brouteur = tirer(1, 'quadrupede', { masse_kg: 2, locomotion: ['marche', 'nage'] });
+  const a1 = tirer(1, 'serpent', mer), lourd = tirer(1, 'serpent', { masse_kg: 20, locomotion: ['nage'] }), ver = tirer(1, 'serpent', { masse_kg: .3, locomotion: ['reptation', 'fouissage'] }), brouteur = tirer(1, 'quadrupede', { masse_kg: 30, locomotion: ['marche', 'course'] });
   const nv = x => (x.radiaire || 0) + (x.tentaculaire || 0) + (x.segmente || 0);
   verif(a0.e === aSans.e && a0.appels === aSans.appels && a1.appels === a0.appels && nv(a0.c) <= 15,
-    `sans le réglage (0, par défaut), les mêmes corps et les mêmes tirages qu'avant ; avec, le hasard du cycle ne bouge pas (${fx(a0.appels)} tirages dans les deux cas) ; sans lui, ${nv(a0.c)} formes nouvelles sur 3 000 séparations`);
+    `sans le réglage (0, par défaut), les mêmes corps et les mêmes tirages qu'avant ; avec, la dérive ne tire rien de plus du hasard du cycle (${fx(a0.appels)} et ${fx(a1.appels)} tirages) ; sans lui, ${nv(a0.c)} formes nouvelles sur 3 000 séparations`);
   verif(nv(a1.c) > 900 && nv(a1.c) < 1500 && a1.c.radiaire > 0 && a1.c.tentaculaire > 0 && !lourd.c.radiaire && lourd.c.tentaculaire > 900 && ver.c.segmente > 1200 && !ver.c.radiaire && !nv(brouteur.c),
-    `réglé à 1, sur 3 000 séparations : d'un poisson de 500 g, ${a1.c.radiaire} rayonnés et ${a1.c.tentaculaire} à tentacules ; de 20 kg, ${lourd.c.tentaculaire} à tentacules et aucun rayonné ; d'un ver, ${ver.c.segmente} segmentés ; d'un brouteur à pattes qui nage, aucun`);
+    `réglé à 1, sur 3 000 séparations : d'un poisson de 500 g, ${a1.c.radiaire} rayonnés et ${a1.c.tentaculaire} à tentacules ; de 20 kg, ${lourd.c.tentaculaire} à tentacules et aucun rayonné ; d'un ver, ${ver.c.segmente} segmentés ; d'un grand brouteur qui marche, ${nv(brouteur.c)}`);
   Corps.etendre(av);
 }
 

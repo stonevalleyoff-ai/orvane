@@ -227,12 +227,6 @@ function deriver(c, plan, b, R, A = 1, gagnes = [], k = 1, fx = 0) {
     const C3 = formesIci(n.forme, plan);
     if (C3.length) { const [id, F] = C3[Math.floor(R() * C3.length)]; if (R() < (F.chance ?? .3)) { n.forme = id; n.pattes = F.pattes ?? n.pattes; } }
   }
-  // (docs/33, équilibrage du 5 novembre) les formes du monde naissent aussi hors des grands changements de plan : à la séparation
-  // d'une lignée qui vit là où l'une d'elles peut naître, à sa chance × fx (REGLES.derive.formes, 0 par défaut : rien ne change).
-  // Avec un hasard tiré du corps lui-même : celui du cycle ne bouge pas, et les autres lignées dérivent exactement comme avant
-  if (fx > 0) { const C4 = formesIci(n.forme, plan);
-    if (C4.length) { const Rf = generateurDe('formes' + JSON.stringify([n.long, n.haut, n.queue, n.museau, n.organes.length, b?.id || '', plan?.masse_kg, plan?.regime]));
-      const [id, F] = C4[Math.floor(Rf() * C4.length)]; if (Rf() < Math.min(1, fx * (F.chance ?? .3))) { n.forme = id; n.pattes = F.pattes ?? n.pattes; } } }
   if (n.forme === 'serpent') { n.pattes = 0; n.long = Math.max(n.long, .8); }
   // (docs/33) un corps segmenté gagne ou perd des anneaux ; un corps rayonné, à tentacules, un bras
   if (FX[n.forme]?.repli && R() < .2 * A) { const S = n.forme === 'segmente' ? [10, 40, 2] : n.forme === 'radiaire' ? [4, 8, 1] : [6, 10, 2], d = R() < .5 ? -S[2] : S[2]; n.pattes = Math.max(S[0], Math.min(S[1], (n.pattes || S[0]) + d)); }
@@ -249,6 +243,13 @@ function deriver(c, plan, b, R, A = 1, gagnes = [], k = 1, fx = 0) {
   if (lu < .35) C.oeil = mix(C.oeil, [200, 236, 255], .3);                                             // dans l'ombre, des yeux pâles
   C.oeil = C.oeil.map(v => Math.round(clamp(v + j(10), 0, 255)));
   if (R() < .12 * A) n.motif = MOTIFS[Math.floor(R() * MOTIFS.length)];
+  // (docs/33, équilibrage du 5 novembre) les formes du monde naissent aussi hors des grands changements de plan : à la séparation
+  // d'une lignée qui vit là où l'une d'elles peut naître, à sa chance × fx (REGLES.derive.formes, 0 par défaut : rien ne change).
+  // Tout à la fin, avec un hasard tiré du corps lui-même : la dérive ne tire rien de plus du hasard du cycle
+  if (fx > 0) { const C4 = formesIci(n.forme, plan);
+    if (C4.length) { const Rf = generateurDe('formes' + JSON.stringify([n.long, n.haut, n.queue, n.museau, n.organes.length, b?.id || '', plan?.masse_kg, plan?.regime]));
+      const [id, F] = C4[Math.floor(Rf() * C4.length)];
+      if (Rf() < Math.min(1, fx * (F.chance ?? .3))) { n.forme = id; n.pattes = F.pattes ?? n.pattes; if (id === 'segmente') n.long = Math.max(n.long, .8); if (F.repli) n.posture = 0; } } }
   for (const o of n.organes) o.taille = r2(o.taille);
   for (const key of NUM) if (!ORGANES.includes(key)) n[key] = r2(n[key]);
   n.organes.sort((a, b) => a.type < b.type ? -1 : a.type > b.type ? 1 : a.place < b.place ? -1 : 1);
