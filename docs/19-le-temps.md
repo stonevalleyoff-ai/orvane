@@ -102,6 +102,10 @@ Le dernier cycle est daté de l'heure où l'action est partie. Et le monde solo 
 node bancs/temps.js
 ```
 
+## La simulation en direct
+
+`simulation/` (en ligne : https://stonevalleyoff-ai.github.io/orvane/simulation/) est un monde solo qu'on regarde vivre. Il part du monde d'Orvane publié, tourne dans un Web Worker au rythme qu'on choisit (d'un cycle par jour, comme le monde partagé, à un cycle toutes les dix secondes, ou au plus vite), et rattrape à la réouverture les cycles dus, au plus son rattrapage. À l'écran, les bêtes du biome choisi vivent en temps réel : chacune est un individu tiré de la population réelle (docs/35), avec la silhouette de sa lignée ; elle dort hors de ses heures, broute, chasse ce que le moteur lui donne à manger, fuit ses prédateurs et le joueur à la distance que lui donne sa méfiance (docs/12), suit son groupe (docs/38). Les naissances et les morts suivent celles du moteur, cycle après cycle. Les gestes du joueur (observer, nourrir, chasser, capturer, déplacer, relâcher, transformer un lieu) passent au moteur par le tampon, au cycle suivant. Chaque paramètre d'Orvane s'y règle : les règles de chaque module, les catalogues, le profil, le monde, les biomes, et les mécanismes, qu'on éveille ou qu'on endort. Le détail : `simulation/LISEZ-MOI.md` ; le banc : `node bancs/simulation.js`.
+
 ## Ce qui reste ouvert
 
 - **Un monde solo qui rejoint le monde partagé.** Une partie hors ligne pourrait, de retour en ligne, envoyer au monde partagé ce que le joueur a fait, comme un lot en retard. Aujourd'hui, rien n'en revient.

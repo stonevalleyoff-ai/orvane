@@ -602,7 +602,7 @@ function blocChronique() {
 function vueSimuler() {
   const local = E.H.length - E.publies, K = E.comptes || 10;
   $('#contenu').innerHTML = `<section class="simulation-panel"><p class="atlas-kicker">LABORATOIRE / EXPÉRIENCE LOCALE</p><h2>Simuler la suite</h2>
-    <p class="note">Le moteur d'Orvane tourne dans votre navigateur, à partir du monde affiché. Rien n'est envoyé ni publié : le monde en ligne continue d'avancer d'un cycle chaque nuit, de son côté.</p>
+    <p class="note">Le moteur d'Orvane tourne dans votre navigateur, à partir du monde affiché. Rien n'est envoyé ni publié : le monde en ligne continue d'avancer d'un cycle chaque nuit, de son côté. Pour le voir vivre en temps réel, bête par bête, avec tous ses paramètres : <a href="../simulation/">la simulation en direct</a>.</p>
     <div class="actions"><button class="bouton principal" data-n="1">Faire tourner 1 cycle</button><button class="bouton" data-n="10">10 cycles</button><button class="bouton" data-n="50">50 cycles</button><button class="bouton" id="arret" disabled>Arrêter</button></div>
     <div class="progres" aria-hidden="true"><span id="barre"></span></div><p class="note" id="avance">${local > 0 ? `${local} cycle${local > 1 ? 's' : ''} simulé${local > 1 ? 's' : ''} depuis le monde ${E.source?.publie ? 'publié' : 'ouvert'}.` : 'Aucun cycle simulé pour l\'instant.'}</p>
     ${local > 0 ? '<button class="lien" id="revenir">Revenir au monde de départ</button>' : ''}

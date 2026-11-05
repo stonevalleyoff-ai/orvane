@@ -42,3 +42,4 @@ Points essentiels :
 - [Le fonctionnement, fichier par fichier](https://raw.githubusercontent.com/stonevalleyoff-ai/orvane/main/LISEZ-MOI.md)
 - [L'hébergement](https://raw.githubusercontent.com/stonevalleyoff-ai/orvane/main/hebergement/LISEZ-MOI.md)
 - [L'observatoire](https://stonevalleyoff-ai.github.io/orvane/monde/?monde=orvane) : le monde vu de l'intérieur (page interactive)
+- [La simulation en direct](https://stonevalleyoff-ai.github.io/orvane/simulation/) : le monde d'Orvane en temps réel, avec tous ses paramètres à régler (page interactive, simulation/LISEZ-MOI.md)

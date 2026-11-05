@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Orvane — La simulation en direct</title>
+<meta name="description" content="Le monde d'Orvane en temps réel : ses bêtes naissent, broutent, chassent, fuient et meurent sous vos yeux, au rythme du moteur, avec tous ses paramètres à régler.">
+<meta name="theme-color" content="#172c25">
+<link rel="icon" href="../assets/embleme.svg" type="image/svg+xml">
+<link rel="stylesheet" href="simulation.css">
+</head>
+<body class="sim">
+<header class="sim-tete">
+  <a class="sim-marque" href="../" aria-label="Orvane, accueil"><svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M20 35V19M20 26C8 27 4 18 5 7c11 0 17 6 15 19ZM20 21C19 11 26 5 35 5c1 10-4 17-15 16Z" stroke="currentColor" stroke-width="1.5"/><path d="m11 14 9 12M28 12l-8 9" stroke="currentColor" stroke-width="1.3"/></svg><span>orvane<small>SIMULATION EN DIRECT</small></span></a>
+  <div class="sim-etat"><b id="etatCycle">—</b><small id="etatSource"></small></div>
+  <div class="sim-commandes">
+    <button id="bJouer" class="rond" aria-label="Mettre en pause">❚❚</button>
+    <label class="cache-visuel" for="rythme">Rythme</label><select id="rythme" title="La durée réelle d'un cycle"></select>
+    <a class="sim-lien" href="../monde/?monde=orvane" title="L'observatoire : le monde publié">Observatoire ↗</a>
+  </div>
+</header>
+<main class="sim-grille">
+  <section class="sim-scene" aria-label="La scène : les bêtes du biome, en temps réel">
+    <canvas id="toile" role="img" aria-label="Les bêtes du biome, en temps réel. La liste des espèces, dans l'onglet Biome, la décrit."></canvas>
+    <div class="hud">
+      <button id="hudBiome" class="hud-biome" title="Changer de biome">—</button>
+      <span id="hudHeure" class="hud-pilule">—</span>
+      <span id="hudProchain" class="hud-pilule sourd">—</span>
+    </div>
+    <p id="notes" class="hud-notes" hidden></p>
+    <div id="outils" class="outils" role="toolbar" aria-label="Outils du joueur">
+      <button data-outil="observer" aria-pressed="true"><span aria-hidden="true">◉</span>Observer</button>
+      <button data-outil="nourrir" aria-pressed="false"><span aria-hidden="true">❀</span>Nourrir</button>
+      <button data-outil="capturer" aria-pressed="false"><span aria-hidden="true">◌</span>Capturer</button>
+      <button data-outil="chasser" aria-pressed="false"><span aria-hidden="true">⌖</span>Chasser</button>
+    </div>
+    <article id="carte" class="carte" hidden aria-live="polite"></article>
+    <div id="toasts" class="toasts" aria-live="polite"></div>
+    <div id="chargement" class="chargement"><div><svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M20 35V19M20 26C8 27 4 18 5 7c11 0 17 6 15 19ZM20 21C19 11 26 5 35 5c1 10-4 17-15 16Z" stroke="currentColor" stroke-width="1.5"/></svg><p>Chargement…</p></div></div>
+  </section>
+  <aside class="sim-panneau">
+    <nav id="onglets" class="onglets" aria-label="Vues de la simulation">
+      <button data-o="biome" aria-selected="true">Biome</button><button data-o="monde" aria-selected="false">Monde</button><button data-o="journal" aria-selected="false">Journal</button><button data-o="reglages" aria-selected="false">Réglages</button>
+    </nav>
+    <div id="panneau" class="panneau"></div>
+  </aside>
+</main>
+<input type="file" id="fichier" accept="application/json,.json" hidden>
+<!-- ce que la page lit du moteur pour dessiner (la silhouette, la chaîne alimentaire, les individus, l'exposition) ; le moteur lui-même tourne dans travailleur.js -->
+<script src="../moteur/catalogue.js"></script>
+<script src="../moteur/corps.js"></script>
+<script src="../moteur/dietes.js"></script>
+<script src="../moteur/orvane.js"></script>
+<script src="../tampon/tampon.js"></script>
+<script src="../tampon/individus.js"></script>
+<script src="parametres.js"></script>
+<script src="vivant.js"></script>
+<script src="simulation.js"></script>
+</body>
+</html>

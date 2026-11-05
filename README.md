@@ -6,7 +6,7 @@ Orvane fait vivre un seul monde, le monde d'Orvane : 24 biomes, de la banquise a
 
 N'importe quel jeu peut s'y brancher. Il lit le monde et en fait ses créatures, chacune à sa façon. Puis il renvoie ce que font ses joueurs (les bêtes croisées, chassées, apprivoisées), et le monde en tient compte la nuit suivante. Une espèce trop chassée se raréfie, devient méfiante, rapetisse si l'on prend toujours les plus grandes, et cela dans tous les jeux à la fois.
 
-- **Voir le monde vivre** : [l'observatoire](https://stonevalleyoff-ai.github.io/orvane/monde/?monde=orvane)
+- **Voir le monde vivre** : [l'observatoire](https://stonevalleyoff-ai.github.io/orvane/monde/?monde=orvane), et [la simulation en direct](https://stonevalleyoff-ai.github.io/orvane/simulation/) : le monde d'Orvane en temps réel, ses bêtes qui naissent, broutent, chassent et fuient sous vos yeux, et chacun de ses paramètres à régler (`simulation/`)
 - **Brancher un jeu** : [le guide pas à pas](BRANCHER-UN-JEU.md) et [la page d'inscription](https://stonevalleyoff-ai.github.io/orvane/inscription/) ; in English: [CONNECT-A-GAME.md](CONNECT-A-GAME.md) and [the field glossary](docs/glossary.md)
 - **Écrire son traducteur** : [le mode d'emploi en 39 chapitres](docs/LISEZ-MOI.md)
 - **Le fonctionnement, fichier par fichier** : [LISEZ-MOI.md](LISEZ-MOI.md) et [l'hébergement](hebergement/LISEZ-MOI.md)
@@ -37,4 +37,4 @@ Orvane is an ecosystem and evolution engine running **one shared living world**:
 2. read the world from `https://stonevalleyoff-ai.github.io/orvane/mondes/orvane/instantane.json` and turn its lineages into creatures;
 3. report what players do (encounters, kills, captures) through the `orvane_deposer` RPC.
 
-Over-hunted species become rarer, warier or smaller, in every connected game. The step-by-step guide, with endpoints and examples, is [CONNECT-A-GAME.md](CONNECT-A-GAME.md), and [docs/glossary.md](docs/glossary.md) translates every field name; the rest of the documentation is in French. A game can read only the biomes it plays, piece by piece (`tampon/morceaux.js`). Licence: [PolyForm Shield 1.0.0](https://polyformproject.org/licenses/shield/1.0.0). Use it freely in any game, commercial or not; just don't use its code to build a competing product.
+Over-hunted species become rarer, warier or smaller, in every connected game. To watch the world live, in real time, with every engine parameter exposed, open [the live simulation](https://stonevalleyoff-ai.github.io/orvane/simulation/). The step-by-step guide, with endpoints and examples, is [CONNECT-A-GAME.md](CONNECT-A-GAME.md), and [docs/glossary.md](docs/glossary.md) translates every field name; the rest of the documentation is in French. A game can read only the biomes it plays, piece by piece (`tampon/morceaux.js`). Licence: [PolyForm Shield 1.0.0](https://polyformproject.org/licenses/shield/1.0.0). Use it freely in any game, commercial or not; just don't use its code to build a competing product.
