@@ -102,6 +102,9 @@ function regrouper(inst) {
     if (L.length) { x.capacite = +L.reduce((s, p) => s + (p.capacite || 0), 0).toFixed(2); if (b.capacite_base != null) x.capacite_base = +L.reduce((s, p) => s + (p.capacite_base || 0), 0).toFixed(2);
       if (L[0].axes_saison) x.axes_saison = moyenne(L.map(p => p.axes_saison), L.map(p => p.capacite || 1));
       if (L[0].transforme) { const w = L.map(p => p.capacite || 1); x.axes = moyenne(L.map(p => p.axes), w); const W = w.reduce((a, v) => a + v, 0) || 1, J = {}; L.forEach((p, i) => { for (const [k, v] of Object.entries(p.transforme.jeu || {})) J[k] = (J[k] || 0) + v * w[i] / W; }); for (const k in J) J[k] = +J[k].toFixed(3); x.transforme = { base: L[0].transforme.base, jeu: J }; }   // (docs/22) le milieu d'aujourd'hui, en moyenne sur ses parcelles
+      if (L.some(p => p.nature)) { const W = L.reduce((a, p) => a + (p.capacite || 1), 0) || 1, N = {};   // (docs/28) la part de ses parcelles qui ont changé de nature
+        for (const p of L) if (p.nature) { const y = N[p.nature.type] ??= { type: p.nature.type, nom: p.nature.nom, part: 0 }; y.part += (p.capacite || 1) / W; }
+        x.natures = Object.values(N).map(y => ({ ...y, part: +y.part.toFixed(3) })); }
       if (L[0].ressources) { const S = L.map(p => p.ressources?.surface || 1), r = moyenne(L.map(p => p.ressources), S);   // (docs/16) les stocks s'additionnent
         for (const k of ['surface', 'minerai', 'minerai_max', 'ferraille']) r[k] = +L.reduce((s, p) => s + (p.ressources?.[k] || 0), 0).toFixed(1); x.ressources = r; } }
     return x; });

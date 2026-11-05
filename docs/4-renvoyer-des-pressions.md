@@ -17,9 +17,9 @@ Le jeu renvoie des **comptes bruts**, jamais des conclusions. Le tampon fait le 
 | action | quand | pourquoi ça compte |
 | --- | --- | --- |
 | `rencontre` | une bête sauvage entre dans le champ du joueur (une fois par bête) | mesure l'**exposition** : 14 tués sur 31 croisés n'est pas 14 tués sur 300 |
-| `prelevement` | une bête meurt **du fait du joueur** (arme, piège, tour, monture) | retire des individus ; par phénotype, c'est la sélection |
+| `prelevement` | une bête meurt **du fait du joueur** (arme, piège, tour, monture) ; avec `age: "oeuf"`, un œuf pris (docs/25) | retire des individus ; par phénotype, c'est la sélection |
 | `capture` | apprivoisée, retirée du sauvage | comme un prélèvement, mais elle peut revenir |
-| `liberation` | rendue au sauvage | l'inverse |
+| `liberation` | rendue au sauvage ; avec `genome`, née en élevage (docs/36) | l'inverse ; avec son génome, elle rejoint la population avec ses gènes |
 | `nourrissage` | nourrie, soignée | aide la population (poids négatif) |
 | `reproduction` | des petits nés en captivité puis relâchés, ou un élevage sélectif | aide, et oriente les phénotypes |
 | `deplacement` (+ `vers`) | emportée sur un autre biome | fonde ou renforce une population ailleurs |

@@ -61,11 +61,12 @@ function eveiller(inst) {
 function preparer(ctx) {
   const { biomes, taxons, prB = {}, n } = ctx, B = biomes, I = indices(taxons), ev = [], fert = {};
   for (const b of Object.values(B)) { const M = b.transforme; if (!M) continue;
-    const X = I[b.id] || { bio: 0, pat: 0, fou: 0, bat: 0 }, r = M.ref, base = M.base, T = { ...base }, K = Math.max(b.capacite || 0, 1);
+    const X = I[b.id] || { bio: 0, pat: 0, fou: 0, bat: 0 }, r = M.ref, base = M.base, T = { ...base }, K = Math.max(b.capacite || 0, 1), dc = ctx.climat?.decalage(b);   // (docs/31) le climat déplace la cible
+    if (dc && base.temperature != null) T.temperature = clamp(base.temperature + dc.temperature);
     const ep = X.pat / K - r.pat, ef = clamp((X.fou / K - r.fou) / Math.max(r.fou, REGLES.terriers.plancher), -1, 2);   // (les parts de la capacité du lieu)
     if (b.milieu !== 'marin' && b.milieu !== 'aquatique' && base.couvert != null) T.couvert = clamp(base.couvert - REGLES.paturage.effet * ep);
     const hum = eau(b, B) && X.bat > 0 ? REGLES.barrages.effet * X.bat / (X.bat + REGLES.barrages.demi * K) : 0;
-    if (base.humidite != null) T.humidite = clamp(base.humidite + hum);
+    if (base.humidite != null) T.humidite = clamp(base.humidite + hum + (dc?.humidite || 0));
     for (const k in T) M.etat[k] = r3((M.etat[k] ?? base[k]) + (T[k] - (M.etat[k] ?? base[k])) * REGLES.vitesse);
     fert[b.id] = 1 + REGLES.terriers.effet * ef;
     // ce que les jeux ont fait ce cycle : une part du lieu, vers l'extrême de l'axe ; puis tout ce qu'ils ont fait s'efface un peu
@@ -78,7 +79,7 @@ function preparer(ctx) {
     // ce qui a changé assez pour se dire
     for (const k of Object.keys(b.axes)) { const avant = M.signale[k] ?? base[k]; if (avant == null || Math.abs(b.axes[k] - avant) < REGLES.signal) continue;
       const dj = Math.abs(M.jeu[k] || 0), de = Math.abs((M.etat[k] ?? base[k]) - base[k]), monte = b.axes[k] > avant;
-      const cause = dj >= de ? 'ce qu\'y font les joueurs' : k === 'couvert' ? (monte ? 'moins de grands brouteurs' : 'les grands brouteurs') : k === 'humidite' ? 'les barrages des bâtisseurs' : 'ses bêtes';
+      const cause = dj >= de ? 'ce qu\'y font les joueurs' : k === 'temperature' ? 'le climat' : k === 'couvert' ? (monte ? 'moins de grands brouteurs' : 'les grands brouteurs') : k === 'humidite' ? 'les barrages des bâtisseurs' : 'ses bêtes';
       ev.push({ type: 'transformation', taxon: b.id, biome: b.id, detail: `${b.nom || b.id} : ${MOTS[k] || k} ${monte ? 'monte' : 'baisse'} de ${String(avant).replace('.', ',')} à ${String(b.axes[k]).replace('.', ',')} (${cause})` });
       M.signale[k] = b.axes[k]; }
   }

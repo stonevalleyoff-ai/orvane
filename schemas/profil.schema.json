@@ -84,6 +84,54 @@
           "description": "La flore (docs/17) : le cycle de nuit éveille la flore, une fois : une lignée de plantes par forme et par biome, à l'équilibre avec les brouteurs du moment.",
           "type": "boolean"
         },
+        "milieu": {
+          "description": "Le milieu transformé (docs/22) : le cycle de nuit l'éveille, une fois ; les brouteurs, les fouisseurs, les bâtisseurs et les joueurs changent désormais les lieux.",
+          "type": "boolean"
+        },
+        "ponte": {
+          "description": "Pondre ou mettre bas (docs/25) : le cycle de nuit donne à chaque lignée son mode, une fois.",
+          "type": "boolean"
+        },
+        "stades": {
+          "description": "Les cycles de vie (docs/26) : le cycle de nuit les éveille, une fois ; la métamorphose peut alors naître par mutation.",
+          "type": "boolean"
+        },
+        "invention": {
+          "description": "Un monde inventif (docs/27) : le cycle de nuit l'éveille, une fois ; ses lignées peuvent inventer des traits que personne n'a décrits.",
+          "type": "boolean"
+        },
+        "esprit": {
+          "description": "L'esprit (docs/34) : le cycle de nuit l'éveille, une fois ; les bêtes apprennent, transmettent, se servent d'outils ; chaque population a ses savoirs.",
+          "type": "boolean"
+        },
+        "castes": {
+          "description": "Les castes (docs/33) : le cycle de nuit les éveille, une fois ; de petits hexapodes grégaires peuvent devenir des colonies (une reine, des ouvrières, des soldats).",
+          "type": "boolean"
+        },
+        "formes": {
+          "description": "Les formes nouvelles (docs/33) : le cycle de nuit les éveille, une fois ; un corps segmenté, rayonné ou à tentacules peut naître.",
+          "type": "boolean"
+        },
+        "grammaire": {
+          "description": "La grammaire des effets et des conduites (docs/32) : le cycle de nuit l'éveille, une fois ; le monde compose des traits d'un genre neuf (une lueur qui attire, une décharge qui foudroie, un cri qui alerte, une odeur qui repousse).",
+          "type": "boolean"
+        },
+        "climat": {
+          "description": "Le climat et la géologie lente (docs/31) : le cycle de nuit l'éveille, une fois ; le monde se réchauffe et se refroidit de lui-même, la mer monte et baisse, des volcans font des îles.",
+          "type": "boolean"
+        },
+        "dietes": {
+          "description": "Les régimes en spectre (docs/30) : le cycle de nuit les éveille, une fois, après la flore ; chaque lignée mange des feuilles, des fruits, des graines, du nectar, des insectes, de la viande ou du sang, en parts qui lui sont propres.",
+          "type": "boolean"
+        },
+        "derives": {
+          "description": "Les dérives (docs/29) : le cycle de nuit les éveille, une fois ; les régimes changent à la séparation, les plantes se séparent, les souches mutent, les insectes les portent.",
+          "type": "boolean"
+        },
+        "natures": {
+          "description": "Les lieux qui changent de nature (docs/28) : le cycle de nuit l'éveille, une fois, dans un monde au milieu transformé ; un lieu dont les axes ressemblent à un autre type de lieu en prend la nature.",
+          "type": "boolean"
+        },
         "synthetique": {
           "description": "La vie synthétique (docs/16) : le cycle de nuit éveille la Mère, une fois, dans le biome dit (le volcan par défaut). true : avec ses réglages par défaut.",
           "oneOf": [

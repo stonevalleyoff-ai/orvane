@@ -51,6 +51,6 @@ Quelques valeurs, aux taux de Stone Valley :
 
 ## Ce qui vient ensuite
 
-- **L'élevage** : deux compagnes connues, père et mère, au campement ; le petit tiré entre leurs deux génotypes, et la sélection du joueur rapportée comme une pression.
+- **L'élevage** (fait, docs/35 et 36) : deux compagnes connues, père et mère, au campement ; le petit tiré entre leurs deux génotypes ; relâché, ses gènes rejoignent la population.
 - **La préférence qui évolue** : un trait « exigence » des femelles, lié aux ornements qu'elles choisissent (l'emballement de Fisher), au lieu d'un attrait fixé au catalogue.
 - **Des loci liés** : des traits qui voyagent ensemble sur un même chromosome, au lieu de loci indépendants.

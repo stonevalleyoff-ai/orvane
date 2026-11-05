@@ -11,6 +11,7 @@
 //            collerette, antennes, trompe, ailes, nageoires, carapace, plaques, épines, massue, aiguillon, panache, pinces
 //            (ORGANES_CAT : où ils vont, combien, de quelle forme, à quoi ils servent, la conduite qu'ils prêtent à un jeu) ;
 //            cornes · crete · ailes · carapace · antennes restent lisibles en proportions (0 à 1), pour les traducteurs d'avant
+//   posture  0 à quatre pattes, 0,5 se dresse, 1 debout (docs/24) ; les mains (un organe) naissent de la vie dans les arbres
 //   motif    uni · rayures · taches · bandes · masque
 //   couleurs { robe, sombre, ventre, oeil } en [r, v, b]
 //
@@ -56,13 +57,16 @@ const ORGANES_CAT = {
   panache:    { places: ['queue'], nombre: [1, 1], defaut: 1, formes: ['touffe', 'eventail'], fonction: 'parade', mot: ['panache', 'panaches'], fem: 0 },
   pinces:     { places: ['avant'], nombre: [2, 2], defaut: 2, formes: ['fines', 'massives'], fonction: 'saisie', mot: ['pince', 'pinces'], fem: 1,
                 conduite: { type: 'morsure', force: 1.2, nom: 'à pinces', presage: 'ouvre et ferme ses pinces' } },
+  // (docs/24) les mains : elles ne naissent pas au hasard, mais de la vie dans les arbres (deriver) ; elles atteignent les fruits
+  mains:      { places: ['avant'], nombre: [2, 2], defaut: 2, formes: ['agiles', 'puissantes'], fonction: 'saisie', mot: ['main', 'mains'], fem: 1,
+                conduite: { type: 'escalade', nom: 'à mains', presage: 'saisit une branche des deux mains' } },
 };
 const PLACE_MOT = { tete: 'sur la tête', dos: 'sur le dos', queue: 'au bout de la queue', flancs: 'sur les flancs', avant: 'à l\'avant' };
 // la forme dite d'un organe : [féminin, masculin] au singulier ; l'accord se fait en nombre (accord)
 const FORME_MOT = { recourbees: ['recourbée', 'recourbé'], droites: ['droite', 'droit'], ramifiees: ['ramifiée', 'ramifié'], dentelee: ['dentelée', 'dentelé'],
   frangee: ['frangée', 'frangé'], plumeuses: ['plumeuse', 'plumeux'], longue: ['longue', 'long'], membranes: ['membraneuse', 'membraneux'], voiles: ['en voile'],
   segmentee: ['segmentée', 'segmenté'], triangles: ['triangulaire', 'triangulaire'], massives: ['massive', 'massif'], cloutee: ['cloutée', 'clouté'],
-  courbe: ['courbe', 'courbe'], eventail: ['en éventail'], rondes: ['ronde', 'rond'] };
+  courbe: ['courbe', 'courbe'], eventail: ['en éventail'], rondes: ['ronde', 'rond'], agiles: ['agile', 'agile'], puissantes: ['puissante', 'puissant'] };
 const accord = (forme, fem, plur) => { const m = FORME_MOT[forme]; if (!m) return ''; const f = m[fem || m.length < 2 ? 0 : 1];
   return !plur || f.startsWith('en ') || /[sx]$/.test(f) ? f : f + 's'; };
 // un organe propre, quoi qu'on lui donne (null : un type inconnu)
@@ -93,14 +97,17 @@ const DEFAUT = { forme: 'quadrupede', pattes: 4, long: .5, haut: .45, cou: .3, t
 const MAX_ORGANES = 16;
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const r2 = v => Math.round(v * 100) / 100;
+const generateurDe = s => { let g = 2166136261; for (let i = 0; i < s.length; i++) { g ^= s.charCodeAt(i); g = Math.imul(g, 16777619); } g >>>= 0; return () => { g = (Math.imul(g, 1664525) + 1013904223) >>> 0; return g / 4294967296; }; };
 const mix = (a, b, k) => a.map((v, i) => Math.round(clamp(v + (b[i] - v) * k, 0, 255)));
 
 // un corps complet et propre, quoi qu'on lui donne (champs manquants : ceux du défaut)
 function normaliser(c) {
   c = c || {};
   const n = { forme: FORMES.includes(c.forme) || FX[c.forme] ? c.forme : DEFAUT.forme };
-  n.pattes = FX[n.forme] ? (Number.isFinite(c.pattes) ? Math.max(0, Math.min(12, Math.round(c.pattes))) : FX[n.forme].pattes ?? 4)
+  n.pattes = FX[n.forme] ? (Number.isFinite(c.pattes) ? Math.max(0, Math.min(FX[n.forme].pattes > 12 ? 60 : 12, Math.round(c.pattes))) : FX[n.forme].pattes ?? 4)   // (docs/33 : un corps segmenté porte jusqu'à soixante pattes)
     : Number.isFinite(c.pattes) ? Math.max(0, Math.min(8, Math.round(c.pattes / 2) * 2)) : PATTES[n.forme];
+  // (docs/24) la posture : 0 à quatre pattes (ou au ras du sol), 0,5 se dresse, 1 debout ; un bipède, un oiseau sont debout
+  n.posture = Number.isFinite(c.posture) ? r2(clamp(c.posture)) : n.forme === 'bipede' || n.forme === 'oiseau' ? 1 : 0;
   for (const k of NUM) n[k] = r2(clamp(Number.isFinite(c[k]) ? c[k] : DEFAUT[k]));
   n.motif = MOTIFS.includes(c.motif) ? c.motif : 'uni';
   // les organes : la liste si elle est là ; sinon, ceux qu'un corps d'avant marque en proportions (au-delà de 0,2)
@@ -187,6 +194,18 @@ function deriver(c, plan, b, R, A = 1, gagnes = [], k = 1) {
     if (l === 'saut') marque('haut', .1);
     if (l === 'course') { marque('haut', .06); marque('long', .03); }
   }
+  // (docs/24) les corps assemblés : la vie dans les arbres donne des mains, et un porteur de mains se redresse ; debout, il devient
+  // bipède. Ces tirages ont leur propre hasard (graine tirée du corps lui-même) : celui du cycle ne bouge pas, et une lignée qui
+  // ne vit pas dans les arbres dérive exactement comme avant
+  { const loco = plan?.locomotion || [], m = plan?.masse_kg || 1, reg = plan?.regime, co = ax.couvert ?? .5;
+    const Rm = generateurDe(JSON.stringify([n.long, n.haut, n.cou, n.queue, n.museau, n.organes.length, b?.id || '', m]));
+    const arbre = loco.includes('grimpe') && co >= .5 && (reg === 'herbivore' || reg === 'omnivore') && m >= .1 && m <= 150 && (n.forme === 'quadrupede' || n.forme === 'bipede');
+    if (arbre && !n.organes.some(o => o.type === 'mains') && Rm() < .25 * A) poser(n, 'mains', .45 + .3 * Rm(), Rm, 'avant');
+    if (n.organes.some(o => o.type === 'mains')) {
+      if (loco.includes('grimpe')) n.posture = r2(clamp(n.posture + .12 * A * Rm()));                                   // assis, suspendu : il se redresse
+      if ((loco.includes('marche') || loco.includes('course')) && co < .45) n.posture = r2(clamp(n.posture + .25 * A * Rm()));   // descendu des arbres, en terrain ouvert : il se lève
+      if (n.forme === 'quadrupede' && n.posture >= .8) { n.forme = 'bipede'; n.pattes = 2; }                             // un simien debout
+    } }
   // très rarement, le plan d'ensemble change (ou rien : la plupart des tirages ne changent rien)
   if (R() < .02 * A * A) {
     const loco = plan?.locomotion || [], u = R();
@@ -200,10 +219,15 @@ function deriver(c, plan, b, R, A = 1, gagnes = [], k = 1) {
     } else if (n.forme === 'bipede' && u < .3) { n.forme = 'quadrupede'; n.pattes = 4; }
     else if (n.forme === 'serpent' && u < .35) { n.forme = 'quadrupede'; n.pattes = 4; n.haut = .12; }
     // (docs/20) une forme du monde naît d'une de celles qu'elle nomme (depuis), à sa chance
-    const C3 = Object.entries(FX).filter(([id, F]) => id !== n.forme && (F.depuis || []).includes(n.forme));
+    const m = plan?.masse_kg ?? 1, C3 = Object.entries(FX).filter(([id, F]) => id !== n.forme && (F.depuis || []).includes(n.forme)
+      && (!F.loco || F.loco.some(l => loco.includes(l))) && (F.masse_max == null || m <= F.masse_max) && (F.masse_min == null || m >= F.masse_min));   // (docs/33 : là où elle peut naître)
     if (C3.length) { const [id, F] = C3[Math.floor(R() * C3.length)]; if (R() < (F.chance ?? .3)) { n.forme = id; n.pattes = F.pattes ?? n.pattes; } }
   }
   if (n.forme === 'serpent') { n.pattes = 0; n.long = Math.max(n.long, .8); }
+  // (docs/33) un corps segmenté gagne ou perd des anneaux ; un corps rayonné, à tentacules, un bras
+  if (FX[n.forme]?.repli && R() < .2 * A) { const S = n.forme === 'segmente' ? [10, 40, 2] : n.forme === 'radiaire' ? [4, 8, 1] : [6, 10, 2], d = R() < .5 ? -S[2] : S[2]; n.pattes = Math.max(S[0], Math.min(S[1], (n.pattes || S[0]) + d)); }
+  if (n.forme === 'segmente') n.long = Math.max(n.long, .8);
+  if (n.forme === 'bipede' || n.forme === 'oiseau') n.posture = Math.max(n.posture, .9); else if (n.forme === 'serpent' || n.forme === 'hexapode' || FX[n.forme]?.repli) n.posture = 0;   // (docs/24)
   // la masse : une lignée plus grande a une tête plus petite, à proportion (et l'inverse)
   if (k > 0 && k !== 1) ajoute('tete', -.12 * Math.log2(k) / A);
   // la robe glisse vers la teinte du sol (le camouflage), tourne un peu ; parfois elle s'avive (la parade, l'avertissement)
@@ -236,14 +260,15 @@ function distance(a, b) {
 function decrire(c) {
   c = normaliser(c);
   const F = { quadrupede: 'quadrupède', hexapode: 'hexapode', bipede: 'bipède', oiseau: 'oiseau', serpent: 'serpentiforme' };
-  const L = [(F[c.forme] || FX[c.forme]?.nom || c.forme) + (c.forme === 'hexapode' && c.pattes !== 6 || FX[c.forme] && c.pattes ? ` à ${c.pattes} pattes` : '') + (c.long > .7 ? ' allongé' : c.long < .3 ? ' trapu' : '')];
+  const simien = c.organes.some(o => o.type === 'mains') && (c.forme === 'quadrupede' || c.forme === 'bipede');   // (docs/24)
+  const L = [(simien ? (c.forme === 'bipede' ? 'simien debout' : c.posture >= .4 ? 'simien qui se dresse' : 'simien') : F[c.forme] || FX[c.forme]?.nom || c.forme) + (c.forme === 'hexapode' && c.pattes !== 6 || FX[c.forme] && c.pattes ? ` à ${c.pattes} ${c.forme === 'radiaire' || c.forme === 'tentaculaire' ? 'bras' : 'pattes'}` : '') + (c.long > .7 ? ' allongé' : c.long < .3 ? ' trapu' : '')];
   if (c.forme !== 'serpent') L.push(c.haut > .7 ? 'haut sur pattes' : c.haut < .2 ? 'ras du sol' : '');
   const q = (k, mots) => { const v = c[k]; return v >= .7 ? mots[1] : v >= .35 ? mots[0] : ''; };
   L.push(q('cou', ['cou dégagé', 'long cou']), q('queue', ['queue', 'longue queue']), q('oreilles', ['oreilles', 'grandes oreilles']), q('museau', ['museau', 'long museau']));
   const CHIFFRES = ['', 'un', 'deux', 'trois', 'quatre'];
   for (const o of c.organes) { const T = OCAT[o.type], plur = o.nombre > 1, fs = accord(o.forme, T.fem, plur);
     const n = o.nombre > 4 ? 'des' : o.nombre === 1 ? (T.fem ? 'une' : 'un') : CHIFFRES[o.nombre], grand = o.taille >= .7 ? (T.fem ? (plur ? 'grandes ' : 'grande ') : (plur ? 'grands ' : 'grand ')) : '';
-    L.push(`${n === 'des' && grand ? 'de' : n} ${grand}${T.mot[plur ? 1 : 0]}${fs ? ' ' + fs : ''}${['dos', 'queue', 'avant'].includes(o.place) ? ' ' + (o.type === 'epines' && o.place === 'queue' ? 'sur la queue' : PLACE_MOT[o.place]) : ''}`); }
+    L.push(`${n === 'des' && grand ? 'de' : n} ${grand}${T.mot[plur ? 1 : 0]}${fs ? ' ' + fs : ''}${['dos', 'queue', 'avant'].includes(o.place) && o.type !== 'mains' ? ' ' + (o.type === 'epines' && o.place === 'queue' ? 'sur la queue' : PLACE_MOT[o.place]) : ''}`); }
   if (c.motif !== 'uni') L.push(c.motif === 'masque' ? 'masque sombre' : c.motif);
   return L.filter(Boolean).join(', ');
 }

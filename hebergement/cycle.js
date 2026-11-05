@@ -15,7 +15,7 @@
 //   les fusions que commande le profil, profil.monde.fusions, sont appliquées une fois chacune, avant le cycle : docs/14 ;
 //   un profil qui demande des parcelles (profil.monde.parcelles) découpe le monde une fois ; il tourne ensuite par parcelle,
 //   et l'instantané publié reste par biome (docs/15) ; un profil qui demande la vie synthétique (profil.monde.synthetique)
-//   éveille la Mère une fois : docs/16 ; la flore (profil.monde.flore) : docs/17 ; les souches (profil.monde.pathogenes) : docs/18 ; le milieu (profil.monde.milieu) : docs/22 ;
+//   éveille la Mère une fois : docs/16 ; la flore (profil.monde.flore) : docs/17 ; les souches (profil.monde.pathogenes) : docs/18 ; le milieu (profil.monde.milieu) : docs/22 ; la ponte (profil.monde.ponte) : docs/25 ; les cycles de vie (profil.monde.stades) : docs/26 ; l'invention (profil.monde.invention) : docs/27 ; les natures des lieux (profil.monde.natures) : docs/28 ; les dérives (profil.monde.derives) : docs/29 ; les régimes en spectre (profil.monde.dietes) : docs/30 ; le climat (profil.monde.climat) : docs/31 ; la grammaire (profil.monde.grammaire) : docs/32 ; les castes et les formes nouvelles (profil.monde.castes, profil.monde.formes) : docs/33 ; l'esprit (profil.monde.esprit) : docs/34 ;
 //   --forcer : faire tourner un monde dont le profil dit monde.nocturne = false, comme une genèse à observer)
 // Les lots en ligne viennent du Supabase d'Orvane (hebergement/supabase.sql, hebergement/LISEZ-MOI.md), où tous les jeux déposent : lus par
 // la fonction orvane_lire_lots avec le secret de lecture d'Orvane (profil.monde.pressions, voir lotsEnLigne), avec les
@@ -23,7 +23,7 @@
 // lus avec les expositions du dernier jeux.json.
 'use strict';
 const fs = require('fs'), path = require('path');
-const Orvane = require('../moteur/orvane.js'), Tampon = require('../tampon/tampon.js'), Morceaux = require('../tampon/morceaux.js'), Milieu = require('../moteur/milieu.js'), Fusion = require('../moteur/fusion.js'), Parcelles = require('../moteur/parcelles.js'), Synthetique = require('../moteur/synthetique.js'), Flore = require('../moteur/flore.js'), Pathogenes = require('../moteur/pathogenes.js');
+const Orvane = require('../moteur/orvane.js'), Tampon = require('../tampon/tampon.js'), Morceaux = require('../tampon/morceaux.js'), Milieu = require('../moteur/milieu.js'), Ponte = require('../moteur/ponte.js'), Stades = require('../moteur/stades.js'), Invention = require('../moteur/invention.js'), Natures = require('../moteur/natures.js'), Derives = require('../moteur/derives.js'), Dietes = require('../moteur/dietes.js'), Climat = require('../moteur/climat.js'), Grammaire = require('../moteur/grammaire.js'), Castes = require('../moteur/castes.js'), Formes = require('../moteur/formes.js'), Esprit = require('../moteur/esprit.js'), Fusion = require('../moteur/fusion.js'), Parcelles = require('../moteur/parcelles.js'), Synthetique = require('../moteur/synthetique.js'), Flore = require('../moteur/flore.js'), Pathogenes = require('../moteur/pathogenes.js');
 const a = process.argv.slice(2), monde = a.find(x => !x.startsWith('--')) || 'sv-1', sansReseau = a.includes('--sans-reseau');
 const arg = (k, defaut) => { const i = a.indexOf(k); return i >= 0 && a[i + 1] != null ? +a[i + 1] : defaut; };
 let nCycles = arg('--cycles', 1) || 1;
@@ -162,12 +162,36 @@ const alleger = I => ({ cycle: I.cycle, taxons: I.taxons.map(t => ({ id: t.id, n
     console.log(`flore : ${r.evenements.map(e => e.detail).join(' ; ')}`);
   }
   // (docs/18) les souches : un profil qui les demande (monde.pathogenes : true) les donne au monde, une fois
+  // (docs/27) un monde inventif : un profil qui le demande (monde.invention : true) le rend inventif, une fois
+  if (profil.monde?.invention && !etat.monde.invention) { const r = Invention.eveiller(etat); etat = r.inst; arrivees = [...arrivees, ...r.evenements]; console.log('invention : le monde peut inventer des traits'); }
+  // (docs/26) les cycles de vie : un profil qui les demande (monde.stades : true) les éveille, une fois
+  if (profil.monde?.stades && !etat.monde.stades) { const r = Stades.eveiller(etat); etat = r.inst; arrivees = [...arrivees, ...r.evenements]; console.log(`stades : ${r.evenements[0].detail}`); }
+  // (docs/25) pondre ou mettre bas : un profil qui le demande (monde.ponte : true) donne son mode à chaque lignée, une fois
+  if (profil.monde?.ponte && !etat.monde.ponte) { const r = Ponte.eveiller(etat); etat = r.inst; arrivees = [...arrivees, ...r.evenements]; console.log(`ponte : ${r.evenements[0].detail}`); }
   // (docs/22) le milieu transformé : un profil qui le demande (monde.milieu : true) l'éveille, une fois
   if (profil.monde?.milieu && !etat.monde.milieu) { const r = Milieu.eveiller(etat); etat = r.inst; arrivees = [...arrivees, ...r.evenements]; console.log('milieu : les bêtes et les joueurs transforment désormais le milieu'); }
+  // (docs/28) les lieux qui changent de nature : un profil qui le demande (monde.natures : true) l'éveille, une fois, après le milieu
+  if (profil.monde?.natures && !etat.monde.natures) { const r = Natures.eveiller(etat); etat = r.inst; arrivees = [...arrivees, ...r.evenements]; console.log(`natures : ${r.evenements[0].detail}`); }
+  // (docs/29) les dérives : un profil qui les demande (monde.derives : true) les éveille, une fois
+  if (profil.monde?.derives && !etat.monde.derives) { const r = Derives.eveiller(etat); etat = r.inst; arrivees = [...arrivees, ...r.evenements]; console.log('derives : les régimes, les plantes et les souches dérivent'); }
+  // (docs/30) les régimes en spectre : un profil qui les demande (monde.dietes : true) les éveille, une fois, après la flore
+  if (profil.monde?.dietes && !etat.monde.dietes) { const r = Dietes.eveiller(etat); etat = r.inst; arrivees = [...arrivees, ...r.evenements]; console.log(`dietes : ${r.evenements[0].detail}`); }
+  // (docs/31) le climat et la géologie lente : un profil qui le demande (monde.climat : true) l'éveille, une fois, après le milieu
+  if (profil.monde?.climat && !etat.monde.climat) { const r = Climat.eveiller(etat); etat = r.inst; arrivees = [...arrivees, ...r.evenements]; console.log('climat : le monde se réchauffera et se refroidira de lui-même'); }
+  // (docs/32) la grammaire des effets et des conduites : un profil qui la demande (monde.grammaire : true) l'éveille, une fois
+  if (profil.monde?.grammaire && !etat.monde.grammaire) { const r = Grammaire.eveiller(etat); etat = r.inst; arrivees = [...arrivees, ...r.evenements]; console.log('grammaire : le monde compose des traits d\'un genre neuf'); }
+  // (docs/33) les castes, les formes nouvelles : un profil qui les demande les éveille, une fois
+  if (profil.monde?.castes && !etat.monde.castes) { const r = Castes.eveiller(etat); etat = r.inst; arrivees = [...arrivees, ...r.evenements]; console.log(`castes : ${r.evenements[0].detail}`); }
+  if (profil.monde?.formes && !etat.monde.formes) { const r = Formes.eveiller(etat); etat = r.inst; arrivees = [...arrivees, ...r.evenements]; console.log('formes : des formes nouvelles peuvent naître'); }
+  // (docs/34) l'esprit : un profil qui le demande (monde.esprit : true) l'éveille, une fois
+  if (profil.monde?.esprit && !etat.monde.esprit) { const r = Esprit.eveiller(etat); etat = r.inst; arrivees = [...arrivees, ...r.evenements]; console.log(`esprit : ${r.evenements[0].detail}`); }
   if (profil.monde?.pathogenes && !etat.monde.pathogenes) { const r = Pathogenes.eveiller(etat); etat = r.inst; arrivees = [...arrivees, ...r.evenements]; console.log('souches : les maladies ont désormais leurs souches'); }
   // (docs/20) le catalogue propre du monde (profil.monde.catalogue) : relu à chaque cycle, un auteur de monde peut y ajouter un trait,
   // un organe, une forme de corps, un axe ; ce qui est déjà né reste
-  if (profil.monde?.catalogue) etat.catalogue = { ...etat.catalogue, monde: JSON.parse(fs.readFileSync(path.join(__dirname, '..', profil.monde.catalogue), 'utf8')) };
+  if (profil.monde?.catalogue) { const F = JSON.parse(fs.readFileSync(path.join(__dirname, '..', profil.monde.catalogue), 'utf8')), A = etat.catalogue?.monde || {};
+    // (docs/27, 32, 33) ce que le monde a inventé ou composé lui-même, et ses formes nouvelles, restent : le fichier de l'auteur s'y ajoute
+    const inv = Object.fromEntries(Object.entries(A.traits || {}).filter(([, t]) => t?.origine)), T = { ...(F.traits || {}), ...inv };
+    etat.catalogue = { ...etat.catalogue, monde: { ...F, ...(Object.keys(T).length ? { traits: T } : {}), ...(etat.monde.formes ? { formes: { ...Formes.FORMES, ...(F.formes || {}) } } : {}) } }; }
   const vue = I => Parcelles.regrouper(I);
   // (docs/17) ce qui est publié : les bêtes et les machines dans instantane.json, les plantes à part dans flore.json (des millions
   // de pieds : un jeu qui ne les attend pas n'en voit rien) ; le moteur et le tampon, eux, voient tout

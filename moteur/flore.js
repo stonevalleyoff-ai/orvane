@@ -13,6 +13,7 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const somme = a => a.reduce((s, x) => s + x, 0);
 const typeDe = b => b.type || b.id;
 const estPlante = t => t?.plan?.regime === 'vegetal';
+const DIE = (typeof require === 'function' ? require('./dietes.js') : racine.OrvaneDietes) || null;   // (docs/30) les régimes en spectre
 // ce que les traits font devant les plantes, d'après leur champ flore (moteur/catalogue.js) : ceux du moteur, et ceux qu'un monde
 // porte (catalogue.monde.traits, docs/20) ; le moteur passe le catalogue du monde à chaque cycle (ctx.cat), l'éveil le lit
 const CATM = (typeof require === 'function' ? require('./catalogue.js') : racine.OrvaneCatalogue)?.TRAITS || {};
@@ -62,7 +63,7 @@ function compositionDe(b) {
 // --- un brouteur devant une plante ---
 // ce qu'il en atteint : l'herbe, tout le monde ; un arbre, qui grimpe, vole ou plane, sinon selon sa hauteur ; une algue, qui nage
 function atteinte(h, traits, forme) {
-  const loco = h.locomotion || []; let pe = 1, haut = loco.includes('grimpe') || loco.includes('vol');
+  const loco = h.locomotion || []; let pe = 1, haut = loco.includes('grimpe') || loco.includes('vol') || !!h.corps?.organes?.some(o => o.type === 'mains');   // (docs/24) des mains cueillent dans les arbres
   for (const id of traits || []) { const f = TR[id]?.flore; if (f) { pe += f.portee || 0; haut = haut || !!f.haut; } }   // des pattes longues, une queue préhensile…
   const reach = (h.taille_m || .5) * pe;
   switch (forme) {
@@ -107,28 +108,47 @@ function eveiller(inst, cfg = {}, ctx = {}) {
 }
 
 // --- la nourriture d'un brouteur dans un lieu (maintenant, ou à la référence) ---
+// (ref : true, l'état de référence de la plante ; 'diete', son état à l'éveil des régimes en spectre, docs/30)
+const etatDe = (p, ref) => ref === 'diete' ? p.reference_diete || p.reference || p : ref ? p.reference || p : p;
 function offre(plantes, h, traits, ref, nectar) {
   const R = resistances(h, traits); let S = 0, N = 0;
   for (const { t, p } of plantes) { const A = atteinte(h, traits, t.plan.forme); if (!(A > 0)) continue;
-    const B = ref ? (p.reference?.effectif ?? p.effectif) : p.effectif, f = ref ? (p.reference?.frequences || p.frequences) : p.frequences;
+    const e = etatDe(p, ref), B = e.effectif ?? p.effectif, f = e.frequences || p.frequences;
     let G = 0; for (let k = 0; k < 4; k++) G += (f[k] || 0) * gout(R, k); S += B * t.plan.masse_kg * A * G;
     if (nectar && FLEURS.has(t.plan.forme)) N += B * t.plan.masse_kg; }   // (un butineur : la moitié de ce qu'il mange est du nectar, que les défenses ne gardent pas)
   return nectar ? .5 * S + .5 * N : S;
+}
+// (docs/30) ce qu'une plante donne à une bête qui a un spectre, part par part : chaque part vient de certaines formes, et les
+// défenses ne la gardent pas toutes pareil (un fruit est fait pour être mangé) ; x(k, part) pour chaque phénotype k de la plante
+const goutPart = (R, k, part) => { let g = 1; for (const d of PHENOS[k][1]) g *= 1 - REGLES.defenses[d].effet * (DIE.DEFENSE[part]?.[d] ?? 1) * (1 - R[d]); return g; };
+function parts(h, R, A, forme, k) { const d = h.diete, Y = DIE.RENDEMENT[forme] || { feuilles: 1 }; let x = 0, l = 0;
+  for (const part of DIE.VEG) { const w = d[part], y = Y[part]; if (!w || !y) continue; const v = w * y * A * goutPart(R, k, part); x += v; l += v * DIE.PERTE[part]; } return [x, l]; }
+function offreD(plantes, h, traits, ref) {
+  const R = resistances(h, traits); let S = 0;
+  for (const { t, p } of plantes) { const A = atteinte(h, traits, t.plan.forme); if (!(A > 0)) continue;
+    const e = etatDe(p, ref), B = (e.effectif ?? p.effectif) * t.plan.masse_kg, f = e.frequences || p.frequences;
+    for (let k = 0; k < 4; k++) if (f[k]) S += B * f[k] * parts(h, R, A, t.plan.forme, k)[0]; }
+  return S;
 }
 // les plantes de chaque lieu
 function parLieu(inst) { const L = {}; for (const t of inst.taxons) if (estPlante(t) && !t.eteint) for (const p of t.populations) (L[p.biome] ??= []).push({ t, p }); return L; }
 
 // --- la pousse : la repousse (selon la saison et ce qui reste de place), le broutage, la sélection, la mutation ---
 // H : par lieu, les brouteurs [{ plan, traits, bio }] ; prod : par lieu, le facteur de saison (null : 1)
-function pousser(inst, H, prod) {
+function pousser(inst, H, prod, disp) {
   const L = parLieu(inst);
   for (const [bid, plantes] of Object.entries(L)) {
     const herb = H[bid] || [], perte = plantes.map(() => [0, 0, 0, 0]);
-    for (const h of herb) { const R = resistances(h.plan, h.traits), part = h.nectar ? .5 : 1, u = plantes.map(({ t, p }) => { const A = atteinte(h.plan, h.traits, t.plan.forme); return [0, 1, 2, 3].map(k => p.effectif * t.plan.masse_kg * (p.frequences[k] || 0) * A * gout(R, k)); });
+    for (const h of herb) { const R = resistances(h.plan, h.traits);
+      if (h.plan.diete && DIE) {   // (docs/30) une bouchée de fruit, de nectar, de graine ne prend pas à la plante ce que prend une feuille
+        const u = plantes.map(({ t, p }) => { const A = atteinte(h.plan, h.traits, t.plan.forme); return [0, 1, 2, 3].map(k => { const B = p.effectif * t.plan.masse_kg * (p.frequences[k] || 0); if (!(B > 0)) return [0, 0]; const [x, l] = parts(h.plan, R, A, t.plan.forme, k); return [B * x, B * l]; }); });
+        const S = somme(u.map(v => somme(v.map(x => x[0])))); if (!(S > 0)) continue; const I = REGLES.broutage * h.bio;
+        u.forEach((v, i) => v.forEach(([, l], k) => { perte[i][k] += I * l / S; })); continue; }
+      const part = h.nectar ? .5 : 1, u = plantes.map(({ t, p }) => { const A = atteinte(h.plan, h.traits, t.plan.forme); return [0, 1, 2, 3].map(k => p.effectif * t.plan.masse_kg * (p.frequences[k] || 0) * A * gout(R, k)); });
       const S = somme(u.map(somme)); if (!(S > 0)) continue; const I = REGLES.broutage * h.bio * part;   // (un butineur ne broute que la moitié de ce qu'il mange)
       u.forEach((v, i) => v.forEach((x, k) => { perte[i][k] += I * x / S; })); }
     plantes.forEach(({ t, p }, i) => {
-      const m = t.plan.masse_kg, B = p.effectif * m, K = p.potentiel || B, r = t.plan.croissance * (FLEURS.has(t.plan.forme) ? prod?.[bid] ?? 1 : 1);
+      const m = t.plan.masse_kg, B = p.effectif * m, K = p.potentiel || B, r = t.plan.croissance * (FLEURS.has(t.plan.forme) ? prod?.[bid] ?? 1 : 1) * (disp && DIE?.FRUITS.has(t.plan.forme) ? disp[bid] ?? 1 : 1);   // (docs/30 : qui mange les fruits sème)
       const Bk = [0, 1, 2, 3].map(k => B * (p.frequences[k] || 0)), place = 1 - B / K;
       const nv = Bk.map((x, k) => { const cout = PHENOS[k][1].reduce((c, d) => c + REGLES.defenses[d].cout, 0);
         return Math.max(0, x + (r * place + REGLES.renouveau) * (1 - cout) * x - REGLES.renouveau * x - Math.min(perte[i][k], REGLES.prise_max * x)); });
@@ -147,26 +167,35 @@ function preparer(ctx) {
   // la nourriture d'un brouteur, phénotype par phénotype : maintenant et à la référence
   const nourriture = (t, bid) => { const k = t.id + '|' + bid; if (cache.has(k)) return cache.get(k);
     const E = etat.get(t.id), P = E?.pops[bid], pl = L[bid]; let r = null;
-    if (P && pl && pl.length) { const nec = estButineur(t), S = t.phenotypes.map((ph, i) => offre(pl, E.plans[i], ph.traits, false, nec)), S0 = t.phenotypes.map((ph, i) => offre(pl, E.plans[i], ph.traits, true, nec));
-      const N = somme(P.N) || 1, m = somme(P.N.map((x, i) => x * S[i])) / N, m0 = somme(P.N.map((x, i) => x * S0[i])) / N;
+    if (P && pl && pl.length) { const nec = estButineur(t), D = ctx.dietes && DIE && E.plans[0]?.diete;
+      // (docs/30) une bête qui a un spectre : sa nourriture part par part, rapportée à l'éveil des régimes ; ce qu'elle était alors
+      // (l'ancienne mesure, de l'éveil des régimes à celui de la flore) la raccorde : le jour de l'éveil, rien ne bouge
+      const S = t.phenotypes.map((ph, i) => D ? offreD(pl, E.plans[i], ph.traits, false) : offre(pl, E.plans[i], ph.traits, false, nec)), S0 = t.phenotypes.map((ph, i) => D ? offreD(pl, E.plans[i], ph.traits, 'diete') : offre(pl, E.plans[i], ph.traits, true, nec));
+      const N = somme(P.N) || 1; let m = somme(P.N.map((x, i) => x * S[i])) / N, m0 = somme(P.N.map((x, i) => x * S0[i])) / N;
+      if (D) { const c = somme(P.N.map((x, i) => x * offre(pl, E.plans[i], t.phenotypes[i].traits, 'diete', nec))), c0 = somme(P.N.map((x, i) => x * offre(pl, E.plans[i], t.phenotypes[i].traits, true, nec))); if (c0 > 0 && m0 > 0) m0 = m0 * c0 / c; }
       // (le facteur de chaque phénotype : l'inverse de sa nourriture, ramené à une moyenne de 1 sur la population : la sélection
       //  déplace les naissances d'un phénotype à l'autre sans changer leur total)
-      const inv = S.map(s => s > 0 ? 1 / s : 0), mi = somme(P.N.map((x, i) => x * inv[i])) / N;
+      const Sx = D ? S.map((s, i) => S0[i] > 0 ? offre(pl, E.plans[i], t.phenotypes[i].traits, false, nec) * s / S0[i] : s) : S;   // (docs/30 : raccordée à l'éveil, elle aussi)
+      const inv = Sx.map(s => s > 0 ? 1 / s : 0), mi = somme(P.N.map((x, i) => x * inv[i])) / N;
       r = { ratio: m0 > 0 ? clamp(m / m0, REGLES.ratio[0], REGLES.ratio[1]) : 1, facteur: inv.map(v => mi > 0 && v > 0 ? clamp(v / mi, .5, 2) : 1) }; }
     cache.set(k, r); return r; };
   // la concurrence par ce qu'on mange en commun : par lieu, chaque bête qui pèse sur la place, son régime de plantes (ce qu'elle
   // atteint et supporte de chacune) ; deux brouteurs qui ne mangent pas les mêmes plantes se gênent peu
-  const conc = new Map(), mangeurs = {};
+  const conc = new Map(), mangeurs = {}, araccorder = new Set();   // (docs/30) les lieux où une population attend son raccord : l'ancienne mesure y est prise pour tous
+  if (ctx.dietes) for (const t of taxons) { const E = etat.get(t.id); if (E) for (const [bid, P] of Object.entries(E.pops)) if (P.recAvant > 0) araccorder.add(bid); }
   for (const t of taxons) { if (t.eteint) continue; const E = etat.get(t.id); if (!E) continue; const w = ctx.PART_K[t.plan.regime] ?? 1; if (!(w > 0)) continue;
     for (const [bid, P] of Object.entries(E.pops)) { const Bio = somme(P.N.map((x, i) => x * (E.plans[i].masse_kg || 1))) * w; if (!(Bio > 0)) continue;
-      const pl = L[bid], u = broute(t) && pl ? pl.flatMap(({ t: q, p }) => { const A = atteinte(E.plans[0], t.phenotypes[0]?.traits, q.plan.forme), R = resistances(E.plans[0], t.phenotypes[0]?.traits);
+      const pl = L[bid], D = ctx.dietes && DIE && E.plans[0]?.diete, u = broute(t) && pl ? pl.flatMap(({ t: q, p }) => { const A = atteinte(E.plans[0], t.phenotypes[0]?.traits, q.plan.forme), R = resistances(E.plans[0], t.phenotypes[0]?.traits);
+        if (D) { const Y = DIE.RENDEMENT[q.plan.forme] || { feuilles: 1 }; return [0, 1, 2, 3].flatMap(k => DIE.VEG.map(part => p.effectif * q.plan.masse_kg * (p.frequences[k] || 0) * A * (D[part] || 0) * (Y[part] || 0) * goutPart(R, k, part))); }   // (docs/30 : part par part)
         return [0, 1, 2, 3].map(k => p.effectif * q.plan.masse_kg * (p.frequences[k] || 0) * A * gout(R, k)); }) : null;
-      (mangeurs[bid] ??= []).push({ t, P, Bio, m: t.plan.masse_kg || 1, u, n2: u ? Math.sqrt(somme(u.map(x => x * x))) : 0 }); } }
-  const recouvrementDe = (t, bid) => { const k = t.id + '|' + bid; if (conc.has(k)) return conc.get(k);
-    const M = mangeurs[bid] || [], h = M.find(x => x.t === t); let r = null;
-    if (h && h.u && h.n2 > 0) { let num = 0, den = 0;
+      // (docs/30) l'ancienne mesure aussi, le temps de raccorder la référence de chaque population à l'éveil des régimes
+      const uo = D && broute(t) && pl && araccorder.has(bid) ? pl.flatMap(({ t: q, p }) => { const A = atteinte(E.plans[0], t.phenotypes[0]?.traits, q.plan.forme), R = resistances(E.plans[0], t.phenotypes[0]?.traits); return [0, 1, 2, 3].map(k => p.effectif * q.plan.masse_kg * (p.frequences[k] || 0) * A * gout(R, k)); }) : null;
+      (mangeurs[bid] ??= []).push({ t, P, Bio, m: t.plan.masse_kg || 1, u, n2: u ? Math.sqrt(somme(u.map(x => x * x))) : 0, uo, n2o: uo ? Math.sqrt(somme(uo.map(x => x * x))) : 0 }); } }
+  const recouvrementDe = (t, bid, ancien) => { const k = t.id + '|' + bid + (ancien ? '|a' : ''); if (conc.has(k)) return conc.get(k);
+    const M = mangeurs[bid] || [], h = M.find(x => x.t === t), U = x => ancien && x.uo ? x.uo : x.u, Z = x => ancien && x.uo ? x.n2o : x.n2; let r = null;
+    if (h && U(h) && Z(h) > 0) { let num = 0, den = 0;
       for (const j of M) { const w = j.Bio * ctx.recouvrement(h.m, j.m); if (!(w > 0)) continue;
-        const O = j === h ? 1 : j.u && j.n2 > 0 ? somme(h.u.map((x, i) => x * j.u[i])) / (h.n2 * j.n2) : 1; num += w * O; den += w; }
+        const O = j === h ? 1 : U(j) && Z(j) > 0 && U(j).length === U(h).length ? somme(U(h).map((x, i) => x * U(j)[i])) / (Z(h) * Z(j)) : 1; num += w * O; den += w; }
       r = den > 0 ? num / den : null; }
     conc.set(k, r); return r; };
   const F = {
@@ -174,6 +203,7 @@ function preparer(ctx) {
     // la place d'un brouteur : la charge de sa bande, pesée par ce qu'il mange en commun avec elle, rapportée à ce qu'elle était à
     // son arrivée (le jour de l'éveil, rien ne change) : qui se raréfie et mange autre chose que ses voisins regagne de la place
     concurrence: (t, bid) => { if (!broute(t)) return 1; const r = recouvrementDe(t, bid), P = etat.get(t.id)?.pops[bid]; if (r == null || !P) return 1;
+      if (!(P.rec0 > 0) && P.recAvant > 0) { const ro = recouvrementDe(t, bid, true); P.rec0 = ro > 0 ? P.recAvant * r / ro : r; delete P.recAvant; }   // (docs/30 : raccordée, le jour de l'éveil rien ne change)
       if (!(P.rec0 > 0)) { P.rec0 = r; return 1; } return clamp(r / P.rec0, REGLES.concurrence[0], REGLES.concurrence[1]); },
     facteur: (t, bid, i) => broute(t) ? nourriture(t, bid)?.facteur[i] ?? 1 : 1,
     // après la dynamique des bêtes : la pousse des plantes, sous les brouteurs du début du cycle
@@ -192,9 +222,19 @@ function preparer(ctx) {
       for (const [bid, pl] of Object.entries(L)) { const K = somme(pl.map(({ p }) => p.potentiel || 0)), pi = K > 0 ? (poll[bid] || 0) / ((poll[bid] || 0) + REGLES.pollinisation.demi * K) : 0;
         let ref = null; for (const { t, p } of pl) if (FLEURS.has(t.plan.forme)) { if (p.pollinisation == null) p.pollinisation = +pi.toPrecision(4); ref ??= p.pollinisation; }
         prod[bid] = ref == null ? 1 : (1 + REGLES.pollinisation.gain * pi) / (1 + REGLES.pollinisation.gain * ref); }
-      pousser(inst, H, prod);   // (la saison est déjà dans la place des brouteurs : la repousse n'en tient pas compte une seconde fois)
+      // (docs/30) la dispersion : qui mange les fruits sème les graines ; les arbres, les buissons, les succulentes repoussent jusqu'à
+      // 20 % de plus là où l'on en mange beaucoup, rapporté à leur première fois (le jour un ne change rien)
+      let disp = null;
+      if (ctx.dietes && DIE) { const F = {}; disp = {};
+        for (const t of taxons) { if (t.eteint || !broute(t)) continue; const E = etat.get(t.id), fr = E?.plans[0]?.diete?.fruits || 0; if (!(fr > 0)) continue;
+          for (const [bid, P] of Object.entries(E.pops)) F[bid] = (F[bid] || 0) + fr * somme(P.N.map((x, i) => x * (E.plans[i].masse_kg || 1))); }
+        for (const [bid, pl] of Object.entries(L)) { const K = somme(pl.map(({ p }) => p.potentiel || 0)), pi = K > 0 ? (F[bid] || 0) / ((F[bid] || 0) + DIE.REGLES.dispersion.demi * K) : 0;
+          let ref = null; for (const { t, p } of pl) if (DIE.FRUITS.has(t.plan.forme)) { if (p.dispersion == null) p.dispersion = +pi.toPrecision(4); ref ??= p.dispersion; }
+          disp[bid] = ref == null ? 1 : (1 + DIE.REGLES.dispersion.gain * pi) / (1 + DIE.REGLES.dispersion.gain * ref); } }
+      pousser(inst, H, prod, disp);   // (la saison est déjà dans la place des brouteurs : la repousse n'en tient pas compte une seconde fois)
     },
     publier: (t, bid, p, pop) => { if (!broute(t)) return; const r = nourriture(t, bid); if (r && Math.abs(r.ratio - 1) >= .005) p.nourriture = +r.ratio.toFixed(3);
+      if (pop?.recAvant > 0 && !(pop.rec0 > 0)) { p.recouvrement_avant = pop.recAvant; return; }   // (docs/30 : pas encore raccordée)
       const rc = pop?.rec0 ?? recouvrementDe(t, bid); if (rc > 0) p.recouvrement = +rc.toPrecision(4); },
     // les plantes, écrites : leurs fréquences (globales, par lieu) et leur statut
     ecrire: () => plantes.map(t => {
@@ -215,6 +255,6 @@ function brouteursDe(inst) {
   return H;
 }
 
-const API = { REGLES, FORMES, TRAITS, PHENOS, estButineur, eveiller, preparer, compositionDe, atteinte, resistances, offre, brouteursDe, estPlante };
+const API = { REGLES, FORMES, TRAITS, PHENOS, estButineur, eveiller, preparer, compositionDe, atteinte, resistances, offre, offreD, brouteursDe, estPlante };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else racine.OrvaneFlore = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

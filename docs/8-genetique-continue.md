@@ -60,5 +60,5 @@ Elle **rapporte** `z`, sa valeur exacte, avec chaque prélèvement ou capture (`
 
 - **La sélection sexuelle** : des ornements continus (taille des cornes, éclat de la robe) choisis par les partenaires, payés en survie.
 - **Des traits corrélés** : une matrice G plutôt que des variances séparées (grandir ralentit-il ?).
-- **L'élevage** : deux compagnes croisées donnent un petit tiré entre leurs deux valeurs — la sélection artificielle à côté de la naturelle.
+- **L'élevage** (fait, docs/35 et 36) : deux compagnes croisées donnent un petit tiré entre leurs deux valeurs, et les bêtes relâchées rendent leurs gènes au monde.
 - **La méfiance apprise**, à côté de l'audace héritée : une population chassée qui fuit plus tôt dès le lendemain, et qui oublie avec le temps.

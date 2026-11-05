@@ -13,9 +13,21 @@ moteur/synthetique.js la vie synthétique : la Mère, ses machines, leur énergi
 moteur/flore.js       la flore : les plantes, ce que chaque brouteur atteint et supporte, la coévolution des défenses, la pollinisation (docs/17, 18)
 moteur/pathogenes.js  les souches : des maladies qui circulent, sautent aux lignées apparentées, immunisent (docs/18)
 moteur/milieu.js      le milieu transformé : le pâturage, les terriers, les barrages, et ce que les jeux font aux lieux (docs/22)
+moteur/ponte.js       pondre ou mettre bas : les œufs, le froid, les nids pillés, les mangeurs d'œufs (docs/25)
+moteur/stades.js      les cycles de vie : une larve puis un adulte, la métamorphose (docs/26)
+moteur/invention.js   les traits inventés par le monde : la duplication, la fusion (docs/27)
+moteur/natures.js     les lieux qui changent de nature : une forêt défrichée devient une prairie, un lac asséché une côte (docs/28)
+moteur/derives.js     les dérives : des régimes qui changent, des plantes qui se séparent, des souches qui mutent, des insectes qui les portent (docs/29)
+moteur/dietes.js      les régimes en spectre : feuilles, fruits, graines, nectar, insectes, viande, sang (docs/30)
+moteur/climat.js      le climat et la géologie lente : les âges glaciaires, les ponts de terre, les îles des volcans (docs/31)
+moteur/grammaire.js   la grammaire des effets et des conduites : une lueur qui attire, une décharge qui foudroie, un musc qui repousse (docs/32)
+moteur/castes.js      les castes : des colonies, une reine, des ouvrières, des soldats (docs/33)
+moteur/formes.js      les formes nouvelles : le corps segmenté, rayonné, à tentacules (docs/33)
+moteur/esprit.js      l'esprit : des savoirs qui s'apprennent, se transmettent, se perdent ; des outils ; la curiosité (docs/34)
 moteur/solo.js        un monde solo, dans le jeu : parti de l'instantané publié, il avance en temps réel ou en accéléré (docs/19)
 moteur/biomes-universels.json  les 24 biomes neutres du monde d'Orvane : terre, eau douce, mer, sous-sol
 tampon/tampon.js      exposer() Orvane → jeu ; agreger() jeu → Orvane (dénormalisation, plafonds, lissage)
+tampon/individus.js   les individus : une bête tirée de la population réelle (son génotype, ses valeurs, ses savoirs), deux bêtes croisées, la parenté, le génome relâché (docs/35, 36)
 tampon/morceaux.js    le monde par morceaux : découper l'instantané (l'index, chaque biome, chaque lignée), et lire seulement les biomes d'un jeu (docs/21)
 monde/index.html      l’observatoire : ce que vit un monde (espèces, biomes, lignées, chaîne alimentaire, journal), et une simulation locale
 BRANCHER-UN-JEU.md    brancher un jeu, pas à pas : s'inscrire, lire le monde, traduire, régler l'exposition, déposer des lots, les erreurs
@@ -34,6 +46,18 @@ bancs/pathogenes.js   le banc des souches et des symbioses : la contagion de pro
 bancs/catalogues.js   le banc des catalogues ouverts : Lumen (bancs/lumen/), un monde imaginaire à ses axes, ses traits, ses organes, ses formes de corps
 bancs/morceaux.js     le banc du monde par morceaux : le découpage, les biomes réunis, le navigateur, le cycle de nuit
 bancs/ponts.js        le banc de la fusion par ponts : la genèse 7 devient un continent du monde d'Orvane, ses faunes passent les ponts de proche en proche
+bancs/corps.js        le banc des corps assemblés : des mains chez les grimpeurs des forêts, une posture qui se redresse, des simiens
+bancs/ponte.js        le banc de la ponte : le froid favorise les vivipares, les mangeurs d'œufs, la séparation, les œufs pris par les joueurs
+bancs/stades.js       le banc des cycles de vie : la chenille et le papillon, la métamorphose qui gagne là où elle sert
+bancs/invention.js    le banc des traits inventés : un trait neuf, sa naissance, la sélection, des noms qui ne se répètent pas
+bancs/natures.js      le banc des natures : la forêt devenue prairie, le lac devenu côte, une nature inédite, le retour
+bancs/derives.js      le banc des dérives : un pas de régime, une herbe épineuse qui se sépare, une souche que porte un insecte
+bancs/dietes.js       le banc des régimes en spectre : le mangeur de fruits qui sème, le mangeur d'insectes, le buveur de sang
+bancs/climat.js       le banc du climat : un âge glaciaire, un pont de terre, une île qui se peuple
+bancs/grammaire.js    le banc de la grammaire : qui peut dire quoi, où ça porte, des phrases variées, la sélection
+bancs/formes.js       le banc des corps et des vies nouvelles : la colonie qui gagne, le mille-pattes, l'étoile, la pieuvre, la naïade
+bancs/esprit.js       le banc de l'esprit : qui apprend, une tradition, la perte, chasser ensemble, la curiosité
+bancs/individus.js    le banc des individus et de l'élevage : Mendel, les porteurs cachés, l'héritabilité, la parenté, les hybrides, l'élevage qui revient au monde
 bancs/milieu.js       le banc du milieu transformé : la savane sans brouteurs, les terriers, les barrages, la forêt défrichée, les parcelles
 bancs/temps.js        le banc du temps : le rythme de chaque monde (l'action horaire, le rattrapage), le monde solo (temps réel, accéléré, sauvegarde, navigateur)
 hebergement/cycle.js  le cycle, chaque monde à son rythme (docs/19) : lots de tous les jeux → tampon → moteur → instantané publié (action GitHub .github/workflows/cycle.yml)
@@ -42,7 +66,7 @@ mondes/orvane/        le monde d'Orvane, où tous les jeux se branchent : né de
 mondes/marin/         la mer d'Orvane : une genèse sur les seuls biomes d'eau (vingt ancêtres, 29 lignées), versée dans le monde d'Orvane par une fusion (profil.monde.fusions)
 mondes/sv-1/          le premier monde de Stone Valley (sa faune), archivé
 mondes/genese-7/      un monde né de la genèse (graine 7, 3 000 cycles) : 97 lignées que personne n'a dessinées, archivé
-docs/                 le mode d'emploi : brancher son jeu, écrire son traducteur, jouer les conduites, tirer les traits continus, l'hérédité, les hybrides, les organes, la méfiance, la stabilité, la fusion, les parcelles, la vie synthétique, la flore, les souches et les symbioses, le temps, les catalogues ouverts, le monde par morceaux, le milieu transformé, la fusion par ponts (23 chapitres)
+docs/                 le mode d'emploi : brancher son jeu, écrire son traducteur, jouer les conduites, tirer les traits continus, l'hérédité, les hybrides, les organes, la méfiance, la stabilité, la fusion, les parcelles, la vie synthétique, la flore, les souches et les symbioses, le temps, les catalogues ouverts, le monde par morceaux, le milieu transformé, la fusion par ponts, les corps assemblés, la ponte, les cycles de vie, les traits inventés, les lieux qui changent de nature, les dérives, les régimes en spectre, le climat, la grammaire, les corps et les vies nouvelles, l'esprit, les individus, l'élevage (36 chapitres)
 ```
 
 ## Essayer

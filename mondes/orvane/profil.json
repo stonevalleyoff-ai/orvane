@@ -13,6 +13,17 @@
     "flore": true,
     "milieu": true,
     "pathogenes": true,
+    "ponte": true,
+    "stades": true,
+    "invention": true,
+    "natures": true,
+    "derives": true,
+    "dietes": true,
+    "climat": true,
+    "grammaire": true,
+    "castes": true,
+    "formes": true,
+    "esprit": true,
     "fusions": [
       { "id": "mer-1", "source": "mondes/marin/amorce.json", "part": 0.5 },
       { "id": "genese-7", "nom": "la genèse 7", "source": "mondes/genese-7/instantane.json", "ponts": 3 }

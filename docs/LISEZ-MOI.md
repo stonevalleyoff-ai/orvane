@@ -29,6 +29,19 @@ Pour s'inscrire, recevoir ses clés et faire ses premiers appels au Supabase d'O
 | [21. Le monde par morceaux, et en anglais](21-morceaux-et-anglais.md) | lire seulement les biomes qu'on joue (l'index, un fichier par biome, un par lignée, `tampon/morceaux.js`) ; le guide en anglais et le glossaire des champs |
 | [22. Le milieu transformé](22-milieu-transforme.md) | le pâturage, les terriers, les barrages des bâtisseurs ; défricher, reboiser, assécher, irriguer, construire ; les axes de chaque lieu bougent, la flore et la niche suivent |
 | [23. La fusion par ponts](23-fusion-par-ponts.md) | un monde devient un continent d'un autre : ses parcelles, quelques ponts, et chaque faune gagne l'autre de proche en proche |
+| [24. Les corps assemblés](24-corps-assembles.md) | la vie dans les arbres donne des mains, un porteur de mains se redresse, et debout devient bipède : des simiens ; la posture |
+| [25. Pondre ou mettre bas](25-pondre-ou-mettre-bas.md) | des œufs nombreux qui craignent le froid et les pillards, des petits moins nombreux à l'abri ; les mangeurs d'œufs ; le froid favorise les vivipares |
+| [26. Les cycles de vie](26-cycles-de-vie.md) | une larve puis un adulte : la chenille et le papillon, le têtard et la grenouille ; la métamorphose gagne là où les jeunes disputaient la nourriture des adultes |
+| [27. Les traits inventés](27-traits-inventes.md) | le monde invente ses propres traits : un organe qui en accentue un autre, deux traits qui fusionnent ; un nom, une définition, une naissance |
+| [28. Les lieux qui changent de nature](28-lieux-qui-changent.md) | une forêt défrichée devient une prairie, un lac asséché une côte, et ses poissons en pâtissent ; un lieu qui ne ressemble à rien en invente la nature |
+| [29. Les dérives](29-derives.md) | des régimes qui changent à la séparation, des plantes qui se séparent, des souches qui mutent, des insectes qui les portent |
+| [30. Les régimes en spectre](30-regimes-en-spectre.md) | feuilles, fruits, graines, nectar, insectes, viande, sang : un mangeur de fruits laisse les feuilles et sème les arbres, un buveur de sang pique sans tuer |
+| [31. Le climat et la géologie lente](31-climat-et-geologie.md) | le monde se refroidit et se réchauffe de lui-même, la mer baisse et des ponts de terre émergent, des volcans font des îles |
+| [32. La grammaire des effets et des conduites](32-grammaire.md) | le monde compose des traits comme des phrases : une lueur qui attire dans le noir, une décharge dans l'eau, un cri, un musc ; avec un repli pour les jeux qui ne savent pas |
+| [33. Les corps et les vies nouvelles](33-corps-et-vies-nouvelles.md) | des colonies (une reine, des ouvrières, des soldats), des mille-pattes, des étoiles, des pieuvres, la naïade et le polype |
+| [34. L'esprit](34-esprit.md) | des savoirs qui naissent, se répandent, voyagent et se perdent ; des traditions locales ; des outils ; la curiosité, que la sélection fait gagner là où savoir paie |
+| [35. Les individus](35-individus.md) | `tampon/individus.js` : une bête tirée de la population réelle, avec son génotype (ce qu'elle porte sans le montrer), ses valeurs, ses savoirs, un sexe et un nom ; deux bêtes croisées (Mendel, l'héritabilité, la consanguinité, les hybrides) ; le pedigree |
+| [36. L'élevage](36-elevage.md) | les bêtes nées en élevage, relâchées avec leur génome, rejoignent la population avec leurs gènes ; les plafonds ; Stone Valley croise ses compagnes au campement |
 
 ## En une page
 

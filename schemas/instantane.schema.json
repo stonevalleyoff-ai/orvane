@@ -256,6 +256,14 @@
                   },
                   "infectes": {
                     "type": "integer"
+                  },
+                  "parent": {
+                    "type": "string",
+                    "description": "(docs/29) un mutant : la souche dont il est né"
+                  },
+                  "vecteur": {
+                    "type": "string",
+                    "description": "(docs/29) la lignée d'insectes qui la porte, sans en tomber malade, d'une lignée à l'autre et d'un lieu à l'autre"
                   }
                 },
                 "additionalProperties": false
@@ -285,6 +293,103 @@
           "properties": {
             "depuis": {
               "type": "integer"
+            }
+          }
+        },
+        "ponte": {
+          "type": "object",
+          "description": "(docs/25) Pondre ou mettre bas : depuis quand.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            }
+          }
+        },
+        "stades": {
+          "type": "object",
+          "description": "(docs/26) Les cycles de vie : depuis quand.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            }
+          }
+        },
+        "invention": {
+          "type": "object",
+          "description": "(docs/27) Un monde inventif : depuis quand.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            }
+          }
+        },
+        "esprit": {
+          "type": "object",
+          "description": "(docs/34) L'esprit : depuis quand.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            }
+          }
+        },
+        "castes": {
+          "type": "object",
+          "description": "(docs/33) Les castes : depuis quand.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            }
+          }
+        },
+        "formes": {
+          "type": "object",
+          "description": "(docs/33) Les formes nouvelles : depuis quand.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            }
+          }
+        },
+        "grammaire": {
+          "type": "object",
+          "description": "(docs/32) La grammaire des effets et des conduites : depuis quand.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            }
+          }
+        },
+        "climat": {
+          "type": "object",
+          "description": "(docs/31) Le climat : depuis quand, l'écart de température et d'humidité de tout le monde depuis l'éveil, la marche au hasard, les ponts de terre émergés (ponts), le nombre d'îles nées (iles)."
+        },
+        "dietes": {
+          "type": "object",
+          "description": "(docs/30) Les régimes en spectre : depuis quand.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            }
+          }
+        },
+        "derives": {
+          "type": "object",
+          "description": "(docs/29) Les dérives : depuis quand.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            }
+          }
+        },
+        "natures": {
+          "type": "object",
+          "description": "(docs/28) Les lieux qui changent de nature : depuis quand, et les types de lieux du monde (nom, milieu, axes, saisons), ceux d'origine et ceux qu'il a inventés (inedit, de : le type le plus proche, apparu : le cycle).",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            },
+            "types": {
+              "type": "object"
             }
           }
         }
@@ -498,6 +603,44 @@
           "transforme": {
             "type": "object",
             "description": "Le milieu transformé (docs/22) : base, les axes du lieu à l'éveil du milieu (axes donne ceux d'aujourd'hui) ; jeu, ce que les joueurs y ont changé, qui s'efface lentement ; etat, ref, signale : la mémoire du moteur."
+          },
+          "nature": {
+            "type": "object",
+            "description": "(docs/28) Le lieu a changé de nature : le type de lieu qu'il est devenu (type, nom), depuis quand ; inedite : une nature que le monde a inventée. Il en a pris le milieu et les saisons. Absent : il est de sa nature d'origine.",
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "nom": {
+                "type": "string"
+              },
+              "depuis": {
+                "type": "integer"
+              },
+              "inedite": {
+                "type": "boolean"
+              }
+            }
+          },
+          "traversees": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "(docs/31) Les voisins qu'on ne rejoint qu'en traversant la mer (une île née d'un volcan) : seules les bêtes qui volent, nagent ou dérivent (10 g au plus) y passent."
+          },
+          "climat": {
+            "type": "object",
+            "description": "(docs/31) Un lieu que le milieu ne transforme pas : ses axes à l'éveil du climat (base), que le climat déplace."
+          },
+          "jeune": {
+            "type": "object",
+            "description": "(docs/31) Une île jeune : le cycle de sa naissance (nee) et la capacité qu'elle aura (cible) ; sa terre s'enrichit."
+          },
+          "natures": {
+            "type": "array",
+            "description": "(docs/28) Un monde par parcelles : la part de ses parcelles qui ont changé de nature, par nature (type, nom, part).",
+            "items": {
+              "type": "object"
+            }
           }
         }
       }
@@ -666,6 +809,32 @@
                     "maximum": 1
                   }
                 }
+              },
+              "nom": {
+                "type": "string",
+                "description": "(docs/27) Le nom d'un trait inventé par le monde (des chromatophores dentelés) : un jeu peut le dire tel quel."
+              },
+              "grammaire": {
+                "type": "object",
+                "description": "(docs/32) Un trait composé par la grammaire : sa phrase (phrase), son moyen (lumiere, son, electricite, odeur, chaleur, couleur), son action, sa cible, son moment, son signe (ce qu'un jeu montre : lueur, eclair, decharge, cri, echo, musc, parfum, thermo, vapeur, couleurs), sa force, sa couleur."
+              },
+              "origine": {
+                "type": "object",
+                "description": "(docs/27) Un trait inventé par le monde : la lignée qui l'a inventé, le cycle, les traits dont il vient (de).",
+                "properties": {
+                  "lignee": {
+                    "type": "string"
+                  },
+                  "cycle": {
+                    "type": "integer"
+                  },
+                  "de": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
               }
             }
           }
@@ -817,6 +986,11 @@
               }
             }
           }
+        },
+        "savoirs": {
+          "type": "object",
+          "description": "(docs/34) Les savoirs que le monde connaît : pour chacun, son nom, son geste (casser, pecher, encercler, alerter, cacher, laver, migrer, tisser), son outil (pierre, brindille, brindilles), son présage, ce qu'il fait.",
+          "additionalProperties": { "type": "object" }
         },
         "flore": {
           "type": "object",
@@ -1001,6 +1175,32 @@
                         "maximum": 1
                       }
                     }
+                  },
+                  "nom": {
+                    "type": "string",
+                    "description": "(docs/27) Le nom d'un trait inventé par le monde : un jeu peut le dire tel quel."
+                  },
+                  "grammaire": {
+                    "type": "object",
+                    "description": "(docs/32) Un trait composé par la grammaire : sa phrase, son moyen, son action, sa cible, son moment, son signe, sa force."
+                  },
+                  "origine": {
+                    "type": "object",
+                    "description": "(docs/27) Un trait inventé par le monde : la lignée qui l'a inventé, le cycle, les traits dont il vient (de).",
+                    "properties": {
+                      "lignee": {
+                        "type": "string"
+                      },
+                      "cycle": {
+                        "type": "integer"
+                      },
+                      "de": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
                   }
                 }
               }
@@ -1014,7 +1214,7 @@
             },
             "formes": {
               "type": "object",
-              "description": "Les formes de corps propres au monde : { nom, pattes, depuis (les formes dont elle peut naître), chance }.",
+              "description": "Les formes de corps propres au monde : { nom, pattes, depuis (les formes dont elle peut naître), chance } ; (docs/33) loco (les modes de déplacement dont l'un est requis), masse_max, masse_min, repli (la forme qu'un jeu dessine s'il ne sait pas dessiner celle-ci).",
               "additionalProperties": {
                 "type": "object",
                 "properties": {
@@ -1024,7 +1224,7 @@
                   "pattes": {
                     "type": "integer",
                     "minimum": 0,
-                    "maximum": 12
+                    "maximum": 60
                   },
                   "depuis": {
                     "type": "array",
@@ -1036,7 +1236,11 @@
                     "type": "number",
                     "minimum": 0,
                     "maximum": 1
-                  }
+                  },
+                    "loco": { "type": "array", "items": { "type": "string" } },
+                    "masse_max": { "type": "number" },
+                    "masse_min": { "type": "number" },
+                    "repli": { "type": "string" }
                 }
               }
             }
@@ -1401,6 +1605,12 @@
                       }
                     },
                     "additionalProperties": false
+                  },
+                  "posture": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "(docs/24) La posture : 0 à quatre pattes ou au ras du sol, 0,5 se dresse, 1 debout (un bipède, un oiseau)."
                   }
                 },
                 "additionalProperties": false
@@ -1453,6 +1663,102 @@
                 "type": "number",
                 "minimum": 0,
                 "description": "Une plante : sa repousse par cycle, quand elle a de la place."
+              },
+              "reproduction": {
+                "enum": [
+                  "ovipare",
+                  "vivipare"
+                ],
+                "description": "(docs/25) La lignée pond des œufs (ovipare) ou met bas des petits (vivipare), dans un monde où la ponte est éveillée."
+              },
+              "reproduction0": {
+                "enum": [
+                  "ovipare",
+                  "vivipare"
+                ],
+                "description": "(docs/25) Le mode de sa lignée à l'éveil de la ponte : ce à quoi ses naissances se rapportent."
+              },
+              "castes": {
+                "type": "object",
+                "description": "(docs/33) Une lignée qui vit en colonie : ses castes (reine, ouvrieres, soldats : leur masse relative, leur part ; la reine a des ailes ; essaim : la colonie essaime en volant) et la part de la lignée qui vit en colonie (part)."
+              },
+              "diete": {
+                "type": "object",
+                "description": "(docs/30) Le spectre de son régime : la part de feuilles, fruits, graines, nectar, insectes, viande et sang dans ce qu'elle mange (leur somme fait 1). Le régime (regime) s'y lit : 10 % de chair au plus, herbivore ; 90 % au moins, carnivore.",
+                "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 }
+              },
+              "diete0": {
+                "type": "object",
+                "description": "(docs/30) Le spectre de sa lignée à l'éveil des régimes : ce à quoi se rapporte ce que le spectre change.",
+                "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 }
+              },
+              "stades": {
+                "type": "object",
+                "description": "(docs/26) Les deux vies d'une lignée dont une part se métamorphose : la larve (une chenille, un têtard, une larve) et l'adulte, chacun avec son régime et sa façon de se déplacer ; part : la part de la lignée qui se métamorphose ; larves : la part des bêtes qui sont des larves, à un moment donné.",
+                "properties": {
+                  "larve": {
+                    "type": "object",
+                    "properties": {
+                      "nom": {
+                        "type": "string"
+                      },
+                      "regime": {
+                        "type": "string"
+                      },
+                      "locomotion": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "forme": {
+                        "type": "string"
+                      },
+                      "masse_rel": {
+                        "type": "number"
+                      },
+                      "eau": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "adulte": {
+                    "type": "object",
+                    "properties": {
+                      "nom": {
+                        "type": "string"
+                      },
+                      "regime": {
+                        "type": "string"
+                      },
+                      "locomotion": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "forme": {
+                        "type": "string"
+                      },
+                      "masse_rel": {
+                        "type": "number"
+                      },
+                      "eau": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "part": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "larves": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                }
               }
             }
           },
@@ -1677,6 +1983,25 @@
                   "type": "number",
                   "minimum": 0,
                   "description": "Une plante à fleurs (docs/18) : ce que les butineurs du lieu faisaient à son arrivée ; sa repousse s'y rapporte."
+                },
+                "dispersion": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Une plante à fruits (docs/30) : ce que les mangeurs de fruits du lieu faisaient à son arrivée ; sa repousse s'y rapporte."
+                },
+                "reference_diete": {
+                  "type": "object",
+                  "description": "Une plante (docs/30) : ce qu'elle était à l'éveil des régimes en spectre (effectif, frequences)."
+                },
+                "savoirs": {
+                  "type": "object",
+                  "description": "(docs/34) Ce que sait la population : pour chaque savoir (catalogue.savoirs), la part de ses bêtes qui le savent. Une tradition : une autre population de la même lignée peut ne pas le savoir.",
+                  "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 }
+                },
+                "recouvrement_avant": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Un brouteur (docs/30) : sa référence d'avant l'éveil des régimes, le temps de la raccorder (un cycle)."
                 }
               }
             }
@@ -1762,7 +2087,11 @@
               "eveil",
               "conception",
               "transfert",
-              "transformation"
+              "transformation",
+              "invention",
+              "nature",
+              "climat",
+              "savoir"
             ]
           },
           "taxon": {

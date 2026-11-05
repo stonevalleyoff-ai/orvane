@@ -206,8 +206,14 @@ function agreger(lots, inst, profil, etat = {}, gen0 = null, jeux = null) {
       if (e.action === 'prelevement') T.danger += e.n; else if (e.action === 'capture') T.danger += .5 * e.n;
       else if (e.action === 'nourrissage' || e.action === 'liberation') T.aide += e.n;
       if (e.action === 'deplacement') { T.deplacement.push({ vers: e.vers, n: e.n * (poids.deplacement ?? 1) }); continue; }
+      // (docs/36) des bêtes nées en élevage, relâchées avec leur génome : elles s'ajoutent à la population avec leurs gènes
+      if (e.action === 'liberation' && e.genome && typeof e.genome === 'object') { const G = T.apport ??= { n: 0, N: {}, A: {}, a: {}, na: {} }, k = e.phenotype || 'base';
+        G.n += e.n; G.N[k] = (G.N[k] || 0) + e.n;
+        for (const [id, p] of Object.entries(e.genome.alleles || {})) if (Number.isFinite(p)) G.A[id] = (G.A[id] || 0) + e.n * clamp(p, 0, 1);
+        for (const [q, v] of Object.entries(e.genome.a || {})) if (Number.isFinite(v) && Math.abs(v) < 10) { G.a[q] = (G.a[q] || 0) + e.n * v; G.na[q] = (G.na[q] || 0) + e.n; }
+        continue; }
       const w = poids[e.action]; if (w == null || !w) continue;
-      const k = e.phenotype || '*'; T.brut[k] = (T.brut[k] || 0) + e.n * w * (e.age === 'adulte' ? 1.2 : e.age === 'jeune' ? .8 : 1);
+      const k = e.phenotype || '*'; T.brut[k] = (T.brut[k] || 0) + e.n * w * (e.age === 'adulte' ? 1.2 : e.age === 'jeune' ? .8 : e.age === 'oeuf' ? .3 : 1);
       if (w > 0 && e.q && typeof e.q === 'object') for (const [tr, z] of Object.entries(e.q)) if (Number.isFinite(z) && Math.abs(z) < 10) {
         const A = ((Q[e.taxon] ??= {})[e.biome] ??= {})[tr] ??= { s: 0, w: 0 }; A.s += e.n * w * z; A.w += e.n * w; }
     }
@@ -247,6 +253,9 @@ function agreger(lots, inst, profil, etat = {}, gen0 = null, jeux = null) {
       const O = (out[tid] ??= {})[bid] ??= { retrait: {}, deplacement: [] };
       for (const k in T.retrait) O.retrait[k] = (O.retrait[k] || 0) + T.retrait[k] * (T.retrait[k] > 0 ? fact[c] : 1);
       O.deplacement.push(...T.deplacement);
+      if (T.apport) { const K = O.apport ??= { n: 0, N: {}, A: {}, a: {}, na: {} }, f = I.plafonds.par_compte_cycle != null && T.apport.n > I.plafonds.par_compte_cycle ? I.plafonds.par_compte_cycle / T.apport.n : 1;
+        K.n += T.apport.n * f; for (const [x, v] of Object.entries(T.apport.N)) K.N[x] = (K.N[x] || 0) + v * f; for (const [x, v] of Object.entries(T.apport.A)) K.A[x] = (K.A[x] || 0) + v * f;
+        for (const [x, v] of Object.entries(T.apport.a)) { K.a[x] = (K.a[x] || 0) + v * f; K.na[x] = (K.na[x] || 0) + T.apport.na[x] * f; } }
       if (T.contact && (T.contact.rencontres || T.contact.danger || T.contact.aide)) { const K = O.contact ??= { rencontres: 0, danger: 0, aide: 0 };
         for (const k in K) K[k] = +(K[k] + T.contact[k]).toFixed(2); }
     }
@@ -258,6 +267,12 @@ function agreger(lots, inst, profil, etat = {}, gen0 = null, jeux = null) {
     const s = Object.values(O.retrait).reduce((a, x) => a + Math.max(0, x), 0);
     if (s > pmax * eff) for (const k in O.retrait) if (O.retrait[k] > 0) O.retrait[k] *= pmax * eff / s;
   }
+  // (docs/36) l'apport de l'élevage, une fois, sans lissage : ses fréquences d'allèles et sa valeur génétique moyenne ; une
+  // population n'en reçoit pas plus que part_max_population d'elle-même
+  for (const [tid, Bs] of Object.entries(out)) for (const [bid, O] of Object.entries(Bs)) { const K = O.apport; if (!K) continue;
+    const eff = taxons[tid].populations.find(p => p.biome === bid)?.effectif || 0, f = pmax != null && K.n > Math.max(2, pmax * eff) ? Math.max(2, pmax * eff) / K.n : 1;
+    O.apport = { n: +(K.n * f).toFixed(3), N: Object.fromEntries(Object.entries(K.N).map(([x, v]) => [x, +(v * f).toFixed(3)])),
+      alleles: Object.fromEntries(Object.entries(K.A).map(([x, v]) => [x, +(v / K.n).toFixed(5)])), a: Object.fromEntries(Object.entries(K.a).map(([x, v]) => [x, +(v / K.na[x]).toFixed(4)])) }; }
   // lissage : moyenne mobile exponentielle sur memoire_cycles
   const mem = I.memoire_cycles || 1, a = 2 / (mem + 1), prev = etat.lisse || {}, lisse = {};
   for (const tid of new Set([...Object.keys(out), ...Object.keys(prev)])) for (const bid of new Set([...Object.keys(out[tid] || {}), ...Object.keys(prev[tid] || {})])) {

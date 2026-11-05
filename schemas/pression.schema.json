@@ -40,8 +40,10 @@
           "vers": { "type": "string", "description": "Biome de destination pour « deplacement »." },
           "axe": { "type": "string", "description": "(docs/22) Pour « transformation » : l'axe du lieu que le jeu change (couvert, humidite, temperature… ou un axe du monde, catalogue.monde.axes)." },
           "sens": { "type": "number", "description": "(docs/22) Pour « transformation » : 1, l'axe monte ; −1, il baisse." },
-          "age": { "enum": ["jeune", "adulte", "vieux"], "description": "Si le jeu le sait : prélever des adultes reproducteurs pèse plus." },
-          "q": { "type": "object", "additionalProperties": { "type": "number" }, "description": "Traits continus (docs/8) : la valeur moyenne z des bêtes de cet événement, telle qu'elles l'ont tirée à la naissance. C'est ce qui dit à Orvane si les joueurs prennent les plus grandes, les plus audacieuses…" }
+          "age": { "enum": ["oeuf", "jeune", "adulte", "vieux"], "description": "Si le jeu le sait : prélever des adultes reproducteurs pèse plus ; un œuf pris pèse moins qu'un jeune (docs/25)." },
+          "q": { "type": "object", "additionalProperties": { "type": "number" }, "description": "Traits continus (docs/8) : la valeur moyenne z des bêtes de cet événement, telle qu'elles l'ont tirée à la naissance. C'est ce qui dit à Orvane si les joueurs prennent les plus grandes, les plus audacieuses…" },
+          "genome": { "type": "object", "additionalProperties": false, "description": "Avec « liberation » (docs/36) : les bêtes relâchées sont nées en élevage, et le jeu connaît leur génome (OrvaneIndividus.genome) : elles rejoignent la population avec leurs gènes.",
+            "properties": { "n": { "type": "number", "minimum": 0 }, "alleles": { "type": "object", "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 }, "description": "la fréquence de chaque allèle parmi elles" }, "a": { "type": "object", "additionalProperties": { "type": "number" }, "description": "leur valeur génétique moyenne, par trait continu" } } }
         }
       }
     }

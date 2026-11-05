@@ -138,6 +138,11 @@ const CONDUITE_JEU = {
   'immobilite': 'camouflage', 'alerte-groupe': 'alerte', 'defense-petits': 'parent', 'vision-nocturne': 'nyctalope',
   'perception-proche': 'vibrisses', 'vue-diurne-faible': 'ebloui', 'morsure': 'crocs', 'sprint': 'foulee', 'lenteur': 'lent', 'charge': 'charge',
 };
+// (§228, Orvane docs/32) la grammaire : un trait composé par le monde (un moyen, une action, une cible) a son signe ; le jeu qui
+// le connaît le joue tel quel (une lueur, un éclair, une décharge, un musc…), sinon il joue son repli (conduite.type)
+const GRAMMAIRE_JEU = { 'lueur|attirer': 'leurre', 'lueur|appeler': 'lanterne', 'eclair': 'eclair', 'decharge': 'decharge', 'cri|appeler': 'alerte', 'cri|repousser': 'grondement',
+  'echo': 'echo', 'thermo': 'thermo', 'sens': 'vibrisses', 'musc|repousser': 'musc', 'musc|tromper': 'camouflage', 'parfum': 'parfum', 'vapeur': 'vapeur', 'couleurs': 'bluff' };
+const grammaireJeu = g => g && (GRAMMAIRE_JEU[g.signe + '|' + g.action] || GRAMMAIRE_JEU[g.signe]);
 // un mode de déplacement de la lignée qui devient une conduite
 const LOCOMOTION_CONDUITE = { fouissage: 'terrier' };
 // les conduites d'une bête : ses traits (ceux de son phénotype), lus dans le catalogue du monde ; les modes de déplacement
@@ -147,8 +152,12 @@ const LOCOMOTION_CONDUITE = { fouissage: 'terrier' };
 // à défaut dans moteur/corps.js.
 function conduitesDe(traits, catalogue, locomotion, organes, catOrganes) {
   const out = [], vus = new Set();
-  for (const t of traits || []) { const c = catalogue?.[t]?.conduite, id = c && CONDUITE_JEU[c.type]; if (!id || vus.has(id)) continue; vus.add(id);
-    out.push({ id, trait: t, effet: c.effet, portee: c.portee, recharge: c.recharge, force: c.force, presage: c.presage }); }
+  for (const t of traits || []) { const c = catalogue?.[t]?.conduite, id = c && (grammaireJeu(c.grammaire) || CONDUITE_JEU[c.type]), inv = !!catalogue?.[t]?.origine; if (!id) continue;
+    // (§227) un trait inventé par le monde accentue la conduite de celui qu'il exige : il prend sa place, avec sa force et son nom
+    const k = out.findIndex(x => x.id === id); if (vus.has(id) && !(inv && k >= 0 && !out[k].nom)) continue; vus.add(id);
+    const e = { id, trait: t, effet: c.effet, portee: c.portee, recharge: c.recharge, force: c.force, presage: c.presage, ...(inv && catalogue[t].nom ? { nom: catalogue[t].nom } : {}),
+      ...(c.grammaire ? { grammaire: { action: c.grammaire.action, signe: c.grammaire.signe, ...(c.grammaire.couleur ? { couleur: c.grammaire.couleur.slice() } : {}) } } : {}) };   // (§228)
+    if (k >= 0) out[k] = e; else out.push(e); }
   for (const l of locomotion || []) { const id = LOCOMOTION_CONDUITE[l]; if (id && !vus.has(id)) { vus.add(id); out.push({ id, locomotion: l }); } }
   const OC = catOrganes || (typeof require === 'function' ? (() => { try { return require('../../moteur/corps.js'); } catch (e) { return null; } })() : racine.OrvaneCorps)?.ORGANES_CAT || {};
   for (const o of (organes || []).slice().sort((a, b) => b.taille - a.taille)) { const c = OC[o.type]?.conduite, id = c && CONDUITE_JEU[c.type]; if (!id || vus.has(id) || !(o.taille >= .3)) continue; vus.add(id);
@@ -173,6 +182,6 @@ const EXPOSITION = { mode: 'relatif', compression: { defaut: .1, par_domaine: { 
   propagation_cycles: 3, inertie_max: .05, traits_rendus: ['albinisme', 'melanisme', 'robe-doree', 'gigantisme', 'nanisme'],
   seuil_extinction_jeu: 40, retour_apres_extinction: true, seuil_extinction_part: .25, quantitatifs: { rendus: ['taille', 'vitesse', 'audace'], variation: 0 }, bestiaire: 'orvane' };
 const API = { EXPOSITION, BIOMES_SV, choisirCarte, biomeOrvane, biomeSV, biomesSV, TAXON_ESPECE, especeDe, taxonDe, TRAIT_VARIANTE, varianteDe, traitsDe, CORPS_FAMILLE, CORPS_ESPECE, corpsDe, GABARITS, gabaritDe,
-  CONDUITE_JEU, LOCOMOTION_CONDUITE, conduitesDe, QUANT_JEU, FAUNE, GROUPE };
+  CONDUITE_JEU, GRAMMAIRE_JEU, LOCOMOTION_CONDUITE, conduitesDe, QUANT_JEU, FAUNE, GROUPE };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else racine.OrvaneSV_Corr = API;
 })(globalThis);

@@ -11,7 +11,9 @@
 // 6. les conduites (§211) : phénotype exact à la naissance, conduites à leur fréquence réelle, robes au taux du jeu ;
 // 7. la génétique continue (§212) : jour un inchangé, chasse des grands → la population rapetisse, le jeu le montre, le lot le rapporte ;
 // 8. la reproduction sexuée (§213) : réservoir récessif, choix du partenaire, un petit tient de sa mère sans changer les taux ;
-// 9. l'isolement et les hybrides (§214) : isolement reproductif, écart génétique, zone hybride et introgression, hybrides dans le jeu.
+// 9. l'isolement et les hybrides (§214) : isolement reproductif, écart génétique, zone hybride et introgression, hybrides dans le jeu ;
+// 16. l'élevage (§231, Orvane docs/35–36) : une compagne devient un individu ; deux compagnes ont un petit qui tient d'elles ; relâché, ses gènes vont au lot ;
+// … 14. l'émergence (§227) : les traits inventés, les deux vies, les œufs, les lieux qui changent de nature, montrés d'après leur seule description.
 'use strict';
 const fs = require('fs'), vm = require('vm'), path = require('path');
 if (!process.argv[2]) { console.error('usage : node banc.js <chemin/vers/stonevalley/index.html>'); process.exit(2); }
@@ -48,7 +50,7 @@ function bac2(fichiers, rpc) {
     localStorage: { getItem: k => memoire[k] ?? null, setItem: (k, v) => { memoire[k] = v; } },
     fetch: async f => ({ ok: !!fichiers[f], json: async () => fichiers[f] }), window: {} });
   ctx.globalThis = ctx;
-  for (const f of [racine('moteur/corps.js'), racine('tampon/tampon.js'), ici('correspondance.js'), ici('orvane-sv.js')]) vm.runInContext(fs.readFileSync(f, 'utf8'), ctx, { filename: f });
+  for (const f of [racine('moteur/corps.js'), racine('tampon/tampon.js'), racine('tampon/individus.js'), ici('correspondance.js'), ici('orvane-sv.js')]) vm.runInContext(fs.readFileSync(f, 'utf8'), ctx, { filename: f });
   return ctx;
 }
 const sp = id => SPEC.find(s => s.id === id);
@@ -433,6 +435,72 @@ const sp = id => SPEC.find(s => s.id === id);
     verif(parti && E && E.u === 'https://orvane.exemple/rest/v1/rpc/orvane_deposer' && E.apikey === 'sb_publishable_x' && E.corps.p_cle === 'orv_essai' && E.corps.p_lot.monde === U.monde.id
       && E.corps.p_lot.evenements.length === 400 && Object.keys(c13.OrvaneSV.S.lot).length === 50,
       `le lot part vers le Supabase d'Orvane avec la clé du jeu, 400 événements à la fois (${Object.keys(c13.OrvaneSV.S.lot).length} attendent le suivant)`);
+  }
+
+  // === 14. l'émergence (§227, Orvane docs/24 à 29) : le jeu montre ce que le monde invente, d'après sa seule description ===
+  console.log('\n14. l\'émergence : ce que le monde invente, le jeu le montre');
+  { const Ud = racine('mondes/orvane'), U = lireJ(path.join(Ud, 'instantane.json')), U0 = lireJ(path.join(Ud, 'generation-0.json')), PU = lireJ(path.join(Ud, 'profil.json'));
+    const Iv = require(racine('moteur/invention.js')), CAT = require(racine('moteur/catalogue.js')).TRAITS, Corr = require(ici('correspondance.js'));
+    // un trait que le monde invente (la duplication du camouflage), porté par 5 % d'une lignée de la forêt ; ses deux vies, ses œufs ;
+    // une forêt dont 29 % des terres sont devenues prairie
+    const X = JSON.parse(JSON.stringify(U)), { t: def, nom } = Iv.dupliquer('camouflage', CAT.camouflage, () => .1);
+    const L = X.taxons.find(t => !t.eteint && t.plan.regime !== 'synthetique' && t.populations.some(p => p.biome === 'foret' && p.effectif > 100));
+    def.nom = nom; def.origine = { lignee: L.id, cycle: X.cycle.n, de: ['camouflage'] }; const id = 'chromatophores-denteles';
+    X.catalogue.traits = { ...X.catalogue.traits, camouflage: CAT.camouflage, [id]: def }; X.catalogue.monde = { traits: { [id]: def } };
+    const p0 = L.phenotypes[0]; L.phenotypes.push({ id: ['camouflage', id].join('+'), traits: ['camouflage', id], frequence: .05 }); p0.frequence -= .05;
+    L.plan.stades = { larve: { nom: 'chenille', regime: 'herbivore', locomotion: ['reptation', 'grimpe'] }, adulte: { nom: 'papillon', regime: L.plan.regime, locomotion: ['vol'] }, part: .4, larves: .6 };
+    L.plan.reproduction = 'ovipare'; L.plan.castes = { reine: { masse_rel: 20, ailes: true, part: .001 }, ouvrieres: { part: .85 }, soldats: { part: .149 }, part: .4 }; L.plan.corps = { ...(L.plan.corps || {}), forme: 'segmente', pattes: 26 }; L.populations[0].savoirs = { 'casser-noix': .64 }; X.catalogue.savoirs = { 'casser-noix': { nom: 'casser des noix avec une pierre', geste: 'casser', outil: 'pierre' } }; L.plan.diete = { fruits: .6, feuilles: .4 }; L.plan.diete0 = { feuilles: .5, fruits: .5 }; const F = X.biomes.find(b => b.id === 'foret'); F.natures = [{ type: 'prairie', nom: 'Prairie', part: .29 }]; X.monde.climat = { depuis: 0, temperature: -.08, humidite: .04, marche: 0, signale: -.08, ponts: [], iles: 1 };
+    const c = bac2({ 'orvane/instantane.json': X, 'orvane/generation-0.json': U0, 'orvane/profil.json': PU });
+    await c.OrvaneSV.charger(); c.orvaneEspeces(); c.orvaneAppliquer();
+    const E = c.OrvaneSV.emergenceDe(L.id), cd = Corr.conduitesDe(['camouflage', id], X.catalogue.traits).find(x => x.trait === id);
+    verif(E.some(x => x.includes(nom)) && E.some(x => /chenille, puis papillon/.test(x)) && E.includes('pond des œufs') && E.includes('mange 60 % de fruits, 40 % de feuilles') && E.some(x => /vit en colonie/.test(x)) && E.includes('un corps segmenté, à 26 pattes') && E.some(x => /^sait casser des noix avec une pierre \(.+ : 64 %\)$/.test(x)),
+      `le carnet des lignées dit ce que le monde a fait naître chez ${L.nom} : ${E.join(' · ')}`);
+    verif(cd && cd.nom === nom && cd.presage && cd.force > 1, `le trait inventé se joue d'après sa seule description : sa conduite (${cd?.id}, force ${cd?.force}, « ${cd?.presage} »), et le panneau de la bête le nomme (${cd?.nom})`);
+    const dits = []; c.say = s => dits.push(s); c.setTimeout = f => f(); c.orvaneArrivee(new Set());
+    const n1 = dits.filter(x => /change de nature/.test(x)).length; c.orvaneArrivee(new Set()); const n2 = dits.filter(x => /change de nature/.test(x)).length;
+    verif(n1 === 1 && n2 === 1 && dits.some(x => /29 % de ses terres sont devenues prairie/.test(x)), `à l'arrivée sur une île de la forêt : « ${dits.find(x => /nature/.test(x))} », une fois`);
+    verif(dits.filter(x => /âge glaciaire/.test(x)).length === 1 && dits.filter(x => /une île est née/.test(x)).length === 1, `le climat d'Orvane, dit une fois : « ${dits.find(x => /glaciaire/.test(x))} » ; « ${dits.find(x => /île est née/.test(x))} »`);
+    const c0 = bac2({ 'orvane/instantane.json': U, 'orvane/generation-0.json': U0, 'orvane/profil.json': PU }); await c0.OrvaneSV.charger(); c0.orvaneEspeces(); c0.orvaneAppliquer();
+    const d0 = []; c0.say = s => d0.push(s); c0.setTimeout = f => f(); c0.orvaneArrivee(new Set());
+    verif(!U.taxons.some(t => c0.OrvaneSV.emergenceDe(t.id).length) && !d0.some(x => /nature|glaciaire|île est née/.test(x)), 'un monde qui n\'a rien inventé : le carnet et les arrivées restent tels quels');
+  }
+
+  // === 15. la grammaire (§228, Orvane docs/32) : le jeu joue le signe d'une phrase, ou son repli ===
+  console.log('\n15. la grammaire : une lueur, une décharge, un musc — ou leur repli');
+  { const G = require(racine('moteur/grammaire.js')), Corr = require(ici('correspondance.js')), cat = {}, attendu = { leurre: 'leurre', lanterne: 'lanterne', eclair: 'eclair', torpille: 'decharge', electrocuirasse: 'decharge',
+      electrosens: 'vibrisses', alarme: 'alerte', echolocation: 'echo', grondement: 'grondement', musc: 'musc', pheromone: 'parfum', mimetisme: 'camouflage', thermosens: 'thermo', chaleur: 'vapeur', bluff: 'bluff' };
+    for (const k of Object.keys(G.PHRASES)) { const d = G.definir(k, 1, () => .1); d.origine = { lignee: 'x', cycle: 1, de: [] }; cat['g-' + k] = d; }
+    const joue = Object.fromEntries(Object.keys(G.PHRASES).map(k => [k, Corr.conduitesDe(['g-' + k], cat)[0]]));
+    const faux = Object.keys(attendu).filter(k => joue[k]?.id !== attendu[k]);
+    verif(!faux.length && joue.leurre.nom && joue.leurre.grammaire?.couleur && joue.torpille.presage, `les ${Object.keys(G.PHRASES).length} phrases se jouent d'après leur signe : ${Object.entries(joue).slice(0, 6).map(([k, c]) => k + ' → ' + c?.id).join(', ')}…` + (faux.length ? ' ; faux : ' + faux.join(', ') : ''));
+    // un jeu qui ne connaît pas la grammaire : le repli
+    const sans = JSON.parse(JSON.stringify(cat)); for (const d of Object.values(sans)) delete d.conduite.grammaire;
+    const repli = Object.fromEntries(Object.keys(G.PHRASES).map(k => [k, Corr.conduitesDe(['g-' + k], sans)[0]?.id]));
+    verif(repli.leurre === 'vibrisses' && repli.torpille === 'crocs' && repli.musc === 'crachat' && repli.echolocation === 'nyctalope' && !repli.bluff,
+      `sans la grammaire, le repli : leurre → ${repli.leurre}, torpille → ${repli.torpille}, musc → ${repli.musc}, écholocation → ${repli.echolocation} ; le bluff, qui n'a pas de repli, ne se joue pas`);
+  }
+
+  // === 16. l'élevage (§231, Orvane docs/35 et 36) : deux compagnes au campement ont un petit qui tient d'elles ===
+  console.log('\n16. l\'élevage : une compagne est un individu ; deux compagnes ont un petit');
+  { const c = bac2({ 'orvane/instantane.json': gen0, 'orvane/generation-0.json': gen0, 'orvane/profil.json': profil }); await c.OrvaneSV.charger(); c.orvaneEspeces();
+    const O = c.OrvaneSV, cat = gen0.catalogue.traits, Ind = c.OrvaneIndividus, bete = (v, q) => ({ sp: sp('brouteur'), x: 5, y: 5, z: 0, variante: v, phen: 'base', traits: [], q: { taille: q } });
+    const comp = (id, nom, v, q, sexe) => { const k = { id, esp: 'brouteur', nom, variante: v }; O.individuDe(k, bete(v, q)); k.ind.sexe = sexe; return k; };
+    const A = comp(1, 'Aube', null, 1.5, 'f'), B = comp(2, 'Brun', null, 1.5, 'm'), D = comp(3, 'Dune', 'albinos', 0, 'f');
+    verif(A.ind.taxon === 'brouteur' && !Ind.montre(A.ind, cat).includes('albinisme') && Ind.montre(D.ind, cat).includes('albinisme') && D.ind.alleles.albinisme === 2 && O.ditIndividu(A.ind) === '♀ femelle · née sauvage',
+      `une brouteuse liée devient un individu : « ${O.ditIndividu(A.ind)} » ; une albinos porte deux copies de l'allèle`);
+    A.ind.alleles.albinisme = 1; B.ind.alleles.albinisme = 1; delete A.ind.alleles['robe-doree']; delete B.ind.alleles['robe-doree'];
+    let n = 0, alb = 0, dit = '', taille = 0; for (let k = 0; k < 400; k++) { A.gest = null; const R = O.croiserCompagnes(A, B); if (!R.ok) continue; n++; dit ||= R.dit; const x = A.gest.petit; taille += x.z.taille; if (Ind.montre(x, cat).includes('albinisme')) { alb++; } }
+    const g = (() => { let G; do { A.gest = null; O.croiserCompagnes(A, B); G = A.gest; } while (!G.surprise.includes('albinisme')); return G; })();
+    verif(n === 400 && Math.abs(alb / n - .25) < .07 && Math.abs(taille / n - (1.5 * .5 + .26 * .5)) < .2 && /attend un petit de Brun/.test(dit) && /surprise : l'albinisme, que ses parents portaient sans le montrer/.test(O.ditNaissance(A, g)),
+      `« ${dit} » ; deux porteurs cachés : ${Math.round(alb / n * 100)} % de petits albinos ; à la naissance : « ${O.ditNaissance(A, g)} »`);
+    const b = bete(null, 0); b.sp = sp('brouteur'); O.incarner(b, g.petit);
+    verif(/albinos/.test(b.variante || '') && b.indiv === g.petit && b.qs && Math.abs(b.qs.taille - (g.petit.z.taille - .26209)) < .02, `le petit se voit : robe ${b.variante}, sa taille propre (${b.qs.taille} écart-type)`);
+    const x = g.petit; x.sexe = 'f'; const E = { id: 9, nom: x.nom, esp: 'brouteur', ind: x }; let y; do { A.gest = null; O.croiserCompagnes(A, B); y = A.gest.petit; } while (y.sexe !== 'm'); const F = { id: 10, nom: y.nom, esp: 'brouteur', ind: y };
+    const R2 = O.croiserCompagnes(E, F);
+    verif(R2.ok && /ils sont parents : consanguin à 25 %/.test(R2.dit) && /consanguin.? à 25 %/.test(O.ditIndividu(E.gest.petit)) && /2ᵉ génération/.test(O.ditIndividu(E.gest.petit)) && !O.croiserCompagnes(A, D).ok,
+      `frère et sœur : « ${R2.dit} » ; leur petit : « ${O.ditIndividu(E.gest.petit)} » ; deux femelles : « ${O.croiserCompagnes(A, D).dit} »`);
+    c.orvaneEvenement('liberation', b, null, x); const ev = c.orvaneLot().evenements.find(e => e.action === 'liberation');
+    verif(ev && ev.genome && ev.genome.n === 1 && ev.genome.alleles.albinisme === 1 && Number.isFinite(ev.genome.a.taille), `relâché, le petit part au lot avec son génome (l'albinisme à ${ev?.genome?.alleles?.albinisme * 100} %, taille génétique ${ev?.genome?.a?.taille})`);
   }
 
   console.log(ok ? '\nTOUT PASSE' : '\nÉCHECS'); process.exit(ok ? 0 : 1);

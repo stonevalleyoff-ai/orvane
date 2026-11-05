@@ -10,7 +10,7 @@ Orvane's files use French field names. This page translates them all, object by 
 | `monde` | world | the world's identity and state (below) |
 | `cycle` | cycle | `n` its number, `date`, `pressions_recues` (batches received), `saison` (season) |
 | `biomes` | biomes | the places of the world (below) |
-| `catalogue` | catalogue | the definitions of the traits carried (`traits`), continuous traits (`quantitatifs`), organs (`organes`), plant defences (`flore`), the world's own catalogue (`monde`) |
+| `catalogue` | catalogue | the knowledge the world has (`savoirs`: name, `geste` gesture, `outil` tool), the definitions of the traits carried (`traits`), continuous traits (`quantitatifs`), organs (`organes`), plant defences (`flore`), the world's own catalogue (`monde`) |
 | `taxons` | lineages | the living lineages (below) |
 | `evenements` | events | the cycle's journal: `type`, `taxon`, `biome`, `detail` |
 | `precedent` | previous | the previous cycle in light form, to spread a change over time |
@@ -29,8 +29,16 @@ Orvane's files use French field names. This page translates them all, object by 
 | `parcelles` | plots | the world runs by plots inside each biome |
 | `mere` | Mother | the origin of synthetic life; she never dies |
 | `flore` | flora | since when plants are lineages |
-| `pathogenes` | pathogens | the disease strains of the world |
+| `pathogenes` | pathogens | the disease strains of the world; a mutant strain gives its `parent`, a strain carried by an insect its `vecteur` (vector) |
 | `solo` | solo | a solo copy of a shared world, and where it started from |
+| `milieu`, `ponte`, `stades`, `invention` | medium, laying, life stages, invention | since when the land is transformed, lineages lay eggs, life cycles exist, the world invents traits |
+| `derives` | drifts | since when diets, plants and strains drift |
+| `esprit` | mind | since when animals learn: knowledge born, spread by imitation, carried by migrants, lost |
+| `castes`, `formes` | castes, forms | since when lineages can live in colonies, and new body plans can be born |
+| `grammaire` | grammar | since when the world composes traits like sentences (a means, an action, a target, a moment) |
+| `climat` | climate | since when the world warms and cools by itself; the temperature and humidity shift since then, the land bridges, the islands born |
+| `dietes` | diet spectra | since when each lineage eats leaves, fruits, seeds, nectar, insects, meat or blood in its own shares |
+| `natures` | natures | since when places can change nature, and the world's place types (`types`: those of origin, and those it invented: `inedit`) |
 
 ### `biomes[]`
 
@@ -45,6 +53,9 @@ Orvane's files use French field names. This page translates them all, object by 
 | `catastrophes` | disasters | `false`: sheltered from fires, floods, droughts |
 | `ressources` | resources | what the place offers to machines |
 | `transforme` | transformed | the land as animals and players change it: `base` (its axes when the transformation awoke), `jeu` (what players changed, fading slowly) |
+| `traversees` | crossings | the neighbours reached only across the sea (a volcanic island): only flying, swimming or drifting animals pass |
+| `climat`, `jeune` | climate, young | a place's axes when the climate awoke; a young island and the capacity it will reach |
+| `nature`, `natures` | nature | the place has changed nature: the type it became (`type`, `nom`, `depuis`, `inedite`: a nature the world invented); in a world by plots, the share of its plots that changed (`natures`) |
 
 ### `taxons[]` (lineages)
 
@@ -65,6 +76,7 @@ Orvane's files use French field names. This page translates them all, object by 
 | field | English | meaning |
 | --- | --- | --- |
 | `regime` | diet | `herbivore`, `carnivore`, `omnivore`, `detritivore` (scavenger), `filtreur` (filter feeder), `synthetique` (a machine), `vegetal` (a plant) |
+| `diete`, `diete0` | diet spectrum | the shares of `feuilles` leaves, `fruits`, `graines` seeds, `nectar`, `insectes` insects, `viande` meat, `sang` blood (summing to 1); and the spectrum at its awakening |
 | `famille` | family | `animale` (when absent), `synthetique`, `vegetale` |
 | `masse_kg`, `taille_m` | mass (kg), length (m) | |
 | `locomotion` | movement | `marche` walk, `course` run, `saut` jump, `nage` swim, `vol` fly, `fouissage` burrow, `reptation` crawl, `grimpe` climb |
@@ -77,7 +89,10 @@ Orvane's files use French field names. This page translates them all, object by 
 | `vitesse_rel` | relative speed | top speed, in body lengths per second |
 | `perception` | perception | relative reach of the senses |
 | `niche`, `tolerance` | niche, tolerance | the ideal biome axes, and how wide the niche is |
-| `corps` | body | the silhouette (`moteur/corps.js`): `forme` (`quadrupede` quadruped, `hexapode` hexapod, `bipede` biped, `oiseau` bird, `serpent` snake, or a form of the world), `pattes` (legs), proportions from 0 to 1 (`long` body length, `haut` leg height, `cou` neck, `tete` head, `museau` snout, `oreilles` ears, `queue` tail), `organes` (organs: `type`, `place`, `taille` size, `nombre` count, `forme` shape), `motif` (pattern), `couleurs` (colours: `robe` coat, `sombre` dark, `ventre` belly, `oeil` eye) |
+| `corps` | body | the silhouette (`moteur/corps.js`): `forme` (`quadrupede` quadruped, `hexapode` hexapod, `bipede` biped, `oiseau` bird, `serpent` snake, `segmente` segmented, `radiaire` radial, `tentaculaire` tentacled, or a form of the world), `pattes` (legs), proportions from 0 to 1 (`long` body length, `haut` leg height, `cou` neck, `tete` head, `museau` snout, `oreilles` ears, `queue` tail), `organes` (organs: `type`, `place`, `taille` size, `nombre` count, `forme` shape; `mains` are hands), `posture` (0 on all fours, 0.5 rearing up, 1 upright), `motif` (pattern), `couleurs` (colours: `robe` coat, `sombre` dark, `ventre` belly, `oeil` eye) |
+| `reproduction`, `reproduction0` | reproduction | `ovipare` lays eggs, `vivipare` gives birth; and the mode at the awakening of laying, which births relate to |
+| `castes` | castes | a lineage living in colonies: `reine` queen, `ouvrieres` workers, `soldats` soldiers (relative mass, share), `part` the share of the lineage in colonies |
+| `stades` | life stages | the larva (`chenille` caterpillar, `larve` grub, `têtard` tadpole) and the adult, each with its diet and movement; `part`: the share of the lineage that metamorphoses |
 | `modules`, `role` | modules, role | a machine: the level of each module, and what it mainly does |
 | `forme`, `hauteur_m`, `croissance` | form, height, growth | a plant |
 
@@ -98,6 +113,7 @@ Orvane's files use French field names. This page translates them all, object by 
 | `mefiance`, `habituation` | wariness, habituation | what the population has learnt from players |
 | `parcelles` | plots | the head count in each plot of the biome |
 | `nourriture`, `recouvrement` | food, overlap | a grazer: what it finds to eat, relative to the awakening of the flora; what it shares with its size band |
+| `savoirs` | knowledge | for each piece of knowledge (`catalogue.savoirs`), the share of the population that knows it: a local tradition |
 | `infection` | infection | per strain: `i` infected share, `r` immune share |
 | `energie`, `posture`, `regulation` | energy, posture, regulation | a machine: what it captures over what it spends; `neutre` neutral, `defensive`, `fuyante` fleeing, `hostile`; among animals, the share of deaths caused by machines |
 | `potentiel`, `frequences`, `reference`, `pollinisation` | potential, frequencies, reference, pollination | a plant |
@@ -127,10 +143,12 @@ Orvane's files use French field names. This page translates them all, object by 
 | `heredite` | heredity | `dominant` or `recessif` |
 | `attrait` | appeal | weight in mate choice |
 | `flore` | flora | facing plants: `portee` reach, `haut` reaches trees, `toxique` and `epineux` (the share of toxins and thorns it tolerates) |
+| `grammaire` | grammar | a trait composed by the grammar: its `phrase`, `moyen` (means: `lumiere` light, `son` sound, `electricite`, `odeur` smell, `chaleur` heat, `couleur` colour), `action`, `cible` (target), `moment`, `signe` (what a game shows: `lueur` glow, `eclair` flash, `decharge` shock, `cri` call, `echo`, `musc`, `parfum` scent, `thermo`, `vapeur` steam, `couleurs`), `force`, `couleur` |
+| `origine` | origin | a trait invented by the world: the lineage that invented it, the cycle, the traits it comes from (`de`) |
 
 ### `evenements[].type` (event types)
 
-`apparition` appearance · `extinction` · `separation` split · `migration` · `effondrement` collapse · `explosion` outbreak · `nouveau_trait` new trait · `epidemie` epidemic · `remission` · `catastrophe` disaster · `hybridation` · `mefiance` wariness · `eveil` awakening · `transformation` (an axis of a place has moved) · `conception` (the Mother designs a machine) · `transfert` (machines pass a module on)
+`apparition` appearance · `extinction` · `separation` split · `migration` · `effondrement` collapse · `explosion` outbreak · `nouveau_trait` new trait · `epidemie` epidemic · `remission` · `catastrophe` disaster · `hybridation` · `mefiance` wariness · `eveil` awakening · `transformation` (an axis of a place has moved) · `conception` (the Mother designs a machine) · `transfert` (machines pass a module on) · `invention` (the world invents a trait) · `nature` (a place changes nature) · `climat` (the climate shifts, a land bridge, a new island) · `savoir` (an animal invents, or a population loses, a piece of knowledge)
 
 ## The batch (`schemas/pression.schema.json`)
 
@@ -141,7 +159,7 @@ Orvane's files use French field names. This page translates them all, object by 
 | `familles` | families | the families the game plays |
 | `source` | source | `jeu` game, `compte` opaque player id, `zone` area |
 | `periode` | period | `debut` start, `fin` end |
-| `evenements[]` | events | `taxon`, `biome`, `action`, `n` (count), `phenotype`, `age`, `q` (mean continuous traits), `vers` (to), `parcelle` (plot) |
+| `evenements[]` | events | `taxon`, `biome`, `action`, `n` (count), `phenotype`, `age` (`oeuf` egg, `jeune`, `adulte`, `vieux`), `q` (mean continuous traits), `genome` (with `liberation`: the alleles and breeding values of animals bred by players, docs/36), `vers` (to), `parcelle` (plot) |
 | `action` | action | `rencontre` encounter, `prelevement` kill, `capture`, `liberation` release, `nourrissage` feeding, `reproduction` breeding, `deplacement` relocation, `habitat_perdu` habitat lost, `habitat_gagne` habitat gained, `defrichage` clearing, `reboisement` reforesting, `assechement` draining, `irrigation`, `construction` building, `transformation` (with `axe` axis and `sens` direction) |
 
 ## The exposure (`exposition`, in `schemas/profil.schema.json`)
@@ -164,6 +182,8 @@ Orvane's files use French field names. This page translates them all, object by 
 | effectif | head count |
 | cycle | one step of the world (a day, an hour…) |
 | tampon | buffer (`tampon/tampon.js`): between the world and a game |
+| individu | individual (`tampon/individus.js`, docs/35): one animal drawn from a real population — `alleles` (copies carried), `a` (breeding value) and `z` (own value), `sexe`, `parents`, `ascendance` (ancestry), `F` (inbreeding), `vigueur` (vigour), `hybride` |
+| élevage | breeding (docs/36): animals crossed by players; released with their `genome`, they join the population as an `apport` (input) |
 | traducteur | translator: a game's code that turns the world into its creatures |
 | morceaux | pieces (`morceaux/`): the world split by biome and by lineage |
 | la Mère, les machines | the Mother, the machines (synthetic life) |
