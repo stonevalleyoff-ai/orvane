@@ -557,13 +557,14 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
       T.forEach((q, k) => { if (!p.part[k]) return; const Rq = R * p.part[k] * (DT ? DI.mortel(p.t.plan, q.t.plan) : 1); q.pop.N.forEach((N, i) => { if (q.poids[i]) q.pop.predation[i] += Rq * (q.poids[i] / q.Bv) / (q.E.plans[i].masse_kg || 1); }); });   // (docs/30 : une piqûre ne tue pas)
     }
     // (équilibrage du 6 novembre) les détritivores vivent des morts du lieu : ce que la mort naturelle y laisse ce cycle (les bêtes, pas
-    // les plantes ; × REGLES.cadavres), partagé selon le besoin de chacun, comme une proie que nul ne chasse ; leur satiété et leur
-    // ration en viennent. Sans la règle, ils broutent comme avant
+    // les plantes ; × REGLES.cadavres), partagé selon le besoin de chacun. C'est un flux, pas un stock de proies : un détritivore est
+    // rassasié à moitié quand sa part égale son besoin (un prédateur, quand il a trente fois son besoin sur pied). Sans la règle, ils
+    // broutent comme avant
     if (REGLES.cadavres > 0) { const D = T.filter(q => q.regime === 'detritivore');
       if (D.length) { let offre = 0; for (const q of T) if (q.regime !== 'detritivore' && q.regime !== 'vegetal') q.pop.N.forEach((N, i) => { offre += N * (q.E.plans[i].masse_kg || 1) * mortalite(q.E.plans[i]); });
         offre *= REGLES.cadavres; const besoinDe = pl => REGLES.besoin * Math.pow(pl.masse_kg || 1, .75);
         const demande = D.reduce((a, q) => a + q.pop.N.reduce((x, N, i) => x + N * besoinDe(q.E.plans[i]), 0), 0);
-        for (const q of D) { let sN = 0; q.pop.N.forEach((N, i) => { if (N <= 0) return; const be = besoinDe(q.E.plans[i]), a = demande > 0 ? offre * be / demande : 0, sa = a / (a + REGLES.demi_satiete * be); q.pop.ration[i] = N * be * sa; sN += sa * N; });
+        for (const q of D) { let sN = 0; q.pop.N.forEach((N, i) => { if (N <= 0) return; const be = besoinDe(q.E.plans[i]), a = demande > 0 ? offre * be / demande : 0, sa = a / (a + be); q.pop.ration[i] = N * be * sa; sN += sa * N; });
           q.pop.satiete = q.Nt ? sN / q.Nt : 0; } } }
     if (SY) SY.reguler(bid, T, B[bid] || [], biomes[bid].capacite * productionSaison(biomes[bid], phase));   // les machines régulent (docs/16)
     for (const q of T) q.pop.N.forEach((N, i) => { q.pop.predation[i] = Math.min(q.pop.predation[i], N * REGLES.predation_max); });   // nul ne mange plus qu'une part d'une population en un cycle
@@ -610,7 +611,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
         const viande = REGLES.conversion * pop.ration[i] / (E.plans[i].masse_kg || 1);
         if (reg === 'carnivore') { nais[i] = Math.min(Np * r * s, viande); m *= 1 + (REGLES.faim_carnivore ?? 3) * (1 - s) * (1 - s); faim = Math.max(faim, 1 - s); }   // un carnivore affamé meurt plus
         else if (reg === 'omnivore') nais[i] = Np * r * place * (1 - .3 * s) * (t.plan.regime === 'carnivore' ? REGLES.omnivore_vegetal ?? 1 : REGLES.omnivore_vegetal_base ?? 1) * (DT ? DI.vegetal(E.plans[i]) : 1) + Math.min(Np * r * .3 * s * (DT ? DI.viande(E.plans[i]) : 1), viande);
-        else if (reg === 'detritivore' && REGLES.cadavres > 0) { nais[i] = Math.min(Np * r * s, viande); m *= 1 + (REGLES.faim_carnivore ?? 3) * (1 - s) * (1 - s); faim = Math.max(faim, 1 - s); }   // (les morts du lieu : sa ration, comme un carnivore)
+        else if (reg === 'detritivore' && REGLES.cadavres > 0) { nais[i] = Np * r * s; m *= 1 + (REGLES.faim_carnivore ?? 3) * (1 - s) * (1 - s); faim = Math.max(faim, 1 - s); }   // (les morts du lieu sont sa place : il naît d'autant plus qu'il est rassasié ; affamé, il meurt plus et s'en va)
         else nais[i] = Np * r * place * (reg === 'detritivore' ? REGLES.detritivore_vegetal ?? 1 : 1);
         morts[i] = Np * m; mortsNat += morts[i];
         if (SR) nais[i] *= SR.naissances(t, bid, i);   // (docs/25) pondre ou mettre bas
