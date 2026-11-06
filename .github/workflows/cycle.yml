@@ -1,12 +1,19 @@
 # Orvane — le cycle : chaque heure, l'action regarde chaque monde ; celui dont l'heure de cycle est venue avance (docs/19),
-# et son instantané est publié. Un monde au jour (monde.cycle = "24h", le monde d'Orvane) tourne une fois par jour, à son heure
+# et le site est publié. Un monde au jour (monde.cycle = "24h", le monde d'Orvane) tourne une fois par jour, à son heure
 # (monde.heure, 03:00 UTC par défaut) ; une passe manquée est rattrapée à la suivante (au plus monde.rattrapage cycles d'un coup).
 # Secret du dépôt à renseigner : ORVANE_LECTURE_SECRET (le secret de lecture ; où lire est dans profil.monde.pressions).
-# GitHub Pages (Settings › Pages, branche main, dossier /) sert ensuite mondes/<id>/instantane.json avec CORS *.
+#
+# La publication (hebergement/publication.js) : le site est servi par GitHub Pages depuis la branche `publication`
+# (Settings › Pages : « Deploy from a branch », branche publication, dossier /). L'action la réécrit à chaque passe en un seul
+# commit, sans historique : le code de main, et l'état de chaque monde. L'état d'un monde se reprend de la publication au début de
+# chaque passe ; main garde le code et ce qu'on écrit à la main (profil.json, amorce.json…). Un changement poussé sur main est
+# publié dans la foulée, sans faire tourner un monde avant son heure.
 name: cycle
 on:
   schedule:
     - cron: '17 * * * *'      # à la 17ᵉ minute de chaque heure : chaque monde décide s'il est l'heure (hebergement/cycle.js --auto)
+  push:
+    branches: [main]          # le code a changé : on republie (les mondes ne tournent qu'à leur heure)
   workflow_dispatch:
     inputs:
       cycles:
@@ -14,7 +21,9 @@ on:
         default: ''
 permissions:
   contents: write
-concurrency: cycle
+concurrency:
+  group: cycle
+  cancel-in-progress: false
 jobs:
   cycle:
     runs-on: ubuntu-latest
@@ -22,6 +31,16 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: '22' }
+      - name: reprendre l'état des mondes (branche publication)
+        run: |
+          if git fetch -q --depth=1 origin publication 2>/dev/null; then
+            echo "PUBLIE=$(git rev-parse FETCH_HEAD)" >> "$GITHUB_ENV"
+            mkdir -p "$RUNNER_TEMP/publication" && git archive FETCH_HEAD mondes | tar -x -C "$RUNNER_TEMP/publication"
+            node hebergement/publication.js reprendre "$RUNNER_TEMP/publication"
+          else
+            echo "pas encore de branche publication : les mondes partent de main"
+          fi
+          cp -a mondes "$RUNNER_TEMP/avant"            # (pour rendre à un monde en panne son dossier tel qu'il était)
       - name: faire tourner chaque monde
         id: tourner
         continue-on-error: true          # un monde en panne n'empêche pas les autres d'être publiés
@@ -37,20 +56,23 @@ jobs:
             if [ "$c" = 2 ]; then echec=1                     # le monde a tourné, mais sans les lots en ligne (le message dit pourquoi)
             elif [ "$c" != 0 ]; then
               # un monde interrompu en route n'est pas publié à moitié : on rend son dossier tel qu'il était
-              git checkout -q -- "$m" 2>/dev/null || true; git clean -fdq -- "$m" 2>/dev/null || true
+              rm -rf "$m" && cp -a "$RUNNER_TEMP/avant/$id" "$m"
               echo "::error::le monde $id n'a pas tourné (son dossier est laissé tel qu'il était)"; echec=1
             fi
           done
           exit $echec
-      - name: publier
+      - name: publier (la branche publication, réécrite en un seul commit)
         run: |
           git config user.name "orvane"
           git config user.email "orvane@users.noreply.github.com"
-          git add mondes
-          git diff --cached --quiet && exit 0
-          git commit -q -m "cycle $(date -u +%Y-%m-%dT%H:%M)"
-          git pull --rebase --autostash -q || true
-          git push || { echo "::error title=publication::GitHub refuse que l'action publie le cycle. Dans Settings › Actions › General › Workflow permissions, choisissez « Read and write permissions », puis relancez."; exit 1; }
+          git add -A
+          git rm -r -q --cached .github             # (les workflows restent dans main : la publication n'a pas à les porter)
+          arbre=$(git write-tree)
+          if [ -n "$PUBLIE" ] && [ "$(git rev-parse "$PUBLIE^{tree}")" = "$arbre" ]; then echo "rien de neuf à publier"; exit 0; fi
+          if [ -n "$PUBLIE" ] && git diff --cached --quiet "$PUBLIE" -- mondes; then quoi="le code de main"; else quoi="les mondes"; fi
+          commit=$(git commit-tree "$arbre" -m "publication $(date -u +%Y-%m-%dT%H:%M) : $quoi (main $(git rev-parse --short HEAD))")
+          git push -q -f origin "$commit:refs/heads/publication" || { echo "::error title=publication::GitHub refuse que l'action publie. Dans Settings › Actions › General › Workflow permissions, choisissez « Read and write permissions », puis relancez."; exit 1; }
+          echo "publié : $commit"
       - name: signaler un monde en panne
         if: steps.tourner.outcome == 'failure'
         run: exit 1

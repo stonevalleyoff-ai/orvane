@@ -23,6 +23,10 @@ L'action GitHub (`.github/workflows/cycle.yml`) passe à la 17ᵉ minute de chaq
 
 Le monde d'Orvane tourne donc chaque jour vers 03:17 UTC. Une action en retard ne le fait pas dériver : le lendemain, il tourne de nouveau vers 03:17. Un monde à l'heure tourne à chaque passage. L'action ne passe qu'une fois par heure : un monde à dix minutes y fait 6 cycles d'un coup, s'il a un `rattrapage` d'au moins 6. Pour un rythme plus fin que l'heure, il vaut mieux un monde solo.
 
+**En vrai, l'heure de GitHub (mesuré le 6 novembre).** GitHub ne garantit pas l'heure de ses actions programmées. Quand l'action était quotidienne, elle partait vers 10 h 50 UTC au lieu de 3 h. Programmée à chaque heure, elle n'est partie, du 5 au 6 novembre, qu'à 21 h 28 et à 2 h 27, puis plus pendant sept heures. Un cycle dû n'est jamais perdu, il est rattrapé à la passe suivante ; mais il peut arriver avec des heures de retard. Pour une heure exacte, un déclencheur extérieur peut lancer l'action à l'heure dite : l'appel `workflow_dispatch` de l'API de GitHub, avec un jeton qui ne permet que cela, depuis une tâche planifiée du Supabase d'Orvane (`pg_cron`) ou un service de cron.
+
+**La publication.** Chaque passe republie le site dans la branche `publication`, en un seul commit sans historique : l'état de chaque monde y est repris au début de la passe suivante (hebergement/LISEZ-MOI.md, « La branche de publication »).
+
 **À la main.** « Run workflow » fait tourner chaque monde du nombre de cycles demandé (1 par défaut), sans regarder l'heure. Le champ vide : les cycles que chaque monde doit. Pour essayer une heure donnée : `node hebergement/cycle.js <monde> --auto --maintenant 2026-11-05T03:17:00Z`.
 
 ## Un monde solo
