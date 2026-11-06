@@ -259,7 +259,7 @@ export interface Instantane {
     natures?: {
       [cle: string]: unknown;
     }[];
-    /** (docs/38) Les populations voisines venues hiverner ici (taxon, de : leur lieu, effectif, forme du groupe). Elles restent comptées chez elles. */
+    /** (docs/38) Les populations voisines venues hiverner ici (taxon, de : leur lieu, effectif, forme du groupe). Sans hivernage actif, c'est une estimation, et elles restent comptées chez elles ; avec (regles.hivernage.actif), ce sont les hivernants comptés ici (populations[].hivernants). */
     visiteurs?: {
       taxon?: string;
       de?: string;
@@ -753,6 +753,10 @@ export interface Instantane {
         etat?: "au depart" | "partie" | "au retour" | "au pays";
         guide?: string;
       };
+      /** (docs/38) Dans un monde où l'hivernage est actif (regles.hivernage.actif), la part de cette population venue d'ailleurs passer l'hiver ici, par lieu d'origine : ils sont comptés dans son effectif, et rentrent chez eux au printemps. */
+      hivernants?: {
+        [cle: string]: number;
+      };
       /** Un brouteur (docs/30) : sa référence d'avant l'éveil des régimes, le temps de la raccorder (un cycle). */
       recouvrement_avant?: number;
     }[];
@@ -910,7 +914,7 @@ export interface Profil {
     invention?: boolean;
     /** L'esprit (docs/34) : le cycle de nuit l'éveille, une fois ; les bêtes apprennent, transmettent, se servent d'outils ; chaque population a ses savoirs. */
     esprit?: boolean;
-    /** Des règles du moteur (REGLES de moteur/orvane.js) réglées pour ce monde vivant : elles complètent, d'un niveau, celles de sa genèse (monde.regles de l'instantané) et ne valent que pour ce qui arrive ensuite. Exemple : { "derive": { "tolerance": 0.35, "formes": 1 } } laisse la largeur de la niche dériver à la séparation, et fait naître les formes nouvelles du monde à la séparation (docs/33). */
+    /** Des règles du moteur (REGLES de moteur/orvane.js) réglées pour ce monde vivant : elles complètent, d'un niveau, celles de sa genèse (monde.regles de l'instantané) et ne valent que pour ce qui arrive ensuite. Exemple : { "derive": { "tolerance": 0.35, "formes": 1 } } laisse la largeur de la niche dériver à la séparation, et fait naître les formes nouvelles du monde à la séparation (docs/33). ; { "hivernage": { "actif": 1, "rude": 0.85 } } fait partir pour de bon les bêtes dont l'hiver est rude (docs/38). */
     regles?: {
       [cle: string]: unknown;
     };
