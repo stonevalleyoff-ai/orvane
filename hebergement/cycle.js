@@ -27,6 +27,7 @@
 // lus avec les expositions du dernier jeux.json.
 'use strict';
 const fs = require('fs'), path = require('path');
+const Genres = require('../moteur/genres.js');
 const Orvane = require('../moteur/orvane.js'), Tampon = require('../tampon/tampon.js'), Morceaux = require('../tampon/morceaux.js'), Milieu = require('../moteur/milieu.js'), Ponte = require('../moteur/ponte.js'), Stades = require('../moteur/stades.js'), Invention = require('../moteur/invention.js'), Natures = require('../moteur/natures.js'), Derives = require('../moteur/derives.js'), Dietes = require('../moteur/dietes.js'), Climat = require('../moteur/climat.js'), Grammaire = require('../moteur/grammaire.js'), Castes = require('../moteur/castes.js'), Formes = require('../moteur/formes.js'), Esprit = require('../moteur/esprit.js'), Fusion = require('../moteur/fusion.js'), Parcelles = require('../moteur/parcelles.js'), Synthetique = require('../moteur/synthetique.js'), Flore = require('../moteur/flore.js'), Pathogenes = require('../moteur/pathogenes.js'), Chronique = require('../moteur/chronique.js'), Collectif = require('../moteur/collectif.js');
 const a = process.argv.slice(2), monde = a.find(x => !x.startsWith('--')) || 'sv-1', sansReseau = a.includes('--sans-reseau');
 const arg = (k, defaut) => { const i = a.indexOf(k); return i >= 0 && a[i + 1] != null ? +a[i + 1] : defaut; };
@@ -120,7 +121,8 @@ const alleger = I => ({ cycle: I.cycle, taxons: I.taxons.map(t => ({ id: t.id, n
   biomes: I.biomes.map(b => ({ id: b.id, capacite: Math.round(b.capacite) })), evenements: I.evenements || [] });
 
 (async () => {
-  const profil = lire('profil.json'); if (!profil) throw new Error(`pas de profil : ${f('profil.json')}`);
+  let profil = lire('profil.json'); if (!profil) throw new Error(`pas de profil : ${f('profil.json')}`);
+  if (profil.monde?.genre && profil.monde.genre !== 'neutre') profil = Genres.profil(profil.monde.genre, profil);   // (docs/41) ce que pèsent les joueurs dans ce genre
   if (profil.monde?.nocturne === false && !a.includes('--forcer')) { console.log(`${monde} : pas de cycle nocturne (profil.monde.nocturne = false ; --forcer pour le faire tourner)`); return; }
   let etat = lire('etat.json');
   // (docs/19) le temps : avec --auto, un monde tourne à chaque heure de cycle franchie depuis son dernier cycle. Les heures de cycle
@@ -154,6 +156,8 @@ const alleger = I => ({ cycle: I.cycle, taxons: I.taxons.map(t => ({ id: t.id, n
   if (profil.monde?.annee != null) etat.monde.annee = profil.monde.annee;   // la durée de l'année suit le profil
   // (équilibrage) des règles du moteur réglées pour un monde vivant (profil.monde.regles) : elles complètent celles de sa genèse
   // (monde.regles), d'un niveau ; elles ne valent que pour ce qui arrive ensuite — le jour où on les pose, rien ne bouge
+  // (docs/41) un monde d'un genre (profil.monde.genre) : les règles du genre sur celles de sa genèse ; celles du profil, plus bas, par-dessus
+  if (profil.monde?.genre && profil.monde.genre !== 'neutre') { etat.monde.regles = Genres.regles(profil.monde.genre, etat.monde.regles); etat.monde.genre = profil.monde.genre; }
   if (profil.monde?.regles && typeof profil.monde.regles === 'object') { const R = { ...(etat.monde.regles || {}) };
     for (const [k, v] of Object.entries(profil.monde.regles)) R[k] = v && typeof v === 'object' && !Array.isArray(v) && R[k] && typeof R[k] === 'object' ? { ...R[k], ...v } : v;
     etat.monde.regles = R; }

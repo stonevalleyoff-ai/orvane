@@ -45,6 +45,7 @@ Pour s'inscrire, recevoir ses clés et faire ses premiers appels au Supabase d'O
 | [37. La chronique, le muséum, les noms](37-chronique-museum-noms.md) | l'histoire du monde : un journal de ce qui compte, par année ; un spécimen par lignée, gardé après sa mort, avec sa cause ; le nom commun que donne le premier joueur qui décrit une lignée (`orvane_nommer`) |
 | [38. La vie en groupe](38-comportements-collectifs.md) | troupeaux, meutes, bancs, colonies : la taille des groupes, la hiérarchie, qui les mène ; les migrations des saisons et les visiteurs de l'hiver |
 | [39. Le kit du traducteur](39-kit-traducteur.md) | les types TypeScript du contrat (`types/orvane.d.ts`, tirés des schémas) ; vérifier un lot, un instantané, un profil avant le premier dépôt (`outils/verifier.js`) |
+| [41. Les profils de genre](41-profils-de-genre.md) | horreur, cozy, collection, voxel, survie, stratégie, monde partagé : les règles du moteur, le poids des joueurs et le rythme de chaque genre, tout prêts ; chaque promesse mesurée par un banc |
 
 ## En une page
 
