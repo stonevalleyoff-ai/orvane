@@ -1,0 +1,27 @@
+# Orvane — les versions : quand main porte une version nouvelle (package.json), elle est publiée : l'étiquette vX.Y.Z et une page
+# « Release » sur GitHub, avec ce que dit d'elle CHANGELOG.md. Un jeu l'installe alors par
+#   npm install github:stonevalleyoff-ai/orvane#vX.Y.Z
+# Publier une version : changer « version » dans package.json (et CONTRAT dans moteur/orvane.js pour un MAJEUR ou un MINEUR), écrire
+# son entrée « ## [X.Y.Z] » dans CHANGELOG.md, fusionner (docs/43). Rien d'autre à faire.
+name: version
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: publier la version, si elle est nouvelle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v=$(node -p "require('./package.json').version")
+          if git ls-remote --exit-code --tags origin "refs/tags/v$v" > /dev/null; then echo "v$v est déjà publiée"; exit 0; fi
+          awk -v v="$v" 'index($0, "## [" v "]") == 1 { p = 1; next } p && /^## \[/ { exit } p' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
+          [ -s "$RUNNER_TEMP/notes.md" ] || { echo "::error::CHANGELOG.md n'a pas d'entrée « ## [$v] »"; exit 1; }
+          gh release create "v$v" --target "$GITHUB_SHA" --title "Orvane $v" --notes-file "$RUNNER_TEMP/notes.md"
+          echo "publiée : v$v" >> "$GITHUB_STEP_SUMMARY"

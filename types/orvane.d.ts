@@ -6,7 +6,7 @@ export type InstantaneUnite = number;
 
 /** Orvane — instantané (sortie du moteur) — L'état du vivant d'un monde à un cycle donné. Orvane ne connaît aucun jeu : tout est biologie abstraite. Le traducteur du jeu lit ce fichier et en fait des données jouables. */
 export interface Instantane {
-  /** Version du contrat, ex. « 0.1 ». */
+  /** Version du contrat, MAJEUR.MINEUR : « 1.0 » depuis le 7 novembre 2026 (« 0.1 » avant ; docs/43). Même majeur, rien ne casse : un jeu ignore ce qu'il ne connaît pas. */
   orvane: string;
   monde: {
     /** Un monde par jeu : identifiant stable du monde. */
@@ -810,6 +810,7 @@ export interface Instantane {
 
 /** Orvane — lot de pressions (entrée, envoyé par le traducteur) — Ce qu'un jeu renvoie à Orvane : des comptes bruts, jamais des conclusions. Le tampon rapporte ces comptes à l'exposition (rencontres), les dénormalise selon la rareté affichée par le jeu et les plafonne avant de les donner au moteur. */
 export interface Lot {
+  /** Version du contrat que suit le lot, MAJEUR.MINEUR (« 1.0 » ; docs/43). Orvane accepte les lots des versions 0.x et 1.x. */
   orvane: string;
   /** Doit être l'id du monde de l'instantané lu. */
   monde: string;
@@ -869,6 +870,7 @@ export interface Lot {
 
 /** Orvane — profil d'un monde (réglage du tampon) — Un fichier par monde. Il règle le tampon dans le sens jeu → Orvane : comment les actes des joueurs de tous les jeux branchés pèsent sur le monde. Ce que chaque jeu montre du monde (exposition) est réglé par le jeu lui-même dans le Supabase d'Orvane (orvane_regler_jeu, hebergement/LISEZ-MOI.md) et publié dans jeux.json ; l'exposition d'un profil de monde ne sert plus qu'aux lots sans jeu (et aux mondes d'avant, comme sv-1). Rien ici ne touche à la biologie elle-même. */
 export interface Profil {
+  /** Version du contrat que suit le profil, MAJEUR.MINEUR (« 1.0 » ; docs/43). Orvane accepte les profils des versions 0.x et 1.x. */
   orvane: string;
   /** Le jeu pour lequel le monde a été fait (mondes d'avant, comme sv-1). Un monde universel n'en a pas. */
   jeu?: string;

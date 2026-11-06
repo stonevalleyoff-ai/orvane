@@ -28,7 +28,7 @@ function lire(inst) {
 }
 
 function jouer(inst, hasard) {
-  const C = lire(inst), lot = { orvane: '0.1', monde: inst.monde?.id, instantane: inst.cycle?.n, source: { jeu: 'safari-exemple', compte: 'h:' + Math.floor(hasard() * 1e9).toString(16) },
+  const C = lire(inst), lot = { orvane: inst.orvane || '1.0', monde: inst.monde?.id, instantane: inst.cycle?.n, source: { jeu: 'safari-exemple', compte: 'h:' + Math.floor(hasard() * 1e9).toString(16) },
     periode: { debut: inst.cycle?.date || '2026-01-01T00:00:00Z', fin: inst.cycle?.date || '2026-01-01T00:00:00Z' }, evenements: [] };
   if (!C.length) return lot;
   for (let k = 0; k < 3; k++) { const c = C[Math.floor(hasard() * C.length)];

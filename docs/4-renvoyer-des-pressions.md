@@ -3,7 +3,7 @@
 Le jeu renvoie des **comptes bruts**, jamais des conclusions. Le tampon fait le jugement (chapitre 5). Un lot est validé par `schemas/pression.schema.json` :
 
 ```json
-{ "orvane": "0.1", "monde": "sv-1", "instantane": 12,
+{ "orvane": "1.0", "monde": "sv-1", "instantane": 12,
   "source": { "jeu": "stone-valley", "compte": "h:2k9f1a", "zone": "ile:884120" },
   "periode": { "debut": "2026-10-27T18:02:11Z", "fin": "2026-10-27T19:40:03Z" },
   "evenements": [

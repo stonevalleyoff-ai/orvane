@@ -7,7 +7,7 @@
   "required": ["orvane", "monde", "source", "periode", "evenements"],
   "additionalProperties": false,
   "properties": {
-    "orvane": { "type": "string" },
+    "orvane": { "type": "string", "description": "Version du contrat que suit le lot, MAJEUR.MINEUR (« 1.0 » ; docs/43). Orvane accepte les lots des versions 0.x et 1.x." },
     "monde": { "type": "string", "description": "Doit être l'id du monde de l'instantané lu." },
     "familles": { "type": "array", "items": { "enum": ["animale", "synthetique", "vegetale"] }, "description": "Les familles de lignées que ce jeu joue (animale seule si rien n'est dit, ni ici ni dans son exposition). Le tampon ne lit pas ses événements sur les autres : une nouveauté du monde (les machines, docs/16) ne compte pour un jeu que s'il la demande." },
     "instantane": { "type": "integer", "description": "Numéro du cycle que le jeu utilisait quand ces événements ont eu lieu (sert à dénormaliser avec les bonnes fréquences)." },

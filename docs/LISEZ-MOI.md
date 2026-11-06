@@ -48,6 +48,7 @@ Pour s'inscrire, recevoir ses clés et faire ses premiers appels au Supabase d'O
 | [40. Le directeur de mise en scène](40-directeur.md) | ce qu'un jeu devrait montrer à ses joueurs au dernier cycle, selon son genre (horreur, cozy, collection, survie…) : des moments classés, chacun avec sa raison |
 | [41. Les profils de genre](41-profils-de-genre.md) | horreur, cozy, collection, voxel, survie, stratégie, monde partagé : les règles du moteur, le poids des joueurs et le rythme de chaque genre, tout prêts ; chaque promesse mesurée par un banc |
 | [42. Les eaux douces](42-eaux-douces.md) | une genèse sur dix lieux d'eau, dont sept nouveaux (le torrent, le lac profond, l'étang, la roselière, le delta, les sources chaudes, la grotte inondée) : 60 lignées, reliées au monde d'Orvane par trois ponts |
+| [43. Les versions](43-versions.md) | un contrat qui ne casse pas sans prévenir : ce qui casse un jeu et ce qui ne casse pas, le garde-fou de chaque PR, le journal, le paquet à installer |
 
 ## En une page
 
