@@ -32,7 +32,7 @@ const a = process.argv.slice(2), monde = a.find(x => !x.startsWith('--')) || 'sv
 const arg = (k, defaut) => { const i = a.indexOf(k); return i >= 0 && a[i + 1] != null ? +a[i + 1] : defaut; };
 let nCycles = arg('--cycles', 1) || 1;
 const auto = a.includes('--auto'), iM = a.indexOf('--maintenant'), maintenant = iM >= 0 ? Date.parse(a[iM + 1]) : Date.now();   // --maintenant <date ISO> : rejouer ou essayer une heure donnée
-const periodeDe = c => { c = String(c || '24h'); const n = parseFloat(c) || 24; return c.endsWith('d') ? n * 864e5 : c.endsWith('min') || c.endsWith('m') ? n * 6e4 : n * 36e5; };
+const { periodeDe, dus } = require('./rythme.js');   // (le rythme d'un monde : la veille le lit de la même façon)
 const D = path.join(__dirname, '..', 'mondes', monde), f = n => path.join(D, n);
 const secretDe = Pp => Pp && (process.env[Pp.secret || 'ORVANE_LECTURE_SECRET'] || '').trim().replace(/^["']+|["']+$/g, '');
 const rpc = async (Pp, fn, corps) => { const r = await fetch(`${Pp.url.replace(/\/$/, '')}/rest/v1/rpc/${fn}`, { method: 'POST',
@@ -127,8 +127,7 @@ const alleger = I => ({ cycle: I.cycle, taxons: I.taxons.map(t => ({ id: t.id, n
   // partent de monde.heure (03:00 UTC par défaut, un lundi) et reviennent toutes les monde.cycle : à 03:00 chaque jour pour un monde
   // au jour, à chaque heure pleine pour un monde à l'heure. Au plus monde.rattrapage cycles d'un coup (3 par défaut) ; pas encore
   // l'heure : rien ne bouge, rien n'est lu
-  if (auto && etat) { const per = periodeDe(profil.monde?.cycle), [hh, mm] = String(profil.monde?.heure || '03:00').split(':').map(Number), A = Date.UTC(1970, 0, 5) + ((hh || 0) * 60 + (mm || 0)) * 6e4;
-    const dernier = Date.parse(etat.cycle?.date || 0), du = Math.floor((maintenant - A) / per) - Math.floor((dernier - A) / per);
+  if (auto && etat) { const dernier = Date.parse(etat.cycle?.date || 0), { du } = dus(profil, dernier, maintenant);
     if (du < 1) { console.log(`${monde} : pas encore l'heure (un cycle toutes les ${profil.monde?.cycle || '24h'} ; le dernier il y a ${Math.round((maintenant - dernier) / 6e4)} min)`); return; }
     nCycles = Math.min(du, profil.monde?.rattrapage ?? 3); if (du > nCycles) console.log(`${monde} : ${du} cycles dus, ${nCycles} rattrapés`); }
   if (!etat) {   // premier cycle : on part de l'amorce, et on la publie telle quelle (generation-0.json) : les traducteurs s'y comparent

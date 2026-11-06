@@ -74,6 +74,51 @@ Le site (l'accueil, l'observatoire, et les mondes que lisent les jeux) est servi
 - Les fichiers de `mondes/` que `main` garde sont l'état au moment du passage à la publication : le monde vivant est dans la branche `publication` (`git fetch origin publication`).
 - Le premier passage : fusionner, attendre que l'action ait créé la branche `publication` (l'onglet Actions, quelques minutes après la fusion), puis choisir cette branche dans Settings › Pages. Tant que Pages sert `main`, le site garde le monde du dernier cycle publié dans `main`.
 
+## La fiabilité
+
+Trois gardes, qui ne demandent rien d'autre que le dépôt.
+
+### Les vérifications
+
+`.github/workflows/verifications.yml` tourne à chaque PR et à chaque changement de `main` :
+- **le contrat** (une minute) : chaque fichier JavaScript se lit ; les types (`types/orvane.d.ts`) sont bien ceux des schémas, et passent `tsc --strict` ; chaque profil, chaque amorce et chaque instantané du dépôt respecte le contrat (`outils/verifier.js`) ;
+- **les bancs rapides** : tous les bancs, chacun dans sa version courte, quatre à la fois (`outils/bancs.js`).
+
+Chaque nuit, à 05:23 UTC, elle fait tourner les bancs longs dans leur version entière (le monde à parcelles sur 200 cycles, la stabilité sur 1 000, la fusion, les ponts, le temps). « Run workflow » les lance à la demande (`rapides`, `longs` ou `tous`). Le bilan, banc par banc, est dans le résumé de chaque passe.
+
+Pour qu'une PR en échec ne puisse pas être fusionnée : Settings › Branches › « Add branch ruleset » (ou « Add rule ») pour `main`, « Require status checks to pass », et choisir `contrat` et `bancs`.
+
+À la main :
+
+```
+node outils/bancs.js                  # les bancs rapides (versions courtes)
+node outils/bancs.js corps tampon     # ceux-là seulement
+node outils/bancs.js --longs          # les bancs longs, entiers
+```
+
+Un banc nouveau est pris tout seul : il suffit qu'il finisse par `process.exit` (0 s'il passe). Un banc trop long pour chaque PR se range dans la liste `LONGS` d'`outils/bancs.js`.
+
+### La veille
+
+`.github/workflows/veille.yml` regarde toutes les trois heures si chaque monde qui tourne a eu son dernier cycle (`hebergement/veille.js`, au même rythme que le cycle : `hebergement/rythme.js`). Le monde d'Orvane tourne une fois par jour, à 03:00 UTC : si le cycle d'une heure passée depuis plus de quatre heures n'a pas eu lieu, c'est un retard. Elle regarde aussi ce que montre le site : un site qui montre un cycle plus vieux que la publication n'est pas servi depuis la branche `publication`.
+
+Au premier retard, elle ouvre une issue « veille » (GitHub l'envoie par courriel à qui suit le dépôt), qu'elle tient à jour ; quand tout repart, elle la ferme.
+
+```
+node hebergement/veille.js <la branche publication extraite> [--site https://…/] [--maintenant 2026-11-07T09:00:00Z]
+```
+
+### Les sauvegardes
+
+La branche `publication` n'a pas d'historique : sans sauvegarde, un état abîmé ne se rattraperait pas. Chaque passe du cycle où un monde a tourné garde donc l'état de ce monde dans un artefact de la passe, « etat-mondes », pendant 30 jours (quelques mégaoctets compressés).
+
+Pour revenir en arrière :
+1. Actions › cycle : ouvrir la passe dont on veut l'état. Son numéro est le nombre à la fin de l'adresse de sa page (`…/actions/runs/19234567890`).
+2. Actions › cycle › « Run workflow », et dans « restaurer », ce numéro.
+3. La passe repart de cet état (`node hebergement/publication.js restaurer`), puis fait les cycles dus (au plus `monde.rattrapage`), et publie.
+
+Ce qu'on écrit à la main (le profil, l'amorce) vient toujours de `main`. Une sauvegarde d'un autre monde (une autre naissance) n'est pas restaurée.
+
 ## À la main
 
 ```

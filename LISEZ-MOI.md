@@ -40,6 +40,7 @@ index.html            la page d'accueil du site publié : ce qu'est Orvane, l'é
 README.md, llms.txt   la présentation du dépôt (GitHub l'affiche en page d'accueil) et son résumé pour les IA (liens vers le guide et les schémas)
 types/orvane.d.ts     les types TypeScript du contrat, tirés des schémas par outils/types.js (docs/39)
 outils/verifier.js    vérifier un lot, un instantané ou un profil avant de le déposer : le schéma, et ce que le Supabase refusera (docs/39)
+outils/bancs.js       tous les bancs d'un coup, en parallèle : les rapides à chaque PR, les longs la nuit (hebergement/LISEZ-MOI.md, « La fiabilité »)
 schemas/              le contrat : instantane, pression, profil — avec exemples (crapaud buffle)
 traducteurs/stone-valley/   le premier client, de bout en bout : correspondances, traducteur, génération 0, banc, SQL
 bancs/stabilite.js    les bancs de stabilité : mille cycles sans joueurs et avec, le jour un, la réponse à la sélection, le déterminisme
@@ -70,7 +71,9 @@ bancs/chronique.js    le banc de la chronique : rien ne change, ce qu'elle garde
 bancs/collectif.js    le banc de la vie en groupe : qui vit comment, la taille des groupes, la hiérarchie, les troupeaux mêlés, les migrations et les visiteurs
 bancs/temps.js        le banc du temps : le rythme de chaque monde (l'action horaire, le rattrapage), le monde solo (temps réel, accéléré, sauvegarde, navigateur)
 hebergement/cycle.js  le cycle, chaque monde à son rythme (docs/19) : lots de tous les jeux → tampon → moteur → instantané publié (action GitHub .github/workflows/cycle.yml)
-hebergement/publication.js  la branche publication : l'état de chaque monde repris au début de chaque passe, le site republié en un seul commit sans historique (hebergement/LISEZ-MOI.md)
+hebergement/publication.js  la branche publication : l'état de chaque monde repris au début de chaque passe, le site republié en un seul commit sans historique ; une sauvegarde restaurée (hebergement/LISEZ-MOI.md)
+hebergement/rythme.js le rythme d'un monde hébergé : quand ses cycles sont dus (le cycle et la veille le lisent)
+hebergement/veille.js la veille : un monde qui ne tourne plus, un site qui montre un vieux cycle (action .github/workflows/veille.yml, qui ouvre une issue)
 hebergement/supabase.sql  le Supabase d'Orvane : les jeux s'y inscrivent, y déposent les pressions de leurs joueurs et y proposent des noms
 mondes/orvane/        le monde d'Orvane, où tous les jeux se branchent : né de la genèse universelle, Stone Valley y joue depuis le 29 octobre 2026
 mondes/marin/         la mer d'Orvane : une genèse sur les seuls biomes d'eau (vingt ancêtres, 29 lignées), versée dans le monde d'Orvane par une fusion (profil.monde.fusions)

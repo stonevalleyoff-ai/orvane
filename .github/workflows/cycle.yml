@@ -8,6 +8,10 @@
 # commit, sans historique : le code de main, et l'état de chaque monde. L'état d'un monde se reprend de la publication au début de
 # chaque passe ; main garde le code et ce qu'on écrit à la main (profil.json, amorce.json…). Un changement poussé sur main est
 # publié dans la foulée, sans faire tourner un monde avant son heure.
+#
+# Les sauvegardes : chaque passe où un monde a tourné garde son état dans un artefact de l'action (« etat-mondes », 30 jours). Pour
+# revenir en arrière : Actions › cycle › Run workflow, et dans « restaurer », le numéro de la passe dont on veut l'état (le nombre à la
+# fin de l'adresse de sa page). La passe repart de cet état, puis fait les cycles dus (hebergement/LISEZ-MOI.md, « Les sauvegardes »).
 name: cycle
 on:
   schedule:
@@ -19,8 +23,12 @@ on:
       cycles:
         description: 'nombre de cycles à faire tourner (vide : les cycles dus)'
         default: ''
+      restaurer:
+        description: "revenir en arrière : le numéro de la passe dont on reprend l'état sauvegardé (vide : rien)"
+        default: ''
 permissions:
   contents: write
+  actions: read          # (lire la sauvegarde d'une autre passe)
 concurrency:
   group: cycle
   cancel-in-progress: false
@@ -40,7 +48,15 @@ jobs:
           else
             echo "pas encore de branche publication : les mondes partent de main"
           fi
+          # revenir en arrière : l'état sauvegardé par une passe passée remplace celui de la publication
+          if printf '%s' "$RESTAURER" | grep -Eq '^[0-9]{5,}$'; then
+            gh run download "$RESTAURER" -n etat-mondes -D "$RUNNER_TEMP/restauration" || { echo "::error title=restauration::pas de sauvegarde « etat-mondes » dans la passe $RESTAURER (elle a peut-être plus de 30 jours, ou aucun monde n'y a tourné)"; exit 1; }
+            node hebergement/publication.js restaurer "$RUNNER_TEMP/restauration"
+          elif [ -n "$RESTAURER" ]; then echo "::error title=restauration::« $RESTAURER » n'est pas un numéro de passe"; exit 1; fi
           cp -a mondes "$RUNNER_TEMP/avant"            # (pour rendre à un monde en panne son dossier tel qu'il était)
+        env:
+          RESTAURER: ${{ github.event.inputs.restaurer }}
+          GH_TOKEN: ${{ github.token }}
       - name: faire tourner chaque monde
         id: tourner
         continue-on-error: true          # un monde en panne n'empêche pas les autres d'être publiés
@@ -61,6 +77,22 @@ jobs:
             fi
           done
           exit $echec
+      - name: sauvegarder l'état des mondes qui ont tourné
+        id: sauvegarde
+        run: |
+          n=0; mkdir -p "$RUNNER_TEMP/sauvegarde/mondes"
+          for m in mondes/*/; do id=$(basename "$m")
+            if [ -f "$m/etat.json" ] && ! cmp -s "$m/etat.json" "$RUNNER_TEMP/avant/$id/etat.json"; then cp -a "$m" "$RUNNER_TEMP/sauvegarde/mondes/$id"; n=$((n+1)); fi
+          done
+          echo "n=$n" >> "$GITHUB_OUTPUT"; echo "$n monde(s) à sauvegarder"
+      - name: la sauvegarde (un artefact de la passe, gardé 30 jours)
+        if: steps.sauvegarde.outputs.n != '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: etat-mondes
+          path: ${{ runner.temp }}/sauvegarde
+          retention-days: 30
+          compression-level: 9
       - name: publier (la branche publication, réécrite en un seul commit)
         run: |
           git config user.name "orvane"
