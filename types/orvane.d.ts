@@ -543,6 +543,7 @@ export interface Instantane {
       corps?: {
         /** quadrupede, hexapode, bipede, oiseau, serpent, ou une forme propre au monde (catalogue.monde.formes, docs/20). */
         forme?: string;
+        /** 0, 2, 4, 6 ou 8 pour les cinq formes de base ; un corps segmenté porte de 10 à 40 pattes (60 au plus), un corps rayonné ou à tentacules de 4 à 10 bras (docs/33). */
         pattes?: number;
         long?: number;
         haut?: number;
@@ -628,6 +629,7 @@ export interface Instantane {
         larves?: number;
       };
     };
+    /** Ses populations, une par biome où elle vit. Vide pour une lignée éteinte, qui reste listée 10 cycles ; une lignée vivante en a au moins une (outils/verifier.js le vérifie). */
     populations: {
       biome: string;
       effectif: number;
@@ -908,7 +910,7 @@ export interface Profil {
     invention?: boolean;
     /** L'esprit (docs/34) : le cycle de nuit l'éveille, une fois ; les bêtes apprennent, transmettent, se servent d'outils ; chaque population a ses savoirs. */
     esprit?: boolean;
-    /** Des règles du moteur (REGLES de moteur/orvane.js) réglées pour ce monde vivant : elles complètent, d'un niveau, celles de sa genèse (monde.regles de l'instantané) et ne valent que pour ce qui arrive ensuite. Exemple : { "derive": { "tolerance": 0.35 } } laisse la largeur de la niche dériver à la séparation. */
+    /** Des règles du moteur (REGLES de moteur/orvane.js) réglées pour ce monde vivant : elles complètent, d'un niveau, celles de sa genèse (monde.regles de l'instantané) et ne valent que pour ce qui arrive ensuite. Exemple : { "derive": { "tolerance": 0.35, "formes": 1 } } laisse la largeur de la niche dériver à la séparation, et fait naître les formes nouvelles du monde à la séparation (docs/33). */
     regles?: {
       [cle: string]: unknown;
     };

@@ -1,12 +1,396 @@
 {
- "hotes": {},
+ "hotes": {
+  "souche-1": [
+   "jameki"
+  ],
+  "souche-2": [
+   "tabelume"
+  ],
+  "souche-3": [
+   "orki"
+  ],
+  "souche-4": [
+   "viorgra"
+  ],
+  "souche-5": [
+   "orki"
+  ],
+  "souche-6": [
+   "muel"
+  ],
+  "souche-7": [
+   "elumeys",
+   "elumeys.sommets~3"
+  ],
+  "souche-8": [
+   "phemutor"
+  ],
+  "souche-9": [
+   "muki"
+  ],
+  "souche-10": [
+   "kilovi"
+  ],
+  "souche-12": [
+   "belro",
+   "taphe",
+   "kaysnou"
+  ],
+  "souche-13": [
+   "orki"
+  ],
+  "souche-14": [
+   "tabelume"
+  ],
+  "souche-15": [
+   "silvator"
+  ],
+  "souche-16": [
+   "renou"
+  ],
+  "souche-17": [
+   "nelo"
+  ],
+  "souche-18": [
+   "elumeys"
+  ],
+  "souche-22": [
+   "dunan",
+   "dunan.toundra~3"
+  ],
+  "souche-23": [
+   "dunan"
+  ],
+  "souche-26": [
+   "katorja"
+  ],
+  "souche-27": [
+   "belro",
+   "linnou",
+   "nemumu",
+   "grajaor",
+   "pheneva",
+   "netissil",
+   "jakaan",
+   "katorja",
+   "belanphe",
+   "menouki",
+   "ysmetor",
+   "ouso",
+   "anume",
+   "grane",
+   "neso",
+   "nouan",
+   "yskaor",
+   "gralinlin",
+   "ysouro",
+   "janou",
+   "tasilta",
+   "tamuren",
+   "firtis",
+   "linrogra",
+   "taan",
+   "losoka",
+   "nelo",
+   "vineta",
+   "kata",
+   "firneou",
+   "phetael",
+   "vays",
+   "dunvamu",
+   "nemune",
+   "nounouka",
+   "lincormu",
+   "jaso",
+   "lintor",
+   "silnou",
+   "belne",
+   "muel",
+   "lojaume",
+   "phero",
+   "muka",
+   "loume",
+   "silantis",
+   "kilovi",
+   "jameki",
+   "roren",
+   "kavane",
+   "oror",
+   "corki",
+   "taroan",
+   "silvator",
+   "kabelvi",
+   "renmu",
+   "vineta.foret~3",
+   "dunan",
+   "renou",
+   "yskagra",
+   "elumeys",
+   "oume",
+   "dunsoja",
+   "ortor",
+   "lobel",
+   "sokibel"
+  ],
+  "souche-28": [
+   "linnou"
+  ],
+  "souche-29": [
+   "elumeys"
+  ],
+  "souche-30": [
+   "gralinlin"
+  ],
+  "souche-31": [
+   "ysmetor"
+  ],
+  "souche-32": [
+   "orki"
+  ],
+  "souche-33": [
+   "yskaor"
+  ],
+  "souche-34": [
+   "pheneva",
+   "pheneva.prairie~3"
+  ],
+  "souche-35": [
+   "belro",
+   "muelren",
+   "lojaume",
+   "roren",
+   "jaso",
+   "renmu",
+   "phetael",
+   "kaysnou",
+   "elumeys",
+   "renou"
+  ],
+  "souche-37": [
+   "vineta"
+  ],
+  "souche-38": [
+   "kabelvi"
+  ],
+  "souche-39": [
+   "linnou",
+   "nemumu",
+   "lonefir",
+   "janou",
+   "dunvamu",
+   "pheneva",
+   "firoran",
+   "muel",
+   "netissil",
+   "dunan",
+   "neso",
+   "outor",
+   "neouan",
+   "belanphe",
+   "somean",
+   "roysmu",
+   "anphevi",
+   "grajaor",
+   "kisofir",
+   "muneta",
+   "sonouel",
+   "kimune",
+   "firdun",
+   "phetael",
+   "grane",
+   "silnou",
+   "oume",
+   "nemune",
+   "tiski",
+   "corgra",
+   "lobel",
+   "firneou",
+   "linrogra",
+   "loume",
+   "corfir",
+   "yskagra",
+   "silantis",
+   "loelro",
+   "jakaan",
+   "muelren",
+   "dunbelou",
+   "dunsoja",
+   "ortor",
+   "sokibel",
+   "phero",
+   "renbelka",
+   "vays",
+   "nounouka",
+   "firtis",
+   "kavane",
+   "umeumero",
+   "renou",
+   "taphe",
+   "orki",
+   "vaume",
+   "phetael.toundra~3",
+   "linlinel",
+   "silvator"
+  ],
+  "souche-40": [
+   "muel"
+  ],
+  "souche-42": [
+   "muelren"
+  ],
+  "souche-44": [
+   "janou"
+  ],
+  "souche-45": [
+   "noune"
+  ],
+  "souche-46": [
+   "grane"
+  ],
+  "souche-47": [
+   "jaso"
+  ],
+  "souche-48": [
+   "roysmu"
+  ],
+  "souche-49": [
+   "silnou",
+   "silnou.mangrove~4"
+  ],
+  "souche-50": [
+   "lintor"
+  ],
+  "souche-51": [
+   "nemumu"
+  ],
+  "souche-52": [
+   "dunvamu"
+  ],
+  "souche-53": [
+   "silvator"
+  ],
+  "souche-54": [
+   "linnou"
+  ],
+  "souche-55": [
+   "viorgra"
+  ],
+  "souche-56": [
+   "kimune"
+  ],
+  "souche-57": [
+   "belanphe"
+  ],
+  "souche-58": [
+   "jakaan"
+  ],
+  "souche-59": [
+   "pheneva"
+  ],
+  "souche-60": [
+   "dunsoja"
+  ],
+  "souche-61": [
+   "linnou"
+  ],
+  "souche-62": [
+   "linrogra"
+  ],
+  "souche-63": [
+   "renmu"
+  ],
+  "souche-64": [
+   "loume"
+  ],
+  "souche-65": [
+   "yskagra"
+  ],
+  "souche-66": [
+   "yskaor"
+  ],
+  "souche-67": [
+   "dunan"
+  ],
+  "souche-68": [
+   "loelro"
+  ]
+ },
  "orvane": "0.1",
  "monde": {
   "id": "genese-2026",
   "ne": "2026-11-05T15:17:35.988Z"
  },
  "depuis": 3000,
- "souches": [],
+ "souches": [
+  "souche-1",
+  "souche-2",
+  "souche-3",
+  "souche-4",
+  "souche-5",
+  "souche-6",
+  "souche-7",
+  "souche-8",
+  "souche-9",
+  "souche-10",
+  "souche-11",
+  "souche-12",
+  "souche-13",
+  "souche-14",
+  "souche-15",
+  "souche-16",
+  "souche-17",
+  "souche-18",
+  "souche-19",
+  "souche-20",
+  "souche-21",
+  "souche-22",
+  "souche-23",
+  "souche-24",
+  "souche-25",
+  "souche-26",
+  "souche-27",
+  "souche-28",
+  "souche-29",
+  "souche-30",
+  "souche-31",
+  "souche-32",
+  "souche-33",
+  "souche-34",
+  "souche-35",
+  "souche-36",
+  "souche-37",
+  "souche-38",
+  "souche-39",
+  "souche-40",
+  "souche-41",
+  "souche-42",
+  "souche-43",
+  "souche-44",
+  "souche-45",
+  "souche-46",
+  "souche-47",
+  "souche-48",
+  "souche-49",
+  "souche-50",
+  "souche-51",
+  "souche-52",
+  "souche-53",
+  "souche-54",
+  "souche-55",
+  "souche-56",
+  "souche-57",
+  "souche-58",
+  "souche-59",
+  "souche-60",
+  "souche-61",
+  "souche-62",
+  "souche-63",
+  "souche-64",
+  "souche-65",
+  "souche-66",
+  "souche-67",
+  "souche-68"
+ ],
  "hybrides": [
   "serpent-primitif.desert×yskaor",
   "linrogra×oiseau-primitif.jungle.savane.montagne",
@@ -44,7 +428,9 @@
   "filtreur-marin.mer-froide.cote.mer-froide.cote×vaume",
   "linlo×serpent-primitif",
   "jaou×oiseau-primitif.jungle.taiga.toundra",
-  "oume×ysys"
+  "oume×ysys",
+  "elumeys×elumeys.sommets~3",
+  "dunan×dunan.toundra~3"
  ],
  "records": {
   "lourd": {
@@ -61,36 +447,614 @@
   }
  },
  "compte": {
-  "eveil": 1,
-  "hybridation": 1
+  "eveil": 16,
+  "hybridation": 3,
+  "invention": 15,
+  "savoir": 152,
+  "souche": 68,
+  "naissance": 41,
+  "catastrophe": 24,
+  "conception": 14,
+  "epidemie": 137,
+  "climat": 2,
+  "extinction": 8
  },
  "annees": [
   {
    "an": 25,
    "de": 3001,
-   "a": 3001,
-   "entrees": 2
+   "a": 3119,
+   "entrees": 373
+  },
+  {
+   "an": 26,
+   "de": 3120,
+   "a": 3179,
+   "entrees": 107
   }
  ],
  "derniers": [
   {
-   "n": 3001,
-   "date": "2026-11-06T08:52:04.921Z",
-   "type": "eveil",
+   "n": 3144,
+   "date": "2026-11-20T16:18:20.328Z",
+   "type": "souche",
    "importance": 2,
-   "titre": "Éveil",
-   "texte": "la vie en groupe se voit : 32 troupeaux, 140 bancs, 9 volées ; 32 populations migrent avec les saisons",
-   "taxon": "kiva"
+   "titre": "Une maladie nouvelle",
+   "texte": "Rateose apparaît chez Renmu butineur de montagne (virulence 33 %)",
+   "taxon": "renmu"
   },
   {
-   "n": 3001,
-   "date": "2026-11-06T08:52:04.921Z",
+   "n": 3144,
+   "date": "2026-11-20T16:18:20.328Z",
+   "type": "souche",
+   "importance": 2,
+   "titre": "Une maladie nouvelle",
+   "texte": "Calkéose apparaît chez Loume brouteur d'algues de récif (virulence 23 %)",
+   "taxon": "loume"
+  },
+  {
+   "n": 3145,
+   "date": "2026-11-21T16:18:20.328Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Jaméki brouteur de marais, à Marais 3, une bête invente : se souvenir des routes des saisons · parcelle Marais 3",
+   "taxon": "jameki",
+   "biome": "marais"
+  },
+  {
+   "n": 3146,
+   "date": "2026-11-22T16:18:20.328Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Tiski brouteur d'algues de mer froide, à Abysses 4, une bête invente : un cri pour chaque prédateur · parcelle Abysses 4",
+   "taxon": "tiski",
+   "biome": "abysses"
+  },
+  {
+   "n": 3146,
+   "date": "2026-11-22T16:18:20.328Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Kavane tondeur de savane, à Savane 3, une bête invente : se souvenir des routes des saisons · parcelle Savane 3",
+   "taxon": "kavane",
+   "biome": "savane"
+  },
+  {
+   "n": 3147,
+   "date": "2026-11-23T16:18:20.328Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Kilovi broutard de prairie, à Montagne 2, une bête invente : cacher des réserves pour l'hiver · parcelle Montagne 2",
+   "taxon": "kilovi",
+   "biome": "montagne"
+  },
+  {
+   "n": 3148,
+   "date": "2026-11-24T16:18:20.328Z",
+   "type": "conception",
+   "importance": 1,
+   "titre": "La Mère conçoit",
+   "texte": "La Mère conçoit Ulix-24 d'après Tekkel-3 : pince +0.07, foreuse +0.10 (pour les espèces qui débordent), et l'envoie Banquise 1 ; elle démonte Axtek-20 · parcelle Banquise 1",
+   "taxon": "mere-12",
+   "biome": "banquise"
+  },
+  {
+   "n": 3148,
+   "date": "2026-11-24T16:18:20.328Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Nelo brouteur de forêt, à Toundra 4, une bête invente : cacher des réserves pour l'hiver · parcelle Toundra 4",
+   "taxon": "nelo",
+   "biome": "toundra"
+  },
+  {
+   "n": 3148,
+   "date": "2026-11-24T16:18:20.328Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Linlinel broutard de toundra, à Toundra 3, une bête invente : cacher des réserves pour l'hiver · parcelle Toundra 3",
+   "taxon": "linlinel",
+   "biome": "toundra"
+  },
+  {
+   "n": 3148,
+   "date": "2026-11-24T16:18:20.328Z",
+   "type": "extinction",
+   "importance": 2,
+   "titre": "Une lignée s'éteint",
+   "texte": "Axtek-20 s'éteint après 48 cycles : supplantée par d'autres",
+   "taxon": "mere-8",
+   "famille": "synthetique"
+  },
+  {
+   "n": 3149,
+   "date": "2026-11-25T16:18:20.328Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Ysouro broutard de forêt, à Forêt 2, une bête invente : se souvenir des routes des saisons · parcelle Forêt 2",
+   "taxon": "ysouro",
+   "biome": "foret"
+  },
+  {
+   "n": 3149,
+   "date": "2026-11-25T16:18:20.328Z",
+   "type": "souche",
+   "importance": 2,
+   "titre": "Une maladie nouvelle",
+   "texte": "Gonuose apparaît chez Yskagra brouteur de savane (virulence 23 %)",
+   "taxon": "yskagra"
+  },
+  {
+   "n": 3150,
+   "date": "2026-11-26T16:18:20.328Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Dunan tondeur de prairie, à Toundra 1, une bête invente : cacher des réserves pour l'hiver · parcelle Toundra 1",
+   "taxon": "dunan",
+   "biome": "toundra"
+  },
+  {
+   "n": 3150,
+   "date": "2026-11-26T16:18:20.328Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Lojaume broutard de montagne, à Montagne 4, une bête invente : cacher des réserves pour l'hiver · parcelle Montagne 4",
+   "taxon": "lojaume",
+   "biome": "montagne"
+  },
+  {
+   "n": 3151,
+   "date": "2026-11-27T16:18:20.328Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Jaou butineur de désert froid, à Steppe 2, une bête invente : cacher des réserves pour l'hiver · parcelle Steppe 2",
+   "taxon": "jaou",
+   "biome": "steppe"
+  },
+  {
+   "n": 3152,
+   "date": "2026-11-28T16:18:20.328Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Dunvamu mangeur d'herbe de savane, à Montagne 1, une bête invente : cacher des réserves pour l'hiver · parcelle Montagne 1",
+   "taxon": "dunvamu",
+   "biome": "montagne"
+  },
+  {
+   "n": 3154,
+   "date": "2026-11-05T16:21:16.994Z",
+   "type": "catastrophe",
+   "importance": 2,
+   "titre": "Catastrophe",
+   "texte": "Rivière : crue : les eaux montent ; capacité −20 % · parcelle Rivière 3",
+   "biome": "riviere"
+  },
+  {
+   "n": 3154,
+   "date": "2026-11-05T16:21:16.994Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Silantis brouteur de lac, à Côte 1, une bête invente : laver sa nourriture · parcelle Côte 1",
+   "taxon": "silantis",
+   "biome": "cote"
+  },
+  {
+   "n": 3154,
+   "date": "2026-11-05T16:21:16.994Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Kavane tondeur de savane, à Maquis 1, une bête invente : se souvenir des routes des saisons · parcelle Maquis 1",
+   "taxon": "kavane",
+   "biome": "maquis"
+  },
+  {
+   "n": 3154,
+   "date": "2026-11-05T16:21:16.994Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Kavane tondeur de savane, à Désert froid 3, une bête invente : se souvenir des routes des saisons · parcelle Désert froid 3",
+   "taxon": "kavane",
+   "biome": "desert-froid"
+  },
+  {
+   "n": 3154,
+   "date": "2026-11-05T16:21:16.994Z",
+   "type": "invention",
+   "importance": 2,
+   "titre": "Le monde invente",
+   "texte": "le monde invente « sac vocal perçant » chez Loume brouteur d'algues de récif : le son qui appelle les siens, au danger · parcelle Récif 1",
+   "taxon": "loume",
+   "biome": "recif"
+  },
+  {
+   "n": 3156,
+   "date": "2026-11-07T16:21:16.994Z",
+   "type": "naissance",
+   "importance": 3,
+   "titre": "Une lignée naît",
+   "texte": "Muelren broutard de jungle (Toundra 2) : lignée issue de muelren, plus grande, son corps devient segmenté à 24 pattes · parcelle Toundra 2",
+   "taxon": "muelren.toundra~2",
+   "biome": "toundra",
+   "famille": "animale"
+  },
+  {
+   "n": 3156,
+   "date": "2026-11-07T16:21:16.994Z",
+   "type": "epidemie",
+   "importance": 1,
+   "titre": "Épidémie",
+   "texte": "Numoose α gagne Umeumero butineur de côte",
+   "taxon": "umeumero"
+  },
+  {
+   "n": 3157,
+   "date": "2026-11-08T16:21:16.994Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Taroan fouisseur de taïga, à Taïga 1, une bête invente : un cri pour chaque prédateur · parcelle Taïga 1",
+   "taxon": "taroan",
+   "biome": "taiga"
+  },
+  {
+   "n": 3158,
+   "date": "2026-11-09T16:21:16.994Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Linrogra picoreur de prairie, à Montagne 2, une bête invente : casser des noix avec une pierre (un outil : pierre) · parcelle Montagne 2",
+   "taxon": "linrogra",
+   "biome": "montagne"
+  },
+  {
+   "n": 3158,
+   "date": "2026-11-09T16:21:16.994Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Dunvamu mangeur d'herbe de savane, à Montagne 2, une bête invente : cacher des réserves pour l'hiver · parcelle Montagne 2",
+   "taxon": "dunvamu",
+   "biome": "montagne"
+  },
+  {
+   "n": 3158,
+   "date": "2026-11-09T16:21:16.994Z",
+   "type": "souche",
+   "importance": 2,
+   "titre": "Une maladie nouvelle",
+   "texte": "Linuose apparaît chez Yskaor chapardeur de prairie (virulence 5 %)",
+   "taxon": "yskaor"
+  },
+  {
+   "n": 3160,
+   "date": "2026-11-11T16:21:16.994Z",
+   "type": "conception",
+   "importance": 1,
+   "titre": "La Mère conçoit",
+   "texte": "La Mère conçoit Tormar-25 d'après Tekkel-3 : pince +0.06, foreuse +0.10, thermique +0.09, batterie +0.06 (pour les espèces qui débordent), et l'envoie Jungle 2 ; elle démonte Tekix-22 · parcelle Jungle 2",
+   "taxon": "mere-13",
+   "biome": "jungle"
+  },
+  {
+   "n": 3160,
+   "date": "2026-11-11T16:21:16.994Z",
+   "type": "extinction",
+   "importance": 2,
+   "titre": "Une lignée s'éteint",
+   "texte": "Tekix-22 s'éteint après 36 cycles : supplantée par d'autres",
+   "taxon": "mere-10",
+   "famille": "synthetique"
+  },
+  {
+   "n": 3161,
+   "date": "2026-11-12T16:21:16.994Z",
+   "type": "catastrophe",
+   "importance": 2,
+   "titre": "Catastrophe",
+   "texte": "Côte : crue : les eaux montent ; capacité −20 % · parcelle Côte 1",
+   "biome": "cote"
+  },
+  {
+   "n": 3162,
+   "date": "2026-11-13T16:21:16.994Z",
+   "type": "naissance",
+   "importance": 2,
+   "titre": "Une lignée naît",
+   "texte": "Dunan tondeur de prairie (Toundra 3) : lignée issue de dunan, plus grande, née de l'isolement (écart génétique 0.32) · parcelle Toundra 3",
+   "taxon": "dunan.toundra~3",
+   "biome": "toundra",
+   "famille": "animale"
+  },
+  {
+   "n": 3162,
+   "date": "2026-11-13T16:21:16.994Z",
+   "type": "naissance",
+   "importance": 3,
+   "titre": "Une lignée naît",
+   "texte": "Silnou brouteur d'algues de récif (Mangrove 4) : lignée issue de silnou, plus grande, son corps devient tentaculaire, une forme que le monde n'avait jamais vue, née de l'isolement (écart génétique 0.33) · parcelle Mangrove 4",
+   "taxon": "silnou.mangrove~4",
+   "biome": "mangrove",
+   "famille": "animale"
+  },
+  {
+   "n": 3162,
+   "date": "2026-11-13T16:21:16.994Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Silantis brouteur de lac, à Rivière 2, une bête invente : un cri pour chaque prédateur · parcelle Rivière 2",
+   "taxon": "silantis",
+   "biome": "riviere"
+  },
+  {
+   "n": 3163,
+   "date": "2026-11-14T16:21:16.994Z",
+   "type": "climat",
+   "importance": 2,
+   "titre": "Le climat",
+   "texte": "le monde se refroidit : −0 de température depuis l'éveil du climat"
+  },
+  {
+   "n": 3163,
+   "date": "2026-11-14T16:21:16.994Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Kavane tondeur de savane, à Steppe 4, une bête invente : se souvenir des routes des saisons · parcelle Steppe 4",
+   "taxon": "kavane",
+   "biome": "steppe"
+  },
+  {
+   "n": 3163,
+   "date": "2026-11-14T16:21:16.994Z",
+   "type": "invention",
+   "importance": 2,
+   "titre": "Le monde invente",
+   "texte": "le monde invente « chromatophores dentelés » chez Gralinlin broutard de forêt, à partir de « camouflage » · parcelle Jungle 4",
+   "taxon": "gralinlin",
+   "biome": "jungle"
+  },
+  {
+   "n": 3163,
+   "date": "2026-11-14T16:21:16.994Z",
+   "type": "epidemie",
+   "importance": 1,
+   "titre": "Épidémie",
+   "texte": "Dalsarose gagne Dunan tondeur de prairie (Toundra 3)",
+   "taxon": "dunan.toundra~3"
+  },
+  {
+   "n": 3163,
+   "date": "2026-11-14T16:21:16.994Z",
+   "type": "epidemie",
+   "importance": 1,
+   "titre": "Épidémie",
+   "texte": "Rateose gagne Silnou brouteur d'algues de récif (Mangrove 4)",
+   "taxon": "silnou.mangrove~4"
+  },
+  {
+   "n": 3164,
+   "date": "2026-11-15T16:21:16.994Z",
    "type": "hybridation",
    "importance": 1,
    "titre": "Une zone hybride",
-   "texte": "Oumé tamiseur de récif et Ysys tamiseur de côte se croisent (Côte)",
-   "taxon": "oume",
+   "texte": "Dunan tondeur de prairie et Dunan tondeur de prairie (Toundra 3) se croisent (Toundra)",
+   "taxon": "dunan",
+   "biome": "toundra"
+  },
+  {
+   "n": 3164,
+   "date": "2026-11-15T16:21:16.994Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Silantis brouteur de lac, à Rivière 3, une bête invente : un cri pour chaque prédateur · parcelle Rivière 3",
+   "taxon": "silantis",
+   "biome": "riviere"
+  },
+  {
+   "n": 3164,
+   "date": "2026-11-15T16:21:16.994Z",
+   "type": "souche",
+   "importance": 2,
+   "titre": "Une maladie nouvelle",
+   "texte": "Raliose apparaît chez Dunan tondeur de prairie (virulence 8 %)",
+   "taxon": "dunan"
+  },
+  {
+   "n": 3164,
+   "date": "2026-11-15T16:21:16.994Z",
+   "type": "epidemie",
+   "importance": 1,
+   "titre": "Épidémie",
+   "texte": "Numoose α gagne Renou mangeur d'herbe de steppe",
+   "taxon": "renou"
+  },
+  {
+   "n": 3165,
+   "date": "2026-11-16T16:21:16.994Z",
+   "type": "epidemie",
+   "importance": 1,
+   "titre": "Épidémie",
+   "texte": "Numoose α gagne Taphé broutard de toundra",
+   "taxon": "taphe"
+  },
+  {
+   "n": 3167,
+   "date": "2026-11-18T16:21:16.994Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Renmu butineur de montagne, à Montagne 2, une bête invente : casser des noix avec une pierre (un outil : pierre) · parcelle Montagne 2",
+   "taxon": "renmu",
+   "biome": "montagne"
+  },
+  {
+   "n": 3167,
+   "date": "2026-11-18T16:21:16.994Z",
+   "type": "souche",
+   "importance": 2,
+   "titre": "Une maladie nouvelle",
+   "texte": "Nukéose apparaît chez Loelro picoreur des fonds de mer froide (virulence 28 %)",
+   "taxon": "loelro"
+  },
+  {
+   "n": 3168,
+   "date": "2026-11-19T16:21:16.994Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Anume butineur de forêt, à Taïga 4, une bête invente : cacher des réserves pour l'hiver · parcelle Taïga 4",
+   "taxon": "anume",
+   "biome": "taiga"
+  },
+  {
+   "n": 3168,
+   "date": "2026-11-19T16:21:16.994Z",
+   "type": "epidemie",
+   "importance": 1,
+   "titre": "Épidémie",
+   "texte": "Numoose α gagne Orki brouteur de toundra",
+   "taxon": "orki"
+  },
+  {
+   "n": 3169,
+   "date": "2026-11-20T16:21:16.994Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Neso broutard de prairie, à Steppe 4, une bête invente : cacher des réserves pour l'hiver · parcelle Steppe 4",
+   "taxon": "neso",
+   "biome": "steppe"
+  },
+  {
+   "n": 3170,
+   "date": "2026-11-21T16:21:16.994Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Jaméki brouteur de marais, à Lac 2, une bête invente : se souvenir des routes des saisons · parcelle Lac 2",
+   "taxon": "jameki",
+   "biome": "lac"
+  },
+  {
+   "n": 3170,
+   "date": "2026-11-21T16:21:16.994Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Firoran brouteur d'algues de haute mer, à Haute mer 2, une bête invente : laver sa nourriture · parcelle Haute mer 2",
+   "taxon": "firoran",
+   "biome": "large"
+  },
+  {
+   "n": 3171,
+   "date": "2026-11-22T16:21:16.994Z",
+   "type": "epidemie",
+   "importance": 1,
+   "titre": "Épidémie",
+   "texte": "Numoose α gagne Vaume tamiseur de rivière",
+   "taxon": "vaume"
+  },
+  {
+   "n": 3172,
+   "date": "2026-11-23T16:21:16.994Z",
+   "type": "conception",
+   "importance": 1,
+   "titre": "La Mère conçoit",
+   "texte": "La Mère conçoit Vinrex-26 d'après Tekkel-3 : pince +0.06, foreuse +0.10, thermique +0.09, batterie +0.06 (pour les espèces qui débordent), et l'envoie Jungle 2 ; elle démonte Ulmar-19 · parcelle Jungle 2",
+   "taxon": "mere-14",
+   "biome": "jungle"
+  },
+  {
+   "n": 3172,
+   "date": "2026-11-23T16:21:16.994Z",
+   "type": "extinction",
+   "importance": 2,
+   "titre": "Une lignée s'éteint",
+   "texte": "Ulmar-19 s'éteint après 84 cycles : supplantée par d'autres",
+   "taxon": "mere-7",
+   "famille": "synthetique"
+  },
+  {
+   "n": 3172,
+   "date": "2026-11-23T16:21:16.994Z",
+   "type": "epidemie",
+   "importance": 1,
+   "titre": "Épidémie",
+   "texte": "Numoose α gagne Phétael tondeur de savane (Toundra 3)",
+   "taxon": "phetael.toundra~3"
+  },
+  {
+   "n": 3173,
+   "date": "2026-11-24T16:21:16.994Z",
+   "type": "catastrophe",
+   "importance": 2,
+   "titre": "Catastrophe",
+   "texte": "Lac : crue : les eaux montent ; capacité −20 % · parcelle Lac 4",
+   "biome": "lac"
+  },
+  {
+   "n": 3173,
+   "date": "2026-11-24T16:21:16.994Z",
+   "type": "epidemie",
+   "importance": 1,
+   "titre": "Épidémie",
+   "texte": "Numoose α gagne Linlinel broutard de toundra",
+   "taxon": "linlinel"
+  },
+  {
+   "n": 3175,
+   "date": "2026-11-26T16:21:16.994Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Loume brouteur d'algues de récif, à Côte 3, une bête invente : laver sa nourriture · parcelle Côte 3",
+   "taxon": "loume",
    "biome": "cote"
+  },
+  {
+   "n": 3176,
+   "date": "2026-11-27T16:21:16.994Z",
+   "type": "invention",
+   "importance": 2,
+   "titre": "Le monde invente",
+   "texte": "le monde invente « lanternes vertes » chez Orki brouteur de toundra : la lumière qui appelle son partenaire, la nuit · parcelle Toundra 4",
+   "taxon": "orki",
+   "biome": "toundra"
+  },
+  {
+   "n": 3177,
+   "date": "2026-11-28T16:21:16.994Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Silnou brouteur d'algues de récif, à Côte 4, une bête invente : laver sa nourriture · parcelle Côte 4",
+   "taxon": "silnou",
+   "biome": "cote"
+  },
+  {
+   "n": 3179,
+   "date": "2026-11-05T16:24:55.334Z",
+   "type": "epidemie",
+   "importance": 1,
+   "titre": "Épidémie",
+   "texte": "Numoose α gagne Silvator broutard de prairie",
+   "taxon": "silvator"
   }
  ]
 }

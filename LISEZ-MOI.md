@@ -32,6 +32,7 @@ tampon/tampon.js      exposer() Orvane → jeu ; agreger() jeu → Orvane (déno
 tampon/individus.js   les individus : une bête tirée de la population réelle (son génotype, ses valeurs, ses savoirs), deux bêtes croisées, la parenté, le génome relâché (docs/35, 36)
 tampon/morceaux.js    le monde par morceaux : découper l'instantané (l'index, chaque biome, chaque lignée), et lire seulement les biomes d'un jeu (docs/21)
 monde/index.html      l’observatoire : ce que vit un monde (espèces, biomes, lignées, chaîne alimentaire, journal), et une simulation locale
+monde/silhouette.js   les silhouettes de l'observatoire : chaque lignée dessinée d'après son corps et sa façon de vivre (masse, déplacements, régime, heure), chaque forme à son dessin, les machines d'après leurs modules ; un jeu peut le reprendre
 BRANCHER-UN-JEU.md    brancher un jeu, pas à pas : s'inscrire, lire le monde, traduire, régler l'exposition, déposer des lots, les erreurs
 CONNECT-A-GAME.md     le même guide, en anglais ; docs/glossary.md : chaque champ, traduit en anglais
 inscription/          la page d'inscription : inscrire un jeu et recevoir ses clés, régler son exposition, vérifier une clé
@@ -74,7 +75,7 @@ mondes/orvane/        le monde d'Orvane, où tous les jeux se branchent : né de
 mondes/marin/         la mer d'Orvane : une genèse sur les seuls biomes d'eau (vingt ancêtres, 29 lignées), versée dans le monde d'Orvane par une fusion (profil.monde.fusions)
 mondes/sv-1/          le premier monde de Stone Valley (sa faune), archivé
 mondes/genese-7/      un monde né de la genèse (graine 7, 3 000 cycles) : 97 lignées que personne n'a dessinées, archivé
-mondes/genese-2026/   la genèse de l'équilibrage (graine 2026, les 24 biomes universels, 3 000 cycles, 5 novembre 2026) : 126 lignées, figée ; genese.json garde ses mesures, tous les dix cycles, que l'observatoire trace (docs/13)
+mondes/genese-2026/   la genèse de l'équilibrage (graine 2026, les 24 biomes universels, 3 000 cycles, 5 novembre 2026), puis 175 cycles avec tous les mécanismes éveillés : 136 lignées (36 poissons, une méduse, une pieuvre, des mille-pattes), 81 plantes, 12 plans de machines ; figée ; genese.json garde les mesures de la genèse, que l'observatoire trace (docs/13)
 docs/                 le mode d'emploi : brancher son jeu, écrire son traducteur, jouer les conduites, tirer les traits continus, l'hérédité, les hybrides, les organes, la méfiance, la stabilité, la fusion, les parcelles, la vie synthétique, la flore, les souches et les symbioses, le temps, les catalogues ouverts, le monde par morceaux, le milieu transformé, la fusion par ponts, les corps assemblés, la ponte, les cycles de vie, les traits inventés, les lieux qui changent de nature, les dérives, les régimes en spectre, le climat, la grammaire, les corps et les vies nouvelles, l'esprit, les individus, l'élevage, la chronique et les noms, la vie en groupe, le kit du traducteur (39 chapitres)
 ```
 

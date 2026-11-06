@@ -51,7 +51,10 @@ function genre(o) { return o?.taxons ? 'instantane' : o?.evenements ? 'lot' : o?
 function verifier(o, g = genre(o)) {
   if (!SCHEMAS[g]) return [`je ne sais pas ce qu'est ce fichier : --lot, --instantane ou --profil`];
   const S = JSON.parse(fs.readFileSync(racine(`schemas/${SCHEMAS[g]}.schema.json`), 'utf8')), E = [];
-  valider(S, o, '$', S, E); if (g === 'lot') E.push(...depot(o)); return E;
+  valider(S, o, '$', S, E); if (g === 'lot') E.push(...depot(o));
+  // (une lignée éteinte reste listée 10 cycles, sans population ; une lignée vivante en a au moins une)
+  if (g === 'instantane' && Array.isArray(o.taxons)) o.taxons.forEach((t, i) => { if (t && !t.eteint && Array.isArray(t.populations) && !t.populations.length) E.push(`$.taxons[${i}].populations : une lignée vivante (${t.id}) vit au moins quelque part`); });
+  return E;
 }
 if (require.main === module) {
   const a = process.argv.slice(2), f = a.find(x => !x.startsWith('--')); if (!f) { console.log('node outils/verifier.js <fichier.json> [--lot|--instantane|--profil]'); process.exit(2); }
