@@ -1,0 +1,894 @@
+{
+ "note": "Les ancêtres des eaux douces (moteur/genese.js --ancetres, docs/42) : dans l'eau, des bancs de vairons, des brouteurs de pierres, un fouilleur des vases, des chasseurs à chaque taille jusqu'au grand moustachu, une anguille, une écrevisse, un insecte nageur, un triton, une tortue, un escargot, une hydre ; sur les rives, un héron, un canard, une loutre, un castor, un martin-pêcheur. Pas de filtreur : une moule, dans un premier essai, a fait 52 des 70 lignées (docs/42).",
+ "eau": [
+  {
+   "id": "vairon",
+   "nom": "Vairon des courants",
+   "regime": "omnivore",
+   "masse_kg": 0.02,
+   "taille_m": 0.07,
+   "locomotion": [
+    "nage"
+   ],
+   "eau": "douce",
+   "longevite": 4,
+   "maturite": 1,
+   "portee": 200,
+   "sociabilite": 0.85,
+   "temperament": 0.2,
+   "activite": "diurne",
+   "vitesse_rel": 6,
+   "perception": 0.5,
+   "corps": {
+    "forme": "serpent",
+    "haut": 0,
+    "cou": 0,
+    "long": 0.55,
+    "tete": 0.45,
+    "museau": 0.25,
+    "queue": 0.5,
+    "couleurs": {
+     "robe": [
+      150,
+      160,
+      120
+     ],
+     "sombre": [
+      80,
+      90,
+      60
+     ],
+     "ventre": [
+      226,
+      220,
+      190
+     ],
+     "oeil": [
+      20,
+      20,
+      20
+     ]
+    }
+   }
+  },
+  {
+   "id": "brouteur-des-pierres",
+   "nom": "Brouteur des pierres",
+   "regime": "herbivore",
+   "masse_kg": 0.3,
+   "taille_m": 0.2,
+   "locomotion": [
+    "nage"
+   ],
+   "eau": "douce",
+   "longevite": 8,
+   "maturite": 1,
+   "portee": 40,
+   "sociabilite": 0.5,
+   "temperament": 0.1,
+   "activite": "diurne",
+   "vitesse_rel": 3,
+   "perception": 0.4,
+   "corps": {
+    "forme": "serpent",
+    "haut": 0,
+    "cou": 0,
+    "long": 0.6,
+    "tete": 0.5,
+    "museau": 0.15,
+    "queue": 0.45,
+    "motif": "taches",
+    "couleurs": {
+     "robe": [
+      110,
+      104,
+      84
+     ],
+     "sombre": [
+      60,
+      56,
+      44
+     ],
+     "ventre": [
+      200,
+      190,
+      160
+     ],
+     "oeil": [
+      30,
+      30,
+      24
+     ]
+    }
+   }
+  },
+  {
+   "id": "fouilleur-des-vases",
+   "nom": "Fouilleur des vases",
+   "regime": "omnivore",
+   "masse_kg": 3,
+   "taille_m": 0.6,
+   "locomotion": [
+    "nage"
+   ],
+   "eau": "douce",
+   "longevite": 30,
+   "maturite": 3,
+   "portee": 80,
+   "sociabilite": 0.5,
+   "temperament": 0.2,
+   "activite": "crepusculaire",
+   "vitesse_rel": 3,
+   "perception": 0.5,
+   "corps": {
+    "forme": "serpent",
+    "haut": 0,
+    "cou": 0,
+    "long": 0.7,
+    "tete": 0.5,
+    "museau": 0.35,
+    "queue": 0.55,
+    "couleurs": {
+     "robe": [
+      170,
+      140,
+      70
+     ],
+     "sombre": [
+      110,
+      86,
+      40
+     ],
+     "ventre": [
+      226,
+      206,
+      150
+     ],
+     "oeil": [
+      24,
+      20,
+      16
+     ]
+    }
+   }
+  },
+  {
+   "id": "embusque-des-herbiers",
+   "nom": "Embusqué des herbiers",
+   "regime": "carnivore",
+   "masse_kg": 4,
+   "taille_m": 0.8,
+   "locomotion": [
+    "nage"
+   ],
+   "eau": "douce",
+   "longevite": 18,
+   "maturite": 3,
+   "portee": 30,
+   "sociabilite": 0.1,
+   "temperament": 0.7,
+   "activite": "diurne",
+   "vitesse_rel": 8,
+   "perception": 0.7,
+   "corps": {
+    "forme": "serpent",
+    "haut": 0,
+    "cou": 0,
+    "long": 0.95,
+    "tete": 0.55,
+    "museau": 0.7,
+    "queue": 0.6,
+    "motif": "rayures",
+    "couleurs": {
+     "robe": [
+      96,
+      120,
+      70
+     ],
+     "sombre": [
+      50,
+      66,
+      36
+     ],
+     "ventre": [
+      210,
+      214,
+      170
+     ],
+     "oeil": [
+      220,
+      190,
+      50
+     ]
+    }
+   }
+  },
+  {
+   "id": "grand-moustachu",
+   "nom": "Grand moustachu",
+   "regime": "carnivore",
+   "masse_kg": 30,
+   "taille_m": 2.2,
+   "locomotion": [
+    "nage"
+   ],
+   "eau": "douce",
+   "longevite": 45,
+   "maturite": 6,
+   "portee": 60,
+   "sociabilite": 0.1,
+   "temperament": 0.6,
+   "activite": "nocturne",
+   "vitesse_rel": 4,
+   "perception": 0.6,
+   "corps": {
+    "forme": "serpent",
+    "haut": 0,
+    "cou": 0,
+    "long": 0.9,
+    "tete": 0.6,
+    "museau": 0.5,
+    "queue": 0.7,
+    "antennes": 0.6,
+    "couleurs": {
+     "robe": [
+      70,
+      70,
+      64
+     ],
+     "sombre": [
+      36,
+      36,
+      32
+     ],
+     "ventre": [
+      180,
+      176,
+      164
+     ],
+     "oeil": [
+      210,
+      200,
+      120
+     ]
+    }
+   }
+  },
+  {
+   "id": "anguille-des-fonds",
+   "nom": "Anguille des fonds",
+   "regime": "carnivore",
+   "masse_kg": 0.8,
+   "taille_m": 0.9,
+   "locomotion": [
+    "nage",
+    "reptation"
+   ],
+   "eau": "douce",
+   "longevite": 20,
+   "maturite": 4,
+   "portee": 40,
+   "sociabilite": 0.1,
+   "temperament": 0.4,
+   "activite": "nocturne",
+   "vitesse_rel": 5,
+   "perception": 0.6,
+   "corps": {
+    "forme": "serpent",
+    "haut": 0,
+    "cou": 0,
+    "long": 1,
+    "tete": 0.4,
+    "museau": 0.4,
+    "queue": 0.9,
+    "couleurs": {
+     "robe": [
+      90,
+      84,
+      60
+     ],
+     "sombre": [
+      48,
+      44,
+      30
+     ],
+     "ventre": [
+      190,
+      180,
+      140
+     ],
+     "oeil": [
+      30,
+      30,
+      24
+     ]
+    }
+   }
+  },
+  {
+   "id": "ecrevisse",
+   "nom": "Écrevisse",
+   "regime": "detritivore",
+   "masse_kg": 0.05,
+   "taille_m": 0.1,
+   "locomotion": [
+    "nage",
+    "marche"
+   ],
+   "eau": "douce",
+   "longevite": 6,
+   "maturite": 1,
+   "portee": 60,
+   "sociabilite": 0.2,
+   "temperament": 0.5,
+   "activite": "nocturne",
+   "vitesse_rel": 2,
+   "perception": 0.4,
+   "corps": {
+    "forme": "hexapode",
+    "pattes": 10,
+    "long": 0.45,
+    "haut": 0.15,
+    "cou": 0,
+    "tete": 0.4,
+    "museau": 0.1,
+    "oreilles": 0,
+    "queue": 0.5,
+    "carapace": 0.7,
+    "antennes": 0.5,
+    "couleurs": {
+     "robe": [
+      130,
+      70,
+      50
+     ],
+     "sombre": [
+      80,
+      40,
+      28
+     ],
+     "ventre": [
+      200,
+      160,
+      130
+     ],
+     "oeil": [
+      20,
+      20,
+      20
+     ]
+    }
+   }
+  },
+  {
+   "id": "nageur-a-elytres",
+   "nom": "Nageur à élytres",
+   "regime": "carnivore",
+   "masse_kg": 0.005,
+   "taille_m": 0.03,
+   "locomotion": [
+    "nage",
+    "vol"
+   ],
+   "eau": "douce",
+   "longevite": 2,
+   "maturite": 1,
+   "portee": 40,
+   "sociabilite": 0.1,
+   "temperament": 0.6,
+   "activite": "continue",
+   "vitesse_rel": 6,
+   "perception": 0.6,
+   "corps": {
+    "forme": "hexapode",
+    "pattes": 6,
+    "long": 0.4,
+    "haut": 0.1,
+    "cou": 0,
+    "tete": 0.45,
+    "museau": 0.2,
+    "oreilles": 0,
+    "queue": 0,
+    "carapace": 0.6,
+    "ailes": 0.4,
+    "couleurs": {
+     "robe": [
+      50,
+      60,
+      40
+     ],
+     "sombre": [
+      24,
+      30,
+      20
+     ],
+     "ventre": [
+      150,
+      140,
+      80
+     ],
+     "oeil": [
+      180,
+      160,
+      60
+     ]
+    }
+   }
+  },
+  {
+   "id": "triton",
+   "nom": "Triton",
+   "regime": "carnivore",
+   "masse_kg": 0.015,
+   "taille_m": 0.12,
+   "locomotion": [
+    "nage",
+    "marche"
+   ],
+   "eau": "douce",
+   "longevite": 12,
+   "maturite": 2,
+   "portee": 150,
+   "sociabilite": 0.1,
+   "temperament": 0.3,
+   "activite": "nocturne",
+   "vitesse_rel": 3,
+   "perception": 0.5,
+   "corps": {
+    "forme": "quadrupede",
+    "long": 0.7,
+    "haut": 0.1,
+    "cou": 0.05,
+    "tete": 0.45,
+    "museau": 0.2,
+    "oreilles": 0,
+    "queue": 0.8,
+    "crete": 0.4,
+    "couleurs": {
+     "robe": [
+      90,
+      84,
+      70
+     ],
+     "sombre": [
+      44,
+      40,
+      34
+     ],
+     "ventre": [
+      230,
+      140,
+      50
+     ],
+     "oeil": [
+      30,
+      30,
+      24
+     ]
+    }
+   }
+  },
+  {
+   "id": "tortue-des-etangs",
+   "nom": "Tortue des étangs",
+   "regime": "omnivore",
+   "masse_kg": 5,
+   "taille_m": 0.4,
+   "locomotion": [
+    "nage",
+    "marche"
+   ],
+   "eau": "douce",
+   "longevite": 70,
+   "maturite": 8,
+   "portee": 8,
+   "sociabilite": 0.3,
+   "temperament": 0.2,
+   "activite": "diurne",
+   "vitesse_rel": 1,
+   "perception": 0.5,
+   "corps": {
+    "forme": "quadrupede",
+    "long": 0.55,
+    "haut": 0.3,
+    "cou": 0.3,
+    "tete": 0.35,
+    "museau": 0.3,
+    "oreilles": 0,
+    "queue": 0.2,
+    "carapace": 1,
+    "couleurs": {
+     "robe": [
+      70,
+      80,
+      50
+     ],
+     "sombre": [
+      36,
+      42,
+      26
+     ],
+     "ventre": [
+      200,
+      180,
+      100
+     ],
+     "oeil": [
+      40,
+      30,
+      20
+     ]
+    }
+   }
+  },
+  {
+   "id": "planorbe",
+   "nom": "Planorbe",
+   "regime": "herbivore",
+   "masse_kg": 0.01,
+   "taille_m": 0.03,
+   "locomotion": [
+    "reptation",
+    "nage"
+   ],
+   "eau": "douce",
+   "longevite": 2,
+   "maturite": 1,
+   "portee": 80,
+   "sociabilite": 0.3,
+   "temperament": 0,
+   "activite": "nocturne",
+   "vitesse_rel": 1,
+   "perception": 0.2,
+   "corps": {
+    "forme": "serpent",
+    "long": 0.35,
+    "haut": 0.25,
+    "cou": 0,
+    "tete": 0.4,
+    "museau": 0.1,
+    "queue": 0.1,
+    "carapace": 0.8,
+    "antennes": 0.4,
+    "couleurs": {
+     "robe": [
+      120,
+      80,
+      50
+     ],
+     "sombre": [
+      70,
+      44,
+      26
+     ],
+     "ventre": [
+      190,
+      160,
+      120
+     ],
+     "oeil": [
+      20,
+      20,
+      20
+     ]
+    }
+   }
+  },
+  {
+   "id": "hydre",
+   "nom": "Hydre",
+   "regime": "carnivore",
+   "masse_kg": 0.002,
+   "taille_m": 0.02,
+   "locomotion": [
+    "nage"
+   ],
+   "eau": "douce",
+   "longevite": 1,
+   "maturite": 1,
+   "portee": 60,
+   "sociabilite": 0.2,
+   "temperament": 0.3,
+   "activite": "continue",
+   "vitesse_rel": 1,
+   "perception": 0.3,
+   "corps": {
+    "forme": "serpent",
+    "long": 0.3,
+    "haut": 0,
+    "cou": 0,
+    "tete": 0.3,
+    "museau": 0.1,
+    "queue": 0.2,
+    "antennes": 0.9,
+    "couleurs": {
+     "robe": [
+      140,
+      190,
+      120
+     ],
+     "sombre": [
+      80,
+      120,
+      70
+     ],
+     "ventre": [
+      210,
+      230,
+      200
+     ],
+     "oeil": [
+      60,
+      80,
+      50
+     ]
+    }
+   }
+  }
+ ],
+ "terre": [
+  {
+   "id": "guetteur-des-roseaux",
+   "nom": "Guetteur des roseaux",
+   "regime": "carnivore",
+   "masse_kg": 1.6,
+   "taille_m": 1,
+   "locomotion": [
+    "marche",
+    "vol"
+   ],
+   "longevite": 22,
+   "maturite": 2,
+   "portee": 4,
+   "sociabilite": 0.3,
+   "temperament": 0.3,
+   "activite": "diurne",
+   "vitesse_rel": 5,
+   "perception": 0.8,
+   "corps": {
+    "forme": "oiseau",
+    "long": 0.4,
+    "haut": 0.95,
+    "cou": 0.8,
+    "tete": 0.4,
+    "museau": 0.75,
+    "oreilles": 0,
+    "queue": 0.3,
+    "ailes": 0.9,
+    "couleurs": {
+     "robe": [
+      150,
+      156,
+      164
+     ],
+     "sombre": [
+      80,
+      86,
+      96
+     ],
+     "ventre": [
+      220,
+      222,
+      220
+     ],
+     "oeil": [
+      230,
+      210,
+      60
+     ]
+    }
+   }
+  },
+  {
+   "id": "barboteur",
+   "nom": "Barboteur",
+   "regime": "omnivore",
+   "masse_kg": 1,
+   "taille_m": 0.55,
+   "locomotion": [
+    "nage",
+    "vol",
+    "marche"
+   ],
+   "eau": "douce",
+   "longevite": 12,
+   "maturite": 1,
+   "portee": 10,
+   "sociabilite": 0.8,
+   "temperament": 0.2,
+   "activite": "diurne",
+   "vitesse_rel": 6,
+   "perception": 0.6,
+   "corps": {
+    "forme": "oiseau",
+    "long": 0.55,
+    "haut": 0.4,
+    "cou": 0.4,
+    "tete": 0.45,
+    "museau": 0.45,
+    "oreilles": 0,
+    "queue": 0.3,
+    "ailes": 0.8,
+    "palmes": 0.8,
+    "couleurs": {
+     "robe": [
+      120,
+      100,
+      70
+     ],
+     "sombre": [
+      60,
+      50,
+      30
+     ],
+     "ventre": [
+      200,
+      190,
+      160
+     ],
+     "oeil": [
+      20,
+      20,
+      20
+     ]
+    }
+   }
+  },
+  {
+   "id": "loutre",
+   "nom": "Loutre des berges",
+   "regime": "carnivore",
+   "masse_kg": 8,
+   "taille_m": 1,
+   "locomotion": [
+    "nage",
+    "marche"
+   ],
+   "eau": "douce",
+   "longevite": 14,
+   "maturite": 2,
+   "portee": 3,
+   "sociabilite": 0.5,
+   "temperament": 0.5,
+   "activite": "crepusculaire",
+   "vitesse_rel": 6,
+   "perception": 0.7,
+   "corps": {
+    "forme": "quadrupede",
+    "long": 0.85,
+    "haut": 0.25,
+    "cou": 0.3,
+    "tete": 0.4,
+    "museau": 0.35,
+    "oreilles": 0.15,
+    "queue": 0.8,
+    "couleurs": {
+     "robe": [
+      100,
+      72,
+      50
+     ],
+     "sombre": [
+      56,
+      38,
+      24
+     ],
+     "ventre": [
+      190,
+      170,
+      140
+     ],
+     "oeil": [
+      20,
+      16,
+      12
+     ]
+    }
+   }
+  },
+  {
+   "id": "batisseur-des-berges",
+   "nom": "Bâtisseur des berges",
+   "regime": "herbivore",
+   "masse_kg": 20,
+   "taille_m": 1,
+   "locomotion": [
+    "nage",
+    "marche"
+   ],
+   "eau": "douce",
+   "longevite": 20,
+   "maturite": 2,
+   "portee": 4,
+   "sociabilite": 0.6,
+   "temperament": 0.2,
+   "activite": "nocturne",
+   "vitesse_rel": 3,
+   "perception": 0.5,
+   "corps": {
+    "forme": "quadrupede",
+    "long": 0.7,
+    "haut": 0.35,
+    "cou": 0.2,
+    "tete": 0.45,
+    "museau": 0.4,
+    "oreilles": 0.15,
+    "queue": 0.5,
+    "couleurs": {
+     "robe": [
+      110,
+      76,
+      46
+     ],
+     "sombre": [
+      60,
+      40,
+      22
+     ],
+     "ventre": [
+      170,
+      140,
+      110
+     ],
+     "oeil": [
+      16,
+      12,
+      10
+     ]
+    }
+   }
+  },
+  {
+   "id": "fleche-bleue",
+   "nom": "Flèche bleue",
+   "regime": "carnivore",
+   "masse_kg": 0.04,
+   "taille_m": 0.16,
+   "locomotion": [
+    "vol",
+    "marche"
+   ],
+   "longevite": 6,
+   "maturite": 1,
+   "portee": 6,
+   "sociabilite": 0.1,
+   "temperament": 0.5,
+   "activite": "diurne",
+   "vitesse_rel": 9,
+   "perception": 0.9,
+   "corps": {
+    "forme": "oiseau",
+    "long": 0.4,
+    "haut": 0.35,
+    "cou": 0.2,
+    "tete": 0.55,
+    "museau": 0.8,
+    "oreilles": 0,
+    "queue": 0.2,
+    "ailes": 0.7,
+    "couleurs": {
+     "robe": [
+      40,
+      140,
+      200
+     ],
+     "sombre": [
+      20,
+      70,
+      110
+     ],
+     "ventre": [
+      230,
+      140,
+      60
+     ],
+     "oeil": [
+      20,
+      20,
+      20
+     ]
+    }
+   }
+  }
+ ]
+}

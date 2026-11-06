@@ -74,6 +74,7 @@ hebergement/publication.js  la branche publication : l'état de chaque monde rep
 hebergement/supabase.sql  le Supabase d'Orvane : les jeux s'y inscrivent, y déposent les pressions de leurs joueurs et y proposent des noms
 mondes/orvane/        le monde d'Orvane, où tous les jeux se branchent : né de la genèse universelle, Stone Valley y joue depuis le 29 octobre 2026
 mondes/marin/         la mer d'Orvane : une genèse sur les seuls biomes d'eau (vingt ancêtres, 29 lignées), versée dans le monde d'Orvane par une fusion (profil.monde.fusions)
+mondes/eaux-douces/   les eaux douces : une genèse sur dix lieux d'eau (dont le torrent, l'étang, le delta, les sources chaudes), 60 lignées, reliée au monde d'Orvane par trois ponts (docs/42)
 mondes/sv-1/          le premier monde de Stone Valley (sa faune), archivé
 mondes/genese-7/      un monde né de la genèse (graine 7, 3 000 cycles) : 97 lignées que personne n'a dessinées, archivé
 mondes/genese-2026/   la genèse de l'équilibrage (graine 2026, les 24 biomes universels, 3 000 cycles, 5 novembre 2026), puis 175 cycles avec tous les mécanismes éveillés : 136 lignées (36 poissons, une méduse, une pieuvre, des mille-pattes), 81 plantes, 12 plans de machines ; figée ; genese.json garde les mesures de la genèse, que l'observatoire trace (docs/13)
@@ -130,6 +131,7 @@ node moteur/genese.js moteur/biomes-universels.json --cycles 900 --graine 1 --li
      --regles '{"omnivore_vegetal_base":0.6,"detritivore_vegetal":0.5,"viande_omnivore":0.3,"longevite_predateur":1.6,"omnivore_vegetal":0.2,"vers_carnivore":0.5}' --sortie amorce.json
 node moteur/genese.js mondes/sv-1 --cycles 3000 --graine 7 --nom "Monde né d'Orvane" --sortie amorce.json
 node moteur/genese.js moteur/biomes-universels.json --milieux marin,aquatique,amphibie --ancetres mondes/marin/ancetres.json --cycles 1200 --graine 23 …   # la mer d'Orvane (docs/14)
+node moteur/genese.js mondes/eaux-douces/biomes.json --ancetres mondes/eaux-douces/ancetres.json --cycles 1200 --graine 31 --lignees 90 …     # les eaux douces (docs/42)
 node moteur/fusion.js mondes/orvane/etat.json mondes/marin/amorce.json --part 0.5 --sortie essai.json                                   # une fusion à la main
 ```
 
