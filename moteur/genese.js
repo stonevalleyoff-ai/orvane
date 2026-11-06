@@ -7,7 +7,7 @@
 //                         [--point 200] [--reprise genese.json.reprise.json]   (par tranches : un point de reprise tous les N cycles)
 //                         [--milieux marin,aquatique,amphibie] [--ancetres ancetres.json]   (un monde d'une partie des biomes, d'autres ancêtres)
 //                         [--catalogue catalogue.json]   (le catalogue propre du monde : ses axes, ses traits, ses organes, ses formes, docs/20)
-//                         [--rarete .0005] [--etage 10] [--sursis 100] [--rarete-lieu 0] [--etage-detritivore 1]   (la règle de rareté : docs/13)
+//                         [--rarete .0005] [--etage 10] [--sursis 100] [--rarete-lieu .012] [--etage-detritivore 1]   (la règle de rareté : docs/13)
 // lignees : le nombre de lignées vivantes au-delà duquel plus rien ne se sépare — la place se gagne alors par extinction.
 // biomes.json : un tableau de biomes au format de l'instantané (ou un monde existant : on reprend ses biomes, vides).
 'use strict';
@@ -121,8 +121,8 @@ const ETAGE = { carnivore: +arg('--etage', 10), omnivore: 2, ...(arg('--etage-de
 // lieu (--rarete-lieu : la part de la biomasse d'un lieu sous laquelle une lignée n'y compte pas). Une lignée n'est rayée que si elle
 // ne compte ni dans le monde, ni dans aucun lieu : celle qui tient sa place dans un lieu pauvre (la banquise, le volcan, les abysses)
 // n'est plus rayée parce que ce lieu pèse peu dans le monde ; celle qui compte dans le monde, répandue partout, non plus.
-// 0 : la rareté se juge sur tout le monde seulement, comme avant
-const sursis = +arg('--sursis', 100), rareteLieu = +arg('--rarete-lieu', 0);
+// 0 : la rareté se juge sur tout le monde seulement, comme avant le 6 novembre (docs/13)
+const sursis = +arg('--sursis', 100), rareteLieu = +arg('--rarete-lieu', .012);   // (.012 : la part qu'aurait un lieu moyen, 0,05 % × 24)
 const biomasseDe = t => t.populations.reduce((s, p) => s + p.effectif, 0) * (t.plan.masse_kg || 1);
 const poidsRarete = t => biomasseDe(t) * (ETAGE[Tampon.regimeDe(t, TR)] || 1);
 const rare = (t, total, parLieu) => poidsRarete(t) < rarete * total
