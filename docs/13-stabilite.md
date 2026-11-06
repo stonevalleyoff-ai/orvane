@@ -133,6 +133,19 @@ Cinq genèses de 3 000 cycles, même graine (2026), mêmes règles que la genès
 
 C'est la règle par défaut de la genèse (`--rarete-lieu .012` ; `--rarete-lieu 0` rend la règle d'avant). Elle ne touche pas le monde vivant : seules les genèses à venir la suivent.
 
-**Les détritivores** disparaissent dans toutes : même comptés trente fois, ils ne prennent pas. Ce n'est pas la règle : dans le moteur, un détritivore se nourrit comme un brouteur, de la place des plantes, avec la moitié de ses petits dans la genèse (`detritivore_vegetal` à 0,5) — un herbivore moins bon, qui perd toujours. La suite : leur donner leur ressource, les cadavres (ce que meurent les bêtes d'un lieu). `--etage-detritivore` reste, inerte par défaut.
+**Les détritivores** disparaissaient dans toutes : même comptés trente fois, ils ne prenaient pas. Ce n'était pas la règle : dans le moteur, un détritivore se nourrissait comme un brouteur, de la place des plantes, avec la moitié de ses petits dans la genèse (`detritivore_vegetal` à 0,5) — un herbivore moins bon, qui perd toujours.
+
+**Les cadavres (6 novembre).** `REGLES.cadavres` : les détritivores vivent des morts du lieu. Ce que la mort naturelle y laisse chaque cycle (les bêtes, pas les plantes ; × la règle) se partage entre eux selon leur besoin. C'est un flux, pas un stock de proies : un détritivore est rassasié à moitié quand sa part égale son besoin, il naît selon sa satiété (comme un brouteur selon sa place) ; affamé, il meurt plus et s'en va, comme un carnivore. Il ne pèse plus sur les plantes. À 0, par défaut dans le moteur, rien ne change : le monde d'Orvane donne la même empreinte (`bancs/cadavres.js`).
+
+Même graine, 3 000 cycles, la règle de rareté nouvelle :
+
+| | détritivores (lignées) | leur part de la biomasse des bêtes |
+| --- | --- | --- |
+| sans cadavres | 1 ou 2 jusqu'au cycle 1 250 (comptés trente fois), plus aucun ensuite | — |
+| 30 % des morts du lieu | 8 au cycle 250, 11 au cycle 500, 2 au cycle 1 500 | |
+| **toutes les morts du lieu** | **9 au cycle 250, 18 au cycle 750, 7 au cycle 1 500 et au cycle 1 650** | **16 à 20 % au début, 3 % au cycle 1 650** |
+| toutes, et comptés trente fois | 18 au cycle 500, 9 au cycle 1 000 : rien de plus | |
+
+Ils tiennent désormais, une guilde de quelques lignées qui pèse quelques pour cent des bêtes. Une genèse leur donne toutes les morts du lieu par défaut (`cadavres: 1`), et le monde qui en naît garde la règle (`monde.regles`) : ses détritivores continuent d'en vivre. `--regles '{"cadavres": 0}'` rend la règle d'avant. Le monde d'Orvane n'a plus de détritivores (ils ont disparu dans sa genèse) : la règle ne lui changerait rien.
 
 Les autres pistes, à mesurer de la même façon : faire peser les filtreurs pour 60 % sur la capacité ; une genèse d'eau douce versée dans le monde, comme la mer en octobre.
