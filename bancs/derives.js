@@ -18,7 +18,8 @@ const val = (s, v, p) => { if (!s) return []; if (s.$ref) s = S.$defs[s.$ref.spl
   if (s.type && !t.includes(ty === 'number' && t.includes('integer') && Number.isInteger(v) ? 'integer' : ty)) return [p + ': type ' + ty]; if (s.enum && !s.enum.includes(v)) return [p + ': hors enum ' + v]; const e = [];
   if (ty === 'object') { for (const r of s.required || []) if (!(r in v)) e.push(p + ': manque ' + r); for (const k in v) { const ps = s.properties?.[k] || (typeof s.additionalProperties === 'object' ? s.additionalProperties : null); if (ps) e.push(...val(ps, v[k], p + '.' + k)); else if (s.additionalProperties === false) e.push(p + ': en trop ' + k); } }
   if (ty === 'array' && s.items) v.forEach((x, i) => e.push(...val(s.items, x, p + '[' + i + ']'))); return e; };
-const I0 = lireJ('mondes/orvane/etat.json'), V = Pa.eveiller(Fl.eveiller(I0).inst).inst, W = D.eveiller(V).inst;
+// (le monde d'Orvane, d'avant ce mécanisme : bancs/monde.js ; et sans les régimes en spectre, qui font dériver le régime à sa place)
+const I0 = require('./monde.js').etat(['derives', 'dietes']), V = Pa.eveiller(Fl.eveiller(I0).inst).inst, W = D.eveiller(V).inst;
 const animaux = I => I.taxons.map(t => [t.id, t.plan.regime, t.populations.map(p => [p.biome, p.effectif, p.infection])]);
 const muet = f => { const g = clone(D.REGLES); for (const k in D.REGLES.regime) D.REGLES.regime[k] = 0; D.REGLES.plantes.chance = 0; D.REGLES.souches.chance = 0;
   try { return f(); } finally { Object.assign(D.REGLES.regime, g.regime); Object.assign(D.REGLES.plantes, g.plantes); Object.assign(D.REGLES.souches, g.souches); } };

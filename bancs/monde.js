@@ -21,5 +21,13 @@ function parBiome(E, opt = {}) {
   for (const t of V.taxons) for (const p of t.populations) delete p.parcelles;
   return V;
 }
-const orvane = (opt = {}) => parBiome(JSON.parse(fs.readFileSync(racine('mondes/orvane/etat.json'), 'utf8')), opt);
-module.exports = { orvane, parBiome };
+// (6 novembre) un monde d'avant un mécanisme : le monde d'Orvane les a presque tous éveillés depuis que les bancs sont écrits, et
+// un banc qui vérifie « le jour de l'éveil » ou « le moteur sans ce module » doit partir d'un monde qui ne l'a pas encore. sans(E,
+// ['climat']) retire le mécanisme du monde (monde.climat) : le moteur ne le lit plus, et le profil peut le réveiller.
+// Ce qu'un mécanisme laisse dans le monde part avec lui quand le moteur le relirait : les savoirs des populations (l'esprit).
+function sans(E, cles = []) { if (!cles.length) return E; E = JSON.parse(JSON.stringify(E)); for (const k of cles) delete E.monde[k];
+  if (cles.includes('esprit')) { for (const t of E.taxons) for (const p of t.populations || []) delete p.savoirs; if (E.catalogue) delete E.catalogue.savoirs; }
+  return E; }
+const etat = (cles = []) => sans(JSON.parse(fs.readFileSync(racine('mondes/orvane/etat.json'), 'utf8')), cles);
+const orvane = (opt = {}) => parBiome(etat(opt.sans || []), opt);
+module.exports = { orvane, parBiome, sans, etat };

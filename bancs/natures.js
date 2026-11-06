@@ -18,7 +18,7 @@ const val = (s, v, p) => { if (!s) return []; if (s.$ref) s = S.$defs[s.$ref.spl
   if (s.type && !t.includes(ty === 'number' && t.includes('integer') && Number.isInteger(v) ? 'integer' : ty)) return [p + ': type ' + ty]; if (s.enum && !s.enum.includes(v)) return [p + ': hors enum ' + v]; const e = [];
   if (ty === 'object') { for (const r of s.required || []) if (!(r in v)) e.push(p + ': manque ' + r); for (const k in v) { const ps = s.properties?.[k] || (typeof s.additionalProperties === 'object' ? s.additionalProperties : null); if (ps) e.push(...val(ps, v[k], p + '.' + k)); else if (s.additionalProperties === false) e.push(p + ': en trop ' + k); } }
   if (ty === 'array' && s.items) v.forEach((x, i) => e.push(...val(s.items, x, p + '[' + i + ']'))); return e; };
-const I0 = require('./monde.js').orvane({ continent: '' }), M = Mi.eveiller(I0).inst, W = Na.eveiller(M).inst, animaux = I => I.taxons.map(t => [t.id, t.populations.map(p => [p.biome, p.effectif])]);
+const I0 = require('./monde.js').orvane({ continent: '', sans: ['milieu', 'natures'] }), M = Mi.eveiller(I0).inst, W = Na.eveiller(M).inst, animaux = I => I.taxons.map(t => [t.id, t.populations.map(p => [p.biome, p.effectif])]);
 const B = (X, id) => X.biomes.find(b => b.id === id), jouer = (X, J) => { X = clone(X); for (const [id, j] of Object.entries(J)) B(X, id).transforme.jeu = j; return X; };
 const natures = X => X.evenements.filter(e => e.type === 'nature').map(e => e.detail);
 const nageurs = (X, bid) => X.taxons.filter(t => t.plan.locomotion?.length === 1 && t.plan.locomotion[0] === 'nage').reduce((a, t) => a + (t.populations.find(p => p.biome === bid)?.effectif || 0), 0);

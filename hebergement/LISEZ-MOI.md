@@ -82,11 +82,13 @@ Trois gardes, qui ne demandent rien d'autre que le dépôt.
 
 `.github/workflows/verifications.yml` tourne à chaque PR et à chaque changement de `main` :
 - **le contrat** (une minute) : chaque fichier JavaScript se lit ; les types (`types/orvane.d.ts`) sont bien ceux des schémas, et passent `tsc --strict` ; chaque profil, chaque amorce et chaque instantané du dépôt respecte le contrat (`outils/verifier.js`) ;
-- **les bancs rapides** : tous les bancs, chacun dans sa version courte, quatre à la fois (`outils/bancs.js`).
+- **les bancs** : tous, chacun dans sa version courte, en quatre parts de durées à peu près égales, sur quatre machines à la fois (`outils/bancs.js --part k/4`) : une vingtaine de minutes.
 
-Chaque nuit, à 05:23 UTC, elle fait tourner les bancs longs dans leur version entière (le monde à parcelles sur 200 cycles, la stabilité sur 1 000, la fusion, les ponts, le temps). « Run workflow » les lance à la demande (`rapides`, `longs` ou `tous`). Le bilan, banc par banc, est dans le résumé de chaque passe.
+Chaque nuit, à 05:23 UTC, elle fait tourner dans leur version entière les bancs qui en ont une courte (le monde à parcelles sur 200 cycles, la stabilité sur 1 000, la fusion, les ponts, la flore, les souches, les machines, les corps). « Run workflow » les lance à la demande (`rapides`, `longs` ou `tous`). Le bilan, banc par banc, est dans le résumé de chaque passe.
 
-Pour qu'une PR en échec ne puisse pas être fusionnée : Settings › Branches › « Add branch ruleset » (ou « Add rule ») pour `main`, « Require status checks to pass », et choisir `contrat` et `bancs`.
+Une vérification qu'on sait en échec, et pourquoi, s'affiche « ⚠ connue » : elle ne fait pas échouer son banc, et dit quand elle repasse. Il y en a une, le 6 novembre : la minoritaire de sa bande ne tient plus mieux avec la flore (docs/17).
+
+Pour qu'une PR en échec ne puisse pas être fusionnée : Settings › Branches › « Add branch ruleset » (ou « Add rule ») pour `main`, « Require status checks to pass », et choisir `contrat` et les quatre `bancs (k/4)` (ils n'apparaissent dans la liste qu'après une première passe).
 
 À la main :
 
@@ -94,9 +96,12 @@ Pour qu'une PR en échec ne puisse pas être fusionnée : Settings › Branches 
 node outils/bancs.js                  # les bancs rapides (versions courtes)
 node outils/bancs.js corps tampon     # ceux-là seulement
 node outils/bancs.js --longs          # les bancs longs, entiers
+node outils/bancs.js --part 1/4 --liste   # ce que ferait la première des quatre parts, sans rien lancer
 ```
 
-Un banc nouveau est pris tout seul : il suffit qu'il finisse par `process.exit` (0 s'il passe). Un banc trop long pour chaque PR se range dans la liste `LONGS` d'`outils/bancs.js`.
+Un banc nouveau est pris tout seul : il suffit qu'il finisse par `process.exit` (0 s'il passe). S'il est long, qu'il ait une version courte (`--court`) : c'est elle qui tourne à chaque PR, l'entière la nuit. Sa durée se note dans `DUREES` d'`outils/bancs.js`, pour que les quatre parts restent égales.
+
+Les bancs qui partent du monde d'Orvane partent du monde d'avant le mécanisme qu'ils vérifient (`bancs/monde.js`, `etat(['climat'])`) : le monde vivant a depuis éveillé presque tous ses mécanismes, et un banc du « jour de l'éveil » ne vérifiait plus rien (neuf bancs échouaient ainsi le 6 novembre).
 
 ### La veille
 

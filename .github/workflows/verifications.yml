@@ -1,6 +1,6 @@
 # Orvane — les vérifications : à chaque PR et à chaque changement de main, le contrat et les bancs rapides ; chaque nuit, les bancs
 # longs. Une PR dont une vérification échoue se voit en rouge ; pour qu'elle ne puisse pas être fusionnée, Settings › Branches ›
-# « main » : « Require status checks to pass », et cocher « contrat » et « bancs » (hebergement/LISEZ-MOI.md, « Les vérifications »).
+# « main » : « Require status checks to pass », et cocher « contrat » et les quatre « bancs (k/4) » (hebergement/LISEZ-MOI.md, « Les vérifications »).
 name: verifications
 on:
   pull_request:
@@ -42,7 +42,12 @@ jobs:
           exit $r
   bancs:
     runs-on: ubuntu-latest
-    timeout-minutes: 240
+    timeout-minutes: 330
+    strategy:
+      fail-fast: false
+      matrix:
+        part: [1, 2, 3, 4]           # quatre machines à la fois, chacune une part des bancs, à durées à peu près égales
+    name: bancs (${{ matrix.part }}/4)
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -52,8 +57,8 @@ jobs:
           QUOI: ${{ github.event.inputs.quoi }}
         run: |
           case "${{ github.event_name }}:$QUOI" in
-            schedule:*|*:longs) mode=--longs ;;
-            *:tous) mode=--tous ;;
-            *) mode= ;;
+            schedule:*|*:longs) mode=--longs; delai=18000 ;;
+            *:tous) mode=--tous; delai=18000 ;;
+            *) mode=; delai=2400 ;;
           esac
-          node outils/bancs.js $mode --jobs 4 --delai 2400
+          node outils/bancs.js $mode --part ${{ matrix.part }}/4 --jobs 4 --delai $delai

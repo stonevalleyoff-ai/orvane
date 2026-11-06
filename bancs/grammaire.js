@@ -18,7 +18,7 @@ const val = (s, v, p) => { if (!s) return []; if (s.$ref) s = S.$defs[s.$ref.spl
   if (s.type && !t.includes(ty === 'number' && t.includes('integer') && Number.isInteger(v) ? 'integer' : ty)) return [p + ': type ' + ty]; if (s.enum && !s.enum.includes(v)) return [p + ': hors enum ' + v]; const e = [];
   if (ty === 'object') { for (const r of s.required || []) if (!(r in v)) e.push(p + ': manque ' + r); for (const k in v) { const ps = s.properties?.[k] || (typeof s.additionalProperties === 'object' ? s.additionalProperties : null); if (ps) e.push(...val(ps, v[k], p + '.' + k)); else if (s.additionalProperties === false) e.push(p + ': en trop ' + k); } }
   if (ty === 'array' && s.items) v.forEach((x, i) => e.push(...val(s.items, x, p + '[' + i + ']'))); return e; };
-const I0 = require('./monde.js').orvane({ continent: '' }), W = G.eveiller(I0).inst, animaux = I => I.taxons.map(t => [t.id, t.populations.map(p => [p.biome, p.effectif]), t.phenotypes.map(p => p.id)]);
+const I0 = require('./monde.js').orvane({ continent: '', sans: ['grammaire'] }), W = G.eveiller(I0).inst, animaux = I => I.taxons.map(t => [t.id, t.populations.map(p => [p.biome, p.effectif]), t.phenotypes.map(p => p.id)]);
 const avec = (o, f) => { const g = clone(G.REGLES); Object.assign(G.REGLES, o); try { return f(); } finally { Object.assign(G.REGLES, g); } };
 const B = (X, id) => X.biomes.find(b => b.id === id), Tx = (X, id) => X.taxons.find(t => t.id === id), tot = t => t.populations.reduce((a, p) => a + p.effectif, 0);
 const part = (X, tid, id) => Tx(X, tid).phenotypes.reduce((a, p) => a + (p.traits.includes(id) ? p.frequence : 0), 0);
