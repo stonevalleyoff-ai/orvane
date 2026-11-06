@@ -148,6 +148,25 @@ Même graine, 3 000 cycles, la règle de rareté nouvelle :
 
 (les colonnes du milieu : en moyenne du cycle 1 000 au cycle 3 000)
 
-Les charognards tiennent désormais toute la genèse. **Mais les carnivores y perdent** : 331 lignées d'omnivores naissent au lieu de 144, nourries sans doute de ces charognards abondants (16 à 20 % de la biomasse des bêtes au début), et le monde touche le plafond de 200 lignées, où plus rien ne se sépare : un carnivore qui s'éteint n'est plus remplacé. La règle n'est donc pas encore posée par défaut : une genèse la reçoit par `--regles '{"cadavres": 1}'`, et le monde qui en naît la garde (`monde.regles`). La suite : des charognards moins abondants (une part des morts plus petite, que l'on mesure sur plusieurs graines), et un plafond de lignées plus haut. Le monde d'Orvane n'a plus de charognards (ils ont disparu dans sa genèse) : la règle ne lui changerait rien.
+Les charognards tiennent désormais toute la genèse. **Mais les carnivores y perdent** : 331 lignées d'omnivores naissent au lieu de 144, nourries sans doute de ces charognards abondants (16 à 20 % de la biomasse des bêtes au début), et le monde touche le plafond de 200 lignées, où plus rien ne se sépare : un carnivore qui s'éteint n'est plus remplacé.
 
-Les autres pistes, à mesurer de la même façon : faire peser les filtreurs pour 60 % sur la capacité ; une genèse d'eau douce versée dans le monde, comme la mer en octobre.
+**La moitié des morts (6 novembre, le soir).** Deux pistes, mesurées sur deux graines, 3 000 cycles chacune : une part des morts plus petite (0,5), et un plafond de lignées plus haut (300).
+
+| graine | cadavres | plafond | charognards | carnivores | biomasse des carnivores (part des herbivores) | biomes sans carnivore | lignées |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026 | 0 | 200 | 0,1 | 10,5 | 6,7 % | 0 | 139 |
+| 2026 | 1 | 200 | 9,9 | 7,2 | 6,5 % | 3,1 | 180 |
+| 2026 | 1 | 300 | 13,5 | 8,5 | 6,4 % | 2,3 | 210 |
+| 2026 | **0,5** | 200 | **12,6** | **12,2** | 6,0 % | 1,0 | 192 |
+| 7 | 0 | 200 | 0 | 9,0 | 5,4 % | 1,8 | 172 |
+| 7 | **0,5** | 200 | **11,2** | **11,0** | 3,0 % | 0,9 | 196 |
+
+(en moyenne du cycle 1 000 au cycle 3 000)
+
+- **À 0,5, les charognards tiennent** sur les deux graines : 11 à 13 lignées, 1 à 2 % des bêtes au cycle 3 000. **Et les carnivores gardent leurs lignées** : 12,2 au lieu de 10,5, 11,0 au lieu de 9,0.
+- **Le plafond plus haut ne suffit pas.** Avec toutes les morts, 300 lignées au plus, les carnivores perdent toujours deux lignées.
+- **Ce qui coûte encore.** Sur la graine 7, la biomasse des carnivores baisse : 3,0 % de celle des herbivores au lieu de 5,4 %. Ils sont plus nombreux en lignées, plus maigres en bêtes. Sur la graine 2026, la baisse est faible (6,0 % au lieu de 6,7 %). Les biomes sans carnivore restent autour d'un.
+
+**La règle est désormais posée par défaut dans la genèse, à 0,5.** Le monde qui en naît la garde (`monde.regles`). `--regles '{"cadavres": 0}'` revient à la genèse d'avant ; une genèse publiée avant le 6 novembre (le monde d'Orvane, la mer, la genèse 2026) se refait avec cette option. Le monde d'Orvane n'a plus de charognards (ils ont disparu dans sa genèse) : la règle ne lui changerait rien.
+
+Les autres pistes, à mesurer de la même façon : faire peser les filtreurs pour 60 % sur la capacité ; une genèse d'eau douce versée dans le monde, comme la mer en octobre (faite le 6 novembre : docs/42).

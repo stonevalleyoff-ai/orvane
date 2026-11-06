@@ -107,6 +107,6 @@ node bancs/dietes.js
 
 ## Ce qui reste ouvert
 
-- **La charogne.** Faite en partie (docs/13, 6 novembre) : les charognards peuvent vivre des morts du lieu (`REGLES.cadavres`, au choix d'une genèse). Reste un nécrophage qui suit les chasseurs et vit des restes de leurs proies.
+- **La charogne.** Faite en partie (docs/13, 6 novembre) : les charognards peuvent vivre des morts du lieu (`REGLES.cadavres`, la moitié des morts par défaut dans une genèse). Reste un nécrophage qui suit les chasseurs et vit des restes de leurs proies.
 - **Des spécialistes.** Un mangeur de fruits mange tous les fruits ; un oiseau qui ne mange que les figues d'un seul arbre, et l'arbre qui en dépend, attendront.
 - **Le plancton.** Les filtreurs gardent le leur.
