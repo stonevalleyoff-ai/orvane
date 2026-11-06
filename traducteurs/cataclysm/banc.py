@@ -343,6 +343,14 @@ def main():
         ok(len(lots(os.path.join(de, 'refuses'))) == 1, 'un lot refusé mis de côté dans refuses/')
         ok(len(lots(os.path.join(de, 'lots'))) == 1, 'le lot arrêté par le quota attend')
 
+        print('\nexecuter (pour le lanceur)')
+        reussi, texte = P.executer(['--cdda', cdda, 'etat'])
+        ok(reussi and 'cycle %s' % inst['cycle']['n'] in texte, 'une commande rend sa réussite et son texte')
+        vide = os.path.join(tmp, 'vide')
+        ecrire(os.path.join(vide, 'save', 'M', 'mods.json'), b'["dda", "orvane"]')
+        reussi, texte = P.executer(['--cdda', vide, 'compter'])
+        ok(not reussi and 'preparer' in texte, 'un échec rend son message, sans lever d\'exception')
+
         print('\nUn monde refait de zéro')
         autre = copy.deepcopy(inst)
         autre['monde']['ne'] = '2030-01-01T00:00:00Z'

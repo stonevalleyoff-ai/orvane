@@ -112,6 +112,8 @@ Il prépare le mod depuis `mondes/orvane/`, fabrique des sauvegardes (en clair, 
 
 Ce que le banc ne fait pas : charger le mod dans le jeu lui-même. Sur une machine où le jeu est installé, `cataclysm --check-mods orvane` (ou un nouveau monde avec le mod coché) le confirme.
 
-## Ensuite : dans le lanceur
+## Dans le lanceur
 
-Le lanceur Kitten (`Fris0uman/CDDA-Game-Launcher`, licence MIT) lance le jeu et sait quand il se ferme. Il suffira qu'il appelle `preparer` avant de lancer le jeu et `apres` quand il se ferme, avec un onglet « Orvane » pour l'activer et voir les lots, et le paquet `zstandard` dans son exécutable. `passerelle.py` est fait pour être copié tel quel, avec la ligne `Required Notice` en tête.
+Une copie du lanceur Kitten (licence MIT) fait tout cela seule : [stonevalleyoff-ai/Cataclysm-Dark-Days-Ahead](https://github.com/stonevalleyoff-ai/Cataclysm-Dark-Days-Ahead). Dans son onglet des réglages, la section « Orvane » branche le jeu, ajoute le mod aux mondes existants si on le veut, et a son mode essai. Le lanceur appelle `apres` puis `preparer` avant de lancer le jeu (le premier rattrape une partie qu'il n'a pas vue finir), et `apres` quand le jeu se ferme ; il reste ouvert pendant la partie pour cela. Il appelle la passerelle par `executer(argv)`, qui rend la réussite et le texte d'une commande sans jamais lever d'exception.
+
+Elle y est copiée telle quelle, dans `cddagl/orvane/passerelle.py`, avec la ligne `Required Notice` en tête. Une modification se fait ici, avec le banc, puis se recopie là-bas.

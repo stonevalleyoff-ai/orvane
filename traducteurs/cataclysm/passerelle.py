@@ -848,6 +848,27 @@ def cmd_etat(a):
     print('Dernier envoi : %s' % etat.get('envoi', 'jamais'))
 
 
+def executer(argv):
+    """Pour un programme qui embarque la passerelle (le lanceur) : lance une commande, comme en
+    ligne de commande, et rend (réussite, ce qu'elle a dit). Ne lève jamais d'exception."""
+    import io
+    from contextlib import redirect_stdout
+    tampon = io.StringIO()
+    reussi = True
+    with redirect_stdout(tampon):
+        try:
+            main(list(argv))
+        except SystemExit as e:
+            if e.code not in (None, 0):
+                reussi = False
+                if not isinstance(e.code, int):
+                    print(e.code)
+        except Exception as e:                   # le programme hôte ne doit pas tomber
+            reussi = False
+            print('erreur inattendue : %r' % (e,))
+    return reussi, tampon.getvalue().strip()
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(description='Passerelle Orvane pour Cataclysm: Dark Days Ahead')
     p.add_argument('--cdda', help='dossier du jeu qui contient save/ (sous Windows : le dossier du jeu)')
