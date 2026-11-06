@@ -47,6 +47,7 @@
 <script src="../tampon/tampon.js"></script>
 <script src="../moteur/parcelles.js"></script>
 <script src="silhouette.js"></script>
+<script src="../tampon/directeur.js"></script>
 <script src="../moteur/solo.js"></script>
 <script src="../tampon/individus.js"></script>
 <script src="../moteur/collectif.js"></script>
@@ -313,10 +314,18 @@ function vueEnsemble() {
     </div>
     <section class="atlas-panel populations-panel"><div class="panel-heading"><div><p class="atlas-kicker">DYNAMIQUE DES POPULATIONS</p><h2>Les effectifs au fil des cycles</h2></div><span class="atlas-chart-label">${E.H.length} cycles connus</span></div><div id="zEff"></div></section>
     ${mecanismesHTML(I)}
+    ${globalThis.OrvaneDirecteur ? `<section class="atlas-panel directeur-panel"><div class="panel-heading"><div><p class="atlas-kicker">LE DIRECTEUR DE MISE EN SCÈNE</p><h2>Ce que montrerait un jeu</h2></div></div><div class="genres" role="group" aria-label="Le genre du jeu">${Object.entries(OrvaneDirecteur.GENRES).map(([k, G]) => `<button class="puce" data-genre="${k}" aria-pressed="${k === (E.genre || 'cozy')}">${ESC(G.nom)}</button>`).join('')}</div><ol class="moments" id="moments"></ol><p class="note">Chaque genre met en avant ce qu'il veut faire vivre à ses joueurs, au dernier cycle : les chasseurs qui se multiplient pour l'horreur, les noms et les migrations pour un jeu cozy, les lignées neuves et les raretés pour un jeu de collection. Un jeu l'appelle avec <code>tampon/directeur.js</code> (docs/40).</p></section>` : ''}
     ${genesePanelHTML()}
     <section class="biomes-section"><div class="biomes-banner"><img src="../assets/littoral-900.webp" width="900" height="600" loading="lazy" alt="Illustration d’un littoral où se rencontrent plusieurs habitats."><div><p class="atlas-kicker">02 / LES MILIEUX DU MONDE</p><h2>${I.biomes.length} biomes.<br><em>Autant d’équilibres.</em></h2><p>Populations, ressources et pression sur la végétation : chaque milieu raconte une autre histoire.</p></div><small>Illustration d’univers</small></div><div class="biomes">${I.biomes.slice().sort((a, b) => (occupants[b.id] || []).reduce((s, [, n]) => s + n, 0) - (occupants[a.id] || []).reduce((s, [, n]) => s + n, 0)).map(ficheBiome).join('')}</div>
     <p class="note">Les biomes du plus peuplé au moins peuplé. La pression sur la végétation compare ce que les mangeurs de plantes demandent à ce que le sol produit : au-delà de 100 %, la population doit refluer ou partir.</p></section>`;
-  dessinerEffectifs(); dessinerGenese();
+  dessinerEffectifs(); dessinerGenese(); dessinerMoments();
+}
+// (docs/40) ce que montrerait un jeu de ce genre, au dernier cycle
+function dessinerMoments() {
+  const z = $('#moments'); if (!z || !globalThis.OrvaneDirecteur) return; const g = E.genre || 'cozy', I = inst();
+  const M = OrvaneDirecteur.moments(I, { genre: g, chronique: E.chronique || null });
+  z.innerHTML = M.length ? M.map(m => `<li><b>${ESC(m.titre)}</b> <span class="sourd">· ${ESC(OrvaneDirecteur.TYPES[m.type] || m.type)}</span><br>${m.taxon && I.taxons.some(t => t.id === m.taxon) ? `<button class="lien" data-esp="${ESC(m.taxon)}">${ESC(m.texte)}</button>` : ESC(m.texte)}</li>`).join('') : '<li class="sourd">Rien à mettre en scène ce cycle.</li>';
+  $$('[data-genre]').forEach(b => { b.setAttribute('aria-pressed', b.dataset.genre === g); b.onclick = () => { E.genre = b.dataset.genre; dessinerMoments(); }; });
 }
 function dessinerEffectifs() {
   const z = $('#zEff'); if (!z) return;
