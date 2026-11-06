@@ -244,3 +244,4 @@ The `erreur` strings are in French:
 - [ ] The game filters out the families it cannot play (`Tampon.filtrer`) and lists in its batches those it plays.
 - [ ] A sent batch answers `ok: true`; otherwise it is kept and sent again later.
 - [ ] The next day, `pressions_recues` rises in the instantané's `cycle`.
+- [ ] The translator passes the generic test bench: `node outils/banc-traducteur.js my-translator.js` (docs/39; the model: `traducteurs/exemple/traducteur.js`).
