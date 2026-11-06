@@ -23,8 +23,8 @@ const REGLES = {
   seuils: { famille: .2, groupe: .45 },          // sociabilité sous laquelle on vit seul ; au-delà de laquelle on vit en groupe
   echelle_sociabilite: .08,                      // ce que vaut un écart-type de sociabilité génétique (catalogue : sociabilite.echelle)
   taille: { meute: 6, troupeau: 30, bande: 14, banc: 200, volee: 40, essaim: 900 },   // la taille habituelle d'un groupe moyen
-  migration: { rude: .75, marge: .2, min: .2, part_min: .05, part_max: .85, masse_marcheur: .3, masse_volant: .005 },   // rude : l'hiver vaut moins des trois quarts de l'été
-  fenetres: { depart: [.78, .88], partie: [.88, .12], retour: [.12, .22] }   // la phase de l'année (0 : le cœur de l'hiver)
+  // (la route de l'hiver, ses seuils et ses fenêtres sont ceux du moteur : Orvane.REGLES.hivernage, docs/38 — un monde qui a
+  // l'hivernage actif voit ses bêtes partir vraiment ; ici, on le dit)
 };
 const TERRE = ['marche', 'course', 'saut', 'reptation', 'fouissage', 'grimpe'];
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
@@ -80,22 +80,12 @@ function groupeDe(t, p, b, inst) {
 const phaseDe = inst => inst?.cycle?.saison?.phase ?? (inst?.monde?.annee ? ((inst.cycle?.n || 0) % inst.monde.annee) / inst.monde.annee : null);
 const dans = (x, [a, b]) => a <= b ? x >= a && x < b : x >= a || x < b;
 function routeDe(t, p, b, inst, biomes) {
-  const P = t.plan || {}, L = P.locomotion || [], M = REGLES.migration, m = P.masse_kg || 1;
-  if (!b || b.saisons === false || b.saisons === null || !P.niche || !Orvane) return null;
-  const vole = L.includes('vol'), marche = L.some(l => ['marche', 'course'].includes(l)), nage = L.includes('nage');
-  if (!(vole && m >= M.masse_volant) && !(marche && m >= M.masse_marcheur) && !(nage && m >= M.masse_marcheur)) return null;
-  const hiver = x => ({ ...x, axes: Orvane.axesSaison(x, 0) }), ete = x => ({ ...x, axes: Orvane.axesSaison(x, .5) });
-  const ici = Orvane.convenance(P, hiver(b)), iciEte = Orvane.convenance(P, ete(b));
-  if (ici >= M.rude * iciEte) return null;   // un hiver doux chez soi : on reste (le bœuf musqué ne quitte pas la toundra)
-  let meilleur = null;
-  for (const vid of [...new Set(b.voisins || [])].sort()) { const v = biomes.get(vid); if (!v || typeDe(vid) === typeDe(b.id)) continue;   // (par parcelles : une parcelle d'un autre lieu)
-    const la = Orvane.convenance(P, hiver(v)); if (la < M.min || la < ici * (1 + M.marge)) continue;
-    if (!meilleur || la > meilleur.la) meilleur = { v, la }; }
-  if (!meilleur) return null;
-  const s = sociabiliteDe(t, p), gain = (meilleur.la - ici) / meilleur.la;
-  const q = clamp(gain * (.5 + .5 * s) + .3 * savoir(p, 'routes'), M.part_min, M.part_max), ph = phaseDe(inst), F = REGLES.fenetres;
+  if (!Orvane?.routeHiver) return null;
+  const H = { ...Orvane.REGLES.hivernage, ...(inst?.monde?.regles?.hivernage || {}) };   // (les seuils d'un monde qui les règle : ceux de son cycle)
+  const r = Orvane.routeHiver(t.plan || {}, b, id => biomes.get(id), sociabiliteDe(t, p), savoir(p, 'routes'), H); if (!r) return null;
+  const ph = phaseDe(inst), F = H.fenetres;
   const etat = ph == null ? null : dans(ph, F.depart) ? 'au depart' : dans(ph, F.partie) ? 'partie' : dans(ph, F.retour) ? 'au retour' : 'au pays';
-  return { vers: meilleur.v.id, vers_nom: meilleur.v.nom || meilleur.v.id, saison: 'hiver', part: +q.toFixed(3), depart: F.depart[0], retour: F.retour[1], ...(etat ? { etat } : {}),
+  return { vers: r.vers.id, vers_nom: r.vers.nom || r.vers.id, saison: 'hiver', part: +r.part.toFixed(3), depart: F.depart[0], retour: F.retour[1], ...(etat ? { etat } : {}),
     ...(savoir(p, 'routes') >= .2 ? { guide: 'les plus vieilles mènent, toujours par le même chemin' } : {}) };
 }
 
@@ -112,13 +102,14 @@ function eveiller(inst, opt = {}) {
 // --- ce que lit un jeu : le groupe et la migration de chaque population (la vue par biome), les visiteurs de l'hiver ---
 function decrire(inst, opt = {}) {
   if (!inst?.monde?.collectif && !opt.forcer) return inst;
-  const biomes = new Map((inst.biomes || []).map(b => [b.id, b])), visiteurs = {};
+  const biomes = new Map((inst.biomes || []).map(b => [b.id, b])), visiteurs = {}, reels = (inst.taxons || []).some(t => t.populations?.some(p => p.hivernants));
   const taxons = (inst.taxons || []).map(t => {
     if (!estAnimal(t) || t.eteint) return t;
     const populations = (t.populations || []).map(p => { if (!(p.effectif > 0)) return p; const b = biomes.get(p.biome) || biomes.get(typeDe(p.biome));
       const q = { ...p, groupe: groupeDe(t, p, b, inst) }, r = routeDe(t, p, b, inst, biomes);
-      if (r) { q.migration = r; if (r.etat === 'partie') (visiteurs[r.vers] ||= []).push({ taxon: t.id, de: p.biome, effectif: Math.round(p.effectif * r.part), forme: q.groupe.forme }); }
+      if (r) { q.migration = r; if (r.etat === 'partie' && !reels) (visiteurs[r.vers] ||= []).push({ taxon: t.id, de: p.biome, effectif: Math.round(p.effectif * r.part), forme: q.groupe.forme }); }
       else delete q.migration;
+      for (const [de, h] of Object.entries(p.hivernants || {})) { const e = Math.round(p.effectif * h); if (e >= 1) (visiteurs[p.biome] ||= []).push({ taxon: t.id, de, effectif: e, forme: q.groupe.forme }); }   // (docs/38) ceux qui sont là
       return q; });
     return { ...t, populations };
   });

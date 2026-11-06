@@ -98,7 +98,7 @@ Ce que porte une lignée (`inst.taxons[i]`) :
 
 **Un monde qui n'est pas la Terre.** Un monde peut porter son propre catalogue (`inst.catalogue.monde`) : des axes de biome (la magie), des traits, des organes et des formes de corps à lui. Leurs définitions sont dans l'instantané ; pour dessiner ses silhouettes, appelez `OrvaneCorps.etendre(inst.catalogue.monde)` une fois, à la lecture ([docs/20](docs/20-catalogues-ouverts.md)). Le monde d'Orvane n'en a pas.
 
-**Un monde à soi, solo ou hors ligne.** `moteur/solo.js` fait vivre dans le jeu une copie du monde, partie de l'instantané : elle avance avec le temps réel (un cycle toutes les dix minutes, par exemple) ou en accéléré, ce que fait le joueur y pèse, et elle se sauvegarde. Rien n'en part vers le monde partagé ([docs/19](docs/19-le-temps.md)).
+**Un monde à soi, solo ou hors ligne.** `moteur/solo.js` fait vivre dans le jeu une copie du monde, partie de l'instantané : elle avance avec le temps réel (un cycle toutes les dix minutes, par exemple) ou en accéléré, ce que fait le joueur y pèse, et elle se sauvegarde. Rien n'en part vers le monde partagé ([docs/19](docs/19-le-temps.md)). Un genre la règle d'un mot : `OrvaneSolo.creer(instantane, { genre: 'horreur' })` fait un monde qui change vite et dérange, `'cozy'` un monde qui se répare, `'collection'` un monde riche en lignées ([docs/41](docs/41-profils-de-genre.md)).
 
 `cycle.n` est le numéro du cycle, `cycle.saison` la saison du monde. Le détail champ par champ : [docs/1](docs/1-lire-un-instantane.md) et `schemas/instantane.schema.json`.
 
@@ -224,6 +224,7 @@ La nuit suivante, le cycle lit les lots de tous les jeux et les rapporte à l'ex
 - [ ] Le jeu filtre les familles qu'il ne sait pas jouer (`Tampon.filtrer`) et dit dans ses lots celles qu'il joue.
 - [ ] Un lot déposé répond `ok: true` ; sinon, il est gardé et renvoyé plus tard.
 - [ ] Le lendemain, `pressions_recues` monte dans `cycle` de l'instantané.
+- [ ] Le traducteur passe le banc générique : `node outils/banc-traducteur.js mon-traducteur.js` (docs/39 ; le modèle : `traducteurs/exemple/traducteur.js`).
 
 ## In English, briefly
 

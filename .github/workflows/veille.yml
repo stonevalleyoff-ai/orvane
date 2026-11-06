@@ -1,0 +1,52 @@
+# Orvane — la veille : toutes les trois heures, elle regarde si chaque monde qui tourne a eu son dernier cycle, et si le site le
+# montre (hebergement/veille.js). Au premier retard, elle ouvre une issue « veille » (GitHub l'envoie par courriel à qui suit le
+# dépôt) ; quand tout repart, elle la ferme. Rien à renseigner : elle n'utilise que le jeton de l'action.
+name: veille
+on:
+  schedule:
+    - cron: '41 */3 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+  pages: read
+jobs:
+  veille:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: ce que dit la publication
+        id: veille
+        run: |
+          mkdir -p "$RUNNER_TEMP/pub"
+          if git fetch -q --depth=1 origin publication 2>/dev/null; then
+            fichiers=$(git ls-tree -r --name-only FETCH_HEAD mondes | grep -E '/(historique|profil)\.json$' || true)
+            [ -n "$fichiers" ] && git archive FETCH_HEAD $fichiers | tar -x -C "$RUNNER_TEMP/pub"
+          fi
+          mkdir -p "$RUNNER_TEMP/pub/mondes"
+          site=$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq .html_url 2>/dev/null || true)
+          node hebergement/veille.js "$RUNNER_TEMP/pub" ${site:+--site "$site"} | tee "$RUNNER_TEMP/veille.txt"
+          { echo '### La veille'; echo; sed 's/^/- /; s/\t/ · /g' "$RUNNER_TEMP/veille.txt"; } >> "$GITHUB_STEP_SUMMARY"
+      - name: l'alerte (une issue « veille »)
+        run: |
+          gh label create veille --color B60205 --description "un monde ne tourne plus, ou le site ne le montre pas" 2>/dev/null || true
+          titre="La veille : un monde ne tourne plus, ou le site ne le montre pas"
+          num=$(gh issue list --label veille --state open --json number --jq '.[0].number // empty')
+          if grep -qvE '^OK' "$RUNNER_TEMP/veille.txt"; then
+            {
+              echo "La veille a vu, le $(date -u +'%d/%m/%Y à %H:%M UTC') :"
+              echo
+              grep -vE '^OK' "$RUNNER_TEMP/veille.txt" | sed 's/^/- /; s/\t/ · /g'
+              echo
+              echo "À regarder : l'onglet Actions (le workflow « cycle »), le déclencheur du Supabase (hebergement/declencheur.sql), Settings › Pages (la branche publication). Cette issue se ferme d'elle-même quand tout est reparti (hebergement/LISEZ-MOI.md, « La veille »)."
+            } > "$RUNNER_TEMP/corps.md"
+            if [ -z "$num" ]; then gh issue create --title "$titre" --label veille --body-file "$RUNNER_TEMP/corps.md"
+            else gh issue edit "$num" --body-file "$RUNNER_TEMP/corps.md"; fi    # (une seule issue, tenue à jour : pas un courriel toutes les trois heures)
+          elif [ -n "$num" ]; then
+            gh issue close "$num" --comment "Tout est reparti : $(sed 's/\t/ · /g' "$RUNNER_TEMP/veille.txt" | tr '\n' ';')"
+          fi

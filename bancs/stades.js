@@ -17,7 +17,8 @@ const val = (s, v, p) => { if (!s) return []; if (s.$ref) s = S.$defs[s.$ref.spl
   if (s.type && !t.includes(ty === 'number' && t.includes('integer') && Number.isInteger(v) ? 'integer' : ty)) return [p + ': type ' + ty]; if (s.enum && !s.enum.includes(v)) return [p + ': hors enum ' + v]; const e = [];
   if (ty === 'object') { for (const r of s.required || []) if (!(r in v)) e.push(p + ': manque ' + r); for (const k in v) { const ps = s.properties?.[k] || (typeof s.additionalProperties === 'object' ? s.additionalProperties : null); if (ps) e.push(...val(ps, v[k], p + '.' + k)); else if (s.additionalProperties === false) e.push(p + ': en trop ' + k); } }
   if (ty === 'array' && s.items) v.forEach((x, i) => e.push(...val(s.items, x, p + '[' + i + ']'))); return e; };
-const I0 = lireJ('mondes/orvane/etat.json'), W = St.eveiller(I0).inst, animaux = I => I.taxons.map(t => [t.id, t.populations.map(p => [p.biome, p.effectif])]);
+// (le monde d'Orvane, d'avant ce mécanisme : bancs/monde.js)
+const I0 = require('./monde.js').etat(['stades']), W = St.eveiller(I0).inst, animaux = I => I.taxons.map(t => [t.id, t.populations.map(p => [p.biome, p.effectif])]);
 // une part q des allèles porte la métamorphose, dans toutes les populations de la lignée
 const greffer = (X, tid, q) => { const t = X.taxons.find(x => x.id === tid), f = 1 - (1 - q) ** 2; for (const p of t.populations) p.alleles = { ...(p.alleles || {}), metamorphose: q };
   for (const p of t.phenotypes.slice()) { const traits = [...p.traits, 'metamorphose'].sort(), fb = p.frequence_par_biome;

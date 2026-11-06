@@ -15,7 +15,7 @@ Une lignée qui se sépare change parfois de régime, un pas à la fois :
 | omnivore | carnivore | 4 % |
 | carnivore | omnivore | 4 % |
 
-Jamais d'herbivore à carnivore d'un coup. Un filtreur et un détritivore gardent le leur. Dans un monde aux régimes en spectre (docs/30), c'est le glissement du spectre qui fait changer les régimes, à la place de ces pas. Devenue carnivore, une lignée gagne en audace (+0,15), en sens (+0,1) et en vitesse (+10 %). Devenue herbivore, elle perd en audace (−0,1).
+Jamais d'herbivore à carnivore d'un coup. Un filtreur et un charognard gardent le leur. Dans un monde aux régimes en spectre (docs/30), c'est le glissement du spectre qui fait changer les régimes, à la place de ces pas. Devenue carnivore, une lignée gagne en audace (+0,15), en sens (+0,1) et en vitesse (+10 %). Devenue herbivore, elle perd en audace (−0,1).
 
 La sélection fait le reste : un omnivore né là où les proies abondent prospère, un autre né là où il n'y a rien à chasser s'efface.
 

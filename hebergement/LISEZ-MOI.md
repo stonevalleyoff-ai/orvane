@@ -63,6 +63,7 @@ Le guide pas à pas, avec les adresses, les appels et les erreurs : [BRANCHER-UN
 - **Secret du dépôt** (Settings › Secrets and variables › Actions) : `ORVANE_LECTURE_SECRET`, le secret de lecture. Il n'ouvre que la lecture des lots et des jeux.
 - **L'action** : `.github/workflows/cycle.yml`, qui fait tourner chaque dossier de `mondes/` dont le profil ne dit pas `monde.nocturne = false`, à son rythme (`monde.cycle` et `monde.heure`, au plus `monde.rattrapage` cycles d'un coup : docs/19). « Run workflow » fait tourner chaque monde du nombre de cycles demandé (1 par défaut), sans regarder l'heure. Un dossier qui commence par un point ne passe pas par « Add files › Upload files » : créer le fichier par « Add file › Create new file », en tapant le chemin `.github/workflows/cycle.yml`.
 - **Pages** : Settings › Pages, « Deploy from a branch », branche **`publication`**, dossier `/`.
+- **Le déclencheur** (conseillé) : GitHub ne garantit pas l'heure des actions programmées. `hebergement/declencheur.sql`, collé dans le Supabase d'Orvane, lance l'action chaque heure à la 5ᵉ minute (`pg_cron`, `pg_net`) ; le monde d'Orvane fait ainsi son cycle à 03:05 UTC. Il lui faut un jeton GitHub qui ne permet que de lancer les actions du dépôt, rangé dans le coffre du projet (les étapes sont en tête du fichier).
 
 ### La branche de publication
 
@@ -73,6 +74,56 @@ Le site (l'accueil, l'observatoire, et les mondes que lisent les jeux) est servi
 - Un changement poussé sur `main` (le code, un profil) est publié dans la foulée ; un monde ne tourne pas pour autant avant son heure. Une passe sans rien de neuf ne publie rien.
 - Les fichiers de `mondes/` que `main` garde sont l'état au moment du passage à la publication : le monde vivant est dans la branche `publication` (`git fetch origin publication`).
 - Le premier passage : fusionner, attendre que l'action ait créé la branche `publication` (l'onglet Actions, quelques minutes après la fusion), puis choisir cette branche dans Settings › Pages. Tant que Pages sert `main`, le site garde le monde du dernier cycle publié dans `main`.
+
+## La fiabilité
+
+Trois gardes, qui ne demandent rien d'autre que le dépôt.
+
+### Les vérifications
+
+`.github/workflows/verifications.yml` tourne à chaque PR et à chaque changement de `main` :
+- **le contrat** (une minute) : chaque fichier JavaScript se lit ; les types (`types/orvane.d.ts`) sont bien ceux des schémas, et passent `tsc --strict` ; chaque profil, chaque amorce et chaque instantané du dépôt respecte le contrat (`outils/verifier.js`) ;
+- **les bancs** : tous, chacun dans sa version courte, en quatre parts de durées à peu près égales, sur quatre machines à la fois (`outils/bancs.js --part k/4`) : une vingtaine de minutes.
+
+Chaque nuit, à 05:23 UTC, elle fait tourner dans leur version entière les bancs qui en ont une courte (le monde à parcelles sur 200 cycles, la stabilité sur 1 000, la fusion, les ponts, la flore, les souches, les machines, les corps). « Run workflow » les lance à la demande (`rapides`, `longs` ou `tous`). Le bilan, banc par banc, est dans le résumé de chaque passe.
+
+Une vérification qu'on sait en échec, et pourquoi, s'affiche « ⚠ connue » : elle ne fait pas échouer son banc, et dit quand elle repasse. Il y en a une, le 6 novembre : la minoritaire de sa bande ne tient plus mieux avec la flore (docs/17).
+
+Pour qu'une PR en échec ne puisse pas être fusionnée : Settings › Branches › « Add branch ruleset » (ou « Add rule ») pour `main`, « Require status checks to pass », et choisir `contrat` et les quatre `bancs (k/4)` (ils n'apparaissent dans la liste qu'après une première passe).
+
+À la main :
+
+```
+node outils/bancs.js                  # les bancs rapides (versions courtes)
+node outils/bancs.js corps tampon     # ceux-là seulement
+node outils/bancs.js --longs          # les bancs longs, entiers
+node outils/bancs.js --part 1/4 --liste   # ce que ferait la première des quatre parts, sans rien lancer
+```
+
+Un banc nouveau est pris tout seul : il suffit qu'il finisse par `process.exit` (0 s'il passe). S'il est long, qu'il ait une version courte (`--court`) : c'est elle qui tourne à chaque PR, l'entière la nuit. Sa durée se note dans `DUREES` d'`outils/bancs.js`, pour que les quatre parts restent égales.
+
+Les bancs qui partent du monde d'Orvane partent du monde d'avant le mécanisme qu'ils vérifient (`bancs/monde.js`, `etat(['climat'])`) : le monde vivant a depuis éveillé presque tous ses mécanismes, et un banc du « jour de l'éveil » ne vérifiait plus rien (neuf bancs échouaient ainsi le 6 novembre).
+
+### La veille
+
+`.github/workflows/veille.yml` regarde toutes les trois heures si chaque monde qui tourne a eu son dernier cycle (`hebergement/veille.js`, au même rythme que le cycle : `hebergement/rythme.js`). Le monde d'Orvane tourne une fois par jour, à 03:00 UTC : si le cycle d'une heure passée depuis plus de quatre heures n'a pas eu lieu, c'est un retard. Elle regarde aussi ce que montre le site : un site qui montre un cycle plus vieux que la publication n'est pas servi depuis la branche `publication`.
+
+Au premier retard, elle ouvre une issue « veille » (GitHub l'envoie par courriel à qui suit le dépôt), qu'elle tient à jour ; quand tout repart, elle la ferme.
+
+```
+node hebergement/veille.js <la branche publication extraite> [--site https://…/] [--maintenant 2026-11-07T09:00:00Z]
+```
+
+### Les sauvegardes
+
+La branche `publication` n'a pas d'historique : sans sauvegarde, un état abîmé ne se rattraperait pas. Chaque passe du cycle où un monde a tourné garde donc l'état de ce monde dans un artefact de la passe, « etat-mondes », pendant 30 jours (quelques mégaoctets compressés).
+
+Pour revenir en arrière :
+1. Actions › cycle : ouvrir la passe dont on veut l'état. Son numéro est le nombre à la fin de l'adresse de sa page (`…/actions/runs/19234567890`).
+2. Actions › cycle › « Run workflow », et dans « restaurer », ce numéro.
+3. La passe repart de cet état (`node hebergement/publication.js restaurer`), puis fait les cycles dus (au plus `monde.rattrapage`), et publie.
+
+Ce qu'on écrit à la main (le profil, l'amorce) vient toujours de `main`. Une sauvegarde d'un autre monde (une autre naissance) n'est pas restaurée.
 
 ## À la main
 

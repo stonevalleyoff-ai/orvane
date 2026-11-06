@@ -6,7 +6,10 @@
 //     la nourriture manque ; les troupeaux mêlés ;
 //  4. les migrations : un lieu froid l'hiver, un voisin plus doux ; le départ, l'hiver au loin, le retour ; les visiteurs ;
 //     ni migration vers un lieu meilleur toute l'année, ni pour un fouisseur ;
-//  5. le monde d'Orvane : ce qu'il publie, et ce que cela pèse.
+//  5. le monde d'Orvane : ce qu'il publie, et ce que cela pèse ;
+//  6. l'hivernage qui compte (regles.hivernage.actif) : éteint, rien ne bouge ; allumé, les rennes partent à la fin de l'automne,
+//     hivernent en taïga et rentrent au printemps ; des événements de saison, pas des extinctions ; plus de rennes au sortir de l'hiver ;
+//  7. par parcelles : les hivernants d'un biome, comptés à partir de ceux de ses parcelles ; les visiteurs que lit un jeu.
 //   node bancs/collectif.js
 'use strict';
 const fs = require('fs'), path = require('path');
@@ -84,6 +87,36 @@ console.log('5. Le monde d\'Orvane');
   const poids = JSON.stringify(D).length - JSON.stringify(I).length;
   verif(n > 0 && F.meute && F.troupeau && F.banc && m > 0, `${n} populations : ${Object.entries(F).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${v} ${k}`).join(', ')} ; ${m} migrent avec les saisons`);
   verif(poids < .15 * JSON.stringify(I).length, `ce que cela ajoute à l'instantané : ${fx(poids / 1024, 0)} Ko (${fx(100 * poids / JSON.stringify(I).length, 1)} %)`); }
+
+console.log('6. L\'hivernage qui compte');
+{ // du dernier cycle de l'été (k = 93) au printemps suivant : 60 cycles ; actif 0 (le calcul seul) ou 1 (les bêtes partent)
+  const tourner = (regles, cycles = 60) => { let I = monde(93 / 120); I.cycle.n = 93; delete I.cycle.saison; delete I.monde.collectif; if (regles) I.monde.regles = regles; const L = [];
+    for (let i = 0; i < cycles; i++) { I = Orvane.cycle(I, {}, { duree_ms: 864e5 }); L.push(JSON.parse(JSON.stringify(I))); } return L; };
+  const r = (I, b) => I.taxons.find(t => t.id === 'renne')?.populations.find(p => p.biome === b), eff = (I, b) => r(I, b)?.effectif || 0, k = I => I.cycle.n % 120;
+  const S = tourner(null, 14), Z = tourner({ hivernage: { actif: 0 } }, 14);
+  const sans = L => JSON.stringify(L.map(I => ({ ...I, monde: { ...I.monde, regles: undefined } })));
+  verif(sans(S) === sans(Z), 'éteint (actif 0) : le monde tourne au caractère près comme sans la règle, la fenêtre du départ passée');
+  const A = tourner({ hivernage: { actif: 0 } }), B = tourner({ hivernage: { actif: 1 } }), fin = B.findIndex(I => k(I) === 106), ret = B.findIndex(I => k(I) === 27);
+  const h = r(B[fin], 'taiga')?.hivernants?.toundra || 0;
+  verif(h > .3 && eff(B[fin], 'toundra') < eff(A[fin], 'toundra'), `à la fin de l'automne (cycles 94 à 105), les rennes partent : la taïga en compte ${eff(B[fin], 'taiga')}, dont ${fx(h * 100, 0)} % venus de la toundra pour l'hiver (sans la règle, ${eff(A[fin], 'taiga')})`);
+  verif(!r(B[ret], 'taiga')?.hivernants && B.slice(fin, ret).some(I => r(I, 'taiga')?.hivernants),
+    `au printemps (cycles 15 à 26), ils rentrent : plus un hivernant en taïga à la fin du retour ; la toundra en a ${eff(B[ret], 'toundra')} (sans la règle, ${eff(A[ret], 'toundra')})`);
+  const E = B.flatMap(I => I.evenements.filter(e => e.taxon === 'renne')), dit = re => E.find(e => re.test(e.detail || ''));
+  verif(dit(/migration d'automne/) && dit(/migration de printemps/) && !E.some(e => e.biome === 'taiga' && ['extinction', 'explosion', 'effondrement'].includes(e.type) || /s'installe/.test(e.detail || '')),
+    `des événements de saison : « ${dit(/automne/)?.detail} », « ${dit(/printemps/)?.detail} » — ni installation, ni extinction, ni explosion pour un aller-retour`);
+  const vivants = I => eff(I, 'toundra') + eff(I, 'taiga'), hiver = B.findIndex(I => k(I) === 14);
+  verif(vivants(B[hiver]) > vivants(A[hiver]), `passer l'hiver au doux sauve des bêtes : ${vivants(B[hiver])} rennes à la sortie de l'hiver, contre ${vivants(A[hiver])} sans la règle`);
+  verif(B.every(I => I.taxons.every(t => t.id === 'renne' || t.id === 'caribou' || t.populations.every(p => !p.hivernants))), 'la taupe, le bœuf musqué, le loup, le hareng ne partent pas');
+  verif(JSON.stringify(tourner({ hivernage: { actif: 1 } }, 20)) === JSON.stringify(B.slice(0, 20)), 'déterministe : même monde, mêmes allers et retours'); }
+
+console.log('7. Par parcelles');
+{ const Pa = require(racine('moteur/parcelles.js')), b = (id, type) => ({ id, nom: id, type, milieu: 'terrestre', axes: axes(.3, .5, .3), capacite: 1e4, voisins: [] });
+  const I = { orvane: '0.1', monde: { id: 'p', graine: 1, annee: 120, collectif: { depuis: 0 }, parcelles: { par: 2, graine: 1, types: [b('toundra'), b('taiga')] } }, cycle: { n: 100, date: '2026-11-05T03:00:00Z', saison: { phase: .95 } },
+    biomes: [b('toundra~1', 'toundra'), b('toundra~2', 'toundra'), b('taiga~1', 'taiga'), b('taiga~2', 'taiga')], catalogue: { version: '0.1', traits: {} },
+    taxons: [tx('renne', {}, [{ biome: 'toundra~1', effectif: 100 }, { biome: 'taiga~1', effectif: 300, hivernants: { 'toundra~1': .8 } }, { biome: 'taiga~2', effectif: 100, hivernants: { 'toundra~2': .5 } }])] };
+  const V = Pa.regrouper(I), p = V.taxons[0].populations.find(x => x.biome === 'taiga'), D = K.decrire(V), vis = D.biomes.find(x => x.id === 'taiga').visiteurs || [];
+  verif(Math.abs((p.hivernants?.toundra || 0) - (300 * .8 + 100 * .5) / 400) < 1e-4 && Object.keys(p.hivernants).length === 1, `la taïga (deux parcelles) : ${fx(p.hivernants.toundra * 100, 1)} % d'hivernants venus de la toundra, par biome et non par parcelle`);
+  verif(vis.length === 1 && vis[0].de === 'toundra' && vis[0].effectif === 290, `ce que lit un jeu : ${vis.map(v => `${v.effectif} ${v.taxon} de la ${v.de}`).join(', ')} — les hivernants comptés, non une estimation`); }
 
 console.log(`\n${ok ? 'tout est vérifié' : 'ÉCHEC'} (${((Date.now() - t0) / 1000).toFixed(0)} s)`);
 process.exit(ok ? 0 : 1);

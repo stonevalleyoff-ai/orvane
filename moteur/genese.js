@@ -7,6 +7,8 @@
 //                         [--point 200] [--reprise genese.json.reprise.json]   (par tranches : un point de reprise tous les N cycles)
 //                         [--milieux marin,aquatique,amphibie] [--ancetres ancetres.json]   (un monde d'une partie des biomes, d'autres ancêtres)
 //                         [--catalogue catalogue.json]   (le catalogue propre du monde : ses axes, ses traits, ses organes, ses formes, docs/20)
+//                         [--rarete .0005] [--etage 10] [--sursis 100] [--rarete-lieu .012] [--etage-detritivore 1]   (la règle de rareté : docs/13)
+//                         [--regles '{"cadavres": 0.5}']   (des règles du moteur gardées par le monde ; cadavres : la part des morts du lieu qui nourrit les charognards, 0,5 par défaut)
 // lignees : le nombre de lignées vivantes au-delà duquel plus rien ne se sépare — la place se gagne alors par extinction.
 // biomes.json : un tableau de biomes au format de l'instantané (ou un monde existant : on reprend ses biomes, vides).
 'use strict';
@@ -16,7 +18,7 @@ const Orvane = require('./orvane.js'), CAT = require('./catalogue.js'), CORPS = 
 // de reprise — sans cela, une reprise sans ses --regles ou ses --lignees continuait un autre monde)
 const a = process.argv.slice(2), iR = a.indexOf('--reprise'), ARGS0 = iR >= 0 && a[iR + 1] ? JSON.parse(fs.readFileSync(a[iR + 1], 'utf8')).args || {} : {};
 const arg = (k, d) => { const i = a.indexOf(k); return i >= 0 && a[i + 1] != null ? a[i + 1] : k in ARGS0 ? ARGS0[k] : d; };
-const DRAPEAUX = ['--cycles', '--graine', '--nom', '--sortie', '--lignees', '--rarete', '--etage', '--regles', '--milieux', '--ancetres', '--catalogue', '--point'];
+const DRAPEAUX = ['--cycles', '--graine', '--nom', '--sortie', '--lignees', '--rarete', '--etage', '--regles', '--milieux', '--ancetres', '--catalogue', '--point', '--sursis', '--rarete-lieu', '--etage-detritivore'];
 const src = a.find((x, i) => !x.startsWith('--') && !(i > 0 && a[i - 1].startsWith('--'))) || ARGS0._src || 'mondes/sv-1', cycles = +arg('--cycles', 3000), graine = +arg('--graine', 7), nom = arg('--nom', 'Monde né d\'Orvane'), sortie = arg('--sortie', 'genese.json');
 const ARGS = { _src: src, ...Object.fromEntries(DRAPEAUX.map(k => [k, arg(k, undefined)]).filter(([, v]) => v !== undefined)) };
 
@@ -111,13 +113,24 @@ const maxTaxons = +arg('--lignees', 100);
 Object.assign(Orvane.REGLES, { mutation: .01, nouveau_trait: .08, menace: 20, max_taxons: maxTaxons, separation: { ...R0.separation, cycles: 15, effectif: 40, distance: .8, chance: .03 },
   derive: { masse: [.4, 3], regime: .25, locomotion: .3, activite: .2, corps: 2.5 } });   // corps : la silhouette dérive deux fois et demie plus vite
 // --regles '{"cle": valeur}' : des règles du moteur propres à ce monde
-const reglesMonde = arg('--regles', null) ? JSON.parse(arg('--regles', '{}')) : null;   // gardées par le monde (monde.regles) : elles valent ensuite à chacun de ses cycles
+// (6 novembre) les charognards vivent des morts du lieu (REGLES.cadavres, docs/13), et le monde garde la règle. Par défaut, la moitié
+// de ces morts les nourrit : sur deux graines, 3 000 cycles, ils tiennent (11 à 13 lignées) et les carnivores gardent leurs lignées ;
+// toutes les morts (1) leur en coûtaient trois. --regles '{"cadavres": 0}' revient à la genèse d'avant
+const reglesMonde = { cadavres: .5, ...(arg('--regles', null) ? JSON.parse(arg('--regles', '{}')) : {}) };   // gardées par le monde (monde.regles) : elles valent ensuite à chacun de ses cycles
 if (reglesMonde) for (const [k, v] of Object.entries(reglesMonde)) { const b = Orvane.REGLES[k]; Orvane.REGLES[k] = v && typeof v === 'object' && !Array.isArray(v) && b && typeof b === 'object' && !Array.isArray(b) ? { ...b, ...v } : v; }   // (d'un niveau, comme le moteur : { derive: { tolerance: .3 } } garde le reste de la dérive)
 const rarete = +arg('--rarete', .0005);   // une lignée installée qui reste sous cette part de la BIOMASSE du monde est rayée : la place se libère
 // (la rareté se juge à l'étage de la chaîne : un prédateur ne pèse naturellement qu'un dixième de ses proies — Lindeman)
-const ETAGE = { carnivore: +arg('--etage', 10), omnivore: 2 };
+const ETAGE = { carnivore: +arg('--etage', 10), omnivore: 2, ...(arg('--etage-detritivore', null) != null ? { detritivore: +arg('--etage-detritivore') } : {}) };
+// (équilibrage, 6 novembre) le sursis d'une lignée née, avant que la rareté la juge (100 cycles) ; et la rareté jugée aussi lieu par
+// lieu (--rarete-lieu : la part de la biomasse d'un lieu sous laquelle une lignée n'y compte pas). Une lignée n'est rayée que si elle
+// ne compte ni dans le monde, ni dans aucun lieu : celle qui tient sa place dans un lieu pauvre (la banquise, le volcan, les abysses)
+// n'est plus rayée parce que ce lieu pèse peu dans le monde ; celle qui compte dans le monde, répandue partout, non plus.
+// 0 : la rareté se juge sur tout le monde seulement, comme avant le 6 novembre (docs/13)
+const sursis = +arg('--sursis', 100), rareteLieu = +arg('--rarete-lieu', .012);   // (.012 : la part qu'aurait un lieu moyen, 0,05 % × 24)
 const biomasseDe = t => t.populations.reduce((s, p) => s + p.effectif, 0) * (t.plan.masse_kg || 1);
 const poidsRarete = t => biomasseDe(t) * (ETAGE[Tampon.regimeDe(t, TR)] || 1);
+const rare = (t, total, parLieu) => poidsRarete(t) < rarete * total
+  && !(rareteLieu > 0 && t.populations.some(p => p.effectif * (t.plan.masse_kg || 1) * (ETAGE[Tampon.regimeDe(t, TR)] || 1) >= rareteLieu * (parLieu[p.biome] || 0)));
 let bilan = { separation: 0, extinction: 0, nouveau_trait: 0 }, vivantsMax = 0, k0 = 0;
 const TRACE = process.env.ORVANE_TRACE ? { nes: {}, fin: {}, rarete: {}, vus: new Set(), morts: new Set() } : null;   // (essais : qui naît, qui meurt, par régime de fait)
 // une genèse longue tourne par tranches : un point de reprise tous les --point cycles (sortie.reprise.json) ; --reprise
@@ -131,8 +144,9 @@ for (let k = k0; k < cycles; k++) {
   inst = Orvane.cycle(inst, {}, { duree_ms: 0 });
   for (const t of inst.taxons) if (!PARENTS.has(t.id)) PARENTS.set(t.id, t.parent ?? null);
   for (const e of inst.evenements) if (e.type in bilan) bilan[e.type]++;
-  if ((k + 1) % 25 === 0) { const total = inst.taxons.reduce((s, t) => s + (t.eteint ? 0 : biomasseDe(t)), 0);
-    for (const t of inst.taxons) if (!t.eteint && t.apparu < inst.cycle.n - 100 && poidsRarete(t) < rarete * total) { if (TRACE) TRACE.rarete[Tampon.regimeDe(t, TR)] = (TRACE.rarete[Tampon.regimeDe(t, TR)] || 0) + 1; t.eteint = inst.cycle.n; t.statut = 'eteint'; t.populations = []; bilan.extinction++; } }
+  if ((k + 1) % 25 === 0) { const total = inst.taxons.reduce((s, t) => s + (t.eteint ? 0 : biomasseDe(t)), 0), parLieu = {};
+    if (rareteLieu > 0) for (const t of inst.taxons) if (!t.eteint) for (const p of t.populations) parLieu[p.biome] = (parLieu[p.biome] || 0) + p.effectif * (t.plan.masse_kg || 1);
+    for (const t of inst.taxons) if (!t.eteint && t.apparu < inst.cycle.n - sursis && rare(t, total, parLieu)) { if (TRACE) TRACE.rarete[Tampon.regimeDe(t, TR)] = (TRACE.rarete[Tampon.regimeDe(t, TR)] || 0) + 1; t.eteint = inst.cycle.n; t.statut = 'eteint'; t.populations = []; bilan.extinction++; } }
   if (TRACE) for (const t of inst.taxons) { const r = Tampon.regimeDe(t, TR); if (!TRACE.vus.has(t.id)) { TRACE.vus.add(t.id); TRACE.nes[r] = (TRACE.nes[r] || 0) + 1; }
     if (t.eteint && !TRACE.morts.has(t.id)) { TRACE.morts.add(t.id); TRACE.fin[r] = (TRACE.fin[r] || 0) + 1; } }
   const vivants = inst.taxons.filter(t => !t.eteint).length; vivantsMax = Math.max(vivantsMax, vivants);

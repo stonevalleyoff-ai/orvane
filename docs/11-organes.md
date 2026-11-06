@@ -43,6 +43,19 @@ La conduite emploie le vocabulaire des traits (docs/7), avec son présage (« ba
 - un organe se perd parfois (une séparation sur trente-trois), ou quand sa taille passe sous 0,2 ;
 - les modes de déplacement laissent leur marque comme avant : le vol pose des ailes, la nage parfois des nageoires. L'ombre allonge les antennes.
 
+**Plus d'organes : `regles.derive.organes` (6 novembre).** Mesuré : 40 % des lignées du monde d'Orvane (96 sur 241) et la moitié de celles de la genèse 2026 (67 sur 136) n'avaient aucun organe. Un organe naît à une séparation sur seize et se perd à une sur trente-trois, ou en rapetissant : il en reste peu. Un réglage du monde en fait naître davantage :
+
+```json
+"monde": { …, "regles": { "derive": { "organes": 0.15 } } }
+```
+
+- à chaque séparation, une chance de plus (0,15 : 15 %) qu'un organe neuf naisse, choisi comme les autres selon la vie que mène la lignée ;
+- **0, par défaut : rien ne change.** Les mêmes corps, les mêmes tirages qu'avant ;
+- le tirage vient tout à la fin de la dérive, avec son propre hasard, tiré du corps de la lignée : une séparation ne tire rien de plus du hasard du cycle. Ensuite, une lignée qui porte un organe de plus le fait dériver à ses propres séparations ;
+- le banc (`bancs/formes.js`, point 3 ter) : six séparations de suite, 500 descendances d'un brouteur, 26 % portent au moins un organe sans le réglage (0,31 en moyenne), 69 % avec 0,15 (1,21 en moyenne).
+
+Il est posé à 0,15 dans le profil du monde d'Orvane : les lignées qui naîtront désormais porteront plus souvent des cornes, une crête, une carapace, des épines ; celles d'aujourd'hui gardent leur corps.
+
 Les organes entrent dans l'écart de silhouette (`Corps.distance`). Deux lignées qui diffèrent par une massue s'écartent donc davantage, et sont plus isolées l'une de l'autre (docs/10). Comme le reste de la silhouette, les organes ne pèsent pas encore sur la survie dans le moteur : ils servent à dessiner les lignées et à les faire agir dans le jeu.
 
 ## Côté jeu

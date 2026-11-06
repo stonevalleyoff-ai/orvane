@@ -17,7 +17,8 @@ const val = (s, v, p) => { if (!s) return []; if (s.$ref) s = S.$defs[s.$ref.spl
   if (s.type && !t.includes(ty === 'number' && t.includes('integer') && Number.isInteger(v) ? 'integer' : ty)) return [p + ': type ' + ty]; if (s.enum && !s.enum.includes(v)) return [p + ': hors enum ' + v]; const e = [];
   if (ty === 'object') { for (const r of s.required || []) if (!(r in v)) e.push(p + ': manque ' + r); for (const k in v) { const ps = s.properties?.[k] || (typeof s.additionalProperties === 'object' ? s.additionalProperties : null); if (ps) e.push(...val(ps, v[k], p + '.' + k)); else if (s.additionalProperties === false) e.push(p + ': en trop ' + k); } }
   if (ty === 'array' && s.items) v.forEach((x, i) => e.push(...val(s.items, x, p + '[' + i + ']'))); return e; };
-const I0 = lireJ('mondes/orvane/etat.json'), W = Iv.eveiller(I0).inst, animaux = I => I.taxons.map(t => [t.id, t.populations.map(p => [p.biome, p.effectif]), t.phenotypes.map(p => p.id)]);
+// (le monde d'Orvane, d'avant ce mécanisme : bancs/monde.js ; et sans la grammaire, qui invente aussi, autrement)
+const I0 = require('./monde.js').etat(['invention', 'grammaire']), W = Iv.eveiller(I0).inst, animaux = I => I.taxons.map(t => [t.id, t.populations.map(p => [p.biome, p.effectif]), t.phenotypes.map(p => p.id)]);
 const avec = (chance, f) => { const c = Iv.REGLES.chance; Iv.REGLES.chance = chance; try { return f(); } finally { Iv.REGLES.chance = c; } };
 const part = (X, tid, id) => X.taxons.find(x => x.id === tid).phenotypes.reduce((a, p) => a + (p.traits.includes(id) ? p.frequence : 0), 0);
 
@@ -27,7 +28,7 @@ console.log('1. Le jour un');
   let A = I0, C = I0; for (let k = 0; k < 3; k++) { A = Orvane.cycle(A, {}); C = mod.exports.cycle(C, {}); }
   verif(empreinte(A) === empreinte(C), 'un monde qui n\'est pas inventif tourne exactement comme le moteur sans moteur/invention.js');
   const a = Orvane.cycle(I0, {}), b = avec(0, () => Orvane.cycle(W, {}));
-  verif(empreinte(animaux(a)) === empreinte(animaux(b)) && !b.catalogue.monde, 'le jour de l\'éveil, rien ne bouge : le monde n\'a encore rien inventé, et son hasard est le sien');
+  verif(empreinte(animaux(a)) === empreinte(animaux(b)) && empreinte(b.catalogue.monde || null) === empreinte(a.catalogue.monde || null), 'le jour de l\'éveil, rien ne bouge : le monde n\'a encore rien inventé (son catalogue est celui d\'avant), et son hasard est le sien');
 }
 
 console.log('2. Une invention');
@@ -58,7 +59,8 @@ console.log('3. Il dure');
 
 console.log('4. La diversité, le contrat');
 { let X = W; const ev = []; for (let k = 0; k < 14; k++) { X = avec(1, () => Orvane.cycle(X, {})); ev.push(...X.evenements.filter(e => e.type === 'invention')); }
-  const M = X.catalogue.monde.traits, noms = ev.map(e => e.detail.match(/« (.+?) »/)[1]), sources = new Set(Object.values(M).flatMap(t => t.origine.de)), fus = Object.values(M).filter(t => t.exige.length > 1).length;
+  // (les traits que ce monde a inventés en ces 14 cycles : son catalogue en porte d'autres, venus d'avant, d'une fusion, de la grammaire)
+  const avant = new Set(Object.keys(W.catalogue?.monde?.traits || {})), M = Object.fromEntries(Object.entries(X.catalogue.monde.traits).filter(([k, t]) => !avant.has(k) && Array.isArray(t.exige) && t.origine?.de)), noms = ev.map(e => e.detail.match(/« (.+?) »/)[1]), sources = new Set(Object.values(M).flatMap(t => t.origine.de)), fus = Object.values(M).filter(t => t.exige.length > 1).length;
   verif(ev.length === 14 && new Set(noms).size === noms.length && sources.size >= 5 && Object.keys(M).every(k => !/-\d+$/.test(k)),
     `14 inventions, 14 noms différents, tirés de ${sources.size} traits (${[...sources].join(', ')}), dont ${fus} fusions : ${noms.slice(0, 6).join(', ')}…`);
   const e = val(S, Tampon.filtrer(X, { familles: ['animale', 'synthetique'] }), '$');

@@ -31,6 +31,8 @@ Un pont est un passage comme ceux qui relient deux parcelles voisines. Les bête
 
 Au cycle de nuit suivant, le continent rejoint le monde, une seule fois. Le journal porte une `apparition` par lignée arrivée, et `monde.fusions` garde la fusion, avec `mode: "ponts"` et ses ponts. `nom` (facultatif) nomme le continent dans les noms de ses parcelles et au journal. Sans `ponts`, la fusion se fait biome par biome, comme avant (docs/14). Le monde d'Orvane reçoit ainsi la genèse 7 (4 novembre).
 
+Les eaux douces (docs/42) rejoignent le monde d'Orvane de la même façon, par trois ponts nommés : un lac à un lac, une rivière à une rivière, un marais à un marais.
+
 ## Ce que le monde en fait
 
 `bancs/ponts.js` : le monde de la genèse 7 (seize biomes, 99 lignées) devient un continent du monde d'Orvane, en 80 cycles :

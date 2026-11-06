@@ -21,7 +21,7 @@ const val = (s, v, p) => { if (!s) return []; if (s.$ref) s = S.$defs[s.$ref.spl
   if (ty === 'array' && s.items) v.forEach((x, i) => e.push(...val(s.items, x, p + '[' + i + ']'))); return e; };
 // (le monde d'Orvane a désormais un milieu transformé, qui suit le climat avec retard : le banc part du même monde sans milieu, comme
 //  quand il a été écrit ; la section 2 éveille le milieu pour comparer)
-const I0 = (X => { delete X.monde.milieu; for (const b of X.biomes) { delete b.transforme; for (const k in b.axes) b.axes[k] = Math.round(b.axes[k] * 1e4) / 1e4; } return X; })(require('./monde.js').orvane({ continent: '' })),   // (axes à 4 décimales, comme le climat les écrit)   // (le monde d'Orvane vu par biome, sans le continent de la genèse 7 : bancs/monde.js)
+const I0 = (X => { delete X.monde.milieu; for (const b of X.biomes) { delete b.transforme; for (const k in b.axes) b.axes[k] = Math.round(b.axes[k] * 1e4) / 1e4; } return X; })(require('./monde.js').orvane({ continent: '', sans: ['climat'] })),   // (axes à 4 décimales, comme le climat les écrit)   // (le monde d'Orvane vu par biome, sans le continent de la genèse 7 : bancs/monde.js)
   W = Cl.eveiller(I0).inst, animaux = I => I.taxons.map(t => [t.id, t.populations.map(p => [p.biome, p.effectif])]);
 const B = (X, id) => X.biomes.find(b => b.id === id) || X.biomes.find(b => (b.type || b.id) === id), tot = t => t ? t.populations.reduce((a, p) => a + p.effectif, 0) : 0;
 // des réglages de banc : une onde courte et forte (le froid au cycle 30, le chaud au cycle 50), sans marche
@@ -66,9 +66,18 @@ console.log('4. La mer');
 let XP;
 { const X = avancer(W, 30), P = X.monde.climat.ponts;
   verif(P.length > 0 && P.length <= Cl.REGLES.ponts.max && P.every(([a, b]) => B(X, a).voisins.includes(b) && B(X, b).voisins.includes(a)), `la mer baisse : ${P.length} ponts de terre émergent (${P.map(([a, b]) => `${B(X, a).nom} et ${B(X, b).nom}`).join(' ; ')})`);
-  const Y = avancer(X, 12), passe = Y.taxons.filter(t => t.plan.regime !== 'vegetal' && P.some(([a, b]) => { const pa = t.populations.find(p => p.biome === a)?.effectif || 0, pb = t.populations.find(p => p.biome === b)?.effectif || 0, xa = X.taxons.find(x => x.id === t.id);
-    const qa = xa?.populations.find(p => p.biome === a)?.effectif || 0, qb = xa?.populations.find(p => p.biome === b)?.effectif || 0; return (qa > 0 && qb === 0 && pb > 0) || (qb > 0 && qa === 0 && pa > 0); }));
-  verif(passe.length > 0, `en 12 cycles, ${passe.length} lignées passent un pont vers un rivage où elles ne vivaient pas (${passe.slice(0, 3).map(t => t.nom).join(', ')})`);
+  const Y = avancer(X, 12);
+  // (6 novembre) le pont est un passage : un rivage serré (sa place à 30 % pendant 12 cycles, le pont tenu) pousse des bêtes à le
+  // passer ; le même, sans le pont, aucune. (On comptait les lignées qui passent d'elles-mêmes : le monde d'Orvane est désormais assez
+  // répandu pour que, sans rien qui pousse, aucune ne le fasse en 12 cycles.)
+  const lignees = id => X.taxons.filter(t => t.populations.some(p => p.biome === id)).length, cote = P.length ? P[0].slice().sort((u, v) => lignees(v) - lignees(u))[0] : null;   // (le rivage le plus peuplé du premier pont)
+  const serre = sansPont => { const X2 = clone(X); if (cote) B(X2, cote).capacite *= .3;
+    if (sansPont) for (const [a, b] of P) { B(X2, a).voisins = B(X2, a).voisins.filter(v => v !== b); B(X2, b).voisins = B(X2, b).voisins.filter(v => v !== a); }
+    const Y2 = avancer(X2, 12, { ...ONDE, ponts: { ...Cl.REGLES.ponts, sombrer: 9, emerger: -9 } });
+    const avant = (t, bb) => (X.taxons.find(x => x.id === t.id)?.populations.find(p => p.biome === bb)?.effectif || 0) > 0, ici = (t, bb) => (t.populations.find(p => p.biome === bb)?.effectif || 0) > 0;
+    return Y2.taxons.filter(t => t.plan.regime !== 'vegetal' && P.some(([a, b]) => (avant(t, b) && !avant(t, a) && ici(t, a)) || (avant(t, a) && !avant(t, b) && ici(t, b)))); };
+  const passe = serre(false), sansPont = serre(true);
+  verif(cote && passe.length > 0 && sansPont.length === 0, `le pont est un passage : un rivage serré (${B(X, cote)?.nom}, sa place à 30 % pendant 12 cycles), ${passe.length} lignées le passent vers un rivage où elles ne vivaient pas (${passe.slice(0, 3).map(t => t.nom).join(', ')}) ; sans le pont, ${sansPont.length}`);
   const Z = avancer(Y, 10); XP = Z;
   verif(Z.monde.climat.temperature > -.04 && !Z.monde.climat.ponts.length && P.every(([a, b]) => !B(Z, a).voisins.includes(b) && !B(Z, b).voisins.includes(a)), `la mer remonte (${fx(Z.monde.climat.temperature, 2)}) : les ponts sombrent, les rivages se séparent à nouveau`);
 }

@@ -15,6 +15,8 @@
 // Un lot ou un nom déposé à la main et déjà traité (dans lots/traites/ ou noms/traites/ de la publication) n'est pas relu.
 //
 //   node hebergement/publication.js reprendre <dossier>   (<dossier> : la branche publication extraite ; il contient mondes/)
+//   node hebergement/publication.js restaurer <dossier>   (<dossier> : une sauvegarde, l'artefact « etat-mondes » d'une passe du
+//     cycle ; l'état de chacun de ses mondes remplace celui du dossier de travail, même plus récent : c'est revenir en arrière)
 'use strict';
 const fs = require('fs'), path = require('path');
 
@@ -25,12 +27,14 @@ const copier = (a, b) => fs.cpSync(a, b, { recursive: true, force: true });
 
 // l'état d'un monde, de la publication vers le dossier de travail (une copie de `main`)
 const renaitre = d => { try { return JSON.parse(fs.readFileSync(path.join(d, 'profil.json'), 'utf8')).monde?.renaitre ?? null; } catch (e) { return null; } };
-function reprendreMonde(pub, ici) {
+function reprendreMonde(pub, ici, restaurer = false) {
   const P = lireEtat(pub), M = lireEtat(ici), R = renaitre(ici);
   if (!P) return 'rien à reprendre (pas d\'etat.json publié)';
-  if (R != null && R !== renaitre(pub)) return `le profil demande une renaissance (${R}) : on part de main`;
-  if (M && M.ne !== P.ne) return `main porte un monde né à nouveau (${M.ne}) : on part de main`;
-  if (M && M.n != null && P.n != null && M.n > P.n) return `main porte un état plus récent (cycle ${M.n} contre ${P.n}) : on part de main`;
+  if (!restaurer) {
+    if (R != null && R !== renaitre(pub)) return `le profil demande une renaissance (${R}) : on part de main`;
+    if (M && M.ne !== P.ne) return `main porte un monde né à nouveau (${M.ne}) : on part de main`;
+    if (M && M.n != null && P.n != null && M.n > P.n) return `main porte un état plus récent (cycle ${M.n} contre ${P.n}) : on part de main`;
+  } else if (M && M.ne !== P.ne) return `la sauvegarde est celle d'un autre monde (né le ${P.ne}, celui-ci le ${M.ne}) : rien n'est restauré`;
   // ce que le cycle écrit : celui de la publication remplace celui de main (et ce que main a en plus de ces fichiers est retiré)
   for (const x of fs.readdirSync(ici)) if (!ECRITS.has(x) && !DEPOTS.includes(x)) fs.rmSync(path.join(ici, x), { recursive: true, force: true });
   for (const x of fs.readdirSync(pub)) if (!ECRITS.has(x) && !DEPOTS.includes(x)) copier(path.join(pub, x), path.join(ici, x));
@@ -38,21 +42,21 @@ function reprendreMonde(pub, ici) {
   for (const d of DEPOTS) { const tP = path.join(pub, d, 'traites'); if (!fs.existsSync(tP)) continue;
     copier(tP, path.join(ici, d, 'traites'));
     for (const x of fs.readdirSync(tP)) { const f = path.join(ici, d, x); if (fs.existsSync(f) && fs.statSync(f).isFile()) fs.rmSync(f); } }
-  return `repris au cycle ${P.n}`;
+  return restaurer ? `restauré au cycle ${P.n}${M?.n != null ? ` (il en était au cycle ${M.n})` : ''}` : `repris au cycle ${P.n}`;
 }
 
-function reprendre(dossier) {
+function reprendre(dossier, restaurer = false) {
   const pubM = path.join(dossier, 'mondes'), iciM = path.join(process.cwd(), 'mondes');
   if (!fs.existsSync(pubM)) { console.log('la publication n\'a pas de mondes : on part de main'); return; }
   for (const id of fs.readdirSync(pubM).sort()) { const pub = path.join(pubM, id), ici = path.join(iciM, id);
     if (!fs.statSync(pub).isDirectory()) continue;
     if (!fs.existsSync(ici)) { console.log(`${id} : n'est plus dans main, il n'est plus publié`); continue; }
-    console.log(`${id} : ${reprendreMonde(pub, ici)}`); }
+    console.log(`${id} : ${reprendreMonde(pub, ici, restaurer)}`); }
 }
 
 if (require.main === module) {
   const [cmd, dossier] = process.argv.slice(2);
-  if (cmd !== 'reprendre' || !dossier) { console.log('node hebergement/publication.js reprendre <dossier de la branche publication>'); process.exit(2); }
-  reprendre(path.resolve(dossier));
+  if (!['reprendre', 'restaurer'].includes(cmd) || !dossier) { console.log('node hebergement/publication.js reprendre|restaurer <dossier qui contient mondes/>'); process.exit(2); }
+  reprendre(path.resolve(dossier), cmd === 'restaurer');
 }
 module.exports = { reprendre, reprendreMonde, ECRITS, DEPOTS };

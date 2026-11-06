@@ -47,6 +47,7 @@
 <script src="../tampon/tampon.js"></script>
 <script src="../moteur/parcelles.js"></script>
 <script src="silhouette.js"></script>
+<script src="../tampon/directeur.js"></script>
 <script src="../moteur/solo.js"></script>
 <script src="../tampon/individus.js"></script>
 <script src="../moteur/collectif.js"></script>
@@ -84,8 +85,8 @@ const deGenese = (t, I = inst()) => t.apparu < 0 || t.apparu > I.cycle.n || (!!I
 const ordreApparu = t => deGenese(t) ? t.apparu - 1e9 : t.apparu;   // « les plus récentes » : les lignées de la genèse en dernier, dans leur ordre
 const nomBiome = id => inst()?.biomes.find(b => b.id === id)?.nom || id;
 const STATUT = { croissance: ['en croissance', 'vif'], stable: ['stable', ''], declin: ['en déclin', 'declin'], menace: ['menacée', 'declin'], eteint: ['éteinte', 'declin'] };
-const REGIME = { herbivore: 'herbivore', omnivore: 'omnivore', carnivore: 'carnivore', filtreur: 'filtreur', detritivore: 'détritivore', synthetique: 'machine' };   // (docs/16 : une machine)
-const EVT = { apparition: ['apparition', 'apparitions'], extinction: ['extinction', 'extinctions'], separation: ['nouvelle lignée', 'nouvelles lignées'], migration: ['population installée ailleurs', 'populations installées ailleurs'],
+const REGIME = { herbivore: 'herbivore', omnivore: 'omnivore', carnivore: 'carnivore', filtreur: 'filtreur', detritivore: 'charognard', synthetique: 'machine' };   // (docs/16 : une machine)
+const EVT = { apparition: ['apparition', 'apparitions'], extinction: ['extinction', 'extinctions'], separation: ['nouvelle lignée', 'nouvelles lignées'], migration: ['migration', 'migrations'],
   effondrement: ['effondrement', 'effondrements'], explosion: ['explosion démographique', 'explosions démographiques'], nouveau_trait: ['trait nouveau', 'traits nouveaux'],
   epidemie: ['épidémie', 'épidémies'], remission: ['épidémie éteinte', 'épidémies éteintes'], catastrophe: ['catastrophe', 'catastrophes'], hybridation: ['zone hybride', 'zones hybrides'], mefiance: ['méfiance', 'méfiances'],
   eveil: ['éveil de la Mère', 'éveils de la Mère'], conception: ['plan conçu par la Mère', 'plans conçus par la Mère'], transfert: ['module adopté', 'modules adoptés'] };
@@ -313,10 +314,18 @@ function vueEnsemble() {
     </div>
     <section class="atlas-panel populations-panel"><div class="panel-heading"><div><p class="atlas-kicker">DYNAMIQUE DES POPULATIONS</p><h2>Les effectifs au fil des cycles</h2></div><span class="atlas-chart-label">${E.H.length} cycles connus</span></div><div id="zEff"></div></section>
     ${mecanismesHTML(I)}
+    ${globalThis.OrvaneDirecteur ? `<section class="atlas-panel directeur-panel"><div class="panel-heading"><div><p class="atlas-kicker">LE DIRECTEUR DE MISE EN SCÈNE</p><h2>Ce que montrerait un jeu</h2></div></div><div class="genres" role="group" aria-label="Le genre du jeu">${Object.entries(OrvaneDirecteur.GENRES).map(([k, G]) => `<button class="puce" data-genre="${k}" aria-pressed="${k === (E.genre || 'cozy')}">${ESC(G.nom)}</button>`).join('')}</div><ol class="moments" id="moments"></ol><p class="note">Chaque genre met en avant ce qu'il veut faire vivre à ses joueurs, au dernier cycle : les chasseurs qui se multiplient pour l'horreur, les noms et les migrations pour un jeu cozy, les lignées neuves et les raretés pour un jeu de collection. Un jeu l'appelle avec <code>tampon/directeur.js</code> (docs/40).</p></section>` : ''}
     ${genesePanelHTML()}
     <section class="biomes-section"><div class="biomes-banner"><img src="../assets/littoral-900.webp" width="900" height="600" loading="lazy" alt="Illustration d’un littoral où se rencontrent plusieurs habitats."><div><p class="atlas-kicker">02 / LES MILIEUX DU MONDE</p><h2>${I.biomes.length} biomes.<br><em>Autant d’équilibres.</em></h2><p>Populations, ressources et pression sur la végétation : chaque milieu raconte une autre histoire.</p></div><small>Illustration d’univers</small></div><div class="biomes">${I.biomes.slice().sort((a, b) => (occupants[b.id] || []).reduce((s, [, n]) => s + n, 0) - (occupants[a.id] || []).reduce((s, [, n]) => s + n, 0)).map(ficheBiome).join('')}</div>
     <p class="note">Les biomes du plus peuplé au moins peuplé. La pression sur la végétation compare ce que les mangeurs de plantes demandent à ce que le sol produit : au-delà de 100 %, la population doit refluer ou partir.</p></section>`;
-  dessinerEffectifs(); dessinerGenese();
+  dessinerEffectifs(); dessinerGenese(); dessinerMoments();
+}
+// (docs/40) ce que montrerait un jeu de ce genre, au dernier cycle
+function dessinerMoments() {
+  const z = $('#moments'); if (!z || !globalThis.OrvaneDirecteur) return; const g = E.genre || 'cozy', I = inst();
+  const M = OrvaneDirecteur.moments(I, { genre: g, chronique: E.chronique || null });
+  z.innerHTML = M.length ? M.map(m => `<li><b>${ESC(m.titre)}</b> <span class="sourd">· ${ESC(OrvaneDirecteur.TYPES[m.type] || m.type)}</span><br>${m.taxon && I.taxons.some(t => t.id === m.taxon) ? `<button class="lien" data-esp="${ESC(m.taxon)}">${ESC(m.texte)}</button>` : ESC(m.texte)}</li>`).join('') : '<li class="sourd">Rien à mettre en scène ce cycle.</li>';
+  $$('[data-genre]').forEach(b => { b.setAttribute('aria-pressed', b.dataset.genre === g); b.onclick = () => { E.genre = b.dataset.genre; dessinerMoments(); }; });
 }
 function dessinerEffectifs() {
   const z = $('#zEff'); if (!z) return;
@@ -382,8 +391,8 @@ function fiche() {
   if (G) h += `<h2>La vie en groupe</h2><div class="defile"><table><tr><th>biome</th><th>vit</th><th class="n">un groupe</th><th>hiérarchie</th><th>mené par</th><th>l'hiver</th></tr>
     ${G.pops.filter(q => q.groupe).sort((a, b) => b.effectif - a.effectif).map(q => { const g = q.groupe, m = q.migration;
       const plus = [g.sentinelles ? 'des sentinelles' : '', g.chasse ? (g.chasse === 'encercle' ? 'encercle ses proies' : 'chasse ensemble') : '', g.avec?.length ? 'avec ' + g.avec.map(id => nomEsp(I.taxons.find(z => z.id === id)) || id).join(', ') : ''].filter(Boolean);
-      return `<tr><td>${ESC(nomBiome(q.biome))}</td><td>${ESC(g.nom || g.forme)}${plus.length ? `<br><span class="sourd">${ESC(plus.join(' · '))}</span>` : ''}</td><td class="n">${g.taille ? `${nb(g.taille.typ)}${g.taille.min !== g.taille.max ? ` <span class="sourd">(${nb(g.taille.min)} à ${nb(g.taille.max)})</span>` : ''}` : '—'}</td><td>${g.hierarchie ? ESC(HIER[g.hierarchie.type] || g.hierarchie.type) : '<span class="sourd">—</span>'}</td><td>${g.meneur ? ESC(g.meneur) : '<span class="sourd">—</span>'}</td><td>${m ? `vers ${ESC(m.vers_nom || nomBiome(m.vers))}, ${pct(m.part)} d'entre elles${m.etat ? ` <span class="${m.etat === 'au pays' ? 'sourd' : 'ambre'}">· ${ESC(ETAT_M[m.etat] || m.etat)}</span>` : ''}` : '<span class="sourd">reste</span>'}</td></tr>`; }).join('')}</table></div>
-    <p class="note">Un groupe grandit avec la sociabilité de la population, à découvert et sous la prédation ; sa hiérarchie se durcit quand la nourriture manque. Une population dont l'hiver est rude, et qu'un lieu voisin abrite mieux, y part à la fin de l'automne et revient au printemps.${G.calcule ? ' Ce monde ne publie pas encore sa vie en groupe : elle est lue ici, dans l\'état publié, sans rien y changer.' : ''}</p>`;
+      return `<tr><td>${ESC(nomBiome(q.biome))}</td><td>${ESC(g.nom || g.forme)}${plus.length ? `<br><span class="sourd">${ESC(plus.join(' · '))}</span>` : ''}</td><td class="n">${g.taille ? `${nb(g.taille.typ)}${g.taille.min !== g.taille.max ? ` <span class="sourd">(${nb(g.taille.min)} à ${nb(g.taille.max)})</span>` : ''}` : '—'}</td><td>${g.hierarchie ? ESC(HIER[g.hierarchie.type] || g.hierarchie.type) : '<span class="sourd">—</span>'}</td><td>${g.meneur ? ESC(g.meneur) : '<span class="sourd">—</span>'}</td><td>${m ? `vers ${ESC(m.vers_nom || nomBiome(m.vers))}, ${pct(m.part)} d'entre elles${m.etat ? ` <span class="${m.etat === 'au pays' ? 'sourd' : 'ambre'}">· ${ESC(ETAT_M[m.etat] || m.etat)}</span>` : ''}` : '<span class="sourd">reste</span>'}${q.hivernants ? `<br><span class="ambre">accueille ${Object.entries(q.hivernants).map(([de, h]) => `${nb(Math.round(q.effectif * h))} hivernants de ${ESC(nomBiome(de))}`).join(', ')}</span>` : ''}</td></tr>`; }).join('')}</table></div>
+    <p class="note">Un groupe grandit avec la sociabilité de la population, à découvert et sous la prédation ; sa hiérarchie se durcit quand la nourriture manque. Une population dont l'hiver est rude, et qu'un lieu voisin abrite mieux, y part à la fin de l'automne et revient au printemps.${I.monde?.regles?.hivernage?.actif > 0 ? ' Dans ce monde, elle part vraiment : elle mange, naît et meurt là-bas, puis rentre (docs/38).' : ''}${G.calcule ? ' Ce monde ne publie pas encore sa vie en groupe : elle est lue ici, dans l\'état publié, sans rien y changer.' : ''}</p>`;
   // (docs/25, 26, 30, 33, 34, 18) sa vie : pondre ou mettre bas, deux vies, une colonie, ce qu'elle mange, ce qu'elle sait, ce qui la rend malade
   if (ANIMAL(t)) { const vie = [], SAV = I.catalogue?.savoirs || {}, SO = I.monde?.pathogenes?.souches || {};
     if (p.reproduction) vie.push(['Naître', p.reproduction === 'ovipare' ? `elle pond${partTrait(t, 'oophage') >= .1 ? ' ; elle mange aussi les œufs des autres' : ''}` : `elle met bas${partTrait(t, 'oophage') >= .1 ? ' ; elle mange les œufs des pondeurs' : ''}`]);

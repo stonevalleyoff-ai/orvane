@@ -39,7 +39,36 @@ Il devine le genre du fichier (un instantané a des `taxons`, un lot des `evenem
 
 Les quatre mondes publiés et les trois exemples de `schemas/exemples/` passent.
 
+## Le banc générique (`outils/banc-traducteur.js`, 6 novembre)
+
+Un jeu écrit son traducteur comme un module qui dit cinq choses (le modèle, un safari imaginaire de quarante lignes : `traducteurs/exemple/traducteur.js`) :
+
+```js
+module.exports = {
+  id: 'mon-jeu', nom: 'Mon jeu',
+  biomes: ['prairie', 'foret'],     // les biomes d'Orvane qu'il joue, par type (« prairie » vaut pour « prairie~1 ») ; absent : tous
+  familles: ['animale'],            // ce qu'il montre (animale, synthetique, vegetale) ; absent : les bêtes
+  lire(instantane) { … },           // ce qu'il montre du monde : des créatures { taxon, biome, … }, chacune rattachée à une lignée
+  jouer(instantane, hasard) { … },  // ce que font ses joueurs en une session : un lot (schemas/pression.schema.json)
+};
+```
+
+```
+node outils/banc-traducteur.js mon-traducteur.js [--lumen] [--sessions 20]
+```
+
+Le banc le fait lire des mondes variés et vérifie, pour chacun :
+1. qu'il lit le monde sans lever d'erreur ;
+2. que chaque créature est une lignée vivante, dans un lieu où elle vit et que le jeu dit jouer ;
+3. **qu'il n'oublie aucune lignée** : chaque lignée de ses familles, dans chaque lieu qu'il joue, a sa créature ;
+4. qu'il lit toujours de la même façon, sans toucher au monde qu'on lui donne ;
+5. **que ses lots sont conformes** (le vérificateur, et ce que le Supabase refusera), qu'ils vont au bon monde, et que le tampon n'en écarte aucun événement.
+
+Les mondes : le monde d'Orvane, la genèse 7, la genèse 2026, le monde de Stone Valley, l'exemple du contrat, et **un monde piège**, tiré du monde d'Orvane : une pieuvre à l'organe inconnu (une « lanterne »), une lignée sans corps, une lignée éteinte encore listée, une population de moins d'une bête, une lignée nommée par un joueur, un lieu que nul jeu ne connaît. Avec `--lumen`, un monde imaginaire né d'une genèse, avec ses axes, ses traits et ses organes à lui.
+
+`bancs/traducteur.js` vérifie le banc lui-même : le traducteur d'exemple passe sur les sept mondes ; six traducteurs fautifs sont attrapés, chacun avec sa raison (il plante sur une forme qu'il ne connaît pas, montre les lignées éteintes, oublie celles qu'un joueur a nommées, touche au monde, envoie ses lots à un autre monde, ou des bêtes qui n'existent pas).
+
 ## Ce qui reste ouvert (phase 4.2)
 
-- **Un banc générique.** Un jeu donne sa correspondance (ses biomes, ses espèces) et son traducteur ; le banc le fait lire des mondes variés (le monde d'Orvane, la genèse 7, Lumen) et vérifie qu'il n'oublie aucune lignée et n'envoie que des lots conformes.
+- **Le banc, jusqu'au jeu.** Le banc lit ce que le traducteur dit montrer ; il ne voit pas le jeu lui-même. La suite : un mode qui rejoue des lots réels d'un jeu (ceux que garde le Supabase) et dit ce que le monde en a fait.
 - **Les types en paquet.** Publier `types/orvane.d.ts` et le tampon comme un paquet npm, pour un `npm install` plutôt qu'une copie.

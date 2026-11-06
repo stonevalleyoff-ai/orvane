@@ -18,7 +18,8 @@ const val = (s, v, p) => { if (!s) return []; if (s.$ref) s = S.$defs[s.$ref.spl
   if (s.type && !t.includes(ty === 'number' && t.includes('integer') && Number.isInteger(v) ? 'integer' : ty)) return [p + ': type ' + ty]; if (s.enum && !s.enum.includes(v)) return [p + ': hors enum ' + v]; const e = [];
   if (ty === 'object') { for (const r of s.required || []) if (!(r in v)) e.push(p + ': manque ' + r); for (const k in v) { const ps = s.properties?.[k] || (typeof s.additionalProperties === 'object' ? s.additionalProperties : null); if (ps) e.push(...val(ps, v[k], p + '.' + k)); else if (s.additionalProperties === false) e.push(p + ': en trop ' + k); } }
   if (ty === 'array' && s.items) v.forEach((x, i) => e.push(...val(s.items, x, p + '[' + i + ']'))); return e; };
-const I0 = lireJ('mondes/orvane/etat.json'); let V = Fl.eveiller(I0).inst; V = Orvane.cycle(V, {});   // un monde avec sa flore, un cycle après
+// (le monde d'Orvane, d'avant ce mécanisme : bancs/monde.js)
+const I0 = require('./monde.js').etat(['dietes']); let V = Fl.eveiller(I0).inst; V = Orvane.cycle(V, {});   // un monde avec sa flore, un cycle après
 const W = Di.eveiller(V).inst, W1 = Orvane.cycle(W, {});
 const animaux = I => I.taxons.filter(t => t.plan.regime !== 'vegetal').map(t => [t.id, t.populations.map(p => [p.biome, p.effectif])]);
 const tot = (t, B) => t ? t.populations.filter(p => !B || B.has(p.biome)).reduce((a, p) => a + p.effectif, 0) : 0, Tx = (X, id) => X.taxons.find(t => t.id === id);
