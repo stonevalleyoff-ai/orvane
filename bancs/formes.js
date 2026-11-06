@@ -86,6 +86,19 @@ console.log('3 bis. Les poissons ; les formes à la séparation (REGLES.derive.f
   Corps.etendre(av);
 }
 
+console.log('3 ter. Les organes à la séparation (REGLES.derive.organes)');
+{ const b = { id: 'prairie', axes: { temperature: .5, humidite: .5, couvert: .3, lumiere: .6 }, milieu: 'terrestre' }, gen = s => { let g = s; return () => { g = (Math.imul(g, 1664525) + 1013904223) >>> 0; return g / 4294967296; }; };
+  // une descendance : une lignée qui se sépare six fois de suite, 500 fois ; un appel, avec ou sans le réglage, du même corps
+  const lignee = og => { const R = gen(5), nb = []; for (let i = 0; i < 500; i++) { let c = Corps.normaliser({ forme: 'quadrupede' }); for (let g = 0; g < 6; g++) c = Corps.deriver(c, { masse_kg: 2, regime: 'herbivore', locomotion: ['marche', 'course'] }, b, R, 1, [], 1, 0, og); nb.push(c.organes.length); } return nb; };
+  const un = og => { let n = 0; const R0 = gen(9), R = () => { n++; return R0(); }; const c = Corps.deriver(Corps.normaliser({ forme: 'quadrupede' }), { masse_kg: 2, regime: 'herbivore', locomotion: ['marche'] }, b, R, 1, [], 1, 0, og); return { n, c }; };
+  const a0 = lignee(0), a1 = lignee(.15), part = L => Math.round(100 * L.filter(x => x > 0).length / L.length), moy = L => fx(L.reduce((s, x) => s + x, 0) / L.length, 2);
+  const u0 = un(0), u1 = un(1), sans = (() => { let n = 0; const R0 = gen(9), R = () => { n++; return R0(); }; return { n, c: Corps.deriver(Corps.normaliser({ forme: 'quadrupede' }), { masse_kg: 2, regime: 'herbivore', locomotion: ['marche'] }, b, R, 1, [], 1, 0) }; })();
+  verif(empreinte(sans.c) === empreinte(u0.c) && u1.n === u0.n && u1.c.organes.length === u0.c.organes.length + 1,
+    `sans le réglage, le même corps qu'avant ; avec lui, une séparation ne tire rien de plus du hasard du cycle (${u0.n} tirages dans les deux cas) et un organe de plus naît`);
+  verif(part(a1) > part(a0) + 20 && Math.max(...a1) <= 16,
+    `six séparations de suite, 500 descendances : ${part(a0)} % portent au moins un organe (${moy(a0)} en moyenne) sans le réglage ; ${part(a1)} % (${moy(a1)}) avec 0,15`);
+}
+
 console.log('4. Les vies, le cycle de nuit');
 { const lib = St.stadesDe({ regime: 'carnivore', masse_kg: .02, locomotion: ['vol', 'marche'], corps: { forme: 'hexapode' } }), med = St.stadesDe({ regime: 'carnivore', masse_kg: .3, locomotion: ['nage'], corps: { forme: 'radiaire' } }), pap = St.stadesDe({ regime: 'herbivore', masse_kg: .01, locomotion: ['vol'], corps: { forme: 'hexapode' } });
   verif(lib.larve.nom === 'naïade' && lib.larve.locomotion.includes('nage') && med.larve.nom === 'polype' && med.adulte.nom === 'méduse' && pap.larve.nom === 'chenille' && St.soulagement(lib) > St.soulagement(pap),

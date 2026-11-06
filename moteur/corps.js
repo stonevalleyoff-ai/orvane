@@ -158,7 +158,7 @@ function tourner(c, deg) {
 function formesIci(forme, plan) { const loco = plan?.locomotion || [], m = plan?.masse_kg ?? 1;
   return Object.entries(FX).filter(([id, F]) => id !== forme && (F.depuis || []).includes(forme)
     && (!F.loco || F.loco.some(l => loco.includes(l))) && (F.masse_max == null || m <= F.masse_max) && (F.masse_min == null || m >= F.masse_min)); }
-function deriver(c, plan, b, R, A = 1, gagnes = [], k = 1, fx = 0) {
+function deriver(c, plan, b, R, A = 1, gagnes = [], k = 1, fx = 0, og = 0) {
   const n = normaliser(c), ax = b?.axes || {}, j = s => (R() - .5) * 2 * s * A, ajoute = (key, v) => { n[key] = clamp(n[key] + v * A); }, marque = (key, v) => { n[key] = clamp(n[key] + v); };
   // les proportions dérivent un peu (un léger rappel : elles ne filent pas aux extrêmes) ; les organes ne dérivent que s'ils
   // sont là — leur taille, rarement leur nombre ou leur forme — et se perdent en dessous de 0,2 : ils naissent par
@@ -177,6 +177,7 @@ function deriver(c, plan, b, R, A = 1, gagnes = [], k = 1, fx = 0) {
     carapace: reg === 'carnivore' ? .5 : 1.3, plaques: reg === 'carnivore' ? .5 : 1.2, epines: reg === 'carnivore' ? .4 : 1.3, massue: .7, aiguillon: n.forme === 'hexapode' ? 1.5 : .6,
     panache: (ax0.couvert ?? .5) < .4 ? 1.2 : .6, pinces: n.forme === 'hexapode' ? 1.8 : .2 };
   if (EXT?.organes) for (const k in EXT.organes) if (!(k in poids) && !ORGANES_CAT[k]) poids[k] = EXT.organes[k].poids ?? .8;   // (docs/20) ceux du monde
+  const poidsOrganes = poids;
   if (R() < .06 * A) {
     const C2 = Object.keys(poids).filter(k => !n.organes.some(o => o.type === k) && !(n.forme === 'serpent' && ['pinces', 'massue', 'panache'].includes(k)));
     const z = C2.reduce((a, k) => a + poids[k], 0); let u = R() * z;
@@ -250,6 +251,15 @@ function deriver(c, plan, b, R, A = 1, gagnes = [], k = 1, fx = 0) {
     if (C4.length) { const Rf = generateurDe('formes' + JSON.stringify([n.long, n.haut, n.queue, n.museau, n.organes.length, b?.id || '', plan?.masse_kg, plan?.regime]));
       const [id, F] = C4[Math.floor(Rf() * C4.length)];
       if (Rf() < Math.min(1, fx * (F.chance ?? .3))) { n.forme = id; n.pattes = F.pattes ?? n.pattes; if (id === 'segmente') n.long = Math.max(n.long, .8); if (F.repli) n.posture = 0; } } }
+  // (équilibrage du 6 novembre) un organe neuf naît aussi plus souvent : à la séparation, une chance de plus, og (REGLES.derive.organes,
+  // 0 par défaut : rien ne change), un organe choisi comme les autres (selon le régime, le milieu, la forme). Tout à la fin, avec un
+  // hasard tiré du corps lui-même : la dérive ne tire rien de plus du hasard du cycle
+  if (og > 0 && n.organes.length < MAX_ORGANES) { const Ro = generateurDe('organes' + JSON.stringify([n.long, n.haut, n.cou, n.queue, n.organes.length, b?.id || '', plan?.masse_kg, plan?.regime]));
+    if (Ro() < Math.min(1, og)) { const C2 = Object.keys(poidsOrganes).filter(k2 => OCAT[k2] && !n.organes.some(o => o.type === k2) && !(n.forme === 'serpent' && ['pinces', 'massue', 'panache'].includes(k2)));
+      const z = C2.reduce((a, k2) => a + poidsOrganes[k2], 0); let u = Ro() * z;
+      for (const k2 of C2) { u -= poidsOrganes[k2]; if (u <= 0) { const T = OCAT[k2];
+        n.organes.push(organe({ type: k2, taille: .3 + .35 * Ro(), nombre: T.nombre[0] + Math.floor(Ro() * (T.nombre[1] - T.nombre[0] + 1)), place: T.places[Math.floor(Ro() * T.places.length)], forme: T.formes[Math.floor(Ro() * T.formes.length)] })); break; } }
+      synchroniser(n); } }
   for (const o of n.organes) o.taille = r2(o.taille);
   for (const key of NUM) if (!ORGANES.includes(key)) n[key] = r2(n[key]);
   n.organes.sort((a, b) => a.type < b.type ? -1 : a.type > b.type ? 1 : a.place < b.place ? -1 : 1);
