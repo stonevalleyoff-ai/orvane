@@ -224,6 +224,7 @@ La nuit suivante, le cycle lit les lots de tous les jeux et les rapporte à l'ex
 - [ ] Le jeu filtre les familles qu'il ne sait pas jouer (`Tampon.filtrer`) et dit dans ses lots celles qu'il joue.
 - [ ] Un lot déposé répond `ok: true` ; sinon, il est gardé et renvoyé plus tard.
 - [ ] Le lendemain, `pressions_recues` monte dans `cycle` de l'instantané.
+- [ ] Le traducteur passe le banc générique : `node outils/banc-traducteur.js mon-traducteur.js` (docs/39 ; le modèle : `traducteurs/exemple/traducteur.js`).
 
 ## In English, briefly
 

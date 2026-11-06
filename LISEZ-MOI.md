@@ -41,8 +41,10 @@ README.md, llms.txt   la présentation du dépôt (GitHub l'affiche en page d'ac
 types/orvane.d.ts     les types TypeScript du contrat, tirés des schémas par outils/types.js (docs/39)
 outils/verifier.js    vérifier un lot, un instantané ou un profil avant de le déposer : le schéma, et ce que le Supabase refusera (docs/39)
 outils/bancs.js       tous les bancs d'un coup, en parallèle : les rapides à chaque PR, les longs la nuit (hebergement/LISEZ-MOI.md, « La fiabilité »)
+outils/banc-traducteur.js  le banc générique d'un traducteur : il lui fait lire sept mondes, un monde piège compris, et vérifie qu'il n'oublie aucune lignée et n'envoie que des lots conformes (docs/39)
 schemas/              le contrat : instantane, pression, profil — avec exemples (crapaud buffle)
 traducteurs/stone-valley/   le premier client, de bout en bout : correspondances, traducteur, génération 0, banc, SQL
+traducteurs/exemple/  le plus petit traducteur qui se branche correctement : le modèle d'un jeu nouveau (docs/39)
 bancs/stabilite.js    les bancs de stabilité : mille cycles sans joueurs et avec, le jour un, la réponse à la sélection, le déterminisme
 bancs/fusion.js       le banc de la fusion : la mer d'Orvane versée dans le monde d'Orvane, contre un témoin sans fusion
 bancs/parcelles.js    le banc des parcelles : le monde d'Orvane découpé, contre le même par biomes ; l'invasion de proche en proche, le défrichage
@@ -66,6 +68,7 @@ bancs/esprit.js       le banc de l'esprit : qui apprend, une tradition, la perte
 bancs/individus.js    le banc des individus et de l'élevage : Mendel, les porteurs cachés, l'héritabilité, la parenté, les hybrides, l'élevage qui revient au monde
 bancs/milieu.js       le banc du milieu transformé : la savane sans brouteurs, les terriers, les barrages, la forêt défrichée, les parcelles
 bancs/tampon.js       le banc du tampon : chaque attaque de l'audit du 5 novembre (lot mal formé, n infini, déplacements sans plafond, mille comptes d'un jeu, allèle inventé) neutralisée, et le jour un
+bancs/traducteur.js   le banc du banc générique : le traducteur d'exemple passe, six traducteurs fautifs sont attrapés
 bancs/monde.js        le monde d'Orvane vu par biome, pour les bancs qui parlent des lieux par leur nom (etat.json tourne par parcelles)
 bancs/chronique.js    le banc de la chronique : rien ne change, ce qu'elle garde et laisse, le muséum et la cause d'une extinction, les noms, le cycle de nuit
 bancs/collectif.js    le banc de la vie en groupe : qui vit comment, la taille des groupes, la hiérarchie, les troupeaux mêlés, les migrations et les visiteurs
