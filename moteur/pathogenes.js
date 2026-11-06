@@ -25,7 +25,8 @@ const REGLES = {
   masse: .5,                 // et deux lignées de tailles éloignées aussi (une décade d'écart : ×0,37)
   depart: .01,               // la part de la population infectée à la naissance d'une souche
   seuil: 1,                  // une souche qui n'a plus une bête infectée dans le monde s'éteint
-  locale: 0                  // une souche s'éteint dans une population où il lui reste moins de malades que cela (l'immunité reste) ; 0 : jamais
+  locale: 10                 // une souche s'éteint dans une population où il lui reste moins de dix malades (l'immunité reste) : sous
+                             // 200 bêtes environ, une épidémie passe et s'éteint ; plus nombreuse, une population la garde (6 novembre)
 };
 const SYL = ['ra', 'mo', 'ké', 'li', 'vu', 'sar', 'te', 'go', 'phi', 'dal', 'nu', 'ver', 'zo', 'cal', 'ri'];
 const transmission = v => +(.3 + 1.5 * Math.sqrt(v)).toFixed(3);   // le compromis : plus virulente, plus contagieuse
