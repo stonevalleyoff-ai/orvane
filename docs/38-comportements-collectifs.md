@@ -60,7 +60,40 @@ Elle publie `migration` :
 
 Pendant l'hiver, le lieu d'arrivée publie ses visiteurs : `biomes[].visiteurs`, chacun avec sa lignée, son lieu d'origine, son effectif et sa forme de groupe.
 
-**Les bêtes restent comptées chez elles.** Le moteur ne les déplace pas : la place de l'hiver est déjà dans ses comptes (la saison, la niche, les routes apprises). Une bête prise là-bas se renvoie donc avec son lieu d'origine (`migration` de sa population, ou `visiteurs[].de`).
+**Sans hivernage actif, les bêtes restent comptées chez elles.** Le moteur ne les déplace pas : la place de l'hiver est déjà dans ses comptes (la saison, la niche, les routes apprises). Une bête prise là-bas se renvoie donc avec son lieu d'origine (`migration` de sa population, ou `visiteurs[].de`). Les visiteurs sont alors une estimation : l'effectif de la population d'origine multiplié par sa `part`.
+
+## Les migrations qui comptent : l'hivernage
+
+Un monde peut faire partir ses bêtes pour de bon. C'est une règle du moteur, `hivernage`, éteinte par défaut :
+
+```json
+"regles": { "hivernage": { "actif": 1 } }
+```
+
+- `actif: 0` (le défaut) : le monde calcule les routes, `collectif.js` les publie, personne ne bouge. Un monde tourne alors au caractère près comme avant cette règle.
+- `actif: 1` : la part calculée part vraiment. `actif: 0.5` en fait partir la moitié.
+
+La route est la même que celle qu'on publie : le moteur la calcule (`Orvane.routeHiver`) et `collectif.js` la lit. Ses seuils sont dans `REGLES.hivernage` : `rude`, `marge`, `min`, `part_min`, `part_max`, les masses minimales, et les trois fenêtres de l'année. Une mer ne se traverse qu'en volant, en nageant ou en dérivant (docs/31).
+
+**Le départ.** Pendant la fenêtre du départ (de 0,78 à 0,88 de l'année : 12 cycles dans une année de 120), une petite part s'en va à chaque cycle. Au bout de la fenêtre, la part prévue est partie. Les bêtes emportent leurs gènes, comme tout migrant.
+
+**L'hiver au loin.** Là-bas, les bêtes mangent la place du lieu d'hiver, y font des petits, y sont chassées et y tombent malades. Leur population d'accueil publie la part d'entre elles venue d'ailleurs :
+
+```json
+{ "biome": "taiga", "effectif": 1138, "hivernants": { "toundra": 0.59 } }
+```
+
+Les petits nés là-bas comptent comme hivernants : ils partiront avec leurs parents. Toute autre arrivée dilue cette part.
+
+**Le retour.** Pendant la fenêtre du retour (de 0,12 à 0,22), les hivernants rentrent chez eux, une part égale à chaque cycle. Au dernier cycle de la fenêtre, tous sont partis. Un hivernant attardé hors des trois fenêtres rentre tout de suite. Si son pays a disparu, il reste.
+
+**Ce que cela change ailleurs.**
+- Les événements : une `migration` au premier cycle du départ (« la migration d'automne commence : ≈ 1 981 bêtes partent hiverner vers Taïga »), une au premier cycle du retour. Les allers et retours ne font ni installation, ni extinction, ni explosion, ni effondrement.
+- La séparation des lignées : les hivernants comptent comme un flux de gènes. Une population d'hiver ne devient pas une lignée à part : elle repart.
+- Les visiteurs (`biomes[].visiteurs`) : quand le monde a des hivernants, ce sont eux qu'on compte, et non plus une estimation.
+- Par parcelles (docs/15) : chaque parcelle a sa route, vers une parcelle d'un autre lieu. La vue par biome additionne les hivernants de ses parcelles, par biome d'origine.
+
+L'hivernage ne tire rien au hasard. Il n'use pas les tirages du cycle : un même monde fait les mêmes allers et retours.
 
 ## Ce que voit le monde d'Orvane
 
@@ -74,9 +107,12 @@ Sur l'instantané du 4 novembre : 1 529 populations. 731 vivent en famille, 610 
 - **La taille et la hiérarchie.** Des rennes plus sociables font de plus grands troupeaux ; la gazelle chassée se serre ; la meute affamée est plus hiérarchisée que la repue ; le renne paît avec le caribou et le bœuf musqué, pas la gazelle avec le cerf qui vit la nuit.
 - **Les migrations.** Le renne de la toundra hiverne en taïga ; il part, passe l'hiver, revient ; la taïga voit ses visiteurs ; ni la taupe, ni le bœuf musqué (son hiver n'est pas rude), ni le hareng ne migrent.
 - **Le monde d'Orvane.** Ce qu'il publie, et ce que cela pèse.
+- **L'hivernage qui compte.** Éteint, le monde tourne au caractère près comme sans la règle. Allumé, les rennes partent à la fin de l'automne : la taïga en compte 1 138, dont 59 % venus de la toundra (598 sans la règle). Au printemps, ils rentrent : plus un hivernant à la fin du retour. Les événements sont des migrations d'automne et de printemps, pas des extinctions. Passer l'hiver au doux sauve des bêtes : 179 rennes à la sortie de l'hiver, contre 115 sans la règle. La taupe, le bœuf musqué, le loup et le hareng ne partent pas. Le tout est déterministe.
+- **Par parcelles.** La taïga de deux parcelles compte 72,5 % d'hivernants venus de la toundra : par biome, non par parcelle. Un jeu lit 290 rennes de la toundra, comptés.
 
 ## Ce qui reste ouvert
 
-- **Des migrations qui comptent.** Les bêtes pourraient vraiment partir : la part qui migre irait au lieu d'hiver, y mangerait et y serait chassée. Cela changerait l'équilibre du monde ; il faudra un banc de stabilité.
+- **Des routes plus longues.** Un hivernant ne va qu'au voisin. Une route à plusieurs étapes (la grue qui traverse un continent) demanderait de chercher plus loin.
+- **Des migrations pour d'autres raisons.** La saison sèche plutôt que l'hiver ; la ponte (le saumon qui remonte la rivière).
 - **Des groupes que les joueurs défont.** Une meute dont on tue le couple dominant se disperse ; un troupeau harcelé se fractionne (la méfiance, docs/12, en est le début).
 - **Les routes sur la carte.** Un monde par parcelles pourrait dire le chemin, parcelle par parcelle.

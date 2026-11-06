@@ -259,7 +259,7 @@ export interface Instantane {
     natures?: {
       [cle: string]: unknown;
     }[];
-    /** (docs/38) Les populations voisines venues hiverner ici (taxon, de : leur lieu, effectif, forme du groupe). Elles restent comptées chez elles. */
+    /** (docs/38) Les populations voisines venues hiverner ici (taxon, de : leur lieu, effectif, forme du groupe). Sans hivernage actif, c'est une estimation, et elles restent comptées chez elles ; avec (regles.hivernage.actif), ce sont les hivernants comptés ici (populations[].hivernants). */
     visiteurs?: {
       taxon?: string;
       de?: string;
@@ -752,6 +752,10 @@ export interface Instantane {
         retour?: number;
         etat?: "au depart" | "partie" | "au retour" | "au pays";
         guide?: string;
+      };
+      /** (docs/38) Dans un monde où l'hivernage est actif (regles.hivernage.actif), la part de cette population venue d'ailleurs passer l'hiver ici, par lieu d'origine : ils sont comptés dans son effectif, et rentrent chez eux au printemps. */
+      hivernants?: {
+        [cle: string]: number;
       };
       /** Un brouteur (docs/30) : sa référence d'avant l'éveil des régimes, le temps de la raccorder (un cycle). */
       recouvrement_avant?: number;

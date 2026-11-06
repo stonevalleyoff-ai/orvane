@@ -657,7 +657,7 @@
           },
           "visiteurs": {
             "type": "array",
-            "description": "(docs/38) Les populations voisines venues hiverner ici (taxon, de : leur lieu, effectif, forme du groupe). Elles restent comptées chez elles.",
+            "description": "(docs/38) Les populations voisines venues hiverner ici (taxon, de : leur lieu, effectif, forme du groupe). Sans hivernage actif, c'est une estimation, et elles restent comptées chez elles ; avec (regles.hivernage.actif), ce sont les hivernants comptés ici (populations[].hivernants).",
             "items": { "type": "object", "properties": { "taxon": { "type": "string" }, "de": { "type": "string" }, "effectif": { "type": "integer" }, "forme": { "type": "string" } } }
           }
         }
@@ -2056,6 +2056,11 @@
                     "part": { "type": "number", "minimum": 0, "maximum": 1 }, "depart": { "type": "number" }, "retour": { "type": "number" },
                     "etat": { "enum": ["au depart", "partie", "au retour", "au pays"] }, "guide": { "type": "string" }
                   }
+                },
+                "hivernants": {
+                  "type": "object",
+                  "description": "(docs/38) Dans un monde où l'hivernage est actif (regles.hivernage.actif), la part de cette population venue d'ailleurs passer l'hiver ici, par lieu d'origine : ils sont comptés dans son effectif, et rentrent chez eux au printemps.",
+                  "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 }
                 },
                 "recouvrement_avant": {
                   "type": "number",
