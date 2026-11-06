@@ -63,6 +63,7 @@ Le guide pas à pas, avec les adresses, les appels et les erreurs : [BRANCHER-UN
 - **Secret du dépôt** (Settings › Secrets and variables › Actions) : `ORVANE_LECTURE_SECRET`, le secret de lecture. Il n'ouvre que la lecture des lots et des jeux.
 - **L'action** : `.github/workflows/cycle.yml`, qui fait tourner chaque dossier de `mondes/` dont le profil ne dit pas `monde.nocturne = false`, à son rythme (`monde.cycle` et `monde.heure`, au plus `monde.rattrapage` cycles d'un coup : docs/19). « Run workflow » fait tourner chaque monde du nombre de cycles demandé (1 par défaut), sans regarder l'heure. Un dossier qui commence par un point ne passe pas par « Add files › Upload files » : créer le fichier par « Add file › Create new file », en tapant le chemin `.github/workflows/cycle.yml`.
 - **Pages** : Settings › Pages, « Deploy from a branch », branche **`publication`**, dossier `/`.
+- **Le déclencheur** (conseillé) : GitHub ne garantit pas l'heure des actions programmées. `hebergement/declencheur.sql`, collé dans le Supabase d'Orvane, lance l'action chaque heure à la 5ᵉ minute (`pg_cron`, `pg_net`) ; le monde d'Orvane fait ainsi son cycle à 03:05 UTC. Il lui faut un jeton GitHub qui ne permet que de lancer les actions du dépôt, rangé dans le coffre du projet (les étapes sont en tête du fichier).
 
 ### La branche de publication
 
