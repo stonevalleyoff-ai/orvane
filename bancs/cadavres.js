@@ -1,5 +1,5 @@
 // Orvane — LE BANC DES CADAVRES (bancs/cadavres.js, docs/13)
-// Les détritivores vivent des morts du lieu (REGLES.cadavres) :
+// Les charognards vivent des morts du lieu (REGLES.cadavres) :
 //  1. le jour un : sans la règle (0, par défaut), le moteur tourne exactement comme avant ;
 //  2. sur une genèse naissante (ses ancêtres, dont le crabe primitif), quinze cycles : sans la règle, ils broutent et déclinent ;
 //     avec elle, ils vivent des morts, croissent, et sont rassasiés à peu près à moitié ;
@@ -31,15 +31,15 @@ console.log('2. Une genèse naissante');
       const s = det(I).flatMap(t => t.populations.map(p => p.satiete)).filter(x => x != null); return { debut, fin: N(I), s: s.length ? s.reduce((a, x) => a + x, 0) / s.length : null, lignees: det(I).length }; });
     const a = tourner(0), b = tourner(.3);
     verif(det(I0).length >= 1 && a.fin < a.debut && b.fin > b.debut && b.s > .3 && b.s < .8,
-      `${det(I0).length > 1 ? det(I0).length + ' lignées' : 'une lignée'} de détritivores (${det(I0).map(t => t.nom).join(', ')}) ; du cycle 10 au cycle 25, sans la règle, ils broutent et passent de ${fx(a.debut)} à ${fx(a.fin)} bêtes ; avec 30 % des morts du lieu, de ${fx(b.debut)} à ${fx(b.fin)}, rassasiés à ${fx(b.s * 100)} %`);
-    verif(a.s == null, 'sans la règle, un détritivore n\'a pas de satiété : il broute comme avant');
+      `${det(I0).length > 1 ? det(I0).length + ' lignées' : 'une lignée'} de charognards (${det(I0).map(t => t.nom).join(', ')}) ; du cycle 10 au cycle 25, sans la règle, ils broutent et passent de ${fx(a.debut)} à ${fx(a.fin)} bêtes ; avec 30 % des morts du lieu, de ${fx(b.debut)} à ${fx(b.fin)}, rassasiés à ${fx(b.s * 100)} %`);
+    verif(a.s == null, 'sans la règle, un charognard n\'a pas de satiété : il broute comme avant');
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 }
 
 console.log('3. Ce qu\'ils mangent');
 { const src = fs.readFileSync(racine('moteur/orvane.js'), 'utf8');
   verif(/q\.regime !== 'detritivore' && q\.regime !== 'vegetal'/.test(src) && /'detritivore' && REGLES\.cadavres > 0 \? 0/.test(src),
-    'leur offre ne vient que des bêtes (ni des plantes, ni d\'eux-mêmes), et un détritivore qui vit des morts ne pèse pas sur les plantes');
+    'leur offre ne vient que des bêtes (ni des plantes, ni d\'eux-mêmes), et un charognard qui vit des morts ne pèse pas sur les plantes');
 }
 console.log(`\n${ok ? 'tout passe' : 'ÉCHEC'} (${fx((Date.now() - t0) / 60000, 1)} min)`);
 process.exit(ok ? 0 : 1);

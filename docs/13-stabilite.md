@@ -56,7 +56,7 @@ Le plus lourd des volants pèse alors 1,7 kg, et seules 13 lignées sur 105 ont 
 
 Sur 900 cycles, il reste alors quelques vrais carnivores, bien nourris (satiété 0,67), de 0,7 à 10 kg. Les herbivores sont 45 millions, les omnivores 34 millions. Les carnivores sont rares, comme il se doit au sommet d'une chaîne.
 
-**Des filtreurs dans la prairie.** Le régime d'un filtreur pouvait dériver comme les autres, vers l'herbivore ou le carnivore. La nage pouvait aussi se perdre : un filtreur marin de 71 kg finissait par courir dans la prairie. Un filtreur garde désormais son régime (le détritivore aussi), ne perd pas la nage, et ne vit que dans l'eau : rivière, lac, mer, ou les rives (`convenance`).
+**Des filtreurs dans la prairie.** Le régime d'un filtreur pouvait dériver comme les autres, vers l'herbivore ou le carnivore. La nage pouvait aussi se perdre : un filtreur marin de 71 kg finissait par courir dans la prairie. Un filtreur garde désormais son régime (le charognard aussi), ne perd pas la nage, et ne vit que dans l'eau : rivière, lac, mer, ou les rives (`convenance`).
 
 **Deux prédateurs sur 123 lignées.** Même après ces corrections, la genèse ne gardait presque pas de carnivores. Les essais (des genèses de 900 cycles, `ORVANE_TRACE=1` pour compter qui naît et qui meurt par régime) ont trouvé quatre causes :
 - les omnivores chassaient comme s'ils ne mangeaient que de la viande : ils prenaient cent fois plus de proies que les carnivores. Un omnivore ne cherche plus en viande que 30 % de ce qu'il mange (`viande_omnivore`), et tire des plantes 60 % de ce qu'en tire un herbivore (`omnivore_vegetal_base`) ;
@@ -91,14 +91,14 @@ Le monde qui en est né est publié, figé, dans `mondes/genese-2026/` ; ses mes
 | biomasse des carnivores / celle des herbivores | 10,7 % | 4,9 % | 3,3 % |
 | biomes sans aucun carnivore | 0 | 4 | 5 (banquise, forêt, volcan, grotte, abysses) |
 | filtreurs | 3 | 5 | 31, autant de biomasse que tous les herbivores |
-| détritivores | 0 | 0 | 0 |
+| charognards | 0 | 0 | 0 |
 | masse : médiane, maximum | 1,4 kg, 150 kg | 1,8 kg, 150 kg | 2,4 kg, 72 kg |
 | diversité (Shannon), part de la première lignée | 2,65, 28 % | 3,36, 18 % | 4,03, 6 % |
 
 Ce qu'elle montre :
 - **Les étages se vident par le haut.** Les carnivores se resserrent sur quelques généralistes de taille moyenne, présents partout : ni petits mangeurs d'insectes, ni grands chasseurs.
 - **Toutes les lignées ont la même tolérance**, 0,7, celle des ancêtres : rien ne la faisait varier. Une lignée vit presque partout, et quelques généralistes occupent tout.
-- **Les détritivores disparaissent** avant le cycle 250 et ne reviennent pas : `detritivore_vegetal` à 0,5, et la règle de rareté de la genèse ne les protège pas comme les prédateurs (`--etage`).
+- **Les charognards disparaissent** avant le cycle 250 et ne reviennent pas : `detritivore_vegetal` à 0,5, et la règle de rareté de la genèse ne les protège pas comme les prédateurs (`--etage`).
 - **Les filtreurs prolifèrent** : ils ne comptent que pour 30 % sur la capacité d'un lieu.
 - **La règle de rareté fauche les jeunes lignées** : l'âge médian à l'extinction est de 115 à 124 cycles, juste après le sursis de 100 cycles.
 
@@ -126,28 +126,28 @@ Cinq genèses de 3 000 cycles, même graine (2026), mêmes règles que la genès
 | | lignées | carnivores | biomasse des carnivores / herbivores | biomes sans carnivore | la plus lourde | à la fin |
 | --- | --- | --- | --- | --- | --- | --- |
 | la règle d'avant | 122 | 8,7 | 6,2 % | 2,8 | 72 kg | 138 lignées, 6 carnivores, 5 biomes sans carnivore |
-| les détritivores comptés trente fois | 108 | 10,2 | 7,7 % | 2,4 | 70 kg | aucun détritivore ne tient |
+| les charognards comptés trente fois | 108 | 10,2 | 7,7 % | 2,4 | 70 kg | aucun charognard ne tient |
 | la rareté jugée lieu par lieu seulement | 165 | 10,1 | 7,8 % | 0 | 67 kg | elle raye la plus grande lignée, répandue partout et légère dans chaque lieu |
 | **ni dans le monde, ni dans aucun lieu** | **139** | **10,5** | **6,7 %** | **0** | **76 kg** | **185 lignées, 10 carnivores, aucun biome sans carnivore ; la plus lourde : 99 kg** |
 | un sursis de 200 cycles | (arrêtée au cycle 600 : elle ne fait que retarder) | | | | | |
 
 C'est la règle par défaut de la genèse (`--rarete-lieu .012` ; `--rarete-lieu 0` rend la règle d'avant). Elle ne touche pas le monde vivant : seules les genèses à venir la suivent.
 
-**Les détritivores** disparaissaient dans toutes : même comptés trente fois, ils ne prenaient pas. Ce n'était pas la règle : dans le moteur, un détritivore se nourrissait comme un brouteur, de la place des plantes, avec la moitié de ses petits dans la genèse (`detritivore_vegetal` à 0,5) — un herbivore moins bon, qui perd toujours.
+**Les charognards** disparaissaient dans toutes : même comptés trente fois, ils ne prenaient pas. Ce n'était pas la règle : dans le moteur, un charognard se nourrissait comme un brouteur, de la place des plantes, avec la moitié de ses petits dans la genèse (`detritivore_vegetal` à 0,5) — un herbivore moins bon, qui perd toujours.
 
-**Les cadavres (6 novembre).** `REGLES.cadavres` : les détritivores vivent des morts du lieu. Ce que la mort naturelle y laisse chaque cycle (les bêtes, pas les plantes ; × la règle) se partage entre eux selon leur besoin. C'est un flux, pas un stock de proies : un détritivore est rassasié à moitié quand sa part égale son besoin, il naît selon sa satiété (comme un brouteur selon sa place) ; affamé, il meurt plus et s'en va, comme un carnivore. Il ne pèse plus sur les plantes. À 0, par défaut dans le moteur, rien ne change : le monde d'Orvane donne la même empreinte (`bancs/cadavres.js`).
+**Les cadavres (6 novembre).** `REGLES.cadavres` : les charognards vivent des morts du lieu. (Le régime garde son identifiant dans le contrat, `detritivore`, pour ne rien casser chez les jeux ; on les appelait détritivores jusqu'au 6 novembre.) Ce que la mort naturelle y laisse chaque cycle (les bêtes, pas les plantes ; × la règle) se partage entre eux selon leur besoin. C'est un flux, pas un stock de proies : un charognard est rassasié à moitié quand sa part égale son besoin, il naît selon sa satiété (comme un brouteur selon sa place) ; affamé, il meurt plus et s'en va, comme un carnivore. Il ne pèse plus sur les plantes. À 0, par défaut dans le moteur, rien ne change : le monde d'Orvane donne la même empreinte (`bancs/cadavres.js`).
 
 Même graine, 3 000 cycles, la règle de rareté nouvelle :
 
-| | détritivores (lignées, part des bêtes) | carnivores | biomes sans carnivore | lignées | au cycle 3 000 |
+| | charognards (lignées, part des bêtes) | carnivores | biomes sans carnivore | lignées | au cycle 3 000 |
 | --- | --- | --- | --- | --- | --- |
-| sans cadavres | 1 ou 2 jusqu'au cycle 1 250 (comptés trente fois), plus aucun ensuite | 10,5 | 0 | 139 | 185 lignées, 10 carnivores, aucun détritivore |
+| sans cadavres | 1 ou 2 jusqu'au cycle 1 250 (comptés trente fois), plus aucun ensuite | 10,5 | 0 | 139 | 185 lignées, 10 carnivores, aucun charognard |
 | 30 % des morts du lieu (arrêtée au cycle 1 500) | 11 au cycle 500, 2 au cycle 1 500 | | | | |
-| **toutes les morts du lieu** | **18 au cycle 750, 4 au cycle 2 000, 17 au cycle 3 000 (8 %)** | **7,2** | **3,1** | **180** | **191 lignées, 7 carnivores, 17 détritivores, 5 biomes sans carnivore** |
+| **toutes les morts du lieu** | **18 au cycle 750, 4 au cycle 2 000, 17 au cycle 3 000 (8 %)** | **7,2** | **3,1** | **180** | **191 lignées, 7 carnivores, 17 charognards, 5 biomes sans carnivore** |
 | toutes, et comptés trente fois (arrêtée au cycle 1 000) | rien de plus | | | | |
 
 (les colonnes du milieu : en moyenne du cycle 1 000 au cycle 3 000)
 
-Les détritivores tiennent désormais toute la genèse. **Mais les carnivores y perdent** : 331 lignées d'omnivores naissent au lieu de 144, nourries sans doute de ces détritivores abondants (16 à 20 % de la biomasse des bêtes au début), et le monde touche le plafond de 200 lignées, où plus rien ne se sépare : un carnivore qui s'éteint n'est plus remplacé. La règle n'est donc pas encore posée par défaut : une genèse la reçoit par `--regles '{"cadavres": 1}'`, et le monde qui en naît la garde (`monde.regles`). La suite : des détritivores moins abondants (une part des morts plus petite, que l'on mesure sur plusieurs graines), et un plafond de lignées plus haut. Le monde d'Orvane n'a plus de détritivores (ils ont disparu dans sa genèse) : la règle ne lui changerait rien.
+Les charognards tiennent désormais toute la genèse. **Mais les carnivores y perdent** : 331 lignées d'omnivores naissent au lieu de 144, nourries sans doute de ces charognards abondants (16 à 20 % de la biomasse des bêtes au début), et le monde touche le plafond de 200 lignées, où plus rien ne se sépare : un carnivore qui s'éteint n'est plus remplacé. La règle n'est donc pas encore posée par défaut : une genèse la reçoit par `--regles '{"cadavres": 1}'`, et le monde qui en naît la garde (`monde.regles`). La suite : des charognards moins abondants (une part des morts plus petite, que l'on mesure sur plusieurs graines), et un plafond de lignées plus haut. Le monde d'Orvane n'a plus de charognards (ils ont disparu dans sa genèse) : la règle ne lui changerait rien.
 
 Les autres pistes, à mesurer de la même façon : faire peser les filtreurs pour 60 % sur la capacité ; une genèse d'eau douce versée dans le monde, comme la mer en octobre.
