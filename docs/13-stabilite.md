@@ -139,13 +139,15 @@ C'est la règle par défaut de la genèse (`--rarete-lieu .012` ; `--rarete-lieu
 
 Même graine, 3 000 cycles, la règle de rareté nouvelle :
 
-| | détritivores (lignées) | leur part de la biomasse des bêtes |
-| --- | --- | --- |
-| sans cadavres | 1 ou 2 jusqu'au cycle 1 250 (comptés trente fois), plus aucun ensuite | — |
-| 30 % des morts du lieu | 8 au cycle 250, 11 au cycle 500, 2 au cycle 1 500 | |
-| **toutes les morts du lieu** | **9 au cycle 250, 18 au cycle 750, 7 au cycle 1 500 et au cycle 1 650** | **16 à 20 % au début, 3 % au cycle 1 650** |
-| toutes, et comptés trente fois | 18 au cycle 500, 9 au cycle 1 000 : rien de plus | |
+| | détritivores (lignées, part des bêtes) | carnivores | biomes sans carnivore | lignées | au cycle 3 000 |
+| --- | --- | --- | --- | --- | --- |
+| sans cadavres | 1 ou 2 jusqu'au cycle 1 250 (comptés trente fois), plus aucun ensuite | 10,5 | 0 | 139 | 185 lignées, 10 carnivores, aucun détritivore |
+| 30 % des morts du lieu (arrêtée au cycle 1 500) | 11 au cycle 500, 2 au cycle 1 500 | | | | |
+| **toutes les morts du lieu** | **18 au cycle 750, 4 au cycle 2 000, 17 au cycle 3 000 (8 %)** | **7,2** | **3,1** | **180** | **191 lignées, 7 carnivores, 17 détritivores, 5 biomes sans carnivore** |
+| toutes, et comptés trente fois (arrêtée au cycle 1 000) | rien de plus | | | | |
 
-Ils tiennent désormais, une guilde de quelques lignées qui pèse quelques pour cent des bêtes. Une genèse leur donne toutes les morts du lieu par défaut (`cadavres: 1`), et le monde qui en naît garde la règle (`monde.regles`) : ses détritivores continuent d'en vivre. `--regles '{"cadavres": 0}'` rend la règle d'avant. Le monde d'Orvane n'a plus de détritivores (ils ont disparu dans sa genèse) : la règle ne lui changerait rien.
+(les colonnes du milieu : en moyenne du cycle 1 000 au cycle 3 000)
+
+Les détritivores tiennent désormais toute la genèse. **Mais les carnivores y perdent** : 331 lignées d'omnivores naissent au lieu de 144, nourries sans doute de ces détritivores abondants (16 à 20 % de la biomasse des bêtes au début), et le monde touche le plafond de 200 lignées, où plus rien ne se sépare : un carnivore qui s'éteint n'est plus remplacé. La règle n'est donc pas encore posée par défaut : une genèse la reçoit par `--regles '{"cadavres": 1}'`, et le monde qui en naît la garde (`monde.regles`). La suite : des détritivores moins abondants (une part des morts plus petite, que l'on mesure sur plusieurs graines), et un plafond de lignées plus haut. Le monde d'Orvane n'a plus de détritivores (ils ont disparu dans sa genèse) : la règle ne lui changerait rien.
 
 Les autres pistes, à mesurer de la même façon : faire peser les filtreurs pour 60 % sur la capacité ; une genèse d'eau douce versée dans le monde, comme la mer en octobre.

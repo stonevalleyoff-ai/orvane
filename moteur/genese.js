@@ -8,7 +8,7 @@
 //                         [--milieux marin,aquatique,amphibie] [--ancetres ancetres.json]   (un monde d'une partie des biomes, d'autres ancêtres)
 //                         [--catalogue catalogue.json]   (le catalogue propre du monde : ses axes, ses traits, ses organes, ses formes, docs/20)
 //                         [--rarete .0005] [--etage 10] [--sursis 100] [--rarete-lieu .012] [--etage-detritivore 1]   (la règle de rareté : docs/13)
-//                         [--regles '{"cadavres": 1}']   (des règles du moteur gardées par le monde ; par défaut, les détritivores vivent des morts du lieu)
+//                         [--regles '{"cadavres": 1}']   (des règles du moteur gardées par le monde ; cadavres : les détritivores vivent des morts du lieu)
 // lignees : le nombre de lignées vivantes au-delà duquel plus rien ne se sépare — la place se gagne alors par extinction.
 // biomes.json : un tableau de biomes au format de l'instantané (ou un monde existant : on reprend ses biomes, vides).
 'use strict';
@@ -113,9 +113,9 @@ const maxTaxons = +arg('--lignees', 100);
 Object.assign(Orvane.REGLES, { mutation: .01, nouveau_trait: .08, menace: 20, max_taxons: maxTaxons, separation: { ...R0.separation, cycles: 15, effectif: 40, distance: .8, chance: .03 },
   derive: { masse: [.4, 3], regime: .25, locomotion: .3, activite: .2, corps: 2.5 } });   // corps : la silhouette dérive deux fois et demie plus vite
 // --regles '{"cle": valeur}' : des règles du moteur propres à ce monde
-// (6 novembre) par défaut, les détritivores vivent des morts du lieu (REGLES.cadavres, docs/13) : la règle est gardée par le monde,
-// qui la suit ensuite à chacun de ses cycles ; --regles '{"cadavres": 0}' rend la règle d'avant (ils broutent, et disparaissent)
-const reglesMonde = { cadavres: 1, ...(arg('--regles', null) ? JSON.parse(arg('--regles', '{}')) : {}) };   // gardées par le monde (monde.regles) : elles valent ensuite à chacun de ses cycles
+// (6 novembre) --regles '{"cadavres": 1}' : les détritivores vivent des morts du lieu (REGLES.cadavres, docs/13), et le monde garde la
+// règle. Ils tiennent alors toute la genèse, mais les carnivores y perdent (docs/13) : la règle n'est pas encore posée par défaut
+const reglesMonde = arg('--regles', null) ? JSON.parse(arg('--regles', '{}')) : null;   // gardées par le monde (monde.regles) : elles valent ensuite à chacun de ses cycles
 if (reglesMonde) for (const [k, v] of Object.entries(reglesMonde)) { const b = Orvane.REGLES[k]; Orvane.REGLES[k] = v && typeof v === 'object' && !Array.isArray(v) && b && typeof b === 'object' && !Array.isArray(b) ? { ...b, ...v } : v; }   // (d'un niveau, comme le moteur : { derive: { tolerance: .3 } } garde le reste de la dérive)
 const rarete = +arg('--rarete', .0005);   // une lignée installée qui reste sous cette part de la BIOMASSE du monde est rayée : la place se libère
 // (la rareté se juge à l'étage de la chaîne : un prédateur ne pèse naturellement qu'un dixième de ses proies — Lindeman)

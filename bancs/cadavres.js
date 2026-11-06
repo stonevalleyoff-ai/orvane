@@ -23,7 +23,7 @@ console.log('1. Le jour un');
 console.log('2. Une genèse naissante');
 { const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'orvane-cadavres-')), sortie = path.join(dir, 'amorce.json');
   try { execFileSync('node', [racine('moteur/genese.js'), racine('moteur/biomes-universels.json'), '--cycles', '1', '--graine', '2026', '--point', '0', '--sortie', sortie], { stdio: 'ignore' });
-    const I0 = (X => { if (X.monde?.regles) delete X.monde.regles.cadavres; return X; })(JSON.parse(fs.readFileSync(sortie, 'utf8'))), det =   // (la genèse garde la règle dans le monde : le banc la fait varier lui-même)
+    const I0 = (X => { if (X.monde?.regles) delete X.monde.regles.cadavres; return X; })(JSON.parse(fs.readFileSync(sortie, 'utf8'))), det =   // (si la genèse a posé la règle dans le monde : le banc la fait varier lui-même)
       I => I.taxons.filter(t => !t.eteint && t.plan.regime === 'detritivore');
     const N = I => det(I).reduce((a, t) => a + t.populations.reduce((x, p) => x + p.effectif, 0), 0);
     const tourner = k => avec(k, () => { const av = Orvane.REGLES.detritivore_vegetal; Orvane.REGLES.detritivore_vegetal = .5; let I = I0, debut = null;   // (la règle de la genèse 2026)
