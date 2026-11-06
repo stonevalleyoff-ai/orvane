@@ -914,6 +914,8 @@ export interface Profil {
     regles?: {
       [cle: string]: unknown;
     };
+    /** Faire renaître le monde (hebergement/publication.js) : une date, par exemple « 2026-11-06 ». Quand elle change, la passe suivante de l'action repart de l'état que porte main (supprimé, pour un monde neuf) au lieu de celui de la branche publication. */
+    renaitre?: string;
     /** La vie en groupe (docs/38) : le monde publie, pour chaque population, son groupe (troupeau, meute, banc…), sa hiérarchie et ses migrations saisonnières. Une lecture de l'état : rien ne change dans la simulation. */
     collectif?: boolean;
     /** Les castes (docs/33) : le cycle de nuit les éveille, une fois ; de petits hexapodes grégaires peuvent devenir des colonies (une reine, des ouvrières, des soldats). */
