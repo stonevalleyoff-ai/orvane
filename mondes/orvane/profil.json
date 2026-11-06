@@ -28,7 +28,8 @@
     "regles": { "derive": { "tolerance": 0.35, "formes": 1, "organes": 0.15 }, "hivernage": { "actif": 1, "rude": 0.85 } },
     "fusions": [
       { "id": "mer-1", "source": "mondes/marin/amorce.json", "part": 0.5 },
-      { "id": "genese-7", "nom": "la genèse 7", "source": "mondes/genese-7/instantane.json", "ponts": 3 }
+      { "id": "genese-7", "nom": "la genèse 7", "source": "mondes/genese-7/instantane.json", "ponts": 3 },
+      { "id": "eaux-douces", "nom": "les eaux douces", "source": "mondes/eaux-douces/amorce.json", "ponts": [["lac", "lac"], ["riviere", "riviere"], ["marais", "marais"]] }
     ],
     "pressions": {
       "url": "https://rospodujiyltmxitykwc.supabase.co",

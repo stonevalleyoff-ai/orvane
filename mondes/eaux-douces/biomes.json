@@ -1,0 +1,197 @@
+[
+ {
+  "id": "torrent",
+  "nom": "Torrent",
+  "milieu": "aquatique",
+  "axes": {
+   "temperature": 0.25,
+   "humidite": 1,
+   "altitude": 0.75,
+   "lumiere": 0.75,
+   "couvert": 0.1
+  },
+  "capacite": 120000,
+  "voisins": [
+   "riviere",
+   "lac-profond",
+   "source-chaude"
+  ],
+  "saisons": {
+   "temperature": 0.2,
+   "capacite": 0.4
+  }
+ },
+ {
+  "id": "riviere",
+  "nom": "Rivière",
+  "milieu": "aquatique",
+  "axes": {
+   "temperature": 0.5,
+   "humidite": 1,
+   "altitude": 0.35,
+   "lumiere": 0.7,
+   "couvert": 0.2
+  },
+  "capacite": 300000,
+  "voisins": [
+   "torrent",
+   "lac",
+   "etang",
+   "marais",
+   "delta",
+   "grotte-inondee"
+  ]
+ },
+ {
+  "id": "lac",
+  "nom": "Lac",
+  "milieu": "aquatique",
+  "axes": {
+   "temperature": 0.5,
+   "humidite": 1,
+   "altitude": 0.25,
+   "lumiere": 0.6,
+   "couvert": 0.1
+  },
+  "capacite": 400000,
+  "voisins": [
+   "riviere",
+   "lac-profond",
+   "etang",
+   "roseliere"
+  ]
+ },
+ {
+  "id": "lac-profond",
+  "nom": "Lac profond",
+  "milieu": "aquatique",
+  "axes": {
+   "temperature": 0.3,
+   "humidite": 1,
+   "altitude": 0.3,
+   "lumiere": 0.25,
+   "couvert": 0
+  },
+  "capacite": 250000,
+  "voisins": [
+   "lac",
+   "torrent"
+  ],
+  "saisons": {
+   "temperature": 0.05,
+   "lumiere": 0.05,
+   "capacite": 0.1
+  }
+ },
+ {
+  "id": "etang",
+  "nom": "Étang",
+  "milieu": "aquatique",
+  "axes": {
+   "temperature": 0.62,
+   "humidite": 1,
+   "altitude": 0.2,
+   "lumiere": 0.65,
+   "couvert": 0.45
+  },
+  "capacite": 200000,
+  "voisins": [
+   "riviere",
+   "lac",
+   "roseliere",
+   "marais"
+  ]
+ },
+ {
+  "id": "marais",
+  "nom": "Marais",
+  "milieu": "amphibie",
+  "axes": {
+   "temperature": 0.55,
+   "humidite": 0.95,
+   "altitude": 0.1,
+   "lumiere": 0.5,
+   "couvert": 0.55
+  },
+  "capacite": 500000,
+  "voisins": [
+   "riviere",
+   "etang",
+   "roseliere",
+   "delta"
+  ]
+ },
+ {
+  "id": "roseliere",
+  "nom": "Roselière",
+  "milieu": "amphibie",
+  "axes": {
+   "temperature": 0.5,
+   "humidite": 0.9,
+   "altitude": 0.15,
+   "lumiere": 0.6,
+   "couvert": 0.75
+  },
+  "capacite": 300000,
+  "voisins": [
+   "lac",
+   "etang",
+   "marais",
+   "delta"
+  ]
+ },
+ {
+  "id": "delta",
+  "nom": "Delta",
+  "milieu": "amphibie",
+  "axes": {
+   "temperature": 0.66,
+   "humidite": 0.95,
+   "altitude": 0.03,
+   "lumiere": 0.7,
+   "couvert": 0.3
+  },
+  "capacite": 500000,
+  "voisins": [
+   "riviere",
+   "marais",
+   "roseliere"
+  ]
+ },
+ {
+  "id": "source-chaude",
+  "nom": "Sources chaudes",
+  "milieu": "aquatique",
+  "axes": {
+   "temperature": 0.9,
+   "humidite": 1,
+   "altitude": 0.5,
+   "lumiere": 0.6,
+   "couvert": 0.1
+  },
+  "capacite": 40000,
+  "voisins": [
+   "torrent",
+   "grotte-inondee"
+  ],
+  "saisons": false
+ },
+ {
+  "id": "grotte-inondee",
+  "nom": "Grotte inondée",
+  "milieu": "aquatique",
+  "axes": {
+   "temperature": 0.42,
+   "humidite": 1,
+   "altitude": 0.3,
+   "lumiere": 0.02,
+   "couvert": 1
+  },
+  "capacite": 20000,
+  "voisins": [
+   "riviere",
+   "source-chaude"
+  ],
+  "saisons": false
+ }
+]
