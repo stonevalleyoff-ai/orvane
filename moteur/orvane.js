@@ -92,7 +92,8 @@ const REGLES = {
   longevite_predateur: 0,    // (essais) un carnivore né de la dérive vit au moins autant de fois ce que sa viande lui permet de remplacer
   viande_omnivore: 1,        // la part de viande dans ce que mange un omnivore : son besoin de proies (essais)
   faim_carnivore: 3,         // un carnivore affamé meurt plus : × (1 + faim × (1 − satiété)²)
-  detritivore_vegetal: 1,    // ce qu'un détritivore tire de la place, rapporté à un herbivore (essais)
+  detritivore_vegetal: 1,    // ce qu'un charognard tire de la place, rapporté à un herbivore (essais)
+  cadavres: 0,               // (6 novembre) la part de ce que la mort naturelle laisse dans un lieu dont vivent ses charognards ; 0 : ils broutent, comme avant
   vers_carnivore: .35,       // à la dérive du régime, la chance qu'un omnivore devienne carnivore (sinon herbivore)
   faim_migration: .4,        // satiété sous laquelle un prédateur s'en va chercher ailleurs
   // (docs/15) deux règles des mondes à parcelles, nulles ailleurs (moteur/parcelles.js les pose dans monde.regles) :
@@ -318,7 +319,7 @@ function deriver(plan, b, R) {
   // naissent ; 0 par défaut, et son tirage ne se fait que s'il est demandé : le hasard des mondes qui ne le demandent pas ne bouge pas)
   if (D.tolerance > 0) p.tolerance = +clamp((plan.tolerance || .35) * Math.exp(D.tolerance * (R() - .6)), D.tolerance_min ?? .15, .9).toFixed(3);
   // le régime passe par l'omnivore ; un omnivore redevient plus souvent herbivore que carnivore (il y a plus à brouter qu'à chasser)
-  // (un filtreur, un détritivore gardent le leur : ce n'est pas un pas de plus ou de moins vers la viande)
+  // (un filtreur, un charognard gardent le leur : ce n'est pas un pas de plus ou de moins vers la viande)
   if (R() < D.regime && ['herbivore', 'omnivore', 'carnivore'].includes(plan.regime)) p.regime = plan.regime === 'herbivore' ? 'omnivore' : plan.regime === 'carnivore' ? 'omnivore' : R() < (REGLES.vers_carnivore ?? .35) ? 'carnivore' : 'herbivore';
   // un mode de déplacement se gagne (ce que le biome favorise) ou se perd (un accessoire dont le biome n'a pas l'usage) : sans
   // cela, toutes les lignées finiraient par tout savoir faire
@@ -484,7 +485,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   }
 
   // 2. l'état de départ : par taxon, les plans de chaque phénotype ; par biome, la biomasse qui pèse sur la capacité
-  //    (les herbivores en entier, les omnivores et les détritivores en partie, les carnivores pas du tout : eux vivent des proies)
+  //    (les herbivores en entier, les omnivores et les charognards en partie, les carnivores pas du tout : eux vivent des proies)
   const etat = new Map(), B = {};
   for (const t of taxons) {
     if (t.eteint) continue;
@@ -501,7 +502,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
       if (GEN && !syn) { const P = pops[pop.biome], Q = P.Q = lireQ(pop.quant);   // ce que ses traits continus pèsent : risque d'être mangé, naissances, maladie
         P.fp = penteQ(Q, 'predation'); P.ff = penteQ(Q, 'fecondite') * chargeQ(Q, t.plan, biomes[pop.biome]); P.fm = penteQ(Q, 'maladie'); }
       const s0 = pop.satiete ?? 0;   // (la satiété du cycle précédent : un omnivore qui trouve des proies pèse moins sur la place)
-      (B[pop.biome] ??= []).push({ masse: t.plan.masse_kg || 1, biomasse: N.reduce((s, n, i) => s + n * (plans[i].masse_kg || 1) * (plans[i].regime === 'omnivore' ? 1 - .3 * s0 : PART_K[plans[i].regime] ?? 1), 0) });
+      (B[pop.biome] ??= []).push({ masse: t.plan.masse_kg || 1, biomasse: N.reduce((s, n, i) => s + n * (plans[i].masse_kg || 1) * (plans[i].regime === 'omnivore' ? 1 - .3 * s0 : plans[i].regime === 'detritivore' && REGLES.cadavres > 0 ? 0 : PART_K[plans[i].regime] ?? 1), 0) });   // (un charognard qui vit des morts ne pèse pas sur les plantes)
     }
     etat.set(t.id, { plans, pops, couts: t.phenotypes.map(p => coutDe(p.traits, cat)),
       vuln: t.phenotypes.map(p => facteur(p.traits, cat, 'vulnerabilite')), chasse: t.phenotypes.map(p => facteur(p.traits, cat, 'chasse')),
@@ -555,6 +556,16 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
       p.pop.satiete = sN / p.Nt;
       T.forEach((q, k) => { if (!p.part[k]) return; const Rq = R * p.part[k] * (DT ? DI.mortel(p.t.plan, q.t.plan) : 1); q.pop.N.forEach((N, i) => { if (q.poids[i]) q.pop.predation[i] += Rq * (q.poids[i] / q.Bv) / (q.E.plans[i].masse_kg || 1); }); });   // (docs/30 : une piqûre ne tue pas)
     }
+    // (équilibrage du 6 novembre) les charognards vivent des morts du lieu : ce que la mort naturelle y laisse ce cycle (les bêtes, pas
+    // les plantes ; × REGLES.cadavres), partagé selon le besoin de chacun. C'est un flux, pas un stock de proies : un charognard est
+    // rassasié à moitié quand sa part égale son besoin (un prédateur, quand il a trente fois son besoin sur pied). Sans la règle, ils
+    // broutent comme avant
+    if (REGLES.cadavres > 0) { const D = T.filter(q => q.regime === 'detritivore');
+      if (D.length) { let offre = 0; for (const q of T) if (q.regime !== 'detritivore' && q.regime !== 'vegetal') q.pop.N.forEach((N, i) => { offre += N * (q.E.plans[i].masse_kg || 1) * mortalite(q.E.plans[i]); });
+        offre *= REGLES.cadavres; const besoinDe = pl => REGLES.besoin * Math.pow(pl.masse_kg || 1, .75);
+        const demande = D.reduce((a, q) => a + q.pop.N.reduce((x, N, i) => x + N * besoinDe(q.E.plans[i]), 0), 0);
+        for (const q of D) { let sN = 0; q.pop.N.forEach((N, i) => { if (N <= 0) return; const be = besoinDe(q.E.plans[i]), a = demande > 0 ? offre * be / demande : 0, sa = a / (a + be); q.pop.ration[i] = N * be * sa; sN += sa * N; });
+          q.pop.satiete = q.Nt ? sN / q.Nt : 0; } } }
     if (SY) SY.reguler(bid, T, B[bid] || [], biomes[bid].capacite * productionSaison(biomes[bid], phase));   // les machines régulent (docs/16)
     for (const q of T) q.pop.N.forEach((N, i) => { q.pop.predation[i] = Math.min(q.pop.predation[i], N * REGLES.predation_max); });   // nul ne mange plus qu'une part d'une population en un cycle
   }
@@ -600,7 +611,9 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
         const viande = REGLES.conversion * pop.ration[i] / (E.plans[i].masse_kg || 1);
         if (reg === 'carnivore') { nais[i] = Math.min(Np * r * s, viande); m *= 1 + (REGLES.faim_carnivore ?? 3) * (1 - s) * (1 - s); faim = Math.max(faim, 1 - s); }   // un carnivore affamé meurt plus
         else if (reg === 'omnivore') nais[i] = Np * r * place * (1 - .3 * s) * (t.plan.regime === 'carnivore' ? REGLES.omnivore_vegetal ?? 1 : REGLES.omnivore_vegetal_base ?? 1) * (DT ? DI.vegetal(E.plans[i]) : 1) + Math.min(Np * r * .3 * s * (DT ? DI.viande(E.plans[i]) : 1), viande);
-        else nais[i] = Np * r * place * (reg === 'detritivore' ? REGLES.detritivore_vegetal ?? 1 : 1); morts[i] = Np * m; mortsNat += morts[i];
+        else if (reg === 'detritivore' && REGLES.cadavres > 0) { nais[i] = Np * r * s; m *= 1 + (REGLES.faim_carnivore ?? 3) * (1 - s) * (1 - s); faim = Math.max(faim, 1 - s); }   // (les morts du lieu sont sa place : il naît d'autant plus qu'il est rassasié ; affamé, il meurt plus et s'en va)
+        else nais[i] = Np * r * place * (reg === 'detritivore' ? REGLES.detritivore_vegetal ?? 1 : 1);
+        morts[i] = Np * m; mortsNat += morts[i];
         if (SR) nais[i] *= SR.naissances(t, bid, i);   // (docs/25) pondre ou mettre bas
         if (mal) { const mm = Np * mal.virulence * E.resist[i] * (pop.fm ?? 1) * (.5 + Math.min(1.5, sat)); morts[i] += mm; mortsMal += mm; }   // la maladie frappe les faibles et les entassés
         if (SP) { const mp = SP.mortalite(t, bid); if (mp > 0) { const mm = Np * mp * E.resist[i] * (pop.fm ?? 1); morts[i] += mm; mortsMal += mm; } }   // les souches (docs/18)
