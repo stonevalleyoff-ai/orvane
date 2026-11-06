@@ -24,7 +24,9 @@ const REGLES = {
   parente: 100,              // en cycles : deux lignées séparées depuis plus longtemps se transmettent peu (exp(-âge/100))
   masse: .5,                 // et deux lignées de tailles éloignées aussi (une décade d'écart : ×0,37)
   depart: .01,               // la part de la population infectée à la naissance d'une souche
-  seuil: 1                   // une souche qui n'a plus une bête infectée dans le monde s'éteint
+  seuil: 1,                  // une souche qui n'a plus une bête infectée dans le monde s'éteint
+  locale: 10                 // une souche s'éteint dans une population où il lui reste moins de dix malades (l'immunité reste) : sous
+                             // 200 bêtes environ, une épidémie passe et s'éteint ; plus nombreuse, une population la garde (6 novembre)
 };
 const SYL = ['ra', 'mo', 'ké', 'li', 'vu', 'sar', 'te', 'go', 'phi', 'dal', 'nu', 'ver', 'zo', 'cal', 'ri'];
 const transmission = v => +(.3 + 1.5 * Math.sqrt(v)).toFixed(3);   // le compromis : plus virulente, plus contagieuse
@@ -82,7 +84,7 @@ function preparer(ctx) {
             const i0 = I0[s]?.i || 0, r0 = I0[s]?.r || 0;
             const i1 = clamp(i0 + nouveaux - (REGLES.guerison + so.virulence) * i0, 0, 1), r1 = clamp(r0 + REGLES.guerison * i0 - REGLES.oubli * r0, 0, 1);
             sens = Math.max(0, sens - nouveaux);
-            if (i1 * h.N >= .05 || r1 >= .01) out[s] = { i: +i1.toPrecision(4), r: +r1.toPrecision(4) };
+            if (i1 * h.N >= .05 || r1 >= .01) out[s] = { i: i1 * h.N < REGLES.locale ? 0 : +i1.toPrecision(4), r: +r1.toPrecision(4) };
             if (i1 >= .01 && i1 * h.N >= 20 && !(so.hotes || []).includes(h.t.id)) { (so.hotes ??= []).push(h.t.id);   // (un hôte : une épidémie qui prend, pas quelques bêtes touchées)
               if (so.hotes.length > 1) ev.push({ type: 'epidemie', taxon: h.t.id, biome: bid, detail: `la souche ${so.nom} passe à ${h.t.nom || h.t.id} (virulence ${Math.round(so.virulence * 100)} % par cycle)` }); }
           }

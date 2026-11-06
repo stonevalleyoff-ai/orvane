@@ -20,6 +20,7 @@ Par population, pour chaque souche qui y circule, `populations[].infection` donn
 - **Elle passe d'une parcelle à l'autre** : les populations de la même lignée dans les parcelles voisines lui apportent 5 % de leur part infectée.
 - **Elle saute aux lignées apparentées** du même lieu, selon leur parenté (`exp(−âge de leur séparation / 100 cycles)`), leurs tailles et leur nombre : une petite population infectée n'expose guère une grande. Chez une lignée lointaine, elle se transmet mal (sa contagion × la parenté à sa lignée d'origine, puissance 0,3) et finit par s'y éteindre. Elle ne passe jamais à une lignée sans ancêtre commun, ni aux machines, ni aux plantes.
 - **On en guérit** : 25 % des infectés par cycle guérissent et sont immunisés. L'immunité s'use (5 % par cycle).
+- **Elle s'éteint dans une population** où il lui reste moins de dix malades (l'immunité, elle, reste) : une épidémie y passe et s'éteint. Sous 200 bêtes environ, une souche ne s'installe donc pas pour de bon ; une population plus nombreuse la garde.
 - **Elle s'éteint** quand il ne reste plus une bête infectée dans le monde.
 
 Dans un monde à souches, les épidémies d'avant ne naissent plus : ce sont celles des souches.
@@ -78,6 +79,22 @@ Le banc vérifie aussi le contrat et le cycle de nuit (le monde reçoit ses souc
 node bancs/pathogenes.js            # environ 5 minutes
 node bancs/pathogenes.js --court    # 60 cycles
 ```
+
+## Combien de souches, à la longue (6 novembre)
+
+On craignait que les souches s'accumulent sans fin. Dans la genèse 2026 (tous mécanismes éveillés), 68 sont nées en 175 cycles et 59 vivaient encore ; 89 % des populations étaient touchées, 5,8 % des bêtes malades, et les souches en tuaient 1,3 % par cycle. Chacune a un taux de reproduction d'environ 2, quelle que soit sa virulence, et l'immunité s'use : une fois installée, une souche reste. Et elle restait tant qu'il demeurait 0,05 bête infectée dans une population : dans une population de 150 bêtes, jamais une épidémie ne s'éteignait.
+
+Ce n'est pourtant pas un emballement : leur nombre plafonne. Actives au fil de la genèse 2026 : 7, 24, 41, 43, 50, 57, 59 (une tous les 25 cycles). Elles se partagent leurs hôtes : chacune vit chez trois lignées environ, et une population en porte rarement plus de trois à la fois (au cycle 3179, sur 1 987 populations : 224 n'en portent aucune, 745 une, 540 deux, 334 trois, 144 quatre ou plus), car un hôte guéri ou malade de l'une est moins exposé aux autres.
+
+Le seuil (`REGLES.locale`, dix malades) rend ses creux aux épidémies. Cent cycles de la genèse 2026, du cycle 3179, côte à côte :
+
+| | souches à la fin | en route | malades | mortalité due aux souches |
+| --- | --- | --- | --- | --- |
+| sans seuil (avant) | 66 | de 59 à 66, en lente hausse | 5,4 % | 1,12 % par cycle |
+| seuil de 3 malades | 61 | de 59 à 61 | 5,4 % | 1,08 % |
+| **seuil de 10 malades** | **53** | **de 59 à 51, puis entre 50 et 54** | **5,0 %** | **1,00 %** |
+
+Le banc (`bancs/pathogenes.js`, point 5 bis) : dans une population de 150 bêtes, sans le seuil, la souche ne s'éteint jamais ; avec lui, elle s'éteint en une vingtaine de cycles ; dans une population de 600 bêtes, elle reste.
 
 ## Ce qui reste ouvert
 

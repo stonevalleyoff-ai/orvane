@@ -159,6 +159,13 @@ node bancs/synthetique.js            # environ 6 minutes
 node bancs/synthetique.js --court    # moins de cycles
 ```
 
+**Combien de machines, à la longue (mesuré le 6 novembre).** On craignait qu'elles s'emballent : 443 au cycle 48 du monde d'Orvane, 65 000 cent vingt cycles plus tard, et près d'un million dans la genèse 2026 (175 cycles, tous mécanismes éveillés). Ce n'est pas un emballement, c'est un plateau :
+- dans la genèse 2026, 585 000 au cycle 3150, 823 000 au cycle 3162, 951 000 au cycle 3174, 971 000 au cycle 3179 : la croissance tombe de 63 000 machines en trois cycles (du cycle 3150 au cycle 3153) à 14 000 (du cycle 3174 au cycle 3177) ;
+- leur masse plafonne sur le minerai : 1 070 t, 6 % de celle des bêtes (16 600 t), le minerai des lieux entamé à 90 % ; l'énergie ne manque presque jamais (la mémoire de la Mère : 0,1 % de morts faute d'énergie) ;
+- leur nombre vient de leur taille : la Mère conçoit à la taille de ce qui déborde (0,28 kg dans la genèse 2026), donc des régulateurs d'un kilo ou d'un demi-kilo ; neuf machines sur dix sont des Tekkel-3 de 1,07 kg. Elle n'assemble rien sous 0,5 kg : à masse égale, il n'y en aura jamais plus de deux millions environ.
+
+Rien n'est changé au moteur : le nombre est grand, la place qu'elles prennent ne l'est pas. Un jeu qui montre ses machines en montre une part, comme il le fait des bêtes.
+
 ## Pour un traducteur
 
 Une machine se joue comme une bête dont le régime serait `synthetique`. Il faut :

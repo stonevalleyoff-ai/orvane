@@ -75,6 +75,16 @@ console.log("5. L'immunité");
   verif(p2 < .7 * p1, `${o.nom} : la première vague infecte jusqu'à ${fx(p1 * 100, 1)} % de la prairie ; après elle, ${fx(r * 100, 0)} % sont immunisés, et la même souche revenue n'en infecte plus que ${fx(p2 * 100, 1)} %`);
 }
 
+console.log('5 bis. Une épidémie qui s\'éteint (REGLES.locale)');
+{ // une petite population (150 bêtes) et une plus grande (600), seules de leur lignée : la même souche, avec et sans le seuil
+  const tid = vivants(I0).filter(t => t.populations.length === 1 && t.populations[0].effectif >= 300).sort((a, b) => a.populations[0].effectif - b.populations[0].effectif)[0].id;
+  const essai = (N, k) => { const av = Pa.REGLES.locale; Pa.REGLES.locale = k;
+    try { let X = poser(I0, tid, I0.taxons.find(t => t.id === tid).populations[0].biome, .15, .1); const p0 = X.taxons.find(t => t.id === tid).populations[0], f = N / p0.effectif; p0.effectif = N; if (p0.N) p0.N = p0.N.map(x => x * f);
+      for (let c = 1; c <= 30; c++) { X = Orvane.cycle(X, {}); if (!X.monde.pathogenes.souches['souche-essai']) return c; } return 0; } finally { Pa.REGLES.locale = av; } };
+  const a = essai(150, 0), b = essai(150, Pa.REGLES.locale), c = essai(600, Pa.REGLES.locale);
+  verif(!a && b > 0 && !c, `dans une population de 150 bêtes, sans le seuil, la souche ne s'éteint jamais (quelques malades pour toujours) ; avec lui (moins de ${Pa.REGLES.locale} malades), elle s'éteint au cycle ${b} ; dans une population de 600 bêtes, elle reste`);
+}
+
 console.log('6. Le compromis');
 { const o = vivants(I0).filter(t => t.plan.regime === 'herbivore').sort((x, y) => (y.populations.find(p => p.biome === 'prairie')?.effectif || 0) - (x.populations.find(p => p.biome === 'prairie')?.effectif || 0))[1];
   const essai = v => { let J = poser(I0, o.id, 'prairie', v, .02); let cumul = 0; for (let k = 0; k < (court ? 30 : 40); k++) { J = Orvane.cycle(J, {}); cumul += infectes(J); } return cumul; };
