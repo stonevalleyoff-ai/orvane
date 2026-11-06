@@ -3,6 +3,7 @@
 // session, ou en accéléré. Il part d'un instantané publié (le monde d'Orvane tel qu'il est ce jour-là) ou d'un monde à lui, et
 // rien n'en part vers le monde partagé : c'est une copie qui vit sa vie. Ce que font ses joueurs y pèse, par le même tampon.
 //   const S = OrvaneSolo.creer(instantane, { periode: '10m' })   // un monde solo, d'un instantané
+//   OrvaneSolo.creer(instantane, { genre: 'horreur' })           // (docs/41) réglé pour un genre : ses règles, ses poids, son rythme
 //   OrvaneSolo.noter(S, { taxon, biome, action: 'prelevement', n: 1 })   // ce que fait le joueur (le format des lots, docs/4)
 //   OrvaneSolo.avancer(S, Date.now())   // les cycles dus depuis la dernière fois (au plus S.rattrapage) : rend leurs événements
 //   OrvaneSolo.cycles(S, 5)             // cinq cycles tout de suite (l'accéléré, une session qui commence)
@@ -14,7 +15,8 @@
 (function (racine) {
 const R = n => typeof require === 'function' ? require(n) : null;
 const Orvane = R('./orvane.js') || racine.Orvane, Tampon = R('../tampon/tampon.js') || racine.OrvaneTampon, Parcelles = R('./parcelles.js') || racine.OrvaneParcelles;
-const Collectif = R('./collectif.js') || racine.OrvaneCollectif || null;   // (docs/38) la vie en groupe, si le monde l'a éveillée et si le jeu a chargé collectif.js
+const Collectif = R('./collectif.js') || racine.OrvaneCollectif || null;
+const Genres = R('./genres.js') || racine.OrvaneGenres || null;   // (docs/41) les profils de genre, si le jeu a chargé genres.js   // (docs/38) la vie en groupe, si le monde l'a éveillée et si le jeu a chargé collectif.js
 const clone = o => JSON.parse(JSON.stringify(o));
 const periodeDe = c => { if (typeof c === 'number') return c; c = String(c || '24h'); const n = parseFloat(c) || 24; return c.endsWith('d') ? n * 864e5 : c.endsWith('min') || c.endsWith('m') ? n * 6e4 : c.endsWith('s') ? n * 1e3 : n * 36e5; };
 // le profil d'un monde solo : l'exposition neutre (le jeu voit tout tel quel) et une influence à l'échelle d'un seul joueur
@@ -33,8 +35,12 @@ function creer(source, opt = {}) {
   if (opt.flore?.taxons?.length) { const ids = new Set(etat.taxons.map(t => t.id)); etat.taxons.push(...clone(opt.flore.taxons).filter(t => !ids.has(t.id))); etat.catalogue = { ...etat.catalogue, flore: opt.flore.catalogue?.flore || etat.catalogue?.flore }; }
   else if (!etat.taxons.some(t => t.plan?.regime === 'vegetal')) { delete etat.monde.flore; etat.taxons.forEach(t => t.populations.forEach(p => { delete p.nourriture; delete p.recouvrement; })); }
   etat.cycle = { ...(etat.cycle || { n: 0 }), date: new Date(maintenant).toISOString(), pressions_recues: 0 }; etat.evenements = [];
-  return { orvane_solo: 1, etat, periode: periodeDe(opt.periode || '1h'), acceleration: opt.acceleration || 1, rattrapage: opt.rattrapage ?? 24,
-    dernier: maintenant, notes: [], tampon: {}, profil: clone(opt.profil || PROFIL) };
+  // (docs/41) un genre : ses règles dans le monde, ses poids dans le profil, son rythme quand le jeu n'en donne pas
+  const G = opt.genre && opt.genre !== 'neutre' ? (Genres || (() => { throw new Error('OrvaneSolo : genre demandé, mais moteur/genres.js n\'est pas chargé'); })()) : null;
+  if (G) { const R = G.regles(opt.genre, etat.monde.regles); etat.monde.genre = opt.genre; if (Object.keys(R).length) etat.monde.regles = R; }
+  const rythme = G ? G.solo(opt.genre) : {};
+  return { orvane_solo: 1, etat, periode: periodeDe(opt.periode || rythme.periode || '1h'), acceleration: opt.acceleration || rythme.acceleration || 1, rattrapage: opt.rattrapage ?? 24,
+    dernier: maintenant, notes: [], tampon: {}, profil: G ? G.profil(opt.genre, opt.profil || PROFIL) : clone(opt.profil || PROFIL), ...(rythme.session ? { session: rythme.session } : {}) };
 }
 // ce que fait le joueur : un événement au format des lots (taxon, biome, action, n ; phenotype, q, parcelle facultatifs)
 function noter(S, e) { if (e && e.taxon && e.biome && e.action && e.n > 0) S.notes.push({ ...e }); return S.notes.length; }

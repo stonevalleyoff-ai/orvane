@@ -27,6 +27,7 @@ moteur/esprit.js      l'esprit : des savoirs qui s'apprennent, se transmettent, 
 moteur/chronique.js   l'histoire du monde : la chronique (ce qui compte, par année), le muséum (un spécimen par lignée, gardé après sa mort), les noms que donnent les joueurs (docs/37)
 moteur/collectif.js   la vie en groupe : troupeaux, meutes, bancs, colonies, hiérarchie, migrations des saisons, lue dans l'état à la publication (docs/38)
 moteur/solo.js        un monde solo, dans le jeu : parti de l'instantané publié, il avance en temps réel ou en accéléré (docs/19)
+moteur/genres.js      les profils de genre : horreur, cozy, collection, voxel, survie, stratégie, monde partagé (docs/41)
 moteur/biomes-universels.json  les 24 biomes neutres du monde d'Orvane : terre, eau douce, mer, sous-sol
 tampon/tampon.js      exposer() Orvane → jeu ; agreger() jeu → Orvane (dénormalisation, plafonds, lissage)
 tampon/directeur.js   le directeur de mise en scène : ce qu'un jeu devrait montrer au dernier cycle, selon son genre (docs/40)
@@ -74,6 +75,7 @@ bancs/directeur.js    le banc du directeur : chaque genre met en avant ce qu'il 
 bancs/monde.js        le monde d'Orvane vu par biome, pour les bancs qui parlent des lieux par leur nom (etat.json tourne par parcelles)
 bancs/chronique.js    le banc de la chronique : rien ne change, ce qu'elle garde et laisse, le muséum et la cause d'une extinction, les noms, le cycle de nuit
 bancs/collectif.js    le banc de la vie en groupe : qui vit comment, la taille des groupes, la hiérarchie, les troupeaux mêlés, les migrations et les visiteurs
+bancs/genres.js       le banc des profils de genre : chaque promesse mesurée sur la genèse 7, contre le réglage neutre
 bancs/temps.js        le banc du temps : le rythme de chaque monde (l'action horaire, le rattrapage), le monde solo (temps réel, accéléré, sauvegarde, navigateur)
 hebergement/cycle.js  le cycle, chaque monde à son rythme (docs/19) : lots de tous les jeux → tampon → moteur → instantané publié (action GitHub .github/workflows/cycle.yml)
 hebergement/publication.js  la branche publication : l'état de chaque monde repris au début de chaque passe, le site republié en un seul commit sans historique ; une sauvegarde restaurée (hebergement/LISEZ-MOI.md)

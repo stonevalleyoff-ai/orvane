@@ -30,6 +30,8 @@ export interface Instantane {
     regles?: {
       [cle: string]: unknown;
     };
+    /** (docs/41) Le genre pour lequel ce monde est réglé (moteur/genres.js) : ses règles sont dans regles. */
+    genre?: string;
     /** Les fusions qu'a reçues ce monde (moteur/fusion.js, docs/14) : d'un autre monde, des lignées sont arrivées dans certains biomes, au cycle dit. Une fusion n'est appliquée qu'une fois. */
     fusions?: {
       /** Le nom de la fusion (profil.monde.fusions[].id). */
@@ -914,6 +916,8 @@ export interface Profil {
     invention?: boolean;
     /** L'esprit (docs/34) : le cycle de nuit l'éveille, une fois ; les bêtes apprennent, transmettent, se servent d'outils ; chaque population a ses savoirs. */
     esprit?: boolean;
+    /** (docs/41) Le genre du jeu qui fait vivre ce monde : ses règles du moteur (moteur/genres.js) passent sur celles de la genèse, celles de monde.regles par-dessus ; ses poids des joueurs passent dans l'influence. « neutre » : le moteur tel qu'il est. */
+    genre?: "neutre" | "horreur" | "cozy" | "collection" | "voxel" | "survie" | "strategie" | "mmo";
     /** Des règles du moteur (REGLES de moteur/orvane.js) réglées pour ce monde vivant : elles complètent, d'un niveau, celles de sa genèse (monde.regles de l'instantané) et ne valent que pour ce qui arrive ensuite. Exemple : { "derive": { "tolerance": 0.35, "formes": 1 } } laisse la largeur de la niche dériver à la séparation, et fait naître les formes nouvelles du monde à la séparation (docs/33). ; { "hivernage": { "actif": 1, "rude": 0.85 } } fait partir pour de bon les bêtes dont l'hiver est rude (docs/38). */
     regles?: {
       [cle: string]: unknown;

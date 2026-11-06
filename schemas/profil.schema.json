@@ -104,6 +104,10 @@
           "description": "L'esprit (docs/34) : le cycle de nuit l'éveille, une fois ; les bêtes apprennent, transmettent, se servent d'outils ; chaque population a ses savoirs.",
           "type": "boolean"
         },
+        "genre": {
+          "enum": ["neutre", "horreur", "cozy", "collection", "voxel", "survie", "strategie", "mmo"],
+          "description": "(docs/41) Le genre du jeu qui fait vivre ce monde : ses règles du moteur (moteur/genres.js) passent sur celles de la genèse, celles de monde.regles par-dessus ; ses poids des joueurs passent dans l'influence. « neutre » : le moteur tel qu'il est."
+        },
         "regles": {
           "type": "object",
           "description": "Des règles du moteur (REGLES de moteur/orvane.js) réglées pour ce monde vivant : elles complètent, d'un niveau, celles de sa genèse (monde.regles de l'instantané) et ne valent que pour ce qui arrive ensuite. Exemple : { \"derive\": { \"tolerance\": 0.35, \"formes\": 1 } } laisse la largeur de la niche dériver à la séparation, et fait naître les formes nouvelles du monde à la séparation (docs/33). ; { \"hivernage\": { \"actif\": 1, \"rude\": 0.85 } } fait partir pour de bon les bêtes dont l'hiver est rude (docs/38)."

@@ -105,7 +105,7 @@ What a lineage carries (`inst.taxons[i]`):
 
 **A world that is not Earth.** A world may carry its own catalogue (`inst.catalogue.monde`): extra biome axes (magic), traits, organs and body forms. Their definitions are in the instantané. To draw its silhouettes, call `OrvaneCorps.etendre(inst.catalogue.monde)` once, when reading it. The world of Orvane has none.
 
-**A world of your own, solo or offline.** `moteur/solo.js` runs a copy of the world inside the game, started from the instantané. It advances in real time (one cycle every ten minutes, say) or accelerated. What the player does weighs on it, and it can be saved. Nothing goes back to the shared world.
+**A world of your own, solo or offline.** `moteur/solo.js` runs a copy of the world inside the game, started from the instantané. It advances in real time (one cycle every ten minutes, say) or accelerated. What the player does weighs on it, and it can be saved. Nothing goes back to the shared world. A genre tunes it in one word (the genre ids are French: `horreur`, `cozy`, `collection`, `voxel`, `survie`, `strategie`, `mmo`). `OrvaneSolo.creer(instantane, { genre: 'horreur' })` makes a world that changes fast and unsettles, `'cozy'` a world that heals, `'collection'` a world rich in lineages (docs/41).
 
 `cycle.n` is the cycle number, `cycle.saison` the world's season. Field by field: [docs/glossary.md](docs/glossary.md) and `schemas/instantane.schema.json`.
 

@@ -74,6 +74,7 @@
           "type": "object",
           "description": "Les règles du moteur propres à ce monde (REGLES de moteur/orvane.js), choisies par sa genèse : elles valent pour chacun de ses cycles, où qu'il tourne."
         },
+        "genre": { "type": "string", "description": "(docs/41) Le genre pour lequel ce monde est réglé (moteur/genres.js) : ses règles sont dans regles." },
         "fusions": {
           "type": "array",
           "description": "Les fusions qu'a reçues ce monde (moteur/fusion.js, docs/14) : d'un autre monde, des lignées sont arrivées dans certains biomes, au cycle dit. Une fusion n'est appliquée qu'une fois.",
