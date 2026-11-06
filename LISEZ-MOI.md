@@ -32,6 +32,7 @@ tampon/tampon.js      exposer() Orvane → jeu ; agreger() jeu → Orvane (déno
 tampon/individus.js   les individus : une bête tirée de la population réelle (son génotype, ses valeurs, ses savoirs), deux bêtes croisées, la parenté, le génome relâché (docs/35, 36)
 tampon/morceaux.js    le monde par morceaux : découper l'instantané (l'index, chaque biome, chaque lignée), et lire seulement les biomes d'un jeu (docs/21)
 monde/index.html      l’observatoire : ce que vit un monde (espèces, biomes, lignées, chaîne alimentaire, journal), et une simulation locale
+monde/silhouette.js   les silhouettes de l'observatoire : chaque lignée dessinée d'après son corps et sa façon de vivre (masse, déplacements, régime, heure), chaque forme à son dessin, les machines d'après leurs modules ; un jeu peut le reprendre
 BRANCHER-UN-JEU.md    brancher un jeu, pas à pas : s'inscrire, lire le monde, traduire, régler l'exposition, déposer des lots, les erreurs
 CONNECT-A-GAME.md     le même guide, en anglais ; docs/glossary.md : chaque champ, traduit en anglais
 inscription/          la page d'inscription : inscrire un jeu et recevoir ses clés, régler son exposition, vérifier une clé

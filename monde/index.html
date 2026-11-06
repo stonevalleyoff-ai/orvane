@@ -46,6 +46,7 @@
 <script src="../moteur/orvane.js"></script>
 <script src="../tampon/tampon.js"></script>
 <script src="../moteur/parcelles.js"></script>
+<script src="silhouette.js"></script>
 <script src="../moteur/solo.js"></script>
 <script src="../tampon/individus.js"></script>
 <script src="../moteur/collectif.js"></script>
@@ -336,7 +337,7 @@ function vueEspeces() {
   L.sort(E.tri === 'nom' ? (a, b) => nomEsp(a).localeCompare(nomEsp(b), 'fr') : E.tri === 'apparition' ? (a, b) => ordreApparu(b) - ordreApparu(a) || effectif(b) - effectif(a) : (a, b) => effectif(b) - effectif(a));
   if (!E.espece || !I.taxons.some(t => t.id === E.espece)) E.espece = L[0]?.id || I.taxons[0]?.id || null;
   const rangee = t => { const [st, cl] = STATUT[t.statut] || [t.statut, ''];
-    return `<li><button data-choix="${ESC(t.id)}" title="${ESC(nomEsp(t))}" aria-current="${t.id === E.espece}">${t.plan.corps && globalThis.OrvaneCorps ? croquis(t.plan.corps, [], t.plan) : `<span class="pt" style="background:${couleur(t.id)}"></span>`}<span><span class="nom">${ESC(nomEsp(t))}</span><span class="sous">${ESC(REGIME[t.plan.regime] || t.plan.regime || '')} · ${fx(t.plan.masse_kg, 3)} kg</span></span><span class="chiffre">${nb(effectif(t))}<small class="${cl}">${st}</small></span></button></li>`; };
+    return `<li><button data-choix="${ESC(t.id)}" title="${ESC(nomEsp(t))}" aria-current="${t.id === E.espece}">${(t.plan.corps || t.plan.regime === 'synthetique') && globalThis.OrvaneCorps ? croquis(t.plan.corps, [], t.plan) : `<span class="pt" style="background:${couleur(t.id)}"></span>`}<span><span class="nom">${ESC(nomEsp(t))}</span><span class="sous">${ESC(REGIME[t.plan.regime] || t.plan.regime || '')} · ${fx(t.plan.masse_kg, 3)} kg</span></span><span class="chiffre">${nb(effectif(t))}<small class="${cl}">${st}</small></span></button></li>`; };
   const n = f => I.taxons.filter(f[2]).length;
   $('#contenu').innerHTML = `<div class="especes ${E.ouverte ? 'ouverte' : ''}">
     <aside class="registre"><div class="register-heading"><p class="atlas-kicker">LE REGISTRE DU VIVANT</p><h2>Les espèces</h2></div><label class="sr" for="cherche">Chercher une espèce</label><input class="cherche" id="cherche" type="search" placeholder="Chercher une espèce" value="${ESC(E.recherche)}" autocomplete="off">
@@ -365,7 +366,7 @@ function fiche() {
   const par = t.parent && I.taxons.find(z => z.id === t.parent), enfants = I.taxons.filter(z => z.parent === t.id);
   const dom = (() => { const n = {}; for (const q of t.phenotypes) for (const id of q.traits) n[id] = (n[id] || 0) + q.frequence; return Object.keys(n).filter(k => n[k] >= .5); })();
   let h = `<button class="lien retour" id="retour">‹ Toutes les espèces</button>
-    <header class="species-plate">${p.corps && globalThis.OrvaneCorps ? `<div class="silhouette-plate"><span>SILHOUETTE CALCULÉE</span>${croquis(p.corps, dom, p)}<small>PLAN CORPOREL · ${ESC(t.id)}</small></div>` : ''}<div><p class="atlas-kicker">FICHE NATURALISTE</p><h2 class="species-name">${ESC(nomEsp(t))}</h2>${t.nom_commun ? `<p class="nom-commun">nom savant : <i>${ESC(t.nom || t.id)}</i> · nommée par ${ESC(t.decrit?.par || 'un joueur')}${t.decrit?.jeu ? ` (${ESC(t.decrit.jeu)})` : ''}${t.decrit?.cycle != null ? `, au cycle ${t.decrit.cycle}` : ''}</p>` : ''}
+    <header class="species-plate">${(p.corps || p.regime === 'synthetique') && globalThis.OrvaneCorps ? `<div class="silhouette-plate"><span>SILHOUETTE CALCULÉE</span>${croquis(p.corps, dom, p)}<small>PLAN CORPOREL · ${ESC(t.id)}</small></div>` : ''}<div><p class="atlas-kicker">FICHE NATURALISTE</p><h2 class="species-name">${ESC(nomEsp(t))}</h2>${t.nom_commun ? `<p class="nom-commun">nom savant : <i>${ESC(t.nom || t.id)}</i> · nommée par ${ESC(t.decrit?.par || 'un joueur')}${t.decrit?.jeu ? ` (${ESC(t.decrit.jeu)})` : ''}${t.decrit?.cycle != null ? `, au cycle ${t.decrit.cycle}` : ''}</p>` : ''}
       <div class="ident"><span class="etiq ${cl}">${st}</span> ${nb(effectif(t))} ${t.plan.regime === 'synthetique' ? 'machines' : 'bêtes'} · ${deGenese(t, I) ? `née pendant la genèse${t.apparu < 0 ? ` (cycle ${cyc(t.apparu)})` : ''}` : `apparue au cycle ${t.apparu}`}${t.plan.regime === 'synthetique' && !t.parent ? ` · assemblée par ${ESC(I.monde.mere?.nom || 'la Mère')}` : ''}${t.eteint ? `, éteinte au cycle ${t.eteint}` : ''}${par ? ` · issue de <button data-esp="${ESC(par.id)}">${ESC(nomEsp(par))}</button>` : ''}${t.origine ? ` · arrivée de ${ESC(t.origine.nom || t.origine.monde)} par une fusion (là-bas : ${ESC(t.origine.id || t.id)}, apparue au cycle ${t.origine.apparu ?? '?'})` : ''}</div>
       ${p.corps && globalThis.OrvaneCorps ? `<p class="note">${ESC(OrvaneCorps.decrire(OrvaneCorps.normaliser(p.corps), p))}</p>` : ''}</div></header>
     <dl class="faits">${[['Régime', REGIME[p.regime] || p.regime], ['Masse', fx(p.masse_kg, 3) + ' kg'], ['Taille', fx(p.taille_m, 3) + ' m'], ['Vitesse', p.vitesse_rel != null ? fx(p.vitesse_rel) + ' corps/s' : '—'], ['Activité', p.activite || '—'], ['Se déplace', (p.locomotion || []).join(', ')],
@@ -442,94 +443,9 @@ function fiche() {
   if ($('#cPh')) { const ids = [...new Set(E.H.flatMap(s => (s.taxons.find(z => z.id === t.id)?.phenotypes || []).map(q => q.id)))];
     courbes($('#cPh'), ids.map(id => ({ id, nom: id, coul: couleur(t.id + '/' + id), pts: E.H.map(s => s.taxons.find(z => z.id === t.id)?.phenotypes.find(q => q.id === id)?.frequence ?? 0) })), { empile: true }); }
 }
-// La silhouette d'une lignée (plan.corps, moteur/corps.js), de profil : de quoi la reconnaître d'un coup d'œil.
-function croquis(c, traits = [], plan = null) {
-  c = OrvaneCorps.normaliser(c); const C = c.couleurs, rgb = v => `rgb(${v.join(',')})`, k = 120, sol = 82, E2 = [];
-  const svg = () => `<svg viewBox="0 0 170 90" width="170" height="90" aria-hidden="true">${E2.join('')}</svg>`, tl0 = ty => c.organes.find(o => o.type === ty)?.taille || 0;
-  const allure = OrvaneCorps.allure ? OrvaneCorps.allure(c, plan) : c.forme;
-  // (docs/11, 25) un poisson : une lignée sans pattes qui ne vit que dans l'eau ; un long corps fin, une anguille
-  if (allure === 'poisson') { const ang = c.long > .85, rx = ang ? 62 : 30 + c.long * 22, ry = ang ? 7 : 17 - c.long * 6, cx = 86, cy = 46, voile = c.organes.some(o => o.type === 'nageoires' && o.forme === 'voiles') ? 1.6 : 1, nf = tl0('nageoires');
-    const xq = cx - rx, xt = cx + rx, cq = ry * (ang ? 1.6 : 1.1) * (.8 + c.queue * .5) * voile;
-    E2.push(`<path d="M${xq + 4} ${cy} L${xq - 14 - c.queue * 8} ${cy - cq} Q${xq - 6} ${cy} ${xq - 14 - c.queue * 8} ${cy + cq}Z" fill="${rgb(C.sombre)}"/>`);   // la nageoire de la queue
-    E2.push(`<path d="M${cx - rx * .45} ${cy - ry + 2} Q${cx - rx * .1} ${cy - ry - (7 + nf * 12) * voile} ${cx + rx * .25} ${cy - ry + 1}Z" fill="${rgb(C.sombre)}"/>`);   // la nageoire du dos
-    if (!ang) E2.push(`<path d="M${cx - rx * .25} ${cy + ry - 2} Q${cx - rx * .05} ${cy + ry + (5 + nf * 8) * voile} ${cx + rx * .15} ${cy + ry - 1}Z" fill="${rgb(C.sombre)}" opacity=".8"/>`);
-    E2.push(`<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${rgb(C.robe)}"/>`, `<path d="M${cx - rx * .8} ${cy + ry * .3} Q${cx} ${cy + ry * 1.05} ${cx + rx * .85} ${cy + ry * .25}" fill="${rgb(C.ventre)}" opacity=".9"/>`);
-    if (c.motif === 'rayures' || traits.includes('coloration-aposematique')) for (let i = 0; i < 4; i++) E2.push(`<line x1="${cx - rx * .5 + i * rx * .32}" y1="${cy - ry + 2}" x2="${cx - rx * .55 + i * rx * .32}" y2="${cy + ry - 3}" stroke="${traits.includes('coloration-aposematique') ? '#d8a23a' : rgb(C.sombre)}" stroke-width="3" opacity=".8"/>`);
-    if (c.motif === 'taches') for (let i = 0; i < 5; i++) E2.push(`<circle cx="${cx - rx * .55 + i * rx * .27}" cy="${cy - ry * .25 + (i % 2) * ry * .3}" r="2.2" fill="${rgb(C.sombre)}"/>`);
-    if (c.motif === 'bandes') E2.push(`<line x1="${cx - rx * .8}" y1="${cy - ry * .1}" x2="${cx + rx * .7}" y2="${cy - ry * .1}" stroke="${rgb(C.sombre)}" stroke-width="2.5"/>`);
-    if (tl0('epines') > .2) for (let i = 0; i < 4; i++) E2.push(`<line x1="${cx - rx * .4 + i * rx * .18}" y1="${cy - ry + 3}" x2="${cx - rx * .45 + i * rx * .18}" y2="${cy - ry - 8 - tl0('epines') * 8}" stroke="#e8dcc0" stroke-width="1.5"/>`);
-    E2.push(`<path d="M${xt - ry * .9} ${cy - ry * .55} Q${xt - ry * 1.1} ${cy} ${xt - ry * .9} ${cy + ry * .55}" stroke="${rgb(C.sombre)}" stroke-width="1.2" fill="none" opacity=".7"/>`);   // l'ouïe
-    if (!ang) E2.push(`<path d="M${xt - ry * 1.4} ${cy + 2} l-9 ${6 + nf * 6} l12 -2Z" fill="${rgb(C.sombre)}" opacity=".85"/>`);   // la nageoire de côté
-    if (tl0('antennes') > .25 || c.antennes > .25) E2.push(`<path d="M${xt - 3} ${cy + ry * .3} q8 6 12 14" stroke="${rgb(C.sombre)}" stroke-width="1.3" fill="none"/>`);   // un barbillon
-    E2.push(`<circle cx="${xt - ry * .55}" cy="${cy - ry * .25}" r="${traits.includes('yeux-nocturnes') ? 3.4 : 2.4}" fill="${rgb(C.oeil)}"/>`, `<path d="M${xt - 1} ${cy + ry * .15} l-5 1.5" stroke="${rgb(C.sombre)}" stroke-width="1.2"/>`);
-    return svg(); }
-  // (docs/33) le corps à tentacules : une tête, ses bras
-  if (c.forme === 'tentaculaire') { const n = Math.max(4, Math.min(10, c.pattes || 8)), cx = 85, cy = 30, r = 17;
-    for (let i = 0; i < n; i++) { const a = -.95 + 1.9 * i / (n - 1), x0 = cx + a * r * .7, x1 = cx + a * 46, y1 = 74 + Math.cos(a * 2) * 6, xm = cx + a * 30 + (i % 2 ? 9 : -9);
-      E2.push(`<path d="M${x0} ${cy + r * .6} Q${xm} ${cy + 40} ${x1} ${y1}" stroke="${rgb(i % 2 ? C.sombre : C.robe)}" stroke-width="${4.5 - Math.abs(a) * 1.5}" fill="none" stroke-linecap="round"/>`); }
-    E2.push(`<ellipse cx="${cx}" cy="${cy}" rx="${r}" ry="${r * 1.15}" fill="${rgb(C.robe)}"/>`, `<ellipse cx="${cx - 5}" cy="${cy - 7}" rx="${r * .45}" ry="${r * .55}" fill="${rgb(C.ventre)}" opacity=".35"/>`);
-    if (c.motif === 'taches') for (let i = 0; i < 4; i++) E2.push(`<circle cx="${cx - 9 + i * 6}" cy="${cy - 9 + (i % 2) * 6}" r="2" fill="${rgb(C.sombre)}"/>`);
-    E2.push(`<circle cx="${cx - 7}" cy="${cy + 7}" r="2.6" fill="${rgb(C.oeil)}"/>`, `<circle cx="${cx + 7}" cy="${cy + 7}" r="2.6" fill="${rgb(C.oeil)}"/>`);
-    return svg(); }
-  // (docs/33) le corps rayonné : une méduse qui nage, une étoile qui rampe au fond
-  if (c.forme === 'radiaire') { const n = Math.max(4, Math.min(8, c.pattes || 5)), cx = 85;
-    if ((plan?.locomotion || ['nage']).includes('nage')) { const cy = 34, r = 26;
-      for (let i = 0; i < n; i++) { const x = cx - r * .8 + 1.6 * r * i / (n - 1); E2.push(`<path d="M${x} ${cy} q${i % 2 ? 7 : -7} 18 0 ${30 + (i % 3) * 6} q${i % 2 ? -5 : 5} 8 2 14" stroke="${rgb(C.sombre)}" stroke-width="1.6" fill="none" opacity=".75"/>`); }
-      E2.push(`<path d="M${cx - r} ${cy} Q${cx - r} ${cy - r * 1.05} ${cx} ${cy - r * 1.05} Q${cx + r} ${cy - r * 1.05} ${cx + r} ${cy} Q${cx} ${cy - 7} ${cx - r} ${cy}Z" fill="${rgb(C.robe)}" opacity=".85"/>`, `<path d="M${cx - r * .6} ${cy - 6} Q${cx} ${cy - r * .9} ${cx + r * .6} ${cy - 6}" stroke="${rgb(C.ventre)}" stroke-width="2" fill="none" opacity=".7"/>`);
-    } else { const cy = 50, R1 = 34, R0 = 11; let d = ''; for (let i = 0; i < n * 2; i++) { const a = -Math.PI / 2 + Math.PI * i / n, rr = i % 2 ? R0 : R1; d += (i ? 'L' : 'M') + (cx + rr * Math.cos(a)).toFixed(1) + ' ' + (cy + rr * Math.sin(a) * .85).toFixed(1); }
-      E2.push(`<path d="${d}Z" fill="${rgb(C.robe)}" stroke="${rgb(C.sombre)}" stroke-width="1.5" stroke-linejoin="round"/>`, `<circle cx="${cx}" cy="${cy}" r="5" fill="${rgb(C.ventre)}"/>`); }
-    return svg(); }
-  // (docs/33) le corps segmenté : des anneaux, une paire de pattes à chacun
-  if (c.forme === 'segmente') { const n = Math.max(6, Math.min(16, Math.round((c.pattes || 24) / 2))), w = 128 / n, y = sol - 12;
-    for (let i = 0; i < n; i++) { const x = 22 + i * w + w / 2, yy = y - Math.sin(i * .7) * 3;
-      E2.push(`<line x1="${x}" y1="${yy}" x2="${x - 3}" y2="${sol}" stroke="${rgb(C.sombre)}" stroke-width="1.4"/>`, `<line x1="${x}" y1="${yy}" x2="${x + 3}" y2="${sol - 1}" stroke="${rgb(C.sombre)}" stroke-width="1.4"/>`,
-        `<circle cx="${x}" cy="${yy - 3}" r="${Math.min(8, w * .62)}" fill="${rgb(i % 2 ? C.robe : C.sombre)}"/>`); }
-    const hx = 22 + n * w + 4, hy = y - 5; E2.push(`<circle cx="${hx}" cy="${hy}" r="${Math.min(8, w * .7)}" fill="${rgb(C.robe)}"/>`, `<path d="M${hx + 2} ${hy - 5} q8 -10 14 -8 M${hx} ${hy - 6} q4 -12 10 -14" stroke="${rgb(C.sombre)}" stroke-width="1.3" fill="none"/>`, `<circle cx="${hx + 3}" cy="${hy - 1}" r="1.8" fill="${rgb(C.oeil)}"/>`);
-    return svg(); }
-  const Lt = (.26 + c.long * .34) * k, Th = (.2 - c.long * .05) * k, Hl = c.forme === 'serpent' ? 0 : (.07 + c.haut * .36) * k * (traits.includes('pattes-longues') ? 1.25 : 1);
-  const bip = c.forme === 'bipede' || c.forme === 'oiseau', cx = 82, cy = sol - Hl - Th / 2, xa = cx + Lt / 2, xr = cx - Lt / 2;
-  if (c.forme === 'serpent') { let d = ''; for (let i = 0; i <= 12; i++) { const x = 20 + i * 9, y = sol - 8 - Math.sin(i * .9) * 5; d += (i ? 'L' : 'M') + x + ' ' + y; }
-    E2.push(`<path d="${d}" stroke="${rgb(C.robe)}" stroke-width="${Th * .8}" fill="none" stroke-linecap="round"/>`, `<circle cx="132" cy="${sol - 12}" r="${Th * .55}" fill="${rgb(C.robe)}"/>`, `<circle cx="136" cy="${sol - 14}" r="2" fill="${rgb(C.oeil)}"/>`);
-    return `<svg viewBox="0 0 170 90" width="170" height="90" aria-hidden="true">${E2.join('')}</svg>`; }
-  const og = (ty, pl) => c.organes.find(o => o.type === ty && (!pl || o.place === pl)), tl = (ty, pl) => (og(ty, pl) || {}).taille || 0, acc = rgb(OrvaneCorps.tourner(C.robe, 150));
-  let qx = xr + 2, qy = cy;                                           // le bout de la queue (là où vont massue, aiguillon, panache)
-  if (c.queue > .08) { const L = (.06 + c.queue * .42) * k; qx = xr - L; qy = cy + (bip ? 4 : -L * .25); E2.push(`<path d="M${xr + 4} ${cy - Th * .1} Q${xr - L * .5} ${cy - Th * .2 - (traits.includes('queue-prehensile') ? L * .4 : 0)} ${qx} ${qy}" stroke="${rgb(C.robe)}" stroke-width="${Th * .35}" fill="none" stroke-linecap="round"/>`); }
-  if (og('massue')) E2.push(`<ellipse cx="${qx}" cy="${qy}" rx="${4 + tl('massue') * 6}" ry="${3.5 + tl('massue') * 5}" fill="${rgb(C.sombre)}"/>`);
-  if (og('aiguillon')) E2.push(`<path d="M${qx} ${qy} Q${qx - 4} ${qy - 8 - tl('aiguillon') * 10} ${qx + 6 + tl('aiguillon') * 6} ${qy - 10 - tl('aiguillon') * 12}" stroke="#3c2834" stroke-width="2.5" fill="none" stroke-linecap="round"/>`);
-  if (og('panache')) E2.push(`<path d="M${qx + 2} ${qy} L${qx - 8 - tl('panache') * 12} ${qy - 6 - tl('panache') * 8} L${qx - 6 - tl('panache') * 10} ${qy + 5}Z" fill="${acc}"/>`);
-  if (og('epines', 'queue')) for (const d of [-3, 3]) E2.push(`<line x1="${qx}" y1="${qy}" x2="${qx + d}" y2="${qy - 6 - tl('epines', 'queue') * 6}" stroke="#e8dcc0" stroke-width="1.6"/>`);
-  const paires = Math.max(1, c.pattes / 2);
-  for (let i = 0; i < paires && c.pattes; i++) { const x = bip ? cx - 4 + i * 6 : xa - 6 - (Lt - 12) * i / Math.max(1, paires - 1);
-    E2.push(`<line x1="${x}" y1="${cy + Th * .3}" x2="${x + (c.forme === 'hexapode' ? (i % 2 ? -6 : 6) : 0)}" y2="${sol}" stroke="${rgb(C.sombre)}" stroke-width="${c.forme === 'hexapode' ? 2.5 : 4}"/>`); }
-  if (c.ailes > .3) E2.push(`<path d="M${xa - Lt * .35} ${cy - Th * .3} L${xr - 6} ${cy - Th - c.ailes * 26} L${xr + 6} ${cy - Th * .2}Z" fill="${rgb(C.sombre)}" opacity=".85"/>`);
-  E2.push(`<ellipse cx="${cx}" cy="${cy}" rx="${Lt / 2 + 3}" ry="${Th / 2 + 1}" fill="${rgb(C.robe)}"/>`, `<ellipse cx="${cx + 2}" cy="${cy + Th * .3}" rx="${Lt * .4}" ry="${Th * .18}" fill="${rgb(C.ventre)}"/>`);
-  if (c.carapace > .3) E2.push(`<path d="M${xr + 3} ${cy - 2} Q${cx} ${cy - Th * .9 - c.carapace * 6} ${xa - 3} ${cy - 2}Z" fill="${rgb(C.sombre)}"/>`);
-  const dos = cy - Th / 2 - (c.carapace > .3 ? 3 + c.carapace * 3 : 0);   // (§215) ce qui pousse sur le dos, les flancs, à l'avant
-  if (og('plaques')) { const n = 3 + Math.round(tl('plaques') * 3), h = 5 + tl('plaques') * 10; for (let i = 0; i < n; i++) { const x = xr + 6 + (Lt - 12) * (i + .5) / n, hh = h * (.7 + .3 * Math.sin(Math.PI * (i + .5) / n)); E2.push(`<path d="M${x - 4} ${dos + 1} L${x} ${dos - hh} L${x + 4} ${dos + 1}Z" fill="${acc}"/>`); } }
-  if (og('crete', 'dos')) E2.push(`<path d="M${xr + 6} ${dos + 1} Q${cx} ${dos - 4 - tl('crete', 'dos') * 10} ${xa - 4} ${dos + 1}Z" fill="${acc}"/>`);
-  if (og('nageoires')) E2.push(`<path d="M${cx - 8} ${dos + 1} L${cx - 2} ${dos - 6 - tl('nageoires') * 10} L${cx + 6} ${dos + 1}Z" fill="${rgb(C.sombre)}"/>`, `<path d="M${xa - 8} ${cy + 2} L${xa - 18} ${cy + 8 + tl('nageoires') * 6} L${xa - 4} ${cy + 5}Z" fill="${rgb(C.sombre)}"/>`);
-  for (const pl of ['dos', 'flancs']) if (og('epines', pl)) { const n = 4 + Math.round(tl('epines', pl) * 3), l = 4 + tl('epines', pl) * 7, y0 = pl === 'dos' ? dos + 1 : cy;
-    for (let i = 0; i < n; i++) { const x = xr + 6 + (Lt - 12) * (i + .5) / n; E2.push(`<line x1="${x}" y1="${y0}" x2="${x - 2}" y2="${y0 - l}" stroke="#e8dcc0" stroke-width="1.6"/>`); } }
-  if (og('pinces')) { const l = 8 + tl('pinces') * 14, y = cy + Th * .25; E2.push(`<line x1="${xa - 4}" y1="${y}" x2="${xa + l}" y2="${y}" stroke="${rgb(C.sombre)}" stroke-width="3"/>`, `<path d="M${xa + l} ${y} l5 -4 M${xa + l} ${y} l5 3" stroke="${rgb(C.sombre)}" stroke-width="2.5" fill="none"/>`); }
-  if (c.motif === 'rayures' || traits.includes('coloration-aposematique')) for (let i = 0; i < 4; i++) E2.push(`<line x1="${xr + 8 + i * Lt / 5}" y1="${cy - Th / 2}" x2="${xr + 6 + i * Lt / 5}" y2="${cy + Th / 4}" stroke="${traits.includes('coloration-aposematique') ? '#e8bc2a' : rgb(C.sombre)}" stroke-width="3"/>`);
-  if (c.motif === 'taches') for (let i = 0; i < 4; i++) E2.push(`<circle cx="${xr + 8 + i * Lt / 4.5}" cy="${cy - Th * .15 + (i % 2) * 4}" r="2.5" fill="${rgb(C.sombre)}"/>`);
-  if (c.motif === 'bandes') E2.push(`<line x1="${xr + 4}" y1="${cy - Th * .3}" x2="${xa - 4}" y2="${cy - Th * .3}" stroke="${rgb(C.sombre)}" stroke-width="3"/>`);
-  const hs = (.09 + c.tete * .09) * k, nl = c.cou * .3 * k, hx = xa + nl * .55 + hs * .3, hy = cy - Th * .15 - nl * .8 - (bip ? 8 : 0);
-  if (nl > 3) E2.push(`<line x1="${xa - 4}" y1="${cy - Th * .1}" x2="${hx - hs * .3}" y2="${hy}" stroke="${rgb(C.robe)}" stroke-width="${Th * .45}" stroke-linecap="round"/>`);
-  if (c.museau > .12) E2.push(`<rect x="${hx + hs * .3}" y="${hy - hs * .1}" width="${(.03 + c.museau * .13) * k}" height="${hs * .45}" rx="2" fill="${c.forme === 'oiseau' ? '#d6ac5c' : rgb(C.robe)}"/>`);
-  if (og('collerette')) E2.push(`<ellipse cx="${hx - hs * .45}" cy="${hy}" rx="${hs * (.35 + tl('collerette') * .3)}" ry="${hs * (.8 + tl('collerette') * .8)}" fill="${acc}"/>`);
-  E2.push(`<circle cx="${hx}" cy="${hy}" r="${hs / 2}" fill="${rgb(C.robe)}"/>`);
-  if (og('trompe')) E2.push(`<path d="M${hx + hs * .4} ${hy} Q${hx + hs * .9 + tl('trompe') * 8} ${hy + 4} ${hx + hs * .7} ${hy + hs * .5 + tl('trompe') * 22}" stroke="${rgb(C.robe)}" stroke-width="${hs * .3}" fill="none" stroke-linecap="round"/>`);
-  if (og('defenses')) E2.push(`<path d="M${hx + hs * .35} ${hy + hs * .25} Q${hx + hs * .8 + tl('defenses') * 10} ${hy + hs * .6} ${hx + hs * .9 + tl('defenses') * 14} ${hy - tl('defenses') * 6}" stroke="#f4f0e4" stroke-width="2.6" fill="none" stroke-linecap="round"/>`);
-  if (c.oreilles > .25) E2.push(`<path d="M${hx - hs * .3} ${hy - hs * .3} L${hx - hs * .55} ${hy - hs * .5 - c.oreilles * 14} L${hx - hs * .05} ${hy - hs * .4}Z" fill="${rgb(C.robe)}"/>`);
-  if (c.cornes > .25 && og('cornes')?.nombre === 1) E2.push(`<path d="M${hx + hs * .3} ${hy - hs * .3} L${hx + hs * .45} ${hy - hs * .5 - c.cornes * 16} L${hx + hs * .6} ${hy - hs * .25}Z" fill="#e8dcc0"/>`);
-  else if (c.cornes > .25) E2.push(`<path d="M${hx - hs * .1} ${hy - hs * .4} Q${hx - hs * .2} ${hy - hs - c.cornes * 16} ${hx - hs * .9} ${hy - hs * .7 - c.cornes * 18}" stroke="#e8dcc0" stroke-width="3" fill="none"/>`);
-  if (tl('crete', 'tete') > .25) E2.push(`<path d="M${hx - hs * .6} ${hy - hs * .35} Q${hx - hs * .1} ${hy - hs * .5 - tl('crete', 'tete') * 14} ${hx + hs * .3} ${hy - hs * .4}Z" fill="${rgb(OrvaneCorps.tourner(C.robe, 150))}"/>`);
-  if (c.antennes > .25) E2.push(`<path d="M${hx + hs * .1} ${hy - hs * .4} Q${hx + hs * .5} ${hy - hs - c.antennes * 14} ${hx + hs * 1.3} ${hy - hs * .9 - c.antennes * 12}" stroke="${rgb(C.sombre)}" stroke-width="1.5" fill="none"/>`);
-  if (traits.includes('crocs-allonges')) E2.push(`<line x1="${hx + hs * .5}" y1="${hy + hs * .3}" x2="${hx + hs * .5}" y2="${hy + hs * .3 + 6}" stroke="#f4f0e4" stroke-width="2"/>`);
-  E2.push(`<circle cx="${hx + hs * .15}" cy="${hy - hs * .08}" r="${traits.includes('yeux-nocturnes') ? 3.4 : 2.2}" fill="${rgb(C.oeil)}"/>`);
-  return `<svg viewBox="0 0 170 90" width="170" height="90" aria-hidden="true">${E2.join('')}</svg>`;
-}
+// (monde/silhouette.js) la silhouette d'une lignée : son corps, et sa façon de vivre (sa masse, ses déplacements, son régime, son heure) ;
+// une machine de la Mère, d'après ses modules
+function croquis(c, traits = [], plan = null) { return globalThis.OrvaneSilhouette ? OrvaneSilhouette.dessiner(c, plan || {}, traits) : ''; }
 
 // === LIGNÉES : qui descend de qui, et quand ===
 function vueLignees() {
