@@ -25,6 +25,7 @@ N'importe quel jeu peut s'y brancher. Il lit le monde et en fait ses créatures,
 - **Le tampon** (`tampon/`) se place entre le monde et chaque jeu. Il adoucit ce que le jeu montre et plafonne ce que les joueurs pèsent : un seul jeu ne fait jamais plus de la moitié de la pression sur une espèce.
 - **Le contrat** (`schemas/`) tient en trois objets JSON : l'instantané, le lot de pressions, le profil.
 - **Le premier client** est Stone Valley. Son traducteur complet est dans `traducteurs/stone-valley/`.
+- **Cataclysm: Dark Days Ahead** se branche par un mod et une passerelle, sans toucher au jeu : `traducteurs/cataclysm/`.
 
 ## Licence
 
