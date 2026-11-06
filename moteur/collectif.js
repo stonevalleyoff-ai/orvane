@@ -81,8 +81,9 @@ const phaseDe = inst => inst?.cycle?.saison?.phase ?? (inst?.monde?.annee ? ((in
 const dans = (x, [a, b]) => a <= b ? x >= a && x < b : x >= a || x < b;
 function routeDe(t, p, b, inst, biomes) {
   if (!Orvane?.routeHiver) return null;
-  const r = Orvane.routeHiver(t.plan || {}, b, id => biomes.get(id), sociabiliteDe(t, p), savoir(p, 'routes')); if (!r) return null;
-  const ph = phaseDe(inst), F = Orvane.REGLES.hivernage.fenetres;
+  const H = { ...Orvane.REGLES.hivernage, ...(inst?.monde?.regles?.hivernage || {}) };   // (les seuils d'un monde qui les règle : ceux de son cycle)
+  const r = Orvane.routeHiver(t.plan || {}, b, id => biomes.get(id), sociabiliteDe(t, p), savoir(p, 'routes'), H); if (!r) return null;
+  const ph = phaseDe(inst), F = H.fenetres;
   const etat = ph == null ? null : dans(ph, F.depart) ? 'au depart' : dans(ph, F.partie) ? 'partie' : dans(ph, F.retour) ? 'au retour' : 'au pays';
   return { vers: r.vers.id, vers_nom: r.vers.nom || r.vers.id, saison: 'hiver', part: +r.part.toFixed(3), depart: F.depart[0], retour: F.retour[1], ...(etat ? { etat } : {}),
     ...(savoir(p, 'routes') >= .2 ? { guide: 'les plus vieilles mènent, toujours par le même chemin' } : {}) };

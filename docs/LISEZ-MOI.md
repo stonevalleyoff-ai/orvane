@@ -43,7 +43,7 @@ Pour s'inscrire, recevoir ses clés et faire ses premiers appels au Supabase d'O
 | [35. Les individus](35-individus.md) | `tampon/individus.js` : une bête tirée de la population réelle, avec son génotype (ce qu'elle porte sans le montrer), ses valeurs, ses savoirs, un sexe et un nom ; deux bêtes croisées (Mendel, l'héritabilité, la consanguinité, les hybrides) ; le pedigree |
 | [36. L'élevage](36-elevage.md) | les bêtes nées en élevage, relâchées avec leur génome, rejoignent la population avec leurs gènes ; les plafonds ; Stone Valley croise ses compagnes au campement |
 | [37. La chronique, le muséum, les noms](37-chronique-museum-noms.md) | l'histoire du monde : un journal de ce qui compte, par année ; un spécimen par lignée, gardé après sa mort, avec sa cause ; le nom commun que donne le premier joueur qui décrit une lignée (`orvane_nommer`) |
-| [38. La vie en groupe](38-comportements-collectifs.md) | troupeaux, meutes, bancs, colonies : la taille des groupes, la hiérarchie, qui les mène ; les migrations des saisons et les visiteurs de l'hiver |
+| [38. La vie en groupe](38-comportements-collectifs.md) | troupeaux, meutes, bancs, colonies : la taille des groupes, la hiérarchie, qui les mène ; les migrations des saisons et les visiteurs de l'hiver ; l'hivernage, quand les bêtes partent vraiment (regles.hivernage) |
 | [39. Le kit du traducteur](39-kit-traducteur.md) | les types TypeScript du contrat (`types/orvane.d.ts`, tirés des schémas) ; vérifier un lot, un instantané, un profil avant le premier dépôt (`outils/verifier.js`) |
 
 ## En une page

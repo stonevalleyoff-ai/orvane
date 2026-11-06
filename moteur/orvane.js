@@ -411,11 +411,12 @@ const mortalite = p => 1 / Math.max(2, p.longevite || 20);
 // les poissons qui remontent les fleuves) ; une côte, une mangrove, un estuaire (amphibie) accueillent tous les nageurs.
 const eauDouce = plan => plan.eau !== 'salee', eauSalee = plan => plan.eau === 'salee' || plan.eau === 'mixte';
 // (docs/38) la route de l'hiver d'une population : null, ou { vers, ici, la, part } — P son plan, b son lieu, lieu(id) → un lieu,
-// s sa sociabilité, routes la part des siens qui savent les routes (docs/34). Sans hasard : le moteur s'en sert pour faire partir
-// les bêtes (REGLES.hivernage.actif), collectif.js pour le dire aux jeux. (Une mer ne se traverse qu'en volant, nageant, dérivant.)
+// s sa sociabilité, routes la part des siens qui savent les routes (docs/34), H les seuils (ceux du moteur, ou d'un monde). Sans
+// hasard : le moteur s'en sert pour faire partir les bêtes (REGLES.hivernage.actif), collectif.js pour le dire aux jeux. (Une mer ne
+// se traverse qu'en volant, nageant, dérivant.)
 const lieuType = id => String(id ?? '').split('~')[0];
-function routeHiver(P, b, lieu, s = 0, routes = 0) {
-  const H = REGLES.hivernage, L = P?.locomotion || [], m = P?.masse_kg || 1;
+function routeHiver(P, b, lieu, s = 0, routes = 0, H = REGLES.hivernage) {
+  const L = P?.locomotion || [], m = P?.masse_kg || 1;
   if (!b || b.saisons === false || b.saisons === null || !P?.niche) return null;
   const vole = L.includes('vol'), marche = L.includes('marche') || L.includes('course'), nage = L.includes('nage');
   if (!(vole && m >= H.masse_volant) && !(marche && m >= H.masse_marcheur) && !(nage && m >= H.masse_marcheur)) return null;
