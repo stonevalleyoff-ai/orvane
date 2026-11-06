@@ -95,6 +95,29 @@ Les petits nés là-bas comptent comme hivernants : ils partiront avec leurs par
 
 L'hivernage ne tire rien au hasard. Il n'use pas les tirages du cycle : un même monde fait les mêmes allers et retours.
 
+Les seuils d'un monde (`monde.regles.hivernage`) valent aussi pour ce que publie `collectif.js` : la route qu'un jeu lit est celle que les bêtes prennent.
+
+### Dans le monde d'Orvane (6 novembre)
+
+Le monde d'Orvane a l'hivernage actif depuis le 6 novembre, avec un seuil plus haut : `"hivernage": { "actif": 1, "rude": 0.85 }`.
+
+Pourquoi un seuil plus haut ? Les saisons d'Orvane sont douces (± 0,15 de température) et 92 % de ses bêtes sont trop petites pour partir. Avec le seuil par défaut (l'hiver vaut moins des trois quarts de l'été), seules 20 lignées migraient, 2 600 bêtes, 0,03 % de la biomasse animale : le mécanisme ne se voyait pas. À 0,85, un hiver qui retire 15 % de la place suffit.
+
+Un essai, du cycle 44 au cycle 204 (une année entière et un peu plus), le même monde avec et sans hivernage :
+
+| | sans | avec (`rude` 0,85) |
+| --- | --- | --- |
+| lignées qui migrent | 0 | 22 |
+| hivernants au plus fort de l'automne | 0 | ≈ 44 000 |
+| événements de saison | 0 | 22 départs, 16 retours |
+| bêtes vivantes, un an plus tard | 96,7 millions | 98,0 millions (+ 1,4 %) |
+| lignées, un an plus tard | 256 | 256 |
+| extinctions de population dues aux allers et retours | — | 0 |
+
+Les plus grands voyageurs sont des bêtes de la mer froide qui hivernent en haute mer : 18 000 ouorren, 17 000 firvi, 13 000 rencorki. Sur terre, d'autres gagnent la forêt, la montagne, la prairie ou la lande. Au printemps, environ la moitié rentre : l'hiver a pris les autres. Sans le voyage, il en aurait pris davantage : un an plus tard, le monde compte 1,4 % de bêtes en plus.
+
+Une ligne du profil suffit à revenir en arrière : `"actif": 0`.
+
 ## Ce que voit le monde d'Orvane
 
 Sur l'instantané du 4 novembre : 1 529 populations. 731 vivent en famille, 610 seules, 86 en bancs, 48 en bandes, 34 en meutes, 15 en troupeaux, 5 en volées. 42 migrent avec les saisons, de la taïga vers la montagne, de la montagne vers le maquis, de la mer froide vers la côte. Cela ajoute 183 Ko à l'instantané (5,6 %).

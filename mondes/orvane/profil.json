@@ -25,7 +25,7 @@
     "formes": true,
     "esprit": true,
     "collectif": true,
-    "regles": { "derive": { "tolerance": 0.35, "formes": 1 } },
+    "regles": { "derive": { "tolerance": 0.35, "formes": 1 }, "hivernage": { "actif": 1, "rude": 0.85 } },
     "fusions": [
       { "id": "mer-1", "source": "mondes/marin/amorce.json", "part": 0.5 },
       { "id": "genese-7", "nom": "la genèse 7", "source": "mondes/genese-7/instantane.json", "ponts": 3 }
