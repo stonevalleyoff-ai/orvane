@@ -71,6 +71,7 @@ bancs/collectif.js    le banc de la vie en groupe : qui vit comment, la taille d
 bancs/temps.js        le banc du temps : le rythme de chaque monde (l'action horaire, le rattrapage), le monde solo (temps réel, accéléré, sauvegarde, navigateur)
 hebergement/cycle.js  le cycle, chaque monde à son rythme (docs/19) : lots de tous les jeux → tampon → moteur → instantané publié (action GitHub .github/workflows/cycle.yml)
 hebergement/publication.js  la branche publication : l'état de chaque monde repris au début de chaque passe, le site republié en un seul commit sans historique (hebergement/LISEZ-MOI.md)
+hebergement/declencheur.sql  le cycle à l'heure : le Supabase d'Orvane lance l'action GitHub chaque heure (pg_cron, pg_net), un jeton limité dans son coffre (docs/19)
 hebergement/supabase.sql  le Supabase d'Orvane : les jeux s'y inscrivent, y déposent les pressions de leurs joueurs et y proposent des noms
 mondes/orvane/        le monde d'Orvane, où tous les jeux se branchent : né de la genèse universelle, Stone Valley y joue depuis le 29 octobre 2026
 mondes/marin/         la mer d'Orvane : une genèse sur les seuls biomes d'eau (vingt ancêtres, 29 lignées), versée dans le monde d'Orvane par une fusion (profil.monde.fusions)
