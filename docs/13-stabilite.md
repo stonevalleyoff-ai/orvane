@@ -115,4 +115,24 @@ Ce qu'elle montre :
 
 Des spécialistes régionaux naissent, et les carnivores gagnent des lieux. Le monde d'Orvane la reçoit par son profil (`profil.monde.regles`, que le cycle de nuit ajoute aux règles de sa genèse) : le jour où elle arrive, rien ne bouge ; seules les lignées qui naîtront ensuite en héritent. Pour revenir en arrière, il suffit de retirer la ligne du profil.
 
-Les autres pistes, à mesurer de la même façon : protéger les détritivores dans la genèse (étage 2) ou leur donner les cadavres comme ressource ; faire peser les filtreurs pour 60 % sur la capacité ; juger la rareté lieu par lieu, ou allonger le sursis à 200 cycles.
+## La règle de rareté de la genèse (6 novembre)
+
+Une genèse raye, tous les 25 cycles, une lignée installée depuis plus de 100 cycles qui pèse moins de 0,05 % de la biomasse du monde (un carnivore compte trente fois, un omnivore deux) : sans cela, les lignées qui n'ont pas pris occuperaient les 200 places. **C'est elle qui fauchait, pas l'écologie** : sur les 53 extinctions des 600 premiers cycles (graine 2026), 51 étaient des lignées rayées, dont 13 des 15 carnivores.
+
+Elle jugeait chaque lignée sur le monde entier : une lignée qui tient sa place dans un lieu pauvre (la banquise, le volcan, les abysses) pesait peu dans le monde, et était rayée ; ces lieux perdaient leurs carnivores. Désormais, la rareté se juge aussi lieu par lieu (`--rarete-lieu`, 1,2 % de la biomasse d'un lieu, la part qu'aurait un lieu moyen) : **une lignée n'est rayée que si elle ne compte ni dans le monde, ni dans aucun lieu**.
+
+Cinq genèses de 3 000 cycles, même graine (2026), mêmes règles que la genèse 2026 ; en moyenne du cycle 1 000 au cycle 3 000 :
+
+| | lignées | carnivores | biomasse des carnivores / herbivores | biomes sans carnivore | la plus lourde | à la fin |
+| --- | --- | --- | --- | --- | --- | --- |
+| la règle d'avant | 122 | 8,7 | 6,2 % | 2,8 | 72 kg | 138 lignées, 6 carnivores, 5 biomes sans carnivore |
+| les détritivores comptés trente fois | 108 | 10,2 | 7,7 % | 2,4 | 70 kg | aucun détritivore ne tient |
+| la rareté jugée lieu par lieu seulement | 165 | 10,1 | 7,8 % | 0 | 67 kg | elle raye la plus grande lignée, répandue partout et légère dans chaque lieu |
+| **ni dans le monde, ni dans aucun lieu** | **139** | **10,5** | **6,7 %** | **0** | **76 kg** | **185 lignées, 10 carnivores, aucun biome sans carnivore ; la plus lourde : 99 kg** |
+| un sursis de 200 cycles | (arrêtée au cycle 600 : elle ne fait que retarder) | | | | | |
+
+C'est la règle par défaut de la genèse (`--rarete-lieu .012` ; `--rarete-lieu 0` rend la règle d'avant). Elle ne touche pas le monde vivant : seules les genèses à venir la suivent.
+
+**Les détritivores** disparaissent dans toutes : même comptés trente fois, ils ne prennent pas. Ce n'est pas la règle : dans le moteur, un détritivore se nourrit comme un brouteur, de la place des plantes, avec la moitié de ses petits dans la genèse (`detritivore_vegetal` à 0,5) — un herbivore moins bon, qui perd toujours. La suite : leur donner leur ressource, les cadavres (ce que meurent les bêtes d'un lieu). `--etage-detritivore` reste, inerte par défaut.
+
+Les autres pistes, à mesurer de la même façon : faire peser les filtreurs pour 60 % sur la capacité ; une genèse d'eau douce versée dans le monde, comme la mer en octobre.
