@@ -29,6 +29,7 @@ moteur/collectif.js   la vie en groupe : troupeaux, meutes, bancs, colonies, hi�
 moteur/solo.js        un monde solo, dans le jeu : parti de l'instantané publié, il avance en temps réel ou en accéléré (docs/19)
 moteur/biomes-universels.json  les 24 biomes neutres du monde d'Orvane : terre, eau douce, mer, sous-sol
 tampon/tampon.js      exposer() Orvane → jeu ; agreger() jeu → Orvane (dénormalisation, plafonds, lissage)
+tampon/directeur.js   le directeur de mise en scène : ce qu'un jeu devrait montrer au dernier cycle, selon son genre (docs/40)
 tampon/individus.js   les individus : une bête tirée de la population réelle (son génotype, ses valeurs, ses savoirs), deux bêtes croisées, la parenté, le génome relâché (docs/35, 36)
 tampon/morceaux.js    le monde par morceaux : découper l'instantané (l'index, chaque biome, chaque lignée), et lire seulement les biomes d'un jeu (docs/21)
 monde/index.html      l’observatoire : ce que vit un monde (espèces, biomes, lignées, chaîne alimentaire, journal), et une simulation locale
@@ -65,6 +66,7 @@ bancs/esprit.js       le banc de l'esprit : qui apprend, une tradition, la perte
 bancs/individus.js    le banc des individus et de l'élevage : Mendel, les porteurs cachés, l'héritabilité, la parenté, les hybrides, l'élevage qui revient au monde
 bancs/milieu.js       le banc du milieu transformé : la savane sans brouteurs, les terriers, les barrages, la forêt défrichée, les parcelles
 bancs/tampon.js       le banc du tampon : chaque attaque de l'audit du 5 novembre (lot mal formé, n infini, déplacements sans plafond, mille comptes d'un jeu, allèle inventé) neutralisée, et le jour un
+bancs/directeur.js    le banc du directeur : chaque genre met en avant ce qu'il doit, la dose, les moments déjà vus, le monde piège
 bancs/monde.js        le monde d'Orvane vu par biome, pour les bancs qui parlent des lieux par leur nom (etat.json tourne par parcelles)
 bancs/chronique.js    le banc de la chronique : rien ne change, ce qu'elle garde et laisse, le muséum et la cause d'une extinction, les noms, le cycle de nuit
 bancs/collectif.js    le banc de la vie en groupe : qui vit comment, la taille des groupes, la hiérarchie, les troupeaux mêlés, les migrations et les visiteurs
