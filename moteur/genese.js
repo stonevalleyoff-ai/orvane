@@ -117,16 +117,16 @@ if (reglesMonde) for (const [k, v] of Object.entries(reglesMonde)) { const b = O
 const rarete = +arg('--rarete', .0005);   // une lignée installée qui reste sous cette part de la BIOMASSE du monde est rayée : la place se libère
 // (la rareté se juge à l'étage de la chaîne : un prédateur ne pèse naturellement qu'un dixième de ses proies — Lindeman)
 const ETAGE = { carnivore: +arg('--etage', 10), omnivore: 2, ...(arg('--etage-detritivore', null) != null ? { detritivore: +arg('--etage-detritivore') } : {}) };
-// (équilibrage, 6 novembre) le sursis d'une lignée née, avant que la rareté la juge (100 cycles) ; et la rareté jugée lieu par lieu
-// (--rarete-lieu : la part de la biomasse d'un lieu sous laquelle une lignée n'y compte pas ; elle n'est rayée que si elle ne compte
-// nulle part) : une lignée qui tient sa place dans un lieu pauvre (la banquise, le volcan, les abysses) n'est plus rayée parce que
-// ce lieu pèse peu dans le monde. 0 : la rareté se juge sur tout le monde, comme avant
+// (équilibrage, 6 novembre) le sursis d'une lignée née, avant que la rareté la juge (100 cycles) ; et la rareté jugée aussi lieu par
+// lieu (--rarete-lieu : la part de la biomasse d'un lieu sous laquelle une lignée n'y compte pas). Une lignée n'est rayée que si elle
+// ne compte ni dans le monde, ni dans aucun lieu : celle qui tient sa place dans un lieu pauvre (la banquise, le volcan, les abysses)
+// n'est plus rayée parce que ce lieu pèse peu dans le monde ; celle qui compte dans le monde, répandue partout, non plus.
+// 0 : la rareté se juge sur tout le monde seulement, comme avant
 const sursis = +arg('--sursis', 100), rareteLieu = +arg('--rarete-lieu', 0);
 const biomasseDe = t => t.populations.reduce((s, p) => s + p.effectif, 0) * (t.plan.masse_kg || 1);
 const poidsRarete = t => biomasseDe(t) * (ETAGE[Tampon.regimeDe(t, TR)] || 1);
-const rare = (t, total, parLieu) => rareteLieu > 0
-  ? !t.populations.some(p => p.effectif * (t.plan.masse_kg || 1) * (ETAGE[Tampon.regimeDe(t, TR)] || 1) >= rareteLieu * (parLieu[p.biome] || 0))
-  : poidsRarete(t) < rarete * total;
+const rare = (t, total, parLieu) => poidsRarete(t) < rarete * total
+  && !(rareteLieu > 0 && t.populations.some(p => p.effectif * (t.plan.masse_kg || 1) * (ETAGE[Tampon.regimeDe(t, TR)] || 1) >= rareteLieu * (parLieu[p.biome] || 0)));
 let bilan = { separation: 0, extinction: 0, nouveau_trait: 0 }, vivantsMax = 0, k0 = 0;
 const TRACE = process.env.ORVANE_TRACE ? { nes: {}, fin: {}, rarete: {}, vus: new Set(), morts: new Set() } : null;   // (essais : qui naît, qui meurt, par régime de fait)
 // une genèse longue tourne par tranches : un point de reprise tous les --point cycles (sortie.reprise.json) ; --reprise
