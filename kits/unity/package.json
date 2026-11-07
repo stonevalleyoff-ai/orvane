@@ -1,0 +1,11 @@
+{
+  "name": "com.stonevalley.orvane",
+  "version": "1.0.0",
+  "displayName": "Orvane",
+  "description": "Brancher un jeu Unity sur Orvane : lire le monde (l'instantané), compter ce que font les joueurs, déposer les lots. Le contrat 1.0 (docs/43, 44).",
+  "unity": "2021.3",
+  "dependencies": { "com.unity.nuget.newtonsoft-json": "3.2.1" },
+  "keywords": ["orvane", "ecosysteme", "ecosystem", "faune"],
+  "license": "PolyForm-Shield-1.0.0",
+  "author": { "name": "StoneValley", "url": "https://github.com/stonevalleyoff-ai/orvane" }
+}

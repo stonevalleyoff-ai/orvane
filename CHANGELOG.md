@@ -13,7 +13,8 @@ npm install github:stonevalleyoff-ai/orvane#v1.0.0
 
 ## [À venir]
 
-Rien encore.
+- **Les kits Unity et Godot** (`kits/`, docs/44) : lire le monde, compter ce que font les joueurs, déposer les lots. Rien ne change dans le contrat.
+- **Le cycle 17 % plus vite**, sans rien changer au monde : le même instantané, au caractère près (`outils/vitesse.js`, docs/44).
 
 ## [1.0.0] — 2026-11-07
 

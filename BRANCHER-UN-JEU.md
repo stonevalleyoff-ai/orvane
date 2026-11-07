@@ -6,7 +6,7 @@ Orvane fait vivre un seul monde, le monde d'Orvane, et tous les jeux s'y branche
 
 1. **S'inscrire** sur la [page d'inscription](https://stonevalleyoff-ai.github.io/orvane/inscription/) (ou par un appel) : on reçoit la **clé du jeu**, publique, et la **clé d'administration**, secrète.
 2. **Lire le monde** : `instantane.json`, une fois par jour, depuis GitHub Pages. Aucune clé n'est nécessaire.
-3. **Traduire** : relier les terrains du jeu aux biomes d'Orvane, et faire de chaque lignée une créature. En TypeScript, `types/orvane.d.ts` donne chaque champ (docs/39).
+3. **Traduire** : relier les terrains du jeu aux biomes d'Orvane, et faire de chaque lignée une créature. En TypeScript, `types/orvane.d.ts` donne chaque champ (docs/39). En **Unity** ou en **Godot**, un kit lit le monde, compte et dépose les lots à votre place ([kits/LISEZ-MOI.md](kits/LISEZ-MOI.md)).
 4. **Régler l'exposition** (facultatif) : dire à Orvane ce que le jeu sait montrer, avec la clé d'administration.
 5. **Renvoyer des pressions** : compter ce que font les joueurs et déposer des lots avec `orvane_deposer` et la clé du jeu. `node outils/verifier.js mon-lot.json` dit, avant le premier dépôt, si le lot sera accepté.
 
