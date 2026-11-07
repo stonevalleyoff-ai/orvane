@@ -9,6 +9,7 @@ var _boucles := {}
 var _brefs := {}
 var _lecteurs: Array = []
 var _i := 0
+var _coeur := 0.0
 var _r := RandomNumberGenerator.new()
 
 
@@ -50,6 +51,26 @@ func niveau(nom: String, v: float) -> void:
 		return
 	var p: AudioStreamPlayer = _boucles[nom]
 	p.volume_db = lerpf(p.volume_db, linear_to_db(clampf(v, 0.0001, 1.0)), 0.06)
+
+
+# chaque image de la partie : les boucles suivent l'heure, la peur, la distance au feu ; le cœur bat quand la peur monte
+func maj(jeu, delta: float) -> void:
+	var joueur = jeu.joueur
+	if joueur == null:
+		return
+	var nuit: float = 1.0 - jeu.lumiere_du_jour()
+	niveau("vent", 0.22 + 0.25 * nuit)
+	niveau("nuit", nuit * (0.3 + 0.55 * joueur.peur / 100.0))
+	var df := INF
+	for f in jeu.feux:
+		if is_instance_valid(f) and f.allume():
+			df = minf(df, joueur.position.distance_to(f.position))
+	niveau("feu", clampf(1.0 - df / 420.0, 0.0, 1.0) * 0.6)
+	if joueur.peur > 60.0:
+		_coeur -= delta
+		if _coeur <= 0.0:
+			_coeur = lerpf(1.1, 0.45, (joueur.peur - 60.0) / 40.0)
+			jouer("coeur", -3.0)
 
 
 func taire() -> void:

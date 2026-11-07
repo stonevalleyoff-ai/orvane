@@ -188,7 +188,11 @@ func _lancer() -> void:
 	j.faim = 100.0
 	j.peur = 0.0
 	j.sante = 0.0
-	await _attendre(0.5)
+	# (elle tombe d'abord : l'écran de fin vient jeu.DUREE_MORT secondes après)
+	for i in 40:
+		await _attendre(0.25)
+		if not jeu.en_partie:
+			break
 	verif(not jeu.en_partie, "la santé à zéro, la partie s'arrête sur l'écran de fin, même rassasiée et calme")
 	print("\n%s (%d vérifications)" % ["tout passe" if ok else "ÉCHEC", n])
 	# (des sons qui jouent encore quand Godot s'arrête, il dit qu'ils fuient : on les arrête, et l'on laisse au serveur audio

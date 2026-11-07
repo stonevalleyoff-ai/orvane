@@ -19,12 +19,18 @@ const Sons := preload("res://scripts/sons.gd")
 const Yeux := preload("res://scripts/yeux.gd")
 const Essai := preload("res://scripts/essai.gd")
 const Tactile := preload("res://scripts/tactile.gd")
+const Effets := preload("res://scripts/effets.gd")
+const Vitrine := preload("res://scripts/vitrine.gd")
 const SAUVEGARDE := "user://lisiere.json"
+const DUREE_MORT := 2.4          # la veilleuse tombe, puis l'écran de fin
 
 var donnees := Donnees.new()
 var ui
 var sons
 var tactile
+var effets
+# « haute » sur un ordinateur ; « mobile » sur un téléphone ou une tablette : moins de particules, pas d'ombres portées
+var qualite := "haute"
 var scene: Node2D
 var monde
 var joueur
@@ -54,16 +60,21 @@ var record := 0
 var essai = null
 var _directeur := 0.0
 var _vague := 0.0
-var _coeur := 0.0
 var _agir := 0.0
 var _grogne := 0.0
 var _etait_nuit := false
 var _deja: Dictionary = {}
+var _mort := -1.0
 
 
 func _ready() -> void:
 	randomize()
 	_actions()
+	if DisplayServer.is_touchscreen_available() or OS.has_feature("web_android") or OS.has_feature("web_ios"):
+		qualite = "mobile"
+	effets = Effets.new()
+	effets.jeu = self
+	add_child(effets)
 	sons = Sons.new()
 	add_child(sons)
 	ui = Interface.new()
@@ -80,6 +91,10 @@ func _ready() -> void:
 	Orvane.cle_jeu = R.CLE_JEU
 	if "--essai" in OS.get_cmdline_user_args():
 		essai = Essai.new()
+		add_child(essai)
+		return
+	if "--vitrine" in OS.get_cmdline_user_args():
+		essai = Vitrine.new()
 		add_child(essai)
 		return
 	_titre()
@@ -164,6 +179,7 @@ func _nouvelle_partie() -> void:
 	camera.position_smoothing_speed = 6.0
 	joueur.add_child(camera)
 	camera.make_current()
+	effets.nouvelle_partie(scene, camera, obscurite)
 	couche_yeux = CanvasLayer.new()
 	couche_yeux.layer = 1
 	couche_yeux.follow_viewport_enabled = true
@@ -184,6 +200,7 @@ func _nouvelle_partie() -> void:
 	_directeur = 0.5
 	_vague = 0.0
 	_etait_nuit = false
+	_mort = -1.0
 	en_pause = false
 	en_partie = true
 	ui.montrer_hud()
@@ -205,6 +222,7 @@ func _vider() -> void:
 	joueur = null
 	monde = null
 	yeux = null
+	effets.vider()
 	sons.taire()
 
 
@@ -277,10 +295,7 @@ func _feu_proche(p: Vector2, allume: bool):
 
 
 func _lumieres() -> void:
-	var l := lumiere_du_jour()
-	var c := R.NUIT_COULEUR.lerp(Color(1, 1, 1), l)
-	var tiede := sin(l * PI) if l < 1.0 else 0.0
-	obscurite.color = c.lerp(Color(c.r, c.g * 0.78, c.b * 0.6), tiede * 0.7)
+	effets.teinter(obscurite, lumiere_du_jour())
 
 
 # --- chaque image ---
@@ -292,6 +307,15 @@ func _process(delta: float) -> void:
 		en_pause = not en_pause
 		ui.montrer_pause(en_pause)
 	if en_pause:
+		return
+	if _mort >= 0.0:
+		# (elle est tombée : le monde continue un instant sans elle, puis l'écran de fin)
+		_mort += delta
+		_lumieres()
+		effets.maj(delta)
+		sons.maj(self, delta)
+		if _mort >= DUREE_MORT:
+			_fin()
 		return
 	horloge += delta
 	var j := int(horloge / R.DUREE) + 1
@@ -307,10 +331,11 @@ func _process(delta: float) -> void:
 		_gestes(delta)
 	_corps(delta)
 	_directeur_passe(delta)
-	_ambiance(delta)
+	effets.maj(delta)
+	sons.maj(self, delta)
 	ui.maj_hud(self)
 	if joueur.sante <= 0.0:
-		_fin()
+		_tomber()
 
 
 func _gestes(delta: float) -> void:
@@ -350,17 +375,20 @@ func agir() -> void:
 			if joueur.lance == 0:
 				ui.message("La lance s'est brisée.", Color(0.8, 0.7, 0.6))
 		sons.jouer("coup", -2.0, randf_range(0.9, 1.1))
+		effets.impact(cible.position + Vector2(0, -cible.largeur * 0.3), cible.robe)
+		effets.arret(0.045)
 		cible.blesser(degats, p)
 		return
 	var o = monde.plus_proche(p, R.PORTEE_RECOLTE)
 	if o == null:
 		return
-	joueur.frapper()
 	var genre: String = o.genre
+	joueur.geste(genre, o.position)
 	var g: Dictionary = o.recolter()
+	effets.recolte(o.position, genre)
 	for k in g:
 		joueur.inventaire[k] = int(joueur.inventaire.get(k, 0)) + int(g[k])
-		ui.message("+%d %s" % [g[k], R.nom(k, int(g[k]))], Color(0.75, 0.78, 0.72))
+		ui.ramasse(k, int(g[k]), o.position)
 	var son := "bois"
 	if genre == "rocher":
 		son = "pierre"
@@ -401,6 +429,7 @@ func fabriquer(quoi: String) -> void:
 			f.position = monde.repousser(joueur.position + Vector2(joueur.regard * 34.0, 4.0), 12.0)
 			monde.add_child(f)
 			feux.append(f)
+			effets.allumage(f.position)
 			sons.jouer("allume", -2.0)
 			ui.message("Le feu prend. Nourris-le (F) : chaque bûche le fait durer.", Color(0.95, 0.75, 0.45))
 		"torche":
@@ -503,6 +532,9 @@ func bete_tuee(b) -> void:
 	var viande := clampi(int(round(pow(b.masse, 0.4))), 1, 6)
 	joueur.inventaire["viande"] = int(joueur.inventaire["viande"]) + viande
 	ui.message("%s : +%d viande" % [b.nom, viande], Color(0.85, 0.72, 0.6))
+	effets.mort(b.position, b.robe, b.largeur)
+	effets.arret(0.09)
+	effets.secousse(0.25)
 	var deja := false
 	for t in tuees:
 		if t["id"] == b.id:
@@ -513,10 +545,14 @@ func bete_tuee(b) -> void:
 
 
 func mordre(b) -> void:
+	if _mort >= 0.0:
+		return
 	var d := 4.0 + 7.0 * log(float(b.masse) + 1.0) / log(10.0)
 	joueur.blesser(d)
 	sons.jouer("mord", -1.0, randf_range(0.85, 1.1))
 	ui.blessure()
+	effets.blessure()
+	effets.secousse(clampf(0.35 + d / 30.0, 0.35, 1.0))
 	_conseil("morsure-" + str(b.id), true, "%s te mord." % b.nom, Color(0.95, 0.5, 0.42))
 
 
@@ -532,6 +568,7 @@ func toucher_echo(e) -> void:
 	joueur.peur = minf(100.0, joueur.peur + 14.0)
 	sons.jouer("murmure", -3.0)
 	ui.message("L'écho d'un %s te traverse." % e.nom, Color(0.75, 0.88, 1.0))
+	effets.echo(e.position)
 	e.queue_free()
 
 
@@ -648,6 +685,8 @@ func _voir() -> void:
 
 func _tombee_de_la_nuit() -> void:
 	_vague = 0.0
+	ui.carte("Nuit %d" % jour, "Reste dans la lumière." if nuits == 0 else "Tiens jusqu'au matin.")
+	effets.tombee()
 	if nuits == 0:
 		ui.message("La nuit tombe. Reste dans la lumière.", Color(0.95, 0.75, 0.45))
 	else:
@@ -656,27 +695,13 @@ func _tombee_de_la_nuit() -> void:
 
 func _aube() -> void:
 	nuits += 1
+	ui.carte("L'aube", "Nuit %d tenue." % nuits)
+	effets.aube()
 	ui.message("Le jour revient. Nuit %d tenue." % nuits, Color(0.98, 0.86, 0.6))
 	if nuits > record:
 		record = nuits
 		_sauver()
 	monde.semer_brindilles(30)
-
-
-func _ambiance(delta: float) -> void:
-	var nuit := 1.0 - lumiere_du_jour()
-	sons.niveau("vent", 0.22 + 0.25 * nuit)
-	sons.niveau("nuit", nuit * (0.3 + 0.55 * joueur.peur / 100.0))
-	var df := INF
-	for f in feux:
-		if is_instance_valid(f) and f.allume():
-			df = minf(df, joueur.position.distance_to(f.position))
-	sons.niveau("feu", clampf(1.0 - df / 420.0, 0.0, 1.0) * 0.6)
-	if joueur.peur > 60.0:
-		_coeur -= delta
-		if _coeur <= 0.0:
-			_coeur = lerpf(1.1, 0.45, (joueur.peur - 60.0) / 40.0)
-			sons.jouer("coeur", -3.0)
 
 
 # un conseil, une seule fois par partie
@@ -687,6 +712,15 @@ func _conseil(cle: String, quand: bool, t: String, c: Color = Color(0.95, 0.75, 
 
 
 # --- la fin ---
+
+# la santé à zéro : elle tombe ; le monde continue un instant sans elle, puis l'écran de fin (_process, DUREE_MORT)
+func _tomber() -> void:
+	if _mort >= 0.0:
+		return
+	_mort = 0.0
+	joueur.mourir()
+	effets.fin()
+
 
 func _fin() -> void:
 	en_partie = false

@@ -23,6 +23,7 @@ var _pas := 0.0
 var _blesse := 0.0
 var _geste := 0.0
 var _t := 0.0
+var morte := false
 
 
 func _ready() -> void:
@@ -61,6 +62,16 @@ func blesser(n: float) -> void:
 
 func frapper() -> void:
 	_geste = 0.22
+
+
+# un geste de récolte : couper (arbre, sapin), casser (rocher), cueillir (buisson), arracher (touffe), ramasser (brindille)
+func geste(_genre: String, _vers: Vector2) -> void:
+	frapper()
+
+
+# la santé à zéro : elle tombe (le jeu montre l'écran de fin un peu après)
+func mourir() -> void:
+	morte = true
 
 
 func _process(delta: float) -> void:

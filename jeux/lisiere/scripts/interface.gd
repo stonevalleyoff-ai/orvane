@@ -285,6 +285,16 @@ func message(t: String, c: Color = Color(0.9, 0.86, 0.78)) -> void:
 		_messages.pop_front()
 
 
+# une carte de titre, au milieu de l'écran : « Nuit 2 », « L'aube »
+func carte(titre: String, sous_titre: String = "") -> void:
+	message(titre + ((" — " + sous_titre) if sous_titre != "" else ""), BRAISE)
+
+
+# ce qu'un geste rapporte (l'objet : bois, pierre, fibre, baies ; p : où, dans le lieu)
+func ramasse(objet: String, n: int, _p: Vector2) -> void:
+	message("+%d %s" % [n, R.nom(objet, n)], Color(0.75, 0.78, 0.72))
+
+
 func blessure() -> void:
 	_rouge.color.a = 0.32
 
