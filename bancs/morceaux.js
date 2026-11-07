@@ -1,7 +1,8 @@
 // Orvane — LE BANC DU MONDE PAR MORCEAUX (bancs/morceaux.js, docs/21)
 //  1. le découpage : un index léger, un fichier par biome, un fichier par lignée ;
 //  2. tous les biomes réunis redonnent instantane.json ; quelques biomes, l'instantané réduit à ces biomes, au même contrat ;
-//  3. dans un navigateur, le même résultat ; le cycle de nuit publie les morceaux et retire ceux d'une lignée éteinte.
+//  3. dans un navigateur, le même résultat ; le cycle de nuit publie les morceaux et retire ceux d'une lignée éteinte ;
+//  4. les planches (monde/planches.js) : chaque bête de chaque biome dessinée, avec ses yeux, le même texte à chaque fois.
 //   node bancs/morceaux.js
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm'), { execFileSync } = require('child_process');
@@ -56,6 +57,24 @@ const pareil = (a, b) => ['orvane', 'monde', 'cycle', 'biomes', 'catalogue', 'ta
     const lu = await M.lire('x', { lecteur: async c => JSON.parse(fs.readFileSync(path.join(mo, c), 'utf8')) }), n = fs.readdirSync(path.join(mo, 'lignees')).length;
     verif(lu.cycle.n === P.cycle.n && lu.taxons.length === P.taxons.length && n === P.taxons.length && !fs.existsSync(path.join(mo, 'lignees', 'eteinte.json')),
       `le cycle de nuit publie les morceaux à côté de instantane.json (${n} lignées, celles du cycle), et retire ceux d'une lignée qui n'est plus`);
+    const ns = fs.existsSync(path.join(mo, 'silhouettes')) ? fs.readdirSync(path.join(mo, 'silhouettes')).length : 0;
+    verif(ns === P.biomes.length, `il publie aussi une planche par biome (morceaux/silhouettes/, ${ns} fichiers pour ${P.biomes.length} biomes)`);
   } finally { fs.rmSync(dossier, { recursive: true, force: true }); }
+
+  console.log('4. Les planches');
+  const Pl = require(racine('monde/planches.js')), Q = Pl.planches(D), QB = Object.keys(Q);
+  const betes = c => D[c].taxons.filter(t => t.plan && t.plan.regime !== 'vegetal' && t.plan.famille !== 'vegetale' && (t.plan.corps || t.plan.regime === 'synthetique'));
+  const manque = B.flatMap(c => betes(c).filter(t => !Q['silhouettes/' + c.slice(7)]?.silhouettes[t.id]).map(t => t.id));
+  const nb = QB.reduce((s, c) => s + Object.keys(Q[c].silhouettes).length, 0), to = QB.map(c => JSON.stringify(Q[c]).length / 1024);
+  verif(QB.length === B.length && !manque.length, `une planche par biome, chaque bête dessinée : ${nb} dessins, de ${fmt(Math.min(...to))} à ${fmt(Math.max(...to))} Ko par biome` + (manque.length ? ` ; sans dessin : ${manque.slice(0, 5).join(', ')}` : ''));
+  const tous = QB.flatMap(c => Object.values(Q[c].silhouettes));
+  verif(tous.every(x => x.svg.startsWith('<svg') && x.svg.endsWith('</svg>') && x.svg.includes('viewBox="0 0 170 90"')), 'chaque dessin est un SVG de 170 × 90');
+  const dedans = tous.filter(x => x.yeux.length && x.yeux.every(([x0, y0, r]) => x0 >= 0 && x0 <= 170 && y0 >= 0 && y0 <= 90 && r > 0)).length;
+  verif(dedans === tous.length, `chaque dessin dit où sont ses yeux, dans son cadre (${dedans} sur ${tous.length}) : un jeu les fait briller la nuit`);
+  const doublons = QB.filter(c => { const ids = Object.values(Q[c].silhouettes).flatMap(x => [...x.svg.matchAll(/ id="([^"]+)"/g)].map(m => m[1])); return new Set(ids).size !== ids.length; });
+  verif(!doublons.length, 'deux dessins d\'une même planche ne partagent aucune découpe (les identifiants sont propres à chaque lignée)');
+  verif(JSON.stringify(Pl.planches(D)) === JSON.stringify(Q), 'dessinées deux fois, les planches sont les mêmes, au caractère près (rien ne change d\'un cycle à l\'autre si les bêtes ne changent pas)');
+  const pr = Q['silhouettes/prairie.json'], t0 = Object.keys(pr.silhouettes)[0], ph = Pl.dominant(D['biomes/prairie.json'].taxons.find(t => t.id === t0), 'prairie');
+  verif(!ph || pr.silhouettes[t0].phenotype === ph.id, `chaque bête est dessinée sous sa variante la plus fréquente dans ce biome (${t0} : ${ph?.id ?? 'sans variante'})`);
   console.log(`\n${ok ? 'tout passe' : 'ÉCHEC'}`); process.exit(ok ? 0 : 1);
 })();

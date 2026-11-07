@@ -68,10 +68,11 @@ jobs:
         run: |
           dotnet run --project "kits/unity/Tests~" -- "$RUNNER_TEMP/lots-unity"
           for f in "$RUNNER_TEMP"/lots-unity/lot-*.json; do node outils/verifier.js "$f" --lot; done
-      - name: le kit Godot se lit (syntaxe GDScript 4)
+      - name: le kit Godot et le jeu Lisière se lisent (syntaxe GDScript 4)
         run: |
           pip install -q "gdtoolkit==4.*"
           gdparse kits/godot/addons/orvane/orvane.gd kits/godot/addons/orvane/plugin.gd > /dev/null && echo "le kit Godot se lit"
+          gdparse jeux/lisiere/scripts/*.gd > /dev/null && echo "les scripts de Lisière se lisent"
   bancs:
     runs-on: ubuntu-latest
     timeout-minutes: 330

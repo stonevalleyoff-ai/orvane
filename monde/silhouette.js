@@ -28,14 +28,14 @@ const hasard = s => { let g = 2166136261; for (let i = 0; i < s.length; i++) { g
 function Toile() {
   const E = [], B = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
   const voir = pts => { for (const [x, y] of pts) { if (x < B.x0) B.x0 = x; if (x > B.x1) B.x1 = x; if (y < B.y0) B.y0 = y; if (y > B.y1) B.y1 = y; } };
-  return { E, B, voir, mettre(s, pts) { E.push(s); if (pts) voir(pts); } };
+  return { E, B, Y: [], voir, mettre(s, pts) { E.push(s); if (pts) voir(pts); } };
 }
 // le dessin cadré : au sol (ses pieds sur la ligne du bas) ou en pleine eau (au milieu) ; chaque bête remplit son cadre, comme
 // dans un guide naturaliste (agrandie au plus 2,4 fois) : la masse se lit à la carrure, aux pattes, à la tête
 function cadrer(T, sol, ombre = true) {
   const B = T.B; if (!Number.isFinite(B.x0)) return '<svg viewBox="0 0 170 90" width="170" height="90" aria-hidden="true"></svg>';
   const w = B.x1 - B.x0, h = B.y1 - B.y0, k = Math.min(2.4, 156 / Math.max(1, w), 78 / Math.max(1, h));
-  const tx = 85 - k * (B.x0 + B.x1) / 2, ty = sol ? 86 - k * B.y1 : 45 - k * (B.y0 + B.y1) / 2;
+  const tx = 85 - k * (B.x0 + B.x1) / 2, ty = sol ? 86 - k * B.y1 : 45 - k * (B.y0 + B.y1) / 2; T.cadre = { k, tx, ty, sol };
   const sous = sol && ombre ? `<ellipse cx="${n1((B.x0 + B.x1) / 2)}" cy="${n1(B.y1)}" rx="${n1(w * .36)}" ry="${n1(2.4 / k)}" fill="#3b3423" opacity=".13"/>` : '';
   return `<svg viewBox="0 0 170 90" width="170" height="90" aria-hidden="true"><g transform="translate(${n1(tx)} ${n1(ty)}) scale(${+k.toFixed(3)})" stroke-linecap="round" stroke-linejoin="round">${sous}${T.E.join('')}</g></svg>`;
 }
@@ -73,7 +73,7 @@ const os = '#efe7d2';   // les cornes, les défenses, les griffes
 
 // un œil : plus grand la nuit, un éclat ; un sourcil chez un chasseur
 function oeil(T, x, y, r, X, brow) {
-  ellipse(T, x, y, r, r, X.oeil); ellipse(T, x + r * .35, y - r * .35, r * .32, r * .32, '#fffaf0', ' opacity=".85"');
+  ellipse(T, x, y, r, r, X.oeil); ellipse(T, x + r * .35, y - r * .35, r * .32, r * .32, '#fffaf0', ' opacity=".85"'); T.Y.push([x, y, r]);
   if (brow) trait(T, `M${n1(x - r * 1.6)} ${n1(y - r * 1.5)} L${n1(x + r * 1.4)} ${n1(y - r * .9)}`, X.sombre, Math.max(1, r * .6), []);
 }
 // les motifs, dans la découpe d'un corps (rayures, taches, bandes)
@@ -406,12 +406,18 @@ function machine(T, plan, X) {
   if ((M.pince || 0) > .3) { const l = u * (.1 + .1 * M.pince), p = [[xa - L * .1, y0 + H * .2], [xa + l * .4, y0 - l * .4], [xa + l, y0 - l * .1]]; membre(T, p, 2.4 * S, 1.8 * S, coque); for (const p2 of p.slice(0, 2)) ellipse(T, p2[0], p2[1], 1.8 * S, 1.8 * S, fonce);
     chemin(T, `M${n1(p[2][0])} ${n1(p[2][1])} l${n1(5 * S)} ${n1(-4 * S)} M${n1(p[2][0])} ${n1(p[2][1])} l${n1(5 * S)} ${n1(3 * S)}`, 'none', [[p[2][0] + 5 * S, p[2][1] - 4 * S]], ` stroke="${fonce}" stroke-width="${n1(1.8 * S)}"`); }
   if ((M.arme || 0) > .2) T.mettre(`<rect x="${n1(xa - L * .2)}" y="${n1(y0 - 4 * S)}" width="${n1(L * .45)}" height="${n1(2.5 * S)}" fill="${fonce}"/>`, [[xa + L * .25, y0 - 4 * S]]);
-  const r = 2.4 * S * (.8 + (plan.perception || .5)); ellipse(T, xa - r * 1.3, y0 + H * .35, r * 1.4, r * 1.4, fonce); ellipse(T, xa - r * 1.3, y0 + H * .35, r * .8, r * .8, '#7fe0ff');
+  const r = 2.4 * S * (.8 + (plan.perception || .5)); ellipse(T, xa - r * 1.3, y0 + H * .35, r * 1.4, r * 1.4, fonce); ellipse(T, xa - r * 1.3, y0 + H * .35, r * .8, r * .8, '#7fe0ff'); T.Y.push([xa - r * 1.3, y0 + H * .35, r * 1.4]);
   return cadrer(T, true);
 }
 
-function dessiner(corps, plan = {}, traits = []) {
-  const T = Toile();
+// sortie (facultatif) : un objet qui reçoit où sont les yeux dans le dessin, pour qu'un jeu les fasse briller dans la nuit :
+//   sortie.yeux = [[x, y, r], …] (dans le cadre de 170 × 90), sortie.sol = true quand la bête tient debout sur le bas du cadre
+function dessiner(corps, plan = {}, traits = [], sortie = null) {
+  const T = Toile(), svg = dessin(T, corps, plan, traits);
+  if (sortie) { const C = T.cadre || { k: 1, tx: 0, ty: 0, sol: false }; sortie.yeux = T.Y.map(([x, y, r]) => [n1(C.tx + C.k * x), n1(C.ty + C.k * y), n1(C.k * r)]); sortie.sol = !!C.sol; }
+  return svg;
+}
+function dessin(T, corps, plan, traits) {
   if (plan?.regime === 'synthetique' && !corps) return machine(T, plan, {});
   const Co = racine.OrvaneCorps, c = Co.normaliser(corps), X = contexte(c, plan || {}, traits || []), al = Co.allure ? Co.allure(c, plan) : c.forme;
   if (al === 'poisson') return poisson(T, c, X);
