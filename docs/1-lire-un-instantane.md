@@ -5,7 +5,7 @@ Un instantané, c'est l'état du vivant d'un monde à un cycle. Il est publié e
 ## L'en-tête
 
 ```json
-{ "orvane": "0.1",
+{ "orvane": "1.0",
   "monde": { "id": "sv-1", "graine": 7340021, "nom": "Monde de Stone Valley" },
   "cycle": { "n": 12, "date": "2026-10-27T20:16:41Z", "pressions_recues": 0 },
 ```

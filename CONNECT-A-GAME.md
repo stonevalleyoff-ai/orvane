@@ -168,7 +168,7 @@ Never call `orvane_regler_jeu` from the published game: the admin key has nothin
 The game counts what its players do, without drawing conclusions, and sends these counts in batches:
 
 ```json
-{ "orvane": "0.1", "monde": "orvane", "instantane": 41,
+{ "orvane": "1.0", "monde": "orvane", "instantane": 41,
   "source": { "jeu": "my-game", "compte": "h:9c1e44", "zone": "map:3" },
   "periode": { "debut": "2026-10-29T18:02:11Z", "fin": "2026-10-29T19:40:03Z" },
   "evenements": [
@@ -232,6 +232,7 @@ The `erreur` strings are in French:
 - **Licence.** Orvane is under [PolyForm Shield 1.0.0](https://polyformproject.org/licenses/shield/1.0.0) (`LICENSE`).
   - **Allowed:** connecting any game, commercial or closed-source; copying `tampon/tampon.js`, `tampon/morceaux.js`, the schemas or a translator into the game, and adapting them. Keep the licence URL and the line `Required Notice: Copyright StoneValley (https://github.com/stonevalleyoff-ai/orvane)`, for instance as a comment at the top of each copied file.
   - **Not allowed:** using Orvane's code to provide a competing product (another ecosystem engine, another shared world for games to plug into, a renamed copy).
+- **Versions.** The contract is versioned (`"orvane": "1.0"` in every snapshot). As long as the first number stays the same, nothing breaks, provided your game **ignores what it does not know** (a field, a value, a biome). A breaking change is announced ahead of time in [CHANGELOG.md](CHANGELOG.md) (docs/43). In JavaScript, the engine and the buffer install at a fixed version: `npm install github:stonevalleyoff-ai/orvane#v1.0.0`.
 
 ## Checklist
 

@@ -65,6 +65,8 @@ const GRA = typeof require === 'function' ? require('./grammaire.js') : racine.O
 const CAS = typeof require === 'function' ? require('./castes.js') : racine.OrvaneCastes;   // les castes, les insectes sociaux (moteur/castes.js, docs/33)
 const FOR = typeof require === 'function' ? require('./formes.js') : racine.OrvaneFormes;   // les formes nouvelles (moteur/formes.js, docs/33)
 const ESP = typeof require === 'function' ? require('./esprit.js') : racine.OrvaneEsprit;   // l'esprit : apprendre, transmettre, des outils (moteur/esprit.js, docs/34)
+// (docs/43) la version du contrat : MAJEUR.MINEUR, celle de package.json ; chaque instantané la porte (instantane.orvane)
+const CONTRAT = '1.0';
 const AXES = ['temperature', 'humidite', 'altitude', 'lumiere', 'couvert'];
 let AX = AXES;   // (docs/20) et ceux qu'un monde ajoute (catalogue.monde.axes), le temps de son cycle
 const REGLES = {
@@ -928,14 +930,14 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   const ORD = Object.keys(CAT.TRAITS), traits = {}; for (const id of [...portes].sort((x, y) => ((ORD.indexOf(x) + 1) || 999) - ((ORD.indexOf(y) + 1) || 999) || (x < y ? -1 : 1))) traits[id] = clone(cat[id]);   // (une copie : un jeu qui modifie l'instantané reçu ne touche pas au catalogue du moteur)
   const duree = opt.duree_ms ?? 86400000, d0 = Date.parse(inst.cycle.date);
   return {
-    orvane: inst.orvane || '0.1', monde: (m => m === inst.monde ? clone(m) : m)((m => SP ? SP.monde(m) : m)((m => SY ? SY.monde(m) : m)(SN ? SN.monde(SC ? SC.monde(inst.monde) : inst.monde) : SC ? SC.monde(inst.monde) : inst.monde))),
+    orvane: CONTRAT, monde: (m => m === inst.monde ? clone(m) : m)((m => SP ? SP.monde(m) : m)((m => SY ? SY.monde(m) : m)(SN ? SN.monde(SC ? SC.monde(inst.monde) : inst.monde) : SC ? SC.monde(inst.monde) : inst.monde))),
     cycle: { n, date: new Date((Number.isFinite(d0) ? d0 : 0) + duree).toISOString(), pressions_recues: pressions.nombre ?? 0, ...(saison ? { saison } : {}) },
     biomes: Object.values(biomes).map(b => phase == null ? b : { ...b, axes_saison: axesSaison(b, phase) }), catalogue: { version: inst.catalogue?.version || '0.1', traits, ...(GEN ? { quantitatifs: clone(QUANT) } : {}), organes: CORPS.catalogueOrganes(), ...(SF ? { flore: FLO.TRAITS } : {}), ...(SAV ? { savoirs: SAV } : {}), ...(MC ? { monde: MC } : {}) },
     taxons: sortie, evenements: ev
   };
 }
 
-const API = { cycle, REGLES, QUANT, routeHiver, fenetreDe, planDe, coutDe, croissance, mortalite, convenance, appetence, axesSaison, deriver, rng, lireQ, penteQ, chargeQ, optimumQ, evoluerQ, melangerQ, mendel, allelesDe, portees, domDe, divergence, parente, isolement, apprendre };
+const API = { CONTRAT, cycle, REGLES, QUANT, routeHiver, fenetreDe, planDe, coutDe, croissance, mortalite, convenance, appetence, axesSaison, deriver, rng, lireQ, penteQ, chargeQ, optimumQ, evoluerQ, melangerQ, mendel, allelesDe, portees, domDe, divergence, parente, isolement, apprendre };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else racine.Orvane = API;
 
 // --- ligne de commande : node moteur/orvane.js <instantane.json> [--cycles N] [--lot pression.json --profil profil.json --comptes K] [--sortie fichier.json] ---

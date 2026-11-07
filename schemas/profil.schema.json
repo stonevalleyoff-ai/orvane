@@ -11,9 +11,7 @@
   ],
   "additionalProperties": false,
   "properties": {
-    "orvane": {
-      "type": "string"
-    },
+    "orvane": { "type": "string", "description": "Version du contrat que suit le profil, MAJEUR.MINEUR (« 1.0 » ; docs/43). Orvane accepte les profils des versions 0.x et 1.x." },
     "jeu": {
       "type": "string",
       "description": "Le jeu pour lequel le monde a été fait (mondes d'avant, comme sv-1). Un monde universel n'en a pas."

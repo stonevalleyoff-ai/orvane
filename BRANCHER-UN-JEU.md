@@ -150,7 +150,7 @@ N'appelez jamais `orvane_regler_jeu` depuis le jeu publié : la clé d'administr
 Le jeu compte ce que font ses joueurs, sans rien conclure, et dépose ces comptes par lots :
 
 ```json
-{ "orvane": "0.1", "monde": "orvane", "instantane": 41,
+{ "orvane": "1.0", "monde": "orvane", "instantane": 41,
   "source": { "jeu": "mon-jeu", "compte": "h:9c1e44", "zone": "carte:3" },
   "periode": { "debut": "2026-10-29T18:02:11Z", "fin": "2026-10-29T19:40:03Z" },
   "evenements": [
@@ -211,6 +211,7 @@ La nuit suivante, le cycle lit les lots de tous les jeux et les rapporte à l'ex
 - La clé d'administration ne va jamais dans un jeu publié, ni dans un dépôt de code. Aucune clé de service Supabase ne sert à brancher un jeu.
 - Orvane ne reçoit que des comptes (« 14 tués, 31 croisés »), jamais des conclusions, et aucune donnée personnelle : `p_compte` est opaque.
 - Le monde appartient à tous les jeux : un jeu n'y pèse qu'en proportion de ses joueurs, et jamais plus de la moitié de la pression sur une espèce.
+- **Les versions.** Le contrat est versionné (`"orvane": "1.0"` dans chaque instantané). Tant que le premier chiffre ne change pas, rien ne casse : il suffit que le jeu **ignore ce qu'il ne connaît pas** (un champ, une valeur, un biome). Un changement qui casserait un jeu est annoncé à l'avance dans [CHANGELOG.md](CHANGELOG.md) (docs/43). En JavaScript, le moteur et le tampon s'installent à une version précise : `npm install github:stonevalleyoff-ai/orvane#v1.0.0`.
 - **La licence.** Orvane est sous [PolyForm Shield 1.0.0](https://polyformproject.org/licenses/shield/1.0.0) (`LICENSE`). Brancher un jeu, même commercial ou au code fermé, est permis, de même que copier dans le jeu `tampon/tampon.js`, les schémas ou un traducteur et les adapter. Joignez alors l'adresse de la licence et la ligne `Required Notice: Copyright StoneValley (https://github.com/stonevalleyoff-ai/orvane)`, par exemple en commentaire en tête du fichier copié. Ce qui n'est pas permis : se servir du code d'Orvane pour fournir un produit qui lui fait concurrence (un autre moteur d'écosystème, un autre monde partagé où brancher des jeux, une copie renommée).
 
 ## Liste de vérification
@@ -224,6 +225,7 @@ La nuit suivante, le cycle lit les lots de tous les jeux et les rapporte à l'ex
 - [ ] Le jeu filtre les familles qu'il ne sait pas jouer (`Tampon.filtrer`) et dit dans ses lots celles qu'il joue.
 - [ ] Un lot déposé répond `ok: true` ; sinon, il est gardé et renvoyé plus tard.
 - [ ] Le lendemain, `pressions_recues` monte dans `cycle` de l'instantané.
+- [ ] Le jeu ignore les champs, les valeurs et les biomes qu'il ne connaît pas (docs/43).
 - [ ] Le traducteur passe le banc générique : `node outils/banc-traducteur.js mon-traducteur.js` (docs/39 ; le modèle : `traducteurs/exemple/traducteur.js`).
 
 ## In English, briefly

@@ -13,7 +13,7 @@ Dans les deux cas, le bestiaire d'un jeu n'est pas un équilibre écologique : t
 ## Le profil (`profil.json`)
 
 ```json
-{ "orvane": "0.1", "jeu": "stone-valley",
+{ "orvane": "1.0", "jeu": "stone-valley",
   "monde": { "id": "sv-1", "graine": 7340021, "cycle": "24h", "amorce": "traducteurs/stone-valley/generation-0.json", "rodage": 400, "annee": 120 },
   "exposition": {
     "compression": { "defaut": 0.1, "par_domaine": { "morphologie": 0.1 }, "par_trait": { "gigantisme": 0.1 } },

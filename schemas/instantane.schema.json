@@ -14,10 +14,7 @@
   ],
   "additionalProperties": false,
   "properties": {
-    "orvane": {
-      "type": "string",
-      "description": "Version du contrat, ex. « 0.1 »."
-    },
+    "orvane": { "type": "string", "description": "Version du contrat, MAJEUR.MINEUR : « 1.0 » depuis le 7 novembre 2026 (« 0.1 » avant ; docs/43). Même majeur, rien ne casse : un jeu ignore ce qu'il ne connaît pas." },
     "monde": {
       "type": "object",
       "required": [

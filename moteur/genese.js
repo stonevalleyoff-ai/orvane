@@ -102,7 +102,7 @@ for (const [g, liste] of Object.entries(groupes)) { if (!liste.length) continue;
       phenotypes: [{ id: 'base', frequence: 1, traits: [], cout_total: 0 }] });
   }
 }
-let inst = { orvane: '0.1', monde: { id: 'genese', graine, nom, annee: lu.monde?.annee || 120 }, cycle: { n: 0, date: new Date().toISOString(), pressions_recues: 0 },
+let inst = { orvane: Orvane.CONTRAT, monde: { id: 'genese', graine, nom, annee: lu.monde?.annee || 120 }, cycle: { n: 0, date: new Date().toISOString(), pressions_recues: 0 },
   biomes, catalogue: { version: '0.1', traits: {}, ...(catMonde ? { monde: catMonde } : {}) }, taxons, evenements: [] };
 
 // --- l'évolution accélérée ---

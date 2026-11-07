@@ -43,6 +43,9 @@ README.md, llms.txt   la présentation du dépôt (GitHub l'affiche en page d'ac
 types/orvane.d.ts     les types TypeScript du contrat, tirés des schémas par outils/types.js (docs/39)
 outils/verifier.js    vérifier un lot, un instantané ou un profil avant de le déposer : le schéma, et ce que le Supabase refusera (docs/39)
 outils/bancs.js       tous les bancs d'un coup, en parallèle : les rapides à chaque PR, les longs la nuit (hebergement/LISEZ-MOI.md, « La fiabilité »)
+outils/contrat.js     le garde-fou du contrat : ce qui casse un jeu, ce qui s'ajoute ; un changement cassant demande une version majeure (docs/43)
+package.json, index.js  le paquet : npm install github:stonevalleyoff-ai/orvane#v1.0.0, puis require('orvane') (docs/43)
+CHANGELOG.md          le journal des versions : ce qui change pour un jeu, version après version
 outils/banc-traducteur.js  le banc générique d'un traducteur : il lui fait lire sept mondes, un monde piège compris, et vérifie qu'il n'oublie aucune lignée et n'envoie que des lots conformes (docs/39)
 schemas/              le contrat : instantane, pression, profil — avec exemples (crapaud buffle)
 traducteurs/stone-valley/   le premier client, de bout en bout : correspondances, traducteur, génération 0, banc, SQL

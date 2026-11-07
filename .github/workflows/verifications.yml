@@ -40,6 +40,21 @@ jobs:
           for f in mondes/*/profil.json; do node outils/verifier.js "$f" --profil || r=1; done
           for f in mondes/*/instantane.json mondes/*/amorce.json; do [ -f "$f" ] && { node outils/verifier.js "$f" --instantane || r=1; }; done
           exit $r
+      - name: le contrat ne casse rien sans sa version majeure (outils/contrat.js, docs/43)
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          AVANT: ${{ github.event.before }}
+        run: |
+          if [ -n "$BASE_REF" ]; then git fetch -q --depth=1 origin "$BASE_REF"
+          elif [ -n "$AVANT" ] && [ "$AVANT" != 0000000000000000000000000000000000000000 ]; then git fetch -q --depth=1 origin "$AVANT"
+          else echo "rien à comparer"; exit 0; fi
+          node outils/contrat.js --base FETCH_HEAD
+      - name: le paquet s'installe et se charge
+        run: |
+          npm pack --pack-destination "$RUNNER_TEMP" > /dev/null
+          mkdir -p "$RUNNER_TEMP/jeu" && cd "$RUNNER_TEMP/jeu" && npm init -y > /dev/null
+          npm install --no-audit --no-fund "$RUNNER_TEMP"/orvane-*.tgz
+          node -e "const o = require('orvane'); if (!o.Orvane.cycle || !o.Tampon.agreger || o.CONTRAT !== o.version.split('.').slice(0, 2).join('.')) process.exit(1); console.log('orvane', o.version, '· contrat', o.CONTRAT)"
   bancs:
     runs-on: ubuntu-latest
     timeout-minutes: 330
