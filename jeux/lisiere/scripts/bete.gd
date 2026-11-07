@@ -85,10 +85,14 @@ func rayon_oeil() -> float:
 
 
 func blesser(n: float, depuis: Vector2) -> void:
+	if pv <= 0.0:
+		return
 	pv -= n
 	_flash = 0.14
 	position += (position - depuis).normalized() * 10.0
 	if pv <= 0.0:
+		# (queue_free attend la fin de l'image : hors du groupe tout de suite, pour qu'un second coup ne la tue pas deux fois)
+		remove_from_group("betes")
 		jeu.bete_tuee(self)
 		queue_free()
 		return

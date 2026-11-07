@@ -61,8 +61,15 @@ Sans Godot, `node bancs/lisiere.js` vérifie le projet à chaque PR : chaque fic
 ## Où en est le jeu
 
 - **Écrit** : le jeu entier (`scripts/`, une douzaine de fichiers), ses sons (faits par le code, au lancement), son essai sans écran, sa configuration d'export web.
-- **Vérifié** : la syntaxe GDScript 4 de chaque script (`gdtoolkit`, à chaque PR) ; le projet et le monde gardé (`bancs/lisiere.js`) ; les planches (`bancs/morceaux.js`).
-- **Pas encore vérifié** : le jeu n'a pas encore tourné dans Godot. La session qui l'a écrit ne pouvait pas lancer Godot ; la règle qui l'autorise (`.claude/settings.json`, le seul `outils/godot.sh`) vaut pour les sessions suivantes. Prochaine étape : l'essai sans écran, les corrections, l'export web, et une partie jouée dans un navigateur.
+- **Vérifié à chaque PR** : la syntaxe GDScript 4 de chaque script (`gdtoolkit`) ; le projet et le monde gardé (`bancs/lisiere.js`) ; les planches (`bancs/morceaux.js`).
+- **Vérifié dans Godot 4.3** (le 7 novembre 2026, au cycle 46) :
+  - l'essai sans écran passe, sur la copie gardée (5 lieux) comme sur le monde publié (32 lieux, chacun chargé) ;
+  - le même essai, filmé avec un vrai rendu (`--write-movie`, sous un écran virtuel) : le feu et son halo, les chasseurs qui tournent à la lisière, les yeux dans le noir, les morsures, les échos, l'aube, l'écran de fin ;
+  - l'export web, joué au clavier dans Chromium (WebGL 2) : l'écran-titre lit le monde en ligne, une partie va de l'éveil jusqu'à la mort dans la première nuit, sans erreur.
+- **Corrigé ce jour-là** : la santé remontait de zéro (rassasiée et calme), et la partie ne s'arrêtait pas ; une bête frappée deux fois dans la même image mourait deux fois (deux prélèvements) ; le marais, gardé dans la copie, n'était jamais proposé (les lieux à demi dans l'eau sont jouables : le jeu n'y garde que les bêtes qui marchent) ; un lieu sans proie ni chasseur (l'ossuaire, les terres creuses) était proposé. L'essai ne dépend plus du hasard du directeur, joue son noir en pleine nuit, et vérifie chaque lieu proposé.
+- **Pas encore vérifié** : une partie jouée par une personne, jusqu'au bout ; le jeu sur un téléphone.
+
+Filmer l'essai (des images PNG, puis les regarder) : `xvfb-run -a outils/godot.sh --path jeux/lisiere --write-movie /tmp/film/f.png --fixed-fps 30 -- --essai`. Pas moins de 30 images par seconde : l'essai joue en accéléré, et à 10 images par seconde la caméra (lissée) s'envole hors du monde.
 
 ## Les choix
 
@@ -75,7 +82,7 @@ Lisière est un jeu du genre survie-horreur (récolter, fabriquer, tenir la nuit
 
 ## Ce qui reste
 
-- Le faire tourner dans Godot, le corriger, l'équilibrer (les règles sont toutes dans `scripts/regles.gd`).
-- L'export web, publié sur le site (`lisiere/`).
+- L'équilibrer, partie après partie (les règles sont toutes dans `scripts/regles.gd`).
+- L'export web, publié sur le site (`lisiere/`) : il se fait (35 Mo de moteur, 1,7 Mo de jeu) et se joue ; reste à décider où le garder.
 - Sa clé de jeu, pour que ses lots partent dans le bac à sable, puis dans le monde.
 - Une partie qui se garde d'une session à l'autre ; une manette ; un écran tactile.
