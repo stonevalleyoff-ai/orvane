@@ -55,6 +55,23 @@ jobs:
           mkdir -p "$RUNNER_TEMP/jeu" && cd "$RUNNER_TEMP/jeu" && npm init -y > /dev/null
           npm install --no-audit --no-fund "$RUNNER_TEMP"/orvane-*.tgz
           node -e "const o = require('orvane'); if (!o.Orvane.cycle || !o.Tampon.agreger || o.CONTRAT !== o.version.split('.').slice(0, 2).join('.')) process.exit(1); console.log('orvane', o.version, '· contrat', o.CONTRAT)"
+  kits:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: '8.0.x' }
+      - name: le kit Unity (le cœur C#, hors de Unity) lit le monde et fait des lots conformes
+        run: |
+          dotnet run --project "kits/unity/Tests~" -- "$RUNNER_TEMP/lots-unity"
+          for f in "$RUNNER_TEMP"/lots-unity/lot-*.json; do node outils/verifier.js "$f" --lot; done
+      - name: le kit Godot se lit (syntaxe GDScript 4)
+        run: |
+          pip install -q "gdtoolkit==4.*"
+          gdparse kits/godot/addons/orvane/orvane.gd kits/godot/addons/orvane/plugin.gd > /dev/null && echo "le kit Godot se lit"
   bancs:
     runs-on: ubuntu-latest
     timeout-minutes: 330

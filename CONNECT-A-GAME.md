@@ -6,7 +6,7 @@ Orvane runs a single world, the world of Orvane, and every game plugs into it. A
 
 1. **Register** on the [sign-up page](https://stonevalleyoff-ai.github.io/orvane/inscription/), or with a call. You receive the **game key**, which is public, and the **admin key**, which is secret.
 2. **Read the world**: `instantane.json` once a day from GitHub Pages, or only the biomes you play, piece by piece. No key is needed.
-3. **Translate**: map the game's terrains to Orvane's 24 biomes, and turn each lineage into a creature.
+3. **Translate**: map the game's terrains to Orvane's biomes, and turn each lineage into a creature. In **Unity** or **Godot**, a kit reads the world, counts and sends the batches for you ([kits/LISEZ-MOI.md](kits/LISEZ-MOI.md)).
 4. **Set your exposure** (optional): tell Orvane what the game can show, with the admin key.
 5. **Report pressures**: count what players do and send batches with `orvane_deposer` and the game key. `node outils/verifier.js my-batch.json` tells, before the first deposit, whether the batch will be accepted; `types/orvane.d.ts` gives every field to a TypeScript translator (docs/39).
 

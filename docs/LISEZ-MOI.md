@@ -49,6 +49,7 @@ Pour s'inscrire, recevoir ses clés et faire ses premiers appels au Supabase d'O
 | [41. Les profils de genre](41-profils-de-genre.md) | horreur, cozy, collection, voxel, survie, stratégie, monde partagé : les règles du moteur, le poids des joueurs et le rythme de chaque genre, tout prêts ; chaque promesse mesurée par un banc |
 | [42. Les eaux douces](42-eaux-douces.md) | une genèse sur dix lieux d'eau, dont sept nouveaux (le torrent, le lac profond, l'étang, la roselière, le delta, les sources chaudes, la grotte inondée) : 60 lignées, reliées au monde d'Orvane par trois ponts |
 | [43. Les versions](43-versions.md) | un contrat qui ne casse pas sans prévenir : ce qui casse un jeu et ce qui ne casse pas, le garde-fou de chaque PR, le journal, le paquet à installer |
+| [44. La vitesse et les kits](44-vitesse-et-kits.md) | le cycle 17 % plus vite, le même monde au caractère près ; mesurer une optimisation ; les kits Unity et Godot pour lire le monde, compter, déposer |
 
 ## En une page
 
