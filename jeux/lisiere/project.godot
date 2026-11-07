@@ -1,0 +1,35 @@
+; Lisière — un jeu de survie et d'horreur branché sur le monde vivant d'Orvane (jeux/lisiere/LISEZ-MOI.md)
+
+config_version=5
+
+[application]
+
+config/name="Lisière"
+config/description="Tenir jusqu'au matin, à la lisière d'un lieu du monde d'Orvane. Ses bêtes sont vraies."
+run/main_scene="res://scenes/principal.tscn"
+config/features=PackedStringArray("4.3", "GL Compatibility")
+config/icon="res://icon.svg"
+boot_splash/bg_color=Color(0.02, 0.024, 0.035, 1)
+boot_splash/show_image=false
+
+[autoload]
+
+Orvane="*res://addons/orvane/orvane.gd"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[gui]
+
+theme/default_font_antialiasing=1
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/canvas_textures/default_texture_filter=1
+environment/defaults/default_clear_color=Color(0.02, 0.024, 0.035, 1)

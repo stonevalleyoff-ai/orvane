@@ -6,6 +6,9 @@
 #   Orvane.jeu = "mon-jeu"
 #   Orvane.instantane_lu.connect(func(inst): print(Orvane.vivantes().size(), " lignées vivantes"))
 #   Orvane.lire()
+#   var inst = await Orvane.lire_lieux(["foret"])        # ou seulement les lieux qu'on joue (le monde par morceaux, docs/21)
+#   await Orvane.lire_silhouettes("foret")               # les planches : chaque bête du lieu dessinée, et ses yeux
+#   sprite.texture = Orvane.texture("dunvi", 96.0)       # l'image d'une lignée, à 96 pixels de large ; Orvane.yeux("dunvi")
 #   Orvane.compter("dunvi", "savane", "rencontre")      # au moment où ça arrive, dans un biome d'Orvane (déjà traduit)
 #   Orvane.clore(compte_opaque)                          # à un moment naturel : une sauvegarde, une fin de partie
 #   Orvane.deposer(compte_opaque)                        # dépose le prochain lot ; un lot refusé reste en attente
@@ -17,6 +20,7 @@ extends Node
 signal instantane_lu(inst: Dictionary)
 signal lecture_ratee(erreur: String)
 signal lot_depose(ok: bool, reponse: Dictionary)
+signal silhouettes_lues(biome: String, silhouettes: Dictionary)
 
 const CONTRAT := "1.0"
 const MAX_EVENEMENTS := 500
@@ -36,6 +40,8 @@ var _evenements: Dictionary = {}
 var _en_attente: Array[String] = []
 var _debut := ""
 var _depot_en_cours := false
+var _planches: Dictionary = {}
+var _textures: Dictionary = {}
 
 
 func _ready() -> void:
@@ -66,6 +72,134 @@ func _lu(resultat: int, code: int, _entetes: PackedStringArray, corps: PackedByt
 		return
 	instantane = inst
 	instantane_lu.emit(inst)
+
+
+# --- lire seulement les lieux qu'on joue (le monde par morceaux, docs/21) ---
+
+# l'index du monde, puis les seuls biomes demandés : un instantané au même contrat, réduit à ces biomes ({} si la lecture échoue).
+# Quelques centaines de Ko au lieu de plusieurs Mo. S'attend : var inst = await Orvane.lire_lieux(["foret", "prairie"])
+func lire_lieux(biomes: Array) -> Dictionary:
+	var index = await lire_json(_base() + "morceaux/index.json")
+	if typeof(index) != TYPE_DICTIONARY:
+		lecture_ratee.emit("l'index du monde ne se lit pas")
+		return {}
+	var morceaux := {}
+	for b in biomes:
+		var m = await lire_json(_base() + "morceaux/biomes/" + str(b).uri_encode() + ".json")
+		if typeof(m) == TYPE_DICTIONARY:
+			morceaux[str(b)] = m
+	instantane = assembler(index, morceaux)
+	instantane_lu.emit(instantane)
+	return instantane
+
+
+# l'index et des morceaux de biomes (lus en ligne, ou gardés dans le jeu) → l'instantané réduit à ces biomes, comme tampon/morceaux.js
+func assembler(index: Dictionary, morceaux: Dictionary) -> Dictionary:
+	var vus := {}
+	for b in index.get("biomes", []):
+		var m = morceaux.get(str(b.get("id", "")))
+		if typeof(m) != TYPE_DICTIONARY:
+			continue
+		for t in m.get("taxons", []):
+			var id := str(t.get("id", ""))
+			if not vus.has(id):
+				vus[id] = t.duplicate(true)
+				continue
+			var deja: Dictionary = vus[id]
+			deja["populations"].append_array(t.get("populations", []))
+			var ph: Array = t.get("phenotypes", [])
+			var vu_ph: Array = deja.get("phenotypes", [])
+			for i in mini(ph.size(), vu_ph.size()):
+				if typeof(vu_ph[i].get("frequence_par_biome")) == TYPE_DICTIONARY and typeof(ph[i].get("frequence_par_biome")) == TYPE_DICTIONARY:
+					vu_ph[i]["frequence_par_biome"].merge(ph[i]["frequence_par_biome"], true)
+	var taxons := []
+	for x in index.get("taxons", []):
+		var id := str(x.get("id", ""))
+		if vus.has(id):
+			taxons.append(vus[id])
+	return {"orvane": index.get("orvane", ""), "monde": index.get("monde", {}), "cycle": index.get("cycle", {}), "biomes": index.get("biomes", []),
+		"catalogue": index.get("catalogue", {}), "taxons": taxons, "evenements": index.get("evenements", [])}
+
+
+# --- dessiner les bêtes : les planches (morceaux/silhouettes/<biome>.json, docs/21) ---
+
+# chaque bête d'un biome dessinée de profil, la tête à droite, dans un cadre de 170 × 90, et ses yeux ({} si la lecture échoue)
+func lire_silhouettes(biome: String) -> Dictionary:
+	var p = await lire_json(_base() + "morceaux/silhouettes/" + biome.uri_encode() + ".json")
+	var s := {}
+	if typeof(p) == TYPE_DICTIONARY and typeof(p.get("silhouettes")) == TYPE_DICTIONARY:
+		s = p["silhouettes"]
+		ajouter_planche(biome, s)
+	silhouettes_lues.emit(biome, s)
+	return s
+
+
+# une planche gardée dans le jeu (pour jouer hors ligne) : { lignée: { svg, yeux, sol } }
+func ajouter_planche(biome: String, silhouettes: Dictionary) -> void:
+	if not _planches.has(biome):
+		_planches[biome] = {}
+	_planches[biome].merge(silhouettes, true)
+
+
+func a_une_planche(lignee: String, biome: String = "") -> bool:
+	return not _silhouette(lignee, biome).is_empty()
+
+
+# l'image d'une lignée, à cette largeur en pixels (null : pas de planche, ou un dessin illisible). Le pied de la bête est à 86/90
+# de la hauteur de l'image quand elle tient debout (sol), au milieu sinon.
+func texture(lignee: String, largeur: float = 170.0, biome: String = "") -> ImageTexture:
+	var cle := "%s|%s|%d" % [lignee, biome, int(largeur)]
+	if _textures.has(cle):
+		return _textures[cle]
+	var s := _silhouette(lignee, biome)
+	if str(s.get("svg", "")) == "":
+		return null
+	var img := Image.new()
+	if img.load_svg_from_string(str(s["svg"]), maxf(0.1, largeur / 170.0)) != OK:
+		return null
+	var tex := ImageTexture.create_from_image(img)
+	_textures[cle] = tex
+	return tex
+
+
+# où sont ses yeux, dans le cadre de 170 × 90 de son dessin : [Vector3(x, y, rayon), …]
+func yeux(lignee: String, biome: String = "") -> Array:
+	var out := []
+	for e in _silhouette(lignee, biome).get("yeux", []):
+		if typeof(e) == TYPE_ARRAY and e.size() >= 3:
+			out.append(Vector3(float(e[0]), float(e[1]), float(e[2])))
+	return out
+
+
+func _silhouette(lignee: String, biome: String) -> Dictionary:
+	if biome != "" and _planches.has(biome) and _planches[biome].has(lignee):
+		return _planches[biome][lignee]
+	for b in _planches:
+		if _planches[b].has(lignee):
+			return _planches[b][lignee]
+	return {}
+
+
+func _base() -> String:
+	return monde_url.trim_suffix("/") + "/"
+
+
+# un document JSON (null s'il ne se lit pas) ; sans en-tête particulier, pour qu'un navigateur le lise d'un autre site.
+# S'attend : var index = await Orvane.lire_json(Orvane.monde_url + "morceaux/index.json")
+func lire_json(url: String) -> Variant:
+	var r := HTTPRequest.new()
+	r.timeout = 20.0
+	add_child(r)
+	var sep := "&" if url.contains("?") else "?"
+	var e := r.request(url + sep + "v=" + str(int(Time.get_unix_time_from_system() / 600.0)))
+	if e != OK:
+		r.queue_free()
+		return null
+	var res: Array = await r.request_completed
+	r.queue_free()
+	if int(res[0]) != HTTPRequest.RESULT_SUCCESS or int(res[1]) != 200:
+		return null
+	return JSON.parse_string((res[3] as PackedByteArray).get_string_from_utf8())
 
 
 # le premier chiffre de la version du contrat : tant qu'il est celui que le jeu connaît, rien ne casse
@@ -177,6 +311,13 @@ func clore(compte: String) -> void:
 		i += MAX_EVENEMENTS
 	_evenements.clear()
 	_debut = fin
+	_sauver()
+
+
+# oublie ce qui a été compté et pas encore clos (un jeu qui n'envoie rien, une partie d'essai)
+func oublier() -> void:
+	_evenements.clear()
+	_debut = _maintenant()
 	_sauver()
 
 

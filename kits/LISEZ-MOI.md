@@ -77,8 +77,11 @@ func _on_sauvegarde() -> void:
 - L'instantané reste un `Dictionary`, tel que le contrat le publie : `inst.taxons`, `inst.biomes`, `inst.cycle.n`.
 - Les lots pas encore déposés sont gardés dans `user://orvane.json`, et repris au lancement suivant.
 - Les aides : `vivantes()`, `dans(biome)`, `effectif(lignee, biome)`, `majeur()`, `identite()`.
+- **Seulement les lieux qu'on joue** (le monde par morceaux, docs/21) : `var inst = await Orvane.lire_lieux(["foret"])` lit l'index du monde et ces biomes, et rend l'instantané réduit à ces biomes, au même contrat : quelques centaines de Ko au lieu de plusieurs Mo. `Orvane.assembler(index, morceaux)` fait de même avec des morceaux gardés dans le jeu (pour jouer hors ligne).
+- **Dessiner les bêtes sans moteur de dessin** : `await Orvane.lire_silhouettes("foret")` lit la planche du lieu (chaque bête dessinée de profil, et ses yeux) ; `Orvane.texture("dunvi", 96.0)` rend l'image d'une lignée à 96 pixels de large (`Image.load_svg_from_string`), `Orvane.yeux("dunvi")` où sont ses yeux dans le cadre de 170 × 90. Une planche gardée dans le jeu : `Orvane.ajouter_planche(biome, silhouettes)`.
+- `Orvane.lire_json(url)` lit n'importe quel document du monde ; `Orvane.oublier()` efface ce qui a été compté et pas encore clos (une partie d'essai, un jeu qui n'envoie rien).
 
-**Vérifié** : la syntaxe GDScript 4 (`gdtoolkit`, à chaque PR). **Pas encore vérifié** : le kit n'a pas tourné dans Godot lui-même. Le premier jeu Godot qui s'en sert le dira.
+**Vérifié** : la syntaxe GDScript 4 (`gdtoolkit`, à chaque PR). **Pas encore vérifié** : le kit n'a pas tourné dans Godot lui-même. Le premier jeu Godot qui s'en sert, [Lisière](../jeux/lisiere/LISEZ-MOI.md), le dira : son essai sans écran (`outils/godot.sh --headless --path jeux/lisiere -- --essai`) fait tourner le kit dans Godot 4.3.
 
 ## Ce qui reste ouvert
 

@@ -15,6 +15,9 @@ npm install github:stonevalleyoff-ai/orvane#v1.0.0
 
 - **Les kits Unity et Godot** (`kits/`, docs/44) : lire le monde, compter ce que font les joueurs, déposer les lots. Rien ne change dans le contrat.
 - **Le cycle 17 % plus vite**, sans rien changer au monde : le même instantané, au caractère près (`outils/vitesse.js`, docs/44).
+- **Les planches** (`morceaux/silhouettes/<biome>.json`, docs/21) : à chaque cycle, chaque bête de chaque biome dessinée (un SVG de 170 × 90, sous sa variante la plus fréquente là), avec la place de ses yeux. Un jeu, dans n'importe quel moteur, montre les bêtes d'Orvane sans refaire leur dessin. Un fichier de plus : rien ne change pour un jeu qui ne le lit pas.
+- **Le kit Godot** lit seulement les lieux qu'on joue (`lire_lieux`), dessine les bêtes d'après les planches (`texture`, `yeux`), et peut oublier ce qu'il a compté (`oublier`).
+- **Lisière** (`jeux/lisiere/`), un jeu de survie et d'horreur en Godot, branché sur le monde : le premier jeu qui se sert du kit Godot.
 
 ## [1.0.0] — 2026-11-07
 

@@ -8,7 +8,8 @@
 //   historique.json    les derniers cycles (365, ou profil.monde.historique), allégés (effectifs, fréquences, événements) : pour l'observatoire
 //   tampon.json        la mémoire du tampon (lissage) et la dernière ligne lue (dernier_id)
 //   jeux.json          les jeux branchés sur le monde et leur exposition (publié : chaque traducteur y lit la sienne)
-//   morceaux/          le même monde par morceaux : index.json, biomes/<id>.json, lignees/<id>.json (docs/21)
+//   morceaux/          le même monde par morceaux : index.json, biomes/<id>.json, lignees/<id>.json, et les planches,
+//                      silhouettes/<id>.json : chaque lignée de chaque biome dessinée (docs/21)
 //   lots/              (facultatif) des lots déposés à la main ; lus en plus de Supabase, puis déplacés dans lots/traites/
 //   node hebergement/cycle.js sv-1 [--sans-reseau] [--cycles N | --auto] [--rodage N] [--forcer]   (rodage : au premier cycle seulement ;
 //   --auto : autant de cycles que le rythme du monde en doit, profil.monde.cycle et monde.heure, docs/19 ; --maintenant <date ISO> ;
@@ -312,7 +313,13 @@ const alleger = I => ({ cycle: I.cycle, taxons: I.taxons.map(t => ({ id: t.id, n
   ecrire('instantane.json', P, true);
   // (docs/21) le même monde par morceaux : l'index, chaque biome, chaque lignée (mondes/<id>/morceaux/) ; refaits à chaque cycle
   fs.rmSync(f('morceaux'), { recursive: true, force: true });
-  for (const [c, o] of Object.entries(Morceaux.decouper(P))) { fs.mkdirSync(path.dirname(f('morceaux/' + c)), { recursive: true }); ecrire('morceaux/' + c, o, true); } ecrire('historique.json', historique, true); ecrire('tampon.json', tampon);
+  const D = Morceaux.decouper(P);
+  for (const [c, o] of Object.entries(D)) { fs.mkdirSync(path.dirname(f('morceaux/' + c)), { recursive: true }); ecrire('morceaux/' + c, o, true); }
+  // (docs/21) les planches : chaque lignée de chaque biome dessinée (morceaux/silhouettes/<biome>.json) ; un dessin qui échoue
+  // n'arrête pas le cycle, le monde est publié sans ses planches
+  try { const Planches = require('../monde/planches.js'); fs.mkdirSync(f('morceaux/silhouettes'), { recursive: true }); for (const [c, o] of Object.entries(Planches.planches(D))) ecrire('morceaux/' + c, o, true); }
+  catch (e) { console.error('planches non dessinées :', e.message); }
+  ecrire('historique.json', historique, true); ecrire('tampon.json', tampon);
   console.log(`→ ${path.relative(process.cwd(), f('instantane.json'))}`);
   if (lectureEchouee) process.exitCode = 2;          // le monde est publié, mais l'action se marque en échec pour qu'on le voie
 })().catch(e => { console.error('cycle interrompu :', e.message); process.exit(1); });
