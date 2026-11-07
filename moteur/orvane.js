@@ -817,16 +817,17 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   const nouveaux = []; let vivantsN = taxons.filter(t => !t.eteint).length, formesVues = null;
   for (const t of taxons) {
     if (t.eteint || vivantsN + nouveaux.length >= REGLES.max_taxons) continue;
-    const E = etat.get(t.id);
+    const E = etat.get(t.id), effP = new Map();   // (vitesse : l'effectif de chaque population, compté une fois et non une fois par paire)
+    for (const [k, q] of Object.entries(E.pops)) effP.set(k, q.N.reduce((a, x) => a + x, 0));
     for (const [bid, pop] of Object.entries(E.pops)) {
       if (vivantsN + nouveaux.length >= REGLES.max_taxons) break;   // (la limite vaut pour chaque séparation, pas seulement pour chaque lignée)
-      const eff = pop.N.reduce((a, x) => a + x, 0), b = biomes[bid];
+      const eff = effP.get(bid), b = biomes[bid];
       const s = REGLES.separation, nid = `${t.id}.${bid}`;
       // le flux de gènes reçu (une moyenne glissante de la part d'immigrants) et l'écart au reste de l'espèce
       pop.flux = .85 * (pop.flux0 ?? 0) + .15 * Math.min(1, (pop.immig || 0) / Math.max(1, eff));
-      const autres = Object.entries(E.pops).filter(([k, q]) => k !== bid && q.N.reduce((a, x) => a + x, 0) >= 1);
-      if (autres.length && (pop.A || pop.Q)) { const W = autres.reduce((a, [, q]) => a + q.N.reduce((x, y) => x + y, 0), 0), Ar = {}, Qr = {};
-        for (const [, q] of autres) { const w = q.N.reduce((x, y) => x + y, 0) / W; for (const id in q.A || {}) Ar[id] = (Ar[id] || 0) + w * q.A[id]; for (const k in q.Q || {}) (Qr[k] ??= { m: 0 }).m += w * q.Q[k].m; }
+      const autres = Object.entries(E.pops).filter(([k]) => k !== bid && effP.get(k) >= 1);
+      if (autres.length && (pop.A || pop.Q)) { const W = autres.reduce((a, [k]) => a + effP.get(k), 0), Ar = {}, Qr = {};
+        for (const [k2, q] of autres) { const w = effP.get(k2) / W; for (const id in q.A || {}) Ar[id] = (Ar[id] || 0) + w * q.A[id]; for (const k in q.Q || {}) (Qr[k] ??= { m: 0 }).m += w * q.Q[k].m; }
         pop.div = divergence(pop.A, pop.Q, Ar, Qr); } else pop.div = 0;
       const pret = n - pop.depuis >= s.cycles && eff >= s.effectif && !taxons.some(x => x.id === nid), isole = clamp(1 - Math.max(pop.flux, Object.values(pop.hiv || {}).reduce((a, x) => a + x, 0)) / s.flux, 0, 1);   // (des hivernants ne font pas une lignée : ils repartent, docs/38)
       const ecolo = pret && t.plan.niche && dist(t.plan.niche, b.axes) >= s.distance * (t.plan.tolerance || .35), geno = pret && pop.div >= s.divergence;
@@ -891,7 +892,8 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
     { const vifs = []; for (let i = 0; i < K; i++) if (i === 0 || totP[i] >= .5) vifs.push(i);
       if (vifs.length > REGLES.max_phenotypes) {
         const tri = vifs.slice(1).sort((x, y) => totP[y] - totP[x] || x - y), gardes = [0, ...tri.slice(0, REGLES.max_phenotypes - 1)];
-        const ecart = (a, b) => { const A = new Set(t.phenotypes[a].traits), B = new Set(t.phenotypes[b].traits); let d = 0; for (const x of A) if (!B.has(x)) d++; for (const x of B) if (!A.has(x)) d++; return d; };
+        const TS = t.phenotypes.map(p => new Set(p.traits));   // (vitesse : les traits de chaque phénotype, mis en ensemble une fois)
+        const ecart = (a, b) => { const A = TS[a], B = TS[b]; let d = 0; for (const x of A) if (!B.has(x)) d++; for (const x of B) if (!A.has(x)) d++; return d; };
         for (const i of tri.slice(REGLES.max_phenotypes - 1)) { let j = 0, dj = Infinity; for (const g of gardes) { const d = ecart(i, g); if (d < dj) { dj = d; j = g; } }
           for (const pop of Object.values(E.pops)) { pop.N[j] += pop.N[i] || 0; pop.N[i] = 0; } totP[j] += totP[i]; totP[i] = 0; } } }
     const garde = [];
