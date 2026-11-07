@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>La démo — Orvane</title>
+<meta name="description" content="Un jeu minuscule branché sur Orvane : choisissez un lieu, croisez ses bêtes, chassez-en, et voyez ce que votre jeu enverrait au monde.">
+<link rel="icon" href="../assets/embleme.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/orvane.css">
+<style>
+  body.demo { background: var(--paper); color: var(--ink); }
+  .demo-main { max-width: var(--wrap); margin: 0 auto; padding: 40px 24px 80px; }
+  .demo-tete { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 40px; align-items: end; margin-bottom: 28px; }
+  .demo-tete h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(32px, 5vw, 54px); line-height: 1.05; margin: 8px 0 14px; color: var(--green); }
+  .demo-tete h1 em { color: var(--muted); }
+  .demo-tete p { margin: 0; line-height: 1.6; color: var(--muted); max-width: 60ch; }
+  .lieu { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .lieu label { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .lieu select { font: 15px var(--sans); padding: 10px 12px; border: 1px solid var(--line); background: var(--paper-light); color: var(--ink); min-width: 220px; }
+  .etat-monde { font-size: 13px; color: var(--muted); margin: 10px 0 0; }
+  .demo-corps { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr); gap: 28px; align-items: start; }
+  .betes { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
+  .bete { background: var(--paper-light); border: 1px solid var(--line); padding: 14px 14px 12px; display: flex; flex-direction: column; gap: 6px; }
+  .bete svg { width: 100%; height: auto; max-height: 96px; }
+  .bete h3 { font-family: var(--serif); font-weight: 400; font-size: 17px; margin: 0; color: var(--green); line-height: 1.2; }
+  .bete .infos { font-size: 12px; color: var(--muted); line-height: 1.5; margin: 0; }
+  .bete .gestes { display: flex; gap: 8px; margin-top: auto; padding-top: 6px; }
+  .bete button { flex: 1; font: 600 12px var(--sans); padding: 9px 8px; border: 1px solid var(--green); background: transparent; color: var(--green); cursor: pointer; }
+  .bete button.chasser { background: var(--green); color: var(--paper-light); }
+  .bete button:hover { filter: brightness(1.15); }
+  .bete button:focus-visible, .lieu select:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .bete .compte { font-size: 12px; color: var(--ink); min-height: 1.4em; margin: 0; }
+  .envoi { position: sticky; top: 16px; background: var(--deep); color: var(--paper-light); padding: 20px; }
+  .envoi h2 { font-family: var(--serif); font-weight: 400; font-size: 22px; margin: 4px 0 10px; }
+  .envoi p { font-size: 13px; line-height: 1.6; color: var(--sage); margin: 0 0 12px; }
+  .envoi pre { font: 12px/1.5 var(--mono); background: rgba(255,255,255,.06); padding: 12px; margin: 0; max-height: 340px; overflow: auto; white-space: pre-wrap; word-break: break-word; }
+  .envoi .eyebrow { color: var(--gold); }
+  .envoi .boutons { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+  .envoi button { font: 600 12px var(--sans); padding: 9px 14px; border: 1px solid var(--gold); background: transparent; color: var(--gold); cursor: pointer; }
+  .ensuite { margin-top: 48px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+  .ensuite article { border-top: 1px solid var(--line); padding-top: 16px; }
+  .ensuite h3 { font-family: var(--serif); font-weight: 400; font-size: 20px; margin: 0 0 8px; color: var(--green); }
+  .ensuite p { font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; }
+  .code { margin-top: 40px; }
+  .code pre { font: 13px/1.55 var(--mono); background: var(--paper-light); border: 1px solid var(--line); padding: 16px; overflow-x: auto; }
+  .vide { color: var(--muted); font-size: 14px; }
+  @media (max-width: 900px) { .demo-tete, .demo-corps, .ensuite { grid-template-columns: 1fr; } .envoi { position: static; } }
+</style>
+</head>
+<body class="demo"><a class="skip" href="#contenu">Aller au contenu</a>
+<header class="site-header"><div class="header-inner">
+<a class="brand" href="../" aria-label="Orvane, accueil"><svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M20 35V19M20 26C8 27 4 18 5 7c11 0 17 6 15 19ZM20 21C19 11 26 5 35 5c1 10-4 17-15 16Z" stroke="currentColor" stroke-width="1.5"/><path d="m11 14 9 12M28 12l-8 9" stroke="currentColor" stroke-width="1.3"/></svg><span>orvane<span class="brand-caption">MOTEUR DU VIVANT</span></span></a>
+<nav class="desktop-nav" aria-label="Navigation principale">
+<a href="../studios/">Pour les studios</a>
+<a href="../monde/?monde=orvane">L’Observatoire <span aria-hidden="true">↗</span></a>
+<a href="https://github.com/stonevalleyoff-ai/orvane/blob/main/EN-UNE-HEURE.md">En une heure <span aria-hidden="true">↗</span></a>
+<a class="nav-cta" href="../inscription/">Brancher un jeu <span aria-hidden="true">→</span></a>
+</nav>
+<details class="mobile-menu"><summary>Menu <span aria-hidden="true">☰</span></summary><nav aria-label="Navigation mobile"><a href="../studios/">Pour les studios</a><a href="../monde/?monde=orvane">L’Observatoire <span aria-hidden="true">↗</span></a><a href="https://github.com/stonevalleyoff-ai/orvane/blob/main/EN-UNE-HEURE.md">En une heure <span aria-hidden="true">↗</span></a><a href="../inscription/">Brancher un jeu →</a></nav></details>
+</div></header>
+<main id="contenu" class="demo-main">
+  <div class="demo-tete">
+    <div>
+      <p class="eyebrow dark-ink">LA DÉMO · UN JEU MINUSCULE BRANCHÉ SUR ORVANE</p>
+      <h1>Entrez dans un lieu.<br><em>Ses bêtes sont vraies.</em></h1>
+      <p>Chaque créature ci-dessous vit en ce moment dans le monde d’Orvane : son nombre, sa silhouette, sa façon de vivre viennent du dernier cycle publié. Croisez-en, chassez-en, et voyez ce que votre jeu enverrait au monde.</p>
+    </div>
+    <div>
+      <div class="lieu"><label for="lieu">Le lieu</label><select id="lieu" aria-describedby="etat-monde"><option>…</option></select></div>
+      <p class="etat-monde" id="etat-monde" role="status" aria-live="polite">Lecture du monde…</p>
+    </div>
+  </div>
+  <div class="demo-corps">
+    <section aria-labelledby="t-betes"><h2 id="t-betes" class="eyebrow dark-ink">LES BÊTES DE CE LIEU, LES PLUS NOMBREUSES D’ABORD</h2><div class="betes" id="betes"><p class="vide">…</p></div></section>
+    <aside class="envoi" aria-labelledby="t-envoi">
+      <p class="eyebrow">CE QUE VOTRE JEU ENVERRAIT</p>
+      <h2 id="t-envoi">Un lot, et rien d’autre</h2>
+      <p>Des comptes, pas des conclusions : « 3 croisés, 1 chassé ». Orvane en fait des pressions sur le monde, pesées et plafonnées, au cycle suivant. <b>Ici, rien n’est envoyé</b> : c’est une démonstration.</p>
+      <pre id="lot" aria-live="polite">Croisez ou chassez une bête.</pre>
+      <div class="boutons"><button type="button" id="copier">Copier le lot</button><button type="button" id="vider">Tout effacer</button></div>
+    </aside>
+  </div>
+  <section class="ensuite" aria-label="Ce qui se passe ensuite">
+    <article><h3>Cette nuit</h3><p>Le tampon lit les lots de tous les jeux. Il plafonne ce que pèse un seul jeu, un seul joueur, puis le moteur fait tourner le monde d’un cycle.</p></article>
+    <article><h3>Le lendemain</h3><p>Une espèce trop chassée recule et devient méfiante. Si les joueurs prennent les plus grandes bêtes, les petites prennent le dessus. Tous les jeux branchés le voient en même temps.</p></article>
+    <article><h3>À la longue</h3><p>Des lignées se séparent, d’autres s’éteignent, des corps nouveaux apparaissent. Votre jeu montre ce qu’il sait dessiner, et ignore le reste.</p></article>
+  </section>
+  <section class="code" aria-labelledby="t-code">
+    <p class="eyebrow dark-ink">DANS VOTRE JEU</p><h2 id="t-code" class="eyebrow dark-ink" style="font-size:22px;letter-spacing:0;text-transform:none;font-family:var(--serif);font-weight:400">Cette démo tient en quelques lignes</h2>
+    <pre>// lire un lieu du monde (tampon/morceaux.js : seulement les biomes qu'on joue)
+const inst = await OrvaneMorceaux.lire('https://stonevalleyoff-ai.github.io/orvane/mondes/orvane/', { biomes: ['prairie'] });
+for (const t of inst.taxons) for (const p of t.populations) creer(t, p.effectif);   // votre jeu fait ses créatures
+
+// compter ce que font les joueurs, puis déposer le lot (orvane_deposer, avec la clé du jeu)
+lot.evenements.push({ taxon: 'dunvi', biome: 'prairie', action: 'prelevement', n: 1 });</pre>
+    <p class="vide">En Unity et en Godot, un kit fait la lecture, le compte et le dépôt : <a href="https://github.com/stonevalleyoff-ai/orvane/blob/main/kits/LISEZ-MOI.md">kits/LISEZ-MOI.md</a>. Le parcours complet : <a href="https://github.com/stonevalleyoff-ai/orvane/blob/main/EN-UNE-HEURE.md">en une heure</a>.</p>
+  </section>
+</main>
+<footer class="site-footer"><div class="wrap footer-top"><a class="brand" href="../"><svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M20 35V19M20 26C8 27 4 18 5 7c11 0 17 6 15 19ZM20 21C19 11 26 5 35 5c1 10-4 17-15 16Z" stroke="currentColor" stroke-width="1.5"/><path d="m11 14 9 12M28 12l-8 9" stroke="currentColor" stroke-width="1.3"/></svg><span>orvane<span class="brand-caption">MOTEUR DU VIVANT</span></span></a><p>Un monde partagé.<br>Des histoires qui évoluent.</p><nav aria-label="Ressources"><a href="https://github.com/stonevalleyoff-ai/orvane">GitHub <span aria-hidden="true">↗</span></a><a href="https://github.com/stonevalleyoff-ai/orvane/blob/main/BRANCHER-UN-JEU.md">Guide d’intégration <span aria-hidden="true">↗</span></a><a href="../llms.txt">Orvane pour les IA <span aria-hidden="true">↗</span></a></nav></div><div class="wrap footer-bottom"><span>© StoneValley · Orvane</span><span>Licence <a href="../LICENSE">PolyForm Shield 1.0.0</a></span><span>Les créatures sont celles du monde, au dernier cycle publié</span></div></footer>
+<script src="../moteur/corps.js"></script>
+<script src="../monde/silhouette.js"></script>
+<script src="../tampon/morceaux.js"></script>
+<script src="demo.js"></script>
+</body>
+</html>
