@@ -70,7 +70,7 @@ var _mort := -1.0
 func _ready() -> void:
 	randomize()
 	_actions()
-	if DisplayServer.is_touchscreen_available() or OS.has_feature("web_android") or OS.has_feature("web_ios"):
+	if DisplayServer.is_touchscreen_available() or OS.has_feature("web_android") or OS.has_feature("web_ios") or "--mobile" in OS.get_cmdline_user_args():
 		qualite = "mobile"
 	effets = Effets.new()
 	effets.jeu = self

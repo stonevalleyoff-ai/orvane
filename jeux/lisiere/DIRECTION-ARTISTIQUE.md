@@ -54,7 +54,7 @@ Un département ne modifie que ses fichiers. S'il lui faut une accroche ailleurs
 - `joueur` : `geste(genre, vers)` (une récolte), `frapper()` (un coup), `blesser(n)`, `mourir()` (la santé à zéro ; l'écran de fin vient `DUREE_MORT` secondes après).
 - `ui` : `carte(titre, sous_titre)`, `ramasse(objet, n, p)` (p : où, dans le lieu), `blessure()`, `message(t, couleur)`.
 - `sons` : `maj(jeu, delta)` (chaque image), `jouer(nom, volume_db, hauteur)`, `niveau(boucle, v)`, `taire()`.
-- `jeu.qualite` : `"haute"` (un ordinateur) ou `"mobile"` (un écran tactile). En `"mobile"` : moins de particules, pas d'ombres portées, pas d'effet qui lit l'écran.
+- `jeu.qualite` : `"haute"` (un ordinateur) ou `"mobile"` (un écran tactile ; pour l'essayer : `-- --vitrine --mobile`). En `"mobile"` : moins de particules, pas d'ombres portées, pas d'effet qui lit l'écran.
 
 ## Les contraintes
 
