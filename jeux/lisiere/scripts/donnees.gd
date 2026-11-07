@@ -40,19 +40,31 @@ func local(chemin: String) -> Dictionary:
 	return d if typeof(d) == TYPE_DICTIONARY else {}
 
 
-# les lieux où l'on peut jouer : sur la terre ferme, avec des bêtes ; hors ligne, ceux de la copie
+# les lieux où l'on peut jouer : sur la terre ferme ou à demi dans l'eau (un marais, une côte : le jeu n'y garde que les bêtes
+# qui marchent), avec au moins une proie et un chasseur ; hors ligne, ceux de la copie. L'index ne dit pas comment une lignée
+# se déplace : charger_lieu et faune trient ensuite, et le jeu refuse un lieu qui n'a rien à chasser ou personne pour chasser.
 func lieux() -> Array:
 	var compte := {}
+	var proies := {}
+	var chasseurs := {}
 	for t in index.get("taxons", []):
 		if str(t.get("famille", "animale")) != "animale" or str(t.get("statut", "")) == "eteint":
 			continue
+		var regime := str(t.get("regime", ""))
+		var masse := float(t.get("masse_kg", 0.0))
+		var chasseur := regime == "carnivore" or (regime == "omnivore" and masse >= 15.0)
+		var compte_ici := masse >= 0.2 and regime != "vegetal" and regime != "synthetique"
 		for b in t.get("biomes", []):
 			compte[b] = int(compte.get(b, 0)) + 1
+			if compte_ici and chasseur and masse >= 1.0:
+				chasseurs[b] = true
+			elif compte_ici and not chasseur:
+				proies[b] = true
 	var gardes: Array = index_secours().get("secours", {}).get("lieux", [])
 	var out := []
 	for b in index.get("biomes", []):
 		var id := str(b.get("id", ""))
-		if str(b.get("milieu", "terrestre")) != "terrestre" or int(compte.get(id, 0)) == 0:
+		if not ["terrestre", "amphibie"].has(str(b.get("milieu", "terrestre"))) or not proies.has(id) or not chasseurs.has(id):
 			continue
 		if not en_ligne and not gardes.has(id):
 			continue

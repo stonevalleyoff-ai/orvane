@@ -93,6 +93,33 @@ jobs:
           path: ${{ runner.temp }}/sauvegarde
           retention-days: 30
           compression-level: 9
+      - name: Godot 4.3 et ses modèles web, gardés d'une passe à l'autre
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/orvane/godot-4.3
+            ~/.local/share/godot/export_templates/4.3.stable
+          key: godot-4.3-stable-web
+      - name: le jeu Lisière, pour un navigateur (lisiere/, jeux/lisiere/LISEZ-MOI.md)
+        continue-on-error: true          # un export manqué ne retient pas la publication des mondes
+        run: |
+          # refait seulement quand le jeu a changé ; sinon, l'export de la dernière publication est repris tel quel
+          source=$(git rev-parse HEAD:jeux/lisiere)
+          if [ -n "$PUBLIE" ] && [ "$(git show "$PUBLIE:lisiere/source.txt" 2>/dev/null)" = "$source" ]; then
+            git archive "$PUBLIE" lisiere | tar -x
+            echo "le jeu n'a pas changé : l'export de la dernière publication est repris"
+          else
+            outils/godot.sh --modeles-web
+            outils/godot.sh --headless --path jeux/lisiere --import
+            mkdir -p "$RUNNER_TEMP/lisiere"
+            outils/godot.sh --headless --path jeux/lisiere --export-release Web "$RUNNER_TEMP/lisiere/index.html"
+            # (un export à moitié fait n'est pas publié)
+            test -s "$RUNNER_TEMP/lisiere/index.wasm" && test -s "$RUNNER_TEMP/lisiere/index.pck"
+            echo "$source" > "$RUNNER_TEMP/lisiere/source.txt"
+            rm -rf lisiere && mv "$RUNNER_TEMP/lisiere" lisiere
+            echo "le jeu est exporté"
+          fi
+          ls -la lisiere
       - name: publier (la branche publication, réécrite en un seul commit)
         run: |
           git config user.name "orvane"

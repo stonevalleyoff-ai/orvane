@@ -58,3 +58,8 @@ const RECETTES := {
 const ORDRE_RECETTES := ["feu", "torche", "lance"]
 const NOMS := {"bois": "bois", "pierre": "pierre", "fibre": "fibres", "baies": "baies", "viande": "viande crue", "viande_cuite": "viande cuite"}
 const ORDRE_INVENTAIRE := ["bois", "pierre", "fibre", "baies", "viande", "viande_cuite"]
+
+
+# un nom, accordé à son nombre (« 2 pierres », « 1 pierre ») : les autres noms ne changent pas
+static func nom(k: String, n: int) -> String:
+	return str(NOMS[k]) + ("s" if k == "pierre" and n > 1 else "")

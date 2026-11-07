@@ -40,7 +40,7 @@ Environ une fois tous les vingt-cinq cycles, une lignée dit une phrase :
 - **sa force** va de 0,6 à 1,4 ;
 - **son nom** vient de l'organe qui la dit : « photophore bleuté », « organe électrique sourd », « glandes à musc âcres », « sac vocal strident ». Si tous les noms d'un organe sont pris, il prend celui de la lignée.
 
-Elle naît chez 2 % des bêtes de la lignée, et la sélection fait le reste. Un monde compose 60 phrases au plus.
+Elle naît chez 2 % des bêtes de la lignée, et la sélection fait le reste ; la lignée garde son plafond de variantes dès ce cycle (docs/27). Un monde compose 60 phrases au plus.
 
 ## Le repli : ce qu'un jeu en fait
 

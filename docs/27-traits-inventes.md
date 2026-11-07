@@ -28,6 +28,7 @@ Le nom vient de l'organe, avec une épithète de son domaine (une défense : den
 - **Il a une naissance** (`origine`) : la lignée qui l'a inventé, le cycle, les traits dont il vient (`de`).
 - **Il entre au catalogue propre du monde** (`catalogue.monde.traits`), et parmi les traits portés (`catalogue.traits`).
 - **Il naît chez 2 % des bêtes de la lignée** qui l'invente, celles qui portent déjà ce qu'il exige. La sélection fait le reste : il se répand s'il sert, il s'efface sinon.
+- **La lignée garde son plafond de variantes** (`max_phenotypes`) dès le cycle où il naît : s'il en fait trop, les plus rares rejoignent aussitôt la plus proche, comme à chaque cycle. Il reste porté par les plus nombreuses.
 - Ensuite, il est un trait comme un autre. Il peut naître par mutation dans d'autres lignées, et on peut l'inventer à son tour.
 
 Le hasard des inventions est le sien : celui du cycle ne bouge pas.

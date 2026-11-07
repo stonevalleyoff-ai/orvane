@@ -2,7 +2,7 @@
 // Ce qui se vérifie sans Godot, à chaque PR :
 //  1. le projet : chaque fichier qu'il nomme (res://…) existe ; la scène de départ, l'autoload du kit ;
 //  2. le kit : la copie du jeu (jeux/lisiere/addons/orvane/) est celle du kit (kits/godot/addons/orvane/), au caractère près ;
-//  3. le monde gardé dans le jeu (donnees/) : chaque lieu a son morceau et sa planche, chaque bête du jeu son dessin, et chaque
+//  3. le monde gardé dans le jeu (donnees/) : chaque lieu a son morceau et sa planche, le jeu le propose, chaque bête du jeu son dessin, et chaque
 //     lieu de quoi jouer (des proies le jour, des chasseurs la nuit), selon les règles de scripts/donnees.gd.
 // Ce que seul Godot vérifie (que le jeu tourne) : outils/godot.sh --headless --path jeux/lisiere -- --essai
 //   node bancs/lisiere.js
@@ -32,6 +32,13 @@ console.log('3. Le monde gardé dans le jeu');
 const index = lireJ('donnees/index.json'), lieux = index.secours?.lieux || [];
 verif(lieux.length >= 3 && lieux.every(b => fs.existsSync(path.join(JEU, 'donnees/biomes', b + '.json')) && fs.existsSync(path.join(JEU, 'donnees/silhouettes', b + '.json'))),
   `${lieux.length} lieux gardés (${lieux.join(', ')}), au cycle ${index.cycle?.n}, chacun avec son morceau et sa planche`);
+// les lieux que le jeu propose (scripts/donnees.gd, lieux), en JavaScript : sur la terre ferme ou à demi dans l'eau, une proie et un chasseur
+const chasse = t => t.regime === 'carnivore' || (t.regime === 'omnivore' && t.masse_kg >= 15);
+const proposes = new Set(index.biomes.filter(b => ['terrestre', 'amphibie'].includes(b.milieu || 'terrestre')).map(b => b.id).filter(id => {
+  const ici = index.taxons.filter(t => (t.famille || 'animale') === 'animale' && t.statut !== 'eteint' && (t.biomes || []).includes(id) && t.masse_kg >= 0.2 && !['vegetal', 'synthetique'].includes(t.regime));
+  return ici.some(t => !chasse(t)) && ici.some(t => chasse(t) && t.masse_kg >= 1); }));
+const oublies = lieux.filter(b => !proposes.has(b));
+verif(!oublies.length, 'le jeu propose chaque lieu gardé à son écran-titre' + (oublies.length ? ` ; jamais proposés : ${oublies.join(', ')}` : ''));
 // les règles de scripts/donnees.gd (faune), en JavaScript
 const TERRE = new Set(['marche', 'course', 'saut', 'fouissage', 'grimpe', 'reptation']);
 const faune = (M, b) => { const F = { proies_jour: [], chasseurs_nuit: [], chasseurs: [] };

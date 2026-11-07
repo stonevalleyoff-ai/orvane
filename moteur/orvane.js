@@ -418,6 +418,18 @@ const eauDouce = plan => plan.eau !== 'salee', eauSalee = plan => plan.eau === '
 // hasard : le moteur s'en sert pour faire partir les bêtes (REGLES.hivernage.actif), collectif.js pour le dire aux jeux. (Une mer ne
 // se traverse qu'en volant, nageant, dérivant.)
 const lieuType = id => String(id ?? '').split('~')[0];
+// trop de variantes : le plan de base et les plus fréquentes restent ; chacune des autres rejoint la gardée la plus proche (le moins
+// de traits en plus ou en moins ; à égalité, la première gardée), avec sa fréquence, partout où elle vit
+function plafonner(t, max) {
+  const P = t.phenotypes; if (P.length <= max) return;
+  const tri = P.map((p, i) => i).slice(1).sort((x, y) => (P[y].frequence || 0) - (P[x].frequence || 0) || x - y), gardes = [0, ...tri.slice(0, max - 1)];
+  const TS = P.map(p => new Set(p.traits)), ecart = (a, b) => { let d = 0; for (const x of TS[a]) if (!TS[b].has(x)) d++; for (const x of TS[b]) if (!TS[a].has(x)) d++; return d; };
+  for (const i of tri.slice(max - 1)) { let j = 0, dj = Infinity; for (const g of gardes) { const d = ecart(i, g); if (d < dj) { dj = d; j = g; } }
+    const a = P[i], b = P[j]; b.frequence = +((b.frequence || 0) + (a.frequence || 0)).toFixed(6);
+    if (a.frequence_par_biome) { b.frequence_par_biome ??= {}; for (const k in a.frequence_par_biome) b.frequence_par_biome[k] = +((b.frequence_par_biome[k] || 0) + a.frequence_par_biome[k]).toFixed(6); } }
+  const g = new Set(gardes); t.phenotypes = P.filter((p, i) => g.has(i));
+}
+
 function routeHiver(P, b, lieu, s = 0, routes = 0, H = REGLES.hivernage) {
   const L = P?.locomotion || [], m = P?.masse_kg || 1;
   if (!b || b.saisons === false || b.saisons === null || !P?.niche) return null;
@@ -922,6 +934,9 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   // (docs/32) un monde à la grammaire compose parfois une phrase : une lueur, une décharge, un cri, une odeur
   if (GRA && inst.monde?.grammaire) { const r = GRA.inventer({ sortie, biomes, n, graine: inst.monde.graine, inventes: MC?.traits || {}, cat });
     if (Object.keys(r.traits).length) { MC = { ...(MC || {}), traits: { ...(MC?.traits || {}), ...r.traits } }; Object.assign(cat, r.traits); ev.push(...r.evenements); } }
+  // un trait inventé naît dans chaque phénotype qui porte ce qu'il exige (docs/27, docs/32) : la lignée peut passer le plafond.
+  // Elle y revient dès ce cycle, par la règle du plafond plus haut (sur les fréquences : les comptes n'y sont plus)
+  if ((INV && inst.monde?.invention) || (GRA && inst.monde?.grammaire)) for (const t of sortie) if (!t.eteint && t.phenotypes.length > REGLES.max_phenotypes) plafonner(t, REGLES.max_phenotypes);
   if (SF && DER && inst.monde?.derives) { const r = DER.diviser(plantes, { n, ids: new Set([...inst.taxons, ...sortie, ...plantes].map(t => t.id)), noms: Object.fromEntries(Object.values(biomes).map(b => [b.id, b.nom || b.id])), flore: inst.monde.flore?.lignees });   // (docs/29) des plantes qui se séparent
     plantes.push(...r.neuves); ev.push(...r.evenements); }
   if (SF) sortie.push(...SF.ecrire());   // les plantes (docs/17)
