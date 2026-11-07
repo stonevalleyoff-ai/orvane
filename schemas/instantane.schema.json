@@ -1,0 +1,2241 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orvane/schemas/instantane.schema.json",
+  "title": "Orvane — instantané (sortie du moteur)",
+  "description": "L'état du vivant d'un monde à un cycle donné. Orvane ne connaît aucun jeu : tout est biologie abstraite. Le traducteur du jeu lit ce fichier et en fait des données jouables.",
+  "type": "object",
+  "required": [
+    "orvane",
+    "monde",
+    "cycle",
+    "biomes",
+    "catalogue",
+    "taxons"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "orvane": { "type": "string", "description": "Version du contrat, MAJEUR.MINEUR : « 1.0 » depuis le 7 novembre 2026 (« 0.1 » avant ; docs/43). Même majeur, rien ne casse : un jeu ignore ce qu'il ne connaît pas." },
+    "monde": {
+      "type": "object",
+      "required": [
+        "id",
+        "graine"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Un monde par jeu : identifiant stable du monde."
+        },
+        "graine": {
+          "type": "integer",
+          "description": "Graine du monde. Même graine + mêmes pressions ⇒ même histoire."
+        },
+        "nom": {
+          "type": "string"
+        },
+        "annee": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Durée de l’année en cycles (0 ou absent : pas de saisons). Phase 0 = plein hiver, 0,5 = plein été."
+        },
+        "genese": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cycles": {
+              "type": "integer"
+            },
+            "graine": {
+              "type": "integer"
+            },
+            "ancetres": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "recale": {
+              "type": "integer",
+              "description": "L'écart dont les cycles de la genèse et du rodage ont été recalés : une lignée née avant la génération 0 a un cycle d'apparition négatif."
+            }
+          },
+          "description": "Si le monde est né de la genèse (moteur/genese.js) : combien de cycles, quelle graine, quels ancêtres."
+        },
+        "ne": {
+          "type": "string",
+          "format": "date-time",
+          "description": "La naissance du monde (le premier cycle, posé par hebergement/cycle.js). Avec l'id, c'est l'identité d'un monde : un monde refait de zéro garde son id mais change de date — les traducteurs repartent alors de sa nouvelle génération 0."
+        },
+        "regles": {
+          "type": "object",
+          "description": "Les règles du moteur propres à ce monde (REGLES de moteur/orvane.js), choisies par sa genèse : elles valent pour chacun de ses cycles, où qu'il tourne."
+        },
+        "genre": { "type": "string", "description": "(docs/41) Le genre pour lequel ce monde est réglé (moteur/genres.js) : ses règles sont dans regles." },
+        "fusions": {
+          "type": "array",
+          "description": "Les fusions qu'a reçues ce monde (moteur/fusion.js, docs/14) : d'un autre monde, des lignées sont arrivées dans certains biomes, au cycle dit. Une fusion n'est appliquée qu'une fois.",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "monde",
+              "cycle",
+              "lignees"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Le nom de la fusion (profil.monde.fusions[].id)."
+              },
+              "monde": {
+                "type": "string",
+                "description": "L'id du monde d'où viennent les lignées."
+              },
+              "nom": {
+                "type": "string"
+              },
+              "cycle": {
+                "type": "integer",
+                "description": "Le cycle de la cible où les lignées sont arrivées."
+              },
+              "part": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "La part des effectifs de la source qui est arrivée."
+              },
+              "biomes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "lignees": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "mode": {
+                "enum": [
+                  "biomes",
+                  "ponts"
+                ],
+                "description": "(docs/23) ponts : la source est devenue un continent du monde, relié par quelques ponts ; absent : biome par biome (docs/14)."
+              },
+              "ponts": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "description": "(docs/23) Les ponts : [parcelle de la source, parcelle de la cible]."
+              }
+            }
+          }
+        },
+        "parcelles": {
+          "type": "object",
+          "description": "Le monde tourne par parcelles (moteur/parcelles.js, docs/15) : chaque biome est découpé en parcelles voisines. L'instantané publié reste par biome ; la liste des parcelles est dans « parcelles », et chaque population dit sa répartition.",
+          "properties": {
+            "par": {
+              "type": [
+                "integer",
+                "object"
+              ],
+              "description": "Le nombre de parcelles par biome (ou par biome : { prairie: 6, … })."
+            },
+            "graine": {
+              "type": "integer"
+            },
+            "nombre": {
+              "type": "integer",
+              "description": "Le nombre de parcelles du monde."
+            },
+            "types": {
+              "type": "array",
+              "description": "(dans l'état interne seulement) les biomes d'avant le découpage."
+            }
+          }
+        },
+        "mere": {
+          "type": "object",
+          "description": "La Mère (docs/16) : d'où vient toute la vie synthétique. Elle ne meurt pas.",
+          "properties": {
+            "nom": {
+              "type": "string"
+            },
+            "biome": {
+              "type": "string",
+              "description": "là où elle est (le biome ; « parcelle » dit la parcelle)"
+            },
+            "parcelle": {
+              "type": "string"
+            },
+            "depuis": {
+              "type": "integer"
+            },
+            "conceptions": {
+              "type": "integer",
+              "description": "les plans qu'elle a conçus"
+            },
+            "courant": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "les plans qu'elle assemble"
+            },
+            "prochaine": {
+              "type": "integer"
+            },
+            "derniere": {
+              "type": "object"
+            },
+            "memoire": {
+              "type": "object",
+              "description": "ce qui tue ses machines, par cause (usure, energie, catastrophe, joueurs) : les morts par machine et par cycle ; debord, masse_debord : ce qui déborde sans régulateur, et sa taille",
+              "additionalProperties": {
+                "type": "number"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "flore": {
+          "type": "object",
+          "description": "La flore (docs/17) : depuis quand, combien de lignées à l'éveil.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            },
+            "lignees": {
+              "type": "integer"
+            }
+          },
+          "additionalProperties": false
+        },
+        "pathogenes": {
+          "type": "object",
+          "description": "Les souches du monde (docs/18).",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            },
+            "prochain": {
+              "type": "integer"
+            },
+            "souches": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "nom": {
+                    "type": "string"
+                  },
+                  "virulence": {
+                    "type": "number",
+                    "description": "la part des infectés qui meurent chaque cycle"
+                  },
+                  "transmission": {
+                    "type": "number"
+                  },
+                  "origine": {
+                    "type": "string",
+                    "description": "la lignée où elle est née"
+                  },
+                  "apparu": {
+                    "type": "integer"
+                  },
+                  "hotes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "les lignées où elle a pris"
+                  },
+                  "infectes": {
+                    "type": "integer"
+                  },
+                  "parent": {
+                    "type": "string",
+                    "description": "(docs/29) un mutant : la souche dont il est né"
+                  },
+                  "vecteur": {
+                    "type": "string",
+                    "description": "(docs/29) la lignée d'insectes qui la porte, sans en tomber malade, d'une lignée à l'autre et d'un lieu à l'autre"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "solo": {
+          "type": "object",
+          "description": "Un monde solo (moteur/solo.js, docs/19) : le monde partagé dont il est parti, et à quel cycle. Il vit sa vie ; rien n'en revient au monde partagé.",
+          "properties": {
+            "depuis": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "cycle": {
+              "type": "integer"
+            }
+          }
+        },
+        "milieu": {
+          "type": "object",
+          "description": "Le milieu transformé (docs/22) : depuis quand les bêtes et les joueurs changent les axes des lieux.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            }
+          }
+        },
+        "ponte": {
+          "type": "object",
+          "description": "(docs/25) Pondre ou mettre bas : depuis quand.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            }
+          }
+        },
+        "stades": {
+          "type": "object",
+          "description": "(docs/26) Les cycles de vie : depuis quand.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            }
+          }
+        },
+        "invention": {
+          "type": "object",
+          "description": "(docs/27) Un monde inventif : depuis quand.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            }
+          }
+        },
+        "esprit": {
+          "type": "object",
+          "description": "(docs/34) L'esprit : depuis quand.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            }
+          }
+        },
+        "collectif": {
+          "type": "object",
+          "description": "(docs/38) La vie en groupe est publiée (populations[].groupe, populations[].migration, biomes[].visiteurs) : depuis quand.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            }
+          }
+        },
+        "castes": {
+          "type": "object",
+          "description": "(docs/33) Les castes : depuis quand.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            }
+          }
+        },
+        "formes": {
+          "type": "object",
+          "description": "(docs/33) Les formes nouvelles : depuis quand.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            }
+          }
+        },
+        "grammaire": {
+          "type": "object",
+          "description": "(docs/32) La grammaire des effets et des conduites : depuis quand.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            }
+          }
+        },
+        "climat": {
+          "type": "object",
+          "description": "(docs/31) Le climat : depuis quand, l'écart de température et d'humidité de tout le monde depuis l'éveil, la marche au hasard, les ponts de terre émergés (ponts), le nombre d'îles nées (iles)."
+        },
+        "dietes": {
+          "type": "object",
+          "description": "(docs/30) Les régimes en spectre : depuis quand.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            }
+          }
+        },
+        "derives": {
+          "type": "object",
+          "description": "(docs/29) Les dérives : depuis quand.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            }
+          }
+        },
+        "natures": {
+          "type": "object",
+          "description": "(docs/28) Les lieux qui changent de nature : depuis quand, et les types de lieux du monde (nom, milieu, axes, saisons), ceux d'origine et ceux qu'il a inventés (inedit, de : le type le plus proche, apparu : le cycle) ; continent : celui d'un type venu d'une fusion par ponts (docs/23), dont les lieux prennent d'abord les natures.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            },
+            "types": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "cycle": {
+      "type": "object",
+      "required": [
+        "n",
+        "date"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "n": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Numéro de cycle, croissant de 1 à chaque tour du moteur."
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Quand le cycle a été calculé (UTC)."
+        },
+        "pressions_recues": {
+          "type": "integer",
+          "description": "Nombre d'événements de pression intégrés dans ce cycle."
+        },
+        "saison": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "nom"
+          ],
+          "properties": {
+            "phase": {
+              "$ref": "#/$defs/unite"
+            },
+            "nom": {
+              "enum": [
+                "hiver",
+                "printemps",
+                "été",
+                "automne"
+              ]
+            },
+            "production": {
+              "type": "number",
+              "description": "Facteur de production des biomes à saisons ce cycle (0,75 en plein hiver, 1,25 en plein été par défaut)."
+            }
+          }
+        }
+      }
+    },
+    "biomes": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Les biomes sont décrits par des axes, pas par des noms : un jeu fait correspondre ses propres biomes aux axes.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "milieu",
+          "axes",
+          "capacite"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "nom": {
+            "type": "string"
+          },
+          "milieu": {
+            "enum": [
+              "terrestre",
+              "aquatique",
+              "amphibie",
+              "aerien",
+              "souterrain",
+              "marin"
+            ],
+            "description": "aquatique : l'eau douce (lac, rivière) ; marin : la mer ; amphibie : les deux bords (côte, marais, mangrove), où vivent nageurs et marcheurs."
+          },
+          "axes": {
+            "type": "object",
+            "required": [
+              "temperature",
+              "humidite",
+              "altitude",
+              "lumiere",
+              "couvert"
+            ],
+            "additionalProperties": {
+              "$ref": "#/$defs/unite"
+            },
+            "description": "Chaque axe va de 0 à 1 : 0 = froid/sec/bas/sombre/nu, 1 = chaud/humide/haut/lumineux/dense. Un monde peut en ajouter (catalogue.monde.axes, docs/20).",
+            "properties": {
+              "temperature": {
+                "$ref": "#/$defs/unite"
+              },
+              "humidite": {
+                "$ref": "#/$defs/unite"
+              },
+              "altitude": {
+                "$ref": "#/$defs/unite"
+              },
+              "lumiere": {
+                "$ref": "#/$defs/unite"
+              },
+              "couvert": {
+                "$ref": "#/$defs/unite"
+              }
+            }
+          },
+          "capacite": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Capacité d'accueil totale (unités de biomasse abstraites)."
+          },
+          "voisins": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Biomes vers lesquels une population peut migrer."
+          },
+          "capacite_base": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Capacité d’origine, vers laquelle le biome regagne lentement après une perte d’habitat."
+          },
+          "saisons": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "temperature": {
+                    "type": "number"
+                  },
+                  "lumiere": {
+                    "type": "number"
+                  },
+                  "humidite": {
+                    "type": "number"
+                  },
+                  "capacite": {
+                    "type": "number"
+                  }
+                }
+              }
+            ],
+            "description": "Amplitudes saisonnières de ce biome (false : aucune, ex. une grotte ou un volcan). Par défaut : température ±0,15, lumière ±0,1, humidité ±0,08, production ±25 %."
+          },
+          "axes_saison": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/$defs/unite"
+            },
+            "description": "Les axes tels qu’ils sont en cette saison (axes reste la valeur annuelle, stable : c’est elle qu’un traducteur fait correspondre)."
+          },
+          "catastrophes": {
+            "type": "boolean",
+            "description": "false : ce biome est à l’abri des catastrophes (incendie, crue, sécheresse)."
+          },
+          "type": {
+            "type": "string",
+            "description": "(état interne d'un monde à parcelles, docs/15) le biome dont cette parcelle est une part ; l'instantané publié ne donne que les biomes."
+          },
+          "ressources": {
+            "type": "object",
+            "description": "Ce que le lieu offre aux machines (docs/16), une fois la Mère éveillée.",
+            "properties": {
+              "surface": {
+                "type": "number",
+                "description": "ce qu'il y a à capter (une part de l'étendue du biome)"
+              },
+              "geothermie": {
+                "type": "number",
+                "description": "la chaleur de la terre (le volcan, les abysses, la grotte)"
+              },
+              "lumiere": {
+                "type": "number",
+                "description": "la lumière de ce cycle (saison, durée du jour, moins ce que le couvert cache)"
+              },
+              "chaleur": {
+                "type": "number",
+                "description": "la chaleur de ce cycle (la terre et l'air)"
+              },
+              "minerai": {
+                "type": "number"
+              },
+              "minerai_max": {
+                "type": "number"
+              },
+              "ferraille": {
+                "type": "number",
+                "description": "ce qu'ont laissé les machines mortes ; elle rouille"
+              }
+            },
+            "additionalProperties": false
+          },
+          "transforme": {
+            "type": "object",
+            "description": "Le milieu transformé (docs/22) : base, les axes du lieu à l'éveil du milieu (axes donne ceux d'aujourd'hui) ; jeu, ce que les joueurs y ont changé, qui s'efface lentement ; etat, ref, signale : la mémoire du moteur."
+          },
+          "nature": {
+            "type": "object",
+            "description": "(docs/28) Le lieu a changé de nature : le type de lieu qu'il est devenu (type, nom), depuis quand ; inedite : une nature que le monde a inventée. Il en a pris le milieu et les saisons. Absent : il est de sa nature d'origine.",
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "nom": {
+                "type": "string"
+              },
+              "depuis": {
+                "type": "integer"
+              },
+              "inedite": {
+                "type": "boolean"
+              }
+            }
+          },
+          "traversees": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "(docs/31) Les voisins qu'on ne rejoint qu'en traversant la mer (une île née d'un volcan) : seules les bêtes qui volent, nagent ou dérivent (10 g au plus) y passent."
+          },
+          "climat": {
+            "type": "object",
+            "description": "(docs/31) Un lieu que le milieu ne transforme pas : ses axes à l'éveil du climat (base), que le climat déplace."
+          },
+          "jeune": {
+            "type": "object",
+            "description": "(docs/31) Une île jeune : le cycle de sa naissance (nee) et la capacité qu'elle aura (cible) ; sa terre s'enrichit."
+          },
+          "natures": {
+            "type": "array",
+            "description": "(docs/28) Un monde par parcelles : la part de ses parcelles qui ont changé de nature, par nature (type, nom, part).",
+            "items": {
+              "type": "object"
+            }
+          },
+          "visiteurs": {
+            "type": "array",
+            "description": "(docs/38) Les populations voisines venues hiverner ici (taxon, de : leur lieu, effectif, forme du groupe). Sans hivernage actif, c'est une estimation, et elles restent comptées chez elles ; avec (regles.hivernage.actif), ce sont les hivernants comptés ici (populations[].hivernants).",
+            "items": { "type": "object", "properties": { "taxon": { "type": "string" }, "de": { "type": "string" }, "effectif": { "type": "integer" }, "forme": { "type": "string" } } }
+          }
+        }
+      }
+    },
+    "catalogue": {
+      "type": "object",
+      "required": [
+        "version",
+        "traits"
+      ],
+      "additionalProperties": false,
+      "description": "Les traits cités par les phénotypes de cet instantané, avec ce qu'ils impliquent. Un trait n'est jamais une stat de jeu : c'est un organe, un coût, un effet, un comportement. Les traits y sont dans l’ordre du catalogue du moteur : c’est lui qui dit qui masque qui (docs/9).",
+      "properties": {
+        "version": {
+          "type": "string"
+        },
+        "traits": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "domaine",
+              "organe",
+              "cout",
+              "effet"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "domaine": {
+                "enum": [
+                  "morphologie",
+                  "locomotion",
+                  "sens",
+                  "offense",
+                  "defense",
+                  "metabolisme",
+                  "reproduction",
+                  "social",
+                  "activite"
+                ]
+              },
+              "organe": {
+                "type": "string",
+                "description": "Ce que le corps porte pour ce trait (glande, carapace, membrane…)."
+              },
+              "cout": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Surcoût énergétique relatif par rapport au plan de base (0.15 = +15 %)."
+              },
+              "effet": {
+                "type": "string",
+                "description": "Ce que le trait permet, en langage biologique (« projette une sécrétion irritante à 3 longueurs de corps »)."
+              },
+              "comportement": {
+                "type": "string",
+                "description": "Conduite induite, si le trait en impose une (« embuscade, riposte à distance »)."
+              },
+              "exige": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Traits requis pour que celui-ci existe (cohérence des combinaisons)."
+              },
+              "exclut": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "fournit": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Matières que l'organe laisse derrière lui (pour les traducteurs : objets, récolte)."
+              },
+              "ecarts": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "description": "Multiplicateurs appliqués au plan corporel (masse_kg, longevite, portee…)."
+              },
+              "fixe": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "Valeurs imposées au plan (activite, regime)."
+              },
+              "vulnerabilite": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Multiplicateur de la chance d’être mangé (0.55 = une carapace divise presque par deux). 1 = neutre."
+              },
+              "chasse": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Multiplicateur de l’efficacité de chasse (1.25 = crocs allongés). 1 = neutre."
+              },
+              "resistance": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Multiplicateur de la mortalité par maladie (0.85 résiste ; 1.25 : le groupe propage). 1 = neutre."
+              },
+              "conduite": {
+                "type": "object",
+                "description": "Ce que l'organe fait faire à la bête, en vocabulaire abstrait (docs/7-conduites.md). type : riposte-distance, riposte-contact, defense-contact, repli, protection, immobilite, alerte-groupe, defense-petits, vol-plane, vision-nocturne, perception-proche, vue-diurne-faible, morsure, sprint, lenteur, escalade, nage, avertissement, activite-crepuscule. presage : ce qu'un joueur attentif voit avant qu'elle ne se déclenche.",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "effet": {
+                    "type": "string"
+                  },
+                  "portee": {
+                    "type": "number"
+                  },
+                  "recharge": {
+                    "type": "number"
+                  },
+                  "force": {
+                    "type": "number"
+                  },
+                  "presage": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "heredite": {
+                "enum": [
+                  "dominant",
+                  "recessif"
+                ],
+                "description": "Dominant (par défaut) : une copie de l’allèle suffit à montrer le trait. Récessif : il en faut deux ; deux parents qui ne le montrent pas peuvent le transmettre (docs/9)."
+              },
+              "attrait": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Ce que le trait pèse dans le choix du partenaire : 1,6, un porteur a 60 % de chances en plus d’être choisi pour père (docs/9)."
+              },
+              "flore": {
+                "type": "object",
+                "additionalProperties": false,
+                "description": "Ce que le trait fait devant les plantes (docs/17) : portee (la hauteur atteinte, en part de la taille), haut (il atteint les arbres), toxique et epineux (la part des défenses qu'il supporte, de 0 à 1).",
+                "properties": {
+                  "portee": {
+                    "type": "number"
+                  },
+                  "haut": {
+                    "type": "boolean"
+                  },
+                  "toxique": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "epineux": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                }
+              },
+              "nom": {
+                "type": "string",
+                "description": "(docs/27) Le nom d'un trait inventé par le monde (des chromatophores dentelés) : un jeu peut le dire tel quel."
+              },
+              "grammaire": {
+                "type": "object",
+                "description": "(docs/32) Un trait composé par la grammaire : sa phrase (phrase), son moyen (lumiere, son, electricite, odeur, chaleur, couleur), son action, sa cible, son moment, son signe (ce qu'un jeu montre : lueur, eclair, decharge, cri, echo, musc, parfum, thermo, vapeur, couleurs), sa force, sa couleur."
+              },
+              "origine": {
+                "type": "object",
+                "description": "(docs/27) Un trait inventé par le monde : la lignée qui l'a inventé, le cycle, les traits dont il vient (de).",
+                "properties": {
+                  "lignee": {
+                    "type": "string"
+                  },
+                  "cycle": {
+                    "type": "integer"
+                  },
+                  "de": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "quantitatifs": {
+          "type": "object",
+          "description": "Les traits continus (docs/8) et ce qu’ils modulent : champ du plan, mode (log : × e^(echelle·z) ; lin : + echelle·z), héritabilité de départ, largeur de la sélection stabilisante, pentes de prédation, de fécondité, de maladie, optimum selon un axe du biome.",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "champ",
+              "mode",
+              "echelle",
+              "h2"
+            ],
+            "properties": {
+              "champ": {
+                "type": "string"
+              },
+              "mode": {
+                "enum": [
+                  "log",
+                  "lin"
+                ]
+              },
+              "echelle": {
+                "type": "number"
+              },
+              "h2": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "omega2": {
+                "type": "number"
+              },
+              "predation": {
+                "type": "number"
+              },
+              "fecondite": {
+                "type": "number"
+              },
+              "maladie": {
+                "type": "number"
+              },
+              "optimum": {
+                "type": "object",
+                "properties": {
+                  "axe": {
+                    "type": "string"
+                  },
+                  "pente": {
+                    "type": "number"
+                  }
+                }
+              },
+              "effet": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "organes": {
+          "type": "object",
+          "description": "Les types d'organes (moteur/corps.js, docs/11) : places possibles, nombre, formes, fonction, mots pour les décrire, et la conduite qu'un organe prête au jeu (charge, riposte-contact, protection, repli…), forte en proportion de sa taille. Ajouter un type, c'est une entrée ici : ni le schéma ni les jeux ne changent.",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "places",
+              "nombre",
+              "formes",
+              "fonction",
+              "mot"
+            ],
+            "properties": {
+              "places": {
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "tete",
+                    "dos",
+                    "flancs",
+                    "queue",
+                    "avant"
+                  ]
+                },
+                "minItems": 1
+              },
+              "nombre": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "minItems": 2,
+                "maxItems": 2
+              },
+              "defaut": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "formes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1
+              },
+              "fonction": {
+                "type": "string"
+              },
+              "mot": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 2,
+                "maxItems": 2
+              },
+              "fem": {
+                "type": "integer",
+                "enum": [
+                  0,
+                  1
+                ]
+              },
+              "conduite": {
+                "type": "object",
+                "required": [
+                  "type"
+                ],
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "force": {
+                    "type": "number"
+                  },
+                  "effet": {
+                    "type": "string"
+                  },
+                  "nom": {
+                    "type": "string"
+                  },
+                  "presage": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "savoirs": {
+          "type": "object",
+          "description": "(docs/34) Les savoirs que le monde connaît : pour chacun, son nom, son geste (casser, pecher, encercler, alerter, cacher, laver, migrer, tisser), son outil (pierre, brindille, brindilles), son présage, ce qu'il fait.",
+          "additionalProperties": { "type": "object" }
+        },
+        "flore": {
+          "type": "object",
+          "description": "Les traits des plantes (docs/17) : toxique, epineux.",
+          "additionalProperties": {
+            "type": "object"
+          }
+        },
+        "monde": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Le catalogue propre du monde (docs/20) : ses axes, ses traits, ses organes, ses formes de corps. Ils s'ajoutent à ceux du moteur, sans les remplacer. Un traducteur y lit ce que le monde a de plus que les autres.",
+          "properties": {
+            "nom": {
+              "type": "string"
+            },
+            "axes": {
+              "type": "object",
+              "description": "Les axes de biome propres au monde (la magie, le rayonnement…) : ils comptent dans la niche comme les cinq du moteur.",
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "nom": {
+                    "type": "string"
+                  },
+                  "effet": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "traits": {
+              "type": "object",
+              "description": "Les traits propres au monde, au format de catalogue.traits : ils apparaissent par mutation comme ceux du moteur.",
+              "additionalProperties": {
+                "type": "object",
+                "required": [
+                  "domaine",
+                  "organe",
+                  "cout",
+                  "effet"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "domaine": {
+                    "enum": [
+                      "morphologie",
+                      "locomotion",
+                      "sens",
+                      "offense",
+                      "defense",
+                      "metabolisme",
+                      "reproduction",
+                      "social",
+                      "activite"
+                    ]
+                  },
+                  "organe": {
+                    "type": "string",
+                    "description": "Ce que le corps porte pour ce trait (glande, carapace, membrane…)."
+                  },
+                  "cout": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Surcoût énergétique relatif par rapport au plan de base (0.15 = +15 %)."
+                  },
+                  "effet": {
+                    "type": "string",
+                    "description": "Ce que le trait permet, en langage biologique (« projette une sécrétion irritante à 3 longueurs de corps »)."
+                  },
+                  "comportement": {
+                    "type": "string",
+                    "description": "Conduite induite, si le trait en impose une (« embuscade, riposte à distance »)."
+                  },
+                  "exige": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Traits requis pour que celui-ci existe (cohérence des combinaisons)."
+                  },
+                  "exclut": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "fournit": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Matières que l'organe laisse derrière lui (pour les traducteurs : objets, récolte)."
+                  },
+                  "ecarts": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "number"
+                    },
+                    "description": "Multiplicateurs appliqués au plan corporel (masse_kg, longevite, portee…)."
+                  },
+                  "fixe": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Valeurs imposées au plan (activite, regime)."
+                  },
+                  "vulnerabilite": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Multiplicateur de la chance d’être mangé (0.55 = une carapace divise presque par deux). 1 = neutre."
+                  },
+                  "chasse": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Multiplicateur de l’efficacité de chasse (1.25 = crocs allongés). 1 = neutre."
+                  },
+                  "resistance": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Multiplicateur de la mortalité par maladie (0.85 résiste ; 1.25 : le groupe propage). 1 = neutre."
+                  },
+                  "conduite": {
+                    "type": "object",
+                    "description": "Ce que l'organe fait faire à la bête, en vocabulaire abstrait (docs/7-conduites.md). type : riposte-distance, riposte-contact, defense-contact, repli, protection, immobilite, alerte-groupe, defense-petits, vol-plane, vision-nocturne, perception-proche, vue-diurne-faible, morsure, sprint, lenteur, escalade, nage, avertissement, activite-crepuscule. presage : ce qu'un joueur attentif voit avant qu'elle ne se déclenche.",
+                    "properties": {
+                      "type": {
+                        "type": "string"
+                      },
+                      "effet": {
+                        "type": "string"
+                      },
+                      "portee": {
+                        "type": "number"
+                      },
+                      "recharge": {
+                        "type": "number"
+                      },
+                      "force": {
+                        "type": "number"
+                      },
+                      "presage": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "type"
+                    ]
+                  },
+                  "heredite": {
+                    "enum": [
+                      "dominant",
+                      "recessif"
+                    ],
+                    "description": "Dominant (par défaut) : une copie de l’allèle suffit à montrer le trait. Récessif : il en faut deux ; deux parents qui ne le montrent pas peuvent le transmettre (docs/9)."
+                  },
+                  "attrait": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Ce que le trait pèse dans le choix du partenaire : 1,6, un porteur a 60 % de chances en plus d’être choisi pour père (docs/9)."
+                  },
+                  "flore": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "description": "Ce que le trait fait devant les plantes (docs/17) : portee (la hauteur atteinte, en part de la taille), haut (il atteint les arbres), toxique et epineux (la part des défenses qu'il supporte, de 0 à 1).",
+                    "properties": {
+                      "portee": {
+                        "type": "number"
+                      },
+                      "haut": {
+                        "type": "boolean"
+                      },
+                      "toxique": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "epineux": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      }
+                    }
+                  },
+                  "nom": {
+                    "type": "string",
+                    "description": "(docs/27) Le nom d'un trait inventé par le monde : un jeu peut le dire tel quel."
+                  },
+                  "grammaire": {
+                    "type": "object",
+                    "description": "(docs/32) Un trait composé par la grammaire : sa phrase, son moyen, son action, sa cible, son moment, son signe, sa force."
+                  },
+                  "origine": {
+                    "type": "object",
+                    "description": "(docs/27) Un trait inventé par le monde : la lignée qui l'a inventé, le cycle, les traits dont il vient (de).",
+                    "properties": {
+                      "lignee": {
+                        "type": "string"
+                      },
+                      "cycle": {
+                        "type": "integer"
+                      },
+                      "de": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "organes": {
+              "type": "object",
+              "description": "Les types d'organes propres au monde, au format de catalogue.organes, avec poids (leur chance d'apparaître, 0,8 par défaut).",
+              "additionalProperties": {
+                "type": "object"
+              }
+            },
+            "formes": {
+              "type": "object",
+              "description": "Les formes de corps propres au monde : { nom, pattes, depuis (les formes dont elle peut naître), chance } ; (docs/33) loco (les modes de déplacement dont l'un est requis), masse_max, masse_min, repli (la forme qu'un jeu dessine s'il ne sait pas dessiner celle-ci).",
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "nom": {
+                    "type": "string"
+                  },
+                  "pattes": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 60
+                  },
+                  "depuis": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "chance": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                    "loco": { "type": "array", "items": { "type": "string" } },
+                    "masse_max": { "type": "number" },
+                    "masse_min": { "type": "number" },
+                    "repli": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "taxons": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "apparu",
+          "statut",
+          "plan",
+          "populations",
+          "phenotypes"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Stable dans le temps ; un jeu peut l'associer à une entité."
+          },
+          "nom": {
+            "type": "string",
+            "description": "Nom donné par le moteur (ou gardé si le jeu en a proposé un)."
+          },
+          "nom_commun": {
+            "type": "string",
+            "description": "Le nom commun que lui a donné le premier joueur qui l'a décrite (docs/37). Le nom du moteur (nom) reste ; un jeu montre celui qu'il préfère."
+          },
+          "decrit": {
+            "type": "object",
+            "description": "Qui a nommé la lignée (docs/37) : le nom public du joueur s'il l'a donné, son jeu, le cycle où le nom a été retenu, la date de la proposition.",
+            "additionalProperties": false,
+            "properties": {
+              "par": { "type": "string" },
+              "jeu": { "type": ["string", "null"] },
+              "cycle": { "type": ["integer", "null"] },
+              "date": { "type": ["string", "null"] }
+            }
+          },
+          "parent": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Taxon dont celui-ci s'est séparé (lignée)."
+          },
+          "origine": {
+            "type": "object",
+            "description": "Une lignée arrivée d'un autre monde par une fusion (docs/14) : son monde, son identifiant et son cycle d'apparition là-bas. Elle n'a aucun ancêtre dans ce monde-ci, et ne s'hybride avec aucune de ses lignées.",
+            "additionalProperties": false,
+            "required": [
+              "monde",
+              "fusion"
+            ],
+            "properties": {
+              "monde": {
+                "type": "string"
+              },
+              "nom": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string",
+                "description": "Son identifiant dans son monde d'origine (il change si le nom y était déjà pris)."
+              },
+              "apparu": {
+                "type": "integer"
+              },
+              "fusion": {
+                "type": "string"
+              }
+            }
+          },
+          "apparu": {
+            "type": "integer",
+            "description": "Cycle d'apparition. Négatif : née pendant la genèse ou le rodage, avant la génération 0 (monde.genese.recale)."
+          },
+          "eteint": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Cycle d'extinction, sinon null. Un taxon éteint reste listé 10 cycles."
+          },
+          "statut": {
+            "enum": [
+              "croissance",
+              "stable",
+              "declin",
+              "menace",
+              "eteint"
+            ]
+          },
+          "plan": {
+            "type": "object",
+            "description": "Le plan corporel de base, commun à tous les phénotypes.",
+            "required": [
+              "masse_kg",
+              "taille_m",
+              "locomotion",
+              "regime",
+              "longevite",
+              "maturite",
+              "sociabilite",
+              "temperament",
+              "activite"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "masse_kg": {
+                "type": "number",
+                "minimum": 0
+              },
+              "taille_m": {
+                "type": "number",
+                "minimum": 0
+              },
+              "locomotion": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "enum": [
+                    "marche",
+                    "course",
+                    "saut",
+                    "nage",
+                    "vol",
+                    "fouissage",
+                    "reptation",
+                    "grimpe"
+                  ]
+                }
+              },
+              "eau": {
+                "enum": [
+                  "douce",
+                  "salee",
+                  "mixte"
+                ],
+                "description": "Pour un nageur : l'eau où il vit. douce (ou absent) : lacs, rivières ; salee : la mer ; mixte : les deux, comme les poissons qui remontent les fleuves. Un biome amphibie accueille tous les nageurs."
+              },
+              "regime": {
+                "enum": [
+                  "herbivore",
+                  "carnivore",
+                  "omnivore",
+                  "detritivore",
+                  "filtreur",
+                  "synthetique",
+                  "vegetal"
+                ],
+                "description": "« synthetique » : une machine (docs/16), qui ne mange pas et ne se mange pas. « vegetal » : une plante (docs/17), qui pousse et se fait brouter."
+              },
+              "longevite": {
+                "type": "number",
+                "description": "En cycles."
+              },
+              "maturite": {
+                "type": "number",
+                "description": "Âge de reproduction, en cycles."
+              },
+              "portee": {
+                "type": "number",
+                "description": "Descendants par reproduction (moyenne)."
+              },
+              "sociabilite": {
+                "$ref": "#/$defs/unite",
+                "description": "0 solitaire, 1 grégaire."
+              },
+              "temperament": {
+                "$ref": "#/$defs/unite",
+                "description": "0 fuit toujours, 1 riposte toujours."
+              },
+              "activite": {
+                "enum": [
+                  "diurne",
+                  "nocturne",
+                  "crepusculaire",
+                  "continue"
+                ]
+              },
+              "vitesse_rel": {
+                "type": "number",
+                "description": "Vitesse de pointe en longueurs de corps par seconde."
+              },
+              "perception": {
+                "$ref": "#/$defs/unite",
+                "description": "Acuité des sens (portée relative)."
+              },
+              "niche": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "description": "Axes du biome idéal (mêmes clés que biomes.axes). Sans niche, tout biome au milieu compatible convient."
+              },
+              "tolerance": {
+                "type": "number",
+                "minimum": 0.05,
+                "description": "Largeur de la niche : écart-type de la convenance sur la distance entre axes (0.35 par défaut)."
+              },
+              "corps": {
+                "type": "object",
+                "description": "La silhouette (moteur/corps.js) : des proportions de 0 à 1 et des couleurs, pour qu'un jeu dessine une lignée qu'il n'a jamais vue. Dérive à chaque séparation. Les organes (cornes, massue, aiguillon…) apparaissent, grandissent et se perdent ; les scalaires cornes, crête, ailes, carapace, antennes en sont le résumé (la plus grande taille du type), pour les lecteurs anciens. Facultatif.",
+                "properties": {
+                  "forme": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z-]*$",
+                    "description": "quadrupede, hexapode, bipede, oiseau, serpent, ou une forme propre au monde (catalogue.monde.formes, docs/20)."
+                  },
+                  "pattes": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 60,
+                    "description": "0, 2, 4, 6 ou 8 pour les cinq formes de base ; un corps segmenté porte de 10 à 40 pattes (60 au plus), un corps rayonné ou à tentacules de 4 à 10 bras (docs/33)."
+                  },
+                  "long": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "haut": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "cou": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "tete": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "museau": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "oreilles": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "queue": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "cornes": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "crete": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "ailes": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "carapace": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "antennes": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "organes": {
+                    "type": "array",
+                    "maxItems": 16,
+                    "description": "Les organes de la silhouette (docs/11). Chaque type se pose à une place (tête, dos, flancs, queue, avant) ; sa taille va de 0,2 à 1 ; un organe qui passe sous 0,2 se perd. Ce qu'il fait au jeu (charger, piquer, amortir) est dans ORGANES_CAT.",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "taille"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "pattern": "^[a-z][a-z-]*$",
+                          "description": "Un type du catalogue (catalogue.organes) ; un lecteur qui ne le connaît pas l'ignore."
+                        },
+                        "place": {
+                          "enum": [
+                            "tete",
+                            "dos",
+                            "flancs",
+                            "queue",
+                            "avant"
+                          ]
+                        },
+                        "taille": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "nombre": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 12
+                        },
+                        "forme": {
+                          "type": "string",
+                          "description": "Une des formes que le catalogue donne à ce type."
+                        }
+                      }
+                    }
+                  },
+                  "motif": {
+                    "enum": [
+                      "uni",
+                      "rayures",
+                      "taches",
+                      "bandes",
+                      "masque"
+                    ]
+                  },
+                  "couleurs": {
+                    "type": "object",
+                    "properties": {
+                      "robe": {
+                        "type": "array",
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 255
+                        },
+                        "minItems": 3,
+                        "maxItems": 3
+                      },
+                      "sombre": {
+                        "type": "array",
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 255
+                        },
+                        "minItems": 3,
+                        "maxItems": 3
+                      },
+                      "ventre": {
+                        "type": "array",
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 255
+                        },
+                        "minItems": 3,
+                        "maxItems": 3
+                      },
+                      "oeil": {
+                        "type": "array",
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 255
+                        },
+                        "minItems": 3,
+                        "maxItems": 3
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "posture": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "(docs/24) La posture : 0 à quatre pattes ou au ras du sol, 0,5 se dresse, 1 debout (un bipède, un oiseau)."
+                  }
+                },
+                "additionalProperties": false
+              },
+              "modules": {
+                "type": "object",
+                "description": "Une machine (regime « synthetique », docs/16) : le niveau de chacun de ses modules, de 0 à 1. panneau, thermique : ce qu'elle capte de la lumière, de la chaleur ; batterie : ce qui la tient sans énergie ; foreuse, recycleur : sa matière, du minerai, de la ferraille ; pince : ce qu'elle prélève des espèces qui débordent ; blindage : ce qui la protège et la fait se réparer ; arme : ce qui la fait riposter ; discretion : ce qui la fait passer inaperçue.",
+                "additionalProperties": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "role": {
+                "enum": [
+                  "regulateur",
+                  "foreuse",
+                  "recycleur",
+                  "capteur"
+                ],
+                "description": "Une machine (docs/16) : ce qu'elle fait d'abord, d'après ses modules."
+              },
+              "famille": {
+                "enum": [
+                  "animale",
+                  "synthetique",
+                  "vegetale"
+                ],
+                "description": "La famille de la lignée, si elle n'est pas animale (docs/16, docs/17). Un jeu ne reçoit que les familles qu'il demande (Tampon.filtrer)."
+              },
+              "forme": {
+                "enum": [
+                  "herbe",
+                  "buisson",
+                  "arbre",
+                  "roseau",
+                  "algue",
+                  "lichen",
+                  "succulente",
+                  "champignon"
+                ],
+                "description": "Une plante (docs/17) : sa forme, qui dit qui l'atteint."
+              },
+              "hauteur_m": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Une plante : sa hauteur."
+              },
+              "croissance": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Une plante : sa repousse par cycle, quand elle a de la place."
+              },
+              "reproduction": {
+                "enum": [
+                  "ovipare",
+                  "vivipare"
+                ],
+                "description": "(docs/25) La lignée pond des œufs (ovipare) ou met bas des petits (vivipare), dans un monde où la ponte est éveillée."
+              },
+              "reproduction0": {
+                "enum": [
+                  "ovipare",
+                  "vivipare"
+                ],
+                "description": "(docs/25) Le mode de sa lignée à l'éveil de la ponte : ce à quoi ses naissances se rapportent."
+              },
+              "castes": {
+                "type": "object",
+                "description": "(docs/33) Une lignée qui vit en colonie : ses castes (reine, ouvrieres, soldats : leur masse relative, leur part ; la reine a des ailes ; essaim : la colonie essaime en volant) et la part de la lignée qui vit en colonie (part)."
+              },
+              "diete": {
+                "type": "object",
+                "description": "(docs/30) Le spectre de son régime : la part de feuilles, fruits, graines, nectar, insectes, viande et sang dans ce qu'elle mange (leur somme fait 1). Le régime (regime) s'y lit : 10 % de chair au plus, herbivore ; 90 % au moins, carnivore.",
+                "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 }
+              },
+              "diete0": {
+                "type": "object",
+                "description": "(docs/30) Le spectre de sa lignée à l'éveil des régimes : ce à quoi se rapporte ce que le spectre change.",
+                "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 }
+              },
+              "stades": {
+                "type": "object",
+                "description": "(docs/26) Les deux vies d'une lignée dont une part se métamorphose : la larve (une chenille, un têtard, une larve) et l'adulte, chacun avec son régime et sa façon de se déplacer ; part : la part de la lignée qui se métamorphose ; larves : la part des bêtes qui sont des larves, à un moment donné.",
+                "properties": {
+                  "larve": {
+                    "type": "object",
+                    "properties": {
+                      "nom": {
+                        "type": "string"
+                      },
+                      "regime": {
+                        "type": "string"
+                      },
+                      "locomotion": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "forme": {
+                        "type": "string"
+                      },
+                      "masse_rel": {
+                        "type": "number"
+                      },
+                      "eau": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "adulte": {
+                    "type": "object",
+                    "properties": {
+                      "nom": {
+                        "type": "string"
+                      },
+                      "regime": {
+                        "type": "string"
+                      },
+                      "locomotion": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "forme": {
+                        "type": "string"
+                      },
+                      "masse_rel": {
+                        "type": "number"
+                      },
+                      "eau": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "part": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "larves": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                }
+              }
+            }
+          },
+          "populations": {
+            "type": "array",
+            "description": "Ses populations, une par biome où elle vit. Vide pour une lignée éteinte, qui reste listée 10 cycles ; une lignée vivante en a au moins une (outils/verifier.js le vérifie).",
+            "items": {
+              "type": "object",
+              "required": [
+                "biome",
+                "effectif",
+                "tendance"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "biome": {
+                  "type": "string"
+                },
+                "effectif": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "tendance": {
+                  "type": "number",
+                  "description": "Variation relative sur le cycle (−0.12 = −12 %)."
+                },
+                "pression": {
+                  "$ref": "#/$defs/unite",
+                  "description": "Part de la mortalité du cycle due aux pressions externes (joueurs)."
+                },
+                "depuis": {
+                  "type": "integer",
+                  "description": "Cycle d’installation dans ce biome (sert à la séparation des lignées)."
+                },
+                "predation": {
+                  "$ref": "#/$defs/unite",
+                  "description": "Part de la mortalité du cycle due aux prédateurs."
+                },
+                "satiete": {
+                  "$ref": "#/$defs/unite",
+                  "description": "Prédateurs et omnivores : à quel point les proies suffisent (0 = famine, 1 = rassasié). Un traducteur peut en faire l’agressivité."
+                },
+                "maladie": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "reste",
+                    "virulence"
+                  ],
+                  "properties": {
+                    "reste": {
+                      "type": "integer",
+                      "description": "Cycles avant que l’épidémie ne s’éteigne."
+                    },
+                    "virulence": {
+                      "type": "number",
+                      "description": "Mortalité supplémentaire par cycle, avant résistance et entassement."
+                    },
+                    "part": {
+                      "$ref": "#/$defs/unite",
+                      "description": "Part de la mortalité du cycle due à la maladie."
+                    }
+                  },
+                  "description": "Une épidémie en cours dans cette population."
+                },
+                "quant": {
+                  "type": "object",
+                  "description": "Les traits continus de cette population (docs/8) : pour chacun, la moyenne m, la variance phénotypique v et la variance additive g, en écarts-types naturels de la génération 0 (z = 1 : un écart-type au-dessus de la moyenne d’alors). Un jeu tire chaque bête dans N(m, v) ; l’héritabilité est g / v. Ce que vaut un écart-type sur le plan : catalogue.quantitatifs.",
+                  "additionalProperties": {
+                    "type": "object",
+                    "required": [
+                      "m",
+                      "v",
+                      "g"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "m": {
+                        "type": "number"
+                      },
+                      "v": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "g": {
+                        "type": "number",
+                        "minimum": 0
+                      }
+                    }
+                  }
+                },
+                "alleles": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "description": "La reproduction sexuée (docs/9) : pour chaque trait, la fréquence de l’allèle qui le porte dans cette population. Une bête en a deux copies ; un trait dominant se voit chez une part 1 − (1 − p)² des bêtes, un récessif chez p². Un allèle récessif peut donc être bien plus répandu que le trait ne se voit."
+                },
+                "flux": {
+                  "$ref": "#/$defs/unite",
+                  "description": "Le flux de gènes reçu : la part d’immigrants par cycle, en moyenne glissante (docs/10). Près de 0, la population est isolée."
+                },
+                "divergence": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "L’écart génétique de cette population au reste de l’espèce : le F_ST de leurs allèles, plus le quart de l’écart moyen des traits continus (docs/10). Au-delà de REGLES.separation.divergence, une population isolée peut devenir une lignée."
+                },
+                "hybride": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "avec",
+                    "part",
+                    "isolement"
+                  ],
+                  "description": "Une zone hybride (docs/10) : une lignée apparentée vit dans le même biome et s’y croise.",
+                  "properties": {
+                    "avec": {
+                      "type": "string",
+                      "description": "La lignée avec laquelle elle se croise le plus."
+                    },
+                    "part": {
+                      "$ref": "#/$defs/unite",
+                      "description": "La part des naissances de cette population qui a un père de l’autre lignée et survit."
+                    },
+                    "isolement": {
+                      "$ref": "#/$defs/unite",
+                      "description": "L’isolement reproductif entre les deux (0 : une seule population ; 1 : aucun croisement)."
+                    }
+                  }
+                },
+                "mefiance": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Ce que la population a appris des joueurs (docs/12) : la méfiance, nourrie des contacts qui finissent mal (prélèvements, captures), retombe de moitié en 6 cycles. Absente : 0."
+                },
+                "habituation": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "L'habituation, nourrie des rencontres sans suite et de l'aide (nourrissage, libération), défaite par ce qui finit mal, retombe de moitié en 15 cycles. Absente : 0."
+                },
+                "parcelles": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "number"
+                  },
+                  "description": "(monde à parcelles, docs/15) l'effectif de la population dans chacune des parcelles de son biome."
+                },
+                "energie": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Une machine (docs/16) : ce qu'elle capte rapporté à ce qu'elle dépense ce cycle ; sous 1, elle est en veille et ne s'assemble plus."
+                },
+                "posture": {
+                  "enum": [
+                    "neutre",
+                    "defensive",
+                    "fuyante",
+                    "hostile"
+                  ],
+                  "description": "Une machine (docs/16) : ce qu'elle fait face aux joueurs, d'après sa méfiance (docs/12) et son arme. neutre : elle les ignore ; defensive : elle se tient à distance et riposte si on l'attaque ; fuyante : méfiante et sans arme, elle fuit ; hostile : méfiante et armée, elle attaque."
+                },
+                "regulation": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "La part des morts de la population dues aux machines régulatrices (docs/16)."
+                },
+                "nourriture": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Un brouteur (docs/17) : ce qu'il trouve à brouter ici, rapporté à ce qu'il trouvait à l'éveil de la flore ; absent quand il n'a pas changé."
+                },
+                "potentiel": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Une plante : la place qu'elle a ici (en unités de capacité)."
+                },
+                "frequences": {
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "description": "Une plante : la fréquence de chacun de ses phénotypes ici, dans l'ordre de ses phenotypes."
+                },
+                "reference": {
+                  "type": "object",
+                  "description": "Une plante : ce qu'elle était à l'éveil de la flore (effectif, frequences) ; la nourriture des brouteurs s'y rapporte."
+                },
+                "recouvrement": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Un brouteur (docs/17) : ce qu'il mangeait en commun avec sa bande de taille à son arrivée ; la place qu'il trouve s'y rapporte."
+                },
+                "infection": {
+                  "type": "object",
+                  "description": "Les souches qui circulent dans la population (docs/18) : pour chacune, la part des bêtes infectées (i) et celle des immunisées (r).",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "i": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "r": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "pollinisation": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Une plante à fleurs (docs/18) : ce que les butineurs du lieu faisaient à son arrivée ; sa repousse s'y rapporte."
+                },
+                "dispersion": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Une plante à fruits (docs/30) : ce que les mangeurs de fruits du lieu faisaient à son arrivée ; sa repousse s'y rapporte."
+                },
+                "reference_diete": {
+                  "type": "object",
+                  "description": "Une plante (docs/30) : ce qu'elle était à l'éveil des régimes en spectre (effectif, frequences)."
+                },
+                "savoirs": {
+                  "type": "object",
+                  "description": "(docs/34) Ce que sait la population : pour chaque savoir (catalogue.savoirs), la part de ses bêtes qui le savent. Une tradition : une autre population de la même lignée peut ne pas le savoir.",
+                  "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 }
+                },
+                "groupe": {
+                  "type": "object",
+                  "description": "(docs/38) Comment vivent ses bêtes : seules, en famille, en troupeau, en bande, en meute, en banc, en volée, en essaim, en colonie ; la taille d'un groupe ; sa hiérarchie, qui le mène, ses sentinelles, sa chasse, les lignées qui paissent avec elle. Une lecture de l'état : elle ne change rien à la simulation.",
+                  "required": ["forme", "taille"],
+                  "properties": {
+                    "forme": { "enum": ["solitaire", "famille", "troupeau", "bande", "meute", "banc", "volee", "essaim", "colonie"] },
+                    "nom": { "type": "string" },
+                    "sociabilite": { "type": "number", "minimum": 0 },
+                    "taille": { "type": "object", "properties": { "min": { "type": "integer", "minimum": 1 }, "typ": { "type": "integer", "minimum": 1 }, "max": { "type": "integer", "minimum": 1 } } },
+                    "hierarchie": { "type": "object", "properties": { "niveau": { "type": "number" }, "type": { "enum": ["egalitaire", "dominance", "despotique", "castes"] } } },
+                    "meneur": { "type": ["string", "null"] },
+                    "sentinelles": { "type": "boolean" },
+                    "chasse": { "enum": ["ensemble", "encercle"] },
+                    "avec": { "type": "array", "items": { "type": "string" }, "description": "Des lignées qui paissent avec elle (un troupeau mêlé)." }
+                  }
+                },
+                "migration": {
+                  "type": "object",
+                  "description": "(docs/38) Une population qui migre avec les saisons : le lieu voisin où elle hiverne, la part qui part, les phases de l'année du départ et du retour (0 : le cœur de l'hiver), l'état du moment. Ses bêtes restent comptées ici : un jeu qui en prend une là-bas la renvoie avec ce lieu-ci.",
+                  "properties": {
+                    "vers": { "type": "string" }, "vers_nom": { "type": "string" }, "saison": { "type": "string" },
+                    "part": { "type": "number", "minimum": 0, "maximum": 1 }, "depart": { "type": "number" }, "retour": { "type": "number" },
+                    "etat": { "enum": ["au depart", "partie", "au retour", "au pays"] }, "guide": { "type": "string" }
+                  }
+                },
+                "hivernants": {
+                  "type": "object",
+                  "description": "(docs/38) Dans un monde où l'hivernage est actif (regles.hivernage.actif), la part de cette population venue d'ailleurs passer l'hiver ici, par lieu d'origine : ils sont comptés dans son effectif, et rentrent chez eux au printemps.",
+                  "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 }
+                },
+                "recouvrement_avant": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Un brouteur (docs/30) : sa référence d'avant l'éveil des régimes, le temps de la raccorder (un cycle)."
+                }
+              }
+            }
+          },
+          "phenotypes": {
+            "type": "array",
+            "minItems": 1,
+            "description": "Combinaisons cohérentes de traits, avec leur fréquence dans le taxon. Les fréquences somment à 1. Le premier est le phénotype de base.",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "frequence",
+                "traits"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "frequence": {
+                  "$ref": "#/$defs/unite"
+                },
+                "frequence_par_biome": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/$defs/unite"
+                  }
+                },
+                "traits": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Identifiants du catalogue. Vide pour le phénotype de base."
+                },
+                "cout_total": {
+                  "type": "number",
+                  "description": "Somme des coûts : ce que ce phénotype paie en énergie."
+                },
+                "ecarts": {
+                  "type": "object",
+                  "description": "Ce que le phénotype change au plan (multiplicateurs).",
+                  "additionalProperties": {
+                    "type": "number"
+                  }
+                },
+                "selection": {
+                  "type": "number",
+                  "description": "Avantage sélectif net du cycle (positif : la fréquence monte)."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "evenements": {
+      "type": "array",
+      "description": "Ce qui s'est passé de notable dans le cycle : lisible par le visualiseur et par un jeu qui veut le raconter.",
+      "items": {
+        "type": "object",
+        "required": [
+          "type",
+          "taxon"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "enum": [
+              "apparition",
+              "extinction",
+              "separation",
+              "migration",
+              "effondrement",
+              "explosion",
+              "nouveau_trait",
+              "epidemie",
+              "remission",
+              "catastrophe",
+              "hybridation",
+              "mefiance",
+              "eveil",
+              "conception",
+              "transfert",
+              "transformation",
+              "invention",
+              "nature",
+              "climat",
+              "savoir"
+            ]
+          },
+          "taxon": {
+            "type": "string"
+          },
+          "biome": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "precedent": {
+      "type": "object",
+      "description": "Le cycle d'avant, allégé (effectifs par biome, fréquences des phénotypes), joint à l'instantané publié : tous les traducteurs interpolent entre les deux de la même façon.",
+      "properties": {
+        "cycle": {
+          "type": "integer"
+        },
+        "taxons": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "populations": {
+                "type": "array"
+              },
+              "phenotypes": {
+                "type": "array"
+              }
+            },
+            "required": [
+              "id"
+            ]
+          }
+        }
+      }
+    },
+    "parcelles": {
+      "type": "array",
+      "description": "Les parcelles du monde (docs/15), s'il en a : leur biome (type), leur capacité, leurs voisines. Les populations des taxons sont données par biome, avec leur répartition par parcelle.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "type"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "description": "Le biome dont la parcelle est une part."
+          },
+          "nom": {
+            "type": "string"
+          },
+          "capacite": {
+            "type": "number"
+          },
+          "voisins": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "unite": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    }
+  }
+}

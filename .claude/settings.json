@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(outils/godot.sh)",
+      "Bash(outils/godot.sh *)",
+      "Bash(./outils/godot.sh *)",
+      "Bash(/home/user/orvane/outils/godot.sh *)"
+    ]
+  }
+}

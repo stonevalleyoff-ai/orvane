@@ -1,0 +1,44 @@
+{
+  "name": "orvane",
+  "version": "1.0.0",
+  "description": "Orvane : un moteur d'écosystème déterministe que plusieurs jeux partagent. Des populations qui varient, évoluent et se répondent ; chaque jeu en tire ses bêtes et lui renvoie ce que font ses joueurs.",
+  "main": "index.js",
+  "types": "types/orvane.d.ts",
+  "exports": {
+    ".": { "types": "./types/orvane.d.ts", "default": "./index.js" },
+    "./moteur/*": "./moteur/*",
+    "./tampon/*": "./tampon/*",
+    "./schemas/*": "./schemas/*",
+    "./types/*": "./types/*",
+    "./outils/verifier.js": "./outils/verifier.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "moteur/",
+    "tampon/",
+    "schemas/",
+    "types/",
+    "outils/verifier.js",
+    "outils/types.js",
+    "traducteurs/exemple/",
+    "docs/",
+    "BRANCHER-UN-JEU.md",
+    "CONNECT-A-GAME.md",
+    "CHANGELOG.md",
+    "LISEZ-MOI.md"
+  ],
+  "scripts": {
+    "test": "node outils/bancs.js",
+    "contrat": "node outils/contrat.js",
+    "verifier": "node outils/verifier.js",
+    "types": "node outils/types.js"
+  },
+  "engines": { "node": ">=18" },
+  "license": "PolyForm-Shield-1.0.0",
+  "author": "StoneValley",
+  "homepage": "https://stonevalleyoff-ai.github.io/orvane/",
+  "repository": { "type": "git", "url": "git+https://github.com/stonevalleyoff-ai/orvane.git" },
+  "bugs": { "url": "https://github.com/stonevalleyoff-ai/orvane/issues" },
+  "keywords": ["ecosysteme", "ecosystem", "simulation", "evolution", "procedural", "game", "jeu", "faune", "fauna"]
+}

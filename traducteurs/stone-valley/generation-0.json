@@ -1,0 +1,4464 @@
+{
+ "orvane": "0.1",
+ "monde": {
+  "id": "sv-1",
+  "graine": 7340021,
+  "nom": "Monde de Stone Valley",
+  "annee": 120
+ },
+ "cycle": {
+  "n": 0,
+  "date": "2026-10-28T08:05:25.682Z",
+  "pressions_recues": 0
+ },
+ "biomes": [
+  {
+   "id": "rivage",
+   "nom": "Rivage",
+   "milieu": "amphibie",
+   "axes": {
+    "temperature": 0.55,
+    "humidite": 0.6,
+    "altitude": 0.05,
+    "lumiere": 0.9,
+    "couvert": 0.1
+   },
+   "capacite": 64221,
+   "voisins": [
+    "prairie"
+   ]
+  },
+  {
+   "id": "prairie",
+   "nom": "Prairie",
+   "milieu": "terrestre",
+   "axes": {
+    "temperature": 0.55,
+    "humidite": 0.5,
+    "altitude": 0.2,
+    "lumiere": 0.9,
+    "couvert": 0.3
+   },
+   "capacite": 2628137,
+   "voisins": [
+    "rivage",
+    "bois",
+    "lande",
+    "tourbiere",
+    "cerisaie"
+   ]
+  },
+  {
+   "id": "bois",
+   "nom": "Bois",
+   "milieu": "terrestre",
+   "axes": {
+    "temperature": 0.5,
+    "humidite": 0.6,
+    "altitude": 0.3,
+    "lumiere": 0.4,
+    "couvert": 0.9
+   },
+   "capacite": 1286340,
+   "voisins": [
+    "prairie",
+    "lande",
+    "tourbiere",
+    "sylve",
+    "cerisaie"
+   ]
+  },
+  {
+   "id": "lande",
+   "nom": "Lande",
+   "milieu": "terrestre",
+   "axes": {
+    "temperature": 0.5,
+    "humidite": 0.3,
+    "altitude": 0.4,
+    "lumiere": 0.8,
+    "couvert": 0.3
+   },
+   "capacite": 590922,
+   "voisins": [
+    "prairie",
+    "bois",
+    "falaise",
+    "canyon",
+    "cristal",
+    "ossuaire"
+   ]
+  },
+  {
+   "id": "falaise",
+   "nom": "Falaise",
+   "milieu": "terrestre",
+   "axes": {
+    "temperature": 0.45,
+    "humidite": 0.3,
+    "altitude": 0.7,
+    "lumiere": 0.8,
+    "couvert": 0.1
+   },
+   "capacite": 52496,
+   "voisins": [
+    "lande",
+    "pierre"
+   ]
+  },
+  {
+   "id": "pierre",
+   "nom": "Pierre",
+   "milieu": "terrestre",
+   "axes": {
+    "temperature": 0.4,
+    "humidite": 0.2,
+    "altitude": 0.75,
+    "lumiere": 0.8,
+    "couvert": 0.05
+   },
+   "capacite": 19125,
+   "voisins": [
+    "falaise",
+    "neige",
+    "canyon",
+    "cristal",
+    "caldeira"
+   ]
+  },
+  {
+   "id": "neige",
+   "nom": "Neige",
+   "milieu": "terrestre",
+   "axes": {
+    "temperature": 0.1,
+    "humidite": 0.4,
+    "altitude": 0.9,
+    "lumiere": 0.9,
+    "couvert": 0.05
+   },
+   "capacite": 6327,
+   "voisins": [
+    "pierre"
+   ]
+  },
+  {
+   "id": "tourbiere",
+   "nom": "Tourbière",
+   "milieu": "amphibie",
+   "axes": {
+    "temperature": 0.5,
+    "humidite": 0.95,
+    "altitude": 0.1,
+    "lumiere": 0.6,
+    "couvert": 0.5
+   },
+   "capacite": 347163,
+   "voisins": [
+    "prairie",
+    "bois"
+   ]
+  },
+  {
+   "id": "canyon",
+   "nom": "Canyon d'ocre",
+   "milieu": "terrestre",
+   "axes": {
+    "temperature": 0.85,
+    "humidite": 0.1,
+    "altitude": 0.4,
+    "lumiere": 1,
+    "couvert": 0.1
+   },
+   "capacite": 23198,
+   "voisins": [
+    "lande",
+    "pierre"
+   ]
+  },
+  {
+   "id": "sylve",
+   "nom": "Sylve fongique",
+   "milieu": "terrestre",
+   "axes": {
+    "temperature": 0.55,
+    "humidite": 0.8,
+    "altitude": 0.3,
+    "lumiere": 0.2,
+    "couvert": 0.95
+   },
+   "capacite": 95040,
+   "voisins": [
+    "bois"
+   ]
+  },
+  {
+   "id": "cristal",
+   "nom": "Champs de cristal",
+   "milieu": "terrestre",
+   "axes": {
+    "temperature": 0.4,
+    "humidite": 0.3,
+    "altitude": 0.6,
+    "lumiere": 0.9,
+    "couvert": 0.2
+   },
+   "capacite": 25536,
+   "voisins": [
+    "lande",
+    "pierre"
+   ]
+  },
+  {
+   "id": "caldeira",
+   "nom": "Caldeira de cendre",
+   "milieu": "terrestre",
+   "axes": {
+    "temperature": 0.95,
+    "humidite": 0.1,
+    "altitude": 0.5,
+    "lumiere": 0.7,
+    "couvert": 0.05
+   },
+   "capacite": 2232,
+   "voisins": [
+    "pierre",
+    "braises"
+   ]
+  },
+  {
+   "id": "braises",
+   "nom": "Braises",
+   "milieu": "terrestre",
+   "axes": {
+    "temperature": 1,
+    "humidite": 0.05,
+    "altitude": 0.5,
+    "lumiere": 0.7,
+    "couvert": 0
+   },
+   "capacite": 1116,
+   "voisins": [
+    "caldeira"
+   ]
+  },
+  {
+   "id": "ossuaire",
+   "nom": "Ossuaire",
+   "milieu": "terrestre",
+   "axes": {
+    "temperature": 0.5,
+    "humidite": 0.3,
+    "altitude": 0.35,
+    "lumiere": 0.7,
+    "couvert": 0.1
+   },
+   "capacite": 200,
+   "voisins": [
+    "lande",
+    "terres-creuses"
+   ]
+  },
+  {
+   "id": "terres-creuses",
+   "nom": "Terres creuses",
+   "milieu": "terrestre",
+   "axes": {
+    "temperature": 0.4,
+    "humidite": 0.5,
+    "altitude": 0.2,
+    "lumiere": 0.2,
+    "couvert": 0.3
+   },
+   "capacite": 200,
+   "voisins": [
+    "ossuaire"
+   ]
+  },
+  {
+   "id": "cerisaie",
+   "nom": "Cerisaie",
+   "milieu": "terrestre",
+   "axes": {
+    "temperature": 0.6,
+    "humidite": 0.6,
+    "altitude": 0.25,
+    "lumiere": 0.85,
+    "couvert": 0.7
+   },
+   "capacite": 214800,
+   "voisins": [
+    "prairie",
+    "bois"
+   ]
+  }
+ ],
+ "catalogue": {
+  "version": "0.1",
+  "traits": {
+   "albinisme": {
+    "domaine": "morphologie",
+    "organe": "mélanocytes inactifs",
+    "cout": 0.04,
+    "effet": "robe blanche, yeux clairs ; voit moins bien en plein jour",
+    "exclut": [
+     "melanisme",
+     "robe-doree"
+    ],
+    "ecarts": {
+     "perception": 0.9,
+     "resistance": 1.1
+    },
+    "vulnerabilite": 1.15
+   },
+   "melanisme": {
+    "domaine": "morphologie",
+    "organe": "mélanocytes hyperactifs",
+    "cout": 0.01,
+    "effet": "robe noire ; se réchauffe plus vite",
+    "exclut": [
+     "albinisme",
+     "robe-doree"
+    ],
+    "vulnerabilite": 0.95
+   },
+   "robe-doree": {
+    "domaine": "morphologie",
+    "organe": "pigments caroténoïdes",
+    "cout": 0.03,
+    "effet": "robe dorée, voyante",
+    "exclut": [
+     "albinisme",
+     "melanisme"
+    ],
+    "ecarts": {
+     "temperament": 1.1
+    },
+    "vulnerabilite": 1.1
+   },
+   "gigantisme": {
+    "domaine": "morphologie",
+    "organe": "squelette et masse musculaire",
+    "cout": 0.25,
+    "effet": "masse ×1.8, taille ×1.3 ; plus lent, mûrit plus tard",
+    "exclut": [
+     "nanisme"
+    ],
+    "ecarts": {
+     "masse_kg": 1.8,
+     "taille_m": 1.3,
+     "vitesse_rel": 0.8,
+     "maturite": 1.4,
+     "longevite": 1.15,
+     "resistance": 0.95
+    },
+    "vulnerabilite": 0.85,
+    "chasse": 1.1
+   },
+   "nanisme": {
+    "domaine": "morphologie",
+    "organe": "squelette réduit",
+    "cout": 0.04,
+    "effet": "masse ×0.45, taille ×0.75 ; mûrit plus tôt, vit moins longtemps",
+    "exclut": [
+     "gigantisme"
+    ],
+    "ecarts": {
+     "masse_kg": 0.45,
+     "taille_m": 0.75,
+     "maturite": 0.7,
+     "longevite": 0.8,
+     "portee": 0.85,
+     "resistance": 1.1
+    },
+    "vulnerabilite": 1.15,
+    "chasse": 0.9
+   }
+  }
+ },
+ "taxons": [
+  {
+   "id": "brouteur",
+   "nom": "Brouteur",
+   "parent": null,
+   "apparu": 0,
+   "eteint": null,
+   "statut": "stable",
+   "plan": {
+    "masse_kg": 15.35,
+    "taille_m": 0.68,
+    "locomotion": [
+     "marche",
+     "course",
+     "grimpe"
+    ],
+    "regime": "herbivore",
+    "longevite": 30,
+    "maturite": 6,
+    "portee": 3,
+    "sociabilite": 0.7,
+    "temperament": 0,
+    "activite": "diurne",
+    "vitesse_rel": 4.6,
+    "perception": 0.37,
+    "niche": {
+     "temperature": 0.52,
+     "humidite": 0.47,
+     "altitude": 0.3,
+     "lumiere": 0.7,
+     "couvert": 0.5
+    },
+    "tolerance": 0.6,
+    "corps": {
+     "forme": "hexapode",
+     "pattes": 6,
+     "long": 0.5,
+     "haut": 0.3,
+     "cou": 0,
+     "tete": 0.45,
+     "museau": 0.3,
+     "oreilles": 0,
+     "queue": 0.1,
+     "cornes": 0,
+     "crete": 0,
+     "ailes": 0,
+     "carapace": 0.6,
+     "antennes": 0.3,
+     "motif": "uni",
+     "couleurs": {
+      "robe": [
+       188,
+       168,
+       124
+      ],
+      "sombre": [
+       132,
+       112,
+       78
+      ],
+      "ventre": [
+       211,
+       198,
+       170
+      ],
+      "oeil": [
+       60,
+       52,
+       40
+      ]
+     }
+    }
+   },
+   "populations": [
+    {
+     "biome": "prairie",
+     "effectif": 11600,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "lande",
+     "effectif": 4408,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "bois",
+     "effectif": 9512,
+     "tendance": 0,
+     "depuis": 0
+    }
+   ],
+   "phenotypes": [
+    {
+     "id": "base",
+     "frequence": 0.986,
+     "traits": [],
+     "cout_total": 0
+    },
+    {
+     "id": "albinisme",
+     "frequence": 0.004,
+     "traits": [
+      "albinisme"
+     ],
+     "cout_total": 0.04
+    },
+    {
+     "id": "melanisme",
+     "frequence": 0.004,
+     "traits": [
+      "melanisme"
+     ],
+     "cout_total": 0.01
+    },
+    {
+     "id": "robe-doree",
+     "frequence": 0.004,
+     "traits": [
+      "robe-doree"
+     ],
+     "cout_total": 0.03
+    },
+    {
+     "id": "gigantisme",
+     "frequence": 0.001,
+     "traits": [
+      "gigantisme"
+     ],
+     "cout_total": 0.25
+    },
+    {
+     "id": "nanisme",
+     "frequence": 0.001,
+     "traits": [
+      "nanisme"
+     ],
+     "cout_total": 0.04
+    }
+   ]
+  },
+  {
+   "id": "bosseu",
+   "nom": "Bossu",
+   "parent": null,
+   "apparu": 0,
+   "eteint": null,
+   "statut": "stable",
+   "plan": {
+    "masse_kg": 61.51,
+    "taille_m": 1.08,
+    "locomotion": [
+     "marche",
+     "course"
+    ],
+    "regime": "herbivore",
+    "longevite": 47.5,
+    "maturite": 9.5,
+    "portee": 3,
+    "sociabilite": 0.7,
+    "temperament": 0.78,
+    "activite": "diurne",
+    "vitesse_rel": 3.6,
+    "perception": 0.4,
+    "niche": {
+     "temperature": 0.5,
+     "humidite": 0.47,
+     "altitude": 0.4,
+     "lumiere": 0.7,
+     "couvert": 0.43
+    },
+    "tolerance": 0.74,
+    "corps": {
+     "forme": "hexapode",
+     "pattes": 6,
+     "long": 0.45,
+     "haut": 0.35,
+     "cou": 0,
+     "tete": 0.45,
+     "museau": 0.3,
+     "oreilles": 0,
+     "queue": 0.1,
+     "cornes": 0,
+     "crete": 0,
+     "ailes": 0,
+     "carapace": 0.8,
+     "antennes": 0.3,
+     "motif": "uni",
+     "couleurs": {
+      "robe": [
+       150,
+       132,
+       150
+      ],
+      "sombre": [
+       100,
+       86,
+       104
+      ],
+      "ventre": [
+       187,
+       175,
+       187
+      ],
+      "oeil": [
+       70,
+       60,
+       70
+      ]
+     }
+    }
+   },
+   "populations": [
+    {
+     "biome": "prairie",
+     "effectif": 5600,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "bois",
+     "effectif": 4592,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "falaise",
+     "effectif": 280,
+     "tendance": 0,
+     "depuis": 0
+    }
+   ],
+   "phenotypes": [
+    {
+     "id": "base",
+     "frequence": 0.986,
+     "traits": [],
+     "cout_total": 0
+    },
+    {
+     "id": "albinisme",
+     "frequence": 0.004,
+     "traits": [
+      "albinisme"
+     ],
+     "cout_total": 0.04
+    },
+    {
+     "id": "melanisme",
+     "frequence": 0.004,
+     "traits": [
+      "melanisme"
+     ],
+     "cout_total": 0.01
+    },
+    {
+     "id": "robe-doree",
+     "frequence": 0.004,
+     "traits": [
+      "robe-doree"
+     ],
+     "cout_total": 0.03
+    },
+    {
+     "id": "gigantisme",
+     "frequence": 0.001,
+     "traits": [
+      "gigantisme"
+     ],
+     "cout_total": 0.25
+    },
+    {
+     "id": "nanisme",
+     "frequence": 0.001,
+     "traits": [
+      "nanisme"
+     ],
+     "cout_total": 0.04
+    }
+   ]
+  },
+  {
+   "id": "glaneur",
+   "nom": "Glaneur",
+   "parent": null,
+   "apparu": 0,
+   "eteint": null,
+   "statut": "stable",
+   "plan": {
+    "masse_kg": 5.4,
+    "taille_m": 0.48,
+    "locomotion": [
+     "marche",
+     "course",
+     "grimpe"
+    ],
+    "regime": "omnivore",
+    "longevite": 27.5,
+    "maturite": 5.5,
+    "portee": 3,
+    "sociabilite": 0.2,
+    "temperament": 0.2,
+    "activite": "diurne",
+    "vitesse_rel": 5.8,
+    "perception": 0.43,
+    "niche": {
+     "temperature": 0.52,
+     "humidite": 0.47,
+     "altitude": 0.3,
+     "lumiere": 0.7,
+     "couvert": 0.5
+    },
+    "tolerance": 0.6,
+    "corps": {
+     "forme": "hexapode",
+     "pattes": 6,
+     "long": 0.5,
+     "haut": 0.3,
+     "cou": 0,
+     "tete": 0.45,
+     "museau": 0.3,
+     "oreilles": 0,
+     "queue": 0.1,
+     "cornes": 0,
+     "crete": 0,
+     "ailes": 0,
+     "carapace": 0.6,
+     "antennes": 0.3,
+     "motif": "uni",
+     "couleurs": {
+      "robe": [
+       196,
+       140,
+       86
+      ],
+      "sombre": [
+       142,
+       96,
+       52
+      ],
+      "ventre": [
+       217,
+       180,
+       145
+      ],
+      "oeil": [
+       250,
+       220,
+       140
+      ]
+     }
+    }
+   },
+   "populations": [
+    {
+     "biome": "bois",
+     "effectif": 6560,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "prairie",
+     "effectif": 8000,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "lande",
+     "effectif": 3040,
+     "tendance": 0,
+     "depuis": 0
+    }
+   ],
+   "phenotypes": [
+    {
+     "id": "base",
+     "frequence": 0.986,
+     "traits": [],
+     "cout_total": 0
+    },
+    {
+     "id": "albinisme",
+     "frequence": 0.004,
+     "traits": [
+      "albinisme"
+     ],
+     "cout_total": 0.04
+    },
+    {
+     "id": "melanisme",
+     "frequence": 0.004,
+     "traits": [
+      "melanisme"
+     ],
+     "cout_total": 0.01
+    },
+    {
+     "id": "robe-doree",
+     "frequence": 0.004,
+     "traits": [
+      "robe-doree"
+     ],
+     "cout_total": 0.03
+    },
+    {
+     "id": "gigantisme",
+     "frequence": 0.001,
+     "traits": [
+      "gigantisme"
+     ],
+     "cout_total": 0.25
+    },
+    {
+     "id": "nanisme",
+     "frequence": 0.001,
+     "traits": [
+      "nanisme"
+     ],
+     "cout_total": 0.04
+    }
+   ]
+  },
+  {
+   "id": "traqueur",
+   "nom": "Traqueur",
+   "parent": null,
+   "apparu": 0,
+   "eteint": null,
+   "statut": "stable",
+   "plan": {
+    "masse_kg": 25,
+    "taille_m": 0.8,
+    "locomotion": [
+     "marche",
+     "course",
+     "grimpe"
+    ],
+    "regime": "carnivore",
+    "longevite": 50,
+    "maturite": 10,
+    "portee": 2,
+    "sociabilite": 0.7,
+    "temperament": 0.64,
+    "activite": "diurne",
+    "vitesse_rel": 6.2,
+    "perception": 0.8,
+    "niche": {
+     "temperature": 0.52,
+     "humidite": 0.47,
+     "altitude": 0.3,
+     "lumiere": 0.7,
+     "couvert": 0.5
+    },
+    "tolerance": 0.6,
+    "corps": {
+     "forme": "hexapode",
+     "pattes": 6,
+     "long": 0.5,
+     "haut": 0.4,
+     "cou": 0,
+     "tete": 0.45,
+     "museau": 0.5,
+     "oreilles": 0,
+     "queue": 0.1,
+     "cornes": 0,
+     "crete": 0,
+     "ailes": 0,
+     "carapace": 0.6,
+     "antennes": 0.3,
+     "motif": "uni",
+     "couleurs": {
+      "robe": [
+       178,
+       94,
+       106
+      ],
+      "sombre": [
+       116,
+       56,
+       70
+      ],
+      "ventre": [
+       205,
+       150,
+       158
+      ],
+      "oeil": [
+       255,
+       228,
+       150
+      ]
+     }
+    }
+   },
+   "populations": [
+    {
+     "biome": "prairie",
+     "effectif": 1200,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "bois",
+     "effectif": 984,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "lande",
+     "effectif": 456,
+     "tendance": 0,
+     "depuis": 0
+    }
+   ],
+   "phenotypes": [
+    {
+     "id": "base",
+     "frequence": 0.986,
+     "traits": [],
+     "cout_total": 0
+    },
+    {
+     "id": "albinisme",
+     "frequence": 0.004,
+     "traits": [
+      "albinisme"
+     ],
+     "cout_total": 0.04
+    },
+    {
+     "id": "melanisme",
+     "frequence": 0.004,
+     "traits": [
+      "melanisme"
+     ],
+     "cout_total": 0.01
+    },
+    {
+     "id": "robe-doree",
+     "frequence": 0.004,
+     "traits": [
+      "robe-doree"
+     ],
+     "cout_total": 0.03
+    },
+    {
+     "id": "gigantisme",
+     "frequence": 0.001,
+     "traits": [
+      "gigantisme"
+     ],
+     "cout_total": 0.25
+    },
+    {
+     "id": "nanisme",
+     "frequence": 0.001,
+     "traits": [
+      "nanisme"
+     ],
+     "cout_total": 0.04
+    }
+   ]
+  },
+  {
+   "id": "spectre",
+   "nom": "Spectre",
+   "parent": null,
+   "apparu": 0,
+   "eteint": null,
+   "statut": "stable",
+   "plan": {
+    "masse_kg": 48.83,
+    "taille_m": 1,
+    "locomotion": [
+     "marche",
+     "course",
+     "grimpe"
+    ],
+    "regime": "carnivore",
+    "longevite": 75,
+    "maturite": 15,
+    "portee": 2,
+    "sociabilite": 0.2,
+    "temperament": 0.8,
+    "activite": "nocturne",
+    "vitesse_rel": 6.8,
+    "perception": 0.93,
+    "niche": {
+     "temperature": 0.48,
+     "humidite": 0.4,
+     "altitude": 0.47,
+     "lumiere": 0.67,
+     "couvert": 0.43
+    },
+    "tolerance": 0.67,
+    "corps": {
+     "forme": "hexapode",
+     "pattes": 6,
+     "long": 0.5,
+     "haut": 0.45,
+     "cou": 0,
+     "tete": 0.45,
+     "museau": 0.3,
+     "oreilles": 0,
+     "queue": 0.1,
+     "cornes": 0,
+     "crete": 0,
+     "ailes": 0,
+     "carapace": 0.6,
+     "antennes": 0.5,
+     "motif": "uni",
+     "couleurs": {
+      "robe": [
+       92,
+       80,
+       120
+      ],
+      "sombre": [
+       52,
+       44,
+       72
+      ],
+      "ventre": [
+       149,
+       141,
+       167
+      ],
+      "oeil": [
+       180,
+       240,
+       255
+      ]
+     }
+    }
+   },
+   "populations": [
+    {
+     "biome": "bois",
+     "effectif": 443,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "falaise",
+     "effectif": 27,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "lande",
+     "effectif": 205,
+     "tendance": 0,
+     "depuis": 0
+    }
+   ],
+   "phenotypes": [
+    {
+     "id": "base",
+     "frequence": 0.986,
+     "traits": [],
+     "cout_total": 0
+    },
+    {
+     "id": "albinisme",
+     "frequence": 0.004,
+     "traits": [
+      "albinisme"
+     ],
+     "cout_total": 0.04
+    },
+    {
+     "id": "melanisme",
+     "frequence": 0.004,
+     "traits": [
+      "melanisme"
+     ],
+     "cout_total": 0.01
+    },
+    {
+     "id": "robe-doree",
+     "frequence": 0.004,
+     "traits": [
+      "robe-doree"
+     ],
+     "cout_total": 0.03
+    },
+    {
+     "id": "gigantisme",
+     "frequence": 0.001,
+     "traits": [
+      "gigantisme"
+     ],
+     "cout_total": 0.25
+    },
+    {
+     "id": "nanisme",
+     "frequence": 0.001,
+     "traits": [
+      "nanisme"
+     ],
+     "cout_total": 0.04
+    }
+   ]
+  },
+  {
+   "id": "coursier",
+   "nom": "Coursier",
+   "parent": null,
+   "apparu": 0,
+   "eteint": null,
+   "statut": "stable",
+   "plan": {
+    "masse_kg": 38.02,
+    "taille_m": 0.92,
+    "locomotion": [
+     "marche",
+     "course"
+    ],
+    "regime": "herbivore",
+    "longevite": 45,
+    "maturite": 9,
+    "portee": 3,
+    "sociabilite": 0.7,
+    "temperament": 0.38,
+    "activite": "diurne",
+    "vitesse_rel": 6.6,
+    "perception": 0.6,
+    "niche": {
+     "temperature": 0.53,
+     "humidite": 0.4,
+     "altitude": 0.3,
+     "lumiere": 0.85,
+     "couvert": 0.3
+    },
+    "tolerance": 0.3,
+    "corps": {
+     "forme": "bipede",
+     "pattes": 2,
+     "long": 0.4,
+     "haut": 0.85,
+     "cou": 0.75,
+     "tete": 0.4,
+     "museau": 0.5,
+     "oreilles": 0,
+     "queue": 0.35,
+     "cornes": 0,
+     "crete": 0.3,
+     "ailes": 0,
+     "carapace": 0,
+     "antennes": 0,
+     "motif": "uni",
+     "couleurs": {
+      "robe": [
+       232,
+       190,
+       60
+      ],
+      "sombre": [
+       176,
+       124,
+       36
+      ],
+      "ventre": [
+       240,
+       213,
+       128
+      ],
+      "oeil": [
+       38,
+       30,
+       30
+      ]
+     }
+    }
+   },
+   "populations": [
+    {
+     "biome": "prairie",
+     "effectif": 2800,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "lande",
+     "effectif": 1064,
+     "tendance": 0,
+     "depuis": 0
+    }
+   ],
+   "phenotypes": [
+    {
+     "id": "base",
+     "frequence": 0.986,
+     "traits": [],
+     "cout_total": 0
+    },
+    {
+     "id": "albinisme",
+     "frequence": 0.004,
+     "traits": [
+      "albinisme"
+     ],
+     "cout_total": 0.04
+    },
+    {
+     "id": "melanisme",
+     "frequence": 0.004,
+     "traits": [
+      "melanisme"
+     ],
+     "cout_total": 0.01
+    },
+    {
+     "id": "robe-doree",
+     "frequence": 0.004,
+     "traits": [
+      "robe-doree"
+     ],
+     "cout_total": 0.03
+    },
+    {
+     "id": "gigantisme",
+     "frequence": 0.001,
+     "traits": [
+      "gigantisme"
+     ],
+     "cout_total": 0.25
+    },
+    {
+     "id": "nanisme",
+     "frequence": 0.001,
+     "traits": [
+      "nanisme"
+     ],
+     "cout_total": 0.04
+    }
+   ]
+  },
+  {
+   "id": "coursier_o",
+   "nom": "Coursier orange",
+   "parent": null,
+   "apparu": 0,
+   "eteint": null,
+   "statut": "stable",
+   "plan": {
+    "masse_kg": 41.08,
+    "taille_m": 0.94,
+    "locomotion": [
+     "marche",
+     "course"
+    ],
+    "regime": "herbivore",
+    "longevite": 50,
+    "maturite": 10,
+    "portee": 3,
+    "sociabilite": 0.7,
+    "temperament": 0.38,
+    "activite": "diurne",
+    "vitesse_rel": 7,
+    "perception": 0.67,
+    "niche": {
+     "temperature": 0.53,
+     "humidite": 0.47,
+     "altitude": 0.22,
+     "lumiere": 0.87,
+     "couvert": 0.23
+    },
+    "tolerance": 0.32,
+    "corps": {
+     "forme": "bipede",
+     "pattes": 2,
+     "long": 0.4,
+     "haut": 0.85,
+     "cou": 0.75,
+     "tete": 0.4,
+     "museau": 0.5,
+     "oreilles": 0,
+     "queue": 0.35,
+     "cornes": 0,
+     "crete": 0.3,
+     "ailes": 0,
+     "carapace": 0,
+     "antennes": 0,
+     "motif": "uni",
+     "couleurs": {
+      "robe": [
+       236,
+       132,
+       48
+      ],
+      "sombre": [
+       176,
+       80,
+       30
+      ],
+      "ventre": [
+       243,
+       175,
+       120
+      ],
+      "oeil": [
+       38,
+       30,
+       30
+      ]
+     }
+    }
+   },
+   "populations": [
+    {
+     "biome": "rivage",
+     "effectif": 120,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "prairie",
+     "effectif": 1000,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "lande",
+     "effectif": 380,
+     "tendance": 0,
+     "depuis": 0
+    }
+   ],
+   "phenotypes": [
+    {
+     "id": "base",
+     "frequence": 0.986,
+     "traits": [],
+     "cout_total": 0
+    },
+    {
+     "id": "albinisme",
+     "frequence": 0.004,
+     "traits": [
+      "albinisme"
+     ],
+     "cout_total": 0.04
+    },
+    {
+     "id": "melanisme",
+     "frequence": 0.004,
+     "traits": [
+      "melanisme"
+     ],
+     "cout_total": 0.01
+    },
+    {
+     "id": "robe-doree",
+     "frequence": 0.004,
+     "traits": [
+      "robe-doree"
+     ],
+     "cout_total": 0.03
+    },
+    {
+     "id": "gigantisme",
+     "frequence": 0.001,
+     "traits": [
+      "gigantisme"
+     ],
+     "cout_total": 0.25
+    },
+    {
+     "id": "nanisme",
+     "frequence": 0.001,
+     "traits": [
+      "nanisme"
+     ],
+     "cout_total": 0.04
+    }
+   ]
+  },
+  {
+   "id": "coursier_r",
+   "nom": "Coursier rouge",
+   "parent": null,
+   "apparu": 0,
+   "eteint": null,
+   "statut": "stable",
+   "plan": {
+    "masse_kg": 45.4,
+    "taille_m": 0.98,
+    "locomotion": [
+     "marche",
+     "course"
+    ],
+    "regime": "herbivore",
+    "longevite": 55,
+    "maturite": 11,
+    "portee": 3,
+    "sociabilite": 0.2,
+    "temperament": 0.52,
+    "activite": "diurne",
+    "vitesse_rel": 7.2,
+    "perception": 0.67,
+    "niche": {
+     "temperature": 0.45,
+     "humidite": 0.27,
+     "altitude": 0.62,
+     "lumiere": 0.8,
+     "couvert": 0.15
+    },
+    "tolerance": 0.3,
+    "corps": {
+     "forme": "bipede",
+     "pattes": 2,
+     "long": 0.4,
+     "haut": 0.85,
+     "cou": 0.75,
+     "tete": 0.4,
+     "museau": 0.5,
+     "oreilles": 0,
+     "queue": 0.35,
+     "cornes": 0,
+     "crete": 0.3,
+     "ailes": 0,
+     "carapace": 0,
+     "antennes": 0,
+     "motif": "uni",
+     "couleurs": {
+      "robe": [
+       214,
+       60,
+       54
+      ],
+      "sombre": [
+       140,
+       34,
+       40
+      ],
+      "ventre": [
+       228,
+       128,
+       124
+      ],
+      "oeil": [
+       38,
+       30,
+       30
+      ]
+     }
+    }
+   },
+   "populations": [
+    {
+     "biome": "lande",
+     "effectif": 152,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "falaise",
+     "effectif": 20,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "pierre",
+     "effectif": 32,
+     "tendance": 0,
+     "depuis": 0
+    }
+   ],
+   "phenotypes": [
+    {
+     "id": "base",
+     "frequence": 0.986,
+     "traits": [],
+     "cout_total": 0
+    },
+    {
+     "id": "albinisme",
+     "frequence": 0.004,
+     "traits": [
+      "albinisme"
+     ],
+     "cout_total": 0.04
+    },
+    {
+     "id": "melanisme",
+     "frequence": 0.004,
+     "traits": [
+      "melanisme"
+     ],
+     "cout_total": 0.01
+    },
+    {
+     "id": "robe-doree",
+     "frequence": 0.004,
+     "traits": [
+      "robe-doree"
+     ],
+     "cout_total": 0.03
+    },
+    {
+     "id": "gigantisme",
+     "frequence": 0.001,
+     "traits": [
+      "gigantisme"
+     ],
+     "cout_total": 0.25
+    },
+    {
+     "id": "nanisme",
+     "frequence": 0.001,
+     "traits": [
+      "nanisme"
+     ],
+     "cout_total": 0.04
+    }
+   ]
+  },
+  {
+   "id": "coursier_a",
+   "nom": "Coursier d'aurore",
+   "parent": null,
+   "apparu": 0,
+   "eteint": null,
+   "statut": "stable",
+   "plan": {
+    "masse_kg": 48.83,
+    "taille_m": 1,
+    "locomotion": [
+     "marche",
+     "course"
+    ],
+    "regime": "herbivore",
+    "longevite": 60,
+    "maturite": 12,
+    "portee": 3,
+    "sociabilite": 0.2,
+    "temperament": 0.48,
+    "activite": "diurne",
+    "vitesse_rel": 7.6,
+    "perception": 0.73,
+    "niche": {
+     "temperature": 0.52,
+     "humidite": 0.47,
+     "altitude": 0.3,
+     "lumiere": 0.7,
+     "couvert": 0.5
+    },
+    "tolerance": 0.6,
+    "corps": {
+     "forme": "bipede",
+     "pattes": 2,
+     "long": 0.4,
+     "haut": 0.85,
+     "cou": 0.75,
+     "tete": 0.4,
+     "museau": 0.5,
+     "oreilles": 0,
+     "queue": 0.35,
+     "cornes": 0,
+     "crete": 0.6,
+     "ailes": 0,
+     "carapace": 0,
+     "antennes": 0,
+     "motif": "uni",
+     "couleurs": {
+      "robe": [
+       240,
+       120,
+       120
+      ],
+      "sombre": [
+       120,
+       90,
+       200
+      ],
+      "ventre": [
+       245,
+       167,
+       167
+      ],
+      "oeil": [
+       38,
+       30,
+       30
+      ]
+     }
+    }
+   },
+   "populations": [
+    {
+     "biome": "prairie",
+     "effectif": 200,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "bois",
+     "effectif": 164,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "lande",
+     "effectif": 76,
+     "tendance": 0,
+     "depuis": 0
+    }
+   ],
+   "phenotypes": [
+    {
+     "id": "base",
+     "frequence": 0.986,
+     "traits": [],
+     "cout_total": 0
+    },
+    {
+     "id": "albinisme",
+     "frequence": 0.004,
+     "traits": [
+      "albinisme"
+     ],
+     "cout_total": 0.04
+    },
+    {
+     "id": "melanisme",
+     "frequence": 0.004,
+     "traits": [
+      "melanisme"
+     ],
+     "cout_total": 0.01
+    },
+    {
+     "id": "robe-doree",
+     "frequence": 0.004,
+     "traits": [
+      "robe-doree"
+     ],
+     "cout_total": 0.03
+    },
+    {
+     "id": "gigantisme",
+     "frequence": 0.001,
+     "traits": [
+      "gigantisme"
+     ],
+     "cout_total": 0.25
+    },
+    {
+     "id": "nanisme",
+     "frequence": 0.001,
+     "traits": [
+      "nanisme"
+     ],
+     "cout_total": 0.04
+    }
+   ]
+  },
+  {
+   "id": "crapaud",
+   "nom": "Crapaud-buffle",
+   "parent": null,
+   "apparu": 0,
+   "eteint": null,
+   "statut": "stable",
+   "plan": {
+    "masse_kg": 84.38,
+    "taille_m": 1.2,
+    "locomotion": [
+     "saut",
+     "nage",
+     "marche"
+    ],
+    "regime": "omnivore",
+    "longevite": 40,
+    "maturite": 8,
+    "portee": 40,
+    "sociabilite": 0.2,
+    "temperament": 0.39,
+    "activite": "diurne",
+    "vitesse_rel": 3.8,
+    "perception": 0.4,
+    "niche": {
+     "temperature": 0.5,
+     "humidite": 0.95,
+     "altitude": 0.1,
+     "lumiere": 0.6,
+     "couvert": 0.5
+    },
+    "tolerance": 0.3,
+    "corps": {
+     "forme": "quadrupede",
+     "pattes": 4,
+     "long": 0.3,
+     "haut": 0.2,
+     "cou": 0,
+     "tete": 0.7,
+     "museau": 0.2,
+     "oreilles": 0.1,
+     "queue": 0,
+     "cornes": 0,
+     "crete": 0,
+     "ailes": 0,
+     "carapace": 0,
+     "antennes": 0,
+     "motif": "taches",
+     "couleurs": {
+      "robe": [
+       104,
+       118,
+       70
+      ],
+      "sombre": [
+       70,
+       82,
+       46
+      ],
+      "ventre": [
+       157,
+       166,
+       135
+      ],
+      "oeil": [
+       232,
+       196,
+       70
+      ]
+     }
+    }
+   },
+   "populations": [
+    {
+     "biome": "tourbiere",
+     "effectif": 2880,
+     "tendance": 0,
+     "depuis": 0
+    }
+   ],
+   "phenotypes": [
+    {
+     "id": "base",
+     "frequence": 0.986,
+     "traits": [],
+     "cout_total": 0
+    },
+    {
+     "id": "albinisme",
+     "frequence": 0.004,
+     "traits": [
+      "albinisme"
+     ],
+     "cout_total": 0.04
+    },
+    {
+     "id": "melanisme",
+     "frequence": 0.004,
+     "traits": [
+      "melanisme"
+     ],
+     "cout_total": 0.01
+    },
+    {
+     "id": "robe-doree",
+     "frequence": 0.004,
+     "traits": [
+      "robe-doree"
+     ],
+     "cout_total": 0.03
+    },
+    {
+     "id": "gigantisme",
+     "frequence": 0.001,
+     "traits": [
+      "gigantisme"
+     ],
+     "cout_total": 0.25
+    },
+    {
+     "id": "nanisme",
+     "frequence": 0.001,
+     "traits": [
+      "nanisme"
+     ],
+     "cout_total": 0.04
+    }
+   ]
+  },
+  {
+   "id": "varan",
+   "nom": "Varan d'ocre",
+   "parent": null,
+   "apparu": 0,
+   "eteint": null,
+   "statut": "stable",
+   "plan": {
+    "masse_kg": 61.51,
+    "taille_m": 1.08,
+    "locomotion": [
+     "marche",
+     "course",
+     "nage",
+     "grimpe"
+    ],
+    "regime": "omnivore",
+    "longevite": 55,
+    "maturite": 11,
+    "portee": 12,
+    "sociabilite": 0.2,
+    "temperament": 0.6,
+    "activite": "diurne",
+    "vitesse_rel": 6,
+    "perception": 0.6,
+    "niche": {
+     "temperature": 0.85,
+     "humidite": 0.1,
+     "altitude": 0.4,
+     "lumiere": 1,
+     "couvert": 0.1
+    },
+    "tolerance": 0.3,
+    "corps": {
+     "forme": "quadrupede",
+     "pattes": 4,
+     "long": 0.8,
+     "haut": 0.18,
+     "cou": 0.25,
+     "tete": 0.45,
+     "museau": 0.6,
+     "oreilles": 0.1,
+     "queue": 0.85,
+     "cornes": 0,
+     "crete": 0,
+     "ailes": 0,
+     "carapace": 0,
+     "antennes": 0,
+     "motif": "bandes",
+     "couleurs": {
+      "robe": [
+       196,
+       122,
+       70
+      ],
+      "sombre": [
+       120,
+       68,
+       40
+      ],
+      "ventre": [
+       217,
+       169,
+       135
+      ],
+      "oeil": [
+       250,
+       210,
+       90
+      ]
+     }
+    }
+   },
+   "populations": [
+    {
+     "biome": "canyon",
+     "effectif": 264,
+     "tendance": 0,
+     "depuis": 0
+    }
+   ],
+   "phenotypes": [
+    {
+     "id": "base",
+     "frequence": 0.986,
+     "traits": [],
+     "cout_total": 0
+    },
+    {
+     "id": "albinisme",
+     "frequence": 0.004,
+     "traits": [
+      "albinisme"
+     ],
+     "cout_total": 0.04
+    },
+    {
+     "id": "melanisme",
+     "frequence": 0.004,
+     "traits": [
+      "melanisme"
+     ],
+     "cout_total": 0.01
+    },
+    {
+     "id": "robe-doree",
+     "frequence": 0.004,
+     "traits": [
+      "robe-doree"
+     ],
+     "cout_total": 0.03
+    },
+    {
+     "id": "gigantisme",
+     "frequence": 0.001,
+     "traits": [
+      "gigantisme"
+     ],
+     "cout_total": 0.25
+    },
+    {
+     "id": "nanisme",
+     "frequence": 0.001,
+     "traits": [
+      "nanisme"
+     ],
+     "cout_total": 0.04
+    }
+   ]
+  },
+  {
+   "id": "vesseron",
+   "nom": "Vesseron",
+   "parent": null,
+   "apparu": 0,
+   "eteint": null,
+   "statut": "stable",
+   "plan": {
+    "masse_kg": 43.2,
+    "taille_m": 0.96,
+    "locomotion": [
+     "marche",
+     "course"
+    ],
+    "regime": "herbivore",
+    "longevite": 45,
+    "maturite": 9,
+    "portee": 3,
+    "sociabilite": 0.7,
+    "temperament": 0.32,
+    "activite": "diurne",
+    "vitesse_rel": 3.2,
+    "perception": 0.37,
+    "niche": {
+     "temperature": 0.55,
+     "humidite": 0.8,
+     "altitude": 0.3,
+     "lumiere": 0.2,
+     "couvert": 0.95
+    },
+    "tolerance": 0.3,
+    "corps": {
+     "forme": "bipede",
+     "pattes": 2,
+     "long": 0.3,
+     "haut": 0.3,
+     "cou": 0,
+     "tete": 0.9,
+     "museau": 0,
+     "oreilles": 0.1,
+     "queue": 0,
+     "cornes": 0,
+     "crete": 0.7,
+     "ailes": 0,
+     "carapace": 0,
+     "antennes": 0,
+     "motif": "uni",
+     "couleurs": {
+      "robe": [
+       152,
+       74,
+       172
+      ],
+      "sombre": [
+       96,
+       48,
+       110
+      ],
+      "ventre": [
+       188,
+       137,
+       201
+      ],
+      "oeil": [
+       40,
+       26,
+       50
+      ]
+     }
+    }
+   },
+   "populations": [
+    {
+     "biome": "sylve",
+     "effectif": 1540,
+     "tendance": 0,
+     "depuis": 0
+    }
+   ],
+   "phenotypes": [
+    {
+     "id": "base",
+     "frequence": 0.986,
+     "traits": [],
+     "cout_total": 0
+    },
+    {
+     "id": "albinisme",
+     "frequence": 0.004,
+     "traits": [
+      "albinisme"
+     ],
+     "cout_total": 0.04
+    },
+    {
+     "id": "melanisme",
+     "frequence": 0.004,
+     "traits": [
+      "melanisme"
+     ],
+     "cout_total": 0.01
+    },
+    {
+     "id": "robe-doree",
+     "frequence": 0.004,
+     "traits": [
+      "robe-doree"
+     ],
+     "cout_total": 0.03
+    },
+    {
+     "id": "gigantisme",
+     "frequence": 0.001,
+     "traits": [
+      "gigantisme"
+     ],
+     "cout_total": 0.25
+    },
+    {
+     "id": "nanisme",
+     "frequence": 0.001,
+     "traits": [
+      "nanisme"
+     ],
+     "cout_total": 0.04
+    }
+   ]
+  },
+  {
+   "id": "cerf",
+   "nom": "Cerf de verre",
+   "parent": null,
+   "apparu": 0,
+   "eteint": null,
+   "statut": "stable",
+   "plan": {
+    "masse_kg": 93.1,
+    "taille_m": 1.24,
+    "locomotion": [
+     "saut",
+     "marche"
+    ],
+    "regime": "herbivore",
+    "longevite": 65,
+    "maturite": 13,
+    "portee": 3,
+    "sociabilite": 0.7,
+    "temperament": 0,
+    "activite": "diurne",
+    "vitesse_rel": 7.2,
+    "perception": 0.67,
+    "niche": {
+     "temperature": 0.4,
+     "humidite": 0.3,
+     "altitude": 0.6,
+     "lumiere": 0.9,
+     "couvert": 0.2
+    },
+    "tolerance": 0.3,
+    "corps": {
+     "forme": "quadrupede",
+     "pattes": 4,
+     "long": 0.5,
+     "haut": 0.8,
+     "cou": 0.6,
+     "tete": 0.4,
+     "museau": 0.5,
+     "oreilles": 0.45,
+     "queue": 0.15,
+     "cornes": 0.9,
+     "crete": 0,
+     "ailes": 0,
+     "carapace": 0,
+     "antennes": 0,
+     "motif": "uni",
+     "couleurs": {
+      "robe": [
+       226,
+       244,
+       252
+      ],
+      "sombre": [
+       96,
+       140,
+       176
+      ],
+      "ventre": [
+       236,
+       248,
+       253
+      ],
+      "oeil": [
+       30,
+       50,
+       80
+      ]
+     }
+    }
+   },
+   "populations": [
+    {
+     "biome": "cristal",
+     "effectif": 192,
+     "tendance": 0,
+     "depuis": 0
+    }
+   ],
+   "phenotypes": [
+    {
+     "id": "base",
+     "frequence": 0.986,
+     "traits": [],
+     "cout_total": 0
+    },
+    {
+     "id": "albinisme",
+     "frequence": 0.004,
+     "traits": [
+      "albinisme"
+     ],
+     "cout_total": 0.04
+    },
+    {
+     "id": "melanisme",
+     "frequence": 0.004,
+     "traits": [
+      "melanisme"
+     ],
+     "cout_total": 0.01
+    },
+    {
+     "id": "robe-doree",
+     "frequence": 0.004,
+     "traits": [
+      "robe-doree"
+     ],
+     "cout_total": 0.03
+    },
+    {
+     "id": "gigantisme",
+     "frequence": 0.001,
+     "traits": [
+      "gigantisme"
+     ],
+     "cout_total": 0.25
+    },
+    {
+     "id": "nanisme",
+     "frequence": 0.001,
+     "traits": [
+      "nanisme"
+     ],
+     "cout_total": 0.04
+    }
+   ]
+  },
+  {
+   "id": "salamandre",
+   "nom": "Salamandre de braise",
+   "parent": null,
+   "apparu": 0,
+   "eteint": null,
+   "statut": "stable",
+   "plan": {
+    "masse_kg": 48.83,
+    "taille_m": 1,
+    "locomotion": [
+     "marche",
+     "course",
+     "nage",
+     "grimpe"
+    ],
+    "regime": "omnivore",
+    "longevite": 70,
+    "maturite": 14,
+    "portee": 12,
+    "sociabilite": 0.2,
+    "temperament": 0.72,
+    "activite": "nocturne",
+    "vitesse_rel": 5.6,
+    "perception": 0.53,
+    "niche": {
+     "temperature": 0.98,
+     "humidite": 0.08,
+     "altitude": 0.5,
+     "lumiere": 0.7,
+     "couvert": 0.03
+    },
+    "tolerance": 0.3,
+    "corps": {
+     "forme": "quadrupede",
+     "pattes": 4,
+     "long": 0.8,
+     "haut": 0.15,
+     "cou": 0.15,
+     "tete": 0.45,
+     "museau": 0.4,
+     "oreilles": 0.1,
+     "queue": 0.8,
+     "cornes": 0,
+     "crete": 0.2,
+     "ailes": 0,
+     "carapace": 0,
+     "antennes": 0,
+     "motif": "taches",
+     "couleurs": {
+      "robe": [
+       58,
+       44,
+       46
+      ],
+      "sombre": [
+       255,
+       122,
+       44
+      ],
+      "ventre": [
+       127,
+       118,
+       119
+      ],
+      "oeil": [
+       255,
+       220,
+       120
+      ]
+     }
+    }
+   },
+   "populations": [
+    {
+     "biome": "caldeira",
+     "effectif": 32,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "braises",
+     "effectif": 16,
+     "tendance": 0,
+     "depuis": 0
+    }
+   ],
+   "phenotypes": [
+    {
+     "id": "base",
+     "frequence": 0.986,
+     "traits": [],
+     "cout_total": 0
+    },
+    {
+     "id": "albinisme",
+     "frequence": 0.004,
+     "traits": [
+      "albinisme"
+     ],
+     "cout_total": 0.04
+    },
+    {
+     "id": "melanisme",
+     "frequence": 0.004,
+     "traits": [
+      "melanisme"
+     ],
+     "cout_total": 0.01
+    },
+    {
+     "id": "robe-doree",
+     "frequence": 0.004,
+     "traits": [
+      "robe-doree"
+     ],
+     "cout_total": 0.03
+    },
+    {
+     "id": "gigantisme",
+     "frequence": 0.001,
+     "traits": [
+      "gigantisme"
+     ],
+     "cout_total": 0.25
+    },
+    {
+     "id": "nanisme",
+     "frequence": 0.001,
+     "traits": [
+      "nanisme"
+     ],
+     "cout_total": 0.04
+    }
+   ]
+  },
+  {
+   "id": "lentigrade",
+   "nom": "Lentigrade",
+   "parent": null,
+   "apparu": 0,
+   "eteint": null,
+   "statut": "stable",
+   "plan": {
+    "masse_kg": 171.47,
+    "taille_m": 1.52,
+    "locomotion": [
+     "marche",
+     "course"
+    ],
+    "regime": "herbivore",
+    "longevite": 100,
+    "maturite": 20,
+    "portee": 3,
+    "sociabilite": 0.2,
+    "temperament": 0.7,
+    "activite": "diurne",
+    "vitesse_rel": 1.9,
+    "perception": 0.33,
+    "niche": {
+     "temperature": 0.53,
+     "humidite": 0.55,
+     "altitude": 0.25,
+     "lumiere": 0.65,
+     "couvert": 0.6
+    },
+    "tolerance": 0.64,
+    "corps": {
+     "forme": "quadrupede",
+     "pattes": 4,
+     "long": 0.6,
+     "haut": 0.35,
+     "cou": 0.35,
+     "tete": 0.4,
+     "museau": 0.35,
+     "oreilles": 0.2,
+     "queue": 0.2,
+     "cornes": 0,
+     "crete": 0,
+     "ailes": 0,
+     "carapace": 0.85,
+     "antennes": 0,
+     "motif": "uni",
+     "couleurs": {
+      "robe": [
+       132,
+       120,
+       102
+      ],
+      "sombre": [
+       88,
+       80,
+       68
+      ],
+      "ventre": [
+       175,
+       167,
+       156
+      ],
+      "oeil": [
+       40,
+       34,
+       30
+      ]
+     }
+    }
+   },
+   "populations": [
+    {
+     "biome": "prairie",
+     "effectif": 2000,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "bois",
+     "effectif": 1640,
+     "tendance": 0,
+     "depuis": 0
+    }
+   ],
+   "phenotypes": [
+    {
+     "id": "base",
+     "frequence": 0.986,
+     "traits": [],
+     "cout_total": 0
+    },
+    {
+     "id": "albinisme",
+     "frequence": 0.004,
+     "traits": [
+      "albinisme"
+     ],
+     "cout_total": 0.04
+    },
+    {
+     "id": "melanisme",
+     "frequence": 0.004,
+     "traits": [
+      "melanisme"
+     ],
+     "cout_total": 0.01
+    },
+    {
+     "id": "robe-doree",
+     "frequence": 0.004,
+     "traits": [
+      "robe-doree"
+     ],
+     "cout_total": 0.03
+    },
+    {
+     "id": "gigantisme",
+     "frequence": 0.001,
+     "traits": [
+      "gigantisme"
+     ],
+     "cout_total": 0.25
+    },
+    {
+     "id": "nanisme",
+     "frequence": 0.001,
+     "traits": [
+      "nanisme"
+     ],
+     "cout_total": 0.04
+    }
+   ]
+  },
+  {
+   "id": "cotonnier",
+   "nom": "Cotonnier",
+   "parent": null,
+   "apparu": 0,
+   "eteint": null,
+   "statut": "stable",
+   "plan": {
+    "masse_kg": 52.31,
+    "taille_m": 1.2,
+    "locomotion": [
+     "marche",
+     "course"
+    ],
+    "regime": "herbivore",
+    "longevite": 25,
+    "maturite": 5,
+    "portee": 3,
+    "sociabilite": 0.7,
+    "temperament": 0,
+    "activite": "diurne",
+    "vitesse_rel": 5.4,
+    "perception": 0.47,
+    "niche": {
+     "temperature": 0.53,
+     "humidite": 0.47,
+     "altitude": 0.22,
+     "lumiere": 0.87,
+     "couvert": 0.23
+    },
+    "tolerance": 0.32,
+    "corps": {
+     "forme": "quadrupede",
+     "pattes": 4,
+     "long": 0.45,
+     "haut": 0.45,
+     "cou": 0.25,
+     "tete": 0.4,
+     "museau": 0.3,
+     "oreilles": 0.45,
+     "queue": 0.2,
+     "cornes": 0,
+     "crete": 0,
+     "ailes": 0,
+     "carapace": 0,
+     "antennes": 0,
+     "motif": "uni",
+     "couleurs": {
+      "robe": [
+       238,
+       232,
+       220
+      ],
+      "sombre": [
+       150,
+       138,
+       128
+      ],
+      "ventre": [
+       244,
+       240,
+       232
+      ],
+      "oeil": [
+       28,
+       24,
+       22
+      ]
+     }
+    }
+   },
+   "populations": [
+    {
+     "biome": "prairie",
+     "effectif": 6000,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "lande",
+     "effectif": 2280,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "rivage",
+     "effectif": 720,
+     "tendance": 0,
+     "depuis": 0
+    }
+   ],
+   "phenotypes": [
+    {
+     "id": "base",
+     "frequence": 0.986,
+     "traits": [],
+     "cout_total": 0
+    },
+    {
+     "id": "albinisme",
+     "frequence": 0.004,
+     "traits": [
+      "albinisme"
+     ],
+     "cout_total": 0.04
+    },
+    {
+     "id": "melanisme",
+     "frequence": 0.004,
+     "traits": [
+      "melanisme"
+     ],
+     "cout_total": 0.01
+    },
+    {
+     "id": "robe-doree",
+     "frequence": 0.004,
+     "traits": [
+      "robe-doree"
+     ],
+     "cout_total": 0.03
+    },
+    {
+     "id": "gigantisme",
+     "frequence": 0.001,
+     "traits": [
+      "gigantisme"
+     ],
+     "cout_total": 0.25
+    },
+    {
+     "id": "nanisme",
+     "frequence": 0.001,
+     "traits": [
+      "nanisme"
+     ],
+     "cout_total": 0.04
+    }
+   ]
+  },
+  {
+   "id": "carillonneur",
+   "nom": "Carillonneur",
+   "parent": null,
+   "apparu": 0,
+   "eteint": null,
+   "statut": "stable",
+   "plan": {
+    "masse_kg": 61.51,
+    "taille_m": 1.08,
+    "locomotion": [
+     "saut",
+     "marche"
+    ],
+    "regime": "herbivore",
+    "longevite": 55,
+    "maturite": 11,
+    "portee": 3,
+    "sociabilite": 0.7,
+    "temperament": 0.12,
+    "activite": "diurne",
+    "vitesse_rel": 5.8,
+    "perception": 0.6,
+    "niche": {
+     "temperature": 0.5,
+     "humidite": 0.37,
+     "altitude": 0.43,
+     "lumiere": 0.83,
+     "couvert": 0.23
+    },
+    "tolerance": 0.38,
+    "corps": {
+     "forme": "quadrupede",
+     "pattes": 4,
+     "long": 0.5,
+     "haut": 0.75,
+     "cou": 0.5,
+     "tete": 0.4,
+     "museau": 0.3,
+     "oreilles": 0.4,
+     "queue": 0.2,
+     "cornes": 0.8,
+     "crete": 0,
+     "ailes": 0,
+     "carapace": 0,
+     "antennes": 0,
+     "motif": "uni",
+     "couleurs": {
+      "robe": [
+       204,
+       190,
+       164
+      ],
+      "sombre": [
+       146,
+       128,
+       104
+      ],
+      "ventre": [
+       222,
+       213,
+       196
+      ],
+      "oeil": [
+       40,
+       34,
+       30
+      ]
+     }
+    }
+   },
+   "populations": [
+    {
+     "biome": "lande",
+     "effectif": 1216,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "falaise",
+     "effectif": 160,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "prairie",
+     "effectif": 3200,
+     "tendance": 0,
+     "depuis": 0
+    }
+   ],
+   "phenotypes": [
+    {
+     "id": "base",
+     "frequence": 0.986,
+     "traits": [],
+     "cout_total": 0
+    },
+    {
+     "id": "albinisme",
+     "frequence": 0.004,
+     "traits": [
+      "albinisme"
+     ],
+     "cout_total": 0.04
+    },
+    {
+     "id": "melanisme",
+     "frequence": 0.004,
+     "traits": [
+      "melanisme"
+     ],
+     "cout_total": 0.01
+    },
+    {
+     "id": "robe-doree",
+     "frequence": 0.004,
+     "traits": [
+      "robe-doree"
+     ],
+     "cout_total": 0.03
+    },
+    {
+     "id": "gigantisme",
+     "frequence": 0.001,
+     "traits": [
+      "gigantisme"
+     ],
+     "cout_total": 0.25
+    },
+    {
+     "id": "nanisme",
+     "frequence": 0.001,
+     "traits": [
+      "nanisme"
+     ],
+     "cout_total": 0.04
+    }
+   ]
+  },
+  {
+   "id": "oglodon",
+   "nom": "Oglodon",
+   "parent": null,
+   "apparu": 0,
+   "eteint": null,
+   "statut": "stable",
+   "plan": {
+    "masse_kg": 61.51,
+    "taille_m": 1.08,
+    "locomotion": [
+     "marche",
+     "course"
+    ],
+    "regime": "herbivore",
+    "longevite": 65,
+    "maturite": 13,
+    "portee": 3,
+    "sociabilite": 0.7,
+    "temperament": 1,
+    "activite": "diurne",
+    "vitesse_rel": 4.4,
+    "perception": 0.4,
+    "niche": {
+     "temperature": 0.32,
+     "humidite": 0.3,
+     "altitude": 0.78,
+     "lumiere": 0.83,
+     "couvert": 0.07
+    },
+    "tolerance": 0.31,
+    "corps": {
+     "forme": "quadrupede",
+     "pattes": 4,
+     "long": 0.6,
+     "haut": 0.35,
+     "cou": 0.3,
+     "tete": 0.4,
+     "museau": 0.9,
+     "oreilles": 0.2,
+     "queue": 0.5,
+     "cornes": 0,
+     "crete": 0,
+     "ailes": 0,
+     "carapace": 0,
+     "antennes": 0,
+     "motif": "uni",
+     "couleurs": {
+      "robe": [
+       88,
+       96,
+       110
+      ],
+      "sombre": [
+       56,
+       60,
+       72
+      ],
+      "ventre": [
+       146,
+       152,
+       161
+      ],
+      "oeil": [
+       250,
+       186,
+       74
+      ]
+     }
+    }
+   },
+   "populations": [
+    {
+     "biome": "falaise",
+     "effectif": 120,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "pierre",
+     "effectif": 192,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "neige",
+     "effectif": 72,
+     "tendance": 0,
+     "depuis": 0
+    }
+   ],
+   "phenotypes": [
+    {
+     "id": "base",
+     "frequence": 0.986,
+     "traits": [],
+     "cout_total": 0
+    },
+    {
+     "id": "albinisme",
+     "frequence": 0.004,
+     "traits": [
+      "albinisme"
+     ],
+     "cout_total": 0.04
+    },
+    {
+     "id": "melanisme",
+     "frequence": 0.004,
+     "traits": [
+      "melanisme"
+     ],
+     "cout_total": 0.01
+    },
+    {
+     "id": "robe-doree",
+     "frequence": 0.004,
+     "traits": [
+      "robe-doree"
+     ],
+     "cout_total": 0.03
+    },
+    {
+     "id": "gigantisme",
+     "frequence": 0.001,
+     "traits": [
+      "gigantisme"
+     ],
+     "cout_total": 0.25
+    },
+    {
+     "id": "nanisme",
+     "frequence": 0.001,
+     "traits": [
+      "nanisme"
+     ],
+     "cout_total": 0.04
+    }
+   ]
+  },
+  {
+   "id": "felin",
+   "nom": "Félin de brume",
+   "parent": null,
+   "apparu": 0,
+   "eteint": null,
+   "statut": "stable",
+   "plan": {
+    "masse_kg": 28.94,
+    "taille_m": 0.84,
+    "locomotion": [
+     "saut",
+     "marche"
+    ],
+    "regime": "carnivore",
+    "longevite": 60,
+    "maturite": 12,
+    "portee": 2,
+    "sociabilite": 0.9,
+    "temperament": 0.68,
+    "activite": "diurne",
+    "vitesse_rel": 7.4,
+    "perception": 0.73,
+    "niche": {
+     "temperature": 0.52,
+     "humidite": 0.47,
+     "altitude": 0.3,
+     "lumiere": 0.7,
+     "couvert": 0.5
+    },
+    "tolerance": 0.6,
+    "corps": {
+     "forme": "quadrupede",
+     "pattes": 4,
+     "long": 0.6,
+     "haut": 0.5,
+     "cou": 0.3,
+     "tete": 0.45,
+     "museau": 0.35,
+     "oreilles": 0.55,
+     "queue": 0.7,
+     "cornes": 0,
+     "crete": 0,
+     "ailes": 0,
+     "carapace": 0,
+     "antennes": 0,
+     "motif": "rayures",
+     "couleurs": {
+      "robe": [
+       164,
+       174,
+       188
+      ],
+      "sombre": [
+       88,
+       96,
+       114
+      ],
+      "ventre": [
+       208,
+       214,
+       222
+      ],
+      "oeil": [
+       178,
+       236,
+       255
+      ]
+     }
+    }
+   },
+   "populations": [
+    {
+     "biome": "prairie",
+     "effectif": 240,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "bois",
+     "effectif": 197,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "lande",
+     "effectif": 91,
+     "tendance": 0,
+     "depuis": 0
+    }
+   ],
+   "phenotypes": [
+    {
+     "id": "base",
+     "frequence": 0.986,
+     "traits": [],
+     "cout_total": 0
+    },
+    {
+     "id": "albinisme",
+     "frequence": 0.004,
+     "traits": [
+      "albinisme"
+     ],
+     "cout_total": 0.04
+    },
+    {
+     "id": "melanisme",
+     "frequence": 0.004,
+     "traits": [
+      "melanisme"
+     ],
+     "cout_total": 0.01
+    },
+    {
+     "id": "robe-doree",
+     "frequence": 0.004,
+     "traits": [
+      "robe-doree"
+     ],
+     "cout_total": 0.03
+    },
+    {
+     "id": "gigantisme",
+     "frequence": 0.001,
+     "traits": [
+      "gigantisme"
+     ],
+     "cout_total": 0.25
+    },
+    {
+     "id": "nanisme",
+     "frequence": 0.001,
+     "traits": [
+      "nanisme"
+     ],
+     "cout_total": 0.04
+    }
+   ]
+  },
+  {
+   "id": "bramard",
+   "nom": "Bramard",
+   "parent": null,
+   "apparu": 0,
+   "eteint": null,
+   "statut": "stable",
+   "plan": {
+    "masse_kg": 68.6,
+    "taille_m": 1.12,
+    "locomotion": [
+     "marche",
+     "course"
+    ],
+    "regime": "herbivore",
+    "longevite": 80,
+    "maturite": 16,
+    "portee": 3,
+    "sociabilite": 0.9,
+    "temperament": 0.74,
+    "activite": "diurne",
+    "vitesse_rel": 3.4,
+    "perception": 0.4,
+    "niche": {
+     "temperature": 0.55,
+     "humidite": 0.5,
+     "altitude": 0.2,
+     "lumiere": 0.9,
+     "couvert": 0.3
+    },
+    "tolerance": 0.3,
+    "corps": {
+     "forme": "quadrupede",
+     "pattes": 4,
+     "long": 0.6,
+     "haut": 0.65,
+     "cou": 0.4,
+     "tete": 0.5,
+     "museau": 0.5,
+     "oreilles": 0.3,
+     "queue": 0.2,
+     "cornes": 0.8,
+     "crete": 0.4,
+     "ailes": 0,
+     "carapace": 0.3,
+     "antennes": 0,
+     "motif": "uni",
+     "couleurs": {
+      "robe": [
+       92,
+       74,
+       62
+      ],
+      "sombre": [
+       58,
+       46,
+       40
+      ],
+      "ventre": [
+       149,
+       137,
+       130
+      ],
+      "oeil": [
+       36,
+       30,
+       26
+      ]
+     }
+    }
+   },
+   "populations": [
+    {
+     "biome": "prairie",
+     "effectif": 1600,
+     "tendance": 0,
+     "depuis": 0
+    }
+   ],
+   "phenotypes": [
+    {
+     "id": "base",
+     "frequence": 0.986,
+     "traits": [],
+     "cout_total": 0
+    },
+    {
+     "id": "albinisme",
+     "frequence": 0.004,
+     "traits": [
+      "albinisme"
+     ],
+     "cout_total": 0.04
+    },
+    {
+     "id": "melanisme",
+     "frequence": 0.004,
+     "traits": [
+      "melanisme"
+     ],
+     "cout_total": 0.01
+    },
+    {
+     "id": "robe-doree",
+     "frequence": 0.004,
+     "traits": [
+      "robe-doree"
+     ],
+     "cout_total": 0.03
+    },
+    {
+     "id": "gigantisme",
+     "frequence": 0.001,
+     "traits": [
+      "gigantisme"
+     ],
+     "cout_total": 0.25
+    },
+    {
+     "id": "nanisme",
+     "frequence": 0.001,
+     "traits": [
+      "nanisme"
+     ],
+     "cout_total": 0.04
+    }
+   ]
+  },
+  {
+   "id": "sterne",
+   "nom": "Sterne des nues",
+   "parent": null,
+   "apparu": 0,
+   "eteint": null,
+   "statut": "stable",
+   "plan": {
+    "masse_kg": 54.93,
+    "taille_m": 1.04,
+    "locomotion": [
+     "vol"
+    ],
+    "regime": "omnivore",
+    "longevite": 55,
+    "maturite": 11,
+    "portee": 3,
+    "sociabilite": 0.9,
+    "temperament": 0.24,
+    "activite": "diurne",
+    "vitesse_rel": 3.2,
+    "perception": 0.53,
+    "niche": {
+     "temperature": 0.55,
+     "humidite": 0.6,
+     "altitude": 0.05,
+     "lumiere": 0.9,
+     "couvert": 0.1
+    },
+    "tolerance": 0.3,
+    "corps": {
+     "forme": "oiseau",
+     "pattes": 2,
+     "long": 0.45,
+     "haut": 0.25,
+     "cou": 0.35,
+     "tete": 0.4,
+     "museau": 0.55,
+     "oreilles": 0,
+     "queue": 0.5,
+     "cornes": 0,
+     "crete": 0,
+     "ailes": 1,
+     "carapace": 0,
+     "antennes": 0,
+     "motif": "uni",
+     "couleurs": {
+      "robe": [
+       246,
+       246,
+       242
+      ],
+      "sombre": [
+       164,
+       176,
+       192
+      ],
+      "ventre": [
+       252,
+       252,
+       250
+      ],
+      "oeil": [
+       20,
+       22,
+       28
+      ]
+     }
+    }
+   },
+   "populations": [
+    {
+     "biome": "rivage",
+     "effectif": 43,
+     "tendance": 0,
+     "depuis": 0
+    }
+   ],
+   "phenotypes": [
+    {
+     "id": "base",
+     "frequence": 0.986,
+     "traits": [],
+     "cout_total": 0
+    },
+    {
+     "id": "albinisme",
+     "frequence": 0.004,
+     "traits": [
+      "albinisme"
+     ],
+     "cout_total": 0.04
+    },
+    {
+     "id": "melanisme",
+     "frequence": 0.004,
+     "traits": [
+      "melanisme"
+     ],
+     "cout_total": 0.01
+    },
+    {
+     "id": "robe-doree",
+     "frequence": 0.004,
+     "traits": [
+      "robe-doree"
+     ],
+     "cout_total": 0.03
+    },
+    {
+     "id": "gigantisme",
+     "frequence": 0.001,
+     "traits": [
+      "gigantisme"
+     ],
+     "cout_total": 0.25
+    },
+    {
+     "id": "nanisme",
+     "frequence": 0.001,
+     "traits": [
+      "nanisme"
+     ],
+     "cout_total": 0.04
+    }
+   ]
+  },
+  {
+   "id": "dragon",
+   "nom": "Dragon à plumes",
+   "parent": null,
+   "apparu": 0,
+   "eteint": null,
+   "statut": "stable",
+   "plan": {
+    "masse_kg": 25,
+    "taille_m": 0.8,
+    "locomotion": [
+     "vol",
+     "marche"
+    ],
+    "regime": "carnivore",
+    "longevite": 300,
+    "maturite": 60,
+    "portee": 2,
+    "sociabilite": 0.2,
+    "temperament": 0.8,
+    "activite": "diurne",
+    "vitesse_rel": 2.8,
+    "perception": 1,
+    "niche": {
+     "temperature": 0.45,
+     "humidite": 0.27,
+     "altitude": 0.62,
+     "lumiere": 0.8,
+     "couvert": 0.15
+    },
+    "tolerance": 0.3,
+    "corps": {
+     "forme": "quadrupede",
+     "pattes": 4,
+     "long": 0.95,
+     "haut": 0.25,
+     "cou": 0.6,
+     "tete": 0.5,
+     "museau": 0.55,
+     "oreilles": 0,
+     "queue": 1,
+     "cornes": 0,
+     "crete": 0.6,
+     "ailes": 0.95,
+     "carapace": 0,
+     "antennes": 0,
+     "motif": "uni",
+     "couleurs": {
+      "robe": [
+       46,
+       120,
+       98
+      ],
+      "sombre": [
+       34,
+       92,
+       84
+      ],
+      "ventre": [
+       119,
+       167,
+       153
+      ],
+      "oeil": [
+       255,
+       196,
+       60
+      ]
+     }
+    }
+   },
+   "populations": [
+    {
+     "biome": "lande",
+     "effectif": 23,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "falaise",
+     "effectif": 3,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "pierre",
+     "effectif": 5,
+     "tendance": 0,
+     "depuis": 0
+    }
+   ],
+   "phenotypes": [
+    {
+     "id": "base",
+     "frequence": 0.986,
+     "traits": [],
+     "cout_total": 0
+    },
+    {
+     "id": "albinisme",
+     "frequence": 0.004,
+     "traits": [
+      "albinisme"
+     ],
+     "cout_total": 0.04
+    },
+    {
+     "id": "melanisme",
+     "frequence": 0.004,
+     "traits": [
+      "melanisme"
+     ],
+     "cout_total": 0.01
+    },
+    {
+     "id": "robe-doree",
+     "frequence": 0.004,
+     "traits": [
+      "robe-doree"
+     ],
+     "cout_total": 0.03
+    },
+    {
+     "id": "gigantisme",
+     "frequence": 0.001,
+     "traits": [
+      "gigantisme"
+     ],
+     "cout_total": 0.25
+    },
+    {
+     "id": "nanisme",
+     "frequence": 0.001,
+     "traits": [
+      "nanisme"
+     ],
+     "cout_total": 0.04
+    }
+   ]
+  },
+  {
+   "id": "sika",
+   "nom": "Cerf des cerisiers",
+   "parent": null,
+   "apparu": 0,
+   "eteint": null,
+   "statut": "stable",
+   "plan": {
+    "masse_kg": 68.6,
+    "taille_m": 1.12,
+    "locomotion": [
+     "saut",
+     "marche"
+    ],
+    "regime": "herbivore",
+    "longevite": 60,
+    "maturite": 12,
+    "portee": 3,
+    "sociabilite": 0.7,
+    "temperament": 0.12,
+    "activite": "diurne",
+    "vitesse_rel": 6.6,
+    "perception": 0.6,
+    "niche": {
+     "temperature": 0.6,
+     "humidite": 0.6,
+     "altitude": 0.25,
+     "lumiere": 0.85,
+     "couvert": 0.7
+    },
+    "tolerance": 0.3,
+    "corps": {
+     "forme": "quadrupede",
+     "pattes": 4,
+     "long": 0.5,
+     "haut": 0.8,
+     "cou": 0.6,
+     "tete": 0.4,
+     "museau": 0.5,
+     "oreilles": 0.5,
+     "queue": 0.15,
+     "cornes": 0.8,
+     "crete": 0,
+     "ailes": 0,
+     "carapace": 0,
+     "antennes": 0,
+     "motif": "taches",
+     "couleurs": {
+      "robe": [
+       246,
+       238,
+       232
+      ],
+      "sombre": [
+       214,
+       188,
+       192
+      ],
+      "ventre": [
+       249,
+       244,
+       240
+      ],
+      "oeil": [
+       40,
+       30,
+       36
+      ]
+     }
+    }
+   },
+   "populations": [
+    {
+     "biome": "cerisaie",
+     "effectif": 980,
+     "tendance": 0,
+     "depuis": 0
+    }
+   ],
+   "phenotypes": [
+    {
+     "id": "base",
+     "frequence": 0.986,
+     "traits": [],
+     "cout_total": 0
+    },
+    {
+     "id": "albinisme",
+     "frequence": 0.004,
+     "traits": [
+      "albinisme"
+     ],
+     "cout_total": 0.04
+    },
+    {
+     "id": "melanisme",
+     "frequence": 0.004,
+     "traits": [
+      "melanisme"
+     ],
+     "cout_total": 0.01
+    },
+    {
+     "id": "robe-doree",
+     "frequence": 0.004,
+     "traits": [
+      "robe-doree"
+     ],
+     "cout_total": 0.03
+    },
+    {
+     "id": "gigantisme",
+     "frequence": 0.001,
+     "traits": [
+      "gigantisme"
+     ],
+     "cout_total": 0.25
+    },
+    {
+     "id": "nanisme",
+     "frequence": 0.001,
+     "traits": [
+      "nanisme"
+     ],
+     "cout_total": 0.04
+    }
+   ]
+  },
+  {
+   "id": "renard",
+   "nom": "Renard des pétales",
+   "parent": null,
+   "apparu": 0,
+   "eteint": null,
+   "statut": "stable",
+   "plan": {
+    "masse_kg": 15.35,
+    "taille_m": 0.68,
+    "locomotion": [
+     "saut",
+     "marche"
+    ],
+    "regime": "herbivore",
+    "longevite": 50,
+    "maturite": 10,
+    "portee": 3,
+    "sociabilite": 0.2,
+    "temperament": 0.08,
+    "activite": "diurne",
+    "vitesse_rel": 6.8,
+    "perception": 0.67,
+    "niche": {
+     "temperature": 0.6,
+     "humidite": 0.6,
+     "altitude": 0.25,
+     "lumiere": 0.85,
+     "couvert": 0.7
+    },
+    "tolerance": 0.3,
+    "corps": {
+     "forme": "quadrupede",
+     "pattes": 4,
+     "long": 0.55,
+     "haut": 0.45,
+     "cou": 0.3,
+     "tete": 0.45,
+     "museau": 0.6,
+     "oreilles": 0.8,
+     "queue": 0.9,
+     "cornes": 0,
+     "crete": 0,
+     "ailes": 0,
+     "carapace": 0,
+     "antennes": 0,
+     "motif": "uni",
+     "couleurs": {
+      "robe": [
+       246,
+       226,
+       214
+      ],
+      "sombre": [
+       232,
+       138,
+       164
+      ],
+      "ventre": [
+       255,
+       250,
+       246
+      ],
+      "oeil": [
+       255,
+       196,
+       96
+      ]
+     }
+    }
+   },
+   "populations": [
+    {
+     "biome": "cerisaie",
+     "effectif": 560,
+     "tendance": 0,
+     "depuis": 0
+    }
+   ],
+   "phenotypes": [
+    {
+     "id": "base",
+     "frequence": 0.986,
+     "traits": [],
+     "cout_total": 0
+    },
+    {
+     "id": "albinisme",
+     "frequence": 0.004,
+     "traits": [
+      "albinisme"
+     ],
+     "cout_total": 0.04
+    },
+    {
+     "id": "melanisme",
+     "frequence": 0.004,
+     "traits": [
+      "melanisme"
+     ],
+     "cout_total": 0.01
+    },
+    {
+     "id": "robe-doree",
+     "frequence": 0.004,
+     "traits": [
+      "robe-doree"
+     ],
+     "cout_total": 0.03
+    },
+    {
+     "id": "gigantisme",
+     "frequence": 0.001,
+     "traits": [
+      "gigantisme"
+     ],
+     "cout_total": 0.25
+    },
+    {
+     "id": "nanisme",
+     "frequence": 0.001,
+     "traits": [
+      "nanisme"
+     ],
+     "cout_total": 0.04
+    }
+   ]
+  },
+  {
+   "id": "lentisakura",
+   "nom": "Lentigrade-cerisier",
+   "parent": null,
+   "apparu": 0,
+   "eteint": null,
+   "statut": "stable",
+   "plan": {
+    "masse_kg": 266.2,
+    "taille_m": 1.76,
+    "locomotion": [
+     "marche",
+     "course"
+    ],
+    "regime": "herbivore",
+    "longevite": 130,
+    "maturite": 26,
+    "portee": 3,
+    "sociabilite": 0.2,
+    "temperament": 0.72,
+    "activite": "diurne",
+    "vitesse_rel": 1.6,
+    "perception": 0.33,
+    "niche": {
+     "temperature": 0.6,
+     "humidite": 0.6,
+     "altitude": 0.25,
+     "lumiere": 0.85,
+     "couvert": 0.7
+    },
+    "tolerance": 0.3,
+    "corps": {
+     "forme": "quadrupede",
+     "pattes": 4,
+     "long": 0.6,
+     "haut": 0.35,
+     "cou": 0.35,
+     "tete": 0.4,
+     "museau": 0.35,
+     "oreilles": 0.2,
+     "queue": 0.2,
+     "cornes": 0,
+     "crete": 0,
+     "ailes": 0,
+     "carapace": 0.85,
+     "antennes": 0,
+     "motif": "uni",
+     "couleurs": {
+      "robe": [
+       150,
+       128,
+       118
+      ],
+      "sombre": [
+       100,
+       84,
+       80
+      ],
+      "ventre": [
+       187,
+       172,
+       166
+      ],
+      "oeil": [
+       40,
+       34,
+       30
+      ]
+     }
+    }
+   },
+   "populations": [
+    {
+     "biome": "cerisaie",
+     "effectif": 280,
+     "tendance": 0,
+     "depuis": 0
+    }
+   ],
+   "phenotypes": [
+    {
+     "id": "base",
+     "frequence": 0.986,
+     "traits": [],
+     "cout_total": 0
+    },
+    {
+     "id": "albinisme",
+     "frequence": 0.004,
+     "traits": [
+      "albinisme"
+     ],
+     "cout_total": 0.04
+    },
+    {
+     "id": "melanisme",
+     "frequence": 0.004,
+     "traits": [
+      "melanisme"
+     ],
+     "cout_total": 0.01
+    },
+    {
+     "id": "robe-doree",
+     "frequence": 0.004,
+     "traits": [
+      "robe-doree"
+     ],
+     "cout_total": 0.03
+    },
+    {
+     "id": "gigantisme",
+     "frequence": 0.001,
+     "traits": [
+      "gigantisme"
+     ],
+     "cout_total": 0.25
+    },
+    {
+     "id": "nanisme",
+     "frequence": 0.001,
+     "traits": [
+      "nanisme"
+     ],
+     "cout_total": 0.04
+    }
+   ]
+  },
+  {
+   "id": "trottin_menu",
+   "nom": "Trottin furet",
+   "parent": null,
+   "apparu": 0,
+   "eteint": null,
+   "statut": "stable",
+   "plan": {
+    "masse_kg": 5.76,
+    "taille_m": 0.64,
+    "locomotion": [
+     "saut",
+     "marche"
+    ],
+    "regime": "herbivore",
+    "longevite": 45,
+    "maturite": 9,
+    "portee": 3,
+    "sociabilite": 0.7,
+    "temperament": 0.53,
+    "activite": "diurne",
+    "vitesse_rel": 6.4,
+    "perception": 0.53,
+    "niche": {
+     "temperature": 0.52,
+     "humidite": 0.47,
+     "altitude": 0.3,
+     "lumiere": 0.7,
+     "couvert": 0.5
+    },
+    "tolerance": 0.6,
+    "corps": {
+     "forme": "bipede",
+     "pattes": 2,
+     "long": 0.6,
+     "haut": 0.4,
+     "cou": 0.3,
+     "tete": 0.55,
+     "museau": 0.5,
+     "oreilles": 0.3,
+     "queue": 0.6,
+     "cornes": 0,
+     "crete": 0,
+     "ailes": 0,
+     "carapace": 0,
+     "antennes": 0,
+     "motif": "uni",
+     "couleurs": {
+      "robe": [
+       118,
+       128,
+       100
+      ],
+      "sombre": [
+       70,
+       78,
+       58
+      ],
+      "ventre": [
+       166,
+       172,
+       154
+      ],
+      "oeil": [
+       255,
+       184,
+       72
+      ]
+     }
+    }
+   },
+   "populations": [
+    {
+     "biome": "prairie",
+     "effectif": 1400,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "bois",
+     "effectif": 1148,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "lande",
+     "effectif": 532,
+     "tendance": 0,
+     "depuis": 0
+    }
+   ],
+   "phenotypes": [
+    {
+     "id": "base",
+     "frequence": 0.986,
+     "traits": [],
+     "cout_total": 0
+    },
+    {
+     "id": "albinisme",
+     "frequence": 0.004,
+     "traits": [
+      "albinisme"
+     ],
+     "cout_total": 0.04
+    },
+    {
+     "id": "melanisme",
+     "frequence": 0.004,
+     "traits": [
+      "melanisme"
+     ],
+     "cout_total": 0.01
+    },
+    {
+     "id": "robe-doree",
+     "frequence": 0.004,
+     "traits": [
+      "robe-doree"
+     ],
+     "cout_total": 0.03
+    },
+    {
+     "id": "gigantisme",
+     "frequence": 0.001,
+     "traits": [
+      "gigantisme"
+     ],
+     "cout_total": 0.25
+    },
+    {
+     "id": "nanisme",
+     "frequence": 0.001,
+     "traits": [
+      "nanisme"
+     ],
+     "cout_total": 0.04
+    }
+   ]
+  },
+  {
+   "id": "trottin_echasse",
+   "nom": "Trottin haute-tige",
+   "parent": null,
+   "apparu": 0,
+   "eteint": null,
+   "statut": "stable",
+   "plan": {
+    "masse_kg": 30.24,
+    "taille_m": 0.96,
+    "locomotion": [
+     "saut",
+     "marche"
+    ],
+    "regime": "herbivore",
+    "longevite": 55,
+    "maturite": 11,
+    "portee": 3,
+    "sociabilite": 0.7,
+    "temperament": 0.47,
+    "activite": "diurne",
+    "vitesse_rel": 7,
+    "perception": 0.67,
+    "niche": {
+     "temperature": 0.52,
+     "humidite": 0.47,
+     "altitude": 0.3,
+     "lumiere": 0.7,
+     "couvert": 0.5
+    },
+    "tolerance": 0.6,
+    "corps": {
+     "forme": "bipede",
+     "pattes": 2,
+     "long": 0.35,
+     "haut": 0.95,
+     "cou": 0.45,
+     "tete": 0.55,
+     "museau": 0.3,
+     "oreilles": 0.3,
+     "queue": 0.3,
+     "cornes": 0,
+     "crete": 0,
+     "ailes": 0,
+     "carapace": 0,
+     "antennes": 0,
+     "motif": "uni",
+     "couleurs": {
+      "robe": [
+       146,
+       150,
+       132
+      ],
+      "sombre": [
+       88,
+       92,
+       80
+      ],
+      "ventre": [
+       184,
+       187,
+       175
+      ],
+      "oeil": [
+       255,
+       196,
+       96
+      ]
+     }
+    }
+   },
+   "populations": [
+    {
+     "biome": "prairie",
+     "effectif": 1000,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "bois",
+     "effectif": 820,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "lande",
+     "effectif": 380,
+     "tendance": 0,
+     "depuis": 0
+    }
+   ],
+   "phenotypes": [
+    {
+     "id": "base",
+     "frequence": 0.986,
+     "traits": [],
+     "cout_total": 0
+    },
+    {
+     "id": "albinisme",
+     "frequence": 0.004,
+     "traits": [
+      "albinisme"
+     ],
+     "cout_total": 0.04
+    },
+    {
+     "id": "melanisme",
+     "frequence": 0.004,
+     "traits": [
+      "melanisme"
+     ],
+     "cout_total": 0.01
+    },
+    {
+     "id": "robe-doree",
+     "frequence": 0.004,
+     "traits": [
+      "robe-doree"
+     ],
+     "cout_total": 0.03
+    },
+    {
+     "id": "gigantisme",
+     "frequence": 0.001,
+     "traits": [
+      "gigantisme"
+     ],
+     "cout_total": 0.25
+    },
+    {
+     "id": "nanisme",
+     "frequence": 0.001,
+     "traits": [
+      "nanisme"
+     ],
+     "cout_total": 0.04
+    }
+   ]
+  },
+  {
+   "id": "trottin_pataud",
+   "nom": "Trottin racine",
+   "parent": null,
+   "apparu": 0,
+   "eteint": null,
+   "statut": "stable",
+   "plan": {
+    "masse_kg": 47.52,
+    "taille_m": 0.96,
+    "locomotion": [
+     "saut",
+     "marche"
+    ],
+    "regime": "herbivore",
+    "longevite": 60,
+    "maturite": 12,
+    "portee": 3,
+    "sociabilite": 0.7,
+    "temperament": 0.77,
+    "activite": "diurne",
+    "vitesse_rel": 4.6,
+    "perception": 0.47,
+    "niche": {
+     "temperature": 0.52,
+     "humidite": 0.47,
+     "altitude": 0.3,
+     "lumiere": 0.7,
+     "couvert": 0.5
+    },
+    "tolerance": 0.6,
+    "corps": {
+     "forme": "bipede",
+     "pattes": 2,
+     "long": 0.45,
+     "haut": 0.35,
+     "cou": 0.3,
+     "tete": 0.6,
+     "museau": 0.3,
+     "oreilles": 0.3,
+     "queue": 0.3,
+     "cornes": 0,
+     "crete": 0,
+     "ailes": 0,
+     "carapace": 0,
+     "antennes": 0,
+     "motif": "uni",
+     "couleurs": {
+      "robe": [
+       106,
+       100,
+       82
+      ],
+      "sombre": [
+       62,
+       56,
+       44
+      ],
+      "ventre": [
+       158,
+       154,
+       143
+      ],
+      "oeil": [
+       255,
+       170,
+       60
+      ]
+     }
+    }
+   },
+   "populations": [
+    {
+     "biome": "prairie",
+     "effectif": 1000,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "bois",
+     "effectif": 820,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "lande",
+     "effectif": 380,
+     "tendance": 0,
+     "depuis": 0
+    }
+   ],
+   "phenotypes": [
+    {
+     "id": "base",
+     "frequence": 0.986,
+     "traits": [],
+     "cout_total": 0
+    },
+    {
+     "id": "albinisme",
+     "frequence": 0.004,
+     "traits": [
+      "albinisme"
+     ],
+     "cout_total": 0.04
+    },
+    {
+     "id": "melanisme",
+     "frequence": 0.004,
+     "traits": [
+      "melanisme"
+     ],
+     "cout_total": 0.01
+    },
+    {
+     "id": "robe-doree",
+     "frequence": 0.004,
+     "traits": [
+      "robe-doree"
+     ],
+     "cout_total": 0.03
+    },
+    {
+     "id": "gigantisme",
+     "frequence": 0.001,
+     "traits": [
+      "gigantisme"
+     ],
+     "cout_total": 0.25
+    },
+    {
+     "id": "nanisme",
+     "frequence": 0.001,
+     "traits": [
+      "nanisme"
+     ],
+     "cout_total": 0.04
+    }
+   ]
+  },
+  {
+   "id": "trottin_bondeur",
+   "nom": "Trottin bondelaine",
+   "parent": null,
+   "apparu": 0,
+   "eteint": null,
+   "statut": "stable",
+   "plan": {
+    "masse_kg": 18.75,
+    "taille_m": 0.8,
+    "locomotion": [
+     "saut",
+     "marche"
+    ],
+    "regime": "herbivore",
+    "longevite": 50,
+    "maturite": 10,
+    "portee": 3,
+    "sociabilite": 0.7,
+    "temperament": 0.6,
+    "activite": "diurne",
+    "vitesse_rel": 7.4,
+    "perception": 0.6,
+    "niche": {
+     "temperature": 0.52,
+     "humidite": 0.47,
+     "altitude": 0.3,
+     "lumiere": 0.7,
+     "couvert": 0.5
+    },
+    "tolerance": 0.6,
+    "corps": {
+     "forme": "bipede",
+     "pattes": 2,
+     "long": 0.35,
+     "haut": 0.5,
+     "cou": 0.3,
+     "tete": 0.55,
+     "museau": 0.3,
+     "oreilles": 0.5,
+     "queue": 0.3,
+     "cornes": 0,
+     "crete": 0,
+     "ailes": 0,
+     "carapace": 0,
+     "antennes": 0,
+     "motif": "uni",
+     "couleurs": {
+      "robe": [
+       126,
+       128,
+       104
+      ],
+      "sombre": [
+       76,
+       76,
+       60
+      ],
+      "ventre": [
+       171,
+       172,
+       157
+      ],
+      "oeil": [
+       255,
+       184,
+       72
+      ]
+     }
+    }
+   },
+   "populations": [
+    {
+     "biome": "prairie",
+     "effectif": 1200,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "bois",
+     "effectif": 984,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "lande",
+     "effectif": 456,
+     "tendance": 0,
+     "depuis": 0
+    }
+   ],
+   "phenotypes": [
+    {
+     "id": "base",
+     "frequence": 0.986,
+     "traits": [],
+     "cout_total": 0
+    },
+    {
+     "id": "albinisme",
+     "frequence": 0.004,
+     "traits": [
+      "albinisme"
+     ],
+     "cout_total": 0.04
+    },
+    {
+     "id": "melanisme",
+     "frequence": 0.004,
+     "traits": [
+      "melanisme"
+     ],
+     "cout_total": 0.01
+    },
+    {
+     "id": "robe-doree",
+     "frequence": 0.004,
+     "traits": [
+      "robe-doree"
+     ],
+     "cout_total": 0.03
+    },
+    {
+     "id": "gigantisme",
+     "frequence": 0.001,
+     "traits": [
+      "gigantisme"
+     ],
+     "cout_total": 0.25
+    },
+    {
+     "id": "nanisme",
+     "frequence": 0.001,
+     "traits": [
+      "nanisme"
+     ],
+     "cout_total": 0.04
+    }
+   ]
+  },
+  {
+   "id": "trottin_huppe",
+   "nom": "Trottin augure",
+   "parent": null,
+   "apparu": 0,
+   "eteint": null,
+   "statut": "stable",
+   "plan": {
+    "masse_kg": 10.02,
+    "taille_m": 0.72,
+    "locomotion": [
+     "saut",
+     "marche"
+    ],
+    "regime": "herbivore",
+    "longevite": 55,
+    "maturite": 11,
+    "portee": 3,
+    "sociabilite": 0.7,
+    "temperament": 0.47,
+    "activite": "diurne",
+    "vitesse_rel": 6.2,
+    "perception": 0.67,
+    "niche": {
+     "temperature": 0.52,
+     "humidite": 0.47,
+     "altitude": 0.3,
+     "lumiere": 0.7,
+     "couvert": 0.5
+    },
+    "tolerance": 0.6,
+    "corps": {
+     "forme": "bipede",
+     "pattes": 2,
+     "long": 0.35,
+     "haut": 0.6,
+     "cou": 0.3,
+     "tete": 0.55,
+     "museau": 0.3,
+     "oreilles": 0.3,
+     "queue": 0.3,
+     "cornes": 0,
+     "crete": 0.7,
+     "ailes": 0,
+     "carapace": 0,
+     "antennes": 0,
+     "motif": "uni",
+     "couleurs": {
+      "robe": [
+       120,
+       130,
+       124
+      ],
+      "sombre": [
+       66,
+       74,
+       70
+      ],
+      "ventre": [
+       167,
+       174,
+       170
+      ],
+      "oeil": [
+       255,
+       206,
+       110
+      ]
+     }
+    }
+   },
+   "populations": [
+    {
+     "biome": "prairie",
+     "effectif": 800,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "bois",
+     "effectif": 656,
+     "tendance": 0,
+     "depuis": 0
+    },
+    {
+     "biome": "lande",
+     "effectif": 304,
+     "tendance": 0,
+     "depuis": 0
+    }
+   ],
+   "phenotypes": [
+    {
+     "id": "base",
+     "frequence": 0.986,
+     "traits": [],
+     "cout_total": 0
+    },
+    {
+     "id": "albinisme",
+     "frequence": 0.004,
+     "traits": [
+      "albinisme"
+     ],
+     "cout_total": 0.04
+    },
+    {
+     "id": "melanisme",
+     "frequence": 0.004,
+     "traits": [
+      "melanisme"
+     ],
+     "cout_total": 0.01
+    },
+    {
+     "id": "robe-doree",
+     "frequence": 0.004,
+     "traits": [
+      "robe-doree"
+     ],
+     "cout_total": 0.03
+    },
+    {
+     "id": "gigantisme",
+     "frequence": 0.001,
+     "traits": [
+      "gigantisme"
+     ],
+     "cout_total": 0.25
+    },
+    {
+     "id": "nanisme",
+     "frequence": 0.001,
+     "traits": [
+      "nanisme"
+     ],
+     "cout_total": 0.04
+    }
+   ]
+  }
+ ],
+ "evenements": []
+}

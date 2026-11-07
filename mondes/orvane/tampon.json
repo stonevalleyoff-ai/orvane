@@ -1,0 +1,553 @@
+{
+ "lisse": {
+  "lomuel": {
+   "montagne": {
+    "base": 0.016,
+    "metabolisme-lent": 1.414,
+    "crepuscularite+metabolisme-lent": 0.034,
+    "metabolisme-lent+vibrisses": 0.034,
+    "metabolisme-lent+peau-epaisse": 0.032,
+    "metabolisme-lent+palmes": 0.024,
+    "gregarisme+metabolisme-lent": 0.017,
+    "camouflage+metabolisme-lent": 0.016,
+    "metabolisme-lent+pattes-longues": 0.011,
+    "metabolisme-lent+queue-prehensile": 0.01,
+    "melanisme+metabolisme-lent": 0.01
+   }
+  },
+  "vael": {
+   "prairie": {
+    "metabolisme-lent": 0.01
+   }
+  },
+  "silbel": {
+   "prairie": {
+    "base": 0.019,
+    "metabolisme-lent": 0.254,
+    "crepuscularite+metabolisme-lent": 0.032
+   },
+   "montagne": {
+    "base": 0.051,
+    "metabolisme-lent": 0.783,
+    "crepuscularite+metabolisme-lent": 0.088,
+    "gregarisme+metabolisme-lent": 0.025,
+    "camouflage+metabolisme-lent": 0.017
+   },
+   "steppe": {
+    "base": 0.019,
+    "metabolisme-lent": 0.254,
+    "crepuscularite+metabolisme-lent": 0.032
+   }
+  },
+  "silmevi": {
+   "jungle": {
+    "base": 0.284,
+    "metabolisme-lent": 0.021
+   }
+  },
+  "anphevi": {
+   "montagne": {
+    "base": 0.018,
+    "camouflage+metabolisme-lent": 0.108,
+    "metabolisme-lent": 0.111,
+    "camouflage+crepuscularite+metabolisme-lent": 0.038,
+    "crepuscularite+metabolisme-lent": 0.025
+   },
+   "cote": {
+    "base": 0.034,
+    "camouflage+metabolisme-lent": 0.107,
+    "metabolisme-lent": 0.095,
+    "camouflage+crepuscularite+metabolisme-lent": 0.038,
+    "crepuscularite+metabolisme-lent": 0.025
+   },
+   "prairie": {
+    "base": 0.018,
+    "camouflage+metabolisme-lent": 0.108,
+    "metabolisme-lent": 0.111,
+    "camouflage+crepuscularite+metabolisme-lent": 0.038,
+    "crepuscularite+metabolisme-lent": 0.025
+   }
+  },
+  "phemeva": {
+   "prairie": {
+    "base": 0.15
+   }
+  }
+ },
+ "dernier_id": 34,
+ "lisseQ": {
+  "lomuel": {
+   "steppe": {
+    "audace": {
+     "s": 0.4867,
+     "w": 0.3333
+    },
+    "taille": {
+     "s": 0.0767,
+     "w": 0.3333
+    },
+    "vitesse": {
+     "s": 0.1167,
+     "w": 0.3333
+    }
+   },
+   "cote": {
+    "audace": {
+     "s": 0.2267,
+     "w": 0.6667
+    },
+    "taille": {
+     "s": 0.7067,
+     "w": 0.6667
+    },
+    "vitesse": {
+     "s": 0.6867,
+     "w": 0.6667
+    }
+   },
+   "montagne": {
+    "audace": {
+     "s": 0.8467,
+     "w": 1.6667
+    },
+    "taille": {
+     "s": 2.0433,
+     "w": 1.6667
+    },
+    "vitesse": {
+     "s": 0.7567,
+     "w": 1.6667
+    }
+   }
+  },
+  "dunouro": {
+   "cote": {
+    "audace": {
+     "s": 0.0333,
+     "w": 0.3333
+    },
+    "taille": {
+     "s": 0.1133,
+     "w": 0.3333
+    },
+    "vitesse": {
+     "s": -0.3767,
+     "w": 0.3333
+    }
+   }
+  },
+  "silmevi": {
+   "jungle": {
+    "audace": {
+     "s": 0.1833,
+     "w": 0.3333
+    },
+    "taille": {
+     "s": 0.0733,
+     "w": 0.3333
+    },
+    "vitesse": {
+     "s": -0.2033,
+     "w": 0.3333
+    }
+   },
+   "desert": {
+    "audace": {
+     "s": 0.3733,
+     "w": 0.6667
+    },
+    "taille": {
+     "s": -0.5533,
+     "w": 0.6667
+    },
+    "vitesse": {
+     "s": -0.4133,
+     "w": 0.6667
+    }
+   }
+  },
+  "tisne": {
+   "montagne": {
+    "audace": {
+     "s": -0.2333,
+     "w": 0.6667
+    },
+    "taille": {
+     "s": 0.3067,
+     "w": 0.6667
+    },
+    "vitesse": {
+     "s": -0.0933,
+     "w": 0.6667
+    }
+   },
+   "foret": {
+    "audace": {
+     "s": 0.2978,
+     "w": 0.2016
+    },
+    "taille": {
+     "s": 0.1537,
+     "w": 0.2016
+    },
+    "vitesse": {
+     "s": 0.015,
+     "w": 0.2016
+    },
+    "sociabilite": {
+     "s": -0.0649,
+     "w": 0.2016
+    }
+   }
+  },
+  "anphevi": {
+   "montagne": {
+    "audace": {
+     "s": -0.18,
+     "w": 0.3333
+    },
+    "taille": {
+     "s": 0.5567,
+     "w": 0.3333
+    },
+    "vitesse": {
+     "s": -0.0733,
+     "w": 0.3333
+    }
+   },
+   "cote": {
+    "audace": {
+     "s": 0.9533,
+     "w": 0.3333
+    },
+    "taille": {
+     "s": 0.3,
+     "w": 0.3333
+    },
+    "vitesse": {
+     "s": -0.33,
+     "w": 0.3333
+    }
+   },
+   "prairie": {
+    "audace": {
+     "s": 0.3492,
+     "w": 0.3529
+    },
+    "taille": {
+     "s": 0.5123,
+     "w": 0.3529
+    },
+    "vitesse": {
+     "s": -0.0566,
+     "w": 0.3529
+    },
+    "sociabilite": {
+     "s": -0.012,
+     "w": 0.0195
+    }
+   }
+  },
+  "silbel": {
+   "prairie": {
+    "audace": {
+     "s": -0.15,
+     "w": 0.3333
+    },
+    "taille": {
+     "s": -0.2067,
+     "w": 0.3333
+    },
+    "vitesse": {
+     "s": 0.3967,
+     "w": 0.3333
+    }
+   },
+   "montagne": {
+    "audace": {
+     "s": 0.99,
+     "w": 1
+    },
+    "taille": {
+     "s": 0.02,
+     "w": 1
+    },
+    "vitesse": {
+     "s": -0.86,
+     "w": 1
+    }
+   },
+   "steppe": {
+    "audace": {
+     "s": 0.02,
+     "w": 0.3333
+    },
+    "taille": {
+     "s": 0.0033,
+     "w": 0.3333
+    },
+    "vitesse": {
+     "s": 0.1867,
+     "w": 0.3333
+    }
+   }
+  },
+  "tismusil": {
+   "montagne": {
+    "audace": {
+     "s": 0.9767,
+     "w": 0.3333
+    },
+    "taille": {
+     "s": 0.1567,
+     "w": 0.3333
+    },
+    "vitesse": {
+     "s": -0.09,
+     "w": 0.3333
+    }
+   }
+  },
+  "phemeva": {
+   "prairie": {
+    "audace": {
+     "s": 2.0567,
+     "w": 1.9249
+    },
+    "taille": {
+     "s": 2.3017,
+     "w": 1.9249
+    },
+    "vitesse": {
+     "s": 1.0962,
+     "w": 1.9249
+    },
+    "sociabilite": {
+     "s": 0.6497,
+     "w": 1.9249
+    }
+   }
+  },
+  "belki": {
+   "prairie": {
+    "audace": {
+     "s": 0.0918,
+     "w": 0.0585
+    },
+    "taille": {
+     "s": 0.0743,
+     "w": 0.0585
+    },
+    "vitesse": {
+     "s": -0.0234,
+     "w": 0.0585
+    },
+    "sociabilite": {
+     "s": -0.0141,
+     "w": 0.0585
+    }
+   }
+  },
+  "somu": {
+   "prairie": {
+    "audace": {
+     "s": 0.126,
+     "w": 0.2211
+    },
+    "taille": {
+     "s": 0.1407,
+     "w": 0.2211
+    },
+    "vitesse": {
+     "s": 0.0157,
+     "w": 0.2211
+    },
+    "sociabilite": {
+     "s": 0.0009,
+     "w": 0.2211
+    }
+   }
+  },
+  "jagra": {
+   "prairie": {
+    "audace": {
+     "s": 0.0282,
+     "w": 0.0195
+    },
+    "taille": {
+     "s": -0.0243,
+     "w": 0.0195
+    },
+    "vitesse": {
+     "s": 0.017,
+     "w": 0.0195
+    },
+    "sociabilite": {
+     "s": -0.0055,
+     "w": 0.0195
+    }
+   }
+  },
+  "lotays": {
+   "prairie": {
+    "audace": {
+     "s": 0.0774,
+     "w": 0.0715
+    },
+    "taille": {
+     "s": 0.0089,
+     "w": 0.0715
+    },
+    "vitesse": {
+     "s": -0.0158,
+     "w": 0.0715
+    },
+    "sociabilite": {
+     "s": 0.0121,
+     "w": 0.0715
+    }
+   }
+  },
+  "belgrane": {
+   "prairie": {
+    "audace": {
+     "s": 0.0179,
+     "w": 0.0715
+    },
+    "taille": {
+     "s": 0.0753,
+     "w": 0.0715
+    },
+    "vitesse": {
+     "s": -0.0114,
+     "w": 0.0715
+    },
+    "sociabilite": {
+     "s": -0.0312,
+     "w": 0.0715
+    }
+   }
+  },
+  "oukilo": {
+   "prairie": {
+    "audace": {
+     "s": 0.0159,
+     "w": 0.0195
+    },
+    "taille": {
+     "s": 0.0546,
+     "w": 0.0195
+    },
+    "vitesse": {
+     "s": 0.015,
+     "w": 0.0195
+    },
+    "sociabilite": {
+     "s": 0.0063,
+     "w": 0.0195
+    }
+   }
+  },
+  "mutisnou": {
+   "marais": {
+    "audace": {
+     "s": 0.0303,
+     "w": 0.013
+    },
+    "taille": {
+     "s": 0.0319,
+     "w": 0.013
+    },
+    "vitesse": {
+     "s": -0.0069,
+     "w": 0.013
+    },
+    "sociabilite": {
+     "s": 0.0089,
+     "w": 0.013
+    }
+   }
+  },
+  "memu": {
+   "foret": {
+    "audace": {
+     "s": 0.0365,
+     "w": 0.026
+    },
+    "taille": {
+     "s": 0.0524,
+     "w": 0.026
+    },
+    "vitesse": {
+     "s": -0.0017,
+     "w": 0.026
+    },
+    "sociabilite": {
+     "s": 0.0339,
+     "w": 0.026
+    }
+   }
+  },
+  "lojafir": {
+   "marais": {
+    "audace": {
+     "s": 0.0228,
+     "w": 0.013
+    },
+    "taille": {
+     "s": -0.015,
+     "w": 0.013
+    },
+    "vitesse": {
+     "s": 0.0211,
+     "w": 0.013
+    },
+    "sociabilite": {
+     "s": -0.0009,
+     "w": 0.013
+    }
+   }
+  },
+  "dunvi": {
+   "prairie": {
+    "audace": {
+     "s": 0.0145,
+     "w": 0.013
+    },
+    "taille": {
+     "s": 0.0086,
+     "w": 0.013
+    },
+    "vitesse": {
+     "s": 0.006,
+     "w": 0.013
+    },
+    "sociabilite": {
+     "s": -0.0053,
+     "w": 0.013
+    }
+   }
+  },
+  "vael": {
+   "prairie": {
+    "audace": {
+     "s": -0.0086,
+     "w": 0.013
+    },
+    "taille": {
+     "s": 0.0021,
+     "w": 0.013
+    },
+    "vitesse": {
+     "s": 0.0043,
+     "w": 0.013
+    },
+    "sociabilite": {
+     "s": 0.006,
+     "w": 0.013
+    }
+   }
+  }
+ },
+ "derniere_lecture": "2026-11-06T21:40:10.330548+00:00"
+}
