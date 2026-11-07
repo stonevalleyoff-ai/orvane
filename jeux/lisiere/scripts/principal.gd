@@ -18,11 +18,13 @@ const Interface := preload("res://scripts/interface.gd")
 const Sons := preload("res://scripts/sons.gd")
 const Yeux := preload("res://scripts/yeux.gd")
 const Essai := preload("res://scripts/essai.gd")
+const Tactile := preload("res://scripts/tactile.gd")
 const SAUVEGARDE := "user://lisiere.json"
 
 var donnees := Donnees.new()
 var ui
 var sons
+var tactile
 var scene: Node2D
 var monde
 var joueur
@@ -69,6 +71,9 @@ func _ready() -> void:
 	ui.commencer.connect(_commencer)
 	ui.recommencer.connect(func(): _commencer(biome))
 	ui.vers_titre.connect(_titre)
+	tactile = Tactile.new()
+	tactile.jeu = self
+	add_child(tactile)
 	_charger()
 	Orvane.jeu = "lisiere"
 	Orvane.monde = R.MONDE_DES_LOTS
@@ -355,7 +360,7 @@ func agir() -> void:
 	var g: Dictionary = o.recolter()
 	for k in g:
 		joueur.inventaire[k] = int(joueur.inventaire.get(k, 0)) + int(g[k])
-		ui.message("+%d %s" % [g[k], R.NOMS[k]], Color(0.75, 0.78, 0.72))
+		ui.message("+%d %s" % [g[k], R.nom(k, int(g[k]))], Color(0.75, 0.78, 0.72))
 	var son := "bois"
 	if genre == "rocher":
 		son = "pierre"
@@ -384,7 +389,7 @@ func fabriquer(quoi: String) -> void:
 		for k in rec["cout"]:
 			var m := int(rec["cout"][k]) - int(joueur.inventaire.get(k, 0))
 			if m > 0:
-				manque.append("%d %s" % [m, R.NOMS[k]])
+				manque.append("%d %s" % [m, R.nom(k, m)])
 		ui.message("%s : il te manque %s." % [rec["nom"], ", ".join(PackedStringArray(manque))], Color(0.75, 0.7, 0.66))
 		return
 	for k in rec["cout"]:

@@ -1,7 +1,7 @@
 extends Node
 # Lisière — l'essai sans écran (scripts/essai.gd)
 # Une partie jouée toute seule, en accéléré, sur la copie du monde gardée dans le jeu (sans réseau), qui vérifie que tout tient :
-# le lieu, ses bêtes dessinées d'après leurs planches, la récolte, les fabrications, la nuit, les chasseurs qui n'entrent pas
+# le lieu, ses bêtes dessinées d'après leurs planches, la récolte, les fabrications, le jeu du doigt, la nuit, les chasseurs qui n'entrent pas
 # dans la lumière du feu, la peur dans le noir, les échos, l'aube, la fin, et ce qui est compté pour Orvane.
 #   outils/godot.sh --headless --path jeux/lisiere -- --essai              (sur la copie gardée dans le jeu)
 #   outils/godot.sh --headless --path jeux/lisiere -- --essai --en-ligne   (sur le monde publié)
@@ -26,6 +26,22 @@ func verif(c: bool, m: String) -> void:
 
 func _attendre(s: float) -> void:
 	await get_tree().create_timer(s).timeout
+
+
+# un doigt qui se pose ou se lève, qui glisse : donné tout droit à la couche tactile (scripts/tactile.gd)
+func _toucher(tac, doigt: int, p: Vector2, pose: bool) -> void:
+	var e := InputEventScreenTouch.new()
+	e.index = doigt
+	e.position = p
+	e.pressed = pose
+	tac._input(e)
+
+
+func _glisser(tac, doigt: int, p: Vector2) -> void:
+	var e := InputEventScreenDrag.new()
+	e.index = doigt
+	e.position = p
+	tac._input(e)
 
 
 func _lancer() -> void:
@@ -89,7 +105,35 @@ func _lancer() -> void:
 	jeu.nourrir_feu()
 	verif(f.bois > avant + 20.0, "une bûche nourrit le feu (%d → %d secondes)" % [int(avant), int(f.bois)])
 
-	print("3. La nuit")
+	print("3. Du doigt")
+	var tac = jeu.tactile
+	tac.activer()
+	var clic := InputMap.action_get_events("agir").any(func(e): return e is InputEventMouseButton)
+	verif(tac.actif and jeu.ui.tactile and not clic, "l'écran tactile s'allume : les boutons remplacent les touches, et un toucher ne frappe plus")
+	var depart := Vector2(200, tac._taille().y - 150)
+	_toucher(tac, 0, depart, true)
+	_glisser(tac, 0, depart + Vector2(70, 20))
+	# (deux images : la couche tactile presse les actions de marche dans son _process)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var dir := Input.get_vector("gauche", "droite", "haut", "bas")
+	_toucher(tac, 0, depart + Vector2(70, 20), false)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var arret := Input.get_vector("gauche", "droite", "haut", "bas")
+	verif(dir.x > 0.6 and dir.y > 0.0 and arret == Vector2.ZERO, "le pouce gauche la fait marcher (%.2f, %.2f), et levé, l'arrête" % [dir.x, dir.y])
+	_toucher(tac, 1, tac.position_bouton("feu"), true)
+	var feu := Input.is_action_pressed("feu")
+	_toucher(tac, 1, tac.position_bouton("feu"), false)
+	_toucher(tac, 2, tac.position_bouton("agir"), true)
+	var frappe := Input.is_action_pressed("agir")
+	_toucher(tac, 2, tac.position_bouton("agir"), false)
+	verif(feu and frappe and not Input.is_action_pressed("agir") and not Input.is_action_pressed("feu"), "les boutons pressent les actions du clavier (Feu, Agir), et les lâchent")
+	jeu.ui.message("Ramasse des brindilles (Espace). Avec 4 bois et 2 pierres : un feu (1).")
+	var dit: String = jeu.ui._messages.back()[0].text
+	verif(dit.contains("(Agir)") and dit.contains("bouton Feu"), "les messages nomment les boutons : « %s »" % dit)
+
+	print("4. La nuit")
 	jeu.horloge = jeu.jour * 240.0 - 240.0 * jeu.part_nuit - 3.0
 	j.position = f.position + Vector2(0, 30)
 	f.ajouter(6)
@@ -107,7 +151,7 @@ func _lancer() -> void:
 	verif(vus > 0 and plus_pres >= 0.78, "aucun n'entre dans la lumière du feu (au plus près : %.2f du rayon)" % plus_pres)
 	verif(j.peur < 30.0, "dans la lumière, la peur reste basse (%d)" % int(j.peur))
 
-	print("4. Le noir")
+	print("5. Le noir")
 	var proie = jeu._creer(F["proies_jour"][0], "proie", j.position + Vector2(20, 0))
 	proie.flair = 0.0
 	for i in 12:
@@ -137,7 +181,7 @@ func _lancer() -> void:
 	verif(echo, "la peur haute, ce qu'on a tué revient en écho")
 	verif(perdu > 0.0, "le noir coûte de la santé (%d points perdus en quarante secondes)" % int(perdu))
 
-	print("5. L'aube, la fin")
+	print("6. L'aube, la fin")
 	jeu.horloge = jeu.jour * 240.0 + 20.0
 	await _attendre(2.0)
 	verif(jeu.nuits == 1, "le jour revient : %d nuit%s tenue%s" % [jeu.nuits, "s" if jeu.nuits > 1 else "", "s" if jeu.nuits > 1 else ""])

@@ -12,6 +12,8 @@ const R := preload("res://scripts/regles.gd")
 const ENCRE := Color(0.93, 0.87, 0.74)
 const PALE := Color(0.62, 0.6, 0.56)
 const BRAISE := Color(0.95, 0.62, 0.28)
+# sur un écran tactile, les messages nomment les boutons (scripts/tactile.gd) plutôt que les touches
+const TOUCHES_TACTILES := {"(Espace)": "(Agir)", "un feu (1)": "un feu (bouton Feu)", "touche 1": "bouton Feu", "(F)": "(Nourrir)", "(E)": "(Manger)", "(C)": "(Cuire)"}
 
 var _titre: Control
 var _hud: Control
@@ -36,6 +38,11 @@ var _fin_titre: Label
 var _fin_resume: Label
 var _fin_lot: Label
 var _peur := 0.0
+var _droite: VBoxContainer
+var _aide_titre: Label
+var _boite_titre: VBoxContainer
+var _nom_du_jeu: Label
+var tactile := false
 
 
 func _ready() -> void:
@@ -77,7 +84,9 @@ func _construire_titre() -> void:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 12)
 	centre.add_child(v)
-	v.add_child(_centre(_label("LISIÈRE", 88, ENCRE)))
+	_boite_titre = v
+	_nom_du_jeu = _centre(_label("LISIÈRE", 88, ENCRE))
+	v.add_child(_nom_du_jeu)
 	v.add_child(_centre(_label("Tenir jusqu'au matin.", 22, PALE)))
 	v.add_child(_espace(18))
 	_infos = _centre(_label("Le monde d'Orvane s'éveille…", 15, Color(0.55, 0.62, 0.66)))
@@ -102,7 +111,8 @@ func _construire_titre() -> void:
 	_record = _centre(_label("", 14, PALE))
 	v.add_child(_record)
 	v.add_child(_espace(10))
-	v.add_child(_centre(_label("ZQSD, WASD ou les flèches : marcher · Espace ou clic : récolter, frapper\n1 : un feu de camp · 2 : une torche · 3 : une lance · E : manger · F : nourrir le feu · C : cuire · Échap : pause", 14, PALE)))
+	_aide_titre = _centre(_label("ZQSD, WASD ou les flèches : marcher · Espace ou clic : récolter, frapper\n1 : un feu de camp · 2 : une torche · 3 : une lance · E : manger · F : nourrir le feu · C : cuire · Échap : pause", 14, PALE))
+	v.add_child(_aide_titre)
 	v.add_child(_espace(6))
 	var pied := _centre(_label("Chaque bête est une lignée vraie du monde d'Orvane, au dernier cycle publié : son nombre, sa silhouette, son heure, son caractère.\nCe que tu croises et ce que tu chasses est compté, et renvoyé au monde.", 12, Color(0.45, 0.47, 0.5)))
 	v.add_child(pied)
@@ -190,6 +200,7 @@ func _construire_hud() -> void:
 	haut.add_child(_jauges)
 	haut.add_child(_ressort())
 	var droite := VBoxContainer.new()
+	_droite = droite
 	haut.add_child(droite)
 	_horloge = _label("", 20, ENCRE)
 	_horloge.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -251,15 +262,21 @@ func maj_hud(jeu) -> void:
 		var rec: Dictionary = R.RECETTES[r[0]]
 		var cout := []
 		for k in rec["cout"]:
-			cout.append("%d %s" % [rec["cout"][k], R.NOMS[k]])
-		_ecrire(r[1], "%s · %s : %s" % [rec["touche"], rec["nom"], ", ".join(PackedStringArray(cout))])
+			cout.append("%d %s" % [rec["cout"][k], R.nom(k, int(rec["cout"][k]))])
+		var t := "%s : %s" % [rec["nom"], ", ".join(PackedStringArray(cout))]
+		_ecrire(r[1], t if tactile else "%s · %s" % [rec["touche"], t])
 		r[1].modulate = Color(1, 1, 1, 1) if jeu.peut_fabriquer(r[0]) else Color(1, 1, 1, 0.38)
 	_peur = j.peur
 
 
 func message(t: String, c: Color = Color(0.9, 0.86, 0.78)) -> void:
+	if tactile:
+		for k in TOUCHES_TACTILES:
+			t = t.replace(k, TOUCHES_TACTILES[k])
 	var l := _label(t, 17, c)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	if tactile:
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_boite_messages.add_child(l)
 	_messages.append([l, 5.5])
@@ -270,6 +287,25 @@ func message(t: String, c: Color = Color(0.9, 0.86, 0.78)) -> void:
 
 func blessure() -> void:
 	_rouge.color.a = 0.32
+
+
+# l'écran se joue du doigt (scripts/tactile.gd) : les aides parlent des boutons, les recettes montent en haut à droite pour
+# laisser la place aux boutons, en bas
+func passer_au_tactile() -> void:
+	tactile = true
+	_aide_titre.text = "Le pouce gauche, posé n'importe où à gauche : marcher\nLes boutons à droite : récolter et frapper (Agir), un feu, une torche, une lance, manger, nourrir le feu, cuire"
+	_pause.text = "Pause. Touche le bouton du haut pour reprendre."
+	# (l'écran-titre se resserre : un téléphone tenu à l'horizontale n'en montre que 480 de haut)
+	_boite_titre.add_theme_constant_override("separation", 5)
+	_nom_du_jeu.add_theme_font_size_override("font_size", 62)
+	_aide.visible = false
+	# (les messages restent au milieu, entre les deux pouces : ils passent à la ligne plutôt que sous les boutons)
+	_boite_messages.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_boite_messages.custom_minimum_size = Vector2(540, 0)
+	for r in _recettes:
+		r[1].reparent(_droite, false)
+		r[1].horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		r[1].add_theme_font_size_override("font_size", 14)
 
 
 func montrer_pause(oui: bool) -> void:
