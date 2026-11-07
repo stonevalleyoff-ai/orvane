@@ -33,13 +33,17 @@ Le jeu lit le monde en ligne, par morceaux (`Orvane.lire_lieux`, `Orvane.lire_si
 
 ## Les touches
 
-| | |
-| --- | --- |
-| marcher | ZQSD (clavier français), WASD, ou les flèches |
-| récolter, frapper | Espace, ou le clic |
-| un feu, une torche, une lance | 1, 2, 3 |
-| manger, nourrir le feu, cuire | E, F, C |
-| pause | Échap |
+| | au clavier | au doigt (un téléphone tenu à l'horizontale, une tablette) |
+| --- | --- | --- |
+| marcher | ZQSD (clavier français), WASD, ou les flèches | le pouce gauche, posé n'importe où dans la moitié gauche de l'écran |
+| récolter, frapper | Espace, ou le clic | Agir (on peut le tenir en marchant) |
+| un feu, une torche, une lance | 1, 2, 3 | Feu, Torche, Lance |
+| manger, nourrir le feu, cuire | E, F, C | Manger, Nourrir, Cuire |
+| pause | Échap | le bouton en haut, au milieu |
+
+Les commandes tactiles (`scripts/tactile.gd`) s'allument seules sur un écran tactile. Elles pressent les mêmes actions que les touches. Un bouton pâlit quand on n'a pas de quoi s'en servir. Sur un petit écran l'image grossit ; tenu debout, le téléphone demande qu'on le tourne, et la partie attend.
+
+**Dans un navigateur** : https://stonevalleyoff-ai.github.io/orvane/lisiere/. La publication du site (`.github/workflows/cycle.yml`) exporte le jeu à chaque passe où il a changé.
 
 ## Lancer, essayer, exporter
 
@@ -67,7 +71,7 @@ Sans Godot, `node bancs/lisiere.js` vérifie le projet à chaque PR : chaque fic
   - le même essai, filmé avec un vrai rendu (`--write-movie`, sous un écran virtuel) : le feu et son halo, les chasseurs qui tournent à la lisière, les yeux dans le noir, les morsures, les échos, l'aube, l'écran de fin ;
   - l'export web, joué au clavier dans Chromium (WebGL 2) : l'écran-titre lit le monde en ligne, une partie va de l'éveil jusqu'à la mort dans la première nuit, sans erreur.
 - **Corrigé ce jour-là** : la santé remontait de zéro (rassasiée et calme), et la partie ne s'arrêtait pas ; une bête frappée deux fois dans la même image mourait deux fois (deux prélèvements) ; le marais, gardé dans la copie, n'était jamais proposé (les lieux à demi dans l'eau sont jouables : le jeu n'y garde que les bêtes qui marchent) ; un lieu sans proie ni chasseur (l'ossuaire, les terres creuses) était proposé. L'essai ne dépend plus du hasard du directeur, joue son noir en pleine nuit, et vérifie chaque lieu proposé.
-- **Pas encore vérifié** : une partie jouée par une personne, jusqu'au bout ; le jeu sur un téléphone.
+- **Pas encore vérifié** : une partie jouée par une personne, jusqu'au bout ; le jeu sur un vrai téléphone (au doigt, il n'a été joué que sur un téléphone émulé, dans Chromium, avec de vrais touchers multipoints).
 
 Filmer l'essai (des images PNG, puis les regarder) : `xvfb-run -a outils/godot.sh --path jeux/lisiere --write-movie /tmp/film/f.png --fixed-fps 30 -- --essai`. Pas moins de 30 images par seconde : l'essai joue en accéléré, et à 10 images par seconde la caméra (lissée) s'envole hors du monde.
 
@@ -83,6 +87,6 @@ Lisière est un jeu du genre survie-horreur (récolter, fabriquer, tenir la nuit
 ## Ce qui reste
 
 - L'équilibrer, partie après partie (les règles sont toutes dans `scripts/regles.gd`).
-- L'export web, publié sur le site (`lisiere/`) : il se fait (35 Mo de moteur, 1,7 Mo de jeu) et se joue ; reste à décider où le garder.
 - Sa clé de jeu, pour que ses lots partent dans le bac à sable, puis dans le monde.
-- Une partie qui se garde d'une session à l'autre ; une manette ; un écran tactile.
+- Une partie qui se garde d'une session à l'autre ; une manette.
+- Le jeu au doigt sur un vrai téléphone (il n'a été joué que sur un téléphone émulé, dans Chromium) : la lisibilité des petits textes, et la vitesse de rendu.
