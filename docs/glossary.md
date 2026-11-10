@@ -39,6 +39,7 @@ Orvane's files use French field names. This page translates them all, object by 
 | `climat` | climate | since when the world warms and cools by itself; the temperature and humidity shift since then, the land bridges, the islands born |
 | `meteo` | weather | since when each place has its weather of the cycle (docs/45) |
 | `phenologie` | phenology | since when plants follow the seasons (docs/46) |
+| `succession` | succession | since when disasters hit plants, pioneers take the place of lost trees and a place's cover follows its trees (docs/47) |
 | `dietes` | diet spectra | since when each lineage eats leaves, fruits, seeds, nectar, insects, meat or blood in its own shares |
 | `natures` | natures | since when places can change nature, and the world's place types (`types`: those of origin, and those it invented: `inedit`) |
 
@@ -123,7 +124,8 @@ Orvane's files use French field names. This page translates them all, object by 
 | `infection` | infection | per strain: `i` infected share, `r` immune share |
 | `energie`, `posture`, `regulation` | energy, posture, regulation | a machine: what it captures over what it spends; `neutre` neutral, `defensive`, `fuyante` fleeing, `hostile`; among animals, the share of deaths caused by machines |
 | `potentiel`, `frequences`, `reference`, `pollinisation` | potential, frequencies, reference, pollination | a plant |
-| `stade`, `feuillage` | stage, foliage | a plant this cycle (docs/46): `nu` bare, `bourgeons` in bud, `fleurs` in bloom, `feuilles` in leaf, `fruits` in fruit, `graines` in seed, `feuilles_tombent` leaves falling, `seche` dried, `sous_la_neige` under snow; and the share of its foliage present (0 to 1). On the plan, `feuillage` is `caduc` deciduous or `persistant` evergreen |
+| `sinistre` | disaster | a plant a disaster has just hit (docs/47): which one (`incendie` fire, `crue` flood, `secheresse` drought), at which cycle, the share of stems lost |
+| `stade`, `feuillage` | stage, foliage | a plant this cycle (docs/46): `nu` bare, `bourgeons` in bud, `fleurs` in bloom, `feuilles` in leaf, `fruits` in fruit, `graines` in seed, `feuilles_tombent` leaves falling, `seche` dried, `sous_la_neige` under snow, `brule` just burnt; and the share of its foliage present (0 to 1). On the plan, `feuillage` is `caduc` deciduous or `persistant` evergreen |
 
 ### `phenotypes[]` (variants)
 

@@ -27,7 +27,7 @@ const REGLES = {
   neige: .3                  // sous ce manteau, une plante de moins de 50 cm est sous la neige
 };
 const LIGNEUX = new Set(['arbre', 'buisson']), FLEURS = new Set(['herbe', 'buisson', 'arbre', 'succulente']), FRUITS = new Set(['buisson', 'arbre', 'succulente']);
-const STADES = { nu: 'nu', bourgeons: 'en bourgeons', fleurs: 'en fleurs', feuilles: 'en feuilles', fruits: 'en fruits', graines: 'en graines', feuilles_tombent: 'les feuilles tombent', seche: 'sèche', sous_la_neige: 'sous la neige' };
+const STADES = { nu: 'nu', bourgeons: 'en bourgeons', fleurs: 'en fleurs', feuilles: 'en feuilles', fruits: 'en fruits', graines: 'en graines', feuilles_tombent: 'les feuilles tombent', seche: 'sèche', sous_la_neige: 'sous la neige', brule: 'brûlée' };
 // le feuillage d'une plante : celui de son plan, sinon d'après sa forme et sa niche
 const feuillageDe = plan => plan.feuillage || (LIGNEUX.has(plan.forme) ? ((plan.niche?.temperature ?? .5) < REGLES.froid || (plan.niche?.temperature ?? .5) > REGLES.chaud ? 'persistant' : 'caduc') : 'persistant');
 // une fenêtre de l'année : 0 hors d'elle, 1 à son centre ; sa moyenne sur l'année vaut largeur / 2

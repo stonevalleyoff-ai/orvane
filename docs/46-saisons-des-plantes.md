@@ -80,6 +80,7 @@ Dans `flore.json` (docs/17), chaque population de plante dit où elle en est :
 | `feuilles_tombent` | un arbre caduc à l'automne |
 | `seche` | l'herbe et le roseau en hiver |
 | `sous_la_neige` | une plante de moins de 50 cm sous un manteau de neige (docs/45) |
+| `brule` | une plante qui vient de brûler, trois cycles (docs/47) |
 
 - `feuillage` (de 0 à 1) dit la part des feuilles qui sont là : 0 pour un arbre nu, 0,4 pour une herbe sèche.
 - D'autres stades pourront venir. Un jeu qui n'en connaît pas un montre la plante en feuilles.
@@ -123,7 +124,7 @@ node bancs/phenologie.js --court    # une demi-année
 ## Ce qui reste ouvert
 
 - **Le plafond de la nourriture.** Tant que les brouteurs du monde d'Orvane sont au plafond (le double de l'éveil), l'abondance d'une saison ne leur donne rien. Relever la borne, ou rapporter la nourriture à une référence plus récente, changerait l'équilibre du monde : à décider à part.
-- **Les plantes ne meurent pas du temps qu'il fait.** Un gel tardif ne tue pas les fleurs, une sécheresse ne tue pas de pieds, un incendie ne brûle pas d'arbres. C'est l'étape suivante.
+- **Le gel.** Le feu et le sec prennent désormais des pieds aux plantes (docs/47) ; un gel tardif ne tue pas encore les fleurs.
 - **La neige ne cache pas la nourriture.** Une herbe sous la neige se broute encore comme avant ; le stade ne sert qu'à la montrer.
 - **Une saison sèche.** Les savanes ont une saison des pluies plutôt qu'un hiver ; ici, toutes les plantes suivent la même année.
 - **Le feuillage n'évolue pas.** Une lignée caduque le reste, même si le climat (docs/31) réchauffe son lieu.

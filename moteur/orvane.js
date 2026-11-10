@@ -63,6 +63,7 @@ const DI = typeof require === 'function' ? require('./dietes.js') : racine.Orvan
 const CLI = typeof require === 'function' ? require('./climat.js') : racine.OrvaneClimat;   // le climat et la géologie lente (moteur/climat.js, docs/31)
 const MET = typeof require === 'function' ? require('./meteo.js') : racine.OrvaneMeteo;   // la météo (moteur/meteo.js, docs/45)
 const PHE = typeof require === 'function' ? require('./phenologie.js') : racine.OrvanePhenologie;   // les saisons des plantes (moteur/phenologie.js, docs/46 ; la flore l'appelle)
+const SUC = typeof require === 'function' ? require('./succession.js') : racine.OrvaneSuccession;   // les plantes sous le feu, la succession, le couvert qui suit les arbres (moteur/succession.js, docs/47)
 const GRA = typeof require === 'function' ? require('./grammaire.js') : racine.OrvaneGrammaire;   // la grammaire des effets et des conduites (moteur/grammaire.js, docs/32)
 const CAS = typeof require === 'function' ? require('./castes.js') : racine.OrvaneCastes;   // les castes, les insectes sociaux (moteur/castes.js, docs/33)
 const FOR = typeof require === 'function' ? require('./formes.js') : racine.OrvaneFormes;   // les formes nouvelles (moteur/formes.js, docs/33)
@@ -471,7 +472,7 @@ const biomasse = (plans, N) => N.reduce((s, n, i) => s + n * (plans[i].masse_kg 
 // (dans un navigateur, un module se charge par sa balise <script>, AVANT orvane.js ; un monde qui a éveillé un mécanisme dont le
 // module manque tournerait sans lui, sans rien dire : on le dit, une fois — docs/19)
 const MODULES = [['mere', SYN, 'synthetique'], ['flore', FLO, 'flore'], ['pathogenes', PAT, 'pathogenes'], ['milieu', MIL, 'milieu'], ['ponte', PON, 'ponte'], ['stades', STA, 'stades'], ['invention', INV, 'invention'],
-  ['natures', NAT, 'natures'], ['derives', DER, 'derives'], ['dietes', DI, 'dietes'], ['climat', CLI, 'climat'], ['meteo', MET, 'meteo'], ['phenologie', PHE, 'phenologie'], ['grammaire', GRA, 'grammaire'], ['castes', CAS, 'castes'], ['formes', FOR, 'formes'], ['esprit', ESP, 'esprit']], AVERTIS = new Set();
+  ['natures', NAT, 'natures'], ['derives', DER, 'derives'], ['dietes', DI, 'dietes'], ['climat', CLI, 'climat'], ['meteo', MET, 'meteo'], ['phenologie', PHE, 'phenologie'], ['succession', SUC, 'succession'], ['grammaire', GRA, 'grammaire'], ['castes', CAS, 'castes'], ['formes', FOR, 'formes'], ['esprit', ESP, 'esprit']], AVERTIS = new Set();
 function cycle(inst, pressions = {}, opt = {}) {
   for (const [cle, M, f] of MODULES) if (inst?.monde?.[cle] && !M && !AVERTIS.has(cle)) { AVERTIS.add(cle); if (typeof console !== 'undefined') console.warn(`Orvane : ce monde a éveillé « ${cle} », mais moteur/${f}.js n'est pas chargé (avant orvane.js) : ce mécanisme est ignoré (docs/19).`); }
   const propres = inst?.monde?.regles, M = inst?.catalogue?.monde, avant = {}, ax = AX, ext = CORPS?.etendre ? CORPS.etendre(M) : null;
@@ -500,7 +501,8 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   // 1. l'habitat : les pertes et gains du cycle, puis un lent retour vers la capacité de base ; (docs/22) le milieu transformé par ses
   //    bêtes et ses joueurs : ses axes d'aujourd'hui, et la capacité que les fouisseurs lui donnent
   const SC = CLI && inst.monde?.climat ? CLI.preparer({ monde: inst.monde, biomes, n, taxons: plantes }) : null; if (SC) SC.avant();   // (docs/31) le climat, la mer, les volcans
-  const SM = MIL && inst.monde?.milieu ? MIL.preparer({ biomes, taxons: tousT, prB, n, climat: SC }) : null; if (SM) ev.push(...SM.evenements);
+  const SSu = SUC && inst.monde?.succession && plantes.length ? SUC.preparer({ plantes, biomes, n }) : null;   // (docs/47) les plantes subissent et transforment
+  const SM = MIL && inst.monde?.milieu ? MIL.preparer({ biomes, taxons: tousT, prB, n, climat: SC, couvert: SSu ? SSu.couvert : null }) : null; if (SM) ev.push(...SM.evenements);
   if (SC) { SC.appliquer(); ev.push(...SC.evenements); }
   const SN = NAT && inst.monde?.natures ? NAT.preparer(inst.monde, n) : null; if (SN) { for (const b of Object.values(biomes)) SN.changer(b); ev.push(...SN.evenements); }   // (docs/28) un lieu prend la nature dont ses axes sont le plus près
   // (docs/45) la météo : le temps qu'il fait dans chaque lieu ce cycle ; il déplace les axes et la production de la saison
@@ -564,7 +566,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
 
   // 2d. la flore (docs/17) : la nourriture de chaque brouteur ; rien, s'il n'y a pas de plantes
   const GR = GRA && inst.monde?.grammaire ? GRA.preparer({ cat, taxons }) : null;   // (docs/32) une lueur dans le noir, une décharge dans l'eau : lieu par lieu
-  const SF = FLO && plantes.length ? FLO.preparer({ plantes, etat, taxons, biomes, phase, monde: inst.monde, n, saisons: REGLES.saisons, productionSaison, PART_K, recouvrement, cat, dietes: DT }) : null;
+  const SF = FLO && plantes.length ? FLO.preparer({ plantes, etat, taxons, biomes, phase, monde: inst.monde, n, saisons: REGLES.saisons, succession: SSu, sinistres, productionSaison, PART_K, recouvrement, cat, dietes: DT }) : null;
 
   // 2e. les souches (docs/18) : rien, si le monde n'en a pas
   const SP = PAT && inst.monde?.pathogenes ? PAT.preparer({ inst, n, biomes, taxons, etat, ev, parente }) : null;

@@ -164,7 +164,7 @@ function parLieu(inst) { const L = {}; for (const t of inst.taxons) if (estPlant
 // reference.perte_diete.)
 const calageDe = p => p.reference_diete ? p.reference_diete.perte : p.reference?.perte_diete;
 const caler = (p, c) => { if (p.reference_diete) p.reference_diete.perte = c; else if (p.reference) p.reference.perte_diete = c; };
-function pousser(inst, H, prod, disp, PH) {
+function pousser(inst, H, prod, disp, PH, SU) {
   const L = parLieu(inst);
   for (const [bid, plantes] of Object.entries(L)) {
     const ph = PH ? PH.parts(bid) : null, dent = PH ? PH.dent(bid) : 1;   // (docs/46) ce que chaque part donne en cette saison ; la dent, qui la suit
@@ -184,13 +184,14 @@ function pousser(inst, H, prod, disp, PH) {
     if (parts_) plantes.forEach(({ p }, i) => { let c = calageDe(p);
       if (!c && perteC && (p.reference_diete || p.reference)) { caler(p, perte[i].map((x, k) => x > 0 ? perteC[i][k] / x : 1)); perte[i] = perteC[i]; return; }   // (ce jour-là, la mesure d'hier telle quelle)
       if (c) perte[i] = perte[i].map((x, k) => x * (c[k] ?? 1)); });
+    const bonus = SU ? plantes.map(({ t, p }) => SU.place(bid, t, p)) : null;   // (docs/47) la place que les pionnières prennent aux arbres disparus
     plantes.forEach(({ t, p }, i) => {
-      const m = t.plan.masse_kg, B = p.effectif * m, K = p.potentiel ?? B, r = t.plan.croissance * (FLEURS.has(t.plan.forme) ? prod?.[bid] ?? 1 : 1) * (disp && DIE?.FRUITS.has(t.plan.forme) ? disp[bid] ?? 1 : 1) * (PH ? PH.pousse(bid, t.plan) : 1);   // (docs/30 : qui mange les fruits sème)
+      const m = t.plan.masse_kg, B = p.effectif * m, K = bonus && p.potentiel != null ? p.potentiel + bonus[i] : p.potentiel ?? B, sec = SU ? SU.sec(bid, t.plan.forme) : 0, r = t.plan.croissance * (FLEURS.has(t.plan.forme) ? prod?.[bid] ?? 1 : 1) * (disp && DIE?.FRUITS.has(t.plan.forme) ? disp[bid] ?? 1 : 1) * (PH ? PH.pousse(bid, t.plan) : 1);   // (docs/30 : qui mange les fruits sème)
       // (une place qui fond ne tue pas une plante d'un coup : au pire elle perd sa repousse chaque cycle, jusqu'à sa nouvelle place ;
       //  une place nulle — la forme n'a plus sa place ici — la fait décliner de même)
       const Bk = [0, 1, 2, 3].map(k => B * (p.frequences[k] || 0)), place = K > 0 ? Math.max(REGLES.declin, 1 - B / K) : REGLES.declin;
       const nv = Bk.map((x, k) => { const cout = PHENOS[k][1].reduce((c, d) => c + REGLES.defenses[d].cout, 0);
-        return Math.max(0, x + (r * place + REGLES.renouveau) * (1 - cout) * x - REGLES.renouveau * x - Math.min(dent === 1 ? perte[i][k] : perte[i][k] * dent, REGLES.prise_max * x)); });
+        return Math.max(0, x + (r * place + REGLES.renouveau) * (1 - cout) * x - REGLES.renouveau * x - Math.min(dent === 1 ? perte[i][k] : perte[i][k] * dent, REGLES.prise_max * x) - (sec > 0 ? sec * x : 0)); });   // (docs/47 : le sec qui dure tue)
       const tot = somme(nv), semer = () => { if (p.graines > 0) p.effectif = +(p.effectif + p.graines).toFixed(m >= 1 ? 4 : 2); delete p.graines; };   // (docs/22 : les graines venues d'un voisin)
       if (!(tot > 0)) { p.effectif = 0; semer(); return; }
       const f = nv.map(x => x / tot).map(x => (1 - REGLES.mutation) * x + REGLES.mutation / 4);
@@ -276,8 +277,9 @@ function preparer(ctx) {
         for (const [bid, pl] of Object.entries(L)) { const K = somme(pl.map(({ p }) => p.potentiel || 0)), pi = K > 0 ? (F[bid] || 0) / ((F[bid] || 0) + DIE.REGLES.dispersion.demi * K) : 0;
           let ref = null; for (const { t, p } of pl) if (DIE.FRUITS.has(t.plan.forme)) { if (p.dispersion == null) { p.dispersion = +pi.toPrecision(4); ref ??= pi; } ref ??= p.dispersion; }   // (la première fois : exactement 1)
           disp[bid] = ref == null ? 1 : (1 + DIE.REGLES.dispersion.gain * pi) / (1 + DIE.REGLES.dispersion.gain * ref); } }
-      pousser(inst, H, prod, disp, PH);
-      if (PH) for (const t of plantes) for (const p of t.populations) Object.assign(p, PH.stade(p.biome, t.plan));   // (docs/46) ce qu'un jeu montre   // (la saison est déjà dans la place des brouteurs : la repousse n'en tient pas compte une seconde fois)
+      const SU = ctx.succession || null; if (SU) SU.frapper(ctx.sinistres);   // (docs/47) les catastrophes du cycle prennent des pieds
+      pousser(inst, H, prod, disp, PH, SU);
+      if (PH) for (const t of plantes) for (const p of t.populations) { Object.assign(p, PH.stade(p.biome, t.plan)); if (p.sinistre?.type === 'incendie' && ctx.n - p.sinistre.cycle <= 3) p.stade = 'brule'; }   // (docs/46) ce qu'un jeu montre ; (docs/47) une plante qui vient de brûler   // (la saison est déjà dans la place des brouteurs : la repousse n'en tient pas compte une seconde fois)
     },
     publier: (t, bid, p, pop) => { if (!broute(t)) return; const r = nourriture(t, bid); if (r && Math.abs(r.ratio - 1) >= .005) p.nourriture = +r.ratio.toFixed(3);
       if (pop?.recAvant > 0 && !(pop.rec0 > 0)) { p.recouvrement_avant = pop.recAvant; return; }   // (docs/30 : pas encore raccordée)

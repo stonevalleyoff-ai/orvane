@@ -159,6 +159,10 @@ export interface Instantane {
     meteo?: {
       depuis?: number;
     };
+    /** (docs/47) Les plantes subissent et transforment : depuis quand. */
+    succession?: {
+      depuis?: number;
+    };
     /** (docs/46) Les saisons des plantes : depuis quand. */
     phenologie?: {
       depuis?: number;
@@ -745,7 +749,13 @@ export interface Instantane {
           r?: number;
         };
       };
-      /** (docs/46) Une plante, dans un monde où les plantes ont leurs saisons : où elle en est ce cycle. nu, bourgeons, fleurs, feuilles, fruits, graines, feuilles_tombent, seche, sous_la_neige. D'autres pourront venir : un jeu qui n'en connaît pas un la montre « feuilles ». */
+      /** (docs/47) Une plante qu'une catastrophe vient de toucher, dans un monde à la succession éveillée : laquelle (type : incendie, crue, secheresse), à quel cycle, et la part de ses pieds qu'elle y a perdue. Elle le dit douze cycles. */
+      sinistre?: {
+        type?: string;
+        cycle?: number;
+        part?: number;
+      };
+      /** (docs/46) Une plante, dans un monde où les plantes ont leurs saisons : où elle en est ce cycle. nu, bourgeons, fleurs, feuilles, fruits, graines, feuilles_tombent, seche, sous_la_neige, brule (elle vient de brûler, docs/47). D'autres pourront venir : un jeu qui n'en connaît pas un la montre « feuilles ». */
       stade?: string;
       /** (docs/46) Une plante : la part de son feuillage qui est là ce cycle (1 : tout ; 0 : un arbre nu). */
       feuillage?: number;
@@ -975,6 +985,8 @@ export interface Profil {
     formes?: boolean;
     /** La grammaire des effets et des conduites (docs/32) : le cycle de nuit l'éveille, une fois ; le monde compose des traits d'un genre neuf (une lueur qui attire, une décharge qui foudroie, un cri qui alerte, une odeur qui repousse). */
     grammaire?: boolean;
+    /** Les plantes subissent et transforment (docs/47) : le cycle de nuit l'éveille, une fois, dans un monde qui a une flore ; le feu, la crue et le sec prennent des pieds aux plantes, l'herbe puis les buissons reprennent la place des arbres disparus, et le couvert d'un lieu suit ses arbres (avec le milieu, docs/22). */
+    succession?: boolean;
     /** Les saisons des plantes (docs/46) : le cycle de nuit les éveille, une fois, dans un monde qui a une flore et une année ; les arbres caducs perdent leurs feuilles, la pousse suit la belle saison et le temps qu'il fait, le nectar, les fruits et les graines ont leur saison. */
     phenologie?: boolean;
     /** La météo (docs/45) : le cycle de nuit l'éveille, une fois ; chaque lieu (chaque parcelle d'un monde par parcelles) a son temps du cycle, la pluie, la neige, le gel, les orages, les canicules, qui déplace la température, l'humidité et la production de la saison. */

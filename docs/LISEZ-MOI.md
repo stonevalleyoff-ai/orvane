@@ -52,6 +52,7 @@ Pour s'inscrire, recevoir ses clés et faire ses premiers appels au Supabase d'O
 | [44. La vitesse et les kits](44-vitesse-et-kits.md) | le cycle 17 % plus vite, le même monde au caractère près ; mesurer une optimisation ; les kits Unity et Godot pour lire le monde, compter, déposer |
 | [45. La météo](45-meteo.md) | le temps qu'il fait dans chaque lieu, parcelle par parcelle : la pluie, la neige, le gel, les orages, les canicules ; des fronts qui passent, un sec qui dure ; ce qu'il fait à la température, à l'humidité et à la production du cycle |
 | [46. Les saisons des plantes](46-saisons-des-plantes.md) | les arbres caducs ou persistants ; la pousse à la belle saison ; le nectar au printemps, les fruits à la fin de l'été, les graines à l'automne ; le stade de chaque plante, pour montrer une forêt nue, en fleurs, en fruits |
+| [47. Les plantes sous le feu](47-succession.md) | les catastrophes et le sec prennent des pieds aux plantes ; la succession : l'herbe, puis les buissons, puis les arbres ; le couvert d'un lieu suit ses arbres, une forêt brûlée s'ouvre puis se referme |
 
 ## En une page
 

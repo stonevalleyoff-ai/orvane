@@ -72,4 +72,4 @@ node bancs/milieu.js            # environ 2 minutes
 
 - **Un lieu qui change de nature.** Fait (docs/28). Les formes de plantes qu'un lieu n'avait pas (des arbres dans une prairie reboisée) y reviennent désormais de ses voisins (la recolonisation, plus haut) ; un lieu sans voisin qui les porte les attend.
 - **Les machines qui transforment.** Les foreuses de la Mère pourraient creuser, et les recycleurs nettoyer (docs/16).
-- **Les plantes qui transforment.** Le couvert ne suit pas encore la biomasse des arbres eux-mêmes, mais seulement ce que les brouteurs et les joueurs en font.
+- **Les plantes qui transforment.** Fait (docs/47) : le couvert d'un lieu suit ses arbres, dans un monde à la succession éveillée.

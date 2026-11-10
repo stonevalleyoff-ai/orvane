@@ -383,6 +383,15 @@
             }
           }
         },
+        "succession": {
+          "type": "object",
+          "description": "(docs/47) Les plantes subissent et transforment : depuis quand.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            }
+          }
+        },
         "phenologie": {
           "type": "object",
           "description": "(docs/46) Les saisons des plantes : depuis quand.",
@@ -2048,9 +2057,14 @@
                     "additionalProperties": false
                   }
                 },
+                "sinistre": {
+                  "type": "object",
+                  "description": "(docs/47) Une plante qu'une catastrophe vient de toucher, dans un monde à la succession éveillée : laquelle (type : incendie, crue, secheresse), à quel cycle, et la part de ses pieds qu'elle y a perdue. Elle le dit douze cycles.",
+                  "properties": { "type": { "type": "string" }, "cycle": { "type": "integer" }, "part": { "type": "number" } }
+                },
                 "stade": {
                   "type": "string",
-                  "description": "(docs/46) Une plante, dans un monde où les plantes ont leurs saisons : où elle en est ce cycle. nu, bourgeons, fleurs, feuilles, fruits, graines, feuilles_tombent, seche, sous_la_neige. D'autres pourront venir : un jeu qui n'en connaît pas un la montre « feuilles »."
+                  "description": "(docs/46) Une plante, dans un monde où les plantes ont leurs saisons : où elle en est ce cycle. nu, bourgeons, fleurs, feuilles, fruits, graines, feuilles_tombent, seche, sous_la_neige, brule (elle vient de brûler, docs/47). D'autres pourront venir : un jeu qui n'en connaît pas un la montre « feuilles »."
                 },
                 "feuillage": {
                   "type": "number",

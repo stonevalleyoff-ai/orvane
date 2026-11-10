@@ -113,5 +113,5 @@ node bancs/flore.js --court    # 60 cycles
 - **La minoritaire de sa bande ne tient plus mieux avec la flore** (constaté le 6 novembre). Le banc chasse 60 cycles, à 6 % par cycle, un brouteur minoritaire de la prairie (Anka, 50 g). Avant les correctifs du 5 novembre, il tenait mieux avec la flore. Depuis (une plante qui se séparait doublait sa place), il en reste 26 % avec la flore, 33 % sans elle : la limite de la phase 1 revient. `bancs/flore.js` l'affiche comme une vérification connue (⚠), sans échouer, et dira quand elle repasse.
 - **La flore ne se sépare pas encore en lignées nouvelles.** Une plante change ses défenses, mais pas sa forme ni sa hauteur.
 - **Les saisons.** Fait (docs/46) : la pousse, le nectar, les fruits et les graines suivent l'année, dans un monde qui l'éveille.
-- **Les catastrophes ne touchent pas encore les plantes.** Un incendie retire de la capacité au biome, pas de pieds aux plantes.
+- **Les catastrophes et les plantes.** Fait (docs/47) : le feu, la crue et la sécheresse prennent des pieds aux plantes, dans un monde qui l'éveille.
 - **Les machines et la flore** : des machines qui sèment ou qui défrichent (docs/16).

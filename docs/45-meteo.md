@@ -117,9 +117,9 @@ node bancs/meteo.js --court    # environ 2 minutes
 
 ## Ce qui reste ouvert
 
-- **Les catastrophes et les plantes.** Un incendie retire de la capacité au lieu et des bêtes, pas de pieds aux plantes (docs/17).
+- **Les catastrophes et les plantes.** Fait (docs/47), dans un monde à la succession éveillée.
 - **Une grotte qui brûle.** Les lieux sans temps gardent leurs tirages d'avant, et une grotte au couvert dense peut encore y tirer un incendie.
-- **Les plantes et le temps.** La flore (docs/17) ne sent ni la saison ni la météo : pas de feuilles qui tombent, de floraison, de fruits de saison, de pieds gelés.
+- **Les plantes et le temps.** Fait pour la saison et la pousse (docs/46) et pour le sec qui dure (docs/47). Reste le gel.
 - **Le temps dans les kits et dans Lisière.** Les kits Unity et Godot ne le lisent pas encore ; dans Lisière, la pluie pourrait menacer le feu.
 - **Le vent qui porte.** Les graines, les bêtes qui volent, les souches pourraient suivre les fronts.
 - **Des climats par région.** Comme le climat (docs/31), la météo n'a ni pôles ni équateur autres que ceux des axes des lieux.
