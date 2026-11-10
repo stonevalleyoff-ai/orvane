@@ -374,6 +374,15 @@
           "type": "object",
           "description": "(docs/31) Le climat : depuis quand, l'écart de température et d'humidité de tout le monde depuis l'éveil, la marche au hasard, les ponts de terre émergés (ponts), le nombre d'îles nées (iles)."
         },
+        "meteo": {
+          "type": "object",
+          "description": "(docs/45) La météo : depuis quand chaque lieu a son temps du cycle.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            }
+          }
+        },
         "dietes": {
           "type": "object",
           "description": "(docs/30) Les régimes en spectre : depuis quand.",
@@ -641,6 +650,20 @@
           "climat": {
             "type": "object",
             "description": "(docs/31) Un lieu que le milieu ne transforme pas : ses axes à l'éveil du climat (base), que le climat déplace."
+          },
+          "meteo": {
+            "type": "object",
+            "description": "(docs/45) Le temps qu'il fait ici ce cycle, dans un monde à la météo éveillée. Absent : un lieu sans temps (le sous-sol, la mer sans lumière), ou un monde sans météo. Dans un monde par parcelles, c'est le temps moyen des parcelles du biome ; celui de chaque parcelle est dans « parcelles ».",
+            "properties": {
+              "temps": { "type": "string", "description": "Le temps nommé : clair, couvert, pluie, orage, neige, gel, canicule, tempete, brouillard. D'autres pourront venir : un jeu qui n'en connaît pas un le montre comme « couvert »." },
+              "t": { "type": "number", "description": "L'écart de chaleur à la saison, en écarts-types (0 : la température de saison ; +1 : un cycle nettement chaud)." },
+              "e": { "type": "number", "description": "L'écart d'eau à la saison (0 : un temps de saison ; +1 : un cycle nettement arrosé ; −1 : nettement sec)." },
+              "vent": { "type": "number", "minimum": 0, "maximum": 1, "description": "Le vent : fort là où un front passe. Absent : calme." },
+              "neige": { "type": "number", "minimum": 0, "maximum": 1, "description": "Le manteau de neige au sol (1 : épais). Absent : pas de neige." },
+              "secheresse": { "type": "number", "minimum": 0, "maximum": 1, "description": "Le sec qui dure : une moyenne glissante du manque d'eau. Au-dessus de 0,5, une sécheresse est installée. Absent : aucun manque." },
+              "production": { "type": "number", "description": "Ce que le temps fait à la production du lieu ce cycle (1 : rien ; il multiplie celle de la saison). De moyenne 1 sur l'année." },
+              "temps_parts": { "type": "object", "additionalProperties": { "type": "number" }, "description": "Un biome d'un monde par parcelles dont les parcelles n'ont pas toutes le même temps : la part de chacun (pesée par la capacité)." }
+            }
           },
           "jeune": {
             "type": "object",
@@ -2153,6 +2176,7 @@
               "invention",
               "nature",
               "climat",
+              "meteo",
               "savoir"
             ]
           },
@@ -2226,7 +2250,8 @@
             "items": {
               "type": "string"
             }
-          }
+          },
+          "meteo": { "type": "object", "description": "(docs/45) Le temps qu'il fait dans cette parcelle ce cycle : les mêmes champs que biomes[].meteo (temps, t, e, vent, neige, secheresse, production)." }
         }
       }
     }

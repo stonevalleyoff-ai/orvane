@@ -61,6 +61,7 @@ const NAT = typeof require === 'function' ? require('./natures.js') : racine.Orv
 const DER = typeof require === 'function' ? require('./derives.js') : racine.OrvaneDerives;   // les dérives (moteur/derives.js, docs/29)
 const DI = typeof require === 'function' ? require('./dietes.js') : racine.OrvaneDietes;   // les régimes en spectre (moteur/dietes.js, docs/30)
 const CLI = typeof require === 'function' ? require('./climat.js') : racine.OrvaneClimat;   // le climat et la géologie lente (moteur/climat.js, docs/31)
+const MET = typeof require === 'function' ? require('./meteo.js') : racine.OrvaneMeteo;   // la météo (moteur/meteo.js, docs/45)
 const GRA = typeof require === 'function' ? require('./grammaire.js') : racine.OrvaneGrammaire;   // la grammaire des effets et des conduites (moteur/grammaire.js, docs/32)
 const CAS = typeof require === 'function' ? require('./castes.js') : racine.OrvaneCastes;   // les castes, les insectes sociaux (moteur/castes.js, docs/33)
 const FOR = typeof require === 'function' ? require('./formes.js') : racine.OrvaneFormes;   // les formes nouvelles (moteur/formes.js, docs/33)
@@ -469,7 +470,7 @@ const biomasse = (plans, N) => N.reduce((s, n, i) => s + n * (plans[i].masse_kg 
 // (dans un navigateur, un module se charge par sa balise <script>, AVANT orvane.js ; un monde qui a éveillé un mécanisme dont le
 // module manque tournerait sans lui, sans rien dire : on le dit, une fois — docs/19)
 const MODULES = [['mere', SYN, 'synthetique'], ['flore', FLO, 'flore'], ['pathogenes', PAT, 'pathogenes'], ['milieu', MIL, 'milieu'], ['ponte', PON, 'ponte'], ['stades', STA, 'stades'], ['invention', INV, 'invention'],
-  ['natures', NAT, 'natures'], ['derives', DER, 'derives'], ['dietes', DI, 'dietes'], ['climat', CLI, 'climat'], ['grammaire', GRA, 'grammaire'], ['castes', CAS, 'castes'], ['formes', FOR, 'formes'], ['esprit', ESP, 'esprit']], AVERTIS = new Set();
+  ['natures', NAT, 'natures'], ['derives', DER, 'derives'], ['dietes', DI, 'dietes'], ['climat', CLI, 'climat'], ['meteo', MET, 'meteo'], ['grammaire', GRA, 'grammaire'], ['castes', CAS, 'castes'], ['formes', FOR, 'formes'], ['esprit', ESP, 'esprit']], AVERTIS = new Set();
 function cycle(inst, pressions = {}, opt = {}) {
   for (const [cle, M, f] of MODULES) if (inst?.monde?.[cle] && !M && !AVERTIS.has(cle)) { AVERTIS.add(cle); if (typeof console !== 'undefined') console.warn(`Orvane : ce monde a éveillé « ${cle} », mais moteur/${f}.js n'est pas chargé (avant orvane.js) : ce mécanisme est ignoré (docs/19).`); }
   const propres = inst?.monde?.regles, M = inst?.catalogue?.monde, avant = {}, ax = AX, ext = CORPS?.etendre ? CORPS.etendre(M) : null;
@@ -501,6 +502,9 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   const SM = MIL && inst.monde?.milieu ? MIL.preparer({ biomes, taxons: tousT, prB, n, climat: SC }) : null; if (SM) ev.push(...SM.evenements);
   if (SC) { SC.appliquer(); ev.push(...SC.evenements); }
   const SN = NAT && inst.monde?.natures ? NAT.preparer(inst.monde, n) : null; if (SN) { for (const b of Object.values(biomes)) SN.changer(b); ev.push(...SN.evenements); }   // (docs/28) un lieu prend la nature dont ses axes sont le plus près
+  // (docs/45) la météo : le temps qu'il fait dans chaque lieu ce cycle ; il déplace les axes et la production de la saison
+  const SMe = MET && inst.monde?.meteo ? MET.preparer({ monde: inst.monde, biomes, n, axes: b => axesSaison(b, phase) }) : null; if (SMe) ev.push(...SMe.evenements);
+  const axesCycle = SMe ? b => SMe.axes(b, axesSaison(b, phase)) : b => axesSaison(b, phase), prodCycle = SMe ? b => productionSaison(b, phase) * SMe.production(b) : b => productionSaison(b, phase);
   const SR = PON && inst.monde?.ponte ? PON.preparer({ taxons: tousT, biomes }) : null;   // (docs/25) les pondeurs, les mangeurs d'œufs, les nids pillés
   const SV = STA && inst.monde?.stades ? STA.preparer() : null;   // (docs/26) les cycles de vie
   const SCa = CAS && inst.monde?.castes ? CAS.preparer() : null;   // (docs/33) les colonies
@@ -516,7 +520,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   const sinistres = {};
   for (const b of Object.values(biomes)) {
     if (b.catastrophes === false) continue;
-    const ax = axesSaison(b, phase), C = REGLES.catastrophes, ete = phase != null ? Math.max(0, -Math.cos(2 * Math.PI * phase)) : .5, printemps = phase != null ? Math.max(0, Math.sin(2 * Math.PI * phase)) : .5;
+    const ax = axesCycle(b), C = REGLES.catastrophes, ete = phase != null ? Math.max(0, -Math.cos(2 * Math.PI * phase)) : .5, printemps = phase != null ? Math.max(0, Math.sin(2 * Math.PI * phase)) : .5;
     const chances = {
       incendie: C.incendie.chance * Math.max(0, ax.couvert - .3) * Math.max(0, 1 - ax.humidite) * 4 * (.5 + ete),
       crue: C.crue.chance * Math.max(0, ax.humidite - .5) * Math.max(0, 1 - ax.altitude) * 4 * (.5 + printemps),
@@ -611,7 +615,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
         const demande = D.reduce((a, q) => a + q.pop.N.reduce((x, N, i) => x + N * besoinDe(q.E.plans[i]), 0), 0);
         for (const q of D) { let sN = 0; q.pop.N.forEach((N, i) => { if (N <= 0) return; const be = besoinDe(q.E.plans[i]), a = demande > 0 ? offre * be / demande : 0, sa = a / (a + be); q.pop.ration[i] = N * be * sa; sN += sa * N; });
           q.pop.satiete = q.Nt ? sN / q.Nt : 0; } } }
-    if (SY) SY.reguler(bid, T, B[bid] || [], biomes[bid].capacite * productionSaison(biomes[bid], phase));   // les machines régulent (docs/16)
+    if (SY) SY.reguler(bid, T, B[bid] || [], biomes[bid].capacite * prodCycle(biomes[bid]));   // les machines régulent (docs/16)
     for (const q of T) q.pop.N.forEach((N, i) => { q.pop.predation[i] = Math.min(q.pop.predation[i], N * REGLES.predation_max); });   // nul ne mange plus qu'une part d'une population en un cycle
   }
 
@@ -626,8 +630,8 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
     const E = etat.get(t.id), K = t.phenotypes.length;
     for (const [bid, pop] of Object.entries(E.pops)) {
       const b = biomes[bid]; if (!b) { delete E.pops[bid]; continue; }
-      const bS = phase == null ? b : { ...b, axes: axesSaison(b, phase) };                    // le biome tel qu'il est en cette saison
-      const conv = convenance(t.plan, bS), Keff = b.capacite * productionSaison(b, phase) * (SF ? SF.ratio(t, bid) : 1);   // (docs/17 : ce qui reste à brouter)
+      const bS = phase == null && !SMe ? b : { ...b, axes: axesCycle(b) };                    // le biome tel qu'il est en cette saison
+      const conv = convenance(t.plan, bS), Keff = b.capacite * prodCycle(b) * (SF ? SF.ratio(t, bid) : 1);   // (docs/17 : ce qui reste à brouter)
       const syn = SY && t.plan.regime === 'synthetique';                                        // (une machine : sa presse est celle de l'énergie, docs/16)
       const sat = syn ? SY.sat(bid) : Keff > 0 ? charge(B[bid], t.plan.masse_kg || 1) / (Keff * BANDE) * (SF ? SF.concurrence(t, bid) : 1) : 9;   // (docs/17 : pesée par ce qu'on mange en commun)
       pop.satC = sat;

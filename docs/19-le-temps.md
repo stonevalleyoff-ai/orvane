@@ -68,7 +68,7 @@ const monde = OrvaneSolo.vue(S);                                // ce que le jeu
 <script src="moteur/dietes.js"></script> <script src="moteur/flore.js"></script> <script src="moteur/derives.js"></script>
 <script src="moteur/pathogenes.js"></script> <script src="moteur/milieu.js"></script> <script src="moteur/synthetique.js"></script>
 <script src="moteur/ponte.js"></script> <script src="moteur/stades.js"></script> <script src="moteur/invention.js"></script>
-<script src="moteur/natures.js"></script> <script src="moteur/climat.js"></script> <script src="moteur/grammaire.js"></script>
+<script src="moteur/natures.js"></script> <script src="moteur/climat.js"></script> <script src="moteur/meteo.js"></script> <script src="moteur/grammaire.js"></script>
 <script src="moteur/castes.js"></script> <script src="moteur/formes.js"></script> <script src="moteur/esprit.js"></script>
 <script src="moteur/orvane.js"></script> <script src="tampon/tampon.js"></script> <script src="moteur/parcelles.js"></script>
 <script src="moteur/collectif.js"></script> <script src="moteur/solo.js"></script>

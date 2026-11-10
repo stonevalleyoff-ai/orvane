@@ -13,6 +13,7 @@ npm install github:stonevalleyoff-ai/orvane#v1.0.0
 
 ## [À venir]
 
+- **La météo** (`moteur/meteo.js`, docs/45) : dans un monde qui l'éveille (`profil.monde.meteo`), chaque lieu a son temps du cycle, parcelle par parcelle : la pluie, la neige, le gel, les orages, les canicules, les tempêtes, le brouillard. Il déplace la température, l'humidité et la production de la saison. Ajouts au contrat, rien de retiré : `biomes[].meteo` (le temps, les écarts de chaleur et d'eau, le vent, la neige au sol, la sécheresse, la production), `parcelles[].meteo`, `monde.meteo`, l'événement `meteo`. Un monde qui ne l'éveille pas tourne au caractère près comme avant.
 - **Les kits Unity et Godot** (`kits/`, docs/44) : lire le monde, compter ce que font les joueurs, déposer les lots. Rien ne change dans le contrat.
 - **Le cycle 17 % plus vite**, sans rien changer au monde : le même instantané, au caractère près (`outils/vitesse.js`, docs/44).
 - **Les planches** (`morceaux/silhouettes/<biome>.json`, docs/21) : à chaque cycle, chaque bête de chaque biome dessinée (un SVG de 170 × 90, sous sa variante la plus fréquente là), avec la place de ses yeux. Un jeu, dans n'importe quel moteur, montre les bêtes d'Orvane sans refaire leur dessin. Un fichier de plus : rien ne change pour un jeu qui ne le lit pas.

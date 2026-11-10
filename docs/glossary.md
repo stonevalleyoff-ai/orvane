@@ -37,6 +37,7 @@ Orvane's files use French field names. This page translates them all, object by 
 | `castes`, `formes` | castes, forms | since when lineages can live in colonies, and new body plans can be born |
 | `grammaire` | grammar | since when the world composes traits like sentences (a means, an action, a target, a moment) |
 | `climat` | climate | since when the world warms and cools by itself; the temperature and humidity shift since then, the land bridges, the islands born |
+| `meteo` | weather | since when each place has its weather of the cycle (docs/45) |
 | `dietes` | diet spectra | since when each lineage eats leaves, fruits, seeds, nectar, insects, meat or blood in its own shares |
 | `natures` | natures | since when places can change nature, and the world's place types (`types`: those of origin, and those it invented: `inedit`) |
 
@@ -55,6 +56,7 @@ Orvane's files use French field names. This page translates them all, object by 
 | `transforme` | transformed | the land as animals and players change it: `base` (its axes when the transformation awoke), `jeu` (what players changed, fading slowly) |
 | `traversees` | crossings | the neighbours reached only across the sea (a volcanic island): only flying, swimming or drifting animals pass |
 | `climat`, `jeune` | climate, young | a place's axes when the climate awoke; a young island and the capacity it will reach |
+| `meteo` | weather | the weather here this cycle: `temps` (`clair` clear, `couvert` overcast, `pluie` rain, `orage` thunderstorm, `neige` snow, `gel` frost, `canicule` heatwave, `tempete` storm, `brouillard` fog), `t` and `e` (heat and water departures from the season), `vent` wind, `neige` snow on the ground, `secheresse` lasting drought, `production` (what the weather does to the place's production). Also on each entry of `parcelles` |
 | `nature`, `natures` | nature | the place has changed nature: the type it became (`type`, `nom`, `depuis`, `inedite`: a nature the world invented); in a world by plots, the share of its plots that changed (`natures`) |
 
 ### `taxons[]` (lineages)
@@ -151,7 +153,7 @@ Orvane's files use French field names. This page translates them all, object by 
 
 ### `evenements[].type` (event types)
 
-`apparition` appearance · `extinction` · `separation` split · `migration` · `effondrement` collapse · `explosion` outbreak · `nouveau_trait` new trait · `epidemie` epidemic · `remission` · `catastrophe` disaster · `hybridation` · `mefiance` wariness · `eveil` awakening · `transformation` (an axis of a place has moved) · `conception` (the Mother designs a machine) · `transfert` (machines pass a module on) · `invention` (the world invents a trait) · `nature` (a place changes nature) · `climat` (the climate shifts, a land bridge, a new island) · `savoir` (an animal invents, or a population loses, a piece of knowledge)
+`apparition` appearance · `extinction` · `separation` split · `migration` · `effondrement` collapse · `explosion` outbreak · `nouveau_trait` new trait · `epidemie` epidemic · `remission` · `catastrophe` disaster · `hybridation` · `mefiance` wariness · `eveil` awakening · `transformation` (an axis of a place has moved) · `conception` (the Mother designs a machine) · `transfert` (machines pass a module on) · `invention` (the world invents a trait) · `nature` (a place changes nature) · `climat` (the climate shifts, a land bridge, a new island) · `meteo` (a storm, a heatwave, the first snow, a drought setting in) · `savoir` (an animal invents, or a population loses, a piece of knowledge)
 
 ## The batch (`schemas/pression.schema.json`)
 

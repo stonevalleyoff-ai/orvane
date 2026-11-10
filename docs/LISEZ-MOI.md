@@ -50,6 +50,7 @@ Pour s'inscrire, recevoir ses clés et faire ses premiers appels au Supabase d'O
 | [42. Les eaux douces](42-eaux-douces.md) | une genèse sur dix lieux d'eau, dont sept nouveaux (le torrent, le lac profond, l'étang, la roselière, le delta, les sources chaudes, la grotte inondée) : 60 lignées, reliées au monde d'Orvane par trois ponts |
 | [43. Les versions](43-versions.md) | un contrat qui ne casse pas sans prévenir : ce qui casse un jeu et ce qui ne casse pas, le garde-fou de chaque PR, le journal, le paquet à installer |
 | [44. La vitesse et les kits](44-vitesse-et-kits.md) | le cycle 17 % plus vite, le même monde au caractère près ; mesurer une optimisation ; les kits Unity et Godot pour lire le monde, compter, déposer |
+| [45. La météo](45-meteo.md) | le temps qu'il fait dans chaque lieu, parcelle par parcelle : la pluie, la neige, le gel, les orages, les canicules ; des fronts qui passent, un sec qui dure ; ce qu'il fait à la température, à l'humidité et à la production du cycle |
 
 ## En une page
 

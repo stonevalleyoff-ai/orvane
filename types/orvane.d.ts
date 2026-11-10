@@ -155,6 +155,10 @@ export interface Instantane {
     climat?: {
       [cle: string]: unknown;
     };
+    /** (docs/45) La météo : depuis quand chaque lieu a son temps du cycle. */
+    meteo?: {
+      depuis?: number;
+    };
     /** (docs/30) Les régimes en spectre : depuis quand. */
     dietes?: {
       depuis?: number;
@@ -252,6 +256,27 @@ export interface Instantane {
     /** (docs/31) Un lieu que le milieu ne transforme pas : ses axes à l'éveil du climat (base), que le climat déplace. */
     climat?: {
       [cle: string]: unknown;
+    };
+    /** (docs/45) Le temps qu'il fait ici ce cycle, dans un monde à la météo éveillée. Absent : un lieu sans temps (le sous-sol, la mer sans lumière), ou un monde sans météo. Dans un monde par parcelles, c'est le temps moyen des parcelles du biome ; celui de chaque parcelle est dans « parcelles ». */
+    meteo?: {
+      /** Le temps nommé : clair, couvert, pluie, orage, neige, gel, canicule, tempete, brouillard. D'autres pourront venir : un jeu qui n'en connaît pas un le montre comme « couvert ». */
+      temps?: string;
+      /** L'écart de chaleur à la saison, en écarts-types (0 : la température de saison ; +1 : un cycle nettement chaud). */
+      t?: number;
+      /** L'écart d'eau à la saison (0 : un temps de saison ; +1 : un cycle nettement arrosé ; −1 : nettement sec). */
+      e?: number;
+      /** Le vent : fort là où un front passe. Absent : calme. */
+      vent?: number;
+      /** Le manteau de neige au sol (1 : épais). Absent : pas de neige. */
+      neige?: number;
+      /** Le sec qui dure : une moyenne glissante du manque d'eau. Au-dessus de 0,5, une sécheresse est installée. Absent : aucun manque. */
+      secheresse?: number;
+      /** Ce que le temps fait à la production du lieu ce cycle (1 : rien ; il multiplie celle de la saison). De moyenne 1 sur l'année. */
+      production?: number;
+      /** Un biome d'un monde par parcelles dont les parcelles n'ont pas toutes le même temps : la part de chacun (pesée par la capacité). */
+      temps_parts?: {
+        [cle: string]: number;
+      };
     };
     /** (docs/31) Une île jeune : le cycle de sa naissance (nee) et la capacité qu'elle aura (cible) ; sa terre s'enrichit. */
     jeune?: {
@@ -783,7 +808,7 @@ export interface Instantane {
   }[];
   /** Ce qui s'est passé de notable dans le cycle : lisible par le visualiseur et par un jeu qui veut le raconter. */
   evenements?: {
-    type: "apparition" | "extinction" | "separation" | "migration" | "effondrement" | "explosion" | "nouveau_trait" | "epidemie" | "remission" | "catastrophe" | "hybridation" | "mefiance" | "eveil" | "conception" | "transfert" | "transformation" | "invention" | "nature" | "climat" | "savoir";
+    type: "apparition" | "extinction" | "separation" | "migration" | "effondrement" | "explosion" | "nouveau_trait" | "epidemie" | "remission" | "catastrophe" | "hybridation" | "mefiance" | "eveil" | "conception" | "transfert" | "transformation" | "invention" | "nature" | "climat" | "meteo" | "savoir";
     taxon: string;
     biome?: string;
     detail?: string;
@@ -805,6 +830,10 @@ export interface Instantane {
     nom?: string;
     capacite?: number;
     voisins?: string[];
+    /** (docs/45) Le temps qu'il fait dans cette parcelle ce cycle : les mêmes champs que biomes[].meteo (temps, t, e, vent, neige, secheresse, production). */
+    meteo?: {
+      [cle: string]: unknown;
+    };
   }[];
 }
 
@@ -934,6 +963,8 @@ export interface Profil {
     formes?: boolean;
     /** La grammaire des effets et des conduites (docs/32) : le cycle de nuit l'éveille, une fois ; le monde compose des traits d'un genre neuf (une lueur qui attire, une décharge qui foudroie, un cri qui alerte, une odeur qui repousse). */
     grammaire?: boolean;
+    /** La météo (docs/45) : le cycle de nuit l'éveille, une fois ; chaque lieu (chaque parcelle d'un monde par parcelles) a son temps du cycle, la pluie, la neige, le gel, les orages, les canicules, qui déplace la température, l'humidité et la production de la saison. */
+    meteo?: boolean;
     /** Le climat et la géologie lente (docs/31) : le cycle de nuit l'éveille, une fois ; le monde se réchauffe et se refroidit de lui-même, la mer monte et baisse, des volcans font des îles. */
     climat?: boolean;
     /** Les régimes en spectre (docs/30) : le cycle de nuit les éveille, une fois, après la flore ; chaque lignée mange des feuilles, des fruits, des graines, du nectar, des insectes, de la viande ou du sang, en parts qui lui sont propres. */
