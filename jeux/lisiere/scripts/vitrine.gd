@@ -84,7 +84,8 @@ func _process(delta: float) -> void:
 	j.sante = maxf(j.sante, 60.0)
 	var u := _t / duree
 	if u >= 1.0:
-		get_tree().quit(0)
+		_pret = false
+		_quitter()
 		return
 	var geste := "attendre"
 	for p in _plan:
@@ -163,3 +164,11 @@ func _un_chasseur():
 		if b.role != "echo":
 			return b
 	return null
+
+
+# (des sons qui jouent encore quand Godot s'arrête, il dit qu'ils fuient : on les tait, et on laisse au serveur audio le temps)
+func _quitter() -> void:
+	jeu.sons.taire()
+	jeu.sons.arreter_brefs()
+	await get_tree().create_timer(0.3, true, false, true).timeout
+	get_tree().quit(0)

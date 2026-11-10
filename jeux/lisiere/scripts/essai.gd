@@ -197,6 +197,7 @@ func _lancer() -> void:
 	print("\n%s (%d vérifications)" % ["tout passe" if ok else "ÉCHEC", n])
 	# (des sons qui jouent encore quand Godot s'arrête, il dit qu'ils fuient : on les arrête, et l'on laisse au serveur audio
 	# le temps de les lâcher)
+	jeu.sons.arreter_brefs()
 	for p in jeu.sons.find_children("*", "AudioStreamPlayer", false, false):
 		p.stop()
 	await get_tree().create_timer(0.3, true, false, true).timeout

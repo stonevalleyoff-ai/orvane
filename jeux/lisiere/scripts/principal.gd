@@ -130,6 +130,7 @@ func _titre() -> void:
 	ui.montrer_chargement("Le monde d'Orvane s'éveille…")
 	await donnees.charger_index()
 	ui.montrer_titre(donnees.lieux(), _infos_monde(), record)
+	sons.titre()
 
 
 func _infos_monde() -> String:
@@ -236,6 +237,11 @@ func _vider() -> void:
 
 
 # --- le temps et la lumière ---
+
+# le souffle du vent, commun au lieu (de 0 à 1 environ) : le son du vent, l'herbe, les feuillages, les flammes
+func vent() -> float:
+	return Sons.rafale(horloge)
+
 
 func lumiere_du_jour() -> float:
 	var t := fmod(horloge, R.DUREE)
@@ -444,9 +450,8 @@ func _sur_impact(_p: Vector2, _genre: String) -> void:
 	_toucher_vise()
 
 
+# (le son des pas se branche lui-même sur ce signal : sons.gd)
 func _sur_pas(p: Vector2) -> void:
-	if sons.has_method("pas"):
-		sons.pas(p)
 	if effets.has_method("poussiere"):
 		effets.poussiere(p)
 
