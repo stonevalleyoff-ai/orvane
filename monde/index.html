@@ -29,6 +29,7 @@
 <script src="../moteur/catalogue.js"></script>
 <script src="../moteur/corps.js"></script>
 <script src="../moteur/dietes.js"></script>
+<script src="../moteur/phenologie.js"></script>
 <script src="../moteur/flore.js"></script>
 <script src="../moteur/derives.js"></script>
 <script src="../moteur/pathogenes.js"></script>
@@ -76,7 +77,7 @@ const vivants = I => I.taxons.filter(t => !t.eteint && t.plan?.regime !== 'veget
 const plantesDe = I => [...I.taxons, ...(I === inst() && E.flore?.taxons || [])].filter(t => !t.eteint && t.plan?.regime === 'vegetal');
 const nomEsp = t => t ? (t.nom_commun || t.nom || t.id) : '';   // (docs/37) le nom commun qu'un joueur lui a donné, sinon celui du moteur
 // les fichiers que le moteur charge dans un Web Worker pour simuler sans figer la page (les mêmes que les balises <script> ci-dessus)
-const MODULES = ['moteur/catalogue.js', 'moteur/corps.js', 'moteur/dietes.js', 'moteur/flore.js', 'moteur/derives.js', 'moteur/pathogenes.js', 'moteur/milieu.js', 'moteur/synthetique.js',
+const MODULES = ['moteur/catalogue.js', 'moteur/corps.js', 'moteur/dietes.js', 'moteur/phenologie.js', 'moteur/flore.js', 'moteur/derives.js', 'moteur/pathogenes.js', 'moteur/milieu.js', 'moteur/synthetique.js',
   'moteur/ponte.js', 'moteur/stades.js', 'moteur/invention.js', 'moteur/natures.js', 'moteur/climat.js', 'moteur/meteo.js', 'moteur/grammaire.js', 'moteur/castes.js', 'moteur/formes.js', 'moteur/esprit.js', 'moteur/orvane.js'];
 const SAISON_EN = { printemps: 'au printemps', 'été': 'en été', automne: 'en automne', hiver: 'en hiver' }, enSaison = nom => SAISON_EN[nom] || `en ${nom}`;
 const cyc = n => String(n).replace('-', '−');   // un cycle d'avant le cycle 0 (la genèse) : avec un vrai signe moins

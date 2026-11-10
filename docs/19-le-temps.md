@@ -65,7 +65,7 @@ const monde = OrvaneSolo.vue(S);                                // ce que le jeu
 
 ```html
 <script src="moteur/catalogue.js"></script> <script src="moteur/corps.js"></script>
-<script src="moteur/dietes.js"></script> <script src="moteur/flore.js"></script> <script src="moteur/derives.js"></script>
+<script src="moteur/dietes.js"></script> <script src="moteur/phenologie.js"></script> <script src="moteur/flore.js"></script> <script src="moteur/derives.js"></script>
 <script src="moteur/pathogenes.js"></script> <script src="moteur/milieu.js"></script> <script src="moteur/synthetique.js"></script>
 <script src="moteur/ponte.js"></script> <script src="moteur/stades.js"></script> <script src="moteur/invention.js"></script>
 <script src="moteur/natures.js"></script> <script src="moteur/climat.js"></script> <script src="moteur/meteo.js"></script> <script src="moteur/grammaire.js"></script>

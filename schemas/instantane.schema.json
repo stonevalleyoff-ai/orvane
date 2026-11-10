@@ -383,6 +383,15 @@
             }
           }
         },
+        "phenologie": {
+          "type": "object",
+          "description": "(docs/46) Les saisons des plantes : depuis quand.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            }
+          }
+        },
         "dietes": {
           "type": "object",
           "description": "(docs/30) Les régimes en spectre : depuis quand.",
@@ -1715,6 +1724,10 @@
                 "minimum": 0,
                 "description": "Une plante : sa hauteur."
               },
+              "feuillage": {
+                "type": "string",
+                "description": "(docs/46) Un arbre ou un buisson, dans un monde où les plantes ont leurs saisons : caduc (il perd ses feuilles l'hiver) ou persistant."
+              },
               "croissance": {
                 "type": "number",
                 "minimum": 0,
@@ -2034,6 +2047,16 @@
                     },
                     "additionalProperties": false
                   }
+                },
+                "stade": {
+                  "type": "string",
+                  "description": "(docs/46) Une plante, dans un monde où les plantes ont leurs saisons : où elle en est ce cycle. nu, bourgeons, fleurs, feuilles, fruits, graines, feuilles_tombent, seche, sous_la_neige. D'autres pourront venir : un jeu qui n'en connaît pas un la montre « feuilles »."
+                },
+                "feuillage": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "(docs/46) Une plante : la part de son feuillage qui est là ce cycle (1 : tout ; 0 : un arbre nu)."
                 },
                 "pollinisation": {
                   "type": "number",

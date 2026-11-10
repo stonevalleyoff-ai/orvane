@@ -159,6 +159,10 @@ export interface Instantane {
     meteo?: {
       depuis?: number;
     };
+    /** (docs/46) Les saisons des plantes : depuis quand. */
+    phenologie?: {
+      depuis?: number;
+    };
     /** (docs/30) Les régimes en spectre : depuis quand. */
     dietes?: {
       depuis?: number;
@@ -618,6 +622,8 @@ export interface Instantane {
       forme?: "herbe" | "buisson" | "arbre" | "roseau" | "algue" | "lichen" | "succulente" | "champignon";
       /** Une plante : sa hauteur. */
       hauteur_m?: number;
+      /** (docs/46) Un arbre ou un buisson, dans un monde où les plantes ont leurs saisons : caduc (il perd ses feuilles l'hiver) ou persistant. */
+      feuillage?: string;
       /** Une plante : sa repousse par cycle, quand elle a de la place. */
       croissance?: number;
       /** (docs/25) La lignée pond des œufs (ovipare) ou met bas des petits (vivipare), dans un monde où la ponte est éveillée. */
@@ -739,6 +745,10 @@ export interface Instantane {
           r?: number;
         };
       };
+      /** (docs/46) Une plante, dans un monde où les plantes ont leurs saisons : où elle en est ce cycle. nu, bourgeons, fleurs, feuilles, fruits, graines, feuilles_tombent, seche, sous_la_neige. D'autres pourront venir : un jeu qui n'en connaît pas un la montre « feuilles ». */
+      stade?: string;
+      /** (docs/46) Une plante : la part de son feuillage qui est là ce cycle (1 : tout ; 0 : un arbre nu). */
+      feuillage?: number;
       /** Une plante à fleurs (docs/18) : ce que les butineurs du lieu faisaient à son arrivée ; sa repousse s'y rapporte. */
       pollinisation?: number;
       /** Une plante à fruits (docs/30) : ce que les mangeurs de fruits du lieu faisaient à son arrivée ; sa repousse s'y rapporte. */
@@ -965,6 +975,8 @@ export interface Profil {
     formes?: boolean;
     /** La grammaire des effets et des conduites (docs/32) : le cycle de nuit l'éveille, une fois ; le monde compose des traits d'un genre neuf (une lueur qui attire, une décharge qui foudroie, un cri qui alerte, une odeur qui repousse). */
     grammaire?: boolean;
+    /** Les saisons des plantes (docs/46) : le cycle de nuit les éveille, une fois, dans un monde qui a une flore et une année ; les arbres caducs perdent leurs feuilles, la pousse suit la belle saison et le temps qu'il fait, le nectar, les fruits et les graines ont leur saison. */
+    phenologie?: boolean;
     /** La météo (docs/45) : le cycle de nuit l'éveille, une fois ; chaque lieu (chaque parcelle d'un monde par parcelles) a son temps du cycle, la pluie, la neige, le gel, les orages, les canicules, qui déplace la température, l'humidité et la production de la saison. */
     meteo?: boolean;
     /** Le climat et la géologie lente (docs/31) : le cycle de nuit l'éveille, une fois ; le monde se réchauffe et se refroidit de lui-même, la mer monte et baisse, des volcans font des îles. */
