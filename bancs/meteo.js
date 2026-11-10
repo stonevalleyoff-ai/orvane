@@ -2,10 +2,11 @@
 //  1. le jour un : un monde sans météo tourne exactement comme le moteur sans moteur/meteo.js ; le jour de l'éveil, rien ne bouge ;
 //  2. le temps : des écarts autour de la saison, qui durent et passent de parcelle en parcelle ; le même monde, le même temps ;
 //  3. la neige et le sec : la neige tient au froid et fond au redoux, la sécheresse s'installe quand le sec dure ;
+//     les catastrophes ont une cause : le feu après le sec, la crue après les pluies ou le dégel, aussi souvent qu'avant ;
 //  4. la production : de moyenne 1 dans chaque lieu ; la pluie nourrit les terres sèches ;
 //  5. la vie suit : un été sec pèse sur les brouteurs des terres sèches ; sur la durée, le monde garde son poids ;
 //  6. les parcelles, le contrat, le cycle de nuit.
-//   node bancs/meteo.js            (environ 6 minutes ; --court : environ 2 minutes)
+//   node bancs/meteo.js            (environ 7 minutes ; --court : environ 2 minutes)
 'use strict';
 const fs = require('fs'), path = require('path'), crypto = require('crypto'), vm = require('vm'), { execFileSync } = require('child_process');
 const racine = p => path.join(__dirname, '..', p);
@@ -83,6 +84,23 @@ console.log('3. La neige et le sec');
   avec({ force: { e: -1, t: 0 } }, () => { for (let c = 1; c <= 13; c++) { Me.preparer({ monde: X.monde, biomes: Bm, n: X.cycle.n + c }); suite.push(p.meteo.secheresse || 0); } });
   avec({ force: { e: 1, t: 0 } }, () => { for (let c = 14; c <= 25; c++) Me.preparer({ monde: X.monde, biomes: Bm, n: X.cycle.n + c }); });
   verif(suite[1] > 0 && suite[12] >= Me.REGLES.secheresse.seuil && suite.every((x, i) => i === 0 || x >= suite[i - 1]) && !(p.meteo.secheresse > 0), `douze cycles secs sur une prairie : la sécheresse monte de ${fx(suite[1], 2)} à ${fx(suite[12], 2)} ; douze cycles de pluie, il n'en reste rien`);
+}
+
+{ // les catastrophes ont une cause : la chance de chacune, avec et sans elle, sur tout le monde
+  const N = COURT ? 240 : 480, C = Orvane.REGLES.catastrophes, Sm = { incendie: [0, 0], crue: [0, 0], secheresse: [0, 0] }, X = Me.eveiller(E0).inst, Bm = Object.fromEntries(X.biomes.map(b => [b.id, b])), A = X.monde.annee; let degel = 0, pluies = 0;
+  for (let c = X.cycle.n + 1; c <= X.cycle.n + N + 20; c++) { const ph = (c % A) / A, r = Me.preparer({ monde: X.monde, biomes: Bm, n: c, axes: b => Orvane.axesSaison(b, ph) }); if (c < X.cycle.n + 20) continue;
+    for (const b of Object.values(Bm)) { const k = r.causes(b); if (!k) continue; const ax = r.axes(b, Orvane.axesSaison(b, ph)), ete = Math.max(0, -Math.cos(2 * Math.PI * ph)), pr = Math.max(0, Math.sin(2 * Math.PI * ph));
+      const base = { incendie: C.incendie.chance * Math.max(0, ax.couvert - .3) * Math.max(0, 1 - ax.humidite) * 4 * (.5 + ete), crue: C.crue.chance * Math.max(0, ax.humidite - .5) * Math.max(0, 1 - ax.altitude) * 4 * (.5 + pr), secheresse: C.secheresse.chance * Math.max(0, .6 - ax.humidite) * 4 * ete };
+      for (const t in base) { Sm[t][0] += base[t]; Sm[t][1] += base[t] * k[t]; } if (k.crue > 2) { if (k.dit.crue === 'après le dégel') degel++; else pluies++; } } }
+  const rap = Object.fromEntries(Object.entries(Sm).map(([t, [a, b]]) => [t, b / a]));
+  verif(Object.values(rap).every(x => x > .75 && x < 1.3), `sur ${N} cycles, les catastrophes gardent leur fréquence : l'incendie à ${fx(rap.incendie * 100)} % de ce qu'elle était, la crue à ${fx(rap.crue * 100)} %, la sécheresse à ${fx(rap.secheresse * 100)} %`);
+  verif(degel > 0 && pluies > 0, `les eaux montent après les pluies (${fx(pluies / (pluies + degel) * 100)} % des fois) ou après le dégel (${fx(degel / (pluies + degel) * 100)} %)`);
+  // dans le monde : un temps sec imposé, puis un temps arrosé, les catastrophes vingt fois plus probables (comptées dans les lieux qui ont un temps : la grotte garde ses tirages)
+  const fort = Object.fromEntries(Object.entries(C).map(([k, v]) => [k, { ...v, chance: v.chance * 20 }])), Wf = { ...W, monde: { ...W.monde, regles: { ...(W.monde.regles || {}), catastrophes: fort } } }, M = COURT ? 14 : 24;
+  const compter = o => { let Y = Wf; const T = { incendie: 0, crue: 0, secheresse: 0 }, dits = new Set(); avec(o, () => { for (let k = 0; k < M; k++) { Y = Orvane.cycle(Y, {}); for (const e of Y.evenements) if (e.type === 'catastrophe' && m(Y.biomes.find(b => b.id === e.biome) || {})) { const t = e.detail.split(' : ')[0]; T[t]++; dits.add(e.detail.split(' ; ')[0]); } } }); return { T, dits: [...dits] }; };
+  const sec = compter({ force: { e: -1.2, t: .5 } }), eau = compter({ force: { e: 1.2, t: 0 } });
+  verif(sec.T.incendie + sec.T.secheresse > 0 && sec.T.crue === 0 && eau.T.crue > 0 && eau.T.incendie + eau.T.secheresse === 0,
+    `${M} cycles secs : ${sec.T.incendie} incendies, ${sec.T.secheresse} sécheresses, aucune crue (« ${sec.dits[0]} ») ; ${M} cycles de pluie : ${eau.T.crue} crues, ni feu ni sécheresse (« ${eau.dits[0]} »)`);
 }
 
 console.log('4. La production');

@@ -661,6 +661,7 @@
               "vent": { "type": "number", "minimum": 0, "maximum": 1, "description": "Le vent : fort là où un front passe. Absent : calme." },
               "neige": { "type": "number", "minimum": 0, "maximum": 1, "description": "Le manteau de neige au sol (1 : épais). Absent : pas de neige." },
               "secheresse": { "type": "number", "minimum": 0, "maximum": 1, "description": "Le sec qui dure : une moyenne glissante du manque d'eau. Au-dessus de 0,5, une sécheresse est installée. Absent : aucun manque." },
+              "eaux": { "type": "number", "minimum": 0, "maximum": 1, "description": "Les eaux qui montent : une moyenne glissante de la pluie, et la neige qui fond. Plus elles sont hautes, plus une crue est probable. Absent : rien." },
               "production": { "type": "number", "description": "Ce que le temps fait à la production du lieu ce cycle (1 : rien ; il multiplie celle de la saison). De moyenne 1 sur l'année." },
               "temps_parts": { "type": "object", "additionalProperties": { "type": "number" }, "description": "Un biome d'un monde par parcelles dont les parcelles n'ont pas toutes le même temps : la part de chacun (pesée par la capacité)." }
             }
@@ -2251,7 +2252,7 @@
               "type": "string"
             }
           },
-          "meteo": { "type": "object", "description": "(docs/45) Le temps qu'il fait dans cette parcelle ce cycle : les mêmes champs que biomes[].meteo (temps, t, e, vent, neige, secheresse, production)." }
+          "meteo": { "type": "object", "description": "(docs/45) Le temps qu'il fait dans cette parcelle ce cycle : les mêmes champs que biomes[].meteo (temps, t, e, vent, neige, secheresse, eaux, production)." }
         }
       }
     }

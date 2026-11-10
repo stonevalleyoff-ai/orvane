@@ -271,6 +271,8 @@ export interface Instantane {
       neige?: number;
       /** Le sec qui dure : une moyenne glissante du manque d'eau. Au-dessus de 0,5, une sécheresse est installée. Absent : aucun manque. */
       secheresse?: number;
+      /** Les eaux qui montent : une moyenne glissante de la pluie, et la neige qui fond. Plus elles sont hautes, plus une crue est probable. Absent : rien. */
+      eaux?: number;
       /** Ce que le temps fait à la production du lieu ce cycle (1 : rien ; il multiplie celle de la saison). De moyenne 1 sur l'année. */
       production?: number;
       /** Un biome d'un monde par parcelles dont les parcelles n'ont pas toutes le même temps : la part de chacun (pesée par la capacité). */
@@ -830,7 +832,7 @@ export interface Instantane {
     nom?: string;
     capacite?: number;
     voisins?: string[];
-    /** (docs/45) Le temps qu'il fait dans cette parcelle ce cycle : les mêmes champs que biomes[].meteo (temps, t, e, vent, neige, secheresse, production). */
+    /** (docs/45) Le temps qu'il fait dans cette parcelle ce cycle : les mêmes champs que biomes[].meteo (temps, t, e, vent, neige, secheresse, eaux, production). */
     meteo?: {
       [cle: string]: unknown;
     };

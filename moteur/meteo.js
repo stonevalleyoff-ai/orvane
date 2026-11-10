@@ -6,10 +6,11 @@
 //  - des voisins : un lieu prend une part du temps de ses voisins de la veille (un front passe de parcelle en parcelle) ;
 //  - un vent : la différence d'eau avec les voisins (là où un front passe, il souffle) ;
 //  - un manteau de neige, qui s'épaissit quand il neige et fond au redoux ; une sécheresse, qui monte quand le sec dure ;
+//    des eaux, qui montent quand la pluie dure ou que la neige fond ;
 //  - un temps nommé : clair, couvert, pluie, orage, neige, gel, canicule, tempête, brouillard.
 // Ce que la météo fait au monde : la température et l'humidité du cycle (la niche de chaque lignée les sent), la production du
 // cycle (la pluie nourrit les terres sèches, un coup de chaud les terres froides ; de moyenne 1 : sur l'année, rien ne se déplace),
-// et les catastrophes, qui lisent les axes du cycle. Tout part de zéro à l'éveil : le jour de l'éveil, rien ne bouge. Le hasard de
+// et les catastrophes, qui ont désormais une cause : le feu et la sécheresse suivent le sec qui dure, la crue les eaux qui montent. Tout part de zéro à l'éveil : le jour de l'éveil, rien ne bouge. Le hasard de
 // la météo est le sien. Un monde qui ne l'a pas éveillée n'en voit rien. Déterministe. Node (require) ou navigateur
 // (globalThis.OrvaneMeteo).
 'use strict';
@@ -28,6 +29,11 @@ const REGLES = {
   seuils: { pluie: .35, orage: .9, sec: -.35, vent: .55, brouillard: .6 },
   neige: { chute: .3, fonte: 3 },                 // le manteau : +0,3 par écart d'eau un jour de neige ; il fond de 3 × (la température − froid)
   secheresse: { memoire: .88, force: 1.1, seuil: .5 },        // la sécheresse : une moyenne glissante du manque d'eau ; au-dessus de 0,5, elle est installée
+  eaux: { memoire: .8, force: 1.1, fonte: 1.5 },   // les eaux qui montent : une moyenne glissante de la pluie, et la neige qui fond d'un coup
+  // (docs/45) les catastrophes ont une cause : la chance d'un incendie et d'une sécheresse suit le sec qui dure, celle d'une crue
+  // les eaux qui montent ; rapportées à leur moyenne (mesurée sur le monde d'Orvane, quatre ans), pour que les catastrophes
+  // gardent leur fréquence ; plafond : au plus tant de fois la chance d'avant
+  causes: { sec: .157, eaux: .121, plafond: 6 },
   force: null,               // (des écarts imposés, { t, e }, à la place du souvenir et du tirage : un banc, un auteur de monde qui veut son été sec)
   evenements: 4              // au plus, par cycle (les plus forts)
 };
@@ -70,7 +76,7 @@ function preparer(ctx) {
   const { monde, biomes, n } = ctx, M = monde.meteo, B = Object.values(biomes), ev = [], graine = ((monde.graine >>> 0) ^ 0x4d6574) >>> 0;
   const calme = n - M.depuis <= 1;   // (le premier cycle après l'éveil : rien ne bouge encore)
   const hier = Object.fromEntries(B.filter(b => b.meteo && typeof b.meteo === 'object').map(b => [b.id, { t: b.meteo.t || 0, e: b.meteo.e || 0 }]));
-  const notables = [], tir = {};
+  const notables = [], tir = {}, degel = {};
   // 1. les écarts du cycle : le souvenir (le sien, celui des voisins) et le tirage
   for (const b of B) {
     if (!aUnTemps(b)) { if (b.meteo && typeof b.meteo === 'object') delete b.meteo; continue; }
@@ -91,7 +97,9 @@ function preparer(ctx) {
     let neige = avant.neige || 0;
     if (terre) { if (temps === 'neige' || (temps === 'tempete' && T < REGLES.froid)) neige += REGLES.neige.chute * N.e; if (T > REGLES.froid) neige -= REGLES.neige.fonte * (T - REGLES.froid); neige = r3(clamp(neige)); } else neige = 0;
     const sec = terre ? r3(clamp(REGLES.secheresse.memoire * (avant.secheresse || 0) + (1 - REGLES.secheresse.memoire) * -N.e * REGLES.secheresse.force)) : 0;
-    const m = { temps, t: N.t, e: N.e, ...(vent >= .05 ? { vent } : {}), ...(neige > 0 ? { neige } : {}), ...(sec > 0 ? { secheresse: sec } : {}), production: r3(productionDe(b, N.e, N.t)) };
+    const fonte = terre ? Math.max(0, (avant.neige || 0) - neige) : 0, Ex = REGLES.eaux; if (fonte > .05) degel[b.id] = true;
+    const eaux = b.milieu !== 'marin' ? r3(clamp(Ex.memoire * (avant.eaux || 0) + (1 - Ex.memoire) * N.e * Ex.force + Ex.fonte * fonte)) : 0;
+    const m = { temps, t: N.t, e: N.e, ...(vent >= .05 ? { vent } : {}), ...(neige > 0 ? { neige } : {}), ...(sec > 0 ? { secheresse: sec } : {}), ...(eaux > 0 ? { eaux } : {}), production: r3(productionDe(b, N.e, N.t)) };
     // ce qui se raconte : le temps qui change vers un temps fort, les premières neiges, la sécheresse qui s'installe
     if (!calme) {
       if (['tempete', 'canicule'].includes(temps) && avant.temps !== temps) notables.push([temps === 'tempete' ? 3 + vent : 2 + N.t, b, temps === 'tempete' ? 'une tempête passe' : 'une canicule s\'installe']);
@@ -112,7 +120,10 @@ function preparer(ctx) {
     // les axes du cycle : ceux de la saison, déplacés par le temps qu'il fait
     axes: (b, axS) => { const m = de(b); if (!m) return axS; const s = senti(b);
       return { ...axS, temperature: clamp((axS.temperature ?? .5) + REGLES.axes.temperature * s * m.t), ...(axS.humidite != null ? { humidite: clamp(axS.humidite + REGLES.axes.humidite * s * m.e) } : {}) }; },
-    production: b => de(b)?.production ?? 1
+    production: b => de(b)?.production ?? 1,
+    // ce que le temps des cycles passés fait à la chance de chaque catastrophe (1 : un lieu sans temps), et comment le dire
+    causes: b => { const m = de(b), K = REGLES.causes; if (!m) return null; const s = Math.min(K.plafond, (m.secheresse || 0) / K.sec), x = Math.min(K.plafond, (m.eaux || 0) / K.eaux);
+      return { incendie: s, secheresse: s, crue: x, dit: { incendie: 'après un temps sec', secheresse: 'le sec a trop duré', crue: degel[b.id] ? 'après le dégel' : 'après les pluies' } }; }
   };
 }
 
@@ -122,7 +133,7 @@ function regrouper(L, poids) {
   const W = M.reduce((s, [, w]) => s + w, 0) || 1, moy = k => M.reduce((s, [m, w]) => s + (m[k] || 0) * w, 0) / W, T = {};
   for (const [m, w] of M) T[m.temps] = (T[m.temps] || 0) + w;
   const temps = Object.keys(T).sort((a, b) => T[b] - T[a] || (a < b ? -1 : 1))[0], x = { temps, t: r4(moy('t')), e: r4(moy('e')), production: r3(moy('production') || 1) };
-  for (const k of ['vent', 'neige', 'secheresse']) { const v = r3(moy(k)); if (v > 0) x[k] = v; }
+  for (const k of ['vent', 'neige', 'secheresse', 'eaux']) { const v = r3(moy(k)); if (v > 0) x[k] = v; }
   if (Object.keys(T).length > 1) x.temps_parts = Object.fromEntries(Object.keys(T).sort().map(k => [k, r3(T[k] / W)]));
   return x;
 }

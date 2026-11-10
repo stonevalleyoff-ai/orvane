@@ -520,15 +520,15 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   const sinistres = {};
   for (const b of Object.values(biomes)) {
     if (b.catastrophes === false) continue;
-    const ax = axesCycle(b), C = REGLES.catastrophes, ete = phase != null ? Math.max(0, -Math.cos(2 * Math.PI * phase)) : .5, printemps = phase != null ? Math.max(0, Math.sin(2 * Math.PI * phase)) : .5;
+    const ax = axesCycle(b), cause = SMe ? SMe.causes(b) : null, C = REGLES.catastrophes, ete = phase != null ? Math.max(0, -Math.cos(2 * Math.PI * phase)) : .5, printemps = phase != null ? Math.max(0, Math.sin(2 * Math.PI * phase)) : .5;
     const chances = {
-      incendie: C.incendie.chance * Math.max(0, ax.couvert - .3) * Math.max(0, 1 - ax.humidite) * 4 * (.5 + ete),
-      crue: C.crue.chance * Math.max(0, ax.humidite - .5) * Math.max(0, 1 - ax.altitude) * 4 * (.5 + printemps),
-      secheresse: C.secheresse.chance * Math.max(0, .6 - ax.humidite) * 4 * ete
+      incendie: C.incendie.chance * Math.max(0, ax.couvert - .3) * Math.max(0, 1 - ax.humidite) * 4 * (.5 + ete) * (cause ? cause.incendie : 1),
+      crue: C.crue.chance * Math.max(0, ax.humidite - .5) * Math.max(0, 1 - ax.altitude) * 4 * (.5 + printemps) * (cause ? cause.crue : 1),
+      secheresse: C.secheresse.chance * Math.max(0, .6 - ax.humidite) * 4 * ete * (cause ? cause.secheresse : 1)
     };
     for (const [type, p] of Object.entries(chances)) if (p > 0 && R() < p) {
       b.capacite = Math.max(0, b.capacite * (1 - C[type].capacite)); sinistres[b.id] = type;
-      ev.push({ type: 'catastrophe', taxon: b.id, biome: b.id, detail: `${type} : ${C[type].detail} ; capacité −${Math.round(C[type].capacite * 100)} %` });
+      ev.push({ type: 'catastrophe', taxon: b.id, biome: b.id, detail: `${type} : ${C[type].detail}${cause ? ', ' + cause.dit[type] : ''} ; capacité −${Math.round(C[type].capacite * 100)} %` });
       break;
     }
   }

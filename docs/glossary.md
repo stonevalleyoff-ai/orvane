@@ -56,7 +56,7 @@ Orvane's files use French field names. This page translates them all, object by 
 | `transforme` | transformed | the land as animals and players change it: `base` (its axes when the transformation awoke), `jeu` (what players changed, fading slowly) |
 | `traversees` | crossings | the neighbours reached only across the sea (a volcanic island): only flying, swimming or drifting animals pass |
 | `climat`, `jeune` | climate, young | a place's axes when the climate awoke; a young island and the capacity it will reach |
-| `meteo` | weather | the weather here this cycle: `temps` (`clair` clear, `couvert` overcast, `pluie` rain, `orage` thunderstorm, `neige` snow, `gel` frost, `canicule` heatwave, `tempete` storm, `brouillard` fog), `t` and `e` (heat and water departures from the season), `vent` wind, `neige` snow on the ground, `secheresse` lasting drought, `production` (what the weather does to the place's production). Also on each entry of `parcelles` |
+| `meteo` | weather | the weather here this cycle: `temps` (`clair` clear, `couvert` overcast, `pluie` rain, `orage` thunderstorm, `neige` snow, `gel` frost, `canicule` heatwave, `tempete` storm, `brouillard` fog), `t` and `e` (heat and water departures from the season), `vent` wind, `neige` snow on the ground, `secheresse` lasting drought, `eaux` rising waters, `production` (what the weather does to the place's production). Also on each entry of `parcelles` |
 | `nature`, `natures` | nature | the place has changed nature: the type it became (`type`, `nom`, `depuis`, `inedite`: a nature the world invented); in a world by plots, the share of its plots that changed (`natures`) |
 
 ### `taxons[]` (lineages)

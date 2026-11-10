@@ -18,7 +18,8 @@ Ces écarts tournent autour de ±0,5 et ne passent jamais ±1,6. Ils viennent de
 De là viennent :
 - **le vent** (`vent`, de 0 à 1) : l'écart d'eau avec les voisins. Il souffle là où un front passe ;
 - **la neige au sol** (`neige`, de 0 à 1) : elle s'épaissit quand il neige, et fond dès que la température du cycle passe 0,22 ;
-- **la sécheresse** (`secheresse`, de 0 à 1) : une moyenne glissante du manque d'eau. Au-dessus de 0,5, elle est installée. Douze cycles de pluie l'effacent.
+- **la sécheresse** (`secheresse`, de 0 à 1) : une moyenne glissante du manque d'eau. Au-dessus de 0,5, elle est installée. Douze cycles de pluie l'effacent ;
+- **les eaux** (`eaux`, de 0 à 1) : une moyenne glissante de la pluie, plus la neige qui fond d'un coup.
 
 **Qui n'a pas de temps.** Le sous-sol et la mer sans lumière (les abysses). Un lieu peut aussi le refuser : `"meteo": false`.
 
@@ -48,7 +49,12 @@ D'autres temps pourront venir. Un jeu qui n'en connaît pas un le montre comme `
   - un coup de chaud nourrit une terre froide (jusqu'à +8 % par écart) et brûle une terre chaude ;
   - la mer n'en sent presque rien.
   - Elle est de moyenne 1 : sur l'année, la place de chacun ne se déplace pas. Elle reste entre 0,6 et 1,4.
-- **Les catastrophes** (l'incendie, la crue, la sécheresse) lisent les axes du cycle : un cycle sec et chaud brûle plus volontiers. Elles restent des tirages ; leur donner une cause est l'étape suivante.
+- **Les catastrophes ont une cause.** Sans la météo, un incendie, une crue ou une sécheresse est un tirage, pesé par le sol et la saison. Avec elle, le temps des cycles passés pèse aussi :
+  - la chance d'un **incendie** et d'une **sécheresse** suit le sec qui dure (`secheresse`). Sans manque d'eau, rien ne brûle ;
+  - la chance d'une **crue** suit les eaux qui montent (`eaux`) : après les pluies, ou après le dégel ;
+  - chacune est rapportée à sa moyenne : les catastrophes viennent aussi souvent qu'avant, mais au bon moment. Une chance ne dépasse jamais six fois ce qu'elle était ;
+  - l'événement le dit : « incendie : le feu court dans le couvert, après un temps sec », « crue : les eaux montent, après le dégel ».
+  - Un lieu sans temps (une grotte) garde ses tirages d'avant.
 
 Les routes de l'hiver (docs/38) se décident sur la saison, pas sur le temps du cycle. Les plantes ne sentent pas encore le temps (plus bas).
 
@@ -57,7 +63,7 @@ Les routes de l'hiver (docs/38) se décident sur la saison, pas sur le temps du 
 ```json
 "biomes": [{ "id": "foret", …, "meteo": { "temps": "pluie", "t": -0.49, "e": 0.41, "vent": 0.19, "production": 1.007,
                                            "temps_parts": { "couvert": 0.285, "pluie": 0.715 } } }],
-"parcelles": [{ "id": "foret~2", "type": "foret", …, "meteo": { "temps": "pluie", "t": -1.17, "e": 0.37, "vent": 0.19, "secheresse": 0.16, "production": 0.996 } }]
+"parcelles": [{ "id": "foret~2", "type": "foret", …, "meteo": { "temps": "pluie", "t": -1.17, "e": 0.37, "vent": 0.19, "secheresse": 0.16, "eaux": 0.21, "production": 0.996 } }]
 ```
 
 - **Par biome** (`biomes[].meteo`) : dans un monde par parcelles, c'est le temps moyen de ses parcelles, pesé par leur capacité. `temps` est le plus répandu, et `temps_parts` dit la part de chacun quand elles diffèrent.
@@ -90,26 +96,29 @@ Au cycle de nuit suivant, la météo s'éveille, une fois pour toutes. Le jour d
   - La neige tient au froid : la banquise et les sommets en ont 91 % des cycles, la toundra 69 %. La jungle, le désert et la savane, jamais. Aucune ne passe le cœur de l'été d'un lieu tempéré.
   - Une sécheresse est installée 2,8 % du temps.
   - Douze cycles secs sur une prairie : la sécheresse monte de 0,13 à 0,86. Douze cycles de pluie, il n'en reste rien.
+- **Les catastrophes.**
+  - Sur 480 cycles, elles gardent leur fréquence : l'incendie à 99 % de ce qu'elle était, la crue à 100 %, la sécheresse à 102 %.
+  - Les eaux montent après les pluies (97 % des fois) ou après le dégel (3 %).
+  - 24 cycles secs imposés, les catastrophes vingt fois plus probables : 30 incendies, 86 sécheresses, aucune crue. 24 cycles de pluie : 23 crues, ni feu ni sécheresse.
 - **La production.**
   - Sur 720 cycles, la production moyenne de chaque sorte de lieu reste à 1 (le plus loin : la savane, 0,994).
   - Elle bouge le plus dans les terres sèches et chaudes (de 0,75 à 1,28), à peine au large (de 0,99 à 1,01).
 - **La vie suit.**
   - 25 cycles d'un temps sec et chaud imposé, ou arrosé : dans les terres sèches, les brouteurs pèsent 21 % de moins au sec.
-  - 60 cycles avec et sans météo : les bêtes pèsent 102 % de ce qu'elles pèsent sans elle, 185 lignées contre 184.
+  - 60 cycles avec et sans météo : les bêtes pèsent 105 % de ce qu'elles pèsent sans elle, 184 lignées contre 184.
 - **Les parcelles, le contrat et le cycle de nuit.**
   - Dans un monde par parcelles, chaque parcelle a son temps, et le biome publié celui de ses parcelles.
   - L'instantané respecte le schéma, par biome et par parcelles, et le profil éveille la météo une fois.
 
-Et sur le monde d'Orvane entier, par parcelles, 20 cycles : 345 lignées sans la météo, 343 avec ; les bêtes pèsent 100,8 % de ce qu'elles pèsent sans elle.
-
 ```
-node bancs/meteo.js            # environ 6 minutes
+node bancs/meteo.js            # environ 7 minutes
 node bancs/meteo.js --court    # environ 2 minutes
 ```
 
 ## Ce qui reste ouvert
 
-- **Les catastrophes ont une cause.** Un incendie après une suite de cycles secs, une crue après les pluies ou le dégel, une sécheresse née du manque d'eau cumulé. La neige au sol et la sécheresse sont là pour cela.
+- **Les catastrophes et les plantes.** Un incendie retire de la capacité au lieu et des bêtes, pas de pieds aux plantes (docs/17).
+- **Une grotte qui brûle.** Les lieux sans temps gardent leurs tirages d'avant, et une grotte au couvert dense peut encore y tirer un incendie.
 - **Les plantes et le temps.** La flore (docs/17) ne sent ni la saison ni la météo : pas de feuilles qui tombent, de floraison, de fruits de saison, de pieds gelés.
 - **Le temps dans les kits et dans Lisière.** Les kits Unity et Godot ne le lisent pas encore ; dans Lisière, la pluie pourrait menacer le feu.
 - **Le vent qui porte.** Les graines, les bêtes qui volent, les souches pourraient suivre les fronts.
