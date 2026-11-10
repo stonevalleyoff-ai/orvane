@@ -238,8 +238,11 @@ func _vider() -> void:
 
 # --- le temps et la lumière ---
 
-# le souffle du vent, commun au lieu (de 0 à 1 environ) : le son du vent, l'herbe, les feuillages, les flammes
+# le souffle du vent là où est la veilleuse, de 0 à 1 : celui de l'herbe et des feuillages (monde.vent, et son shader), que
+# le son du vent suit ; hors d'une partie, celui du son (Sons.rafale)
 func vent() -> float:
+	if monde != null and joueur != null:
+		return clampf((monde.vent(joueur.position) - 0.2) / 1.15, 0.0, 1.0)
 	return Sons.rafale(horloge)
 
 
