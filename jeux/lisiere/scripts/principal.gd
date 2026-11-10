@@ -68,6 +68,7 @@ var _mort := -1.0
 # ce que le dernier geste vise : son son, ses éclats et l'arrêt d'image viennent quand il touche, à l'image (joueur.impact)
 var _coup_vise := {}
 var _coup_age := 0.0
+var _pause_vue := false
 
 
 func _ready() -> void:
@@ -208,6 +209,7 @@ func _nouvelle_partie() -> void:
 	_etait_nuit = false
 	_mort = -1.0
 	_coup_vise = {}
+	_agir = 0.35          # (le clic qui lance la partie n'est pas un coup)
 	en_pause = false
 	en_partie = true
 	ui.montrer_hud()
@@ -314,7 +316,12 @@ func _process(delta: float) -> void:
 		en_pause = not en_pause
 		ui.montrer_pause(en_pause)
 	if en_pause:
+		_pause_vue = true
 		return
+	if _pause_vue:
+		# (le clic qui ferme la pause n'est pas un coup)
+		_pause_vue = false
+		_agir = 0.35
 	if _mort >= 0.0:
 		# (elle est tombée : le monde continue un instant sans elle, puis l'écran de fin)
 		_mort += delta
@@ -584,6 +591,7 @@ func bete_tuee(b) -> void:
 	var viande := clampi(int(round(pow(b.masse, 0.4))), 1, 6)
 	joueur.inventaire["viande"] = int(joueur.inventaire["viande"]) + viande
 	ui.message("%s : +%d viande" % [b.nom, viande], Color(0.85, 0.72, 0.6))
+	ui.ramasse("viande", viande, b.position)
 	if _coup_vise.has("bete"):
 		_coup_vise["mort"] = [b.position, b.robe, b.largeur]
 	else:
