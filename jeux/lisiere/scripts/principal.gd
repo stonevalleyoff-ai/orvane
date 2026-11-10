@@ -65,6 +65,9 @@ var _grogne := 0.0
 var _etait_nuit := false
 var _deja: Dictionary = {}
 var _mort := -1.0
+# ce que le dernier geste vise : son son, ses éclats et l'arrêt d'image viennent quand il touche, à l'image (joueur.impact)
+var _coup_vise := {}
+var _coup_age := 0.0
 
 
 func _ready() -> void:
@@ -173,6 +176,9 @@ func _nouvelle_partie() -> void:
 	monde.generer(biome_info, graine)
 	joueur = Joueur.new()
 	monde.add_child(joueur)
+	joueur.pas.connect(_sur_pas)
+	joueur.impact.connect(_sur_impact)
+	joueur.chute.connect(_sur_chute)
 	camera = Camera2D.new()
 	camera.zoom = Vector2(R.ZOOM, R.ZOOM)
 	camera.position_smoothing_enabled = true
@@ -201,6 +207,7 @@ func _nouvelle_partie() -> void:
 	_vague = 0.0
 	_etait_nuit = false
 	_mort = -1.0
+	_coup_vise = {}
 	en_pause = false
 	en_partie = true
 	ui.montrer_hud()
@@ -318,6 +325,9 @@ func _process(delta: float) -> void:
 			_fin()
 		return
 	horloge += delta
+	_coup_age += delta
+	if not _coup_vise.is_empty() and _coup_age > 0.45:
+		_toucher_vise()
 	var j := int(horloge / R.DUREE) + 1
 	if j != jour:
 		jour = j
@@ -374,9 +384,7 @@ func agir() -> void:
 			joueur.lance -= 1
 			if joueur.lance == 0:
 				ui.message("La lance s'est brisée.", Color(0.8, 0.7, 0.6))
-		sons.jouer("coup", -2.0, randf_range(0.9, 1.1))
-		effets.impact(cible.position + Vector2(0, -cible.largeur * 0.3), cible.robe)
-		effets.arret(0.045)
+		_viser({"bete": true, "son": "coup", "db": -2.0, "p": cible.position + Vector2(0, -cible.largeur * 0.3), "c": cible.robe})
 		cible.blesser(degats, p)
 		return
 	var o = monde.plus_proche(p, R.PORTEE_RECOLTE)
@@ -385,19 +393,61 @@ func agir() -> void:
 	var genre: String = o.genre
 	joueur.geste(genre, o.position)
 	var g: Dictionary = o.recolter()
-	effets.recolte(o.position, genre)
-	for k in g:
-		joueur.inventaire[k] = int(joueur.inventaire.get(k, 0)) + int(g[k])
-		ui.ramasse(k, int(g[k]), o.position)
 	var son := "bois"
 	if genre == "rocher":
 		son = "pierre"
 	elif genre == "buisson" or genre == "touffe":
 		son = "herbe"
-	sons.jouer(son, -4.0, randf_range(0.9, 1.15))
+	_viser({"son": son, "db": -4.0, "p": o.position, "genre": genre})
+	for k in g:
+		joueur.inventaire[k] = int(joueur.inventaire.get(k, 0)) + int(g[k])
+		ui.ramasse(k, int(g[k]), o.position)
 	if genre == "brindille" and o.epuise():
 		monde.retirer(o)
 	_conseil("feu", peut_fabriquer("feu") and feux.is_empty(), "Tu as de quoi faire un feu : touche 1.")
+
+
+# un geste part : ce qu'il fera quand il touchera (le geste d'avant, s'il n'a pas encore touché, touche d'abord)
+func _viser(d: Dictionary) -> void:
+	_toucher_vise()
+	_coup_vise = d
+	_coup_age = 0.0
+
+
+func _toucher_vise() -> void:
+	if _coup_vise.is_empty():
+		return
+	var d := _coup_vise
+	_coup_vise = {}
+	sons.jouer(str(d["son"]), float(d["db"]), randf_range(0.9, 1.12))
+	if d.has("bete"):
+		effets.impact(d["p"], d["c"])
+		effets.arret(0.05)
+		if d.has("mort"):
+			effets.mort(d["mort"][0], d["mort"][1], d["mort"][2])
+			effets.arret(0.09)
+			effets.secousse(0.25)
+	else:
+		effets.recolte(d["p"], str(d["genre"]))
+		if ["arbre", "sapin", "rocher"].has(d["genre"]):
+			effets.arret(0.02)
+
+
+func _sur_impact(_p: Vector2, _genre: String) -> void:
+	_toucher_vise()
+
+
+func _sur_pas(p: Vector2) -> void:
+	if sons.has_method("pas"):
+		sons.pas(p)
+	if effets.has_method("poussiere"):
+		effets.poussiere(p)
+
+
+func _sur_chute(p: Vector2) -> void:
+	effets.secousse(0.3)
+	if effets.has_method("chute"):
+		effets.chute(p)
 
 
 func peut_fabriquer(quoi: String) -> bool:
@@ -497,6 +547,8 @@ func cuire() -> void:
 func _corps(delta: float) -> void:
 	var nuit := 1.0 - lumiere_du_jour()
 	var lumiere := eclairage(joueur.position)
+	# (la torche brûle : DUREE_TORCHE secondes de lumière, comme le message le promet)
+	joueur.torche = maxf(0.0, joueur.torche - delta)
 	joueur.faim = maxf(0.0, joueur.faim - R.FAIM * delta)
 	if joueur.faim <= 0.0:
 		joueur.sante -= R.FAMINE * delta
@@ -532,9 +584,12 @@ func bete_tuee(b) -> void:
 	var viande := clampi(int(round(pow(b.masse, 0.4))), 1, 6)
 	joueur.inventaire["viande"] = int(joueur.inventaire["viande"]) + viande
 	ui.message("%s : +%d viande" % [b.nom, viande], Color(0.85, 0.72, 0.6))
-	effets.mort(b.position, b.robe, b.largeur)
-	effets.arret(0.09)
-	effets.secousse(0.25)
+	if _coup_vise.has("bete"):
+		_coup_vise["mort"] = [b.position, b.robe, b.largeur]
+	else:
+		effets.mort(b.position, b.robe, b.largeur)
+		effets.arret(0.09)
+		effets.secousse(0.25)
 	var deja := false
 	for t in tuees:
 		if t["id"] == b.id:
@@ -569,7 +624,7 @@ func toucher_echo(e) -> void:
 	sons.jouer("murmure", -3.0)
 	ui.message("L'écho d'un %s te traverse." % e.nom, Color(0.75, 0.88, 1.0))
 	effets.echo(e.position)
-	e.queue_free()
+	e.dissiper()
 
 
 # --- le directeur : qui vient, et quand ---

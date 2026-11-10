@@ -104,7 +104,8 @@ func _process(delta: float) -> void:
 			var genres := ["arbre", "sapin"] if geste == "couper" else ["buisson", "touffe"]
 			var o = _plus_proche(genres)
 			if o != null:
-				var d2: Vector2 = o.position + Vector2(0, 16) - j.position
+				# (de côté, pour que le geste se lise)
+				var d2: Vector2 = o.position + Vector2(18.0 * (1.0 if j.position.x >= o.position.x else -1.0), 10.0) - j.position
 				if d2.length() > 24.0:
 					j.deplacer(d2.normalized(), delta, jeu.monde)
 				else:
