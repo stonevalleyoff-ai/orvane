@@ -223,6 +223,9 @@ func _brume_matin() -> float:
 # le vent : une seule respiration pour tout le lieu (de -1 à 1 ; positif, il pousse vers la droite), lente, avec des rafales.
 # (le même pour tous ceux qui le lisent : il suit l'horloge du jeu)
 func vent() -> float:
+	# (le vent du lieu, celui de l'herbe et des feuillages, là où est la veilleuse : jeu.vent, de 0 à 1)
+	if jeu != null and jeu.monde != null and jeu.joueur != null:
+		return clampf(0.15 + 0.85 * float(jeu.vent()), -1.0, 1.0)
 	var t: float = jeu.horloge if jeu != null else 0.0
 	var fond := 0.3 + 0.25 * _bruit.get_noise_1d(t * 0.05)
 	var rafale := smoothstep(0.15, 0.7, _bruit.get_noise_1d(t * 0.35 + 300.0)) * 0.55

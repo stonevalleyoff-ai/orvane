@@ -246,6 +246,10 @@ func _bete_proche(portee: float):
 # le vent, qui passe en rafales (l'écharpe, la flamme)
 func _vent() -> Vector2:
 	var rafale := clampf(0.5 + 0.5 * sin(_t * 0.37) * sin(_t * 0.13 + 1.0) + 0.3 * sin(_t * 1.7) * sin(_t * 0.29), 0.0, 1.0)
+	# (en partie, le vent du lieu : celui de l'herbe, des feuillages, des flammes et du son)
+	var jeu = _jeu()
+	if jeu != null and jeu.get("monde") != null and jeu.has_method("vent"):
+		rafale = float(jeu.vent())
 	return Vector2(6.0 + 20.0 * rafale * rafale, -1.0 + 2.0 * sin(_t * 0.6))
 
 
@@ -594,6 +598,10 @@ func _torche(dt: float, mobile: bool) -> void:
 		lumiere.position = Vector2(p.x * 0.7, lerpf(p.y, -10.0, 0.55)) + Vector2(f, f * 0.5) * 0.6
 		lumiere.texture_scale = R.RAYON_TORCHE / 128.0 * (1.0 + 0.035 * f)
 		lumiere.energy = (1.0 + 0.1 * f) * (0.35 + 0.65 * minf(1.0, force * 1.4))
+		# (en plein jour, la torche éclaire à peine : elle ne fait pas un disque jaune à midi)
+		var jeu = _jeu()
+		if jeu != null and jeu.has_method("lumiere_du_jour"):
+			lumiere.energy *= lerpf(1.0, 0.3, jeu.lumiere_du_jour())
 
 
 func _draw() -> void:

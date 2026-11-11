@@ -455,8 +455,7 @@ func _sur_impact(_p: Vector2, _genre: String) -> void:
 
 # (le son des pas se branche lui-même sur ce signal : sons.gd)
 func _sur_pas(p: Vector2) -> void:
-	if effets.has_method("poussiere"):
-		effets.poussiere(p)
+	effets.pas(p, 0.5)
 
 
 func _sur_chute(p: Vector2) -> void:

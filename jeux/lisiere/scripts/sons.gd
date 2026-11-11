@@ -311,6 +311,9 @@ func _process(delta: float) -> void:
 	_bus_maj(dt)
 
 
+var _effets = null
+
+
 func maj(jeu, delta: float) -> void:
 	var j = jeu.joueur
 	if j == null:
@@ -347,6 +350,7 @@ func maj(jeu, delta: float) -> void:
 	_vent(jeu, l, clair, morte)
 	_feu(jeu, j, dt, morte, comble)
 	_pas_maj(j, dt, morte)
+	_effets = jeu.get("effets")
 	_peur(j, dt, peur, comble, morte)
 	_couches["choeur"].cible = 0.0 if morte else c["grillons"] * 0.9
 	_ambiance.maj(dt, c)
@@ -515,6 +519,9 @@ func _peur(j, dt: float, peur: float, comble: float, morte: bool) -> void:
 		if faible and peur < 0.42:
 			vol = -16.0
 		_son("coeur", vol, 1.0 + 0.12 * smoothstep(0.6, 1.0, peur), 0.0, 0.0, B_PEUR, true)
+		# (la vignette de la peur bat avec lui : effets.battement)
+		if _effets != null:
+			_effets.battement()
 
 
 # la veilleuse tombe : un grave immense, le monde qui s'assourdit et se tait, deux derniers battements, puis rien
