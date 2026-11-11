@@ -82,6 +82,23 @@ namespace Orvane
         [JsonProperty("capacite")] public double Capacite;
         [JsonProperty("voisins")] public List<string> Voisins = new List<string>();
         [JsonExtensionData] public IDictionary<string, JToken> Autres;
+
+        /// <summary>Le temps qu'il fait ici ce cycle (docs/45) ; null : un monde sans météo, ou un lieu sans temps.</summary>
+        [JsonIgnore] public Meteo Meteo => Autres != null && Autres.TryGetValue("meteo", out var m) && m != null && m.Type == JTokenType.Object ? m.ToObject<Meteo>() : null;
+    }
+
+    /// <summary>Le temps d'un lieu, un cycle (docs/45).</summary>
+    public class Meteo
+    {
+        [JsonProperty("temps")] public string Temps;                           // clair, couvert, pluie, orage, neige, gel, canicule, tempete, brouillard
+        [JsonProperty("t")] public double T;                                   // l'écart de chaleur à la saison
+        [JsonProperty("e")] public double E;                                   // l'écart d'eau à la saison
+        [JsonProperty("vent")] public double Vent;
+        [JsonProperty("neige")] public double Neige;                           // le manteau au sol, de 0 à 1
+        [JsonProperty("secheresse")] public double Secheresse;                 // le sec qui dure, de 0 à 1
+        [JsonProperty("eaux")] public double Eaux;                             // les eaux qui montent, de 0 à 1
+        [JsonProperty("production")] public double Production = 1;
+        [JsonExtensionData] public IDictionary<string, JToken> Autres;
     }
 
     /// <summary>Une lignée (un taxon) : son plan, ses populations par biome, ses variantes.</summary>

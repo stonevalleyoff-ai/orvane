@@ -374,6 +374,38 @@
           "type": "object",
           "description": "(docs/31) Le climat : depuis quand, l'écart de température et d'humidité de tout le monde depuis l'éveil, la marche au hasard, les ponts de terre émergés (ponts), le nombre d'îles nées (iles)."
         },
+        "meteo": {
+          "type": "object",
+          "description": "(docs/45) La météo : depuis quand chaque lieu a son temps du cycle.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            }
+          }
+        },
+        "diversite": {
+          "type": "object",
+          "description": "(docs/48) La flore riche : depuis quand ; les lignées de plantes vivantes (lignees), celles qui sont nées depuis l'éveil (nees), celles qui se sont éteintes (eteintes).",
+          "properties": { "depuis": { "type": "integer" }, "lignees": { "type": "integer" }, "nees": { "type": "integer" }, "eteintes": { "type": "integer" } }
+        },
+        "succession": {
+          "type": "object",
+          "description": "(docs/47) Les plantes subissent et transforment : depuis quand.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            }
+          }
+        },
+        "phenologie": {
+          "type": "object",
+          "description": "(docs/46) Les saisons des plantes : depuis quand.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            }
+          }
+        },
         "dietes": {
           "type": "object",
           "description": "(docs/30) Les régimes en spectre : depuis quand.",
@@ -641,6 +673,21 @@
           "climat": {
             "type": "object",
             "description": "(docs/31) Un lieu que le milieu ne transforme pas : ses axes à l'éveil du climat (base), que le climat déplace."
+          },
+          "meteo": {
+            "type": "object",
+            "description": "(docs/45) Le temps qu'il fait ici ce cycle, dans un monde à la météo éveillée. Absent : un lieu sans temps (le sous-sol, la mer sans lumière), ou un monde sans météo. Dans un monde par parcelles, c'est le temps moyen des parcelles du biome ; celui de chaque parcelle est dans « parcelles ».",
+            "properties": {
+              "temps": { "type": "string", "description": "Le temps nommé : clair, couvert, pluie, orage, neige, gel, canicule, tempete, brouillard. D'autres pourront venir : un jeu qui n'en connaît pas un le montre comme « couvert »." },
+              "t": { "type": "number", "description": "L'écart de chaleur à la saison, en écarts-types (0 : la température de saison ; +1 : un cycle nettement chaud)." },
+              "e": { "type": "number", "description": "L'écart d'eau à la saison (0 : un temps de saison ; +1 : un cycle nettement arrosé ; −1 : nettement sec)." },
+              "vent": { "type": "number", "minimum": 0, "maximum": 1, "description": "Le vent : fort là où un front passe. Absent : calme." },
+              "neige": { "type": "number", "minimum": 0, "maximum": 1, "description": "Le manteau de neige au sol (1 : épais). Absent : pas de neige." },
+              "secheresse": { "type": "number", "minimum": 0, "maximum": 1, "description": "Le sec qui dure : une moyenne glissante du manque d'eau. Au-dessus de 0,5, une sécheresse est installée. Absent : aucun manque." },
+              "eaux": { "type": "number", "minimum": 0, "maximum": 1, "description": "Les eaux qui montent : une moyenne glissante de la pluie, et la neige qui fond. Plus elles sont hautes, plus une crue est probable. Absent : rien." },
+              "production": { "type": "number", "description": "Ce que le temps fait à la production du lieu ce cycle (1 : rien ; il multiplie celle de la saison). De moyenne 1 sur l'année." },
+              "temps_parts": { "type": "object", "additionalProperties": { "type": "number" }, "description": "Un biome d'un monde par parcelles dont les parcelles n'ont pas toutes le même temps : la part de chacun (pesée par la capacité)." }
+            }
           },
           "jeune": {
             "type": "object",
@@ -1014,6 +1061,11 @@
           "additionalProperties": {
             "type": "object"
           }
+        },
+        "flore_riche": {
+          "type": "object",
+          "description": "(docs/48) La flore riche : ses formes (formes : pour chacune son nom, son port, sa hauteur, sa repousse, son feuillage, ce qu'elle donne, ses caractères) et ses caractères (caracteres : pour chacun son nom, son effet, son coût).",
+          "properties": { "formes": { "type": "object", "additionalProperties": { "type": "object" } }, "caracteres": { "type": "object", "additionalProperties": { "type": "object" } } }
         },
         "monde": {
           "type": "object",
@@ -1682,14 +1734,85 @@
                   "algue",
                   "lichen",
                   "succulente",
-                  "champignon"
+                  "champignon",
+                  "conifere",
+                  "palmier",
+                  "paletuvier",
+                  "bouteille",
+                  "geant",
+                  "fruitier",
+                  "pionnier",
+                  "fougere_arbre",
+                  "bruyere",
+                  "ronce",
+                  "liane",
+                  "baies",
+                  "epine",
+                  "aromatique",
+                  "fougere",
+                  "fleur",
+                  "cereale",
+                  "legumineuse",
+                  "bulbe",
+                  "hautes_herbes",
+                  "coussin",
+                  "mousse",
+                  "sphaigne",
+                  "bambou",
+                  "papyrus",
+                  "jonc",
+                  "riz",
+                  "varech",
+                  "herbier",
+                  "plancton",
+                  "nenuphar",
+                  "lentille",
+                  "algue_glace",
+                  "lichen_rennes",
+                  "lichen_croute",
+                  "cactus",
+                  "agave",
+                  "caillou",
+                  "champignon_geant",
+                  "champignon_lumineux",
+                  "moisissure",
+                  "emergent",
+                  "figuier",
+                  "sous_bois",
+                  "orchidee",
+                  "bromelia",
+                  "grande_herbe"
                 ],
-                "description": "Une plante (docs/17) : sa forme, qui dit qui l'atteint."
+                "description": "Une plante (docs/17) : sa forme. Les huit premières sont celles d'origine ; les autres, celles de la flore riche (docs/48), qui disent leur port (plan.port). D'autres pourront venir : un jeu qui n'en connaît pas une la montre comme son port."
               },
+              "port": {
+                "enum": ["herbe", "buisson", "arbre", "roseau", "algue", "lichen", "succulente", "champignon"],
+                "description": "(docs/48) Une plante de la flore riche : son port, ce qu'elle est pour la mécanique et pour un jeu qui ne connaît pas sa forme (un palmier est un arbre, une fougère une herbe). Absent : le port est la forme."
+              },
+              "caracteres": {
+                "type": "array", "items": { "type": "string" },
+                "description": "(docs/48) Les caractères que la lignée porte et transmet (pyrophyte, racines_profondes, bulbe, echasses, mellifere, fruits_charnus, graines_abondantes, coriace, rapide, geante, naine, vent) : catalogue.flore_riche.caracteres dit ce qu'ils font."
+              },
+              "rendement": {
+                "type": "object", "additionalProperties": { "type": "number" },
+                "description": "(docs/48) Ce que la plante donne de chaque part, rapporté à son poids (feuilles, fruits, graines, nectar). Absent : ce que donne son port (docs/30)."
+              },
+              "sinistres": {
+                "type": "object", "additionalProperties": { "type": "number" },
+                "description": "(docs/48) Ce que ses caractères font aux pieds qu'une catastrophe lui prend (incendie, crue, secheresse) : 0,3, trois fois moins ; 1,2, un cinquième de plus (docs/47)."
+              },
+              "appetence": { "type": "number", "description": "(docs/48) Ce que les brouteurs en mangent, rapporté à une plante ordinaire (0,75 : des feuilles coriaces)." },
+              "vent": { "type": "boolean", "description": "(docs/48) Le vent la féconde : sa repousse ne dépend pas des butineurs." },
+              "feminin": { "type": "boolean", "description": "(docs/48) Le nom de sa forme est féminin (une fougère, une liane) : pour accorder ce qu'on en dit." },
+              "cle": { "type": "string", "description": "(docs/48) Ce qui distingue la lignée devant un brouteur (son port, sa hauteur, ce qu'elle donne) : deux lignées de même clé se mangent pareil." },
               "hauteur_m": {
                 "type": "number",
                 "minimum": 0,
                 "description": "Une plante : sa hauteur."
+              },
+              "feuillage": {
+                "type": "string",
+                "description": "(docs/46) Un arbre ou un buisson, dans un monde où les plantes ont leurs saisons : caduc (il perd ses feuilles l'hiver) ou persistant."
               },
               "croissance": {
                 "type": "number",
@@ -2011,6 +2134,21 @@
                     "additionalProperties": false
                   }
                 },
+                "sinistre": {
+                  "type": "object",
+                  "description": "(docs/47) Une plante qu'une catastrophe vient de toucher, dans un monde à la succession éveillée : laquelle (type : incendie, crue, secheresse), à quel cycle, et la part de ses pieds qu'elle y a perdue. Elle le dit douze cycles.",
+                  "properties": { "type": { "type": "string" }, "cycle": { "type": "integer" }, "part": { "type": "number" } }
+                },
+                "stade": {
+                  "type": "string",
+                  "description": "(docs/46) Une plante, dans un monde où les plantes ont leurs saisons : où elle en est ce cycle. nu, bourgeons, fleurs, feuilles, fruits, graines, feuilles_tombent, seche, sous_la_neige, brule (elle vient de brûler, docs/47). D'autres pourront venir : un jeu qui n'en connaît pas un la montre « feuilles »."
+                },
+                "feuillage": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "(docs/46) Une plante : la part de son feuillage qui est là ce cycle (1 : tout ; 0 : un arbre nu)."
+                },
                 "pollinisation": {
                   "type": "number",
                   "minimum": 0,
@@ -2153,6 +2291,7 @@
               "invention",
               "nature",
               "climat",
+              "meteo",
               "savoir"
             ]
           },
@@ -2226,7 +2365,8 @@
             "items": {
               "type": "string"
             }
-          }
+          },
+          "meteo": { "type": "object", "description": "(docs/45) Le temps qu'il fait dans cette parcelle ce cycle : les mêmes champs que biomes[].meteo (temps, t, e, vent, neige, secheresse, eaux, production)." }
         }
       }
     }

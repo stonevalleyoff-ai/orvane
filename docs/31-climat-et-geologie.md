@@ -78,4 +78,4 @@ node bancs/climat.js
 
 - **Des climats par région.** Aujourd'hui, tout le monde se refroidit ensemble. Un pôle qui gèle plus vite que l'équateur attendra une géographie.
 - **La mer qui monte.** Au chaud, la mer pourrait noyer des côtes et couper des ponts naturels.
-- **Les catastrophes du climat.** Des sécheresses qui font brûler, des crues au dégel.
+- **Les catastrophes du climat.** Fait par la météo (docs/45) : le feu après le sec, la crue après les pluies ou le dégel.

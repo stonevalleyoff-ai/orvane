@@ -20,6 +20,8 @@ Chaque bête du jeu est une lignée vraie d'Orvane, au dernier cycle publié : s
 | dans le jeu | dans le monde d'Orvane |
 | --- | --- |
 | le lieu : ses arbres (des sapins s'il fait froid), ses rochers, ses buissons, son herbe, la couleur de son sol | les axes du biome : `couvert`, `altitude`, `humidite`, `temperature` |
+| ses plantes : chaque arbre, chaque buisson, chaque touffe est une lignée de plantes du lieu, dessinée dans son stade du cycle (en fleurs, en fruits, nue), semée selon son poids | l'herbier publié à chaque cycle (`morceaux/herbier/<biome>.json`, docs/49) ; sans lui, le jeu dessine ses arbres lui-même, d'après les axes |
+| le temps qu'il fait : la pluie, l'orage, la tempête, la neige, le brouillard, dessinés et dits à l'horloge ; sous l'eau et le vent, le feu mange son bois plus vite (jusqu'à deux fois sous la tempête) ; la neige au sol ralentit la marche | la météo du biome ce cycle (`biomes[].meteo`, docs/45), dans un monde qui l'a éveillée ; sinon, il fait toujours beau |
 | la longueur des nuits | la saison du monde ce jour-là (`cycle.saison`) : un tiers du jour en été, la moitié en hiver |
 | les bêtes qui viennent, et combien souvent | les lignées vivantes du biome et leur `effectif` (les plus nombreuses viennent plus souvent) ; celles qui vivent en groupe (`sociabilite`) viennent en bande |
 | qui chasse, qui fuit, et quand | `regime` (un carnivore, ou un omnivore de plus de 15 kg, chasse) et `activite` (de jour, de nuit, au crépuscule) |

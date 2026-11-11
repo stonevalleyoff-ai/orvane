@@ -88,11 +88,12 @@ function preparer(ctx) {
     B[id] = b; m.voisins = [...(m.voisins || []), id]; c.voisins = [...(c.voisins || []), id]; c.traversees = [...(c.traversees || []), id];
     if (c.type && monde.parcelles?.types) types = [...(types || monde.parcelles.types), { id, nom: b.nom, milieu: 'terrestre', axes: { ...axes }, capacite: b.capacite, capacite_base: b.capacite_base, voisins: [typeDe(m), typeDe(c)] }];
     // ses plantes viennent du rivage : 5 % de chaque lignée de plantes du rivage dont la forme pousse sur l'île
-    if (FLO) { const parts = Object.fromEntries(FLO.compositionDe(b));
-      for (const t of taxons) { if (t.plan?.regime !== 'vegetal' || t.eteint) continue; const p = t.populations.find(x => x.biome === c.id), w = parts[t.plan.forme]; if (!p || !w) continue;
+    if (FLO) { const parts = Object.fromEntries(FLO.compositionDe(b)), port = t => t.plan.port || t.plan.forme, nbPort = {};   // (docs/48) plusieurs lignées d'un même port sur le rivage : elles se partagent sa place sur l'île
+      for (const t of taxons) if (t.plan?.regime === 'vegetal' && !t.eteint && parts[port(t)] && t.populations.some(x => x.biome === c.id)) nbPort[port(t)] = (nbPort[port(t)] || 0) + 1;
+      for (const t of taxons) { if (t.plan?.regime !== 'vegetal' || t.eteint) continue; const p = t.populations.find(x => x.biome === c.id), w = parts[t.plan.port || t.plan.forme]; if (!p || !w) continue;
         // (sa place est celle de l'île d'aujourd'hui, pas celle de l'île mûre : elle grandit avec la terre, par le milieu s'il est
         //  éveillé — reference.potentiel et reference.capacite —, sinon à mesure que l'île mûrit)
-        const ef = +(p.effectif * REGLES.iles.plantes).toFixed(2), pot = +(b.capacite * w).toFixed(2);
+        const ef = +(p.effectif * REGLES.iles.plantes).toFixed(2), pot = +(b.capacite * w / (nbPort[port(t)] || 1)).toFixed(2);
         t.populations.push({ biome: id, effectif: ef, tendance: 0, depuis: n, potentiel: pot, frequences: (p.frequences || []).slice(), reference: { effectif: ef, frequences: (p.frequences || []).slice(), potentiel: pot, capacite: b.capacite, part: +w.toFixed(4) },
           ...(p.reference_diete ? { reference_diete: { effectif: ef, frequences: (p.frequences || []).slice() } } : {}) }); } }
     ev.push({ type: 'climat', taxon: id, biome: id, detail: `un volcan sous la mer : une île naît au large de ${c.nom || c.id}, ${b.nom} ; seules les bêtes qui volent, nagent ou dérivent y passeront` });

@@ -29,6 +29,7 @@
 <script src="../moteur/catalogue.js"></script>
 <script src="../moteur/corps.js"></script>
 <script src="../moteur/dietes.js"></script>
+<script src="../moteur/phenologie.js"></script>
 <script src="../moteur/flore.js"></script>
 <script src="../moteur/derives.js"></script>
 <script src="../moteur/pathogenes.js"></script>
@@ -39,6 +40,9 @@
 <script src="../moteur/invention.js"></script>
 <script src="../moteur/natures.js"></script>
 <script src="../moteur/climat.js"></script>
+<script src="../moteur/meteo.js"></script>
+<script src="../moteur/succession.js"></script>
+<script src="../moteur/diversite.js"></script>
 <script src="../moteur/grammaire.js"></script>
 <script src="../moteur/castes.js"></script>
 <script src="../moteur/formes.js"></script>
@@ -47,6 +51,7 @@
 <script src="../tampon/tampon.js"></script>
 <script src="../moteur/parcelles.js"></script>
 <script src="silhouette.js"></script>
+<script src="herbier.js"></script>
 <script src="../tampon/directeur.js"></script>
 <script src="../moteur/solo.js"></script>
 <script src="../tampon/individus.js"></script>
@@ -75,8 +80,8 @@ const vivants = I => I.taxons.filter(t => !t.eteint && t.plan?.regime !== 'veget
 const plantesDe = I => [...I.taxons, ...(I === inst() && E.flore?.taxons || [])].filter(t => !t.eteint && t.plan?.regime === 'vegetal');
 const nomEsp = t => t ? (t.nom_commun || t.nom || t.id) : '';   // (docs/37) le nom commun qu'un joueur lui a donné, sinon celui du moteur
 // les fichiers que le moteur charge dans un Web Worker pour simuler sans figer la page (les mêmes que les balises <script> ci-dessus)
-const MODULES = ['moteur/catalogue.js', 'moteur/corps.js', 'moteur/dietes.js', 'moteur/flore.js', 'moteur/derives.js', 'moteur/pathogenes.js', 'moteur/milieu.js', 'moteur/synthetique.js',
-  'moteur/ponte.js', 'moteur/stades.js', 'moteur/invention.js', 'moteur/natures.js', 'moteur/climat.js', 'moteur/grammaire.js', 'moteur/castes.js', 'moteur/formes.js', 'moteur/esprit.js', 'moteur/orvane.js'];
+const MODULES = ['moteur/catalogue.js', 'moteur/corps.js', 'moteur/dietes.js', 'moteur/phenologie.js', 'moteur/flore.js', 'moteur/derives.js', 'moteur/pathogenes.js', 'moteur/milieu.js', 'moteur/synthetique.js',
+  'moteur/ponte.js', 'moteur/stades.js', 'moteur/invention.js', 'moteur/natures.js', 'moteur/climat.js', 'moteur/meteo.js', 'moteur/succession.js', 'moteur/diversite.js', 'moteur/grammaire.js', 'moteur/castes.js', 'moteur/formes.js', 'moteur/esprit.js', 'moteur/orvane.js'];
 const SAISON_EN = { printemps: 'au printemps', 'été': 'en été', automne: 'en automne', hiver: 'en hiver' }, enSaison = nom => SAISON_EN[nom] || `en ${nom}`;
 const cyc = n => String(n).replace('-', '−');   // un cycle d'avant le cycle 0 (la genèse) : avec un vrai signe moins
 // une lignée née pendant la genèse : avant le cycle 0 (apparu négatif) ; ou, dans un monde publié avant que ses dates soient recalées,
@@ -208,6 +213,17 @@ function mecanismesHTML(I) {
   if (M.climat) { const C = M.climat, T = C.temperature || 0, age = T <= -.06 ? 'un âge glaciaire' : T >= .04 ? 'un âge chaud' : 'un climat tempéré';
     const ponts = (C.ponts || []).map(([a, b]) => `${ESC(nomLieu(a))} ↔ ${ESC(nomLieu(b))}`);
     carte('Le climat', `${age} : ${T === 0 ? 'la température de l\'éveil' : `${T > 0 ? 'plus chaud' : 'plus froid'} de ${fx(Math.abs(T), 3)} qu'à l'éveil`}${C.humidite ? `, ${C.humidite > 0 ? 'plus humide' : 'plus sec'}` : ''}. ${ponts.length ? `La mer a baissé : ${ponts.length > 1 ? 'des ponts de terre relient' : 'un pont de terre relie'} ${ponts.join(', ')}.` : 'Aucun pont de terre.'}${C.iles ? ` ${accordN(C.iles, 'île est née', 'îles sont nées')} d'un volcan.` : ''}`, 'docs/31'); }
+  if (M.meteo) { const NOMS = { clair: 'temps clair', couvert: 'ciel couvert', pluie: 'pluie', orage: 'orage', neige: 'neige', gel: 'gel', canicule: 'canicule', tempete: 'tempête', brouillard: 'brouillard' };
+    const L = (I.parcelles || []).some(p => p.meteo) ? I.parcelles.filter(p => p.meteo) : (I.biomes || []).filter(b => b.meteo && typeof b.meteo === 'object'), T = {};
+    for (const p of L) T[p.meteo.temps] = (T[p.meteo.temps] || 0) + 1;
+    const dits = Object.entries(T).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${ESC(NOMS[k] || k)} sur ${v}`), neige = L.filter(p => p.meteo.neige > 0).length, sec = L.filter(p => p.meteo.secheresse >= .5).length;
+    if (L.length) carte('La météo', `le temps du cycle, sur ${accordN(L.length, 'lieu', 'lieux')} : ${dits.join(', ')}. ${neige ? `${accordN(neige, 'lieu est', 'lieux sont')} sous la neige.` : 'Pas de neige au sol.'}${sec ? ` Une sécheresse est installée sur ${sec}.` : ''}`, 'docs/45'); }
+  if (M.diversite) { const F = plantesDe(I), D = M.diversite, formes = {}, lieux = {}, car = {}, cat = I.catalogue?.flore_riche || {};
+    for (const t of F) { formes[t.plan.forme] = (formes[t.plan.forme] || 0) + 1; for (const p of t.populations) (lieux[p.biome] ??= new Set()).add(t.id); for (const c of t.plan.caracteres || []) car[c] = (car[c] || 0) + 1; }
+    const riches = Object.entries(lieux).sort((a, b) => b[1].size - a[1].size), nomF = f => cat.formes?.[f]?.nom || f, nomC = c => cat.caracteres?.[c]?.nom || c;
+    const dits = Object.entries(formes).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([f, k]) => `${ESC(nomF(f))} (${k})`), cars = Object.entries(car).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([c, k]) => `« ${ESC(nomC(c))} » (${k})`);
+    carte('La flore riche', F.length ? `${accordN(F.length, 'lignée de plantes', 'lignées de plantes')}, de ${accordN(Object.keys(formes).length, 'forme', 'formes')} : ${dits.join(', ')}… ${riches.length ? `Le lieu le plus riche, ${ESC(nomLieu(riches[0][0]))}, en porte ${riches[0][1].size} ; le plus pauvre, ${ESC(nomLieu(riches[riches.length - 1][0]))}, ${riches[riches.length - 1][1].size}.` : ''}${cars.length ? ` Leurs caractères : ${cars.join(', ')}.` : ''} Depuis l'éveil, ${accordN(D.nees || 0, 'lignée est née', 'lignées sont nées')} et ${accordN(D.eteintes || 0, 's\'est éteinte', 'se sont éteintes')}.`
+      : `${accordN(D.lignees || 0, 'lignée de plantes vivante', 'lignées de plantes vivantes')} ; ${accordN(D.nees || 0, 'née', 'nées')} depuis l'éveil, ${accordN(D.eteintes || 0, 'éteinte', 'éteintes')}. (Les plantes sont publiées à part, dans flore.json.)`, 'docs/48'); }
   if (M.mere) { const Mq = V.filter(t => t.plan.regime === 'synthetique'), n = Mq.reduce((a, t) => a + effectif(t), 0), mem = M.mere.memoire || {}, cause = Object.entries(mem).filter(([k, v]) => typeof v === 'number' && !k.startsWith('masse')).sort((a, b) => b[1] - a[1])[0];
     carte('La Mère et ses machines', `${ESC(M.mere.nom || 'La Mère')}, au ${ESC(nomLieu(M.mere.biome))}, a ${accordN(Mq.length, 'plan en service', 'plans en service')} et ${accordN(n, 'machine', 'machines')} ; ${M.mere.conceptions ? `elle en a conçu ${accordN(M.mere.conceptions, 'nouveau', 'nouveaux')}` : 'elle n\'en a encore conçu aucun nouveau'}${M.mere.conceptions && cause && cause[1] > 0 ? `, surtout contre ${({ usure: 'l\'usure', energie: 'le manque d\'énergie', catastrophe: 'les catastrophes', joueurs: 'les joueurs', debord: 'les espèces qui débordent' })[cause[0]] || cause[0]}` : ''}.`, 'docs/16'); }
   if (M.pathogenes) { const S = Object.entries(M.pathogenes.souches || {}).map(([id, s]) => ({ id, ...s })), act = S.filter(s => (s.infectes || 0) > 0).sort((a, b) => b.infectes - a.infectes);
@@ -300,7 +316,12 @@ function vueEnsemble() {
         else if (b.nature) x.push(`devenu ${ESC(b.nature.nom)}`);
         if (b.visiteurs?.length) x.push(`l'hiver, ${nb(b.visiteurs.reduce((a, v) => a + (v.effectif || 0), 0))} visiteurs`);   // (docs/38)
         if (b.transforme?.jeu && Object.values(b.transforme.jeu).some(v => Math.abs(v) >= .005)) x.push('transformé par les joueurs');   // (docs/22)
-        return x.length ? `<p class="biome-plus sourd">${x.join(' · ')}</p>` : ''; })()}</article>`; };
+        if (b.meteo && typeof b.meteo === 'object') x.unshift(`${ESC(({ clair: 'temps clair', couvert: 'ciel couvert', pluie: 'pluie', orage: 'orage', neige: 'neige', gel: 'gel', canicule: 'canicule', tempete: 'tempête', brouillard: 'brouillard' })[b.meteo.temps] || b.meteo.temps)}${b.meteo.neige > 0 ? ', neige au sol' : ''}${b.meteo.secheresse >= .5 ? ', sécheresse' : ''}`);   // (docs/45)
+        return x.length ? `<p class="biome-plus sourd">${x.join(' · ')}</p>` : ''; })()}${herbierBiome(I, b)}</article>`; };
+  // (docs/49) l'herbier d'un biome : ses plantes dessinées, les plus lourdes d'abord
+  function herbierBiome(I, b) { if (!globalThis.OrvaneHerbier) return ''; const F = plantesDe(I).map(t => [t, t.populations.find(p => p.biome === b.id)]).filter(([, p]) => p && p.effectif > 0).sort((x, y) => y[1].effectif * (y[0].plan.masse_kg || 1) - x[1].effectif * (x[0].plan.masse_kg || 1)); if (!F.length) return '';
+    const STADES = { nu: 'nu', bourgeons: 'en bourgeons', fleurs: 'en fleurs', feuilles: 'en feuilles', fruits: 'en fruits', graines: 'en graines', feuilles_tombent: 'les feuilles tombent', seche: 'sèche', sous_la_neige: 'sous la neige', brule: 'brûlée' };
+    return `<div class="herbier" style="display:flex;flex-wrap:wrap;gap:2px;margin-top:8px">${F.slice(0, 10).map(([t, p]) => `<span title="${ESC(t.nom)}${p.stade ? ' · ' + ESC(STADES[p.stade] || p.stade) : ''} · ${String(t.plan.hauteur_m).replace('.', ',')} m" style="width:44px;height:55px;display:inline-block">${OrvaneHerbier.dessiner(t.plan, { stade: p.stade, feuillage: p.feuillage, sinistre: p.sinistre, defense: OrvaneHerbier.defense(t, p) }, t.id).replace('width="120" height="150"', 'width="44" height="55"')}</span>`).join('')}${F.length > 10 ? `<span class="sourd" style="align-self:end">+${F.length - 10}</span>` : ''}</div>`; }
   const evts = Object.entries(parType).sort((a, b) => b[1].length - a[1].length).map(([t, L]) => `<li><span class="combien">${L.length}</span><span>${evtNom(t, L.length)}<br><span class="qui">${[...new Set(L.map(e => nomEsp(I.taxons.find(x => x.id === e.taxon)) || nomBiome(e.taxon)))].slice(0, 4).map(ESC).join(', ')}${L.length > 4 ? '…' : ''}</span></span></li>`).join('');
   $('#contenu').innerHTML = `
     <div class="overview-heading"><div><p class="atlas-kicker">01 / ÉTAT DU VIVANT</p><h2>Le monde, au dernier cycle.</h2></div><span class="reading-state">${E.H.length > E.publies ? 'Simulation locale' : E.source?.publie ? 'Instantané publié' : 'Monde local'}</span></div><p class="phrase">${ESC(phrase)}</p>
@@ -541,7 +562,7 @@ function vueJournal() {
 }
 // (docs/37) la chronique : ce que le monde retient (chronique/index.json), une année entière à la demande, le muséum et ses disparues
 const MOTS_C = { naissance: ['naissance', 'naissances'], extinction: ['extinction', 'extinctions'], catastrophe: ['catastrophe', 'catastrophes'], souche: ['maladie nouvelle', 'maladies nouvelles'],
-  epidemie: ['saut de maladie', 'sauts de maladie'], invention: ['invention', 'inventions'], nature: ['lieu changé', 'lieux changés'], climat: ['changement du climat', 'changements du climat'], eveil: ['éveil', 'éveils'],
+  epidemie: ['saut de maladie', 'sauts de maladie'], invention: ['invention', 'inventions'], nature: ['lieu changé', 'lieux changés'], climat: ['changement du climat', 'changements du climat'], meteo: ['coup de temps', 'coups de temps'], eveil: ['éveil', 'éveils'],
   arrivee: ['arrivée d\'un monde', 'arrivées de mondes'], conception: ['plan de la Mère', 'plans de la Mère'], record: ['record', 'records'], hybridation: ['zone hybride', 'zones hybrides'], savoir: ['savoir', 'savoirs'],
   mefiance: ['méfiance', 'méfiances'], nom: ['lignée nommée', 'lignées nommées'] };
 function entreeC(e) { const t = e.taxon && inst().taxons.find(z => z.id === e.taxon);

@@ -86,9 +86,14 @@ func biome(id: String) -> Dictionary:
 # un lieu : l'instantané réduit à ce lieu, et ses planches ; en ligne d'abord, la copie sinon ({} : ce lieu ne se lit pas)
 func charger_lieu(id: String) -> Dictionary:
 	var garde := local("silhouettes/%s.json" % id)
+	var herbier := local("herbier/%s.json" % id)
 	if en_ligne:
 		var inst: Dictionary = await Orvane.lire_lieux([id])
 		if not inst.get("taxons", []).is_empty():
+			# (docs/49) les plantes du lieu, dessinées, et le temps qu'il y fait : en ligne d'abord, la copie sinon, rien s'il n'y en a pas
+			var h: Dictionary = await Orvane.lire_herbier(id)
+			if h.is_empty() and not herbier.is_empty():
+				Orvane.ajouter_herbier(id, herbier)
 			var s: Dictionary = await Orvane.lire_silhouettes(id)
 			if s.is_empty():
 				# (le monde publié n'a pas encore ses planches : on prend celles de la copie, pour les lignées qu'elle connaît)
@@ -100,6 +105,7 @@ func charger_lieu(id: String) -> Dictionary:
 	var inst2: Dictionary = Orvane.assembler(index_secours(), {id: m})
 	Orvane.instantane = inst2
 	Orvane.ajouter_planche(id, garde.get("silhouettes", {}))
+	Orvane.ajouter_herbier(id, herbier)
 	return inst2
 
 

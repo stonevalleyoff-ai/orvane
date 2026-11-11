@@ -3,7 +3,7 @@
 //  1. le projet : chaque fichier qu'il nomme (res://…) existe ; la scène de départ, l'autoload du kit ;
 //  2. le kit : la copie du jeu (jeux/lisiere/addons/orvane/) est celle du kit (kits/godot/addons/orvane/), au caractère près ;
 //  3. le monde gardé dans le jeu (donnees/) : chaque lieu a son morceau et sa planche, le jeu le propose, chaque bête du jeu son dessin, et chaque
-//     lieu de quoi jouer (des proies le jour, des chasseurs la nuit), selon les règles de scripts/donnees.gd.
+//     lieu son herbier (ses plantes dessinées) et de quoi jouer (des proies le jour, des chasseurs la nuit), selon les règles de scripts/donnees.gd.
 // Ce que seul Godot vérifie (que le jeu tourne) : outils/godot.sh --headless --path jeux/lisiere -- --essai
 //   node bancs/lisiere.js
 'use strict';
@@ -57,7 +57,11 @@ for (const b of lieux) {
 }
 verif(!sansDessin.length, 'chaque bête que le jeu fait venir a son dessin et ses yeux' + (sansDessin.length ? ` ; sans : ${sansDessin.slice(0, 6).join(', ')}` : ''));
 verif(bilan.every(x => x.proies >= 3 && x.nuit >= 1), 'chaque lieu se joue : ' + bilan.map(x => `${x.b} ${x.proies} proies, ${x.nuit} chasseurs de nuit`).join(' ; '));
-const taille = ['index.json', ...lieux.flatMap(b => [`biomes/${b}.json`, `silhouettes/${b}.json`])].reduce((s, f) => s + fs.statSync(path.join(JEU, 'donnees', f)).size, 0);
+// (docs/49) l'herbier de chaque lieu : ses plantes dessinées, de quoi faire ses arbres, ses buissons et ses touffes
+const PORTS = { arbre: ['arbre'], buisson: ['buisson'], touffe: ['herbe', 'roseau', 'succulente', 'lichen', 'champignon'] }, herbiers = lieux.map(b => { const f = path.join(JEU, 'donnees/herbier', b + '.json'); return [b, fs.existsSync(f) ? lireJ(`donnees/herbier/${b}.json`) : null]; });
+const malDessinees = herbiers.flatMap(([b, H]) => H ? Object.entries(H.plantes).filter(([, p]) => !p.svg.startsWith('<svg') || !(p.hauteur_m > 0) || !p.port).map(([id]) => `${b}/${id}`) : [`${b} (pas d'herbier)`]);
+verif(!malDessinees.length && herbiers.every(([, H]) => Object.values(H.plantes).some(p => PORTS.touffe.includes(p.port))), 'chaque lieu a son herbier : ' + herbiers.map(([b, H]) => `${b} ${H ? Object.keys(H.plantes).length : 0} plantes (${H ? [...new Set(Object.values(H.plantes).map(p => p.port))].join(', ') : ''})`).join(' ; ') + (malDessinees.length ? ` ; mal : ${malDessinees.slice(0, 5).join(', ')}` : ''));
+const taille = ['index.json', ...lieux.flatMap(b => [`biomes/${b}.json`, `silhouettes/${b}.json`, `herbier/${b}.json`])].reduce((s, f) => s + fs.statSync(path.join(JEU, 'donnees', f)).size, 0);
 verif(taille < 4e6, `le tout pèse ${Math.round(taille / 1024)} Ko (moins de 4 Mo)`);
 
 console.log(`\n${ok ? 'tout passe' : 'ÉCHEC'}`); process.exit(ok ? 0 : 1);
