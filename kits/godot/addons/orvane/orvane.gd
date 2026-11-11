@@ -55,6 +55,10 @@ func _ready() -> void:
 
 func lire(url: String = "") -> void:
 	var r := HTTPRequest.new()
+	# dans un navigateur, la page reçoit le document déjà décompressé : Godot ne doit pas le décompresser une seconde fois. Sinon,
+	# quand le jeu est servi du même site que le monde (le navigateur lui montre alors l'en-tête Content-Encoding), la lecture
+	# échoue, et le jeu se croit hors ligne. Ailleurs, Godot décompresse lui-même, comme avant.
+	r.accept_gzip = not OS.has_feature("web")
 	add_child(r)
 	r.request_completed.connect(_lu.bind(r))
 	var e := r.request(url if url != "" else monde_url.trim_suffix("/") + "/instantane.json", PackedStringArray(["Cache-Control: no-cache"]))
@@ -263,6 +267,7 @@ func _base() -> String:
 # S'attend : var index = await Orvane.lire_json(Orvane.monde_url + "morceaux/index.json")
 func lire_json(url: String) -> Variant:
 	var r := HTTPRequest.new()
+	r.accept_gzip = not OS.has_feature("web")     # (voir lire)
 	r.timeout = 20.0
 	add_child(r)
 	var sep := "&" if url.contains("?") else "?"
@@ -405,6 +410,7 @@ func deposer(compte: String) -> void:
 		return
 	_depot_en_cours = true
 	var r := HTTPRequest.new()
+	r.accept_gzip = not OS.has_feature("web")     # (voir lire)
 	add_child(r)
 	r.request_completed.connect(_depose.bind(r))
 	var corps := '{"p_cle":%s,"p_compte":%s,"p_lot":%s}' % [JSON.stringify(cle_jeu), JSON.stringify(compte), _en_attente[0]]
