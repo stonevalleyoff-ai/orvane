@@ -57,7 +57,7 @@ Hors ligne, `Orvane.ajouter_herbier(biome, herbier)` donne au kit un herbier gar
 
 **Le kit Unity** : `instantane.Biome("foret").Meteo` rend le temps du lieu (`Temps`, `Vent`, `Neige`, `Secheresse`…), ou `null`. Il ne lit pas encore l'herbier.
 
-**[Lisière](https://github.com/stonevalleyoff-ai/Lisi-re)** (son propre dépôt), le premier jeu à s'en servir :
+**[Lisière](https://github.com/stonevalleyoff-ai/Lisiere)** (son propre dépôt), le premier jeu à s'en servir :
 - chaque arbre, chaque buisson, chaque touffe du lieu est une lignée de plantes d'Orvane, semée selon son poids, à sa taille (un arbre de 6 m fait 80 pixels, un arbre de 60 m 150), dans son stade du cycle ;
 - la pluie, l'orage, la tempête, la neige et le brouillard se dessinent et se disent à l'horloge (« été, pluie ») ;
 - sous l'eau et le vent, le feu mange son bois plus vite : × 1,4 sous la pluie, × 1,7 sous l'orage, × 2 sous la tempête ;
