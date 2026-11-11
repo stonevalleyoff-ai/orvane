@@ -84,7 +84,7 @@ func dans_zone(p: Vector3) -> bool:
 
 
 func depart(k: int) -> Vector3:
-	return Vector3(10.2 + float(k % 3) * 1.8, 0.05, 16.5 + float(k / 3) * 0.9)
+	return Vector3(12.0 + [0.0, -1.5, 1.5][k % 3], 0.05, 20.0 + float(k / 3) * 1.2)     # dans la zone, le premier face à la porte
 
 
 func pres_d_une_porte(p: Vector2, d: float) -> bool:

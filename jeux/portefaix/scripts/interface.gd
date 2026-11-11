@@ -32,6 +32,8 @@ var _vote_texte: Label
 var _mort: Label
 var _fin_texte: Label
 var _fin_rejouer: Button
+var _aide: Label
+var _reseau: Array = []           # ce qui sert à jouer à plusieurs, caché dans un navigateur
 
 
 func _ready() -> void:
@@ -94,9 +96,10 @@ func _faire_menu() -> void:
 	_texte(_menu, "Videz la maison avant l'aube. Ne réveillez pas ce qui y dort.", 20)
 	_avis = _texte(_menu, "", 18, Color(1.0, 0.5, 0.4))
 	_bouton(_menu, "Jouer seul", func(): seul.emit())
-	_bouton(_menu, "Héberger une partie (2 à 6 joueurs)", func(): heberger.emit())
+	_reseau.append(_bouton(_menu, "Héberger une partie (2 à 6 joueurs)", func(): heberger.emit()))
 	var ligne := HBoxContainer.new()
 	_menu.add_child(ligne)
+	_reseau.append(ligne)
 	_adresse = LineEdit.new()
 	_adresse.text = "127.0.0.1"
 	_adresse.placeholder_text = "l'adresse de l'hôte"
@@ -113,7 +116,7 @@ func _faire_menu() -> void:
 	_micro.button_pressed = true
 	_micro.add_theme_font_size_override("font_size", 18)
 	_menu.add_child(_micro)
-	_texte(_menu, "ZQSD : marcher · Maj : courir (bruyant) · Ctrl : s'accroupir · Espace : sauter\n"
+	_aide = _texte(_menu, "ZQSD : marcher · Maj : courir (bruyant) · Ctrl : s'accroupir · Espace : sauter\n"
 		+ "E ou clic : prendre, poser · clic droit : lancer · F : torche · V : crier · Échap : libérer la souris", 15, Color(0.6, 0.62, 0.66))
 
 
@@ -181,6 +184,19 @@ func _montrer(page: Control) -> void:
 	for p in [_menu, _salon, _fin]:
 		p.get_parent().get_parent().visible = p == page
 	_partie.visible = page == _partie
+
+
+# dans un navigateur, on joue seul : pas de port à ouvrir, et le micro attend qu'on le demande
+func passer_au_navigateur() -> void:
+	for c in _reseau:
+		c.visible = false
+	_micro.button_pressed = false
+	_aide.text += "\nDans un navigateur, on joue seul. À plusieurs : la version de bureau (Godot 4.3)."
+
+
+func passer_au_tactile() -> void:
+	_micro.button_pressed = false
+	_aide.text = "Le pouce gauche marche, le droit regarde en glissant.\nAgir : prendre, poser, klaxonner · Courir (bruyant) et Bas restent enfoncés."
 
 
 # --- les écrans ---

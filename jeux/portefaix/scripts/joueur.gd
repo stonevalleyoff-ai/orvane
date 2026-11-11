@@ -125,8 +125,8 @@ func mourir() -> void:
 
 
 func _unhandled_input(e: InputEvent) -> void:
-	if not local or pilote or principal.etat != principal.PARTIE:
-		return
+	if not local or pilote or principal.etat != principal.PARTIE or principal.tactile.actif:
+		return      # (au doigt, c'est scripts/tactile.gd qui mène : un toucher fait aussi un clic, qui ne doit rien prendre)
 	var pris := Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
 	if e is InputEventMouseMotion and pris:
 		yaw -= e.relative.x * R.SOURIS
@@ -136,8 +136,8 @@ func _unhandled_input(e: InputEvent) -> void:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 		elif e.button_index == MOUSE_BUTTON_LEFT:
 			agir()
-		elif e.button_index == MOUSE_BUTTON_RIGHT and porte >= 0:
-			principal.vouloir("lacher", [porte, true])
+		elif e.button_index == MOUSE_BUTTON_RIGHT:
+			lancer()
 	elif e is InputEventKey and e.pressed and not e.echo:
 		match e.physical_keycode:
 			KEY_E:
@@ -145,11 +145,20 @@ func _unhandled_input(e: InputEvent) -> void:
 			KEY_F:
 				torche_voulue = not torche_voulue
 			KEY_V:
-				if vivant:
-					_cri = 0.7
-					principal.sons.jouer("cri", -4.0)
+				crier()
 			KEY_ESCAPE:
 				Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+
+func lancer() -> void:
+	if vivant and porte >= 0:
+		principal.vouloir("lacher", [porte, true])
+
+
+func crier() -> void:
+	if vivant:
+		_cri = 0.7
+		principal.sons.jouer("cri", -4.0)
 
 
 # la touche d'action : prendre, poser, klaxonner ; mort, pousser
@@ -179,19 +188,21 @@ func _physics_process(dt: float) -> void:
 		_regarder(dt)
 		return
 	var joue: bool = principal.etat == principal.PARTIE
-	var avance := (_touche(KEY_W, KEY_UP) - _touche(KEY_S, KEY_DOWN)) if joue else 0.0
-	var cote := (_touche(KEY_D, KEY_RIGHT) - _touche(KEY_A, KEY_LEFT)) if joue else 0.0
+	var doigt = principal.tactile          # le joystick et les boutons d'un écran tactile s'ajoutent au clavier
+	var avance := clampf(_touche(KEY_W, KEY_UP) - _touche(KEY_S, KEY_DOWN) - doigt.vecteur.y, -1.0, 1.0) if joue else 0.0
+	var cote := clampf(_touche(KEY_D, KEY_RIGHT) - _touche(KEY_A, KEY_LEFT) + doigt.vecteur.x, -1.0, 1.0) if joue else 0.0
 	if vivant:
-		var dir := (Basis(Vector3.UP, yaw) * Vector3(cote, 0.0, -avance)).normalized()
-		accroupi = joue and Input.is_physical_key_pressed(KEY_CTRL)
-		var court: bool = Input.is_physical_key_pressed(KEY_SHIFT) and not accroupi and dir != Vector3.ZERO
+		var pousse := Vector3(cote, 0.0, -avance)
+		var dir := (Basis(Vector3.UP, yaw) * pousse).normalized() if pousse.length() > 0.15 else Vector3.ZERO
+		accroupi = joue and (Input.is_physical_key_pressed(KEY_CTRL) or doigt.accroupi)
+		var court: bool = (Input.is_physical_key_pressed(KEY_SHIFT) or doigt.court) and not accroupi and dir != Vector3.ZERO
 		var v: float = R.ACCROUPI if accroupi else (R.COURSE if court else R.MARCHE)
 		v *= frein()
 		var k := minf(1.0, dt * 12.0)
 		velocity.x = lerpf(velocity.x, dir.x * v, k)
 		velocity.z = lerpf(velocity.z, dir.z * v, k)
 		if is_on_floor():
-			if joue and Input.is_physical_key_pressed(KEY_SPACE):
+			if joue and (Input.is_physical_key_pressed(KEY_SPACE) or doigt.saut):
 				velocity.y = R.SAUT
 		else:
 			velocity.y -= R.GRAVITE * dt

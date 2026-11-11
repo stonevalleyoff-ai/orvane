@@ -13,6 +13,7 @@ const Chat = preload("res://scripts/chat.gd")
 const Micro = preload("res://scripts/micro.gd")
 const Sons = preload("res://scripts/sons.gd")
 const Interface = preload("res://scripts/interface.gd")
+const Tactile = preload("res://scripts/tactile.gd")
 const Essai = preload("res://scripts/essai.gd")
 
 enum { MENU, SALON, PARTIE, FIN }
@@ -28,6 +29,8 @@ var chat
 var micro
 var sons
 var ui
+var tactile
+var web := OS.has_feature("web")  # dans un navigateur : on joue seul (pas de port à ouvrir), le doigt ou le clavier
 var moi
 var joueurs := {}
 var objets := {}
@@ -72,6 +75,12 @@ func _ready() -> void:
 	ui.commencer.connect(lancer)
 	ui.rejouer.connect(lancer)
 	ui.quitter.connect(retour_menu)
+	tactile = Tactile.new()
+	tactile.name = "Tactile"
+	tactile.jeu = self
+	add_child(tactile)
+	if web:
+		ui.passer_au_navigateur()
 	multiplayer.peer_connected.connect(_arrive)
 	multiplayer.peer_disconnected.connect(_part)
 	multiplayer.connected_to_server.connect(_connecte)
@@ -231,7 +240,8 @@ func commencer(graine: int, ids: Array) -> void:
 	sons.nuit(true)
 	ui.partie()
 	ui.annoncer("Chargez pour %d € dans la zone jaune avant 6 h. Puis klaxonnez." % quota, 7.0)
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	if not tactile.actif:
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
 func _ambiance() -> void:
@@ -454,7 +464,7 @@ func mort(qui: int) -> void:
 	j.mourir()
 	sons.jouer_a("mort", j.global_position + Vector3.UP, 4.0)
 	if qui == mon_id:
-		ui.mort("La chose t'a pris. Tu hantes la maison : E pour pousser les petits objets.")
+		ui.mort("La chose t'a pris. Tu hantes la maison : %s pour pousser les petits objets." % ("le bouton Pousser" if tactile.actif else "E"))
 	else:
 		ui.annoncer("Un porteur ne répond plus.")
 
@@ -634,7 +644,10 @@ func _envoyer_objets() -> void:
 func _process(dt: float) -> void:
 	if etat != PARTIE or moi == null:
 		return
-	ui.dire(temps, charge, quota, moi.bruit, _indice())
+	var indice := _indice()
+	if tactile.actif:        # au doigt, les boutons disent déjà quoi presser
+		indice = indice.replace(" · E : poser · clic droit : lancer", "").replace("E : poser · clic droit : lancer", "").replace("E : ", "Agir : ")
+	ui.dire(temps, charge, quota, moi.bruit, indice)
 	ui.vote(_vote.ouvert, _vote.options, _vote.voix, _vote.reste)
 	# le cœur bat quand la chose est près
 	var d: float = moi.global_position.distance_to(chose.global_position)

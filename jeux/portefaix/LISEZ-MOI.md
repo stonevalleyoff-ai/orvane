@@ -2,7 +2,7 @@
 
 *Videz la maison avant l'aube. Ne réveillez pas ce qui y dort.*
 
-Un prototype en Godot 4.3, en 3D, à la première personne, pour 1 à 6 joueurs. Des déménageurs de nuit vident une maison hantée : il faut charger pour un quota d'euros dans la zone du camion avant 6 h. Les meubles sont lourds et fragiles, la chose qui dort au fond de la maison entend tout, et le public du stream vote les sabotages.
+Un prototype en Godot 4.3, en 3D, à la première personne, pour 1 à 6 joueurs. Il se joue au clavier et à la souris, ou au doigt, et dans un navigateur (seul). Des déménageurs de nuit vident une maison hantée : il faut charger pour un quota d'euros dans la zone du camion avant 6 h. Les meubles sont lourds et fragiles, la chose qui dort au fond de la maison entend tout, et le public du stream vote les sabotages.
 
 C'est un prototype : il sert à savoir si la boucle de jeu est drôle, pas à être beau. Tout y est fait de boîtes et de sons fabriqués par le code ; il n'y a aucun fichier d'image ni de son.
 
@@ -16,6 +16,7 @@ Il faut [Godot 4.3](https://godotengine.org/download/archive/4.3-stable/) (la ve
 outils/godot.sh --path jeux/portefaix
 ```
 
+- **Dans un navigateur** : on y joue seul (un navigateur ne peut pas ouvrir de port pour héberger). Une fois ce dossier dans `main`, la passe de publication l'exporte sur le site, à côté de Lisière : `https://stonevalleyoff-ai.github.io/orvane/portefaix/`. Le micro y est éteint au départ ; la case du menu le rallume, si le navigateur l'accorde.
 - **Jouer seul** : on est son propre hôte. Le piano et l'armoire ne se soulèvent pas seul ; le quota en tient compte.
 - **À plusieurs** : l'un clique « Héberger », puis « Commencer la nuit » quand tout le monde est au salon. Les autres tapent son adresse et « Rejoindre ». Sur le même réseau local, c'est l'adresse que le salon affiche. Par Internet, l'hôte doit ouvrir le port **24680 en UDP** sur sa box, ou tout le monde passe par un réseau privé (Tailscale, ZeroTier, Hamachi). On n'entre pas dans une nuit commencée.
 - **Avec son chat Twitch** : l'hôte tape le nom de sa chaîne dans le menu. Le jeu lit le chat en lecture seule, sans compte ni mot de passe. Sans chaîne, des spectateurs de paille votent au hasard.
@@ -31,6 +32,8 @@ outils/godot.sh --path jeux/portefaix
 | la torche | F |
 | crier (pour qui n'a pas de micro) | V |
 | libérer la souris | Échap |
+
+**Au doigt** (un téléphone tenu à l'horizontale, une tablette) : le pouce gauche marche, avec un joystick qui naît où il se pose, dans la moitié gauche de l'écran. Le pouce droit regarde, en glissant, et presse les boutons : **Agir** (prendre, poser, klaxonner ; mort, pousser), **Lancer**, **Saut**, **Courir** et **Bas** (s'accroupir), qui restent enfoncés jusqu'à ce qu'on les retouche, **Torche** et **Crier** en haut à gauche. Le jeu passe au doigt tout seul sur un écran tactile, ou au premier toucher.
 
 ## Les règles
 
@@ -59,6 +62,7 @@ Tous les réglages sont dans `scripts/regles.gd`.
 | `scripts/micro.gd` | le niveau du micro (rien n'est enregistré ni envoyé) |
 | `scripts/sons.gd` | les sons, fabriqués au lancement |
 | `scripts/interface.gd` | ce qui s'écrit à l'écran |
+| `scripts/tactile.gd` | jouer du doigt : le joystick, le regard, les boutons |
 | `scripts/essai.gd` | les essais sans écran |
 
 **Le réseau** : l'hôte fait foi. Il fait seul tomber les meubles, penser la chose, compter le chargement et dépouiller les votes, et le redit aux autres vingt fois par seconde. Chaque joueur ne mène que son porteur, et demande le reste à l'hôte (prendre, lâcher, pousser, klaxonner). Tout le monde bâtit la même maison d'après une graine donnée au départ.
@@ -73,4 +77,17 @@ outils/godot.sh --headless --path jeux/portefaix -- --essai-reseau   # un hôte 
 
 Chacun sort avec le code 0 si tout passe. Sans écran, Godot écrit des lignes `Parameter "m" is null` : c'est son rendu factice qui ne connaît pas les maillages, sans effet sur le jeu.
 
+L'export pour un navigateur :
+
+```
+outils/godot.sh --modeles-web                                         # une fois : les modèles d'export web
+outils/godot.sh --headless --path jeux/portefaix --export-release Web ../../portefaix/index.html
+```
+
 `--essai` joue toujours la même maison (la graine 7) ; `--essai --graine=12` en essaie une autre.
+
+## Où en est le prototype
+
+- **Vérifié dans Godot 4.3, sans écran** : les deux essais passent (57 vérifications seul, 13 en réseau).
+- **Vérifié dans Chromium** (WebGL 2, un téléphone émulé de 844 sur 390, de vrais touchers) : l'export web se charge, le menu passe au doigt, une partie commence, le joystick fait marcher jusque dans le salon, le pouce droit tourne le regard pendant qu'on marche, « Courir » reste enfoncé, « Torche » éteint la lampe.
+- **Pas encore vérifié** : une partie jouée par une personne ; le jeu sur un vrai téléphone (la vitesse du rendu, la taille des boutons sous de vrais pouces) ; le micro ; le vrai chat de Twitch (seule la lecture de ses lignes est essayée) ; le réseau entre deux machines.

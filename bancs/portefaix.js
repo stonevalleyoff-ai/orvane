@@ -14,12 +14,15 @@ const lire = f => fs.readFileSync(path.join(JEU, f), 'utf8');
 const fichiers = d => fs.readdirSync(path.join(JEU, d)).filter(f => !f.startsWith('.')).map(f => path.join(d, f));
 
 console.log('1. Le projet');
-const projet = lire('project.godot'), sources = ['project.godot', ...fichiers('scenes'), ...fichiers('scripts')];
+const projet = lire('project.godot'), sources = ['project.godot', 'export_presets.cfg', ...fichiers('scenes'), ...fichiers('scripts')];
 const noms = new Set(sources.flatMap(f => [...lire(f).matchAll(/res:\/\/([A-Za-zÀ-ÿ0-9_\-./]+)/g)].map(m => m[1])).filter(n => /\.[a-z]+$/.test(n)));
 const manquent = [...noms].filter(n => !fs.existsSync(path.join(JEU, n)));
 verif(noms.size >= 10 && !manquent.length, `les ${noms.size} fichiers que nomme le projet existent` + (manquent.length ? ` ; manquent : ${manquent.join(', ')}` : ''));
 verif(/run\/main_scene="res:\/\/scenes\/principal\.tscn"/.test(projet) && /gl_compatibility/.test(projet) && /driver\/enable_input=true/.test(projet),
   'la scène de départ, le rendu Compatibility, le micro ouvert');
+const preset = lire('export_presets.cfg');
+verif(/platform="Web"/.test(preset) && /variant\/thread_support=false/.test(preset) && fs.existsSync(path.join(JEU, 'scripts/tactile.gd')),
+  'un export pour le navigateur, sans fils d\'exécution (celui que lit n\'importe quel navigateur), et de quoi jouer du doigt');
 const gd = fichiers('scripts').filter(f => f.endsWith('.gd'));
 const espaces = gd.filter(f => lire(f).split('\n').some(l => /^ +\S/.test(l)));
 verif(!espaces.length, `${gd.length} scripts, indentés aux tabulations, comme Godot le veut` + (espaces.length ? ` ; avec des espaces : ${espaces.join(', ')}` : ''));

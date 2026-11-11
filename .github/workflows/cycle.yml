@@ -120,6 +120,26 @@ jobs:
             echo "le jeu est exporté"
           fi
           ls -la lisiere
+      - name: le prototype Portefaix, pour un navigateur (portefaix/, jeux/portefaix/LISEZ-MOI.md)
+        continue-on-error: true          # un export manqué ne retient pas la publication des mondes
+        run: |
+          # refait seulement quand le jeu a changé ; sinon, l'export de la dernière publication est repris tel quel
+          source=$(git rev-parse HEAD:jeux/portefaix)
+          if [ -n "$PUBLIE" ] && [ "$(git show "$PUBLIE:portefaix/source.txt" 2>/dev/null)" = "$source" ]; then
+            git archive "$PUBLIE" portefaix | tar -x
+            echo "le jeu n'a pas changé : l'export de la dernière publication est repris"
+          else
+            outils/godot.sh --modeles-web
+            outils/godot.sh --headless --path jeux/portefaix --import
+            mkdir -p "$RUNNER_TEMP/portefaix"
+            outils/godot.sh --headless --path jeux/portefaix --export-release Web "$RUNNER_TEMP/portefaix/index.html"
+            # (un export à moitié fait n'est pas publié)
+            test -s "$RUNNER_TEMP/portefaix/index.wasm" && test -s "$RUNNER_TEMP/portefaix/index.pck"
+            echo "$source" > "$RUNNER_TEMP/portefaix/source.txt"
+            rm -rf portefaix && mv "$RUNNER_TEMP/portefaix" portefaix
+            echo "le jeu est exporté"
+          fi
+          ls -la portefaix
       - name: publier (la branche publication, réécrite en un seul commit)
         run: |
           git config user.name "orvane"
