@@ -32,6 +32,7 @@ var _doigt_stick := -1
 var _doigt_regard := -1
 var _centre := Vector2.ZERO
 var _doigts := {}                 # le doigt → le bouton qu'il tient
+var _ou := {}                     # le doigt → où il était la dernière fois
 var _dessin: Control
 var _tourner: ColorRect
 
@@ -111,6 +112,7 @@ func _input(e: InputEvent) -> void:
 		activer()
 	# (un doigt qui se lève lâche ce qu'il tenait, quoi qu'il arrive à l'écran)
 	if e is InputEventScreenTouch and not e.pressed:
+		_ou.erase(e.index)
 		if _doigts.get(e.index, "") == "saut":
 			saut = false
 		_doigts.erase(e.index)
@@ -123,6 +125,10 @@ func _input(e: InputEvent) -> void:
 	if not _en_jeu() or portrait:
 		return
 	var moi = jeu.moi
+	# de combien ce doigt a glissé : compté ici, d'après sa propre place d'avant. (Dans un navigateur, à deux doigts, le « relative »
+	# de Godot 4.3 compare un doigt à la place de l'autre : le regard sautait d'un pouce à l'autre.)
+	var glisse: Vector2 = e.position - _ou.get(e.index, e.position)
+	_ou[e.index] = e.position
 	if e is InputEventScreenTouch:
 		var b := _bouton_sous(e.position)
 		if b != "":
@@ -142,8 +148,8 @@ func _input(e: InputEvent) -> void:
 			d = e.position - _centre
 		vecteur = d / RAYON_STICK
 	elif e.index == _doigt_regard:
-		moi.yaw -= e.relative.x * REGARD
-		moi.pitch = clampf(moi.pitch - e.relative.y * REGARD, -1.4, 1.4)
+		moi.yaw -= glisse.x * REGARD
+		moi.pitch = clampf(moi.pitch - glisse.y * REGARD, -1.4, 1.4)
 
 
 func _presser(b: String) -> void:
@@ -180,6 +186,7 @@ func _process(_delta: float) -> void:
 # tout lâcher : la partie s'arrête, ou le téléphone se lève
 func _lacher() -> void:
 	_doigts.clear()
+	_ou.clear()
 	_doigt_stick = -1
 	_doigt_regard = -1
 	vecteur = Vector2.ZERO
