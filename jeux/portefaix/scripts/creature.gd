@@ -1,12 +1,13 @@
 extends Node3D
 # Portefaix — la chose (scripts/creature.gd)
-# Elle dort au fond du bureau, puis rôde. Elle entend : un bruit assez fort et assez près, elle va voir. Elle voit : un porteur
-# dans son regard, elle le chasse, plus vite qu'il ne marche. Elle traverse les meubles et les portes claquées, pas les murs.
+# Elle dort au fond du bureau, puis rôde. Elle entend : un bruit assez fort et assez près, elle va voir. Elle voit devant elle : un
+# porteur dans son regard, elle crie, puis le chasse, plus vite qu'il ne marche, moins qu'il ne court, et pas longtemps. Son premier
+# coup blesse, le suivant tue. Elle traverse les meubles et les portes claquées, pas les murs, et ne sort pas de la maison.
 # L'hôte seul la fait penser ; les autres la voient où il dit qu'elle est.
 
 const R = preload("res://scripts/regles.gd")
 
-enum { DORT, RODE, ENQUETE, CHASSE }
+enum { DORT, RODE, ENQUETE, CHASSE, ALERTE }
 
 var principal
 var maison
@@ -22,6 +23,9 @@ var _attente := 0.0
 var _pense := 0.0
 var _trace := 0.0
 var _interet := 0.0               # la force du bruit qu'elle suit
+var _alerte := 0.0                # ce qu'il lui reste à crier avant de s'élancer
+var _souffle := 0.0               # ce qu'il lui reste de chasse
+var _repue := 0.0                 # tant que ça dure, elle ne regarde rien
 var _son: AudioStreamPlayer3D
 var _yeux: Array = []
 
@@ -88,7 +92,7 @@ func reveiller() -> void:
 
 # un bruit, quelque part : s'il porte jusqu'à elle, et s'il vaut mieux que celui qu'elle suit, elle y va
 func entendre(ou: Vector3, rayon: float) -> void:
-	if mode == CHASSE:
+	if mode == CHASSE or mode == ALERTE or _repue > 0.0:
 		return
 	var d := global_position.distance_to(ou)
 	if d > rayon:
@@ -111,35 +115,57 @@ func avancer(dt: float) -> void:
 	if mode == DORT:
 		return
 	_interet = maxf(_interet - dt * 1.5, 0.0)
+	_repue = maxf(_repue - dt, 0.0)
 	_pense -= dt
 	if _pense <= 0.0:
 		_pense = 0.2
 		_chercher()
 	var vitesse: float = R.CHOSE_RODE
 	match mode:
+		ALERTE:
+			# elle a vu un porteur : elle se tourne vers lui et crie, sans avancer. C'est le moment de fuir.
+			var j = principal.joueurs.get(proie)
+			if j == null or not j.vivant:
+				_roder(1.0)
+				return
+			var d: Vector3 = j.global_position - global_position
+			rotation.y = lerp_angle(rotation.y, atan2(-d.x, -d.z), minf(1.0, dt * 8.0))
+			_alerte -= dt
+			if _alerte <= 0.0:
+				mode = CHASSE
+				_souffle = R.CHOSE_SOUFFLE
+				_trace = 0.0
+				_vu = 0.0
+			return
 		CHASSE:
 			vitesse = R.CHOSE_CHASSE
+			_souffle -= dt
 			var j = principal.joueurs.get(proie)
 			if j == null or not j.vivant:
 				_roder(1.0)
 			elif _a_plat(j.global_position) < R.CHOSE_ALLONGE and _vu <= 0.0:
-				principal.tuer(proie)
-				_roder(3.0)
+				principal.frapper(proie)       # (le premier coup blesse, le suivant tue)
+				rentrer()
 			elif _vu > R.CHOSE_PERTE:
 				mode = ENQUETE
 				_aller(_dernier)
+			elif _souffle <= 0.0:              # essoufflée : elle s'arrête, et ne regarde plus un moment
+				_repue = 4.0
+				_roder(4.0)
 			else:
 				_trace -= dt
 				if _trace <= 0.0:
 					_trace = 0.3
 					_aller(j.global_position)
-				if _i >= route.size():      # dans la même case : droit sur lui
+				if _i >= route.size() and maison.dedans(j.global_position):      # dans la même case : droit sur lui
 					_vers(j.global_position, vitesse, dt)
 		ENQUETE:
 			vitesse = R.CHOSE_ENQUETE
 			if _i >= route.size():
 				_roder(2.5)
 		RODE:
+			if _repue > 0.0:                   # (elle rentre d'un bon pas)
+				vitesse = R.CHOSE_ENQUETE
 			if _i >= route.size():
 				_attente -= dt
 				if _attente <= 0.0:
@@ -163,8 +189,16 @@ func _roder(attente: float) -> void:
 	_i = 0
 
 
+# après un coup : elle rentre à sa tanière, sans rien regarder en chemin
+func rentrer() -> void:
+	_roder(3.0)
+	_repue = R.CHOSE_REPUE
+	_aller(maison.TANIERE)
+
+
+# elle ne sort pas de la maison : ce qui l'appelle dehors l'amène au seuil, pas plus loin
 func _aller(ou: Vector3) -> void:
-	route = maison.chemin(global_position, ou)
+	route = maison.chemin(global_position, ou if maison.dedans(ou) else maison.SEUIL)
 	_i = 1 if route.size() > 1 else 0     # la première case est celle où elle est
 
 
@@ -178,30 +212,43 @@ func _vers(p: Vector3, vitesse: float, dt: float) -> bool:
 	return false
 
 
-# qui voit-elle ? Le plus proche des vivants, à portée, sans mur entre eux.
+func _voit(j, portee: float) -> bool:
+	return j.vivant and maison.dedans(j.global_position) and global_position.distance_to(j.global_position) < portee \
+		and maison.voit(yeux(), j.global_position + Vector3(0.0, 1.0, 0.0))
+
+
+# qui voit-elle ? En chasse, elle ne suit que sa proie. Sinon : le plus proche des vivants, dans la maison, devant elle (ou tout
+# près), à portée, sans mur entre eux. Alors elle crie avant de s'élancer.
 func _chercher() -> void:
+	if mode == ALERTE or _repue > 0.0:
+		return
+	if mode == CHASSE:
+		var p = principal.joueurs.get(proie)
+		if p != null and _voit(p, R.CHOSE_VUE * 1.3):
+			_vu = 0.0
+			_dernier = p.global_position
+		else:
+			_vu += 0.2
+		return
+	var avant := Vector3(-sin(rotation.y), 0.0, -cos(rotation.y))
 	var mieux := -1
 	var pres := 1e9
 	for j in principal.joueurs.values():
-		if not j.vivant:
-			continue
-		var portee: float = R.CHOSE_VUE * (R.CHOSE_VUE_ACCROUPI if j.accroupi else 1.0)
 		var d: float = global_position.distance_to(j.global_position)
-		if d < portee and d < pres and maison.voit(yeux(), j.global_position + Vector3(0.0, 1.0, 0.0)):
+		var vers: Vector3 = (j.global_position - global_position) * Vector3(1.0, 0.0, 1.0)
+		if d >= pres or (d > R.CHOSE_PRES and avant.dot(vers.normalized()) < R.CHOSE_CONE):
+			continue
+		if _voit(j, R.CHOSE_VUE * (R.CHOSE_VUE_ACCROUPI if j.accroupi else 1.0)):
 			mieux = j.id
 			pres = d
-	if mieux >= 0 and (mode != CHASSE or mieux == proie or pres < 4.0):
-		if mode != CHASSE:
-			_trace = 0.0
-		mode = CHASSE
+	if mieux >= 0:
+		mode = ALERTE
 		proie = mieux
-	if mode == CHASSE:
-		var j = principal.joueurs.get(proie)
-		if j != null and mieux == proie:
-			_vu = 0.0
-			_dernier = j.global_position
-		else:
-			_vu += 0.2
+		_alerte = R.CHOSE_ALERTE
+		_dernier = principal.joueurs[mieux].global_position
+		route = PackedVector3Array()
+		_i = 0
+		principal.reperer(mieux)
 
 
 # --- chez tout le monde ---
@@ -211,6 +258,6 @@ func _process(dt: float) -> void:
 		global_position = global_position.lerp(cible_pos, minf(1.0, dt * 12.0))
 		rotation.y = lerp_angle(rotation.y, cible_yaw, minf(1.0, dt * 10.0))
 	visible = mode != DORT
-	var volume: float = [-80.0, -14.0, -7.0, 0.0][mode]
+	var volume: float = [-80.0, -14.0, -7.0, 0.0, 3.0][mode]
 	_son.volume_db = lerpf(_son.volume_db, volume, minf(1.0, dt * 3.0))
-	_son.pitch_scale = lerpf(_son.pitch_scale, 1.35 if mode == CHASSE else 1.0, minf(1.0, dt * 3.0))
+	_son.pitch_scale = lerpf(_son.pitch_scale, 1.35 if mode == CHASSE or mode == ALERTE else 1.0, minf(1.0, dt * 3.0))

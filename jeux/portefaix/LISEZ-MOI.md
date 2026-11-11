@@ -41,7 +41,13 @@ outils/godot.sh --path jeux/portefaix
 - **Porter** : chaque porteur donne une force limitée. Seul, on soulève jusqu'à 45 kg ; à deux, 90 ; à trois, 135. Ce qui pèse plus se traîne. Ce qu'on porte ralentit, et échappe des mains si l'on s'en éloigne de 4 m (un canapé coincé dans une porte, par exemple).
 - **La casse** : un choc coûte à un meuble une part de sa valeur, selon sa fragilité. Un vase perd presque tout, un canapé presque rien.
 - **Le bruit** : les pas, la course, les cris, les chocs et le **vrai micro** du joueur ont une portée en mètres. La jauge en bas à gauche la montre.
-- **La chose** : elle dort 35 secondes, puis rôde. Elle va voir tout bruit qui porte jusqu'à elle, et chasse le porteur qu'elle voit (à 11 m, moins s'il est accroupi), plus vite qu'on ne marche et moins vite qu'on ne court. Elle traverse les meubles et les portes claquées, pas les murs. Sans voir sa proie pendant 4 secondes, elle renonce.
+- **La chose** : elle dort une minute, puis rôde. Elle va voir tout bruit qui porte jusqu'à elle. Elle ne tue pas d'office, et on a de quoi lui échapper :
+  - elle ne voit que **devant elle**, à 9 m (moitié moins si l'on est accroupi), et sent ce qui est à moins de 2,5 m : on passe dans son dos ;
+  - quand elle voit un porteur, elle **crie près de deux secondes** avant de s'élancer : c'est le moment de fuir ;
+  - elle va plus vite qu'on ne marche et moins vite qu'on ne court, ne chasse pas plus de 10 secondes d'une traite, et renonce si elle ne voit plus sa proie pendant 2,5 secondes ;
+  - elle **ne sort pas de la maison** : la cour est sûre ;
+  - son **premier coup blesse** sans tuer, puis elle rentre à sa tanière. La blessure guérit en 45 secondes ; blessé, le coup suivant tue.
+  Elle traverse les meubles et les portes claquées, pas les murs.
 - **Les morts** hantent la maison : ils volent, et poussent les objets de moins de 12 kg. Pour aider, ou non.
 - **Le chat** : toutes les 40 secondes, trois sabotages sont proposés. Le public vote `1`, `2` ou `3` pendant 15 secondes, une voix par personne. Les cinq sabotages : couper le courant, claquer une porte, faire du vacarme sur un porteur, griller les torches, mettre les meubles en apesanteur.
 - **La fin** : gagné si le quota est dans la zone à 6 h, ou si l'on klaxonne le camion une fois le quota atteint. Perdu si l'aube se lève sur un camion trop vide, ou si plus personne n'est en vie. Klaxonner sans le quota ne fait que prévenir la chose.
@@ -88,6 +94,6 @@ outils/godot.sh --headless --path jeux/portefaix --export-release Web ../../port
 
 ## Où en est le prototype
 
-- **Vérifié dans Godot 4.3, sans écran** : les deux essais passent (57 vérifications seul, 13 en réseau).
+- **Vérifié dans Godot 4.3, sans écran** : les deux essais passent (67 vérifications seul, 13 en réseau).
 - **Vérifié dans Chromium** (WebGL 2, un téléphone émulé de 844 sur 390, de vrais touchers) : l'export web se charge, le menu passe au doigt, une partie commence, le joystick fait marcher jusque dans le salon, le pouce droit tourne le regard pendant qu'on marche, « Courir » reste enfoncé, « Torche » éteint la lampe. Deux pouces à la fois : le gauche tenant le joystick, le droit glisse et revient sans que la vue saute, puis glisse et la vue tourne.
 - **Pas encore vérifié** : une partie jouée par une personne ; le jeu sur un vrai téléphone (la vitesse du rendu, la taille des boutons sous de vrais pouces) ; le micro ; le vrai chat de Twitch (seule la lecture de ses lignes est essayée) ; le réseau entre deux machines.

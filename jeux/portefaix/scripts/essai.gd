@@ -2,7 +2,8 @@ extends Node
 # Portefaix — l'essai sans écran (scripts/essai.gd)
 # Trois façons de le lancer, chacune sort avec le code 0 si tout passe, 1 sinon :
 #   outils/godot.sh --headless --path jeux/portefaix -- --essai          une partie seul, jouée par le programme : la maison, les meubles,
-#       porter un carton jusqu'au camion, traîner puis soulever à deux un canapé, casser un vase, la chose qui entend, voit, chasse et prend,
+#       porter un carton jusqu'au camion, traîner puis soulever à deux un canapé, casser un vase, la chose qui entend, voit devant elle, crie,
+#       chasse, blesse puis tue, et qu'on sème en sortant,
 #       le mort qui pousse, le chat (ses votes, les lignes de Twitch), chaque sabotage, le klaxon, l'aube
 #   outils/godot.sh --headless --path jeux/portefaix -- --essai-reseau   un hôte, qui lance lui-même un invité (un second programme) sur
 #       cette machine, et vérifie avec lui que les deux voient la même partie
@@ -228,23 +229,62 @@ func _seul() -> void:
 	moi.bruit = 0.0
 
 	print("6. La chose")
-	chose.global_position = Vector3(8.5, 0.0, 7.5)
-	chose._roder(60.0)
+	var poser := func(ou: Vector3, vers: Vector3):     # la chose, là, tournée vers ce point, prête à voir
+		chose.global_position = ou
+		chose._roder(60.0)
+		chose._repue = 0.0
+		chose.rotation.y = atan2(-(vers.x - ou.x), -(vers.z - ou.z))
+	var couloir := Vector3(8.5, 0.0, 7.5)
+	var fond := Vector3(25.0, 0.0, 7.5)
+	poser.call(couloir, fond)
 	second.global_position = Vector3(21.5, 0.05, 7.5)
 	await _attendre(0.5)
 	verif(chose.mode == chose.RODE, "à treize mètres dans le couloir, elle ne voit pas le porteur")
+	second.global_position = Vector3(3.5, 0.05, 7.5)
+	await _attendre(0.5)
+	verif(chose.mode == chose.RODE, "ni à cinq mètres dans son dos")
+	second.global_position = Vector3(14.5, 0.05, 7.5)
+	second.accroupi = true
+	await _attendre(0.5)
+	verif(chose.mode == chose.RODE, "ni accroupi, à six mètres devant elle")
+	second.accroupi = false
 	second.global_position = Vector3(16.5, 0.05, 7.5)
 	await _attendre(0.5)
-	verif(chose.mode == chose.CHASSE and chose.proie == 2, "à huit mètres, elle le voit et le chasse")
+	verif(chose.mode == chose.ALERTE and chose.proie == 2 and chose.global_position.distance_to(couloir) < 0.1, "debout à huit mètres devant elle, elle le voit : elle crie, sans avancer")
+	await _attendre(R.CHOSE_ALERTE)
+	verif(chose.mode == chose.CHASSE, "près de deux secondes plus tard, elle s'élance")
 	var t0 := Time.get_ticks_msec()
-	while second.vivant and Time.get_ticks_msec() - t0 < 6000:
+	while not second.blesse and Time.get_ticks_msec() - t0 < 6000:
 		await get_tree().physics_frame
-	verif(not second.vivant and chose.mode == chose.RODE, "elle le rejoint et le prend (en %.1f s)" % ((Time.get_ticks_msec() - t0) / 1000.0))
+	verif(second.blesse and second.vivant and chose.mode == chose.RODE, "son premier coup blesse sans tuer (après %.1f s de chasse)" % ((Time.get_ticks_msec() - t0) / 1000.0))
+	var coup: Vector3 = chose.global_position
+	await _attendre(1.5)
+	verif(chose.mode == chose.RODE and chose.global_position.distance_to(coup) > 2.0 and second.vivant, "puis elle s'en va vers sa tanière, sans plus regarder le blessé")
+	jeu.blessures[2] = 0.05
+	await _attendre(0.3)
+	verif(not second.blesse, "la blessure guérit avec le temps (%d s)" % int(R.BLESSURE))
+	jeu.frapper(2)
+	verif(second.blesse and second.vivant, "un autre coup le blesse de nouveau")
+	jeu.frapper(2)
+	verif(not second.vivant, "et blessé, le coup suivant le tue")
 	verif(moi.vivant and jeu.etat == jeu.PARTIE, "la partie continue tant qu'un porteur vit")
-	chose.global_position = Vector3(8.5, 0.0, 7.5)
+	second.global_position = Vector3(2.0, 0.05, 20.0)
+	poser.call(couloir, Vector3(4.5, 0.0, 3.0))
 	moi.global_position = Vector3(4.5, 0.05, 3.0)        # dans la chambre : un mur entre eux
 	await _attendre(0.5)
-	verif(chose.mode != chose.CHASSE, "derrière un mur, à six mètres, elle ne voit rien")
+	verif(chose.mode == chose.RODE, "derrière un mur, à six mètres, elle ne voit rien")
+	poser.call(m.SEUIL, Vector3(12.0, 0.0, 20.0))
+	moi.global_position = Vector3(12.0, 0.05, 17.5)
+	await _attendre(0.5)
+	verif(chose.mode == chose.RODE, "dans la cour, à trois mètres du seuil, elle ne voit pas le porteur non plus")
+	poser.call(Vector3(12.0, 0.0, 8.0), m.SEUIL)
+	moi.global_position = Vector3(12.0, 0.05, 12.5)
+	await _attendre(0.5)
+	verif(chose.mode == chose.ALERTE and chose.proie == 1, "dans l'entrée, elle le voit et crie")
+	moi.global_position = Vector3(12.0, 0.05, 19.0)      # il sort pendant qu'elle crie
+	await _attendre(R.CHOSE_ALERTE + R.CHOSE_PERTE + 3.0)
+	verif(chose.mode != chose.CHASSE and chose.mode != chose.ALERTE and m.dedans(chose.global_position) and moi.vivant and not moi.blesse,
+		"sorti dans la cour, il la sème : elle ne passe pas le seuil")
 	moi.global_position = Vector3(12.0, 0.05, 20.0)
 	chose.global_position = m.TANIERE
 	chose._roder(60.0)

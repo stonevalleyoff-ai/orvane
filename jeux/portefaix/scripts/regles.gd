@@ -8,7 +8,7 @@ const JOUEURS_MAX := 6
 
 # la nuit : dix minutes de 22 h à 6 h ; la chose dort pendant le répit du début
 const DUREE_NUIT := 600.0
-const REPIT := 35.0
+const REPIT := 60.0
 const HAUTEUR := 2.8          # sous plafond ; les portes font 2,2 m
 
 # le corps (mètres, secondes)
@@ -36,7 +36,7 @@ const FREIN := 45.0           # les kilos portés qui divisent la marche par deu
 
 # le bruit : le rayon, en mètres, où la chose l'entend
 const BRUIT_ACCROUPI := 1.5
-const BRUIT_PAS := 5.0
+const BRUIT_PAS := 4.0
 const BRUIT_COURSE := 11.0
 const BRUIT_CRI := 17.0
 const BRUIT_MICRO := 18.0     # le vrai micro, à pleine voix
@@ -49,13 +49,21 @@ const CHOC_SEUIL := 2.2
 const CHOC_PLEIN := 9.0
 
 # la chose
+# la chose : elle doit faire peur, pas tuer d'office. On peut passer dans son dos, on a le temps de fuir quand elle crie, on la sème
+# en courant ou en sortant de la maison (elle ne passe pas le seuil), et son premier coup blesse sans tuer.
 const CHOSE_RODE := 1.5
-const CHOSE_ENQUETE := 2.9
-const CHOSE_CHASSE := 4.5     # plus vite qu'on ne marche, moins qu'on ne court
-const CHOSE_VUE := 11.0
-const CHOSE_VUE_ACCROUPI := 0.6
-const CHOSE_PERTE := 4.0      # sans voir sa proie tout ce temps, elle renonce
+const CHOSE_ENQUETE := 2.5
+const CHOSE_CHASSE := 4.0     # plus vite qu'on ne marche, moins qu'on ne court
+const CHOSE_VUE := 9.0
+const CHOSE_VUE_ACCROUPI := 0.5
+const CHOSE_CONE := 0.4       # elle voit devant elle : le cosinus du demi-angle (66° de chaque côté)…
+const CHOSE_PRES := 2.5       # … et sent ce qui est tout près, même dans son dos
+const CHOSE_ALERTE := 1.8     # quand elle voit un porteur, elle crie tout ce temps avant de s'élancer
+const CHOSE_SOUFFLE := 10.0   # elle ne chasse pas plus longtemps d'une traite
+const CHOSE_PERTE := 2.5      # sans voir sa proie tout ce temps, elle renonce
+const CHOSE_REPUE := 10.0     # après un coup, elle rentre à sa tanière sans rien regarder
 const CHOSE_ALLONGE := 1.2
+const BLESSURE := 45.0        # le premier coup blesse ; passé ce temps, on est guéri. Blessé, le coup suivant tue.
 
 # le chat : un vote toutes les 40 secondes, 15 secondes pour voter (1, 2 ou 3)
 const VOTE_PAUSE := 40.0

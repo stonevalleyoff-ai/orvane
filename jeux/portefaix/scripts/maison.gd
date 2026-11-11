@@ -39,6 +39,7 @@ const ZONE := Rect2(9.5, 17.5, 5.0, 4.5)           # la zone de chargement, derr
 const CAMION := Rect2(10.6, 22.6, 2.8, 4.2)
 const PORTE_HAUT := 2.2
 const TANIERE := Vector3(22.5, 0.0, 3.5)           # là où dort la chose : le bureau, au fond
+const SEUIL := Vector3(12.0, 0.0, 14.5)            # juste derrière la porte d'entrée : la chose ne va pas plus loin
 
 var largeur := 0
 var profondeur := 0

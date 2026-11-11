@@ -42,6 +42,7 @@ var charge := 0
 var gagne := false
 var graine := -1                # la graine de la maison ; négative, le hasard la choisit
 var repit: float = R.REPIT       # la chose dort jusque-là (l'essai le repousse)
+var blessures := {}               # chez l'hôte : le porteur blessé → le temps qu'il lui reste à guérir
 var effets := {}                  # les sabotages en cours : nom → {reste, param}
 var _vote := {"ouvert": false, "options": [], "voix": [0, 0, 0], "reste": 0.0}
 var _poussees := {}
@@ -201,6 +202,7 @@ func _vider() -> void:
 	joueurs.clear()
 	objets.clear()
 	effets.clear()
+	blessures.clear()
 	_poussees.clear()
 
 
@@ -396,6 +398,23 @@ func tuer(qui: int) -> void:
 	mort.rpc(qui)
 
 
+# la chose a vu un porteur : elle crie, et lui le sait
+func reperer(qui: int) -> void:
+	repere.rpc(qui, chose.global_position)
+
+
+# la chose touche un porteur : le premier coup blesse, le suivant tue
+func frapper(qui: int) -> void:
+	var j = joueurs.get(qui)
+	if j == null or not j.vivant:
+		return
+	if j.blesse:
+		tuer(qui)
+	else:
+		blessures[qui] = R.BLESSURE
+		blessure.rpc(qui, true)
+
+
 func finir(victoire: bool, raison: String) -> void:
 	if etat == PARTIE:
 		fin.rpc(victoire, charge, quota, raison)
@@ -433,7 +452,7 @@ func partie_etat(t: float, c: int, ou: Vector3, yaw: float, mode: int) -> void:
 	if chose != null:
 		chose.cible_pos = ou
 		chose.cible_yaw = yaw
-		chose.mode = clampi(mode, 0, 3)
+		chose.mode = clampi(mode, 0, 4)
 
 
 @rpc("authority", "call_local", "reliable")
@@ -467,6 +486,27 @@ func mort(qui: int) -> void:
 		ui.mort("La chose t'a pris. Tu hantes la maison : %s pour pousser les petits objets." % ("le bouton Pousser" if tactile.actif else "E"))
 	else:
 		ui.annoncer("Un porteur ne répond plus.")
+
+
+@rpc("authority", "call_local", "reliable")
+func repere(qui: int, ou: Vector3) -> void:
+	sons.jouer_a("hurle", ou + Vector3.UP * 2.0, 8.0)
+	if qui == mon_id:
+		ui.annoncer("Elle t'a vu ! Cours, ou sors de la maison.", 3.0)
+
+
+@rpc("authority", "call_local", "reliable")
+func blessure(qui: int, oui: bool) -> void:
+	var j = joueurs.get(qui)
+	if j == null or not j.vivant:
+		return
+	j.blesse = oui
+	if oui:
+		sons.jouer_a("choc", j.global_position + Vector3.UP, 8.0)
+	if qui == mon_id:
+		ui.mort("Blessé : un coup de plus et c'est fini. Elle ne sort pas de la maison." if oui else "")
+		if not oui:
+			ui.annoncer("Tu es guéri.")
 
 
 @rpc("authority", "call_local", "unreliable")
@@ -581,8 +621,13 @@ func _physics_process(dt: float) -> void:
 	temps -= dt
 	if chose.mode == Creature.DORT and R.DUREE_NUIT - temps > repit:
 		chose.reveiller()
-		annonce.rpc("Quelque chose s'est réveillé dans la maison.")
+		annonce.rpc("Quelque chose s'est réveillé dans la maison. Elle ne sort pas dans la cour.")
 	chose.avancer(dt)
+	for qui in blessures.keys():
+		blessures[qui] -= dt
+		if blessures[qui] <= 0.0:
+			blessures.erase(qui)
+			blessure.rpc(qui, false)
 	_t_ecoute -= dt
 	if _t_ecoute <= 0.0:
 		_t_ecoute = 0.25

@@ -10,6 +10,7 @@ var local := false
 var pilote := false           # l'essai tient les commandes
 var principal
 var vivant := true
+var blesse := false           # un coup de la chose : le prochain tue
 var accroupi := false
 var bruit := 0.0              # le rayon, en mètres, où on l'entend
 var yaw := 0.0
