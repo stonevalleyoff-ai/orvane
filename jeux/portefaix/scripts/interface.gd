@@ -10,6 +10,11 @@ signal rejoindre(adresse: String)
 signal commencer
 signal rejouer
 signal quitter
+signal connexion(email: String, mot_de_passe: String)
+signal deconnexion
+signal sans_compte
+signal vers_connexion
+signal pseudo_choisi(pseudo: String)
 
 var _menu: Control
 var _salon: Control
@@ -33,6 +38,17 @@ var _mort: Label
 var _fin_texte: Label
 var _fin_rejouer: Button
 var _aide: Label
+var _connexion: Control
+var _email: LineEdit
+var _mdp: LineEdit
+var _connexion_avis: Label
+var _connexion_bouton: Button
+var _compte_texte: Label
+var _compte_bouton: Button
+var _pseudo_ligne: HBoxContainer
+var _pseudo: LineEdit
+var _connecte := false
+var _en_ligne: Array = []          # ce qui demande le réseau du dehors : le compte, le chat de Twitch
 var _reseau: Array = []           # ce qui sert à jouer à plusieurs, caché dans un navigateur
 
 
@@ -42,6 +58,7 @@ func _ready() -> void:
 	racine.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(racine)
 	_menu = _page(racine)
+	_connexion = _page(racine)
 	_salon = _page(racine)
 	_fin = _page(racine)
 	_partie = Control.new()
@@ -49,6 +66,7 @@ func _ready() -> void:
 	_partie.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	racine.add_child(_partie)
 	_faire_menu()
+	_faire_connexion()
 	_faire_salon()
 	_faire_partie()
 	_faire_fin()
@@ -95,6 +113,29 @@ func _faire_menu() -> void:
 	_texte(_menu, "PORTEFAIX", 64, Color(1.0, 0.86, 0.5))
 	_texte(_menu, "Videz la maison avant l'aube. Ne réveillez pas ce qui y dort.", 20)
 	_avis = _texte(_menu, "", 18, Color(1.0, 0.5, 0.4))
+	# le compte : qui l'on est, et le pseudo que les autres verront
+	var ligne_compte := HBoxContainer.new()
+	_menu.add_child(ligne_compte)
+	_en_ligne.append(ligne_compte)
+	_compte_texte = Label.new()
+	_compte_texte.add_theme_font_size_override("font_size", 18)
+	_compte_texte.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_compte_texte.clip_text = true
+	ligne_compte.add_child(_compte_texte)
+	_compte_bouton = _bouton(ligne_compte, "Se connecter", func():
+		if _connecte:
+			deconnexion.emit()
+		else:
+			vers_connexion.emit())
+	_pseudo_ligne = HBoxContainer.new()
+	_menu.add_child(_pseudo_ligne)
+	_pseudo = LineEdit.new()
+	_pseudo.placeholder_text = "ton pseudo (16 lettres au plus)"
+	_pseudo.max_length = 16
+	_pseudo.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_pseudo.add_theme_font_size_override("font_size", 18)
+	_pseudo_ligne.add_child(_pseudo)
+	_bouton(_pseudo_ligne, "Garder ce pseudo", func(): pseudo_choisi.emit(_pseudo.text))
 	_bouton(_menu, "Jouer seul", func(): seul.emit())
 	_reseau.append(_bouton(_menu, "Héberger une partie (2 à 6 joueurs)", func(): heberger.emit()))
 	var ligne := HBoxContainer.new()
@@ -111,6 +152,7 @@ func _faire_menu() -> void:
 	_chaine.placeholder_text = "ta chaîne Twitch, pour que ton chat vote (facultatif)"
 	_chaine.add_theme_font_size_override("font_size", 18)
 	_menu.add_child(_chaine)
+	_en_ligne.append(_chaine)
 	_micro = CheckBox.new()
 	_micro.text = "La chose entend mon micro"
 	_micro.button_pressed = true
@@ -118,6 +160,27 @@ func _faire_menu() -> void:
 	_menu.add_child(_micro)
 	_aide = _texte(_menu, "ZQSD : marcher · Maj : courir (bruyant) · Ctrl : s'accroupir · Espace : sauter\n"
 		+ "E ou clic : prendre, poser · clic droit : lancer · F : torche · V : crier · Échap : libérer la souris", 15, Color(0.6, 0.62, 0.66))
+
+
+func _faire_connexion() -> void:
+	_texte(_connexion, "PORTEFAIX", 52, Color(1.0, 0.86, 0.5))
+	_texte(_connexion, "Connecte-toi avec ton compte Stone Valley.", 20)
+	_email = LineEdit.new()
+	_email.placeholder_text = "ton e-mail"
+	_email.virtual_keyboard_type = LineEdit.KEYBOARD_TYPE_EMAIL_ADDRESS
+	_email.add_theme_font_size_override("font_size", 20)
+	_connexion.add_child(_email)
+	_mdp = LineEdit.new()
+	_mdp.placeholder_text = "ton mot de passe"
+	_mdp.secret = true
+	_mdp.virtual_keyboard_type = LineEdit.KEYBOARD_TYPE_PASSWORD
+	_mdp.add_theme_font_size_override("font_size", 20)
+	_mdp.text_submitted.connect(func(_t): connexion.emit(_email.text, _mdp.text))
+	_connexion.add_child(_mdp)
+	_connexion_avis = _texte(_connexion, "", 18, Color(1.0, 0.5, 0.4))
+	_connexion_bouton = _bouton(_connexion, "Se connecter", func(): connexion.emit(_email.text, _mdp.text))
+	_bouton(_connexion, "Jouer sans compte", func(): sans_compte.emit())
+	_texte(_connexion, "Pas encore de compte ? Il se crée dans Stone Valley.\nTon mot de passe n'est pas gardé sur cet appareil.", 15, Color(0.6, 0.62, 0.66))
 
 
 func _faire_salon() -> void:
@@ -181,7 +244,7 @@ func _coin(ancre: int, ou: Vector2, t: Vector2, corps: int) -> Label:
 
 
 func _montrer(page: Control) -> void:
-	for p in [_menu, _salon, _fin]:
+	for p in [_menu, _connexion, _salon, _fin]:
 		p.get_parent().get_parent().visible = p == page
 	_partie.visible = page == _partie
 
@@ -192,6 +255,13 @@ func passer_au_navigateur() -> void:
 		c.visible = false
 	_micro.button_pressed = false
 	_aide.text += "\nDans un navigateur, on joue seul. À plusieurs : la version de bureau (Godot 4.3)."
+
+
+# sur une page qui ne laisse rien sortir vers le réseau : ni compte, ni chat de Twitch
+func passer_hors_ligne() -> void:
+	for c in _en_ligne:
+		c.visible = false
+	_aide.text += "\nSur cette page, on joue sans compte et sans chat : elle ne laisse pas le jeu joindre le réseau."
 
 
 func passer_au_tactile() -> void:
@@ -205,6 +275,26 @@ func menu(avis: String) -> void:
 	_avis.text = avis
 	_avis.visible = avis != ""
 	_montrer(_menu)
+
+
+func page_connexion() -> void:
+	_montrer(_connexion)
+
+
+# l'état du compte, redit aux deux écrans qui en parlent
+func compte(connecte: bool, nom: String, occupe: bool, erreur: String) -> void:
+	_connecte = connecte
+	_connexion_avis.text = "On frappe à la porte…" if occupe else erreur
+	_connexion_avis.add_theme_color_override("font_color", Color(0.75, 0.78, 0.82) if occupe else Color(1.0, 0.5, 0.4))
+	_connexion_bouton.disabled = occupe
+	_compte_texte.text = ("Connecté : %s" % nom) if connecte else "Sans compte"
+	_compte_bouton.text = "Se déconnecter" if connecte else "Se connecter"
+	_compte_bouton.disabled = occupe
+	_pseudo_ligne.visible = connecte
+	if connecte:
+		_mdp.text = ""
+		if not _pseudo.has_focus():
+			_pseudo.text = nom if nom != "Porteur" else ""
 
 
 func salon(t: String, hote: bool) -> void:

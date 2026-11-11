@@ -27,6 +27,11 @@ const gd = fichiers('scripts').filter(f => f.endsWith('.gd'));
 const espaces = gd.filter(f => lire(f).split('\n').some(l => /^ +\S/.test(l)));
 verif(!espaces.length, `${gd.length} scripts, indentés aux tabulations, comme Godot le veut` + (espaces.length ? ` ; avec des espaces : ${espaces.join(', ')}` : ''));
 
+const compte = lire('scripts/compte.gd'), secrets = gd.filter(f => /service_role|sb_secret_|eyJhbGciOi/.test(lire(f)));
+verif(/const CLE := "sb_publishable_/.test(compte) && /const SUPABASE := "https:\/\//.test(compte) && !secrets.length,
+  'le compte : le service et sa clé publique, et aucune clé secrète dans les scripts' + (secrets.length ? ` ; à retirer de : ${secrets.join(', ')}` : ''));
+verif(!/vp_sauver|METHOD_(POST|PATCH|PUT|DELETE), "\/rest/.test(compte), 'il lit la sauvegarde de Stone Valley sans jamais y écrire');
+
 console.log('2. La maison');
 const maison = lire('scripts/maison.gd');
 const plan = [...maison.match(/const PLAN := \[([\s\S]*?)\n\]/)[1].matchAll(/"([#.DP]+)"/g)].map(m => m[1]);

@@ -6,6 +6,7 @@ extends CharacterBody3D
 const R = preload("res://scripts/regles.gd")
 
 var id := 1
+var nom := "Porteur"
 var local := false
 var pilote := false           # l'essai tient les commandes
 var principal
@@ -76,6 +77,16 @@ func preparer(p, i: int, depart: Vector3, rang: int) -> void:
 	_piece(corps, Vector3(0, 1.05, 0), Vector3(0.5, 0.75, 0.3))
 	_piece(corps, Vector3(0, 0.35, 0), Vector3(0.42, 0.7, 0.26))
 	_piece(tete, Vector3(0, 0.02, 0), Vector3(0.3, 0.32, 0.3))
+	if not local:                 # son pseudo, au-dessus de sa tête, pour les autres
+		var etiquette := Label3D.new()
+		etiquette.text = nom
+		etiquette.position.y = 2.05
+		etiquette.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		etiquette.font_size = 40
+		etiquette.pixel_size = 0.004
+		etiquette.outline_size = 10
+		etiquette.modulate = COULEURS[rang % COULEURS.size()].lightened(0.5)
+		add_child(etiquette)
 	if local:
 		corps.visible = false
 		tete.get_child(tete.get_child_count() - 1).visible = false

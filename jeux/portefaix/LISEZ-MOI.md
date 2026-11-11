@@ -17,6 +17,7 @@ outils/godot.sh --path jeux/portefaix
 ```
 
 - **Dans un navigateur** : on y joue seul (un navigateur ne peut pas ouvrir de port pour héberger). Une fois ce dossier dans `main`, la passe de publication l'exporte sur le site, à côté de Lisière : `https://stonevalleyoff-ai.github.io/orvane/portefaix/`. Le micro y est éteint au départ ; la case du menu le rallume, si le navigateur l'accorde.
+- **Le compte** : le jeu s'ouvre sur une page de connexion. On s'y connecte avec son **compte Stone Valley** (le même e-mail, le même mot de passe : les comptes du projet Supabase « Vallée de pierre »), ou l'on joue sans compte. Connecté, on se choisit un pseudo, que les autres voient au salon et au-dessus de sa tête ; sans pseudo choisi ici, c'est celui de sa sauvegarde Stone Valley. On reste connecté d'une fois sur l'autre.
 - **Jouer seul** : on est son propre hôte. Le piano et l'armoire ne se soulèvent pas seul ; le quota en tient compte.
 - **À plusieurs** : l'un clique « Héberger », puis « Commencer la nuit » quand tout le monde est au salon. Les autres tapent son adresse et « Rejoindre ». Sur le même réseau local, c'est l'adresse que le salon affiche. Par Internet, l'hôte doit ouvrir le port **24680 en UDP** sur sa box, ou tout le monde passe par un réseau privé (Tailscale, ZeroTier, Hamachi). On n'entre pas dans une nuit commencée.
 - **Avec son chat Twitch** : l'hôte tape le nom de sa chaîne dans le menu. Le jeu lit le chat en lecture seule, sans compte ni mot de passe. Sans chaîne, des spectateurs de paille votent au hasard.
@@ -68,8 +69,11 @@ Tous les réglages sont dans `scripts/regles.gd`.
 | `scripts/micro.gd` | le niveau du micro (rien n'est enregistré ni envoyé) |
 | `scripts/sons.gd` | les sons, fabriqués au lancement |
 | `scripts/interface.gd` | ce qui s'écrit à l'écran |
+| `scripts/compte.gd` | le compte : se connecter, rester connecté, le pseudo |
 | `scripts/tactile.gd` | jouer du doigt : le joystick, le regard, les boutons |
 | `scripts/essai.gd` | les essais sans écran |
+
+**Le compte** : la connexion passe par le service de comptes de Supabase, avec la clé publique du projet (faite pour être dans le jeu). Le jeu ne lit que qui l'on est et le pseudo de sa sauvegarde ; il **n'écrit jamais** dans la sauvegarde de Stone Valley (`vp_comptes`), et n'a rien changé à la base. Le pseudo choisi ici est gardé sur le compte lui-même (ses métadonnées). Le mot de passe n'est pas gardé : seul un jeton de reprise l'est, sur l'appareil (`user://compte.json`), effacé quand on se déconnecte. Un compte se crée dans Stone Valley, pas ici. Pour l'instant le pseudo qu'un invité annonce à l'hôte est cru sur parole : la preuve (le jeton du compte, `compte.jeton`) servira au jeu en ligne.
 
 **Le réseau** : l'hôte fait foi. Il fait seul tomber les meubles, penser la chose, compter le chargement et dépouiller les votes, et le redit aux autres vingt fois par seconde. Chaque joueur ne mène que son porteur, et demande le reste à l'hôte (prendre, lâcher, pousser, klaxonner). Tout le monde bâtit la même maison d'après une graine donnée au départ.
 
@@ -79,6 +83,7 @@ Tous les réglages sont dans `scripts/regles.gd`.
 outils/godot.sh --headless --path jeux/portefaix --import            # la première fois
 outils/godot.sh --headless --path jeux/portefaix -- --essai          # une partie seul, jouée par le programme
 outils/godot.sh --headless --path jeux/portefaix -- --essai-reseau   # un hôte et un invité sur la même machine
+outils/godot.sh --headless --path jeux/portefaix -- --essai-compte   # la connexion, contre un faux service de comptes local
 ```
 
 Chacun sort avec le code 0 si tout passe. Sans écran, Godot écrit des lignes `Parameter "m" is null` : c'est son rendu factice qui ne connaît pas les maillages, sans effet sur le jeu.
@@ -94,6 +99,6 @@ outils/godot.sh --headless --path jeux/portefaix --export-release Web ../../port
 
 ## Où en est le prototype
 
-- **Vérifié dans Godot 4.3, sans écran** : les deux essais passent (67 vérifications seul, 13 en réseau).
+- **Vérifié dans Godot 4.3, sans écran** : les deux essais passent (67 vérifications seul, 15 en réseau, 20 pour la connexion ; avec `--en-ligne`, le vrai service refuse bien un compte qui n'existe pas).
 - **Vérifié dans Chromium** (WebGL 2, un téléphone émulé de 844 sur 390, de vrais touchers) : l'export web se charge, le menu passe au doigt, une partie commence, le joystick fait marcher jusque dans le salon, le pouce droit tourne le regard pendant qu'on marche, « Courir » reste enfoncé, « Torche » éteint la lampe. Deux pouces à la fois : le gauche tenant le joystick, le droit glisse et revient sans que la vue saute, puis glisse et la vue tourne.
-- **Pas encore vérifié** : une partie jouée par une personne ; le jeu sur un vrai téléphone (la vitesse du rendu, la taille des boutons sous de vrais pouces) ; le micro ; le vrai chat de Twitch (seule la lecture de ses lignes est essayée) ; le réseau entre deux machines.
+- **Pas encore vérifié** : une connexion réussie avec un vrai compte Stone Valley (l'essai joue contre un faux service qui répond comme le vrai) ; le clavier du téléphone dans les champs de la page de connexion ; une partie jouée par une personne ; le jeu sur un vrai téléphone (la vitesse du rendu, la taille des boutons sous de vrais pouces) ; le micro ; le vrai chat de Twitch (seule la lecture de ses lignes est essayée) ; le réseau entre deux machines.

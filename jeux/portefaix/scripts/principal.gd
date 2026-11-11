@@ -14,6 +14,7 @@ const Micro = preload("res://scripts/micro.gd")
 const Sons = preload("res://scripts/sons.gd")
 const Interface = preload("res://scripts/interface.gd")
 const Tactile = preload("res://scripts/tactile.gd")
+const Compte = preload("res://scripts/compte.gd")
 const Essai = preload("res://scripts/essai.gd")
 
 enum { MENU, SALON, PARTIE, FIN }
@@ -30,7 +31,11 @@ var micro
 var sons
 var ui
 var tactile
+var compte
+var noms := {}                    # le numéro d'un joueur → son pseudo, tel qu'il l'a donné en entrant au salon
 var web := OS.has_feature("web")  # dans un navigateur : on joue seul (pas de port à ouvrir), le doigt ou le clavier
+# « --hors-ligne » : la page qui porte le jeu ne laisse rien sortir vers le réseau (ni comptes, ni chat de Twitch) ; on n'y propose ni l'un ni l'autre
+var hors_ligne := OS.get_cmdline_args().has("--hors-ligne") or OS.get_cmdline_user_args().has("--hors-ligne")
 var moi
 var joueurs := {}
 var objets := {}
@@ -76,6 +81,16 @@ func _ready() -> void:
 	ui.commencer.connect(lancer)
 	ui.rejouer.connect(lancer)
 	ui.quitter.connect(retour_menu)
+	compte = Compte.new()
+	compte.name = "Compte"
+	add_child(compte)
+	compte.change.connect(_sur_compte)
+	ui.connexion.connect(compte.connecter)
+	ui.deconnexion.connect(compte.deconnecter)
+	ui.pseudo_choisi.connect(compte.nommer)
+	ui.vers_connexion.connect(ui.page_connexion)
+	ui.sans_compte.connect(func(): ui.menu(""))
+	_sur_compte()
 	tactile = Tactile.new()
 	tactile.name = "Tactile"
 	tactile.jeu = self
@@ -94,6 +109,39 @@ func _ready() -> void:
 			e.mode = a
 			add_child(e)
 			return
+	if hors_ligne:
+		ui.passer_hors_ligne()
+		return
+	# la première page : la connexion, sauf si l'on était resté connecté
+	ui.page_connexion()
+	await compte.reprendre()
+	if compte.connecte and etat == MENU:
+		ui.menu("")
+
+
+# --- le compte ---
+
+func _sur_compte() -> void:
+	var entre: bool = compte.connecte and not compte.occupe and ui._connexion.is_visible_in_tree()
+	ui.compte(compte.connecte, compte.nom(), compte.occupe, compte.erreur)
+	if entre:                 # connecté : la page de connexion laisse la place au menu
+		ui.menu("")
+	if etat == SALON:
+		if serveur:
+			_dire_salon()
+		elif multiplayer.multiplayer_peer.get_connection_status() == MultiplayerPeer.CONNECTION_CONNECTED:
+			se_presenter.rpc_id(1, compte.nom())
+
+
+# un invité dit son pseudo à l'hôte en entrant au salon (l'hôte le croit sur parole : ce sera vérifié avec le jeu en ligne)
+@rpc("any_peer", "call_remote", "reliable")
+func se_presenter(p: String) -> void:
+	if not serveur or etat != SALON:
+		return
+	var qui := multiplayer.get_remote_sender_id()
+	var propre: String = Compte.propre(p)
+	noms[qui] = propre if propre != "" else "Porteur"
+	_dire_salon()
 
 
 # --- le menu et le réseau ---
@@ -112,6 +160,7 @@ func heberger() -> bool:
 	multiplayer.multiplayer_peer = pair
 	en_reseau = true
 	etat = SALON
+	noms = {1: compte.nom()}
 	_dire_salon()
 	return true
 
@@ -151,6 +200,7 @@ func _arrive(id: int) -> void:
 func _part(id: int) -> void:
 	if not serveur:
 		return
+	noms.erase(id)
 	if etat == SALON:
 		_dire_salon()
 	elif etat == PARTIE and joueurs.has(id):
@@ -159,7 +209,8 @@ func _part(id: int) -> void:
 
 func _connecte() -> void:
 	mon_id = multiplayer.get_unique_id()
-	ui.salon("Tu es dans le salon. L'hôte lance la nuit.", false)
+	se_presenter.rpc_id(1, compte.nom())
+	ui.salon("Tu es dans le salon, %s. L'hôte lance la nuit." % compte.nom(), false)
 
 
 func _dire_salon() -> void:
@@ -167,8 +218,11 @@ func _dire_salon() -> void:
 	for a in IP.get_local_addresses():
 		if a.count(".") == 3 and not a.begins_with("127.") and not a.begins_with("169.254."):
 			adresses.append(a)
-	ui.salon("%d porteur(s) dans le salon.\nLes autres te rejoignent à l'adresse : %s (port %d, UDP)."
-		% [multiplayer.get_peers().size() + 1, " ou ".join(adresses) if not adresses.is_empty() else "celle de cette machine", R.PORT], true)
+	var presents: Array = [compte.nom()]
+	for id in multiplayer.get_peers():
+		presents.append(str(noms.get(id, "…")))
+	ui.salon("Dans le salon : %s.\nLes autres te rejoignent à l'adresse : %s (port %d, UDP)."
+		% [", ".join(presents), " ou ".join(adresses) if not adresses.is_empty() else "celle de cette machine", R.PORT], true)
 
 
 # l'hôte (ou le joueur seul) lance la nuit pour tout le monde
@@ -178,8 +232,13 @@ func lancer() -> void:
 	var ids: Array = [1]
 	for id in multiplayer.get_peers():
 		ids.append(id)
-	chat.chaine = ui.chaine()
-	commencer.rpc(graine if graine >= 0 else int(hasard.randi()), ids)
+	ids.sort()
+	noms[1] = compte.nom()
+	var pseudos: Array = []
+	for id in ids:
+		pseudos.append(str(noms.get(id, "Porteur")))
+	chat.chaine = "" if hors_ligne else ui.chaine()
+	commencer.rpc(graine if graine >= 0 else int(hasard.randi()), ids, pseudos)
 
 
 func retour_menu(avis: String = "") -> void:
@@ -209,7 +268,7 @@ func _vider() -> void:
 # --- le début d'une nuit, chez tout le monde ---
 
 @rpc("authority", "call_local", "reliable")
-func commencer(graine: int, ids: Array) -> void:
+func commencer(graine: int, ids: Array, pseudos: Array) -> void:
 	_vider()
 	mon_id = multiplayer.get_unique_id()
 	serveur = multiplayer.is_server()
@@ -222,9 +281,8 @@ func commencer(graine: int, ids: Array) -> void:
 	monde.add_child(maison)
 	maison.construire()
 	_meubler(graine)
-	ids.sort()
 	for k in ids.size():
-		ajouter_joueur(int(ids[k]), maison.depart(k), k)
+		ajouter_joueur(int(ids[k]), maison.depart(k), k, Compte.propre(str(pseudos[k])) if k < pseudos.size() else "Porteur")
 	moi = joueurs.get(mon_id)
 	chose = Creature.new()
 	chose.name = "Chose"
@@ -300,8 +358,9 @@ func _meubler(graine: int) -> void:
 			break
 
 
-func ajouter_joueur(id: int, ou: Vector3, rang: int):
+func ajouter_joueur(id: int, ou: Vector3, rang: int, pseudo: String = "Porteur"):
 	var j := Joueur.new()
+	j.nom = pseudo
 	j.preparer(self, id, ou, rang)
 	monde.add_child(j)
 	joueurs[id] = j
@@ -485,7 +544,7 @@ func mort(qui: int) -> void:
 	if qui == mon_id:
 		ui.mort("La chose t'a pris. Tu hantes la maison : %s pour pousser les petits objets." % ("le bouton Pousser" if tactile.actif else "E"))
 	else:
-		ui.annoncer("Un porteur ne répond plus.")
+		ui.annoncer("%s ne répond plus." % j.nom)
 
 
 @rpc("authority", "call_local", "reliable")

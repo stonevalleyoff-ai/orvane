@@ -7,6 +7,9 @@ extends Node
 #       le mort qui pousse, le chat (ses votes, les lignes de Twitch), chaque sabotage, le klaxon, l'aube
 #   outils/godot.sh --headless --path jeux/portefaix -- --essai-reseau   un hôte, qui lance lui-même un invité (un second programme) sur
 #       cette machine, et vérifie avec lui que les deux voient la même partie
+#   outils/godot.sh --headless --path jeux/portefaix -- --essai-compte   la connexion, contre un faux service de comptes que l'essai
+#       ouvre lui-même sur cette machine : un mauvais mot de passe, un bon, le pseudo, rester connecté, le service en panne, se déconnecter
+#       (avec --en-ligne : un mauvais mot de passe aussi contre le vrai service, sans rien y écrire)
 #   (-- --essai-client : l'invité que lance l'essai du réseau)
 
 const R = preload("res://scripts/regles.gd")
@@ -30,6 +33,8 @@ func _lancer() -> void:
 			await _hote()
 		"--essai-client":
 			await _invite()
+		"--essai-compte":
+			await _compte()
 		_:
 			await _seul()
 	if mode != "--essai-client":
@@ -415,12 +420,15 @@ func _hote() -> void:
 		OS.kill(invite)
 		return
 	var lui: int = multiplayer.get_peers()[0]
+	await _attendre(0.5)
+	verif(jeu.noms.get(lui, "") == "Invité d'essai" and jeu.ui._salon_texte.text.contains("Porteur, Invité d'essai"), "il dit son pseudo, et le salon l'affiche")
 	jeu.lancer()
 	jeu.repit = 1e9
 	jeu.chat.reste = 1e9
 	await _attendre(2.6)
 	var moi = jeu.moi
 	verif(jeu.joueurs.size() == 2 and jeu.joueurs.has(lui) and jeu.quota == R.quota(jeu.total, 2), "la nuit commence à deux, le quota est celui de deux porteurs (%d €)" % jeu.quota)
+	verif(jeu.joueurs[lui].nom == "Invité d'essai" and moi.nom == "Porteur", "dans la partie, chacun porte son pseudo")
 	var ou: Array = []
 	for i in jeu.objets.size():
 		ou.append(jeu.objets[i].global_position)
@@ -467,6 +475,7 @@ func _hote() -> void:
 # --- le réseau : l'invité, qui fait ce que l'hôte lui dit et lui rend compte ---
 
 func _invite() -> void:
+	jeu.compte.pseudo = "Invité d'essai"
 	jeu.rejoindre("127.0.0.1")
 	var t0 := Time.get_ticks_msec()
 	while not _fini and Time.get_ticks_msec() - t0 < 60000:
@@ -480,7 +489,8 @@ func etape(nom: String, quoi: String, args: Array) -> void:
 	var moi = jeu.moi
 	match quoi:
 		"maison":
-			bon = jeu.etat == jeu.PARTIE and jeu.quota == args[0] and jeu.objets.size() == args[1].size() and jeu.joueurs.size() == 2 and moi != null
+			bon = moi != null and moi.nom == "Invité d'essai" and jeu.joueurs[1].nom == "Porteur"
+			bon = bon and jeu.etat == jeu.PARTIE and jeu.quota == args[0] and jeu.objets.size() == args[1].size() and jeu.joueurs.size() == 2 and moi != null
 			for i in jeu.objets.size():
 				bon = bon and jeu.objets[i].global_position.distance_to(args[1][i]) < 0.4
 		"objet":
@@ -508,3 +518,152 @@ func etape(nom: String, quoi: String, args: Array) -> void:
 			_fini = true
 			return
 	rapport.rpc_id(1, nom, bon)
+
+
+# --- le compte : un faux service de comptes, sur cette machine, qui répond comme le vrai ---
+
+const PORT_COMPTES := 24691
+var _srv: TCPServer
+var _clients: Array = []
+var _vus: Array = []              # les demandes reçues : « POST /auth/v1/… »
+var _sans_cle := 0
+var _meta_pseudo := ""            # le pseudo gardé sur le compte
+var _pseudo_sv := "Ada des Pierres"
+
+
+func _process(_dt: float) -> void:
+	if _srv == null:
+		return
+	while _srv.is_connection_available():
+		_clients.append({"pair": _srv.take_connection(), "lu": PackedByteArray(), "fait": false})
+	for c in _clients:
+		var p: StreamPeerTCP = c.pair
+		p.poll()
+		if c.fait or p.get_status() != StreamPeerTCP.STATUS_CONNECTED:
+			continue
+		var n := p.get_available_bytes()
+		if n > 0:
+			c.lu.append_array(p.get_data(n)[1])
+		var texte: String = c.lu.get_string_from_utf8()
+		var coupe := texte.find("\r\n\r\n")
+		if coupe < 0:
+			continue
+		var tete := texte.substr(0, coupe)
+		var corps := texte.substr(coupe + 4)
+		var longueur := 0
+		for l in tete.split("\r\n"):
+			if l.to_lower().begins_with("content-length:"):
+				longueur = int(l.get_slice(":", 1))
+		if corps.to_utf8_buffer().size() < longueur:
+			continue
+		c.fait = true
+		var r := _repondre(tete, corps)
+		var json := JSON.stringify(r[1]).to_utf8_buffer()
+		p.put_data(("HTTP/1.1 %d Essai\r\nContent-Type: application/json\r\nContent-Length: %d\r\nConnection: close\r\n\r\n" % [r[0], json.size()]).to_utf8_buffer() + json)
+
+
+func _repondre(tete: String, corps: String) -> Array:
+	var ligne := tete.get_slice("\r\n", 0).get_slice(" HTTP", 0)
+	_vus.append(ligne)
+	if not tete.contains("apikey: sb_publishable_"):
+		_sans_cle += 1
+	var j = JSON.parse_string(corps) if corps.strip_edges() != "" else {}
+	var session := func(n: int) -> Dictionary:
+		return {"access_token": "jeton-%d" % n, "refresh_token": "reprise-%d" % n, "expires_in": 3600,
+			"user": {"id": "u-1", "email": "ada@exemple.fr", "user_metadata": {"pseudo": _meta_pseudo} if _meta_pseudo != "" else {}}}
+	if ligne.begins_with("POST /auth/v1/token?grant_type=password"):
+		if j is Dictionary and j.get("email") == "ada@exemple.fr" and j.get("password") == "bon":
+			return [200, session.call(1)]
+		return [400, {"code": 400, "error_code": "invalid_credentials", "msg": "Invalid login credentials"}]
+	if ligne.begins_with("POST /auth/v1/token?grant_type=refresh_token"):
+		if j is Dictionary and j.get("refresh_token") == "reprise-1":
+			return [200, session.call(2)]
+		return [400, {"code": 400, "error_code": "refresh_token_not_found"}]
+	var porteur := tete.contains("Authorization: Bearer jeton-")
+	if ligne.begins_with("GET /rest/v1/vp_comptes?select=pseudo:donnees-%3E%3Epseudo"):
+		return [200, [{"pseudo": _pseudo_sv}]] if porteur else [401, {"message": "JWT manquant"}]
+	if ligne.begins_with("PUT /auth/v1/user") and porteur and j is Dictionary and j.get("data") is Dictionary:
+		_meta_pseudo = str(j.data.get("pseudo", ""))
+		return [200, {"id": "u-1"}]
+	if ligne.begins_with("POST /auth/v1/logout") and porteur:
+		return [204, {}]
+	return [404, {}]
+
+
+func _compte() -> void:
+	print("La connexion : contre un faux service de comptes, sur cette machine")
+	_srv = TCPServer.new()
+	verif(_srv.listen(PORT_COMPTES, "127.0.0.1") == OK, "le faux service écoute (port %d)" % PORT_COMPTES)
+	var Compte = jeu.Compte
+	var c = jeu.compte
+	c.url = "http://127.0.0.1:%d" % PORT_COMPTES
+	c.fichier = "user://compte-essai.json"
+	var chemin := ProjectSettings.globalize_path(c.fichier)
+	DirAccess.remove_absolute(chemin)
+	jeu.ui.page_connexion()
+	verif(c.url != c.SUPABASE and c.SUPABASE.begins_with("https://") and c.CLE.begins_with("sb_publishable_"), "le jeu connaît le vrai service et sa clé publique ; l'essai, lui, parle au faux")
+
+	print("1. Se connecter")
+	await c.connecter("", "")
+	verif(not c.connecte and c.erreur != "" and _vus.is_empty(), "sans e-mail ni mot de passe : rien n'est envoyé, et c'est dit")
+	await c.connecter("ada@exemple.fr", "faux")
+	verif(not c.connecte and c.erreur == "E-mail ou mot de passe incorrect." and not FileAccess.file_exists(c.fichier), "un mauvais mot de passe : refusé, et c'est dit")
+	verif(jeu.ui._connexion.is_visible_in_tree() and jeu.ui._connexion_avis.text == c.erreur, "la page de connexion reste là, avec l'explication")
+	await c.connecter("  ada@exemple.fr ", "bon")
+	verif(c.connecte and c.id == "u-1" and c.jeton == "jeton-1" and c.erreur == "", "le bon : connecté")
+	verif(c.pseudo == "Ada des Pierres" and c.nom() == "Ada des Pierres", "sans pseudo choisi ici, c'est celui de sa sauvegarde Stone Valley")
+	var garde := FileAccess.get_file_as_string(c.fichier)
+	verif(garde.contains("reprise-1") and not garde.contains("bon") and not garde.contains("ada@") and not garde.contains("jeton-1"), "sur l'appareil : le jeton de reprise seulement, ni le mot de passe, ni l'e-mail")
+	verif(jeu.ui._menu.is_visible_in_tree() and jeu.ui._compte_texte.text == "Connecté : Ada des Pierres" and jeu.ui._mdp.text == "", "la page de connexion laisse la place au menu, qui dit qui l'on est")
+
+	print("2. Le pseudo")
+	await c.nommer("  Ada <la> Portefaix de la nuit  ")
+	verif(c.pseudo == "Ada la Portefaix" and _meta_pseudo == c.pseudo, "un pseudo choisi ici est nettoyé, coupé à 16 lettres, et gardé sur le compte : « %s »" % c.pseudo)
+	verif(not _vus.any(func(l): return l.contains("vp_sauver") or (l.contains("vp_comptes") and not l.begins_with("GET"))), "la sauvegarde de Stone Valley est lue, jamais écrite")
+	jeu.graine = 7
+	jeu.jouer_seul()
+	await _attendre(0.3)
+	verif(jeu.moi.nom == "Ada la Portefaix", "dans la partie, le porteur porte ce pseudo")
+	jeu.retour_menu()
+
+	print("3. Rester connecté")
+	var c2 = Compte.new()
+	c2.url = c.url
+	c2.fichier = c.fichier
+	add_child(c2)
+	await c2.reprendre()
+	verif(c2.connecte and c2.jeton == "jeton-2" and c2.pseudo == "Ada la Portefaix", "au lancement suivant : connecté sans rien retaper, avec son pseudo")
+	verif(FileAccess.get_file_as_string(c.fichier).contains("reprise-2"), "et le jeton de reprise est renouvelé")
+	var c3 = Compte.new()
+	c3.url = "http://127.0.0.1:%d" % (PORT_COMPTES + 7)       # personne n'écoute là
+	c3.fichier = c.fichier
+	add_child(c3)
+	await c3.reprendre()
+	verif(not c3.connecte and c3.erreur == "" and FileAccess.file_exists(c.fichier), "le service en panne au lancement : pas connecté, sans reproche, et le jeton est gardé pour la prochaine fois")
+	await c3.connecter("ada@exemple.fr", "bon")
+	verif(not c3.connecte and c3.erreur.begins_with("Le service des comptes ne répond pas"), "en panne quand on se connecte : c'est dit")
+	FileAccess.open(c.fichier, FileAccess.WRITE).store_string(JSON.stringify({"reprise": "perimee"}))
+	var c4 = Compte.new()
+	c4.url = c.url
+	c4.fichier = c.fichier
+	add_child(c4)
+	await c4.reprendre()
+	verif(not c4.connecte and not FileAccess.file_exists(c.fichier), "un jeton de reprise périmé : pas connecté, et il est jeté")
+
+	print("4. Se déconnecter")
+	c2.deconnecter()
+	c.deconnecter()
+	await _attendre(0.4)
+	verif(not c.connecte and c.jeton == "" and c.nom() == "Porteur" and not FileAccess.file_exists(c.fichier), "déconnecté : plus de jeton, plus rien sur l'appareil")
+	verif(_vus.any(func(l): return l.begins_with("POST /auth/v1/logout")) and _sans_cle == 0, "le service en est prévenu ; chaque demande portait la clé publique")
+	verif(jeu.ui._compte_texte.text == "Sans compte" and jeu.ui._compte_bouton.text == "Se connecter" and not jeu.ui._pseudo_ligne.visible, "le menu le dit, et propose de se reconnecter")
+	_srv.stop()
+	_srv = null
+
+	if OS.get_cmdline_user_args().has("--en-ligne"):
+		print("5. Le vrai service (un mauvais mot de passe, rien n'y est écrit)")
+		var vrai = Compte.new()
+		vrai.fichier = c.fichier
+		add_child(vrai)
+		await vrai.connecter("essai@example.invalid", "mauvais-mot-de-passe")
+		verif(not vrai.connecte and vrai.erreur == "E-mail ou mot de passe incorrect." and not FileAccess.file_exists(c.fichier), "le vrai service répond, et refuse un compte qui n'existe pas")
