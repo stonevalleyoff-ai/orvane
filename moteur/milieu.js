@@ -14,6 +14,7 @@
 const FLO = (typeof require === 'function' ? require('./flore.js') : racine.OrvaneFlore) || null;
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const r3 = v => +v.toFixed(3);
+const port = plan => plan.port || plan.forme;   // (docs/48) une forme de la flore riche dit son port
 const REGLES = {
   vitesse: .1,                          // le milieu suit ses bêtes avec retard : 10 % de l'écart à sa cible par cycle
   retour: .02,                          // ce que le jeu a fait s'efface de 2 % par cycle (la succession)
@@ -93,7 +94,7 @@ function preparer(ctx) {
   // d'un voisin, celle du jour de son retour (reference.part)
   const pc = new Map(), compo = b => { if (!pc.has(b.id)) pc.set(b.id, { maint: parts(b.transforme?.arbres != null && b.axes.couvert != null ? { ...b, axes: { ...b.axes, couvert: clamp(b.axes.couvert / b.transforme.arbres) } } : b), base: parts({ ...b, milieu: b.transforme?.milieu || b.milieu, axes: { ...b.axes, ...(b.transforme?.base || {}) } }) }); return pc.get(b.id); };
   for (const t of taxons) if (t.plan?.regime === 'vegetal') for (const p of t.populations) { const b = B[p.biome], R = p.reference; if (!b?.transforme || R?.potentiel == null) continue;
-    const { maint, base } = compo(b), w0 = R.part ?? base[t.plan.forme] ?? 0, w = maint[t.plan.forme] || 0;
+    const { maint, base } = compo(b), w0 = R.part ?? base[port(t.plan)] ?? 0, w = maint[port(t.plan)] || 0;
     p.potentiel = r3(R.potentiel * (R.capacite > 0 ? b.capacite / R.capacite : 1) * (w0 > 0 ? w / w0 : w > 0 ? 1 : 0)); }
   // (la recolonisation) une forme que le lieu porte aujourd'hui, mais dont il n'a presque plus de pieds (une forêt qui se referme
   // sur une prairie, un lac asséché devenu rive, une herbe broutée jusqu'à la dernière) revient d'un voisin : chaque cycle, quelques
@@ -101,9 +102,9 @@ function preparer(ctx) {
   const RC = REGLES.recolonisation, ici = {};
   for (const t of taxons) if (t.plan?.regime === 'vegetal' && !t.eteint) for (const p of t.populations) (ici[p.biome] ??= []).push({ t, p });
   for (const b of Object.values(B)) { if (!b.transforme || !(b.capacite > 0)) continue;
-    for (const [forme, w] of Object.entries(compo(b).maint)) { const cible = b.capacite * w, L = (ici[b.id] || []).filter(x => x.t.plan.forme === forme);
+    for (const [forme, w] of Object.entries(compo(b).maint)) { const cible = b.capacite * w, L = (ici[b.id] || []).filter(x => port(x.t.plan) === forme);
       if (L.reduce((s, x) => s + x.p.effectif * (x.t.plan.masse_kg || 1), 0) >= RC.seuil * cible) continue;
-      let don = null; for (const v of b.voisins || []) for (const x of ici[v] || []) { if (x.t.plan.forme !== forme || !(x.p.effectif > 0)) continue; const bio = x.p.effectif * (x.t.plan.masse_kg || 1);
+      let don = null; for (const v of b.voisins || []) for (const x of ici[v] || []) { if (port(x.t.plan) !== forme || !(x.p.effectif > 0)) continue; const bio = x.p.effectif * (x.t.plan.masse_kg || 1);
         if (!don || bio > don.bio || (bio === don.bio && x.t.id < don.t.id)) don = { ...x, bio }; }
       if (!don) continue;
       // (les graines tombent à la fin du cycle, après la pousse — moteur/flore.js, p.graines — : ce que mangent les brouteurs ce cycle-ci

@@ -87,5 +87,4 @@ node bancs/succession.js --court    # moins de cycles
 - **Le gel.** Un gel tardif ne tue pas encore les fleurs, ni un hiver rude les pieds.
 - **La neige.** Elle ne cache pas l'herbe aux brouteurs, et ne casse pas de branches.
 - **Les graines dans le sol.** Une forme tout à fait disparue d'un lieu n'y revient que d'un voisin (la recolonisation, docs/22), pas d'une réserve de graines.
-- **Des plantes faites pour le feu.** Une écorce épaisse, des graines qui germent après l'incendie : des défenses de plus, que la sélection pourrait trier (docs/17).
-- **La flore ne se sépare pas encore par ses propres traits.** Hauteur, repousse, tenue au froid et au sec : l'étape suivante.
+- **Des plantes faites pour le feu.** Fait (docs/48) : les caractères « aime le feu », « à bulbe », « racines profondes », « racines échasses », dans un monde à la flore riche.

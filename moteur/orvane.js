@@ -64,6 +64,7 @@ const CLI = typeof require === 'function' ? require('./climat.js') : racine.Orva
 const MET = typeof require === 'function' ? require('./meteo.js') : racine.OrvaneMeteo;   // la météo (moteur/meteo.js, docs/45)
 const PHE = typeof require === 'function' ? require('./phenologie.js') : racine.OrvanePhenologie;   // les saisons des plantes (moteur/phenologie.js, docs/46 ; la flore l'appelle)
 const SUC = typeof require === 'function' ? require('./succession.js') : racine.OrvaneSuccession;   // les plantes sous le feu, la succession, le couvert qui suit les arbres (moteur/succession.js, docs/47)
+const DIV = typeof require === 'function' ? require('./diversite.js') : racine.OrvaneDiversite;   // la flore riche : quarante formes, des caractères, la radiation (moteur/diversite.js, docs/48)
 const GRA = typeof require === 'function' ? require('./grammaire.js') : racine.OrvaneGrammaire;   // la grammaire des effets et des conduites (moteur/grammaire.js, docs/32)
 const CAS = typeof require === 'function' ? require('./castes.js') : racine.OrvaneCastes;   // les castes, les insectes sociaux (moteur/castes.js, docs/33)
 const FOR = typeof require === 'function' ? require('./formes.js') : racine.OrvaneFormes;   // les formes nouvelles (moteur/formes.js, docs/33)
@@ -472,7 +473,7 @@ const biomasse = (plans, N) => N.reduce((s, n, i) => s + n * (plans[i].masse_kg 
 // (dans un navigateur, un module se charge par sa balise <script>, AVANT orvane.js ; un monde qui a éveillé un mécanisme dont le
 // module manque tournerait sans lui, sans rien dire : on le dit, une fois — docs/19)
 const MODULES = [['mere', SYN, 'synthetique'], ['flore', FLO, 'flore'], ['pathogenes', PAT, 'pathogenes'], ['milieu', MIL, 'milieu'], ['ponte', PON, 'ponte'], ['stades', STA, 'stades'], ['invention', INV, 'invention'],
-  ['natures', NAT, 'natures'], ['derives', DER, 'derives'], ['dietes', DI, 'dietes'], ['climat', CLI, 'climat'], ['meteo', MET, 'meteo'], ['phenologie', PHE, 'phenologie'], ['succession', SUC, 'succession'], ['grammaire', GRA, 'grammaire'], ['castes', CAS, 'castes'], ['formes', FOR, 'formes'], ['esprit', ESP, 'esprit']], AVERTIS = new Set();
+  ['natures', NAT, 'natures'], ['derives', DER, 'derives'], ['dietes', DI, 'dietes'], ['climat', CLI, 'climat'], ['meteo', MET, 'meteo'], ['phenologie', PHE, 'phenologie'], ['succession', SUC, 'succession'], ['diversite', DIV, 'diversite'], ['grammaire', GRA, 'grammaire'], ['castes', CAS, 'castes'], ['formes', FOR, 'formes'], ['esprit', ESP, 'esprit']], AVERTIS = new Set();
 function cycle(inst, pressions = {}, opt = {}) {
   for (const [cle, M, f] of MODULES) if (inst?.monde?.[cle] && !M && !AVERTIS.has(cle)) { AVERTIS.add(cle); if (typeof console !== 'undefined') console.warn(`Orvane : ce monde a éveillé « ${cle} », mais moteur/${f}.js n'est pas chargé (avant orvane.js) : ce mécanisme est ignoré (docs/19).`); }
   const propres = inst?.monde?.regles, M = inst?.catalogue?.monde, avant = {}, ax = AX, ext = CORPS?.etendre ? CORPS.etendre(M) : null;
@@ -946,6 +947,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   if ((INV && inst.monde?.invention) || (GRA && inst.monde?.grammaire)) for (const t of sortie) if (!t.eteint && t.phenotypes.length > REGLES.max_phenotypes) plafonner(t, REGLES.max_phenotypes);
   if (SF && DER && inst.monde?.derives) { const r = DER.diviser(plantes, { n, ids: new Set([...inst.taxons, ...sortie, ...plantes].map(t => t.id)), noms: Object.fromEntries(Object.values(biomes).map(b => [b.id, b.nom || b.id])), flore: inst.monde.flore?.lignees });   // (docs/29) des plantes qui se séparent
     plantes.push(...r.neuves); ev.push(...r.evenements); }
+  let SDi = null; if (SF && DIV && inst.monde?.diversite) { SDi = DIV.vivre(plantes, { n, biomes, monde: inst.monde, ids: new Set([...inst.taxons, ...sortie, ...plantes].map(t => t.id)) }); ev.push(...SDi.evenements); }   // (docs/48) la flore riche : la place, les séparations, les lieux gagnés, les extinctions
   if (SF) sortie.push(...SF.ecrire());   // les plantes (docs/17)
 
   // 7. le catalogue de l'instantané : les traits réellement portés
@@ -954,9 +956,9 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   const ORD = Object.keys(CAT.TRAITS), traits = {}; for (const id of [...portes].sort((x, y) => ((ORD.indexOf(x) + 1) || 999) - ((ORD.indexOf(y) + 1) || 999) || (x < y ? -1 : 1))) traits[id] = clone(cat[id]);   // (une copie : un jeu qui modifie l'instantané reçu ne touche pas au catalogue du moteur)
   const duree = opt.duree_ms ?? 86400000, d0 = Date.parse(inst.cycle.date);
   return {
-    orvane: CONTRAT, monde: (m => m === inst.monde ? clone(m) : m)((m => SP ? SP.monde(m) : m)((m => SY ? SY.monde(m) : m)(SN ? SN.monde(SC ? SC.monde(inst.monde) : inst.monde) : SC ? SC.monde(inst.monde) : inst.monde))),
+    orvane: CONTRAT, monde: (m => m === inst.monde ? clone(m) : m)((m => SDi ? SDi.monde(m) : m)((m => SP ? SP.monde(m) : m)((m => SY ? SY.monde(m) : m)(SN ? SN.monde(SC ? SC.monde(inst.monde) : inst.monde) : SC ? SC.monde(inst.monde) : inst.monde)))),
     cycle: { n, date: new Date((Number.isFinite(d0) ? d0 : 0) + duree).toISOString(), pressions_recues: pressions.nombre ?? 0, ...(saison ? { saison } : {}) },
-    biomes: Object.values(biomes).map(b => phase == null ? b : { ...b, axes_saison: axesSaison(b, phase) }), catalogue: { version: inst.catalogue?.version || '0.1', traits, ...(GEN ? { quantitatifs: clone(QUANT) } : {}), organes: CORPS.catalogueOrganes(), ...(SF ? { flore: FLO.TRAITS } : {}), ...(SAV ? { savoirs: SAV } : {}), ...(MC ? { monde: MC } : {}) },
+    biomes: Object.values(biomes).map(b => phase == null ? b : { ...b, axes_saison: axesSaison(b, phase) }), catalogue: { version: inst.catalogue?.version || '0.1', traits, ...(GEN ? { quantitatifs: clone(QUANT) } : {}), organes: CORPS.catalogueOrganes(), ...(SF ? { flore: FLO.TRAITS } : {}), ...(SDi ? { flore_riche: DIV.catalogue() } : {}), ...(SAV ? { savoirs: SAV } : {}), ...(MC ? { monde: MC } : {}) },
     taxons: sortie, evenements: ev
   };
 }

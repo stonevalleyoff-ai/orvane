@@ -383,6 +383,11 @@
             }
           }
         },
+        "diversite": {
+          "type": "object",
+          "description": "(docs/48) La flore riche : depuis quand ; les lignées de plantes vivantes (lignees), celles qui sont nées depuis l'éveil (nees), celles qui se sont éteintes (eteintes).",
+          "properties": { "depuis": { "type": "integer" }, "lignees": { "type": "integer" }, "nees": { "type": "integer" }, "eteintes": { "type": "integer" } }
+        },
         "succession": {
           "type": "object",
           "description": "(docs/47) Les plantes subissent et transforment : depuis quand.",
@@ -1057,6 +1062,11 @@
             "type": "object"
           }
         },
+        "flore_riche": {
+          "type": "object",
+          "description": "(docs/48) La flore riche : ses formes (formes : pour chacune son nom, son port, sa hauteur, sa repousse, son feuillage, ce qu'elle donne, ses caractères) et ses caractères (caracteres : pour chacun son nom, son effet, son coût).",
+          "properties": { "formes": { "type": "object", "additionalProperties": { "type": "object" } }, "caracteres": { "type": "object", "additionalProperties": { "type": "object" } } }
+        },
         "monde": {
           "type": "object",
           "additionalProperties": false,
@@ -1724,10 +1734,77 @@
                   "algue",
                   "lichen",
                   "succulente",
-                  "champignon"
+                  "champignon",
+                  "conifere",
+                  "palmier",
+                  "paletuvier",
+                  "bouteille",
+                  "geant",
+                  "fruitier",
+                  "pionnier",
+                  "fougere_arbre",
+                  "bruyere",
+                  "ronce",
+                  "liane",
+                  "baies",
+                  "epine",
+                  "aromatique",
+                  "fougere",
+                  "fleur",
+                  "cereale",
+                  "legumineuse",
+                  "bulbe",
+                  "hautes_herbes",
+                  "coussin",
+                  "mousse",
+                  "sphaigne",
+                  "bambou",
+                  "papyrus",
+                  "jonc",
+                  "riz",
+                  "varech",
+                  "herbier",
+                  "plancton",
+                  "nenuphar",
+                  "lentille",
+                  "algue_glace",
+                  "lichen_rennes",
+                  "lichen_croute",
+                  "cactus",
+                  "agave",
+                  "caillou",
+                  "champignon_geant",
+                  "champignon_lumineux",
+                  "moisissure",
+                  "emergent",
+                  "figuier",
+                  "sous_bois",
+                  "orchidee",
+                  "bromelia",
+                  "grande_herbe"
                 ],
-                "description": "Une plante (docs/17) : sa forme, qui dit qui l'atteint."
+                "description": "Une plante (docs/17) : sa forme. Les huit premières sont celles d'origine ; les autres, celles de la flore riche (docs/48), qui disent leur port (plan.port). D'autres pourront venir : un jeu qui n'en connaît pas une la montre comme son port."
               },
+              "port": {
+                "enum": ["herbe", "buisson", "arbre", "roseau", "algue", "lichen", "succulente", "champignon"],
+                "description": "(docs/48) Une plante de la flore riche : son port, ce qu'elle est pour la mécanique et pour un jeu qui ne connaît pas sa forme (un palmier est un arbre, une fougère une herbe). Absent : le port est la forme."
+              },
+              "caracteres": {
+                "type": "array", "items": { "type": "string" },
+                "description": "(docs/48) Les caractères que la lignée porte et transmet (pyrophyte, racines_profondes, bulbe, echasses, mellifere, fruits_charnus, graines_abondantes, coriace, rapide, geante, naine, vent) : catalogue.flore_riche.caracteres dit ce qu'ils font."
+              },
+              "rendement": {
+                "type": "object", "additionalProperties": { "type": "number" },
+                "description": "(docs/48) Ce que la plante donne de chaque part, rapporté à son poids (feuilles, fruits, graines, nectar). Absent : ce que donne son port (docs/30)."
+              },
+              "sinistres": {
+                "type": "object", "additionalProperties": { "type": "number" },
+                "description": "(docs/48) Ce que ses caractères font aux pieds qu'une catastrophe lui prend (incendie, crue, secheresse) : 0,3, trois fois moins ; 1,2, un cinquième de plus (docs/47)."
+              },
+              "appetence": { "type": "number", "description": "(docs/48) Ce que les brouteurs en mangent, rapporté à une plante ordinaire (0,75 : des feuilles coriaces)." },
+              "vent": { "type": "boolean", "description": "(docs/48) Le vent la féconde : sa repousse ne dépend pas des butineurs." },
+              "feminin": { "type": "boolean", "description": "(docs/48) Le nom de sa forme est féminin (une fougère, une liane) : pour accorder ce qu'on en dit." },
+              "cle": { "type": "string", "description": "(docs/48) Ce qui distingue la lignée devant un brouteur (son port, sa hauteur, ce qu'elle donne) : deux lignées de même clé se mangent pareil." },
               "hauteur_m": {
                 "type": "number",
                 "minimum": 0,

@@ -42,6 +42,7 @@
 <script src="../moteur/climat.js"></script>
 <script src="../moteur/meteo.js"></script>
 <script src="../moteur/succession.js"></script>
+<script src="../moteur/diversite.js"></script>
 <script src="../moteur/grammaire.js"></script>
 <script src="../moteur/castes.js"></script>
 <script src="../moteur/formes.js"></script>
@@ -79,7 +80,7 @@ const plantesDe = I => [...I.taxons, ...(I === inst() && E.flore?.taxons || [])]
 const nomEsp = t => t ? (t.nom_commun || t.nom || t.id) : '';   // (docs/37) le nom commun qu'un joueur lui a donné, sinon celui du moteur
 // les fichiers que le moteur charge dans un Web Worker pour simuler sans figer la page (les mêmes que les balises <script> ci-dessus)
 const MODULES = ['moteur/catalogue.js', 'moteur/corps.js', 'moteur/dietes.js', 'moteur/phenologie.js', 'moteur/flore.js', 'moteur/derives.js', 'moteur/pathogenes.js', 'moteur/milieu.js', 'moteur/synthetique.js',
-  'moteur/ponte.js', 'moteur/stades.js', 'moteur/invention.js', 'moteur/natures.js', 'moteur/climat.js', 'moteur/meteo.js', 'moteur/succession.js', 'moteur/grammaire.js', 'moteur/castes.js', 'moteur/formes.js', 'moteur/esprit.js', 'moteur/orvane.js'];
+  'moteur/ponte.js', 'moteur/stades.js', 'moteur/invention.js', 'moteur/natures.js', 'moteur/climat.js', 'moteur/meteo.js', 'moteur/succession.js', 'moteur/diversite.js', 'moteur/grammaire.js', 'moteur/castes.js', 'moteur/formes.js', 'moteur/esprit.js', 'moteur/orvane.js'];
 const SAISON_EN = { printemps: 'au printemps', 'été': 'en été', automne: 'en automne', hiver: 'en hiver' }, enSaison = nom => SAISON_EN[nom] || `en ${nom}`;
 const cyc = n => String(n).replace('-', '−');   // un cycle d'avant le cycle 0 (la genèse) : avec un vrai signe moins
 // une lignée née pendant la genèse : avant le cycle 0 (apparu négatif) ; ou, dans un monde publié avant que ses dates soient recalées,
@@ -216,6 +217,12 @@ function mecanismesHTML(I) {
     for (const p of L) T[p.meteo.temps] = (T[p.meteo.temps] || 0) + 1;
     const dits = Object.entries(T).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${ESC(NOMS[k] || k)} sur ${v}`), neige = L.filter(p => p.meteo.neige > 0).length, sec = L.filter(p => p.meteo.secheresse >= .5).length;
     if (L.length) carte('La météo', `le temps du cycle, sur ${accordN(L.length, 'lieu', 'lieux')} : ${dits.join(', ')}. ${neige ? `${accordN(neige, 'lieu est', 'lieux sont')} sous la neige.` : 'Pas de neige au sol.'}${sec ? ` Une sécheresse est installée sur ${sec}.` : ''}`, 'docs/45'); }
+  if (M.diversite) { const F = plantesDe(I), D = M.diversite, formes = {}, lieux = {}, car = {}, cat = I.catalogue?.flore_riche || {};
+    for (const t of F) { formes[t.plan.forme] = (formes[t.plan.forme] || 0) + 1; for (const p of t.populations) (lieux[p.biome] ??= new Set()).add(t.id); for (const c of t.plan.caracteres || []) car[c] = (car[c] || 0) + 1; }
+    const riches = Object.entries(lieux).sort((a, b) => b[1].size - a[1].size), nomF = f => cat.formes?.[f]?.nom || f, nomC = c => cat.caracteres?.[c]?.nom || c;
+    const dits = Object.entries(formes).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([f, k]) => `${ESC(nomF(f))} (${k})`), cars = Object.entries(car).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([c, k]) => `« ${ESC(nomC(c))} » (${k})`);
+    carte('La flore riche', F.length ? `${accordN(F.length, 'lignée de plantes', 'lignées de plantes')}, de ${accordN(Object.keys(formes).length, 'forme', 'formes')} : ${dits.join(', ')}… ${riches.length ? `Le lieu le plus riche, ${ESC(nomLieu(riches[0][0]))}, en porte ${riches[0][1].size} ; le plus pauvre, ${ESC(nomLieu(riches[riches.length - 1][0]))}, ${riches[riches.length - 1][1].size}.` : ''}${cars.length ? ` Leurs caractères : ${cars.join(', ')}.` : ''} Depuis l'éveil, ${accordN(D.nees || 0, 'lignée est née', 'lignées sont nées')} et ${accordN(D.eteintes || 0, 's\'est éteinte', 'se sont éteintes')}.`
+      : `${accordN(D.lignees || 0, 'lignée de plantes vivante', 'lignées de plantes vivantes')} ; ${accordN(D.nees || 0, 'née', 'nées')} depuis l'éveil, ${accordN(D.eteintes || 0, 'éteinte', 'éteintes')}. (Les plantes sont publiées à part, dans flore.json.)`, 'docs/48'); }
   if (M.mere) { const Mq = V.filter(t => t.plan.regime === 'synthetique'), n = Mq.reduce((a, t) => a + effectif(t), 0), mem = M.mere.memoire || {}, cause = Object.entries(mem).filter(([k, v]) => typeof v === 'number' && !k.startsWith('masse')).sort((a, b) => b[1] - a[1])[0];
     carte('La Mère et ses machines', `${ESC(M.mere.nom || 'La Mère')}, au ${ESC(nomLieu(M.mere.biome))}, a ${accordN(Mq.length, 'plan en service', 'plans en service')} et ${accordN(n, 'machine', 'machines')} ; ${M.mere.conceptions ? `elle en a conçu ${accordN(M.mere.conceptions, 'nouveau', 'nouveaux')}` : 'elle n\'en a encore conçu aucun nouveau'}${M.mere.conceptions && cause && cause[1] > 0 ? `, surtout contre ${({ usure: 'l\'usure', energie: 'le manque d\'énergie', catastrophe: 'les catastrophes', joueurs: 'les joueurs', debord: 'les espèces qui débordent' })[cause[0]] || cause[0]}` : ''}.`, 'docs/16'); }
   if (M.pathogenes) { const S = Object.entries(M.pathogenes.souches || {}).map(([id, s]) => ({ id, ...s })), act = S.filter(s => (s.infectes || 0) > 0).sort((a, b) => b.infectes - a.infectes);

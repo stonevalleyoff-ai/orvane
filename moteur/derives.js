@@ -58,7 +58,7 @@ function diviser(plantes, ctx) {
       // la part défendue part : elle emporte sa part de la place, de l'effectif, de la référence (la nourriture des brouteurs reste continue)
       const q = f[k], fq = [0, 0, 0, 0].map((_, i) => i === k ? .9 : .1 / 3), reste = f.map((x, i) => i === k ? 0 : x), sr = reste.reduce((a, x) => a + x, 0) || 1;
       let id = `${t.id}-${k === 1 ? 'tox' : k === 2 ? 'epi' : 'def'}`, j = 2; while (ids.has(id)) id = `${t.id}-${k === 1 ? 'tox' : k === 2 ? 'epi' : 'def'}-${j++}`; ids.add(id);
-      const forme = t.plan.forme, nom = (SYL[Math.floor(R() * SYL.length)] + SYL[Math.floor(R() * SYL.length)]).replace(/^./, c => c.toUpperCase()), d = DEF[k][FEM.has(forme) ? 1 : 0];
+      const forme = t.plan.forme, nom = (SYL[Math.floor(R() * SYL.length)] + SYL[Math.floor(R() * SYL.length)]).replace(/^./, c => c.toUpperCase()), d = DEF[k][(t.plan.feminin ?? FEM.has(forme)) ? 1 : 0];
       // (tout ce qui mesure une place se partage : l'effectif, le potentiel, et ceux de la référence — le milieu recalcule chaque
       //  cycle le potentiel d'après reference.potentiel ; sans ce partage, la mère et la fille reprenaient chacune toute la place.
       //  Les fréquences de la référence restent celles de la mère : la nourriture de référence des brouteurs ne bouge pas)

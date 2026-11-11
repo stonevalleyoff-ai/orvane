@@ -21,6 +21,7 @@ moteur/derives.js     les dérives : des régimes qui changent, des plantes qui 
 moteur/dietes.js      les régimes en spectre : feuilles, fruits, graines, nectar, insectes, viande, sang (docs/30)
 moteur/climat.js      le climat et la géologie lente : les âges glaciaires, les ponts de terre, les îles des volcans (docs/31)
 moteur/phenologie.js  les saisons des plantes : le feuillage caduc ou persistant, la pousse à la belle saison, le nectar, les fruits et les graines en leur saison, le stade de chaque plante (docs/46)
+moteur/diversite.js   la flore riche : quarante-sept formes de plantes, douze caractères hérités, la radiation, la concurrence pour la place, la colonisation, les extinctions (docs/48)
 moteur/succession.js  les plantes sous le feu : les catastrophes et le sec leur prennent des pieds, l'herbe puis les buissons reprennent la place des arbres, le couvert suit les arbres (docs/47)
 moteur/meteo.js       la météo : le temps du cycle dans chaque lieu, parcelle par parcelle (la pluie, la neige, le gel, les orages, les canicules) (docs/45)
 moteur/grammaire.js   la grammaire des effets et des conduites : une lueur qui attire, une décharge qui foudroie, un musc qui repousse (docs/32)
@@ -74,6 +75,7 @@ bancs/derives.js      le banc des dérives : un pas de régime, une herbe épine
 bancs/dietes.js       le banc des régimes en spectre : le mangeur de fruits qui sème, le mangeur d'insectes, le buveur de sang
 bancs/climat.js       le banc du climat : un âge glaciaire, un pont de terre, une île qui se peuple
 bancs/phenologie.js   le banc des saisons des plantes : une forêt nue, en fleurs, en fruits ; les butineurs et les mangeurs de fruits au fil de l'année
+bancs/diversite.js    le banc de la flore riche : de 54 à 257 lignées de plantes ; qui mange quoi ; le feu qui trie les caractères ; la place qui se dispute
 bancs/succession.js   le banc de la succession : une forêt brûlée, l'herbe, les buissons, puis les arbres ; le couvert qui tombe et revient
 bancs/meteo.js        le banc de la météo : des fronts qui passent, une sécheresse qui s'installe, la vie qui suit le temps
 bancs/grammaire.js    le banc de la grammaire : qui peut dire quoi, où ça porte, des phrases variées, la sélection

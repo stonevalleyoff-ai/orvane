@@ -159,6 +159,13 @@ export interface Instantane {
     meteo?: {
       depuis?: number;
     };
+    /** (docs/48) La flore riche : depuis quand ; les lignées de plantes vivantes (lignees), celles qui sont nées depuis l'éveil (nees), celles qui se sont éteintes (eteintes). */
+    diversite?: {
+      depuis?: number;
+      lignees?: number;
+      nees?: number;
+      eteintes?: number;
+    };
     /** (docs/47) Les plantes subissent et transforment : depuis quand. */
     succession?: {
       depuis?: number;
@@ -420,6 +427,19 @@ export interface Instantane {
         [cle: string]: unknown;
       };
     };
+    /** (docs/48) La flore riche : ses formes (formes : pour chacune son nom, son port, sa hauteur, sa repousse, son feuillage, ce qu'elle donne, ses caractères) et ses caractères (caracteres : pour chacun son nom, son effet, son coût). */
+    flore_riche?: {
+      formes?: {
+        [cle: string]: {
+          [cle: string]: unknown;
+        };
+      };
+      caracteres?: {
+        [cle: string]: {
+          [cle: string]: unknown;
+        };
+      };
+    };
     /** Le catalogue propre du monde (docs/20) : ses axes, ses traits, ses organes, ses formes de corps. Ils s'ajoutent à ceux du moteur, sans les remplacer. Un traducteur y lit ce que le monde a de plus que les autres. */
     monde?: {
       nom?: string;
@@ -622,8 +642,28 @@ export interface Instantane {
       role?: "regulateur" | "foreuse" | "recycleur" | "capteur";
       /** La famille de la lignée, si elle n'est pas animale (docs/16, docs/17). Un jeu ne reçoit que les familles qu'il demande (Tampon.filtrer). */
       famille?: "animale" | "synthetique" | "vegetale";
-      /** Une plante (docs/17) : sa forme, qui dit qui l'atteint. */
-      forme?: "herbe" | "buisson" | "arbre" | "roseau" | "algue" | "lichen" | "succulente" | "champignon";
+      /** Une plante (docs/17) : sa forme. Les huit premières sont celles d'origine ; les autres, celles de la flore riche (docs/48), qui disent leur port (plan.port). D'autres pourront venir : un jeu qui n'en connaît pas une la montre comme son port. */
+      forme?: "herbe" | "buisson" | "arbre" | "roseau" | "algue" | "lichen" | "succulente" | "champignon" | "conifere" | "palmier" | "paletuvier" | "bouteille" | "geant" | "fruitier" | "pionnier" | "fougere_arbre" | "bruyere" | "ronce" | "liane" | "baies" | "epine" | "aromatique" | "fougere" | "fleur" | "cereale" | "legumineuse" | "bulbe" | "hautes_herbes" | "coussin" | "mousse" | "sphaigne" | "bambou" | "papyrus" | "jonc" | "riz" | "varech" | "herbier" | "plancton" | "nenuphar" | "lentille" | "algue_glace" | "lichen_rennes" | "lichen_croute" | "cactus" | "agave" | "caillou" | "champignon_geant" | "champignon_lumineux" | "moisissure" | "emergent" | "figuier" | "sous_bois" | "orchidee" | "bromelia" | "grande_herbe";
+      /** (docs/48) Une plante de la flore riche : son port, ce qu'elle est pour la mécanique et pour un jeu qui ne connaît pas sa forme (un palmier est un arbre, une fougère une herbe). Absent : le port est la forme. */
+      port?: "herbe" | "buisson" | "arbre" | "roseau" | "algue" | "lichen" | "succulente" | "champignon";
+      /** (docs/48) Les caractères que la lignée porte et transmet (pyrophyte, racines_profondes, bulbe, echasses, mellifere, fruits_charnus, graines_abondantes, coriace, rapide, geante, naine, vent) : catalogue.flore_riche.caracteres dit ce qu'ils font. */
+      caracteres?: string[];
+      /** (docs/48) Ce que la plante donne de chaque part, rapporté à son poids (feuilles, fruits, graines, nectar). Absent : ce que donne son port (docs/30). */
+      rendement?: {
+        [cle: string]: number;
+      };
+      /** (docs/48) Ce que ses caractères font aux pieds qu'une catastrophe lui prend (incendie, crue, secheresse) : 0,3, trois fois moins ; 1,2, un cinquième de plus (docs/47). */
+      sinistres?: {
+        [cle: string]: number;
+      };
+      /** (docs/48) Ce que les brouteurs en mangent, rapporté à une plante ordinaire (0,75 : des feuilles coriaces). */
+      appetence?: number;
+      /** (docs/48) Le vent la féconde : sa repousse ne dépend pas des butineurs. */
+      vent?: boolean;
+      /** (docs/48) Le nom de sa forme est féminin (une fougère, une liane) : pour accorder ce qu'on en dit. */
+      feminin?: boolean;
+      /** (docs/48) Ce qui distingue la lignée devant un brouteur (son port, sa hauteur, ce qu'elle donne) : deux lignées de même clé se mangent pareil. */
+      cle?: string;
       /** Une plante : sa hauteur. */
       hauteur_m?: number;
       /** (docs/46) Un arbre ou un buisson, dans un monde où les plantes ont leurs saisons : caduc (il perd ses feuilles l'hiver) ou persistant. */
@@ -985,6 +1025,8 @@ export interface Profil {
     formes?: boolean;
     /** La grammaire des effets et des conduites (docs/32) : le cycle de nuit l'éveille, une fois ; le monde compose des traits d'un genre neuf (une lueur qui attire, une décharge qui foudroie, un cri qui alerte, une odeur qui repousse). */
     grammaire?: boolean;
+    /** La flore riche (docs/48) : le cycle de nuit l'éveille, une fois, dans un monde qui a une flore ; quarante formes de plantes de plus (conifère, palmier, fougère, liane, bambou, cactus, varech, plancton…), douze caractères hérités, et une flore qui vit : les lignées se disputent la place, se séparent, gagnent les lieux voisins, s'éteignent. */
+    diversite?: boolean;
     /** Les plantes subissent et transforment (docs/47) : le cycle de nuit l'éveille, une fois, dans un monde qui a une flore ; le feu, la crue et le sec prennent des pieds aux plantes, l'herbe puis les buissons reprennent la place des arbres disparus, et le couvert d'un lieu suit ses arbres (avec le milieu, docs/22). */
     succession?: boolean;
     /** Les saisons des plantes (docs/46) : le cycle de nuit les éveille, une fois, dans un monde qui a une flore et une année ; les arbres caducs perdent leurs feuilles, la pousse suit la belle saison et le temps qu'il fait, le nectar, les fruits et les graines ont leur saison. */
