@@ -53,6 +53,10 @@ var duree_lancement_ms := 0.0     # le temps pris au lancement (_ready)
 var duree_preparation_ms := 0.0   # le temps pris, image après image, à préparer les sons
 var preparation_finie_ms := -1.0  # quand la file s'est vidée (depuis le lancement)
 
+# sur un téléphone (jeu.qualite « mobile ») : aucun son ne se fabrique pendant la partie, ils se font tous avant (le jeu attend
+# restant() == 0 au chargement du lieu) ; sinon un son fait d'un coup, en GDScript, fige l'image un instant
+var mobile := false
+
 var _r := RandomNumberGenerator.new()
 var _web := false
 var _prets := {}
@@ -276,7 +280,8 @@ func _process(delta: float) -> void:
 	var en_partie: bool = jeu != null and "en_partie" in jeu and jeu.en_partie
 	# la file : plus large hors partie (titre, chargement), étroite en partie (un son par image au plus)
 	_repos = maxf(0.0, _repos - dt)
-	_preparer(8000 if not en_partie else 2500, en_partie)
+	if not (mobile and en_partie):
+		_preparer(8000 if not en_partie else 2500, en_partie)
 	# l'écran-titre : le vent, et le thème
 	var titre: bool = not en_partie and jeu != null and "essai" in jeu and jeu.essai == null and (_titre_dit or _ecran_titre(jeu))
 	if titre and not _titre:
@@ -377,6 +382,16 @@ func maj(jeu, delta: float) -> void:
 
 # --- la partie ---
 
+# ce qui reste à fabriquer (0 : tout est prêt)
+func restant() -> int:
+	return _file.size() + (1 if _travail != null else 0)
+
+
+# avant une partie : les sons de ce lieu (ses pas, ses grenouilles) entrent dans la file, pour être prêts quand on y joue
+func preparer_lieu(axes: Dictionary) -> void:
+	_lieu(axes, float(axes.get("temperature", 0.5)) < 0.35)
+
+
 func _nouvelle_partie(jeu, j) -> void:
 	_joueur = j
 	var axes: Dictionary = jeu.biome_info.get("axes", {}) if "biome_info" in jeu else {}
@@ -385,6 +400,22 @@ func _nouvelle_partie(jeu, j) -> void:
 		froid = bool(jeu.monde.palette.get("froid", false))
 	else:
 		froid = float(axes.get("temperature", 0.5)) < 0.35
+	_lieu(axes, froid)
+	_pas_signal = false
+	if j.has_signal("pas") and not j.is_connected("pas", pas):
+		j.connect("pas", pas)
+		_pas_signal = true
+	_feux.clear()
+	_nuit_entiere = false
+	_nuits = jeu.nuits
+	_mort = -1.0
+	_ambiance.nouvelle_partie(_traits)
+	_musique.vider()
+	_musique._attente = 30.0
+
+
+# le lieu : ses traits, le sol sous les pieds, et ses sons demandés
+func _lieu(axes: Dictionary, froid: bool) -> void:
 	_traits = {"couvert": float(axes.get("couvert", 0.4)), "humide": float(axes.get("humidite", 0.5)),
 		"temp": float(axes.get("temperature", 0.5)), "froid": froid}
 	# le sol sous les pieds : la neige s'il fait froid, des feuilles sous le couvert, de la terre sèche dans l'ouvert
@@ -408,17 +439,6 @@ func _nouvelle_partie(jeu, j) -> void:
 		devant.append_array(["grenouille0", "grenouille1"])
 	for nom in devant:
 		_demander(nom, false)
-	_pas_signal = false
-	if j.has_signal("pas") and not j.is_connected("pas", pas):
-		j.connect("pas", pas)
-		_pas_signal = true
-	_feux.clear()
-	_nuit_entiere = false
-	_nuits = jeu.nuits
-	_mort = -1.0
-	_ambiance.nouvelle_partie(_traits)
-	_musique.vider()
-	_musique._attente = 30.0
 
 
 # le vent : une respiration lente pour tout le lieu, et des rafales ; plus de feuilles sous le couvert, plus froid s'il gèle

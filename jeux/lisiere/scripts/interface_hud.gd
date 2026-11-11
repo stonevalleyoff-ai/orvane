@@ -34,7 +34,20 @@ class Ressort:
 
 # --- les jauges ---
 
-class Jauges extends Control:
+# ce qui se redessine de soi-même, image après image ; sur un téléphone (interface.alleger), au plus vingt fois par seconde : c'est
+# assez pour l'œil, et le texte coûte cher à redessiner
+class Allege extends Control:
+	var cadence := 0.0
+	var _depuis_dessin := 0.0
+
+	func _redessiner(d: float) -> void:
+		_depuis_dessin += d
+		if _depuis_dessin >= cadence:
+			_depuis_dessin = 0.0
+			queue_redraw()
+
+
+class Jauges extends Allege:
 	const COULEURS := [Color("d0553a"), Color("e3a04f"), Color("9a80e6")]
 	const NOMS := ["Santé", "Faim", "Peur"]
 	const ICONES := ["coeur", "baies", "oeil"]
@@ -96,7 +109,7 @@ class Jauges extends Control:
 				_trace[i] = _vu[i]
 		_secousse = maxf(0.0, _secousse - d * 2.2)
 		_eclair = maxf(0.0, _eclair - d * 1.8)
-		queue_redraw()
+		_redessiner(d)
 
 	# un battement de cœur (deux coups, puis rien), de période p
 	static func battement(t: float, p: float) -> float:
@@ -169,7 +182,7 @@ class Jauges extends Control:
 
 # --- l'heure : le cadran ---
 
-class Cadran extends Control:
+class Cadran extends Allege:
 	var compact := false
 	var nuit := false
 	var u := 0.0               # le chemin fait, du lever au coucher (ou du soir au matin)
@@ -193,7 +206,7 @@ class Cadran extends Control:
 	func _process(d: float) -> void:
 		if is_visible_in_tree():
 			_t += d
-			queue_redraw()
+			_redessiner(d)
 
 	# l'arc du ciel, l'horizon, l'astre qui passe (le soleil jusqu'au soir, la lune jusqu'au matin)
 	func _arc(c: Vector2, r: float, isz: float) -> void:
@@ -279,7 +292,7 @@ class Compteurs extends Control:
 
 # --- le sac ---
 
-class Sac extends Control:
+class Sac extends Allege:
 	const CASES := ["bois", "pierre", "fibre", "baies", "viande", "viande_cuite", "torche", "lance"]
 	var compact := false
 	var quantites := {}
@@ -361,7 +374,7 @@ class Sac extends Control:
 		for k in CASES:
 			_ressorts[k].avancer(d)
 			_eclats[k] = maxf(0.0, float(_eclats[k]) - d * 2.4)
-		queue_redraw()
+		_redessiner(d)
 
 	func _draw() -> void:
 		var r := _rayon()
@@ -396,7 +409,7 @@ class Sac extends Control:
 
 # --- une recette, en petite carte ---
 
-class Recette extends Control:
+class Recette extends Allege:
 	var cle := ""
 	var compact := false
 	var tactile := false
@@ -444,7 +457,7 @@ class Recette extends Control:
 			if _vague > 1.0:
 				_vague = -1.0
 		_ressort.avancer(d)
-		queue_redraw()
+		_redessiner(d)
 
 	func _draw() -> void:
 		var rec: Dictionary = R.RECETTES[cle]

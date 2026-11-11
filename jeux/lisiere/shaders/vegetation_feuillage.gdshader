@@ -16,6 +16,8 @@ shader_type canvas_item;
 
 uniform float temps = 0.0;
 uniform float souplesse = 1.0;
+// sur un téléphone : les feuillages et les pierres sans leurs cellules (le dôme et les trois tons restent), bien moins cher au pixel
+uniform bool simple = false;
 
 varying vec2 v_local;
 varying vec2 v_pied;
@@ -84,30 +86,38 @@ void fragment() {
 		// un feuillage : le grand dôme, et ses touffes (des cellules d'environ 11 pixels), chacune éclairée en haut à gauche
 		vec2 q = UV - vec2(3.0);
 		float l0 = dot(normalize(dome(q * 0.92)), LUMIERE);
-		vec2 vers;
-		float d1;
-		float d2;
-		vec2 cle;
-		cellules(v_local / 12.5 + v_pied * 0.017, vers, d1, d2, cle);
-		vec2 o = -vers / 0.6;
-		float l1 = dot(normalize(dome(o * 0.95)), LUMIERE);
-		float creux = 1.0 - smoothstep(0.0, 0.13, d2 - d1);
-		float l = l0 * 0.85 + l1 * 0.5 - 0.36 + n * 0.22 - creux * 0.5 * smoothstep(-0.7, 0.3, -l0);
-		c = peindre(base * (0.93 + 0.14 * vent_hash(cle)), l);
+		if (simple) {
+			c = peindre(base, l0 * 0.95 - 0.12 + n * 0.3);
+		} else {
+			vec2 vers;
+			float d1;
+			float d2;
+			vec2 cle;
+			cellules(v_local / 12.5 + v_pied * 0.017, vers, d1, d2, cle);
+			vec2 o = -vers / 0.6;
+			float l1 = dot(normalize(dome(o * 0.95)), LUMIERE);
+			float creux = 1.0 - smoothstep(0.0, 0.13, d2 - d1);
+			float l = l0 * 0.85 + l1 * 0.5 - 0.36 + n * 0.22 - creux * 0.5 * smoothstep(-0.7, 0.3, -l0);
+			c = peindre(base * (0.93 + 0.14 * vent_hash(cle)), l);
+		}
 	} else if (UV.x > 5.5 && UV.x < 8.5) {
 		// une pierre : des facettes planes, chacune tournée un peu autrement, sur un dôme
 		vec2 q = UV - vec2(7.0);
-		vec2 vers;
-		float d1;
-		float d2;
-		vec2 cle;
-		cellules(q * 1.7 + v_pied * 0.03, vers, d1, d2, cle);
-		vec3 nf = normalize(vec3(vent_hash(cle) - 0.5, vent_hash(cle + 3.1) - 0.5, 0.0) * 0.8 + dome(q * 0.9) * 1.2);
-		float arete = 1.0 - smoothstep(0.0, 0.05, d2 - d1);
-		float l = dot(nf, LUMIERE) - 0.12 + n * 0.12 + arete * 0.12;
-		float grain = vent_hash(floor(v_local * 1.1));
-		c = peindre(base * (0.96 + 0.08 * grain), l);
-		c *= 1.0 - arete * 0.18 * smoothstep(0.0, -0.5, l);
+		if (simple) {
+			c = peindre(base, dot(normalize(dome(q * 0.9)), LUMIERE) - 0.12 + n * 0.12);
+		} else {
+			vec2 vers;
+			float d1;
+			float d2;
+			vec2 cle;
+			cellules(q * 1.7 + v_pied * 0.03, vers, d1, d2, cle);
+			vec3 nf = normalize(vec3(vent_hash(cle) - 0.5, vent_hash(cle + 3.1) - 0.5, 0.0) * 0.8 + dome(q * 0.9) * 1.2);
+			float arete = 1.0 - smoothstep(0.0, 0.05, d2 - d1);
+			float l = dot(nf, LUMIERE) - 0.12 + n * 0.12 + arete * 0.12;
+			float grain = vent_hash(floor(v_local * 1.1));
+			c = peindre(base * (0.96 + 0.08 * grain), l);
+			c *= 1.0 - arete * 0.18 * smoothstep(0.0, -0.5, l);
+		}
 	} else if (UV.x > 9.5 && UV.x < 12.5) {
 		// une écorce : un cylindre éclairé à gauche, des fibres sombres en long
 		float x = clamp(UV.x - 11.0, -1.0, 1.0);

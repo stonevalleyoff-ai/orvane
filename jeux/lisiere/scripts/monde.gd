@@ -81,6 +81,8 @@ func creer_sol(biome: Dictionary, graine: int) -> Node2D:
 	_mobile = jeu != null and str(jeu.get("qualite")) == "mobile"
 	_terrain = Decor.terrain(graine)
 	Objet.matieres()
+	Objet.vegetation.set_shader_parameter("simple", _mobile)
+	Objet.fixe.set_shader_parameter("simple", _mobile)
 	Objet.climat = {"froid": float(_parts["froid"]), "humide": float(_parts["humide"])}
 	_racine = Node2D.new()
 	_mat_sol = ShaderMaterial.new()

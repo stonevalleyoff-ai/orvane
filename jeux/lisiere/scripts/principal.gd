@@ -87,6 +87,7 @@ func _ready() -> void:
 	effets.jeu = self
 	add_child(effets)
 	sons = Sons.new()
+	sons.mobile = qualite == "mobile"
 	add_child(sons)
 	ui = Interface.new()
 	add_child(ui)
@@ -96,7 +97,10 @@ func _ready() -> void:
 	tactile = Tactile.new()
 	tactile.jeu = self
 	add_child(tactile)
+	if qualite == "mobile":
+		ui.alleger()
 	_charger()
+	_compteur_ips()
 	Orvane.jeu = "lisiere"
 	Orvane.monde = R.MONDE_DES_LOTS
 	Orvane.cle_jeu = R.CLE_JEU
@@ -109,6 +113,35 @@ func _ready() -> void:
 		add_child(essai)
 		return
 	_titre()
+
+
+# le compteur d'images par seconde, discret, en haut au milieu : avec -- --ips, ou ?ips au bout de l'adresse du jeu web
+func _compteur_ips() -> void:
+	var voulu := "--ips" in OS.get_cmdline_user_args()
+	if OS.has_feature("web"):
+		var q = JavaScriptBridge.eval("window.location.search", true)
+		voulu = voulu or (typeof(q) == TYPE_STRING and str(q).contains("ips"))
+	if not voulu:
+		return
+	var couche := CanvasLayer.new()
+	couche.layer = 20
+	add_child(couche)
+	var l := Label.new()
+	l.add_theme_font_size_override("font_size", 13)
+	l.add_theme_color_override("font_color", Color(0.9, 0.95, 0.85))
+	l.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+	l.add_theme_constant_override("outline_size", 4)
+	l.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	l.position.y = 64.0
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	couche.add_child(l)
+	var minuteur := Timer.new()
+	minuteur.wait_time = 0.5
+	minuteur.autostart = true
+	minuteur.timeout.connect(func():
+		var ms := Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0
+		l.text = "%d images/s · %.1f ms de jeu · %s" % [Engine.get_frames_per_second(), ms, qualite])
+	couche.add_child(minuteur)
 
 
 # les touches, posées ici : par leur place sur le clavier (ZQSD sur un clavier français, WASD sur un anglais)
@@ -169,7 +202,18 @@ func _commencer(b: String) -> void:
 	meteo = Orvane.meteo(b)
 	feu_temps = float(R.FEU_TEMPS.get(str(meteo.get("temps", "")), 1.0))
 	allure_temps = R.ALLURE_NEIGE if float(meteo.get("neige", 0.0)) >= R.NEIGE_AU_SOL else 1.0
+	if qualite == "mobile":
+		await _attendre_sons()
 	_nouvelle_partie()
+
+
+# sur un téléphone, les sons se fabriquent avant la partie (sons.gd, mobile) : pendant qu'on joue, ils figeraient l'image
+func _attendre_sons() -> void:
+	sons.preparer_lieu(biome_info.get("axes", {}))
+	var t0 := Time.get_ticks_msec()
+	while sons.restant() > 0 and Time.get_ticks_msec() - t0 < 30000:
+		ui.montrer_chargement("Le lieu s'éveille…\nles sons s'accordent (%d)" % sons.restant())
+		await get_tree().process_frame
 
 
 func _nouvelle_partie() -> void:

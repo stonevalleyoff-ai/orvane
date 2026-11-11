@@ -423,6 +423,13 @@ func blessure() -> void:
 
 # l'écran se joue du doigt (scripts/tactile.gd) : les aides parlent des boutons, tout se resserre (un téléphone tenu à
 # l'horizontale ne montre que 480 de haut), les recettes montent en haut à droite pour laisser la place aux boutons, en bas
+# sur un téléphone : le HUD se redessine au plus vingt fois par seconde (interface_hud.gd, Allege)
+func alleger() -> void:
+	for w in [_jauges, _cadran, _sac] + _recettes.map(func(r): return r[1]):
+		if w != null and "cadence" in w:
+			w.cadence = 1.0 / 20.0
+
+
 func passer_au_tactile() -> void:
 	tactile = true
 	_aide_titre.text = "Le pouce gauche, posé n'importe où à gauche : marcher\nLes boutons à droite : récolter et frapper (Agir), un feu, une torche, une lance, manger, nourrir le feu, cuire"
