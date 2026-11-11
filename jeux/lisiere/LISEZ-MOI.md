@@ -56,7 +56,11 @@ outils/godot.sh --headless --path jeux/lisiere -- --essai             # l'essai 
 outils/godot.sh --headless --path jeux/lisiere -- --essai --en-ligne  # l'essai sur le monde publié
 outils/godot.sh --modeles-web                                         # une fois : les modèles d'export web
 outils/godot.sh --headless --path jeux/lisiere --export-release Web ../../lisiere/index.html   # le jeu dans un navigateur
+outils/godot.sh --path jeux/lisiere -- --vitrine --heure nuit         # la vitrine : une scène jouée toute seule, pour regarder
+jeux/lisiere/outils/film.sh /tmp/film -- --vitrine --heure jour       # la filmer image par image (et sa planche-contact)
 ```
+
+La vitrine (`scripts/vitrine.gd`) met en scène une partie à une heure choisie (`--heure jour|soir|nuit`, `--duree`, `--lieu`, `--mobile`) : le feu, des bêtes de chaque sorte, la veilleuse qui attend, marche, coupe, chasse, cueille, prend une torche, a peur et se fait mordre. `outils/film.sh` la filme avec un vrai rendu, sous un écran virtuel.
 
 L'essai (`scripts/essai.gd`) joue une partie tout seul, en accéléré, et vérifie : le lieu et ses bêtes dessinées, la récolte, les fabrications, la nuit, les chasseurs qui n'entrent pas dans la lumière du feu, la peur dans le noir, les échos, l'aube, la fin, et ce qui est compté pour Orvane. Il sort avec le code 0 si tout passe.
 
@@ -64,7 +68,7 @@ Sans Godot, `node bancs/lisiere.js` vérifie le projet à chaque PR : chaque fic
 
 ## Où en est le jeu
 
-- **Écrit** : le jeu entier (`scripts/`, une douzaine de fichiers), ses sons (faits par le code, au lancement), son essai sans écran, sa configuration d'export web.
+- **Écrit** : le jeu entier (`scripts/`, 39 fichiers, et `shaders/`), ses sons (faits par le code), son essai sans écran, sa vitrine, sa configuration d'export web.
 - **Vérifié à chaque PR** : la syntaxe GDScript 4 de chaque script (`gdtoolkit`) ; le projet et le monde gardé (`bancs/lisiere.js`) ; les planches (`bancs/morceaux.js`).
 - **Vérifié dans Godot 4.3** (le 7 novembre 2026, au cycle 46) :
   - l'essai sans écran passe, sur la copie gardée (5 lieux) comme sur le monde publié (32 lieux, chacun chargé) ;
@@ -74,6 +78,19 @@ Sans Godot, `node bancs/lisiere.js` vérifie le projet à chaque PR : chaque fic
 - **Pas encore vérifié** : une partie jouée par une personne, jusqu'au bout ; le jeu sur un vrai téléphone (au doigt, il n'a été joué que sur un téléphone émulé, dans Chromium, avec de vrais touchers multipoints).
 
 Filmer l'essai (des images PNG, puis les regarder) : `xvfb-run -a outils/godot.sh --path jeux/lisiere --write-movie /tmp/film/f.png --fixed-fps 30 -- --essai`. Pas moins de 30 images par seconde : l'essai joue en accéléré, et à 10 images par seconde la caméra (lissée) s'envole hors du monde.
+
+## Ce qu'on voit, ce qu'on entend
+
+Le jeu a été retravaillé comme par une petite équipe de studio, chacun à son métier, sur une direction artistique commune (`DIRECTION-ARTISTIQUE.md` : l'intention, la palette de `scripts/palette.gd`, comment ça bouge, qui a la charge de quoi). Les règles n'ont pas bougé. Tout est fait par le code : aucune image ni aucun son venus d'ailleurs, sauf deux fontes libres (IM Fell English et Alegreya Sans, licence OFL, dans `polices/`).
+
+- **Le lieu** (`monde.gd`, `objet.gd`, `decor*.gd`) : un sol peint d'après les axes du lieu (terre, mousse, feuilles mortes une à une, neige, boue), cuit par tuiles ; de l'herbe, des fougères et des roseaux qui ondulent au vent et s'écartent devant la veilleuse ; des arbres, sapins, rochers, buissons et touffes à l'encre, qu'on entaille, qu'on abat, qu'on use ; des couronnes qui s'effacent quand on passe dessous ; le décor selon le lieu ; quatre rangs de forêt pour clore le monde.
+- **Les bêtes** (`bete.gd`, `squelette.gd`) : leurs pattes sont lues dans leurs planches et marchent pour de vrai (en diagonale, en trépied, en alternance), sans glisser ; elles respirent, broutent, guettent, fuient en bondissant, se tapissent à l'affût ; frappées, elles sursautent ; tuées, elles s'affaissent et leur encre s'émiette ; les serpents ondulent ; les échos sont une fumée pâle.
+- **La veilleuse** (`joueur.gd`, `veilleuse_*.gd`) : redessinée, elle se tourne de face, de profil et de dos ; elle marche, respire, tremble de peur ; chaque récolte a son geste, la lance son estoc ; l'écharpe est une chaîne simulée qui prend le vent ; à la fin, elle tombe à genoux, lâche la torche et s'effondre.
+- **La lumière et les effets** (`feu.gd`, `yeux.gd`, `effets*.gd`, `shaders/`) : un feu vivant (deux langues de flamme, des braises, des étincelles, une fumée, une lueur au sol, de fausses ombres poussées par sa lumière), dont le cercle de lumière est la zone sûre ; la couleur de l'heure, de l'aube rose au soir mauve et à la nuit bleu d'encre ; une brume au sol ; des yeux qui brillent et clignent ; la caméra qui tremble et l'image qui s'arrête un instant sur un coup ; des particules ; la peur qui ferme et décolore l'écran au rythme du cœur ; la morsure qui le tache de rouge.
+- **L'interface** (`interface*.gd`, `tactile.gd`) : un écran-titre vivant (la lune, trois plans de forêt, la brume, des yeux, la veilleuse au feu) ; des jauges en cercles d'encre ; le sac en icônes, où vole ce qu'on ramasse ; des recettes en cartes ; un cadran soleil et lune ; des cartes « Nuit 2 » et « L'aube » ; la pause et la fin en pages de carnet, la fin avec les bêtes croisées dessinées.
+- **Le son** (`sons*.gd`) : un vent à rafales qui suit celui de l'herbe ; des oiseaux le jour ; des grillons, des grenouilles, des chouettes la nuit ; les chasseurs qui hurlent ou grondent de leur côté ; un feu qui crépite au hasard ; des pas selon le sol ; la peur qui monte en bourdon et fait battre le cœur ; une musique discrète, en majeur le jour et en mineur la nuit. Il se prépare en arrière-plan, pendant l'écran-titre.
+
+Un seul vent pour tout le lieu (`jeu.vent()`) : l'herbe, les feuillages, les flammes, la fumée, la brume, l'écharpe et le son du vent. En qualité « mobile » (un écran tactile, ou `--mobile`) : moins d'herbe et de particules, pas d'ombres portées, pas d'effet qui relit l'écran.
 
 ## Les choix
 
@@ -89,4 +106,5 @@ Lisière est un jeu du genre survie-horreur (récolter, fabriquer, tenir la nuit
 - L'équilibrer, partie après partie (les règles sont toutes dans `scripts/regles.gd`).
 - Sa clé de jeu, pour que ses lots partent dans le bac à sable, puis dans le monde.
 - Une partie qui se garde d'une session à l'autre ; une manette.
-- Le jeu au doigt sur un vrai téléphone (il n'a été joué que sur un téléphone émulé, dans Chromium) : la lisibilité des petits textes, et la vitesse de rendu.
+- Le jeu sur un vrai téléphone (il n'a été joué que sur un téléphone émulé, dans Chromium, sans carte graphique) : la lisibilité des petits textes, et surtout la vitesse de rendu. Dans Chromium en rendu logiciel, la partie retravaillée coûte environ 20 % de plus que l'ancienne, l'écran-titre environ trois fois plus : à mesurer sur un vrai appareil, et à alléger en qualité « mobile » s'il le faut.
+- Une écoute du son : il a été réglé sur des mesures (spectres, niveaux, crêtes), sans oreille.
