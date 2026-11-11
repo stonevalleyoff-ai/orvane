@@ -9,7 +9,7 @@
 //   tampon.json        la mémoire du tampon (lissage) et la dernière ligne lue (dernier_id)
 //   jeux.json          les jeux branchés sur le monde et leur exposition (publié : chaque traducteur y lit la sienne)
 //   morceaux/          le même monde par morceaux : index.json, biomes/<id>.json, lignees/<id>.json, et les planches,
-//                      silhouettes/<id>.json : chaque lignée de chaque biome dessinée (docs/21)
+//                      silhouettes/<id>.json : chaque lignée de chaque biome dessinée (docs/21) ; herbier/<id>.json : chaque plante (docs/49)
 //   lots/              (facultatif) des lots déposés à la main ; lus en plus de Supabase, puis déplacés dans lots/traites/
 //   node hebergement/cycle.js sv-1 [--sans-reseau] [--cycles N | --auto] [--rodage N] [--forcer]   (rodage : au premier cycle seulement ;
 //   --auto : autant de cycles que le rythme du monde en doit, profil.monde.cycle et monde.heure, docs/19 ; --maintenant <date ISO> ;
@@ -255,7 +255,7 @@ const alleger = I => ({ cycle: I.cycle, taxons: I.taxons.map(t => ({ id: t.id, n
   // (docs/17) ce qui est publié : les bêtes et les machines dans instantane.json, les plantes à part dans flore.json (des millions
   // de pieds : un jeu qui ne les attend pas n'en voit rien) ; le moteur et le tampon, eux, voient tout
   const filtre = V => Collectif.decrire(Tampon.filtrer(V, { familles: ['animale', 'synthetique'] })), publie = I => filtre(vue(I));   // (docs/38) le groupe de chaque population, s'il est éveillé
-  const flore = I => { const V = vue(I), P = V.taxons.filter(t => t.plan?.regime === 'vegetal'); return P.length ? { orvane: V.orvane, monde: { id: V.monde.id, ne: V.monde.ne, flore: V.monde.flore }, cycle: V.cycle, catalogue: { flore: V.catalogue?.flore || Flore.TRAITS }, taxons: P } : null; };
+  const flore = I => { const V = vue(I), P = V.taxons.filter(t => t.plan?.regime === 'vegetal'); return P.length ? { orvane: V.orvane, monde: { id: V.monde.id, ne: V.monde.ne, flore: V.monde.flore, ...(V.monde.diversite ? { diversite: V.monde.diversite } : {}), ...(V.monde.phenologie ? { phenologie: V.monde.phenologie } : {}), ...(V.monde.succession ? { succession: V.monde.succession } : {}) }, cycle: V.cycle, catalogue: { flore: V.catalogue?.flore || Flore.TRAITS, ...(V.catalogue?.flore_riche ? { flore_riche: V.catalogue.flore_riche } : {}) }, taxons: P } : null; };
   let avant = etat;
   let historique = lire('historique.json', []);
   // (docs/37) l'histoire du monde : la chronique et le muséum s'éveillent au premier cycle qui ne les trouve pas ; ce jour-là, la
@@ -327,6 +327,9 @@ const alleger = I => ({ cycle: I.cycle, taxons: I.taxons.map(t => ({ id: t.id, n
   // n'arrête pas le cycle, le monde est publié sans ses planches
   try { const Planches = require('../monde/planches.js'); fs.mkdirSync(f('morceaux/silhouettes'), { recursive: true }); for (const [c, o] of Object.entries(Planches.planches(D))) ecrire('morceaux/' + c, o, true); }
   catch (e) { console.error('planches non dessinées :', e.message); }
+  // (docs/49) l'herbier : chaque plante de chaque biome dessinée (morceaux/herbier/<biome>.json), avec le temps qu'il y fait
+  try { if (F) { const Herbier = require('../monde/herbier.js'); fs.mkdirSync(f('morceaux/herbier'), { recursive: true }); for (const [c, o] of Object.entries(Herbier.planches(F, P.biomes, { orvane: P.orvane, monde: P.monde, cycle: P.cycle }))) ecrire('morceaux/' + c, o, true); } }
+  catch (e) { console.error('herbier non dessiné :', e.message); }
   ecrire('historique.json', historique, true); ecrire('tampon.json', tampon);
   console.log(`→ ${path.relative(process.cwd(), f('instantane.json'))}`);
   if (lectureEchouee) process.exitCode = 2;          // le monde est publié, mais l'action se marque en échec pour qu'on le voie

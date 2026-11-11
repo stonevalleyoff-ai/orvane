@@ -139,5 +139,4 @@ node bancs/diversite.js --court    # moins de cycles
 - **La place d'un port ne bouge pas.** Les lignées se disputent la place de leur port, mais un lieu ne devient pas plus boisé parce que ses arbres réussissent. Seul le milieu (docs/22) la déplace.
 - **Les défenses restent deux.** Les toxines et les épines sont des variantes au sein d'une lignée ; les caractères, eux, ne varient qu'entre lignées.
 - **Le feuillage n'évolue pas** (docs/46), ni la niche : une lignée qui gagne un lieu plus froid n'y devient pas plus résistante au froid.
-- **Dessiner les plantes.** Il n'y a pas de planches pour elles (docs/21), comme il y en a pour les bêtes.
 - **Le coût.** La nourriture d'un brouteur se calcule plante par plante ; regrouper les lignées de même clé dans un lieu rendrait le cycle à sa vitesse.

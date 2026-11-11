@@ -51,6 +51,7 @@
 <script src="../tampon/tampon.js"></script>
 <script src="../moteur/parcelles.js"></script>
 <script src="silhouette.js"></script>
+<script src="herbier.js"></script>
 <script src="../tampon/directeur.js"></script>
 <script src="../moteur/solo.js"></script>
 <script src="../tampon/individus.js"></script>
@@ -315,7 +316,12 @@ function vueEnsemble() {
         else if (b.nature) x.push(`devenu ${ESC(b.nature.nom)}`);
         if (b.visiteurs?.length) x.push(`l'hiver, ${nb(b.visiteurs.reduce((a, v) => a + (v.effectif || 0), 0))} visiteurs`);   // (docs/38)
         if (b.transforme?.jeu && Object.values(b.transforme.jeu).some(v => Math.abs(v) >= .005)) x.push('transformé par les joueurs');   // (docs/22)
-        return x.length ? `<p class="biome-plus sourd">${x.join(' · ')}</p>` : ''; })()}</article>`; };
+        if (b.meteo && typeof b.meteo === 'object') x.unshift(`${ESC(({ clair: 'temps clair', couvert: 'ciel couvert', pluie: 'pluie', orage: 'orage', neige: 'neige', gel: 'gel', canicule: 'canicule', tempete: 'tempête', brouillard: 'brouillard' })[b.meteo.temps] || b.meteo.temps)}${b.meteo.neige > 0 ? ', neige au sol' : ''}${b.meteo.secheresse >= .5 ? ', sécheresse' : ''}`);   // (docs/45)
+        return x.length ? `<p class="biome-plus sourd">${x.join(' · ')}</p>` : ''; })()}${herbierBiome(I, b)}</article>`; };
+  // (docs/49) l'herbier d'un biome : ses plantes dessinées, les plus lourdes d'abord
+  function herbierBiome(I, b) { if (!globalThis.OrvaneHerbier) return ''; const F = plantesDe(I).map(t => [t, t.populations.find(p => p.biome === b.id)]).filter(([, p]) => p && p.effectif > 0).sort((x, y) => y[1].effectif * (y[0].plan.masse_kg || 1) - x[1].effectif * (x[0].plan.masse_kg || 1)); if (!F.length) return '';
+    const STADES = { nu: 'nu', bourgeons: 'en bourgeons', fleurs: 'en fleurs', feuilles: 'en feuilles', fruits: 'en fruits', graines: 'en graines', feuilles_tombent: 'les feuilles tombent', seche: 'sèche', sous_la_neige: 'sous la neige', brule: 'brûlée' };
+    return `<div class="herbier" style="display:flex;flex-wrap:wrap;gap:2px;margin-top:8px">${F.slice(0, 10).map(([t, p]) => `<span title="${ESC(t.nom)}${p.stade ? ' · ' + ESC(STADES[p.stade] || p.stade) : ''} · ${String(t.plan.hauteur_m).replace('.', ',')} m" style="width:44px;height:55px;display:inline-block">${OrvaneHerbier.dessiner(t.plan, { stade: p.stade, feuillage: p.feuillage, sinistre: p.sinistre, defense: OrvaneHerbier.defense(t, p) }, t.id).replace('width="120" height="150"', 'width="44" height="55"')}</span>`).join('')}${F.length > 10 ? `<span class="sourd" style="align-self:end">+${F.length - 10}</span>` : ''}</div>`; }
   const evts = Object.entries(parType).sort((a, b) => b[1].length - a[1].length).map(([t, L]) => `<li><span class="combien">${L.length}</span><span>${evtNom(t, L.length)}<br><span class="qui">${[...new Set(L.map(e => nomEsp(I.taxons.find(x => x.id === e.taxon)) || nomBiome(e.taxon)))].slice(0, 4).map(ESC).join(', ')}${L.length > 4 ? '…' : ''}</span></span></li>`).join('');
   $('#contenu').innerHTML = `
     <div class="overview-heading"><div><p class="atlas-kicker">01 / ÉTAT DU VIVANT</p><h2>Le monde, au dernier cycle.</h2></div><span class="reading-state">${E.H.length > E.publies ? 'Simulation locale' : E.source?.publie ? 'Instantané publié' : 'Monde local'}</span></div><p class="phrase">${ESC(phrase)}</p>

@@ -54,6 +54,7 @@ Pour s'inscrire, recevoir ses clés et faire ses premiers appels au Supabase d'O
 | [46. Les saisons des plantes](46-saisons-des-plantes.md) | les arbres caducs ou persistants ; la pousse à la belle saison ; le nectar au printemps, les fruits à la fin de l'été, les graines à l'automne ; le stade de chaque plante, pour montrer une forêt nue, en fleurs, en fruits |
 | [47. Les plantes sous le feu](47-succession.md) | les catastrophes et le sec prennent des pieds aux plantes ; la succession : l'herbe, puis les buissons, puis les arbres ; le couvert d'un lieu suit ses arbres, une forêt brûlée s'ouvre puis se referme |
 | [48. La flore riche](48-flore-riche.md) | quarante-sept formes de plantes de plus, chacune avec son port, sa hauteur, ce qu'elle donne et les lieux où elle se plaît ; douze caractères hérités ; la radiation de l'éveil ; la concurrence pour la place, les séparations, la colonisation, les extinctions |
+| [49. L'herbier](49-herbier.md) | chaque plante de chaque biome dessinée à chaque cycle, selon sa forme, son stade, son feuillage, ce qu'elle a subi ; `morceaux/herbier/<biome>.json`, avec le temps qu'il fait |
 
 ## En une page
 
