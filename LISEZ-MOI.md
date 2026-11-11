@@ -20,6 +20,10 @@ moteur/natures.js     les lieux qui changent de nature : une forêt défrichée 
 moteur/derives.js     les dérives : des régimes qui changent, des plantes qui se séparent, des souches qui mutent, des insectes qui les portent (docs/29)
 moteur/dietes.js      les régimes en spectre : feuilles, fruits, graines, nectar, insectes, viande, sang (docs/30)
 moteur/climat.js      le climat et la géologie lente : les âges glaciaires, les ponts de terre, les îles des volcans (docs/31)
+moteur/phenologie.js  les saisons des plantes : le feuillage caduc ou persistant, la pousse à la belle saison, le nectar, les fruits et les graines en leur saison, le stade de chaque plante (docs/46)
+moteur/diversite.js   la flore riche : quarante-sept formes de plantes, douze caractères hérités, la radiation, la concurrence pour la place, la colonisation, les extinctions (docs/48)
+moteur/succession.js  les plantes sous le feu : les catastrophes et le sec leur prennent des pieds, l'herbe puis les buissons reprennent la place des arbres, le couvert suit les arbres (docs/47)
+moteur/meteo.js       la météo : le temps du cycle dans chaque lieu, parcelle par parcelle (la pluie, la neige, le gel, les orages, les canicules) (docs/45)
 moteur/grammaire.js   la grammaire des effets et des conduites : une lueur qui attire, une décharge qui foudroie, un musc qui repousse (docs/32)
 moteur/castes.js      les castes : des colonies, une reine, des ouvrières, des soldats (docs/33)
 moteur/formes.js      les formes nouvelles : le corps segmenté, rayonné, à tentacules (docs/33)
@@ -35,6 +39,7 @@ tampon/individus.js   les individus : une bête tirée de la population réelle 
 tampon/morceaux.js    le monde par morceaux : découper l'instantané (l'index, chaque biome, chaque lignée), et lire seulement les biomes d'un jeu (docs/21)
 monde/index.html      l’observatoire : ce que vit un monde (espèces, biomes, lignées, chaîne alimentaire, journal), et une simulation locale
 monde/silhouette.js   les silhouettes de l'observatoire : chaque lignée dessinée d'après son corps et sa façon de vivre (masse, déplacements, régime, heure), chaque forme à son dessin, les machines d'après leurs modules ; un jeu peut le reprendre
+monde/herbier.js      l'herbier : chaque plante dessinée d'après sa forme, son stade, son feuillage, ce qu'elle a subi ; publié à chaque cycle dans morceaux/herbier/ (docs/49)
 BRANCHER-UN-JEU.md    brancher un jeu, pas à pas : s'inscrire, lire le monde, traduire, régler l'exposition, déposer des lots, les erreurs
 CONNECT-A-GAME.md     le même guide, en anglais ; docs/glossary.md : chaque champ, traduit en anglais
 inscription/          la page d'inscription : inscrire un jeu et recevoir ses clés, régler son exposition, vérifier une clé
@@ -70,6 +75,11 @@ bancs/natures.js      le banc des natures : la forêt devenue prairie, le lac de
 bancs/derives.js      le banc des dérives : un pas de régime, une herbe épineuse qui se sépare, une souche que porte un insecte
 bancs/dietes.js       le banc des régimes en spectre : le mangeur de fruits qui sème, le mangeur d'insectes, le buveur de sang
 bancs/climat.js       le banc du climat : un âge glaciaire, un pont de terre, une île qui se peuple
+bancs/phenologie.js   le banc des saisons des plantes : une forêt nue, en fleurs, en fruits ; les butineurs et les mangeurs de fruits au fil de l'année
+bancs/herbier.js      le banc de l'herbier : chaque forme de plante dessinée, ses stades, la planche d'un biome
+bancs/diversite.js    le banc de la flore riche : de 54 à 257 lignées de plantes ; qui mange quoi ; le feu qui trie les caractères ; la place qui se dispute
+bancs/succession.js   le banc de la succession : une forêt brûlée, l'herbe, les buissons, puis les arbres ; le couvert qui tombe et revient
+bancs/meteo.js        le banc de la météo : des fronts qui passent, une sécheresse qui s'installe, la vie qui suit le temps
 bancs/grammaire.js    le banc de la grammaire : qui peut dire quoi, où ça porte, des phrases variées, la sélection
 bancs/formes.js       le banc des corps et des vies nouvelles : la colonie qui gagne, le mille-pattes, l'étoile, la pieuvre, la naïade
 bancs/esprit.js       le banc de l'esprit : qui apprend, une tradition, la perte, chasser ensemble, la curiosité

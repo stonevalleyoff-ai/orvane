@@ -11,6 +11,7 @@ extends Node2D
 const Pinceau := preload("res://scripts/decor_pinceau.gd")
 const P := preload("res://scripts/palette.gd")
 const SHADER := preload("res://shaders/vegetation_feuillage.gdshader")
+const SHADER_PLANCHE := preload("res://shaders/vegetation_planche.gdshader")
 const BUTIN := {"arbre": "bois", "sapin": "bois", "souche": "", "rocher": "pierre", "buisson": "baies", "touffe": "fibre", "brindille": "bois"}
 const REPOUSSE := 240.0
 const CHUTE := 1.15            # secondes : un arbre abattu tombe
@@ -19,6 +20,9 @@ const ENCRE := Color(0.086, 0.075, 0.059, 0.92)
 # les deux matières, partagées par tous : la végétation (le vent la plie), et ce qui ne bouge pas (la même peinture)
 static var vegetation: ShaderMaterial
 static var fixe: ShaderMaterial
+# (docs/49) les dessins de l'herbier, mis à l'encre : les arbres et les buissons (feuilles du lieu), les touffes (son herbe)
+static var planche: ShaderMaterial
+static var planche_herbe: ShaderMaterial
 # le climat du lieu, posé par le monde avant de semer (de 0 à 1) : la neige, la mousse
 static var climat := {"froid": 0.0, "humide": 0.5}
 static var _pinceau
@@ -52,12 +56,20 @@ static func matieres() -> void:
 		fixe = ShaderMaterial.new()
 		fixe.shader = SHADER
 		fixe.set_shader_parameter("souplesse", 0.0)
+		planche = ShaderMaterial.new()
+		planche.shader = SHADER_PLANCHE
+		planche_herbe = ShaderMaterial.new()
+		planche_herbe.shader = SHADER_PLANCHE
 
 
 static func pinceau():
 	if _pinceau == null:
 		_pinceau = Pinceau.new()
 	return _pinceau
+
+# (docs/49) une plante du monde d'Orvane : son dessin de l'herbier, à sa taille ; sans lui, l'objet se dessine lui-même
+var image: Texture2D = null
+var plante := ""
 
 
 func preparer(g: String, couleur: Color, s: int) -> void:
@@ -88,6 +100,52 @@ func preparer(g: String, couleur: Color, s: int) -> void:
 		couronne.material = vegetation
 		add_child(couronne)
 	set_process(false)
+
+
+# une plante du monde d'Orvane (docs/49) : le dessin de l'herbier remplace le sien ; l'ombre et la couronne suivent ce dessin
+func porter_plante(tex: Texture2D, id: String) -> void:
+	image = tex
+	plante = id
+	if tex == null:
+		return
+	var t := tex.get_size()
+	match genre:
+		"arbre", "sapin":
+			_rx = t.x * 0.4
+			_ry = t.y * 0.3
+			_cc = Vector2(0, -t.y * 0.62)
+			hauteur = t.y * 0.92
+			couronne_rect = Rect2(-t.x * 0.42, -t.y * 0.96, t.x * 0.84, t.y * 0.66)
+		"buisson":
+			_rx = t.x * 0.42
+			_ry = t.y * 0.7
+			hauteur = t.y * 0.7
+		"touffe":
+			hauteur = t.y * 0.6
+	# (mis à l'encre, aux couleurs du lieu : la teinte de l'objet est celle de ses feuilles, ou de son herbe)
+	var m: ShaderMaterial = planche_herbe if genre == "touffe" else planche
+	m.set_shader_parameter("teinte", teinte)
+	if couronne != null:
+		couronne.material = m
+		couronne.queue_redraw()
+	else:
+		material = m
+	queue_redraw()
+
+
+# un buisson ou une touffe de l'herbier : son dessin, posé sur son pied (à 144/150 de sa hauteur) ; un buisson montre ses baies,
+# une touffe arrachée reste rase
+func _plante_basse(r: RandomNumberGenerator) -> void:
+	var t := image.get_size()
+	if genre == "touffe" and reste <= 0:
+		t *= 0.4
+	draw_texture_rect(image, Rect2(Vector2(-t.x * 0.5, -t.y * 0.96), t), false)
+	if genre == "buisson":
+		for i in reste * 2:
+			var b := Vector2(r.randf_range(-t.x * 0.3, t.x * 0.3), -t.y * r.randf_range(0.25, 0.6))
+			draw_circle(b, 2.6, ENCRE)
+			draw_circle(b, 2.0, Color(0.66, 0.12, 0.2))
+			draw_circle(b + Vector2(-0.6, -0.6), 0.7, Color(1.0, 0.85, 0.85, 0.8))
 
 
 func _mesurer() -> void:
@@ -232,9 +290,14 @@ func _draw() -> void:
 		elif genre != "arbre" and genre != "sapin":
 			# (un buisson, une touffe : la tête frémit, le pied reste)
 			draw_set_transform_matrix(Transform2D(Vector2(1, 0), Vector2(-k * 0.35, 1), Vector2.ZERO))
+	if image != null and (genre == "buisson" or genre == "touffe"):
+		_plante_basse(r)
+		p.finir()
+		return
 	match genre:
 		"arbre", "sapin":
-			_pied(p, r, false)
+			if image == null:
+				_pied(p, r, false)
 		"souche":
 			_pied(p, r, true)
 		"rocher":
@@ -249,6 +312,11 @@ func _draw() -> void:
 
 
 func _dessiner_couronne(c: CanvasItem) -> void:
+	if image != null:
+		# (un arbre de l'herbier : tout son dessin, posé sur son pied, ondule et s'efface avec la couronne)
+		var t := image.get_size()
+		c.draw_texture_rect(image, Rect2(Vector2(-t.x * 0.5, -t.y * 0.96), t), false)
+		return
 	var p = pinceau()
 	p.commencer(c.get_canvas_item())
 	var r := RandomNumberGenerator.new()

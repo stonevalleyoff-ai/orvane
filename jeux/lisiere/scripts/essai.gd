@@ -69,6 +69,15 @@ func _lancer() -> void:
 	for o in jeu.monde.objets:
 		genres[o.genre] = int(genres.get(o.genre, 0)) + 1
 	verif(int(genres.get("arbre", 0)) + int(genres.get("sapin", 0)) > 100 and int(genres.get("rocher", 0)) > 20, "le lieu est semé : %s" % str(genres))
+	# (docs/49) les arbres, les buissons et les touffes du lieu sont ses plantes dans le monde d'Orvane, dessinées d'après l'herbier
+	var plantes_lieu: Array = Orvane.plantes("foret")
+	var dessines := 0
+	var especes := {}
+	for o in jeu.monde.objets:
+		if o.image != null:
+			dessines += 1
+			especes[o.plante] = true
+	verif(plantes_lieu.size() > 0 and dessines > 100 and especes.size() >= 2, "le décor est fait des plantes du lieu : %d objets dessinés d'après l'herbier, de %d lignées sur %d (%s)" % [dessines, especes.size(), plantes_lieu.size(), ", ".join(PackedStringArray(plantes_lieu.slice(0, 3).map(func(x): return str(x.get("forme", "?")))))])
 	Engine.time_scale = 4.0
 	# (le directeur tire au sort toutes les demi-secondes : on attend qu'une bête vienne, trente secondes au plus)
 	var betes: Array = []
@@ -104,6 +113,40 @@ func _lancer() -> void:
 	var avant: float = f.bois
 	jeu.nourrir_feu()
 	verif(f.bois > avant + 20.0, "une bûche nourrit le feu (%d → %d secondes)" % [int(avant), int(f.bois)])
+
+	# (docs/45) le temps qu'il fait : sous la tempête, le feu mange son bois deux fois plus vite ; la neige au sol ralentit ; le ciel se dessine
+	var temps_du_lieu: float = jeu.feu_temps
+	jeu.feu_temps = 1.0
+	var bois0: float = f.bois
+	await _attendre(2.0)
+	var calme: float = bois0 - f.bois
+	jeu.feu_temps = float(jeu.R.FEU_TEMPS["tempete"])
+	bois0 = f.bois
+	await _attendre(2.0)
+	var tempete: float = bois0 - f.bois
+	jeu.feu_temps = temps_du_lieu
+	verif(calme > 0.0 and tempete > calme * 1.6, "sous la tempête, le feu mange son bois plus vite (%.1f s de bois en deux secondes, contre %.1f)" % [tempete, calme])
+	jeu.meteo = {"temps": "pluie", "vent": 0.3}
+	jeu.ciel.regler("pluie", 0.3)
+	var pluie: bool = jeu.ciel.visible_du_ciel() and jeu.texte_horloge().contains("pluie")
+	jeu.ciel.regler("neige", 0.1)
+	var neige: bool = jeu.ciel.visible_du_ciel()
+	jeu.ciel.regler("clair", 0.0)
+	var clair: bool = not jeu.ciel.visible_du_ciel()
+	jeu.meteo = Orvane.meteo("foret")
+	jeu.ciel.regler(str(jeu.meteo.get("temps", "")), float(jeu.meteo.get("vent", 0.0)))
+	verif(pluie and neige and clair, "la pluie et la neige se dessinent et se disent à l'horloge ; un temps clair ne dessine rien")
+	var allure_du_lieu: float = jeu.allure_temps
+	j.position = Vector2(0, 0)
+	jeu.allure_temps = jeu.R.ALLURE_NEIGE
+	j.deplacer(Vector2(1, 0), 1.0, jeu.monde)
+	var dans_la_neige: float = j.position.x
+	j.position = Vector2(0, 0)
+	jeu.allure_temps = 1.0
+	j.deplacer(Vector2(1, 0), 1.0, jeu.monde)
+	jeu.allure_temps = allure_du_lieu
+	verif(dans_la_neige > 0.0 and dans_la_neige < j.position.x * 0.9, "dans la neige, on marche moins vite (%d pixels en une seconde, contre %d)" % [int(dans_la_neige), int(j.position.x)])
+	j.position = Vector2(0, 0)
 
 	print("3. Du doigt")
 	var tac = jeu.tactile

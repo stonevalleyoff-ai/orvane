@@ -16,6 +16,7 @@
 'use strict';
 (function (racine) {
 const clone = o => JSON.parse(JSON.stringify(o));
+const MET = (typeof require === 'function' ? require('./meteo.js') : racine.OrvaneMeteo) || null;   // (docs/45) la météo : le temps d'un biome est celui de ses parcelles
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 function generateur(graine) { let g = ((graine | 0) ^ 0x9a7c) >>> 0; return () => { g = (Math.imul(g, 1664525) + 1013904223) >>> 0; return g / 4294967296; }; }
 const AXES = ['temperature', 'humidite', 'altitude', 'lumiere', 'couvert'];
@@ -127,6 +128,7 @@ function regrouper(inst) {
   out.biomes = types.map(b => { const L = inst.biomes.filter(p => typeDe(p) === b.id), x = { ...clone(b) };
     if (L.length) { x.capacite = +L.reduce((s, p) => s + (p.capacite || 0), 0).toFixed(2); if (b.capacite_base != null) x.capacite_base = +L.reduce((s, p) => s + (p.capacite_base || 0), 0).toFixed(2);
       if (L[0].axes_saison) x.axes_saison = moyenne(L.map(p => p.axes_saison), L.map(p => p.capacite || 1));
+      if (MET) { const m = MET.regrouper(L, L.map(p => p.capacite || 1)); if (m) x.meteo = m; else delete x.meteo; }   // (docs/45) le temps moyen du biome ; celui de chaque parcelle est dans « parcelles »
       if (L[0].transforme) { const w = L.map(p => p.capacite || 1); x.axes = moyenne(L.map(p => p.axes), w); const W = w.reduce((a, v) => a + v, 0) || 1, J = {}; L.forEach((p, i) => { for (const [k, v] of Object.entries(p.transforme.jeu || {})) J[k] = (J[k] || 0) + v * w[i] / W; }); for (const k in J) J[k] = +J[k].toFixed(3); x.transforme = { base: L[0].transforme.base, etat: moyenne(L.map(p => p.transforme.etat || p.transforme.base), w), jeu: J, ref: moyenne(L.map(p => p.transforme.ref || { pat: 0, fou: 0 }), w), signale: { ...x.axes } }; }   // (complet : un monde solo en repart, docs/19)   // (docs/22) le milieu d'aujourd'hui, en moyenne sur ses parcelles
       if (L.some(p => p.nature)) { const W = L.reduce((a, p) => a + (p.capacite || 1), 0) || 1, N = {};   // (docs/28) la part de ses parcelles qui ont changé de nature
         for (const p of L) if (p.nature) { const y = N[p.nature.type] ??= { type: p.nature.type, nom: p.nature.nom, part: 0 }; y.part += (p.capacite || 1) / W; }
@@ -156,7 +158,7 @@ function regrouper(inst) {
   out.evenements = (inst.evenements || []).map(e => { const p = e.biome && parId.get(e.biome); return p && p.type ? { ...e, biome: p.type, detail: (e.detail ? e.detail + ' · ' : '') + 'parcelle ' + (p.nom || p.id) } : e; });
   out.monde = { ...inst.monde, parcelles: { par: P.par, graine: P.graine, nombre: inst.biomes.length } };
   if (inst.monde.mere) { const p = parId.get(inst.monde.mere.biome); out.monde.mere = { ...inst.monde.mere, biome: p ? typeDe(p) : inst.monde.mere.biome, parcelle: inst.monde.mere.biome }; }   // (docs/16)
-  out.parcelles = inst.biomes.map(p => ({ id: p.id, type: typeDe(p), nom: p.nom, capacite: Math.round(p.capacite || 0), voisins: p.voisins || [] }));
+  out.parcelles = inst.biomes.map(p => ({ id: p.id, type: typeDe(p), nom: p.nom, capacite: Math.round(p.capacite || 0), voisins: p.voisins || [], ...(p.meteo && typeof p.meteo === 'object' ? { meteo: p.meteo } : {}) }));   // (docs/45) le temps qu'il fait, parcelle par parcelle
   return out;
 }
 

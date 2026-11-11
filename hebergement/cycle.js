@@ -9,7 +9,7 @@
 //   tampon.json        la mémoire du tampon (lissage) et la dernière ligne lue (dernier_id)
 //   jeux.json          les jeux branchés sur le monde et leur exposition (publié : chaque traducteur y lit la sienne)
 //   morceaux/          le même monde par morceaux : index.json, biomes/<id>.json, lignees/<id>.json, et les planches,
-//                      silhouettes/<id>.json : chaque lignée de chaque biome dessinée (docs/21)
+//                      silhouettes/<id>.json : chaque lignée de chaque biome dessinée (docs/21) ; herbier/<id>.json : chaque plante (docs/49)
 //   lots/              (facultatif) des lots déposés à la main ; lus en plus de Supabase, puis déplacés dans lots/traites/
 //   node hebergement/cycle.js sv-1 [--sans-reseau] [--cycles N | --auto] [--rodage N] [--forcer]   (rodage : au premier cycle seulement ;
 //   --auto : autant de cycles que le rythme du monde en doit, profil.monde.cycle et monde.heure, docs/19 ; --maintenant <date ISO> ;
@@ -29,7 +29,7 @@
 'use strict';
 const fs = require('fs'), path = require('path');
 const Genres = require('../moteur/genres.js');
-const Orvane = require('../moteur/orvane.js'), Tampon = require('../tampon/tampon.js'), Morceaux = require('../tampon/morceaux.js'), Milieu = require('../moteur/milieu.js'), Ponte = require('../moteur/ponte.js'), Stades = require('../moteur/stades.js'), Invention = require('../moteur/invention.js'), Natures = require('../moteur/natures.js'), Derives = require('../moteur/derives.js'), Dietes = require('../moteur/dietes.js'), Climat = require('../moteur/climat.js'), Grammaire = require('../moteur/grammaire.js'), Castes = require('../moteur/castes.js'), Formes = require('../moteur/formes.js'), Esprit = require('../moteur/esprit.js'), Fusion = require('../moteur/fusion.js'), Parcelles = require('../moteur/parcelles.js'), Synthetique = require('../moteur/synthetique.js'), Flore = require('../moteur/flore.js'), Pathogenes = require('../moteur/pathogenes.js'), Chronique = require('../moteur/chronique.js'), Collectif = require('../moteur/collectif.js');
+const Orvane = require('../moteur/orvane.js'), Tampon = require('../tampon/tampon.js'), Morceaux = require('../tampon/morceaux.js'), Milieu = require('../moteur/milieu.js'), Ponte = require('../moteur/ponte.js'), Stades = require('../moteur/stades.js'), Invention = require('../moteur/invention.js'), Natures = require('../moteur/natures.js'), Derives = require('../moteur/derives.js'), Dietes = require('../moteur/dietes.js'), Climat = require('../moteur/climat.js'), Meteo = require('../moteur/meteo.js'), Phenologie = require('../moteur/phenologie.js'), Succession = require('../moteur/succession.js'), Diversite = require('../moteur/diversite.js'), Grammaire = require('../moteur/grammaire.js'), Castes = require('../moteur/castes.js'), Formes = require('../moteur/formes.js'), Esprit = require('../moteur/esprit.js'), Fusion = require('../moteur/fusion.js'), Parcelles = require('../moteur/parcelles.js'), Synthetique = require('../moteur/synthetique.js'), Flore = require('../moteur/flore.js'), Pathogenes = require('../moteur/pathogenes.js'), Chronique = require('../moteur/chronique.js'), Collectif = require('../moteur/collectif.js');
 const a = process.argv.slice(2), monde = a.find(x => !x.startsWith('--')) || 'sv-1', sansReseau = a.includes('--sans-reseau');
 const arg = (k, defaut) => { const i = a.indexOf(k); return i >= 0 && a[i + 1] != null ? +a[i + 1] : defaut; };
 let nCycles = arg('--cycles', 1) || 1;
@@ -227,6 +227,14 @@ const alleger = I => ({ cycle: I.cycle, taxons: I.taxons.map(t => ({ id: t.id, n
   if (profil.monde?.dietes && !etat.monde.dietes) { const r = Dietes.eveiller(etat); etat = r.inst; arrivees = [...arrivees, ...r.evenements]; console.log(`dietes : ${r.evenements[0].detail}`); }
   // (docs/31) le climat et la géologie lente : un profil qui le demande (monde.climat : true) l'éveille, une fois, après le milieu
   if (profil.monde?.climat && !etat.monde.climat) { const r = Climat.eveiller(etat); etat = r.inst; arrivees = [...arrivees, ...r.evenements]; console.log('climat : le monde se réchauffera et se refroidira de lui-même'); }
+  // (docs/45) la météo : un profil qui la demande (monde.meteo : true) l'éveille, une fois
+  if (profil.monde?.meteo && !etat.monde.meteo) { const r = Meteo.eveiller(etat); etat = r.inst; arrivees = [...arrivees, ...r.evenements]; console.log(`meteo : ${r.evenements[0].detail}`); }
+  // (docs/46) les saisons des plantes : un profil qui les demande (monde.phenologie : true) les éveille, une fois, après la flore
+  if (profil.monde?.phenologie && !etat.monde.phenologie && etat.monde.flore) { const r = Phenologie.eveiller(etat); etat = r.inst; arrivees = [...arrivees, ...r.evenements]; console.log(`phenologie : ${r.evenements[0].detail}`); }
+  // (docs/47) les plantes subissent et transforment : un profil qui le demande (monde.succession : true) l'éveille, une fois, après la flore
+  // (docs/48) la flore riche : un profil qui la demande (monde.diversite : true) l'éveille, une fois, après la flore et avant la succession (qui garde le poids des plantes du jour)
+  if (profil.monde?.diversite && !etat.monde.diversite && etat.monde.flore) { const r = Diversite.eveiller(etat); etat = r.inst; arrivees = [...arrivees, ...r.evenements]; console.log(`diversite : ${r.evenements[0].detail}`); }
+  if (profil.monde?.succession && !etat.monde.succession && etat.monde.flore) { const r = Succession.eveiller(etat); etat = r.inst; arrivees = [...arrivees, ...r.evenements]; console.log(`succession : ${r.evenements[0].detail}`); }
   // (docs/32) la grammaire des effets et des conduites : un profil qui la demande (monde.grammaire : true) l'éveille, une fois
   if (profil.monde?.grammaire && !etat.monde.grammaire) { const r = Grammaire.eveiller(etat); etat = r.inst; arrivees = [...arrivees, ...r.evenements]; console.log('grammaire : le monde compose des traits d\'un genre neuf'); }
   // (docs/33) les castes, les formes nouvelles : un profil qui les demande les éveille, une fois
@@ -247,7 +255,7 @@ const alleger = I => ({ cycle: I.cycle, taxons: I.taxons.map(t => ({ id: t.id, n
   // (docs/17) ce qui est publié : les bêtes et les machines dans instantane.json, les plantes à part dans flore.json (des millions
   // de pieds : un jeu qui ne les attend pas n'en voit rien) ; le moteur et le tampon, eux, voient tout
   const filtre = V => Collectif.decrire(Tampon.filtrer(V, { familles: ['animale', 'synthetique'] })), publie = I => filtre(vue(I));   // (docs/38) le groupe de chaque population, s'il est éveillé
-  const flore = I => { const V = vue(I), P = V.taxons.filter(t => t.plan?.regime === 'vegetal'); return P.length ? { orvane: V.orvane, monde: { id: V.monde.id, ne: V.monde.ne, flore: V.monde.flore }, cycle: V.cycle, catalogue: { flore: V.catalogue?.flore || Flore.TRAITS }, taxons: P } : null; };
+  const flore = I => { const V = vue(I), P = V.taxons.filter(t => t.plan?.regime === 'vegetal'); return P.length ? { orvane: V.orvane, monde: { id: V.monde.id, ne: V.monde.ne, flore: V.monde.flore, ...(V.monde.diversite ? { diversite: V.monde.diversite } : {}), ...(V.monde.phenologie ? { phenologie: V.monde.phenologie } : {}), ...(V.monde.succession ? { succession: V.monde.succession } : {}) }, cycle: V.cycle, catalogue: { flore: V.catalogue?.flore || Flore.TRAITS, ...(V.catalogue?.flore_riche ? { flore_riche: V.catalogue.flore_riche } : {}) }, taxons: P } : null; };
   let avant = etat;
   let historique = lire('historique.json', []);
   // (docs/37) l'histoire du monde : la chronique et le muséum s'éveillent au premier cycle qui ne les trouve pas ; ce jour-là, la
@@ -319,6 +327,9 @@ const alleger = I => ({ cycle: I.cycle, taxons: I.taxons.map(t => ({ id: t.id, n
   // n'arrête pas le cycle, le monde est publié sans ses planches
   try { const Planches = require('../monde/planches.js'); fs.mkdirSync(f('morceaux/silhouettes'), { recursive: true }); for (const [c, o] of Object.entries(Planches.planches(D))) ecrire('morceaux/' + c, o, true); }
   catch (e) { console.error('planches non dessinées :', e.message); }
+  // (docs/49) l'herbier : chaque plante de chaque biome dessinée (morceaux/herbier/<biome>.json), avec le temps qu'il y fait
+  try { if (F) { const Herbier = require('../monde/herbier.js'); fs.mkdirSync(f('morceaux/herbier'), { recursive: true }); for (const [c, o] of Object.entries(Herbier.planches(F, P.biomes, { orvane: P.orvane, monde: P.monde, cycle: P.cycle }))) ecrire('morceaux/' + c, o, true); } }
+  catch (e) { console.error('herbier non dessiné :', e.message); }
   ecrire('historique.json', historique, true); ecrire('tampon.json', tampon);
   console.log(`→ ${path.relative(process.cwd(), f('instantane.json'))}`);
   if (lectureEchouee) process.exitCode = 2;          // le monde est publié, mais l'action se marque en échec pour qu'on le voie

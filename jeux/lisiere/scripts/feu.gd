@@ -184,7 +184,7 @@ func _process(delta: float) -> void:
 		return
 	_t += delta
 	if bois > 0.0:
-		bois = maxf(0.0, bois - delta)
+		bois = maxf(0.0, bois - delta * (float(jeu.feu_temps) if jeu != null else 1.0))   # (le temps qu'il fait : scripts/regles.gd, FEU_TEMPS)
 		_eteint = 0.0
 	else:
 		_eteint += delta

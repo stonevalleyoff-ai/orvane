@@ -155,6 +155,25 @@ export interface Instantane {
     climat?: {
       [cle: string]: unknown;
     };
+    /** (docs/45) La météo : depuis quand chaque lieu a son temps du cycle. */
+    meteo?: {
+      depuis?: number;
+    };
+    /** (docs/48) La flore riche : depuis quand ; les lignées de plantes vivantes (lignees), celles qui sont nées depuis l'éveil (nees), celles qui se sont éteintes (eteintes). */
+    diversite?: {
+      depuis?: number;
+      lignees?: number;
+      nees?: number;
+      eteintes?: number;
+    };
+    /** (docs/47) Les plantes subissent et transforment : depuis quand. */
+    succession?: {
+      depuis?: number;
+    };
+    /** (docs/46) Les saisons des plantes : depuis quand. */
+    phenologie?: {
+      depuis?: number;
+    };
     /** (docs/30) Les régimes en spectre : depuis quand. */
     dietes?: {
       depuis?: number;
@@ -252,6 +271,29 @@ export interface Instantane {
     /** (docs/31) Un lieu que le milieu ne transforme pas : ses axes à l'éveil du climat (base), que le climat déplace. */
     climat?: {
       [cle: string]: unknown;
+    };
+    /** (docs/45) Le temps qu'il fait ici ce cycle, dans un monde à la météo éveillée. Absent : un lieu sans temps (le sous-sol, la mer sans lumière), ou un monde sans météo. Dans un monde par parcelles, c'est le temps moyen des parcelles du biome ; celui de chaque parcelle est dans « parcelles ». */
+    meteo?: {
+      /** Le temps nommé : clair, couvert, pluie, orage, neige, gel, canicule, tempete, brouillard. D'autres pourront venir : un jeu qui n'en connaît pas un le montre comme « couvert ». */
+      temps?: string;
+      /** L'écart de chaleur à la saison, en écarts-types (0 : la température de saison ; +1 : un cycle nettement chaud). */
+      t?: number;
+      /** L'écart d'eau à la saison (0 : un temps de saison ; +1 : un cycle nettement arrosé ; −1 : nettement sec). */
+      e?: number;
+      /** Le vent : fort là où un front passe. Absent : calme. */
+      vent?: number;
+      /** Le manteau de neige au sol (1 : épais). Absent : pas de neige. */
+      neige?: number;
+      /** Le sec qui dure : une moyenne glissante du manque d'eau. Au-dessus de 0,5, une sécheresse est installée. Absent : aucun manque. */
+      secheresse?: number;
+      /** Les eaux qui montent : une moyenne glissante de la pluie, et la neige qui fond. Plus elles sont hautes, plus une crue est probable. Absent : rien. */
+      eaux?: number;
+      /** Ce que le temps fait à la production du lieu ce cycle (1 : rien ; il multiplie celle de la saison). De moyenne 1 sur l'année. */
+      production?: number;
+      /** Un biome d'un monde par parcelles dont les parcelles n'ont pas toutes le même temps : la part de chacun (pesée par la capacité). */
+      temps_parts?: {
+        [cle: string]: number;
+      };
     };
     /** (docs/31) Une île jeune : le cycle de sa naissance (nee) et la capacité qu'elle aura (cible) ; sa terre s'enrichit. */
     jeune?: {
@@ -383,6 +425,19 @@ export interface Instantane {
     flore?: {
       [cle: string]: {
         [cle: string]: unknown;
+      };
+    };
+    /** (docs/48) La flore riche : ses formes (formes : pour chacune son nom, son port, sa hauteur, sa repousse, son feuillage, ce qu'elle donne, ses caractères) et ses caractères (caracteres : pour chacun son nom, son effet, son coût). */
+    flore_riche?: {
+      formes?: {
+        [cle: string]: {
+          [cle: string]: unknown;
+        };
+      };
+      caracteres?: {
+        [cle: string]: {
+          [cle: string]: unknown;
+        };
       };
     };
     /** Le catalogue propre du monde (docs/20) : ses axes, ses traits, ses organes, ses formes de corps. Ils s'ajoutent à ceux du moteur, sans les remplacer. Un traducteur y lit ce que le monde a de plus que les autres. */
@@ -587,10 +642,32 @@ export interface Instantane {
       role?: "regulateur" | "foreuse" | "recycleur" | "capteur";
       /** La famille de la lignée, si elle n'est pas animale (docs/16, docs/17). Un jeu ne reçoit que les familles qu'il demande (Tampon.filtrer). */
       famille?: "animale" | "synthetique" | "vegetale";
-      /** Une plante (docs/17) : sa forme, qui dit qui l'atteint. */
-      forme?: "herbe" | "buisson" | "arbre" | "roseau" | "algue" | "lichen" | "succulente" | "champignon";
+      /** Une plante (docs/17) : sa forme. Les huit premières sont celles d'origine ; les autres, celles de la flore riche (docs/48), qui disent leur port (plan.port). D'autres pourront venir : un jeu qui n'en connaît pas une la montre comme son port. */
+      forme?: "herbe" | "buisson" | "arbre" | "roseau" | "algue" | "lichen" | "succulente" | "champignon" | "conifere" | "palmier" | "paletuvier" | "bouteille" | "geant" | "fruitier" | "pionnier" | "fougere_arbre" | "bruyere" | "ronce" | "liane" | "baies" | "epine" | "aromatique" | "fougere" | "fleur" | "cereale" | "legumineuse" | "bulbe" | "hautes_herbes" | "coussin" | "mousse" | "sphaigne" | "bambou" | "papyrus" | "jonc" | "riz" | "varech" | "herbier" | "plancton" | "nenuphar" | "lentille" | "algue_glace" | "lichen_rennes" | "lichen_croute" | "cactus" | "agave" | "caillou" | "champignon_geant" | "champignon_lumineux" | "moisissure" | "emergent" | "figuier" | "sous_bois" | "orchidee" | "bromelia" | "grande_herbe";
+      /** (docs/48) Une plante de la flore riche : son port, ce qu'elle est pour la mécanique et pour un jeu qui ne connaît pas sa forme (un palmier est un arbre, une fougère une herbe). Absent : le port est la forme. */
+      port?: "herbe" | "buisson" | "arbre" | "roseau" | "algue" | "lichen" | "succulente" | "champignon";
+      /** (docs/48) Les caractères que la lignée porte et transmet (pyrophyte, racines_profondes, bulbe, echasses, mellifere, fruits_charnus, graines_abondantes, coriace, rapide, geante, naine, vent) : catalogue.flore_riche.caracteres dit ce qu'ils font. */
+      caracteres?: string[];
+      /** (docs/48) Ce que la plante donne de chaque part, rapporté à son poids (feuilles, fruits, graines, nectar). Absent : ce que donne son port (docs/30). */
+      rendement?: {
+        [cle: string]: number;
+      };
+      /** (docs/48) Ce que ses caractères font aux pieds qu'une catastrophe lui prend (incendie, crue, secheresse) : 0,3, trois fois moins ; 1,2, un cinquième de plus (docs/47). */
+      sinistres?: {
+        [cle: string]: number;
+      };
+      /** (docs/48) Ce que les brouteurs en mangent, rapporté à une plante ordinaire (0,75 : des feuilles coriaces). */
+      appetence?: number;
+      /** (docs/48) Le vent la féconde : sa repousse ne dépend pas des butineurs. */
+      vent?: boolean;
+      /** (docs/48) Le nom de sa forme est féminin (une fougère, une liane) : pour accorder ce qu'on en dit. */
+      feminin?: boolean;
+      /** (docs/48) Ce qui distingue la lignée devant un brouteur (son port, sa hauteur, ce qu'elle donne) : deux lignées de même clé se mangent pareil. */
+      cle?: string;
       /** Une plante : sa hauteur. */
       hauteur_m?: number;
+      /** (docs/46) Un arbre ou un buisson, dans un monde où les plantes ont leurs saisons : caduc (il perd ses feuilles l'hiver) ou persistant. */
+      feuillage?: string;
       /** Une plante : sa repousse par cycle, quand elle a de la place. */
       croissance?: number;
       /** (docs/25) La lignée pond des œufs (ovipare) ou met bas des petits (vivipare), dans un monde où la ponte est éveillée. */
@@ -712,6 +789,16 @@ export interface Instantane {
           r?: number;
         };
       };
+      /** (docs/47) Une plante qu'une catastrophe vient de toucher, dans un monde à la succession éveillée : laquelle (type : incendie, crue, secheresse), à quel cycle, et la part de ses pieds qu'elle y a perdue. Elle le dit douze cycles. */
+      sinistre?: {
+        type?: string;
+        cycle?: number;
+        part?: number;
+      };
+      /** (docs/46) Une plante, dans un monde où les plantes ont leurs saisons : où elle en est ce cycle. nu, bourgeons, fleurs, feuilles, fruits, graines, feuilles_tombent, seche, sous_la_neige, brule (elle vient de brûler, docs/47). D'autres pourront venir : un jeu qui n'en connaît pas un la montre « feuilles ». */
+      stade?: string;
+      /** (docs/46) Une plante : la part de son feuillage qui est là ce cycle (1 : tout ; 0 : un arbre nu). */
+      feuillage?: number;
       /** Une plante à fleurs (docs/18) : ce que les butineurs du lieu faisaient à son arrivée ; sa repousse s'y rapporte. */
       pollinisation?: number;
       /** Une plante à fruits (docs/30) : ce que les mangeurs de fruits du lieu faisaient à son arrivée ; sa repousse s'y rapporte. */
@@ -783,7 +870,7 @@ export interface Instantane {
   }[];
   /** Ce qui s'est passé de notable dans le cycle : lisible par le visualiseur et par un jeu qui veut le raconter. */
   evenements?: {
-    type: "apparition" | "extinction" | "separation" | "migration" | "effondrement" | "explosion" | "nouveau_trait" | "epidemie" | "remission" | "catastrophe" | "hybridation" | "mefiance" | "eveil" | "conception" | "transfert" | "transformation" | "invention" | "nature" | "climat" | "savoir";
+    type: "apparition" | "extinction" | "separation" | "migration" | "effondrement" | "explosion" | "nouveau_trait" | "epidemie" | "remission" | "catastrophe" | "hybridation" | "mefiance" | "eveil" | "conception" | "transfert" | "transformation" | "invention" | "nature" | "climat" | "meteo" | "savoir";
     taxon: string;
     biome?: string;
     detail?: string;
@@ -805,6 +892,10 @@ export interface Instantane {
     nom?: string;
     capacite?: number;
     voisins?: string[];
+    /** (docs/45) Le temps qu'il fait dans cette parcelle ce cycle : les mêmes champs que biomes[].meteo (temps, t, e, vent, neige, secheresse, eaux, production). */
+    meteo?: {
+      [cle: string]: unknown;
+    };
   }[];
 }
 
@@ -934,6 +1025,14 @@ export interface Profil {
     formes?: boolean;
     /** La grammaire des effets et des conduites (docs/32) : le cycle de nuit l'éveille, une fois ; le monde compose des traits d'un genre neuf (une lueur qui attire, une décharge qui foudroie, un cri qui alerte, une odeur qui repousse). */
     grammaire?: boolean;
+    /** La flore riche (docs/48) : le cycle de nuit l'éveille, une fois, dans un monde qui a une flore ; quarante formes de plantes de plus (conifère, palmier, fougère, liane, bambou, cactus, varech, plancton…), douze caractères hérités, et une flore qui vit : les lignées se disputent la place, se séparent, gagnent les lieux voisins, s'éteignent. */
+    diversite?: boolean;
+    /** Les plantes subissent et transforment (docs/47) : le cycle de nuit l'éveille, une fois, dans un monde qui a une flore ; le feu, la crue et le sec prennent des pieds aux plantes, l'herbe puis les buissons reprennent la place des arbres disparus, et le couvert d'un lieu suit ses arbres (avec le milieu, docs/22). */
+    succession?: boolean;
+    /** Les saisons des plantes (docs/46) : le cycle de nuit les éveille, une fois, dans un monde qui a une flore et une année ; les arbres caducs perdent leurs feuilles, la pousse suit la belle saison et le temps qu'il fait, le nectar, les fruits et les graines ont leur saison. */
+    phenologie?: boolean;
+    /** La météo (docs/45) : le cycle de nuit l'éveille, une fois ; chaque lieu (chaque parcelle d'un monde par parcelles) a son temps du cycle, la pluie, la neige, le gel, les orages, les canicules, qui déplace la température, l'humidité et la production de la saison. */
+    meteo?: boolean;
     /** Le climat et la géologie lente (docs/31) : le cycle de nuit l'éveille, une fois ; le monde se réchauffe et se refroidit de lui-même, la mer monte et baisse, des volcans font des îles. */
     climat?: boolean;
     /** Les régimes en spectre (docs/30) : le cycle de nuit les éveille, une fois, après la flore ; chaque lignée mange des feuilles, des fruits, des graines, du nectar, des insectes, de la viande ou du sang, en parts qui lui sont propres. */

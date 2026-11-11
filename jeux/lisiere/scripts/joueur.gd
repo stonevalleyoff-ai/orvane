@@ -158,7 +158,7 @@ func deplacer(dir: Vector2, delta: float, monde) -> void:
 	if en_mouvement:
 		if absf(dir.x) > 0.1:
 			regard = signf(dir.x)
-		var allure := 0.7 if faim <= 0.0 else 1.0
+		var allure: float = (0.7 if faim <= 0.0 else 1.0) * (float(monde.jeu.allure_temps) if monde.jeu != null else 1.0)   # (la neige au sol ralentit)
 		var avant := position
 		position = monde.repousser(position + dir.limit_length(1.0) * R.VITESSE * allure * delta, 8.0)
 		_v_mesure = (position - avant) / maxf(delta, 0.0001)

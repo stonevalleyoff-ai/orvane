@@ -77,8 +77,8 @@ console.log('4. Le garder, le recharger, le navigateur, le contrat');
   let refuse = false; try { Solo.charger('{"x":1}'); } catch { refuse = true; } verif(refuse, "charger refuse ce qui n'est pas un monde solo");
   // le navigateur : les fichiers chargés dans l'ordre, sans require ni module, comme des balises <script>
   const ctx = { console, JSON, Math, Date }; ctx.globalThis = ctx; vm.createContext(ctx);
-  for (const f of ['moteur/catalogue.js', 'moteur/corps.js', 'moteur/dietes.js', 'moteur/flore.js', 'moteur/derives.js', 'moteur/pathogenes.js', 'moteur/milieu.js', 'moteur/synthetique.js', 'moteur/ponte.js', 'moteur/stades.js',
-    'moteur/invention.js', 'moteur/natures.js', 'moteur/climat.js', 'moteur/grammaire.js', 'moteur/castes.js', 'moteur/formes.js', 'moteur/esprit.js', 'moteur/orvane.js', 'tampon/tampon.js', 'moteur/parcelles.js', 'moteur/collectif.js', 'moteur/solo.js'])   // (docs/19 : tous les modules, avant orvane.js)
+  for (const f of ['moteur/catalogue.js', 'moteur/corps.js', 'moteur/dietes.js', 'moteur/phenologie.js', 'moteur/flore.js', 'moteur/derives.js', 'moteur/pathogenes.js', 'moteur/milieu.js', 'moteur/synthetique.js', 'moteur/ponte.js', 'moteur/stades.js',
+    'moteur/invention.js', 'moteur/natures.js', 'moteur/climat.js', 'moteur/meteo.js', 'moteur/succession.js', 'moteur/diversite.js', 'moteur/grammaire.js', 'moteur/castes.js', 'moteur/formes.js', 'moteur/esprit.js', 'moteur/orvane.js', 'tampon/tampon.js', 'moteur/parcelles.js', 'moteur/collectif.js', 'moteur/solo.js'])   // (docs/19 : tous les modules, avant orvane.js)
     vm.runInContext(fs.readFileSync(racine(f), 'utf8'), ctx, { filename: f });
   ctx.src = j; const D = vm.runInContext('(() => { const S = OrvaneSolo.charger(src); OrvaneSolo.cycles(S, 2); return JSON.stringify(S.etat); })()', ctx);
   verif(empreinte(JSON.parse(D)) === empreinte(B.etat), 'dans un navigateur (globalThis.OrvaneSolo), le même monde qu\'avec Node');

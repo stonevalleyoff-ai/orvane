@@ -21,6 +21,7 @@ const Essai := preload("res://scripts/essai.gd")
 const Tactile := preload("res://scripts/tactile.gd")
 const Effets := preload("res://scripts/effets.gd")
 const Vitrine := preload("res://scripts/vitrine.gd")
+const Ciel := preload("res://scripts/ciel.gd")
 const SAUVEGARDE := "user://lisiere.json"
 const DUREE_MORT := 2.4          # la veilleuse tombe, puis l'écran de fin
 
@@ -37,6 +38,12 @@ var joueur
 var camera: Camera2D
 var obscurite: CanvasModulate
 var couche_yeux: CanvasLayer
+var couche_ciel: CanvasLayer
+var ciel
+# le temps qu'il fait dans le lieu, ce cycle du monde d'Orvane (docs/45) ; {} : un monde sans météo
+var meteo: Dictionary = {}
+var feu_temps := 1.0
+var allure_temps := 1.0
 var yeux
 var feux: Array = []
 var en_partie := false
@@ -159,6 +166,9 @@ func _commencer(b: String) -> void:
 	biome_info = donnees.biome(b)
 	saison = str(inst.get("cycle", {}).get("saison", {}).get("nom", "été"))
 	part_nuit = float(R.NUIT.get(saison, 0.4))
+	meteo = Orvane.meteo(b)
+	feu_temps = float(R.FEU_TEMPS.get(str(meteo.get("temps", "")), 1.0))
+	allure_temps = R.ALLURE_NEIGE if float(meteo.get("neige", 0.0)) >= R.NEIGE_AU_SOL else 1.0
 	_nouvelle_partie()
 
 
@@ -195,6 +205,12 @@ func _nouvelle_partie() -> void:
 	yeux = Yeux.new()
 	yeux.jeu = self
 	couche_yeux.add_child(yeux)
+	couche_ciel = CanvasLayer.new()
+	couche_ciel.layer = 2
+	add_child(couche_ciel)
+	ciel = Ciel.new()
+	couche_ciel.add_child(ciel)
+	ciel.regler(str(meteo.get("temps", "")), float(meteo.get("vent", 0.0)))
 	horloge = R.TRANSITION + 2.0
 	jour = 1
 	nuits = 0
@@ -215,6 +231,11 @@ func _nouvelle_partie() -> void:
 	en_partie = true
 	ui.montrer_hud()
 	ui.message("Tu t'éveilles à la lisière : %s, %s. Le jour baisse vite." % [str(biome_info.get("nom", biome)), saison])
+	var dit := str(R.TEMPS_DIT.get(str(meteo.get("temps", "")), ""))
+	if allure_temps < 1.0:
+		dit = (dit + " " if dit != "" else "") + "La neige tient au sol : on y marche moins vite."
+	if dit != "":
+		ui.message(dit, Color(0.72, 0.82, 0.92))
 	ui.message("Ramasse des brindilles et des pierres (Espace). Avec 4 bois et 2 pierres : un feu (1).", Color(0.95, 0.75, 0.45))
 
 
@@ -228,6 +249,10 @@ func _vider() -> void:
 	if couche_yeux != null:
 		couche_yeux.queue_free()
 		couche_yeux = null
+	if couche_ciel != null:
+		couche_ciel.queue_free()
+		couche_ciel = null
+		ciel = null
 	feux.clear()
 	joueur = null
 	monde = null
@@ -266,8 +291,14 @@ func texte_horloge() -> String:
 	var t := fmod(horloge, R.DUREE)
 	var soir := R.DUREE * (1.0 - part_nuit)
 	if t < soir:
-		return "Jour %d · %s · la nuit dans %s" % [jour, saison, _duree(soir - t)]
-	return "Nuit %d · %s · le jour dans %s" % [jour, saison, _duree(R.DUREE - t)]
+		return "Jour %d · %s%s · la nuit dans %s" % [jour, saison, _texte_temps(), _duree(soir - t)]
+	return "Nuit %d · %s%s · le jour dans %s" % [jour, saison, _texte_temps(), _duree(R.DUREE - t)]
+
+
+# le temps qu'il fait, pour l'horloge (« , pluie ») ; rien sous un temps clair, ou dans un monde sans météo
+func _texte_temps() -> String:
+	var t := str(meteo.get("temps", ""))
+	return ", " + str(R.TEMPS.get(t, t)) if t != "" and t != "clair" else ""
 
 
 func _duree(s: float) -> String:

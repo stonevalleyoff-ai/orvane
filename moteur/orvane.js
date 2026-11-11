@@ -61,6 +61,10 @@ const NAT = typeof require === 'function' ? require('./natures.js') : racine.Orv
 const DER = typeof require === 'function' ? require('./derives.js') : racine.OrvaneDerives;   // les dérives (moteur/derives.js, docs/29)
 const DI = typeof require === 'function' ? require('./dietes.js') : racine.OrvaneDietes;   // les régimes en spectre (moteur/dietes.js, docs/30)
 const CLI = typeof require === 'function' ? require('./climat.js') : racine.OrvaneClimat;   // le climat et la géologie lente (moteur/climat.js, docs/31)
+const MET = typeof require === 'function' ? require('./meteo.js') : racine.OrvaneMeteo;   // la météo (moteur/meteo.js, docs/45)
+const PHE = typeof require === 'function' ? require('./phenologie.js') : racine.OrvanePhenologie;   // les saisons des plantes (moteur/phenologie.js, docs/46 ; la flore l'appelle)
+const SUC = typeof require === 'function' ? require('./succession.js') : racine.OrvaneSuccession;   // les plantes sous le feu, la succession, le couvert qui suit les arbres (moteur/succession.js, docs/47)
+const DIV = typeof require === 'function' ? require('./diversite.js') : racine.OrvaneDiversite;   // la flore riche : quarante formes, des caractères, la radiation (moteur/diversite.js, docs/48)
 const GRA = typeof require === 'function' ? require('./grammaire.js') : racine.OrvaneGrammaire;   // la grammaire des effets et des conduites (moteur/grammaire.js, docs/32)
 const CAS = typeof require === 'function' ? require('./castes.js') : racine.OrvaneCastes;   // les castes, les insectes sociaux (moteur/castes.js, docs/33)
 const FOR = typeof require === 'function' ? require('./formes.js') : racine.OrvaneFormes;   // les formes nouvelles (moteur/formes.js, docs/33)
@@ -469,7 +473,7 @@ const biomasse = (plans, N) => N.reduce((s, n, i) => s + n * (plans[i].masse_kg 
 // (dans un navigateur, un module se charge par sa balise <script>, AVANT orvane.js ; un monde qui a éveillé un mécanisme dont le
 // module manque tournerait sans lui, sans rien dire : on le dit, une fois — docs/19)
 const MODULES = [['mere', SYN, 'synthetique'], ['flore', FLO, 'flore'], ['pathogenes', PAT, 'pathogenes'], ['milieu', MIL, 'milieu'], ['ponte', PON, 'ponte'], ['stades', STA, 'stades'], ['invention', INV, 'invention'],
-  ['natures', NAT, 'natures'], ['derives', DER, 'derives'], ['dietes', DI, 'dietes'], ['climat', CLI, 'climat'], ['grammaire', GRA, 'grammaire'], ['castes', CAS, 'castes'], ['formes', FOR, 'formes'], ['esprit', ESP, 'esprit']], AVERTIS = new Set();
+  ['natures', NAT, 'natures'], ['derives', DER, 'derives'], ['dietes', DI, 'dietes'], ['climat', CLI, 'climat'], ['meteo', MET, 'meteo'], ['phenologie', PHE, 'phenologie'], ['succession', SUC, 'succession'], ['diversite', DIV, 'diversite'], ['grammaire', GRA, 'grammaire'], ['castes', CAS, 'castes'], ['formes', FOR, 'formes'], ['esprit', ESP, 'esprit']], AVERTIS = new Set();
 function cycle(inst, pressions = {}, opt = {}) {
   for (const [cle, M, f] of MODULES) if (inst?.monde?.[cle] && !M && !AVERTIS.has(cle)) { AVERTIS.add(cle); if (typeof console !== 'undefined') console.warn(`Orvane : ce monde a éveillé « ${cle} », mais moteur/${f}.js n'est pas chargé (avant orvane.js) : ce mécanisme est ignoré (docs/19).`); }
   const propres = inst?.monde?.regles, M = inst?.catalogue?.monde, avant = {}, ax = AX, ext = CORPS?.etendre ? CORPS.etendre(M) : null;
@@ -498,9 +502,13 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   // 1. l'habitat : les pertes et gains du cycle, puis un lent retour vers la capacité de base ; (docs/22) le milieu transformé par ses
   //    bêtes et ses joueurs : ses axes d'aujourd'hui, et la capacité que les fouisseurs lui donnent
   const SC = CLI && inst.monde?.climat ? CLI.preparer({ monde: inst.monde, biomes, n, taxons: plantes }) : null; if (SC) SC.avant();   // (docs/31) le climat, la mer, les volcans
-  const SM = MIL && inst.monde?.milieu ? MIL.preparer({ biomes, taxons: tousT, prB, n, climat: SC }) : null; if (SM) ev.push(...SM.evenements);
+  const SSu = SUC && inst.monde?.succession && plantes.length ? SUC.preparer({ plantes, biomes, n }) : null;   // (docs/47) les plantes subissent et transforment
+  const SM = MIL && inst.monde?.milieu ? MIL.preparer({ biomes, taxons: tousT, prB, n, climat: SC, couvert: SSu ? SSu.couvert : null }) : null; if (SM) ev.push(...SM.evenements);
   if (SC) { SC.appliquer(); ev.push(...SC.evenements); }
   const SN = NAT && inst.monde?.natures ? NAT.preparer(inst.monde, n) : null; if (SN) { for (const b of Object.values(biomes)) SN.changer(b); ev.push(...SN.evenements); }   // (docs/28) un lieu prend la nature dont ses axes sont le plus près
+  // (docs/45) la météo : le temps qu'il fait dans chaque lieu ce cycle ; il déplace les axes et la production de la saison
+  const SMe = MET && inst.monde?.meteo ? MET.preparer({ monde: inst.monde, biomes, n, axes: b => axesSaison(b, phase) }) : null; if (SMe) ev.push(...SMe.evenements);
+  const axesCycle = SMe ? b => SMe.axes(b, axesSaison(b, phase)) : b => axesSaison(b, phase), prodCycle = SMe ? b => productionSaison(b, phase) * SMe.production(b) : b => productionSaison(b, phase);
   const SR = PON && inst.monde?.ponte ? PON.preparer({ taxons: tousT, biomes }) : null;   // (docs/25) les pondeurs, les mangeurs d'œufs, les nids pillés
   const SV = STA && inst.monde?.stades ? STA.preparer() : null;   // (docs/26) les cycles de vie
   const SCa = CAS && inst.monde?.castes ? CAS.preparer() : null;   // (docs/33) les colonies
@@ -516,15 +524,15 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   const sinistres = {};
   for (const b of Object.values(biomes)) {
     if (b.catastrophes === false) continue;
-    const ax = axesSaison(b, phase), C = REGLES.catastrophes, ete = phase != null ? Math.max(0, -Math.cos(2 * Math.PI * phase)) : .5, printemps = phase != null ? Math.max(0, Math.sin(2 * Math.PI * phase)) : .5;
+    const ax = axesCycle(b), cause = SMe ? SMe.causes(b) : null, C = REGLES.catastrophes, ete = phase != null ? Math.max(0, -Math.cos(2 * Math.PI * phase)) : .5, printemps = phase != null ? Math.max(0, Math.sin(2 * Math.PI * phase)) : .5;
     const chances = {
-      incendie: C.incendie.chance * Math.max(0, ax.couvert - .3) * Math.max(0, 1 - ax.humidite) * 4 * (.5 + ete),
-      crue: C.crue.chance * Math.max(0, ax.humidite - .5) * Math.max(0, 1 - ax.altitude) * 4 * (.5 + printemps),
-      secheresse: C.secheresse.chance * Math.max(0, .6 - ax.humidite) * 4 * ete
+      incendie: C.incendie.chance * Math.max(0, ax.couvert - .3) * Math.max(0, 1 - ax.humidite) * 4 * (.5 + ete) * (cause ? cause.incendie : 1),
+      crue: C.crue.chance * Math.max(0, ax.humidite - .5) * Math.max(0, 1 - ax.altitude) * 4 * (.5 + printemps) * (cause ? cause.crue : 1),
+      secheresse: C.secheresse.chance * Math.max(0, .6 - ax.humidite) * 4 * ete * (cause ? cause.secheresse : 1)
     };
     for (const [type, p] of Object.entries(chances)) if (p > 0 && R() < p) {
       b.capacite = Math.max(0, b.capacite * (1 - C[type].capacite)); sinistres[b.id] = type;
-      ev.push({ type: 'catastrophe', taxon: b.id, biome: b.id, detail: `${type} : ${C[type].detail} ; capacité −${Math.round(C[type].capacite * 100)} %` });
+      ev.push({ type: 'catastrophe', taxon: b.id, biome: b.id, detail: `${type} : ${C[type].detail}${cause ? ', ' + cause.dit[type] : ''} ; capacité −${Math.round(C[type].capacite * 100)} %` });
       break;
     }
   }
@@ -559,7 +567,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
 
   // 2d. la flore (docs/17) : la nourriture de chaque brouteur ; rien, s'il n'y a pas de plantes
   const GR = GRA && inst.monde?.grammaire ? GRA.preparer({ cat, taxons }) : null;   // (docs/32) une lueur dans le noir, une décharge dans l'eau : lieu par lieu
-  const SF = FLO && plantes.length ? FLO.preparer({ plantes, etat, taxons, biomes, phase, productionSaison, PART_K, recouvrement, cat, dietes: DT }) : null;
+  const SF = FLO && plantes.length ? FLO.preparer({ plantes, etat, taxons, biomes, phase, monde: inst.monde, n, saisons: REGLES.saisons, succession: SSu, sinistres, productionSaison, PART_K, recouvrement, cat, dietes: DT }) : null;
 
   // 2e. les souches (docs/18) : rien, si le monde n'en a pas
   const SP = PAT && inst.monde?.pathogenes ? PAT.preparer({ inst, n, biomes, taxons, etat, ev, parente }) : null;
@@ -611,7 +619,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
         const demande = D.reduce((a, q) => a + q.pop.N.reduce((x, N, i) => x + N * besoinDe(q.E.plans[i]), 0), 0);
         for (const q of D) { let sN = 0; q.pop.N.forEach((N, i) => { if (N <= 0) return; const be = besoinDe(q.E.plans[i]), a = demande > 0 ? offre * be / demande : 0, sa = a / (a + be); q.pop.ration[i] = N * be * sa; sN += sa * N; });
           q.pop.satiete = q.Nt ? sN / q.Nt : 0; } } }
-    if (SY) SY.reguler(bid, T, B[bid] || [], biomes[bid].capacite * productionSaison(biomes[bid], phase));   // les machines régulent (docs/16)
+    if (SY) SY.reguler(bid, T, B[bid] || [], biomes[bid].capacite * prodCycle(biomes[bid]));   // les machines régulent (docs/16)
     for (const q of T) q.pop.N.forEach((N, i) => { q.pop.predation[i] = Math.min(q.pop.predation[i], N * REGLES.predation_max); });   // nul ne mange plus qu'une part d'une population en un cycle
   }
 
@@ -626,8 +634,8 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
     const E = etat.get(t.id), K = t.phenotypes.length;
     for (const [bid, pop] of Object.entries(E.pops)) {
       const b = biomes[bid]; if (!b) { delete E.pops[bid]; continue; }
-      const bS = phase == null ? b : { ...b, axes: axesSaison(b, phase) };                    // le biome tel qu'il est en cette saison
-      const conv = convenance(t.plan, bS), Keff = b.capacite * productionSaison(b, phase) * (SF ? SF.ratio(t, bid) : 1);   // (docs/17 : ce qui reste à brouter)
+      const bS = phase == null && !SMe ? b : { ...b, axes: axesCycle(b) };                    // le biome tel qu'il est en cette saison
+      const conv = convenance(t.plan, bS), Keff = b.capacite * prodCycle(b) * (SF ? SF.ratio(t, bid) : 1);   // (docs/17 : ce qui reste à brouter)
       const syn = SY && t.plan.regime === 'synthetique';                                        // (une machine : sa presse est celle de l'énergie, docs/16)
       const sat = syn ? SY.sat(bid) : Keff > 0 ? charge(B[bid], t.plan.masse_kg || 1) / (Keff * BANDE) * (SF ? SF.concurrence(t, bid) : 1) : 9;   // (docs/17 : pesée par ce qu'on mange en commun)
       pop.satC = sat;
@@ -939,6 +947,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   if ((INV && inst.monde?.invention) || (GRA && inst.monde?.grammaire)) for (const t of sortie) if (!t.eteint && t.phenotypes.length > REGLES.max_phenotypes) plafonner(t, REGLES.max_phenotypes);
   if (SF && DER && inst.monde?.derives) { const r = DER.diviser(plantes, { n, ids: new Set([...inst.taxons, ...sortie, ...plantes].map(t => t.id)), noms: Object.fromEntries(Object.values(biomes).map(b => [b.id, b.nom || b.id])), flore: inst.monde.flore?.lignees });   // (docs/29) des plantes qui se séparent
     plantes.push(...r.neuves); ev.push(...r.evenements); }
+  let SDi = null; if (SF && DIV && inst.monde?.diversite) { SDi = DIV.vivre(plantes, { n, biomes, monde: inst.monde, ids: new Set([...inst.taxons, ...sortie, ...plantes].map(t => t.id)) }); ev.push(...SDi.evenements); }   // (docs/48) la flore riche : la place, les séparations, les lieux gagnés, les extinctions
   if (SF) sortie.push(...SF.ecrire());   // les plantes (docs/17)
 
   // 7. le catalogue de l'instantané : les traits réellement portés
@@ -947,9 +956,9 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   const ORD = Object.keys(CAT.TRAITS), traits = {}; for (const id of [...portes].sort((x, y) => ((ORD.indexOf(x) + 1) || 999) - ((ORD.indexOf(y) + 1) || 999) || (x < y ? -1 : 1))) traits[id] = clone(cat[id]);   // (une copie : un jeu qui modifie l'instantané reçu ne touche pas au catalogue du moteur)
   const duree = opt.duree_ms ?? 86400000, d0 = Date.parse(inst.cycle.date);
   return {
-    orvane: CONTRAT, monde: (m => m === inst.monde ? clone(m) : m)((m => SP ? SP.monde(m) : m)((m => SY ? SY.monde(m) : m)(SN ? SN.monde(SC ? SC.monde(inst.monde) : inst.monde) : SC ? SC.monde(inst.monde) : inst.monde))),
+    orvane: CONTRAT, monde: (m => m === inst.monde ? clone(m) : m)((m => SDi ? SDi.monde(m) : m)((m => SP ? SP.monde(m) : m)((m => SY ? SY.monde(m) : m)(SN ? SN.monde(SC ? SC.monde(inst.monde) : inst.monde) : SC ? SC.monde(inst.monde) : inst.monde)))),
     cycle: { n, date: new Date((Number.isFinite(d0) ? d0 : 0) + duree).toISOString(), pressions_recues: pressions.nombre ?? 0, ...(saison ? { saison } : {}) },
-    biomes: Object.values(biomes).map(b => phase == null ? b : { ...b, axes_saison: axesSaison(b, phase) }), catalogue: { version: inst.catalogue?.version || '0.1', traits, ...(GEN ? { quantitatifs: clone(QUANT) } : {}), organes: CORPS.catalogueOrganes(), ...(SF ? { flore: FLO.TRAITS } : {}), ...(SAV ? { savoirs: SAV } : {}), ...(MC ? { monde: MC } : {}) },
+    biomes: Object.values(biomes).map(b => phase == null ? b : { ...b, axes_saison: axesSaison(b, phase) }), catalogue: { version: inst.catalogue?.version || '0.1', traits, ...(GEN ? { quantitatifs: clone(QUANT) } : {}), organes: CORPS.catalogueOrganes(), ...(SF ? { flore: FLO.TRAITS } : {}), ...(SDi ? { flore_riche: DIV.catalogue() } : {}), ...(SAV ? { savoirs: SAV } : {}), ...(MC ? { monde: MC } : {}) },
     taxons: sortie, evenements: ev
   };
 }
