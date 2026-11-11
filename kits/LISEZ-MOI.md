@@ -82,7 +82,7 @@ func _on_sauvegarde() -> void:
 - **Dessiner les plantes, lire le temps qu'il fait** (l'herbier, docs/49) : `await Orvane.lire_herbier("foret")` lit les plantes du lieu, dessinées dans leur stade du cycle ; `Orvane.plantes("foret")` les rend, les plus lourdes d'abord (leur forme, leur port, leur hauteur, leur part) ; `Orvane.texture_plante(id, 96.0, "foret")` rend l'image d'une plante à 96 pixels de large, le pied à 144/150 de sa hauteur ; `Orvane.meteo("foret")` rend le temps du lieu (`temps`, `vent`, `neige`, `secheresse`…), `Orvane.temps("foret")` son nom. Hors ligne : `Orvane.ajouter_herbier(biome, herbier)`.
 - `Orvane.lire_json(url)` lit n'importe quel document du monde ; `Orvane.oublier()` efface ce qui a été compté et pas encore clos (une partie d'essai, un jeu qui n'envoie rien).
 
-**Vérifié** : la syntaxe GDScript 4 (`gdtoolkit`, à chaque PR). **Pas encore vérifié** : le kit n'a pas tourné dans Godot lui-même. Le premier jeu Godot qui s'en sert, [Lisière](../jeux/lisiere/LISEZ-MOI.md), le dira : son essai sans écran (`outils/godot.sh --headless --path jeux/lisiere -- --essai`) fait tourner le kit dans Godot 4.3.
+**Vérifié** : la syntaxe GDScript 4 (`gdtoolkit`, à chaque PR). **Pas encore vérifié** : le kit n'a pas tourné dans Godot lui-même. Le premier jeu Godot qui s'en sert, [Lisière](https://github.com/stonevalleyoff-ai/Lisi-re), le dira : son essai sans écran (dans son dépôt, `outils/godot.sh --headless --path . -- --essai`) fait tourner le kit dans Godot 4.3. Lisière porte une copie du kit (`addons/orvane/`) et la reprend quand il le veut : son banc signale une copie en retard sur celle d'ici.
 
 ## Ce qui reste ouvert
 

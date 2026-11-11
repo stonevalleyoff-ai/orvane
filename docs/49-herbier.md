@@ -57,7 +57,7 @@ Hors ligne, `Orvane.ajouter_herbier(biome, herbier)` donne au kit un herbier gar
 
 **Le kit Unity** : `instantane.Biome("foret").Meteo` rend le temps du lieu (`Temps`, `Vent`, `Neige`, `Secheresse`…), ou `null`. Il ne lit pas encore l'herbier.
 
-**Lisière** (`jeux/lisiere/`), le premier jeu à s'en servir :
+**[Lisière](https://github.com/stonevalleyoff-ai/Lisi-re)** (son propre dépôt), le premier jeu à s'en servir :
 - chaque arbre, chaque buisson, chaque touffe du lieu est une lignée de plantes d'Orvane, semée selon son poids, à sa taille (un arbre de 6 m fait 80 pixels, un arbre de 60 m 150), dans son stade du cycle ;
 - la pluie, l'orage, la tempête, la neige et le brouillard se dessinent et se disent à l'horloge (« été, pluie ») ;
 - sous l'eau et le vent, le feu mange son bois plus vite : × 1,4 sous la pluie, × 1,7 sous l'orage, × 2 sous la tempête ;
@@ -77,7 +77,7 @@ Aujourd'hui, le monde d'Orvane n'a ni météo ni flore riche : la forêt de Lisi
 node bancs/herbier.js
 ```
 
-Et dans Godot, l'essai sans écran de Lisière (`outils/godot.sh --headless --path jeux/lisiere -- --essai`, 29 vérifications) : le décor est fait des plantes du lieu (655 objets dessinés d'après l'herbier) ; sous la tempête, le feu mange deux fois plus de bois ; la pluie et la neige se dessinent et se disent à l'horloge ; dans la neige, on marche moins vite. `bancs/lisiere.js` vérifie que chaque lieu gardé dans le jeu a son herbier.
+Et dans Godot, l'essai sans écran de Lisière (dans son dépôt : `outils/godot.sh --headless --path . -- --essai`, 29 vérifications) : le décor est fait des plantes du lieu (655 objets dessinés d'après l'herbier) ; sous la tempête, le feu mange deux fois plus de bois ; la pluie et la neige se dessinent et se disent à l'horloge ; dans la neige, on marche moins vite. Son banc (`outils/banc.js`, dans son dépôt) vérifie que chaque lieu gardé dans le jeu a son herbier.
 
 ## Ce qui reste ouvert
 

@@ -4,7 +4,7 @@
 # de Godot (github.com/godotengine/godot), vérifie son empreinte (SHA-512, celle que Godot publie), et la garde en cache.
 # À chaque lancement, il revérifie l'empreinte du programme avant de le lancer : un programme modifié ne se lance pas.
 #   outils/godot.sh --version                                  la version
-#   outils/godot.sh --headless --path jeux/lisiere --import    tout ce que Godot accepte
+#   outils/godot.sh --headless --path <projet> --import        tout ce que Godot accepte
 #   outils/godot.sh --modeles-web                              installe les modèles d'export web (téléchargés, vérifiés)
 # Le cache : $GODOT_CACHE, sinon ~/.cache/orvane/godot-4.3. Les modèles vont où Godot les cherche.
 set -euo pipefail
