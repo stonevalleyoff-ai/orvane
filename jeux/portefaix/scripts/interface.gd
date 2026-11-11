@@ -15,6 +15,8 @@ signal deconnexion
 signal sans_compte
 signal vers_connexion
 signal pseudo_choisi(pseudo: String)
+signal salon_creer
+signal salon_rejoindre(code: String)
 
 var _menu: Control
 var _salon: Control
@@ -25,6 +27,7 @@ var _adresse: LineEdit
 var _chaine: LineEdit
 var _micro: CheckBox
 var _salon_texte: Label
+var _salon_code: Label
 var _salon_bouton: Button
 var _heure: Label
 var _quota: Label
@@ -48,6 +51,14 @@ var _compte_bouton: Button
 var _pseudo_ligne: HBoxContainer
 var _pseudo: LineEdit
 var _connecte := false
+var _ligne_bloc: VBoxContainer     # jouer en ligne : ouvrir un salon, ou entrer par un code
+var _ligne_creer: Button
+var _ligne_rang: HBoxContainer
+var _ligne_code: LineEdit
+var _ligne_note: Label
+var _ligne_possible := false
+var _b_seul: Button
+var _b_entrer: Button
 var _en_ligne: Array = []          # ce qui demande le réseau du dehors : le compte, le chat de Twitch
 var _reseau: Array = []           # ce qui sert à jouer à plusieurs, caché dans un navigateur
 
@@ -136,8 +147,29 @@ func _faire_menu() -> void:
 	_pseudo.add_theme_font_size_override("font_size", 18)
 	_pseudo_ligne.add_child(_pseudo)
 	_bouton(_pseudo_ligne, "Garder ce pseudo", func(): pseudo_choisi.emit(_pseudo.text))
-	_bouton(_menu, "Jouer seul", func(): seul.emit())
-	_reseau.append(_bouton(_menu, "Héberger une partie (2 à 6 joueurs)", func(): heberger.emit()))
+	_b_seul = _bouton(_menu, "Jouer seul", func(): seul.emit())
+	_ligne_bloc = VBoxContainer.new()
+	_ligne_bloc.add_theme_constant_override("separation", 10)
+	_menu.add_child(_ligne_bloc)
+	_en_ligne.append(_ligne_bloc)
+	_ligne_creer = _bouton(_ligne_bloc, "Ouvrir un salon en ligne (2 à 6 joueurs)", func(): salon_creer.emit())
+	_ligne_rang = HBoxContainer.new()
+	_ligne_bloc.add_child(_ligne_rang)
+	_ligne_code = LineEdit.new()
+	_ligne_code.placeholder_text = "le code d'un salon"
+	_ligne_code.max_length = 5
+	_ligne_code.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_ligne_code.add_theme_font_size_override("font_size", 20)
+	_ligne_code.text_changed.connect(func(t: String):
+		if t != t.to_upper():
+			var ou := _ligne_code.caret_column
+			_ligne_code.text = t.to_upper()
+			_ligne_code.caret_column = ou)
+	_ligne_code.text_submitted.connect(func(t: String): salon_rejoindre.emit(t))
+	_ligne_rang.add_child(_ligne_code)
+	_b_entrer = _bouton(_ligne_rang, "Entrer dans ce salon", func(): salon_rejoindre.emit(_ligne_code.text))
+	_ligne_note = _texte(_ligne_bloc, "", 15, Color(0.6, 0.62, 0.66))
+	_reseau.append(_bouton(_menu, "Héberger en réseau local (2 à 6 joueurs)", func(): heberger.emit()))
 	var ligne := HBoxContainer.new()
 	_menu.add_child(ligne)
 	_reseau.append(ligne)
@@ -185,6 +217,7 @@ func _faire_connexion() -> void:
 
 func _faire_salon() -> void:
 	_texte(_salon, "Le salon", 40, Color(1.0, 0.86, 0.5))
+	_salon_code = _texte(_salon, "", 54, Color(1.0, 0.95, 0.8))     # le code d'un salon en ligne, en grand : c'est lui qu'on dicte
 	_salon_texte = _texte(_salon, "", 20)
 	_salon_bouton = _bouton(_salon, "Commencer la nuit", func(): commencer.emit())
 	_bouton(_salon, "Retour", func(): quitter.emit())
@@ -269,6 +302,20 @@ func passer_au_tactile() -> void:
 	_aide.text = "Le pouce gauche marche, le droit regarde en glissant.\nAgir : prendre, poser, klaxonner · Courir (bruyant) et Bas restent enfoncés."
 
 
+# où sont les boutons et les champs qu'on voit, en pixels de la fenêtre : pour qu'un essai dans un navigateur clique au bon endroit
+func reperes() -> Dictionary:
+	var vers := get_viewport().get_screen_transform()
+	var r := {}
+	var choses := {"email": _email, "mdp": _mdp, "connecter": _connexion_bouton, "seul": _b_seul, "ouvrir": _ligne_creer, "code": _ligne_code,
+		"entrer": _b_entrer, "commencer": _salon_bouton}
+	for nom in choses:
+		var c: Control = choses[nom]
+		if c.is_visible_in_tree():
+			var p: Vector2 = vers * c.get_global_rect().get_center()
+			r[nom] = [int(p.x), int(p.y)]
+	return r
+
+
 # --- les écrans ---
 
 func menu(avis: String) -> void:
@@ -291,13 +338,30 @@ func compte(connecte: bool, nom: String, occupe: bool, erreur: String) -> void:
 	_compte_bouton.text = "Se déconnecter" if connecte else "Se connecter"
 	_compte_bouton.disabled = occupe
 	_pseudo_ligne.visible = connecte
+	_en_ligne_maj()
 	if connecte:
 		_mdp.text = ""
 		if not _pseudo.has_focus():
 			_pseudo.text = nom if nom != "Porteur" else ""
 
 
-func salon(t: String, hote: bool) -> void:
+# jouer en ligne demande un compte, et de quoi relier les joueurs (tous les navigateurs l'ont)
+func en_ligne(possible: bool) -> void:
+	_ligne_possible = possible
+	_en_ligne_maj()
+
+
+func _en_ligne_maj() -> void:
+	var ouvert := _ligne_possible and _connecte
+	_ligne_creer.visible = ouvert
+	_ligne_rang.visible = ouvert
+	_ligne_note.visible = not ouvert
+	_ligne_note.text = "Pour jouer en ligne : connecte-toi." if _ligne_possible else "Le jeu en ligne (salon et code) se joue dans un navigateur."
+
+
+func salon(t: String, hote: bool, code: String = "") -> void:
+	_salon_code.text = "  ".join(code.split(""))
+	_salon_code.visible = code != ""
 	_salon_texte.text = t
 	_salon_bouton.visible = hote
 	_montrer(_salon)

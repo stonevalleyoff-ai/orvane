@@ -28,6 +28,7 @@ var _mat_corps: StandardMaterial3D
 var _cri := 0.0
 var _envoi := 0.0
 var _pas := 0.0
+var _prise_le := -1               # quand la souris a été prise (ce qu'elle dit juste après ne compte pas)
 
 const COULEURS := [Color(0.9, 0.55, 0.15), Color(0.2, 0.6, 0.9), Color(0.4, 0.75, 0.3), Color(0.85, 0.3, 0.5), Color(0.9, 0.85, 0.3), Color(0.6, 0.4, 0.85)]
 
@@ -140,7 +141,16 @@ func _unhandled_input(e: InputEvent) -> void:
 	if not local or pilote or principal.etat != principal.PARTIE or principal.tactile.actif:
 		return      # (au doigt, c'est scripts/tactile.gd qui mène : un toucher fait aussi un clic, qui ne doit rien prendre)
 	var pris := Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
-	if e is InputEventMouseMotion and pris:
+	if e is InputEventMouseMotion:
+		# quand la souris vient d'être prise, un navigateur peut annoncer un grand mouvement qui n'a pas eu lieu (le regard partait au
+		# ciel) : on laisse passer un quart de seconde, et on ne croit jamais un bond de plus de 300 pixels d'un coup
+		if not pris:
+			_prise_le = -1
+			return
+		if _prise_le < 0:
+			_prise_le = Time.get_ticks_msec()
+		if Time.get_ticks_msec() - _prise_le < 250 or e.relative.length() > 300.0:
+			return
 		yaw -= e.relative.x * R.SOURIS
 		pitch = clampf(pitch - e.relative.y * R.SOURIS, -1.4, 1.4)
 	elif e is InputEventMouseButton and e.pressed:

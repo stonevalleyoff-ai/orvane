@@ -19,7 +19,8 @@ outils/godot.sh --path jeux/portefaix
 - **Dans un navigateur** : on y joue seul (un navigateur ne peut pas ouvrir de port pour héberger). Une fois ce dossier dans `main`, la passe de publication l'exporte sur le site, à côté de Lisière : `https://stonevalleyoff-ai.github.io/orvane/portefaix/`. Le micro y est éteint au départ ; la case du menu le rallume, si le navigateur l'accorde.
 - **Le compte** : le jeu s'ouvre sur une page de connexion. On s'y connecte avec son **compte Stone Valley** (le même e-mail, le même mot de passe : les comptes du projet Supabase « Vallée de pierre »), ou l'on joue sans compte. Connecté, on se choisit un pseudo, que les autres voient au salon et au-dessus de sa tête ; sans pseudo choisi ici, c'est celui de sa sauvegarde Stone Valley. On reste connecté d'une fois sur l'autre.
 - **Jouer seul** : on est son propre hôte. Le piano et l'armoire ne se soulèvent pas seul ; le quota en tient compte.
-- **À plusieurs** : l'un clique « Héberger », puis « Commencer la nuit » quand tout le monde est au salon. Les autres tapent son adresse et « Rejoindre ». Sur le même réseau local, c'est l'adresse que le salon affiche. Par Internet, l'hôte doit ouvrir le port **24680 en UDP** sur sa box, ou tout le monde passe par un réseau privé (Tailscale, ZeroTier, Hamachi). On n'entre pas dans une nuit commencée.
+- **En ligne, avec un salon et son code** (dans un navigateur, connecté à son compte) : l'un clique « Ouvrir un salon en ligne » ; le jeu lui donne un **code de cinq lettres ou chiffres**. Les autres le tapent dans « le code d'un salon » et entrent. Le salon dit qui est là et qui est déjà relié ; l'hôte lance la nuit. De 2 à 6 porteurs ; on n'entre pas dans une nuit commencée. Rien à ouvrir sur sa box.
+- **À plusieurs en réseau local** (la version de bureau) : l'un clique « Héberger », puis « Commencer la nuit » quand tout le monde est au salon. Les autres tapent son adresse et « Rejoindre ». Sur le même réseau local, c'est l'adresse que le salon affiche. Par Internet, l'hôte doit ouvrir le port **24680 en UDP** sur sa box, ou tout le monde passe par un réseau privé (Tailscale, ZeroTier, Hamachi). On n'entre pas dans une nuit commencée.
 - **Avec son chat Twitch** : l'hôte tape le nom de sa chaîne dans le menu. Le jeu lit le chat en lecture seule, sans compte ni mot de passe. Sans chaîne, des spectateurs de paille votent au hasard.
 
 | | |
@@ -70,10 +71,18 @@ Tous les réglages sont dans `scripts/regles.gd`.
 | `scripts/sons.gd` | les sons, fabriqués au lancement |
 | `scripts/interface.gd` | ce qui s'écrit à l'écran |
 | `scripts/compte.gd` | le compte : se connecter, rester connecté, le pseudo |
+| `scripts/salon.gd` | le salon en ligne : son code, qui y est, relier les joueurs |
+| `supabase.sql` | les tables et les fonctions du salon, dans le Supabase de Stone Valley |
+| `outils/faux-service.js` | un faux service de comptes et de salons, pour les essais |
+| `outils/essai-en-ligne.js` | l'essai en ligne : trois navigateurs, un salon |
 | `scripts/tactile.gd` | jouer du doigt : le joystick, le regard, les boutons |
 | `scripts/essai.gd` | les essais sans écran |
 
 **Le compte** : la connexion passe par le service de comptes de Supabase, avec la clé publique du projet (faite pour être dans le jeu). Le jeu ne lit que qui l'on est et le pseudo de sa sauvegarde ; il **n'écrit jamais** dans la sauvegarde de Stone Valley (`vp_comptes`), et n'a rien changé à la base. Le pseudo choisi ici est gardé sur le compte lui-même (ses métadonnées). Le mot de passe n'est pas gardé : seul un jeton de reprise l'est, sur l'appareil (`user://compte.json`), effacé quand on se déconnecte. Un compte se crée dans Stone Valley, pas ici. Pour l'instant le pseudo qu'un invité annonce à l'hôte est cru sur parole : la preuve (le jeton du compte, `compte.jeton`) servira au jeu en ligne.
+
+**Le salon en ligne** (`scripts/salon.gd`, `supabase.sql`) : Supabase ne porte que le salon. Trois tables (`pf_salons`, `pf_membres`, `pf_signaux`) et six fonctions (`pf_salon_creer`, `_rejoindre`, `_etat`, `_signal`, `_partir`, `_quitter`), dans le projet « Vallée de pierre », à côté de celles de Stone Valley et sans y toucher. Les tables sont fermées : on n'y accède que par les fonctions, réservées aux comptes connectés, et chacun n'y voit que son salon. Le salon sert à se trouver : pendant qu'on attend, le jeu lui demande une fois par seconde qui est là et ce qu'on lui a laissé, et les navigateurs s'y échangent de quoi se relier (WebRTC). Puis la partie passe **directement d'un joueur à l'autre**, chaque invité relié à l'hôte : la base ne voit rien de la nuit. Un salon que son hôte quitte est effacé ; un salon oublié l'est au bout d'un quart d'heure.
+
+Deux limites, connues : sur un ordinateur, hors d'un navigateur, Godot demande une extension pour WebRTC (webrtc-native) que le projet ne porte pas, donc **le jeu en ligne se joue dans un navigateur** ; et les joueurs se trouvent à travers leurs box avec un serveur STUN public, sans relais : derrière certains réseaux (des réseaux mobiles, des réseaux d'entreprise), deux joueurs peuvent ne pas réussir à se relier.
 
 **Le réseau** : l'hôte fait foi. Il fait seul tomber les meubles, penser la chose, compter le chargement et dépouiller les votes, et le redit aux autres vingt fois par seconde. Chaque joueur ne mène que son porteur, et demande le reste à l'hôte (prendre, lâcher, pousser, klaxonner). Tout le monde bâtit la même maison d'après une graine donnée au départ.
 
@@ -88,6 +97,13 @@ outils/godot.sh --headless --path jeux/portefaix -- --essai-compte   # la connex
 
 Chacun sort avec le code 0 si tout passe. Sans écran, Godot écrit des lignes `Parameter "m" is null` : c'est son rendu factice qui ne connaît pas les maillages, sans effet sur le jeu.
 
+L'essai en ligne joue dans trois navigateurs (il lui faut Playwright et son Chromium) : trois comptes se connectent, l'un ouvre un salon, les deux autres y entrent par son code, la nuit commence et ils se voient bouger. Les comptes et le salon passent par un faux service ; la partie passe pour de bon d'un navigateur à l'autre.
+
+```
+outils/godot.sh --headless --path jeux/portefaix --export-release Web /tmp/portefaix-web/index.html
+node jeux/portefaix/outils/essai-en-ligne.js /tmp/portefaix-web
+```
+
 L'export pour un navigateur :
 
 ```
@@ -101,4 +117,5 @@ outils/godot.sh --headless --path jeux/portefaix --export-release Web ../../port
 
 - **Vérifié dans Godot 4.3, sans écran** : les deux essais passent (67 vérifications seul, 15 en réseau, 20 pour la connexion ; avec `--en-ligne`, le vrai service refuse bien un compte qui n'existe pas).
 - **Vérifié dans Chromium** (WebGL 2, un téléphone émulé de 844 sur 390, de vrais touchers) : l'export web se charge, le menu passe au doigt, une partie commence, le joystick fait marcher jusque dans le salon, le pouce droit tourne le regard pendant qu'on marche, « Courir » reste enfoncé, « Torche » éteint la lampe. Deux pouces à la fois : le gauche tenant le joystick, le droit glisse et revient sans que la vue saute, puis glisse et la vue tourne.
-- **Pas encore vérifié** : une connexion réussie avec un vrai compte Stone Valley (l'essai joue contre un faux service qui répond comme le vrai) ; le clavier du téléphone dans les champs de la page de connexion ; une partie jouée par une personne ; le jeu sur un vrai téléphone (la vitesse du rendu, la taille des boutons sous de vrais pouces) ; le micro ; le vrai chat de Twitch (seule la lecture de ses lignes est essayée) ; le réseau entre deux machines.
+- **Vérifié dans trois Chromium à la fois** : l'essai en ligne passe (28 vérifications). Et les fonctions du salon, dans un Postgres local : les codes, six porteurs au plus, la nuit commencée fermée aux nouveaux, le ménage des vieux salons, tout refusé sans compte.
+- **Pas encore vérifié** : le salon en ligne entre deux vraies maisons, à travers deux box ; une connexion réussie avec un vrai compte Stone Valley (l'essai joue contre un faux service qui répond comme le vrai) ; le clavier du téléphone dans les champs de la page de connexion ; une partie jouée par une personne ; le jeu sur un vrai téléphone (la vitesse du rendu, la taille des boutons sous de vrais pouces) ; le micro ; le vrai chat de Twitch (seule la lecture de ses lignes est essayée) ; le réseau entre deux machines.

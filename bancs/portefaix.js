@@ -30,7 +30,20 @@ verif(!espaces.length, `${gd.length} scripts, indentés aux tabulations, comme G
 const compte = lire('scripts/compte.gd'), secrets = gd.filter(f => /service_role|sb_secret_|eyJhbGciOi/.test(lire(f)));
 verif(/const CLE := "sb_publishable_/.test(compte) && /const SUPABASE := "https:\/\//.test(compte) && !secrets.length,
   'le compte : le service et sa clé publique, et aucune clé secrète dans les scripts' + (secrets.length ? ` ; à retirer de : ${secrets.join(', ')}` : ''));
-verif(!/vp_sauver|METHOD_(POST|PATCH|PUT|DELETE), "\/rest/.test(compte), 'il lit la sauvegarde de Stone Valley sans jamais y écrire');
+const ecrit = gd.filter(f => !f.endsWith('essai.gd') && /vp_sauver|vp_oublier|vp_supprimer|METHOD_(POST|PATCH|PUT|DELETE), "\/rest\/v1\/vp_/.test(lire(f)));
+verif(/METHOD_GET, "\/rest\/v1\/vp_comptes/.test(compte) && !ecrit.length, 'il lit la sauvegarde de Stone Valley sans jamais y écrire' + (ecrit.length ? ` ; y écrit : ${ecrit.join(', ')}` : ''));
+
+// le salon en ligne : ce que le jeu appelle existe dans le schéma, fermé comme il faut, et le faux service des essais répond aux mêmes noms
+const sql = lire('supabase.sql'), salon = lire('scripts/salon.gd'), faux = lire('outils/faux-service.js');
+const appelees = [...new Set([...salon.matchAll(/"(pf_\w+)"/g)].map(m => m[1]))], definies = [...sql.matchAll(/create function public\.(pf_salon_\w+)\(/g)].map(m => m[1]);
+const absentes = appelees.filter(f => !definies.includes(f)), sansFaux = definies.filter(f => !new RegExp(f + '\\(uid').test(faux));
+verif(appelees.length >= 5 && !absentes.length && !sansFaux.length, `le salon en ligne : ${definies.length} fonctions au schéma, ${appelees.length} appelées par le jeu, toutes imitées par le faux service`
+  + (absentes.length ? ` ; absentes du schéma : ${absentes.join(', ')}` : '') + (sansFaux.length ? ` ; sans imitation : ${sansFaux.join(', ')}` : ''));
+const tables = [...sql.matchAll(/create table public\.(pf_\w+)/g)].map(m => m[1]);
+verif(tables.length === 3 && tables.every(t => sql.includes(`alter table public.${t} enable row level security`)) && !/create policy/.test(sql)
+  && definies.every(f => new RegExp(`create function public\\.${f}\\([^)]*\\) returns jsonb\\s+language plpgsql security definer set search_path = ''`).test(sql))
+  && /from public, anon;/.test(sql) && !/vp_/.test(sql.replace(/^--.*$/gm, '')),
+  `${tables.length} tables fermées (accès par les fonctions seulement, réservées aux comptes connectés), rien de Stone Valley n'est touché`);
 
 console.log('2. La maison');
 const maison = lire('scripts/maison.gd');

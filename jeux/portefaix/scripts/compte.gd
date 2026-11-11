@@ -20,6 +20,7 @@ var pseudo := ""
 var erreur := ""
 var jeton := ""                   # ce qui prouve qui l'on est, pour ce qui viendra (le jeu en ligne)
 var _reprise := ""
+var _jeton_le := 0                # quand le jeton a été reçu : il ne vaut qu'une heure
 
 
 func nom() -> String:
@@ -91,6 +92,22 @@ func nommer(p: String) -> void:
 	_fin()
 
 
+# appeler une fonction de la base, en son nom : rend sa réponse, ou {erreur}
+func fonction(nom_fonction: String, params: Dictionary) -> Dictionary:
+	if not connecte:
+		return {"erreur": "connexion"}
+	if Time.get_ticks_msec() - _jeton_le > 45 * 60 * 1000 and _reprise != "":      # le jeton vieillit : on le renouvelle
+		_jeton_le = Time.get_ticks_msec()
+		await _recevoir(await _appel(HTTPClient.METHOD_POST, "/auth/v1/token?grant_type=refresh_token", {"refresh_token": _reprise}))
+		if not connecte:
+			change.emit()
+			return {"erreur": "connexion"}
+	var r := await _appel(HTTPClient.METHOD_POST, "/rest/v1/rpc/" + nom_fonction, params, jeton)
+	if r.code == 200 and r.json is Dictionary:
+		return r.json
+	return {"erreur": "reseau" if r.code == 0 else ("connexion" if r.code == 401 or r.code == 403 else "refus %d" % r.code)}
+
+
 func _debut() -> void:
 	occupe = true
 	erreur = ""
@@ -106,6 +123,7 @@ func _recevoir(r: Dictionary) -> bool:
 	var j = r.json
 	if r.code == 200 and j is Dictionary and str(j.get("access_token", "")) != "" and j.get("user") is Dictionary:
 		jeton = str(j.access_token)
+		_jeton_le = Time.get_ticks_msec()
 		_reprise = str(j.get("refresh_token", ""))
 		id = str(j.user.get("id", ""))
 		pseudo = ""

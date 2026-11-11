@@ -5,6 +5,8 @@ extends RefCounted
 # le réseau : l'hôte ouvre ce port (UDP), les autres le rejoignent par son adresse
 const PORT := 24680
 const JOUEURS_MAX := 6
+# en ligne : ce qui aide deux joueurs à se trouver à travers leurs box (un serveur STUN public ; il ne voit pas la partie)
+const STUN := ["stun:stun.l.google.com:19302"]
 
 # la nuit : dix minutes de 22 h à 6 h ; la chose dort pendant le répit du début
 const DUREE_NUIT := 600.0

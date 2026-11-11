@@ -15,6 +15,7 @@ const Sons = preload("res://scripts/sons.gd")
 const Interface = preload("res://scripts/interface.gd")
 const Tactile = preload("res://scripts/tactile.gd")
 const Compte = preload("res://scripts/compte.gd")
+const Salon = preload("res://scripts/salon.gd")
 const Essai = preload("res://scripts/essai.gd")
 
 enum { MENU, SALON, PARTIE, FIN }
@@ -32,6 +33,7 @@ var sons
 var ui
 var tactile
 var compte
+var salon
 var noms := {}                    # le numéro d'un joueur → son pseudo, tel qu'il l'a donné en entrant au salon
 var web := OS.has_feature("web")  # dans un navigateur : on joue seul (pas de port à ouvrir), le doigt ou le clavier
 # « --hors-ligne » : la page qui porte le jeu ne laisse rien sortir vers le réseau (ni comptes, ni chat de Twitch) ; on n'y propose ni l'un ni l'autre
@@ -58,6 +60,7 @@ var _t_ecoute := 0.0
 var _t_charge := 0.0
 var _t_vote := 0.0
 var _t_coeur := 0.0
+var _t_temoin := 0.0
 
 
 func _ready() -> void:
@@ -90,6 +93,18 @@ func _ready() -> void:
 	ui.pseudo_choisi.connect(compte.nommer)
 	ui.vers_connexion.connect(ui.page_connexion)
 	ui.sans_compte.connect(func(): ui.menu(""))
+	salon = Salon.new()
+	salon.name = "Salon"
+	salon.principal = self
+	salon.compte = compte
+	add_child(salon)
+	salon.change.connect(_sur_salon)
+	ui.salon_creer.connect(ouvrir_salon)
+	ui.salon_rejoindre.connect(entrer_salon)
+	ui.en_ligne(Salon.disponible())
+	for a in OS.get_cmdline_args() + OS.get_cmdline_user_args():
+		if a.begins_with("--service="):          # un autre service de comptes et de salons (les essais)
+			compte.url = a.get_slice("=", 1)
 	_sur_compte()
 	tactile = Tactile.new()
 	tactile.name = "Tactile"
@@ -144,6 +159,37 @@ func se_presenter(p: String) -> void:
 	_dire_salon()
 
 
+# --- le salon en ligne ---
+
+func ouvrir_salon() -> void:
+	ui.menu("On ouvre un salon…")
+	var refus: String = await salon.creer()
+	if refus != "":
+		ui.menu(refus)
+
+
+func entrer_salon(code: String) -> void:
+	ui.menu("On frappe à la porte du salon…")
+	var refus: String = await salon.rejoindre(code)
+	if refus != "":
+		ui.menu(refus)
+
+
+# le salon a relié les joueurs : le jeu passe par là
+func brancher(pair: MultiplayerPeer, hote: bool) -> void:
+	multiplayer.multiplayer_peer = pair
+	en_reseau = true
+	serveur = hote
+	mon_id = multiplayer.get_unique_id()
+	etat = SALON
+	_dire_salon()
+
+
+func _sur_salon() -> void:
+	if etat == SALON and salon.code != "":
+		_dire_salon()
+
+
 # --- le menu et le réseau ---
 
 func jouer_seul() -> void:
@@ -178,8 +224,13 @@ func rejoindre(adresse: String) -> void:
 	ui.salon("On frappe chez %s…" % adresse, false)
 
 
+func debrancher() -> void:
+	_hors_ligne()
+
+
 func _hors_ligne() -> void:
 	chat.arreter()
+	salon.quitter()
 	if en_reseau:
 		multiplayer.multiplayer_peer.close()
 	multiplayer.multiplayer_peer = OfflineMultiplayerPeer.new()
@@ -209,11 +260,26 @@ func _part(id: int) -> void:
 
 func _connecte() -> void:
 	mon_id = multiplayer.get_unique_id()
+	if salon.code != "":              # en ligne, le salon sait déjà qui je suis
+		_dire_salon()
+		return
 	se_presenter.rpc_id(1, compte.nom())
 	ui.salon("Tu es dans le salon, %s. L'hôte lance la nuit." % compte.nom(), false)
 
 
 func _dire_salon() -> void:
+	if salon.code != "":
+		# en ligne : le code à donner aux autres, qui est là, et qui est déjà relié
+		var relies: Array = multiplayer.get_peers()
+		var gens: Array = []
+		for m in salon.membres:
+			var n := int(m.get("numero", 0))
+			var lie: bool = n == salon.numero or relies.has(n) or (not salon.hote() and n != 1)
+			gens.append(str(m.get("pseudo", "Porteur")) + ("" if lie else " (en route…)"))
+		var suite := "Donne ce code aux autres. Lance la nuit quand tout le monde est là." if salon.hote() \
+			else ("L'hôte lance la nuit." if relies.has(1) else "On te relie à l'hôte…")
+		ui.salon("C'est le code de ce salon.\n\nDans le salon : %s.\n%s" % [", ".join(gens), suite], salon.hote(), salon.code)
+		return
 	var adresses: Array = []
 	for a in IP.get_local_addresses():
 		if a.count(".") == 3 and not a.begins_with("127.") and not a.begins_with("169.254."):
@@ -234,6 +300,10 @@ func lancer() -> void:
 		ids.append(id)
 	ids.sort()
 	noms[1] = compte.nom()
+	if salon.code != "":             # en ligne, les pseudos sont ceux du salon, et plus personne n'entre
+		for id in ids:
+			noms[id] = salon.pseudo_de(id)
+		salon.partir()
 	var pseudos: Array = []
 	for id in ids:
 		pseudos.append(str(noms.get(id, "Porteur")))
@@ -745,7 +815,26 @@ func _envoyer_objets() -> void:
 		objets_etat.rpc(d)
 
 
+# dans un navigateur : ce que le jeu sait de lui-même, posé dans la page (window.portefaix), pour les essais
+func _temoigner(dt: float) -> void:
+	_t_temoin -= dt
+	if _t_temoin > 0.0:
+		return
+	_t_temoin = 0.3
+	var ou := {}
+	var pseudos := {}
+	for j in joueurs.values():
+		ou[str(j.id)] = [snappedf(j.global_position.x, 0.01), snappedf(j.global_position.z, 0.01)]
+		pseudos[str(j.id)] = j.nom
+	var t := {"etat": ["menu", "salon", "partie", "fin"][etat], "connecte": compte.connecte, "pseudo": compte.nom(), "avis": ui._avis.text,
+		"refus": ui._connexion_avis.text, "code": salon.code, "numero": salon.numero, "membres": salon.membres, "relies": Array(multiplayer.get_peers()),
+		"hote": serveur, "regard": [snappedf(moi.yaw, 0.01), snappedf(moi.pitch, 0.01)] if moi != null else [], "joueurs": ou, "pseudos": pseudos, "meubles": objets.size(), "quota": quota, "reperes": ui.reperes()}
+	JavaScriptBridge.eval("window.portefaix=" + JSON.stringify(t) + ";", true)
+
+
 func _process(dt: float) -> void:
+	if web:
+		_temoigner(dt)
 	if etat != PARTIE or moi == null:
 		return
 	var indice := _indice()
