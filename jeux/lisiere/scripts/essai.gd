@@ -74,10 +74,10 @@ func _lancer() -> void:
 	var dessines := 0
 	var especes := {}
 	for o in jeu.monde.objets:
-		if o.image != null:
+		if o.plante != "":
 			dessines += 1
 			especes[o.plante] = true
-	verif(plantes_lieu.size() > 0 and dessines > 100 and especes.size() >= 2, "le décor est fait des plantes du lieu : %d objets dessinés d'après l'herbier, de %d lignées sur %d (%s)" % [dessines, especes.size(), plantes_lieu.size(), ", ".join(PackedStringArray(plantes_lieu.slice(0, 3).map(func(x): return str(x.get("forme", "?")))))])
+	verif(plantes_lieu.size() > 0 and dessines > 100 and especes.size() >= 2, "le décor est fait des plantes du lieu : %d objets d'après l'herbier (leur couleur, leur taille, leur port, leurs épines), à l'encre, de %d lignées sur %d (%s)" % [dessines, especes.size(), plantes_lieu.size(), ", ".join(PackedStringArray(plantes_lieu.slice(0, 3).map(func(x): return str(x.get("forme", "?")))))])
 	Engine.time_scale = 4.0
 	# (le directeur tire au sort toutes les demi-secondes : on attend qu'une bête vienne, trente secondes au plus)
 	var betes: Array = []
@@ -231,11 +231,16 @@ func _lancer() -> void:
 	j.faim = 100.0
 	j.peur = 0.0
 	j.sante = 0.0
-	await _attendre(0.5)
+	# (elle tombe d'abord : l'écran de fin vient jeu.DUREE_MORT secondes après)
+	for i in 40:
+		await _attendre(0.25)
+		if not jeu.en_partie:
+			break
 	verif(not jeu.en_partie, "la santé à zéro, la partie s'arrête sur l'écran de fin, même rassasiée et calme")
 	print("\n%s (%d vérifications)" % ["tout passe" if ok else "ÉCHEC", n])
 	# (des sons qui jouent encore quand Godot s'arrête, il dit qu'ils fuient : on les arrête, et l'on laisse au serveur audio
 	# le temps de les lâcher)
+	jeu.sons.arreter_brefs()
 	for p in jeu.sons.find_children("*", "AudioStreamPlayer", false, false):
 		p.stop()
 	await get_tree().create_timer(0.3, true, false, true).timeout

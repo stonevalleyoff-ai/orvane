@@ -4,10 +4,14 @@ extends CanvasLayer
 # qui le suit s'il va trop loin) ; le pouce droit agit (de gros boutons, autour de « Agir »). Les boutons pressent les actions
 # du clavier (principal.gd, _actions) : le reste du jeu ne fait pas la différence. Sur un petit écran, l'image grossit ;
 # tenu debout, le téléphone demande qu'on le tourne, et la partie attend.
-# Il s'allume seul sur un écran tactile, ou au premier toucher.
+# Il s'allume seul sur un écran tactile, ou au premier toucher. Les boutons sont des jetons d'encre, chacun avec l'icône du HUD
+# (scripts/interface_icones.gd) et son nom ; pressés, ils s'enfoncent et s'allument ; sans de quoi s'en servir, ils pâlissent.
 
-const ENCRE := Color(0.93, 0.87, 0.74)
-const BRAISE := Color(0.95, 0.62, 0.28)
+const P := preload("res://scripts/palette.gd")
+const T := preload("res://scripts/interface_theme.gd")
+const I := preload("res://scripts/interface_icones.gd")
+const ENCRE := P.IVOIRE
+const BRAISE := P.BRAISE
 const RAYON_STICK := 62.0
 const PAUSE := Vector2(0, 38)          # depuis le milieu du haut de l'écran
 const RAYON_PAUSE := 23.0
@@ -22,6 +26,7 @@ const BOUTONS := [
 	["manger", "Manger", Vector2(-120, -306), 29.0],
 ]
 const MARCHE := {"droite": Vector2.RIGHT, "gauche": Vector2.LEFT, "bas": Vector2.DOWN, "haut": Vector2.UP}
+const ICONES := {"feu": "feu", "torche": "torche", "lance": "lance", "nourrir": "nourrir", "cuire": "cuire", "manger": "manger"}
 
 var jeu
 var actif := false
@@ -33,6 +38,8 @@ var _doigts := {}        # le doigt → l'action qu'il tient
 var _marche := {}        # les actions de marche que ce joystick tient
 var _dessin: Control
 var _tourner: ColorRect
+var _appuis := {}        # l'action → combien le bouton est enfoncé (de 0 à 1)
+var _t := 0.0
 
 
 func _ready() -> void:
@@ -43,17 +50,21 @@ func _ready() -> void:
 	_dessin.draw.connect(_dessiner)
 	add_child(_dessin)
 	_tourner = ColorRect.new()
-	_tourner.color = Color(0.02, 0.024, 0.035)
+	_tourner.color = P.NUIT
 	_tourner.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_tourner.visible = false
-	var l := Label.new()
-	l.text = "Tourne ton téléphone\nà l'horizontale."
-	l.add_theme_font_size_override("font_size", 30)
-	l.add_theme_color_override("font_color", ENCRE)
+	_tourner.theme = T.theme()
+	var l := T.libelle("Tourne ton téléphone\nà l'horizontale.", T.titre(), 30, ENCRE)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	l.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	l.offset_top = 90
 	_tourner.add_child(l)
+	var tel := Control.new()
+	tel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	tel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tel.draw.connect(_dessiner_telephone.bind(tel))
+	_tourner.add_child(tel)
 	add_child(_tourner)
 	get_tree().root.size_changed.connect(_ajuster)
 	if DisplayServer.is_touchscreen_available():
@@ -146,9 +157,16 @@ func _input(e: InputEvent) -> void:
 		_vecteur = d / RAYON_STICK
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if not actif:
 		return
+	_t += delta
+	var tenus := _doigts.values()
+	for b in BOUTONS + [["pause"]]:
+		var a: String = b[0]
+		_appuis[a] = move_toward(float(_appuis.get(a, 0.0)), 1.0 if tenus.has(a) else 0.0, delta * (16.0 if tenus.has(a) else 6.0))
+	if _tourner.visible:
+		_tourner.get_child(1).queue_redraw()
 	if portrait and _en_jeu() and not jeu.en_pause:
 		jeu.en_pause = true
 		jeu.ui.montrer_pause(true)
@@ -193,30 +211,84 @@ func _dessiner() -> void:
 	if not actif or not _en_jeu() or portrait:
 		return
 	var t := _taille()
-	var police := ThemeDB.fallback_font
-	var tenus := _doigts.values()
-	# la pause : deux traits, en haut au milieu
+	# la pause : un jeton, deux traits, en haut au milieu
 	var pp := position_bouton("pause")
-	_dessin.draw_circle(pp, RAYON_PAUSE, Color(0, 0, 0, 0.5 if not tenus.has("pause") else 0.8))
-	_dessin.draw_arc(pp, RAYON_PAUSE, 0.0, TAU, 32, Color(ENCRE, 0.35), 1.5, true)
-	_dessin.draw_rect(Rect2(pp + Vector2(-7, -8), Vector2(4.5, 16)), Color(ENCRE, 0.85))
-	_dessin.draw_rect(Rect2(pp + Vector2(2.5, -8), Vector2(4.5, 16)), Color(ENCRE, 0.85))
+	_jeton(pp, RAYON_PAUSE, float(_appuis.get("pause", 0.0)), true)
+	I.icone(_dessin, "pause", pp, RAYON_PAUSE * 0.95, Color(1, 1, 1, 0.9))
 	if jeu.en_pause:
 		return
 	# le joystick : là où le pouce s'est posé ; au repos, une trace pâle, en bas à gauche
 	var tenu := _doigt_stick >= 0
 	var c := _centre if tenu else Vector2(130, t.y - 140)
-	var a := 0.55 if tenu else 0.2
-	_dessin.draw_circle(c, RAYON_STICK, Color(0, 0, 0, a * 0.6))
-	_dessin.draw_arc(c, RAYON_STICK, 0.0, TAU, 48, Color(ENCRE, a), 2.0, true)
-	_dessin.draw_circle(c + _vecteur * RAYON_STICK, 26.0, Color(ENCRE, a * 0.8))
+	var a := 0.8 if tenu else 0.32
+	I.disque(_dessin, c, RAYON_STICK, Color(P.ENCRE, 0.42 * a))
+	_dessin.draw_arc(c, RAYON_STICK - 1.0, 0.0, TAU, 64, Color(ENCRE, 0.4 * a), 2.0, true)
+	for k in 4:
+		var d := Vector2.from_angle(k * PI * 0.5)
+		var q := c + d * (RAYON_STICK - 12.0)
+		var o := d.orthogonal() * 5.0
+		_dessin.draw_polyline(PackedVector2Array([q - d * 4.0 + o, q, q - d * 4.0 - o]), Color(ENCRE, 0.5 * a), 1.6, true)
+	var bout := c + _vecteur * RAYON_STICK
+	I.disque(_dessin, bout + Vector2(0, 2), 27.0, Color(0, 0, 0, 0.3 * a))
+	I.disque(_dessin, bout, 26.0, Color(P.ENCRE.lerp(P.CAPE, 0.5), 0.9 * a))
+	_dessin.draw_arc(bout, 25.0, 0.0, TAU, 48, Color(BRAISE if tenu else ENCRE, 0.85 * a), 2.0, true)
+	I.disque(_dessin, bout, 6.0, Color(ENCRE, 0.5 * a))
+	if not tenu:
+		var g := T.texte_gras()
+		var lw := g.get_string_size("marcher", HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
+		_dessin.draw_string(g, c + Vector2(-lw * 0.5, RAYON_STICK + 16.0), "marcher", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(ENCRE, 0.45))
 	# les boutons
 	for b in BOUTONS:
 		var p: Vector2 = t + b[2]
 		var r: float = b[3]
 		var dispo := _disponible(b[0])
-		var k := 1.0 if dispo else 0.4
-		_dessin.draw_circle(p, r, Color(0.05, 0.05, 0.07, 0.85 if tenus.has(b[0]) else 0.55))
-		_dessin.draw_arc(p, r, 0.0, TAU, 40, Color(BRAISE, (0.9 if tenus.has(b[0]) else 0.6) * k), 2.0, true)
-		var taille := 17 if b[0] == "agir" else 12
-		_dessin.draw_string(police, p + Vector2(-r, taille * 0.36), b[1], HORIZONTAL_ALIGNMENT_CENTER, r * 2.0, taille, Color(ENCRE, 0.95 * k))
+		var appui := float(_appuis.get(b[0], 0.0))
+		var k := 1.0 - 0.07 * appui
+		_dessin.draw_set_transform(p * (1.0 - k), 0.0, Vector2(k, k))
+		_jeton(p, r, appui, dispo)
+		var m := Color(1, 1, 1, 1.0 if dispo else 0.4)
+		if b[0] == "agir":
+			var f := T.titre()
+			var lw2 := f.get_string_size(b[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 26).x
+			_dessin.draw_string_outline(f, p + Vector2(-lw2 * 0.5, 9), b[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 26, 5, Color(P.ENCRE, 0.7))
+			_dessin.draw_string(f, p + Vector2(-lw2 * 0.5, 9), b[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 26, P.PAPIER.lerp(P.BRAISE_COEUR, appui))
+		else:
+			I.icone(_dessin, ICONES[b[0]], p + Vector2(0, -r * 0.18), r * 1.08, m, 1.0, Transform2D(0.0, Vector2(k, k), 0.0, p * (1.0 - k)))
+			var g2 := T.texte_gras()
+			var lw3 := g2.get_string_size(b[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 10).x
+			var q2 := p + Vector2(-lw3 * 0.5, r * 0.66)
+			_dessin.draw_string_outline(g2, q2, b[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 10, 4, Color(P.ENCRE, 0.8))
+			_dessin.draw_string(g2, q2, b[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(ENCRE, 0.95 if dispo else 0.45))
+		_dessin.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
+# un jeton d'encre : une ombre, le disque, un liseré de braise (plus vif quand on presse ; éteint s'il ne sert à rien)
+func _jeton(p: Vector2, r: float, appui: float, dispo: bool) -> void:
+	if appui > 0.01:
+		var h := r * 2.2
+		_dessin.draw_texture_rect(T.halo(), Rect2(p - Vector2(h, h), Vector2(h, h) * 2.0), false, Color(P.BRAISE, 0.35 * appui))
+	I.disque(_dessin, p + Vector2(0, 2), r + 1.5, Color(0, 0, 0, 0.3))
+	I.disque(_dessin, p, r, Color(P.ENCRE, 0.62 + 0.22 * appui))
+	_dessin.draw_arc(p, r - 3.5, 0.0, TAU, 48, Color(ENCRE, 0.12), 1.0, true)
+	var bord := Color(BRAISE, 0.7 if dispo else 0.0).lerp(P.BRAISE_COEUR, appui)
+	if not dispo:
+		bord = Color(ENCRE, 0.18)
+	I.arc_encre(_dessin, p, r - 1.2, -PI * 0.5, PI * 1.5, 2.0 + 1.4 * appui, bord, false)
+
+
+# « tourne ton téléphone » : un téléphone debout qui se couche, une flèche en arc
+func _dessiner_telephone(c: Control) -> void:
+	var centre := c.size * 0.5 + Vector2(0, -50)
+	var u := smoothstep(0.2, 0.8, fmod(_t, 2.4) / 2.4)
+	var rot := -PI * 0.5 * u
+	c.draw_set_transform(centre, rot, Vector2.ONE)
+	var corps := StyleBoxFlat.new()
+	corps.bg_color = Color(P.ENCRE, 0.6)
+	corps.border_color = ENCRE
+	corps.set_border_width_all(3)
+	corps.set_corner_radius_all(9)
+	corps.anti_aliasing = true
+	c.draw_style_box(corps, Rect2(Vector2(-24, -42), Vector2(48, 84)))
+	c.draw_line(Vector2(-8, 33), Vector2(8, 33), Color(ENCRE, 0.7), 2.0, true)
+	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	I.arc_encre(c, centre, 66.0, -PI * 0.15, -PI * 0.15 - PI * 0.5 * u, 3.0, Color(BRAISE, 0.9))
