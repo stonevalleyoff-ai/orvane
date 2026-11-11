@@ -15,6 +15,9 @@ var teinte := Color(0.2, 0.3, 0.18)
 var graine := 0
 var _repousse := 0.0
 var _secoue := 0.0
+# (docs/49) une plante du monde d'Orvane : son dessin de l'herbier, à sa taille ; sans lui, l'objet se dessine lui-même
+var image: Texture2D = null
+var plante := ""
 
 
 func preparer(g: String, couleur: Color, s: int) -> void:
@@ -77,6 +80,9 @@ func _draw() -> void:
 	var r := RandomNumberGenerator.new()
 	r.seed = graine
 	var bouge := sin(_secoue * 40.0) * _secoue * 6.0
+	if image != null and ["arbre", "sapin", "buisson", "touffe"].has(genre):
+		_plante(r, bouge)
+		return
 	match genre:
 		"arbre":
 			_arbre(r, bouge)
@@ -97,6 +103,19 @@ func _draw() -> void:
 				var a := r.randf_range(-0.5, 0.5) + (PI if i == 1 else 0.0)
 				var l := r.randf_range(7.0, 11.0)
 				draw_line(Vector2.ZERO - Vector2.from_angle(a) * l, Vector2.from_angle(a) * l, Color(0.36, 0.26, 0.17), 2.0)
+
+
+# une plante de l'herbier : son ombre, son dessin posé sur son pied (à 144/150 de sa hauteur) ; un buisson montre ses baies, une
+# touffe coupée reste rase
+func _plante(r: RandomNumberGenerator, bouge: float) -> void:
+	var t := image.get_size()
+	if genre == "touffe" and reste <= 0:
+		t *= 0.4
+	_ellipse(Vector2(0, 2), t.x * 0.3, t.x * 0.09, Color(0, 0, 0, 0.26))
+	draw_texture_rect(image, Rect2(Vector2(-t.x * 0.5 + bouge, -t.y * 0.96), t), false)
+	if genre == "buisson":
+		for i in reste * 2:
+			draw_circle(Vector2(r.randf_range(-t.x * 0.3, t.x * 0.3), -t.y * r.randf_range(0.25, 0.6)), 2.2, Color(0.66, 0.12, 0.2))
 
 
 func _arbre(r: RandomNumberGenerator, bouge: float) -> void:

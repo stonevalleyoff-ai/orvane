@@ -21,6 +21,7 @@ signal instantane_lu(inst: Dictionary)
 signal lecture_ratee(erreur: String)
 signal lot_depose(ok: bool, reponse: Dictionary)
 signal silhouettes_lues(biome: String, silhouettes: Dictionary)
+signal herbier_lu(biome: String, herbier: Dictionary)
 
 const CONTRAT := "1.0"
 const MAX_EVENEMENTS := 500
@@ -42,6 +43,7 @@ var _debut := ""
 var _depot_en_cours := false
 var _planches: Dictionary = {}
 var _textures: Dictionary = {}
+var _herbiers: Dictionary = {}
 
 
 func _ready() -> void:
@@ -178,6 +180,79 @@ func _silhouette(lignee: String, biome: String) -> Dictionary:
 		if _planches[b].has(lignee):
 			return _planches[b][lignee]
 	return {}
+
+
+# --- dessiner les plantes, lire le temps qu'il fait : l'herbier (morceaux/herbier/<biome>.json, docs/49) ---
+
+# chaque plante d'un biome dessinée dans un cadre de 120 × 150, le pied en bas, dans son stade du cycle, et le temps qu'il y fait
+# ({} si la lecture échoue, ou si le monde n'a pas de flore)
+func lire_herbier(biome: String) -> Dictionary:
+	var p = await lire_json(_base() + "morceaux/herbier/" + biome.uri_encode() + ".json")
+	var h := {}
+	if typeof(p) == TYPE_DICTIONARY and typeof(p.get("plantes")) == TYPE_DICTIONARY:
+		h = p
+		ajouter_herbier(biome, h)
+	herbier_lu.emit(biome, h)
+	return h
+
+
+# un herbier gardé dans le jeu (pour jouer hors ligne) : { plantes: { lignée: { svg, forme, port, hauteur_m, part, stade… } }, meteo }
+func ajouter_herbier(biome: String, herbier: Dictionary) -> void:
+	_herbiers[biome] = herbier
+
+
+# les plantes d'un biome, les plus lourdes d'abord : [{ id, nom, forme, port, hauteur_m, part, stade, feuillage… }] (sans leur dessin)
+func plantes(biome: String) -> Array:
+	var out := []
+	var P = _herbiers.get(biome, {}).get("plantes", {})
+	if typeof(P) != TYPE_DICTIONARY:
+		return out
+	for id in P:
+		var e: Dictionary = P[id].duplicate()
+		e.erase("svg")
+		e["id"] = id
+		out.append(e)
+	out.sort_custom(func(a, b): return float(a.get("part", 0.0)) > float(b.get("part", 0.0)))
+	return out
+
+
+# l'image d'une plante, à cette largeur en pixels (null : pas d'herbier, ou un dessin illisible). Son pied est à 144/150 de la
+# hauteur de l'image, au milieu de sa largeur.
+func texture_plante(lignee: String, largeur: float = 120.0, biome: String = "") -> ImageTexture:
+	var cle := "plante|%s|%s|%d" % [lignee, biome, int(largeur)]
+	if _textures.has(cle):
+		return _textures[cle]
+	var s := {}
+	if biome != "" and _herbiers.get(biome, {}).get("plantes", {}).has(lignee):
+		s = _herbiers[biome]["plantes"][lignee]
+	else:
+		for b in _herbiers:
+			if _herbiers[b].get("plantes", {}).has(lignee):
+				s = _herbiers[b]["plantes"][lignee]
+				break
+	if str(s.get("svg", "")) == "":
+		return null
+	var img := Image.new()
+	if img.load_svg_from_string(str(s["svg"]), maxf(0.1, largeur / 120.0)) != OK:
+		return null
+	var tex := ImageTexture.create_from_image(img)
+	_textures[cle] = tex
+	return tex
+
+
+# le temps qu'il fait dans un biome ce cycle (docs/45) : { temps, t, e, vent, neige, secheresse, eaux, production } ; {} : un monde
+# sans météo, ou un lieu sans temps. Lu dans l'instantané, sinon dans l'herbier du biome.
+func meteo(biome: String) -> Dictionary:
+	for b in instantane.get("biomes", []):
+		if str(b.get("id", "")) == biome and typeof(b.get("meteo")) == TYPE_DICTIONARY:
+			return b["meteo"]
+	var m = _herbiers.get(biome, {}).get("meteo", {})
+	return m if typeof(m) == TYPE_DICTIONARY else {}
+
+
+# le temps nommé : clair, couvert, pluie, orage, neige, gel, canicule, tempete, brouillard ("" : pas de météo)
+func temps(biome: String) -> String:
+	return str(meteo(biome).get("temps", ""))
 
 
 func _base() -> String:

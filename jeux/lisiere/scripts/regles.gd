@@ -44,6 +44,15 @@ const FEU_DEPART := 60.0
 const FEU_BUCHE := 25.0
 const FEU_MAX := 150.0
 
+# le temps qu'il fait dans le lieu, ce cycle du monde d'Orvane (docs/45) : ce qu'il fait au feu (son bois brûle plus vite sous
+# l'eau et le vent) et à la marche (la neige au sol la ralentit)
+const FEU_TEMPS := {"pluie": 1.4, "orage": 1.7, "tempete": 2.0, "neige": 1.25, "brouillard": 1.1}
+const NEIGE_AU_SOL := 0.3     # à partir de ce manteau, on marche dans la neige
+const ALLURE_NEIGE := 0.8
+const TEMPS := {"clair": "temps clair", "couvert": "ciel couvert", "pluie": "pluie", "orage": "orage", "neige": "neige", "gel": "gel", "canicule": "canicule", "tempete": "tempête", "brouillard": "brouillard"}
+const TEMPS_DIT := {"pluie": "Il pleut : le feu mange son bois plus vite.", "orage": "L'orage gronde : le feu mange son bois bien plus vite.", "tempete": "La tempête passe : un feu ne tiendra pas longtemps.",
+	"neige": "Il neige : le feu mange son bois plus vite.", "brouillard": "Le brouillard est tombé.", "gel": "Il gèle.", "canicule": "La chaleur écrase le lieu."}
+
 # les bêtes
 const PROIES_JOUR := 12       # autour du joueur, le jour
 const CHASSEURS_MAX := 10

@@ -13,6 +13,9 @@ var jeu
 var objets: Array = []
 var palette := {}
 var _grille := {}
+# (docs/49) les plantes du lieu, d'après l'herbier d'Orvane : par genre d'objet, celles qu'on sème et leur poids
+var lieu := ""
+var flore := {}
 
 
 # les couleurs du lieu, d'après ses axes (0 à 1)
@@ -66,6 +69,8 @@ func generer(biome: Dictionary, graine: int) -> void:
 	var humid := float(axes.get("humidite", 0.5))
 	var alt := float(axes.get("altitude", 0.3))
 	var arbre := "sapin" if palette.get("froid", false) else "arbre"
+	lieu = str(biome.get("id", ""))
+	_lire_flore(arbre)
 	_semer(r, arbre, int(70 + 430 * couvert), palette["feuilles"], bosquets, 0.25 + couvert)
 	_semer(r, "rocher", int(40 + 140 * alt), palette["pierre"], null, 1.0)
 	_semer(r, "buisson", int(40 + 110 * humid), palette["feuilles"], bosquets, 0.6)
@@ -95,9 +100,50 @@ func _semer(r: RandomNumberGenerator, genre: String, n: int, couleur: Color, bru
 		poses += 1
 
 
+# les plantes du lieu, rangées par genre d'objet : un arbre du jeu est une plante au port d'arbre, un buisson une plante au port de
+# buisson, une touffe une herbe, un roseau, une succulente ou un lichen. Chacune a son poids (sa part du lieu) et sa taille à l'écran,
+# d'après sa hauteur vraie. Sans herbier, rien : les objets se dessinent eux-mêmes, comme avant.
+const PORTS := {"arbre": ["arbre"], "buisson": ["buisson"], "touffe": ["herbe", "roseau", "succulente", "lichen", "champignon"]}
+
+func _lire_flore(arbre: String) -> void:
+	flore = {}
+	for e in Orvane.plantes(lieu):
+		var port := str(e.get("port", e.get("forme", "")))
+		for genre in PORTS:
+			if not PORTS[genre].has(port):
+				continue
+			var h := float(e.get("hauteur_m", 1.0))
+			# (la hauteur à l'écran : un arbre de 6 m fait 80 pixels, un arbre de 60 m 150 ; un buisson de 26 à 60 ; une touffe de 16 à 44)
+			var px := clampf(80.0 + 30.0 * log(h / 6.0) / log(2.2), 60.0, 150.0) if genre == "arbre" else clampf(26.0 + 16.0 * h, 26.0, 60.0) if genre == "buisson" else clampf(16.0 + 14.0 * h, 16.0, 44.0)
+			var g := arbre if genre == "arbre" else str(genre)
+			if not flore.has(g):
+				flore[g] = []
+			flore[g].append({"id": str(e["id"]), "poids": maxf(0.02, float(e.get("part", 0.0))), "largeur": px * 0.8})
+
+
+# une plante du lieu pour ce genre d'objet, tirée selon son poids ({} : aucune)
+func _plante(genre: String, graine: int) -> Dictionary:
+	var L: Array = flore.get(genre, [])
+	if L.is_empty():
+		return {}
+	var tot := 0.0
+	for e in L:
+		tot += float(e["poids"])
+	var x := float(graine % 10007) / 10007.0 * tot
+	for e in L:
+		x -= float(e["poids"])
+		if x <= 0.0:
+			return e
+	return L[0]
+
+
 func _poser(genre: String, p: Vector2, couleur: Color, graine: int) -> void:
 	var o = Objet.new()
 	o.preparer(genre, couleur, graine)
+	var pl := _plante(genre, graine)
+	if not pl.is_empty():
+		o.image = Orvane.texture_plante(str(pl["id"]), float(pl["largeur"]), lieu)
+		o.plante = str(pl["id"])
 	o.position = p
 	add_child(o)
 	objets.append(o)
