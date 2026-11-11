@@ -157,8 +157,9 @@ func _semer(r: RandomNumberGenerator, genre: String, n: int, couleur: Color, bru
 
 
 # les plantes du lieu, rangées par genre d'objet : un arbre du jeu est une plante au port d'arbre, un buisson une plante au port de
-# buisson, une touffe une herbe, un roseau, une succulente ou un lichen. Chacune a son poids (sa part du lieu) et sa taille à l'écran,
-# d'après sa hauteur vraie. Sans herbier, rien : les objets se dessinent eux-mêmes, comme avant.
+# buisson, une touffe une herbe, un roseau, une succulente ou un lichen. Chacune a son poids (sa part du lieu), et ce que le dessin
+# à l'encre de l'objet prend d'elle (objet.porter_plante) : sa couleur (lue une fois sur son dessin de l'herbier), sa taille
+# (d'après sa hauteur vraie), son port, ses défenses. Sans herbier, rien : les objets gardent les couleurs du lieu.
 const PORTS := {"arbre": ["arbre"], "buisson": ["buisson"], "touffe": ["herbe", "roseau", "succulente", "lichen", "champignon"]}
 
 func _lire_flore(arbre: String) -> void:
@@ -169,12 +170,34 @@ func _lire_flore(arbre: String) -> void:
 			if not PORTS[genre].has(port):
 				continue
 			var h := float(e.get("hauteur_m", 1.0))
-			# (la hauteur à l'écran : un arbre de 6 m fait 80 pixels, un arbre de 60 m 150 ; un buisson de 26 à 60 ; une touffe de 16 à 44)
-			var px := clampf(80.0 + 30.0 * log(h / 6.0) / log(2.2), 60.0, 150.0) if genre == "arbre" else clampf(26.0 + 16.0 * h, 26.0, 60.0) if genre == "buisson" else clampf(16.0 + 14.0 * h, 16.0, 44.0)
+			# (la taille : un arbre de 12 m, un buisson d'1,5 m sont à la mesure du dessin ; plus haut, un peu plus grand, sans excès)
+			var k := 1.0
+			if genre == "arbre":
+				k = clampf(pow(h / 12.0, 0.35), 0.8, 1.3)
+			elif genre == "buisson":
+				k = clampf(pow(h / 1.5, 0.35), 0.8, 1.3)
 			var g := arbre if genre == "arbre" else str(genre)
 			if not flore.has(g):
 				flore[g] = []
-			flore[g].append({"id": str(e["id"]), "poids": maxf(0.02, float(e.get("part", 0.0))), "largeur": px * 0.8})
+			flore[g].append({"id": str(e["id"]), "poids": maxf(0.02, float(e.get("part", 0.0))), "taille": k, "port": port,
+				"defense": e.get("defense", []), "couleur": _couleur_plante(str(e["id"]))})
+
+
+# la couleur d'une plante : la moyenne des verts de son dessin de l'herbier, rendu petit une fois (null : pas de dessin)
+func _couleur_plante(id: String):
+	var tex: ImageTexture = Orvane.texture_plante(id, 40.0, lieu)
+	if tex == null:
+		return null
+	var img := tex.get_image()
+	var somme := Color(0, 0, 0, 0)
+	var n := 0
+	for y in range(0, img.get_height(), 2):
+		for x in range(0, img.get_width(), 2):
+			var c := img.get_pixel(x, y)
+			if c.a > 0.5 and c.g > maxf(c.r, c.b) + 0.03:
+				somme += c
+				n += 1
+	return Color(somme.r / n, somme.g / n, somme.b / n) if n > 0 else null
 
 
 # une plante du lieu pour ce genre d'objet, tirée selon son poids ({} : aucune)
@@ -198,7 +221,7 @@ func _poser(genre: String, p: Vector2, couleur: Color, graine: int) -> void:
 	o.preparer(genre, couleur, graine)
 	var pl := _plante(genre, graine)
 	if not pl.is_empty():
-		o.porter_plante(Orvane.texture_plante(str(pl["id"]), float(pl["largeur"]), lieu), str(pl["id"]))
+		o.porter_plante(pl)
 	o.position = p
 	add_child(o)
 	objets.append(o)
@@ -316,8 +339,6 @@ func _process(delta: float) -> void:
 	_temps = fmod(_temps + delta, 3600.0)
 	if Objet.vegetation != null:
 		Objet.vegetation.set_shader_parameter("temps", _temps)
-		Objet.planche.set_shader_parameter("temps", _temps)
-		Objet.planche_herbe.set_shader_parameter("temps", _temps)
 	if _mat_herbe != null:
 		_mat_herbe.set_shader_parameter("temps", _temps)
 	if jeu == null:

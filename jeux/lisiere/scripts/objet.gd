@@ -11,7 +11,6 @@ extends Node2D
 const Pinceau := preload("res://scripts/decor_pinceau.gd")
 const P := preload("res://scripts/palette.gd")
 const SHADER := preload("res://shaders/vegetation_feuillage.gdshader")
-const SHADER_PLANCHE := preload("res://shaders/vegetation_planche.gdshader")
 const BUTIN := {"arbre": "bois", "sapin": "bois", "souche": "", "rocher": "pierre", "buisson": "baies", "touffe": "fibre", "brindille": "bois"}
 const REPOUSSE := 240.0
 const CHUTE := 1.15            # secondes : un arbre abattu tombe
@@ -20,9 +19,6 @@ const ENCRE := Color(0.086, 0.075, 0.059, 0.92)
 # les deux matières, partagées par tous : la végétation (le vent la plie), et ce qui ne bouge pas (la même peinture)
 static var vegetation: ShaderMaterial
 static var fixe: ShaderMaterial
-# (docs/49) les dessins de l'herbier, mis à l'encre : les arbres et les buissons (feuilles du lieu), les touffes (son herbe)
-static var planche: ShaderMaterial
-static var planche_herbe: ShaderMaterial
 # le climat du lieu, posé par le monde avant de semer (de 0 à 1) : la neige, la mousse
 static var climat := {"froid": 0.0, "humide": 0.5}
 static var _pinceau
@@ -56,10 +52,7 @@ static func matieres() -> void:
 		fixe = ShaderMaterial.new()
 		fixe.shader = SHADER
 		fixe.set_shader_parameter("souplesse", 0.0)
-		planche = ShaderMaterial.new()
-		planche.shader = SHADER_PLANCHE
-		planche_herbe = ShaderMaterial.new()
-		planche_herbe.shader = SHADER_PLANCHE
+
 
 
 static func pinceau():
@@ -67,9 +60,10 @@ static func pinceau():
 		_pinceau = Pinceau.new()
 	return _pinceau
 
-# (docs/49) une plante du monde d'Orvane : son dessin de l'herbier, à sa taille ; sans lui, l'objet se dessine lui-même
-var image: Texture2D = null
+# (docs/49) la plante du monde d'Orvane qu'est cet objet, d'après l'herbier ("" : aucune) ; son port (un roseau…), ses épines
 var plante := ""
+var port := ""
+var epineux := false
 
 
 func preparer(g: String, couleur: Color, s: int) -> void:
@@ -102,50 +96,37 @@ func preparer(g: String, couleur: Color, s: int) -> void:
 	set_process(false)
 
 
-# une plante du monde d'Orvane (docs/49) : le dessin de l'herbier remplace le sien ; l'ombre et la couronne suivent ce dessin
-func porter_plante(tex: Texture2D, id: String) -> void:
-	image = tex
-	plante = id
-	if tex == null:
-		return
-	var t := tex.get_size()
-	match genre:
-		"arbre", "sapin":
-			_rx = t.x * 0.4
-			_ry = t.y * 0.3
-			_cc = Vector2(0, -t.y * 0.62)
-			hauteur = t.y * 0.92
-			couronne_rect = Rect2(-t.x * 0.42, -t.y * 0.96, t.x * 0.84, t.y * 0.66)
-		"buisson":
-			_rx = t.x * 0.42
-			_ry = t.y * 0.7
-			hauteur = t.y * 0.7
-		"touffe":
-			hauteur = t.y * 0.6
-	# (mis à l'encre, aux couleurs du lieu : la teinte de l'objet est celle de ses feuilles, ou de son herbe)
-	var m: ShaderMaterial = planche_herbe if genre == "touffe" else planche
-	m.set_shader_parameter("teinte", teinte)
+# une plante du monde d'Orvane (docs/49), d'après l'herbier : sa teinte (la couleur de son dessin, à la valeur du lieu), sa taille
+# (sa hauteur), son port (un roseau), ses épines. Le dessin reste celui du carnet, à l'encre.
+func porter_plante(e: Dictionary) -> void:
+	plante = str(e.get("id", ""))
+	port = str(e.get("port", ""))
+	var defense = e.get("defense", [])
+	epineux = typeof(defense) == TYPE_ARRAY and defense.has("epineux")
+	var c = e.get("couleur")
+	if typeof(c) == TYPE_COLOR and c.s > 0.08:
+		teinte = Color.from_hsv(c.h, lerpf(teinte.s, c.s, 0.35), teinte.v)
+	var k := float(e.get("taille", 1.0))
+	if absf(k - 1.0) > 0.01:
+		_mesurer()
+		_echelle(k)
 	if couronne != null:
-		couronne.material = m
 		couronne.queue_redraw()
-	else:
-		material = m
 	queue_redraw()
 
 
-# un buisson ou une touffe de l'herbier : son dessin, posé sur son pied (à 144/150 de sa hauteur) ; un buisson montre ses baies,
-# une touffe arrachée reste rase
-func _plante_basse(r: RandomNumberGenerator) -> void:
-	var t := image.get_size()
-	if genre == "touffe" and reste <= 0:
-		t *= 0.4
-	draw_texture_rect(image, Rect2(Vector2(-t.x * 0.5, -t.y * 0.96), t), false)
-	if genre == "buisson":
-		for i in reste * 2:
-			var b := Vector2(r.randf_range(-t.x * 0.3, t.x * 0.3), -t.y * r.randf_range(0.25, 0.6))
-			draw_circle(b, 2.6, ENCRE)
-			draw_circle(b, 2.0, Color(0.66, 0.12, 0.2))
-			draw_circle(b + Vector2(-0.6, -0.6), 0.7, Color(1.0, 0.85, 0.85, 0.8))
+# toutes les mesures, à cette échelle (une plante plus haute, ou plus basse, que la moyenne)
+func _echelle(k: float) -> void:
+	_ht *= k
+	_rx *= k
+	_ry *= k
+	_cc *= k
+	hauteur *= k
+	match genre:
+		"arbre":
+			couronne_rect = Rect2(_cc - Vector2(_rx, _ry), Vector2(_rx, _ry) * 2.0)
+		"sapin":
+			couronne_rect = Rect2(-_rx, -hauteur, _rx * 2.0, _ry)
 
 
 func _mesurer() -> void:
@@ -290,14 +271,9 @@ func _draw() -> void:
 		elif genre != "arbre" and genre != "sapin":
 			# (un buisson, une touffe : la tête frémit, le pied reste)
 			draw_set_transform_matrix(Transform2D(Vector2(1, 0), Vector2(-k * 0.35, 1), Vector2.ZERO))
-	if image != null and (genre == "buisson" or genre == "touffe"):
-		_plante_basse(r)
-		p.finir()
-		return
 	match genre:
 		"arbre", "sapin":
-			if image == null:
-				_pied(p, r, false)
+			_pied(p, r, false)
 		"souche":
 			_pied(p, r, true)
 		"rocher":
@@ -312,11 +288,6 @@ func _draw() -> void:
 
 
 func _dessiner_couronne(c: CanvasItem) -> void:
-	if image != null:
-		# (un arbre de l'herbier : tout son dessin, posé sur son pied, ondule et s'efface avec la couronne)
-		var t := image.get_size()
-		c.draw_texture_rect(image, Rect2(Vector2(-t.x * 0.5, -t.y * 0.96), t), false)
-		return
 	var p = pinceau()
 	p.commencer(c.get_canvas_item())
 	var r := RandomNumberGenerator.new()
@@ -638,6 +609,14 @@ func _buisson(p, r: RandomNumberGenerator) -> void:
 		t = t.lerp(P.TERRE, 0.12)
 	p.aplat(poly, t, Pinceau.FEUILLAGE, centre, Vector2(_rx, _ry * 0.55) * 1.08)
 	p.contour(poly, 1.35, ENCRE, r, 3)
+	if epineux:
+		# (une plante épineuse : de petites épines d'encre, tournées vers dehors, sur le haut et les flancs)
+		for i in range(0, poly.size(), 4):
+			var q: Vector2 = poly[i]
+			var dehors := (q - centre).normalized()
+			if dehors.y > 0.5:
+				continue
+			p.tracer(PackedVector2Array([q - dehors * 0.6, q + dehors * 2.6 + dehors.orthogonal() * 0.8]), 0.9, ENCRE)
 	for i in 2:
 		var q := centre + Vector2(r.randf_range(0.0, 0.6) * _rx, r.randf_range(0.0, 0.4) * _ry * 0.5)
 		var arc := PackedVector2Array()
@@ -678,8 +657,9 @@ func _touffe(p, r: RandomNumberGenerator) -> void:
 	for i in n:
 		var x0 := r.randf_range(-3.5, 3.5)
 		var cote := signf(x0 + r.randf_range(-0.5, 0.5))
-		var h := r.randf_range(12.0, 21.0) * (1.0 if reste >= plein else 0.85)
-		var bout := Vector2(x0 * 2.0 + cote * r.randf_range(2.0, 11.0), -h)
+		var h := r.randf_range(12.0, 21.0) * (1.0 if reste >= plein else 0.85) * (1.75 if port == "roseau" else 1.0)
+		# (un roseau : plus haut, plus droit)
+		var bout := Vector2(x0 * 2.0 + cote * r.randf_range(2.0, 11.0) * (0.4 if port == "roseau" else 1.0), -h)
 		var milieu := Vector2(x0 * 1.3 + bout.x * 0.35, -h * 0.62)
 		lames.append([Vector2(x0, 1.0), milieu, bout, r.randf()])
 	# de l'arrière vers l'avant : les lames du fond, plus sombres, puis celles du devant, cernées d'encre
@@ -700,6 +680,11 @@ func _touffe(p, r: RandomNumberGenerator) -> void:
 				larg_e.append(larg[k] + 0.9)
 			p.tracer(ligne, 2.6, ENCRE, false, larg_e)
 		p.tracer(ligne, 2.0, vert.lerp(paille, avant * 0.55).darkened((1.0 - avant) * 0.22), false, larg)
+		# (un roseau : un épi brun au bout de quelques tiges)
+		if port == "roseau" and int(l[3] * 10.0) % 4 == 0:
+			var epi: Vector2 = l[2] + (l[1] - l[2]).normalized() * 4.0
+			p.disque(epi, 1.9, 4.2, ENCRE)
+			p.disque(epi, 1.3, 3.5, P.TERRE.lightened(0.08), Pinceau.DOME)
 	# des épis, au bout de quelques lames
 	for i in mini(3, lames.size()):
 		var l: Array = lames[lames.size() - 1 - i * 2]
