@@ -558,7 +558,8 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
       const N = F.map(f => SF > 0 ? pop.effectif * f / SF : 0); if (SF <= 0 && N.length) N[0] = pop.effectif;
       pops[pop.biome] = { N, depuis: pop.depuis ?? t.apparu, avant: pop.effectif, predation: new Array(N.length).fill(0), ration: new Array(N.length).fill(0), satiete: null, maladie: pop.maladie ? { ...pop.maladie } : null, malade0: !!pop.maladie };
       if (SEX && !syn) pops[pop.biome].A = allelesDe(t.phenotypes, N, cat, pop.alleles);   // les fréquences d'allèles (un monde d'avant : déduites des phénotypes)
-      Object.assign(pops[pop.biome], { flux0: pop.flux ?? 0, hyb0: pop.hybride?.part ?? 0, immig: 0, mef0: pop.mefiance ?? 0, hab0: pop.habituation ?? 0 }); if (ME) { if (pop.memoire) pops[pop.biome].M = ME.lire(pop.memoire); pops[pop.biome].att0 = pop.attitude; } if (pop.hivernants) pops[pop.biome].hiv = { ...pop.hivernants }; if (pop.savoirs?.routes) pops[pop.biome].routes = pop.savoirs.routes; if (pop.recouvrement != null) pops[pop.biome].rec0 = pop.recouvrement; if (pop.recouvrement_avant != null) pops[pop.biome].recAvant = pop.recouvrement_avant; if (pop.infection) pops[pop.biome].inf0 = pop.infection;
+      // (docs/50, dans un monde à la mémoire éveillée : Mp, ce que la population publiait ; M, ce que ses migrants y mêleront ; att0, son attitude)
+      Object.assign(pops[pop.biome], { flux0: pop.flux ?? 0, hyb0: pop.hybride?.part ?? 0, immig: 0, mef0: pop.mefiance ?? 0, hab0: pop.habituation ?? 0 }); if (ME) { const P = pops[pop.biome]; P.Mp = ME.lire(pop.memoire); if (pop.memoire) P.M = { ...P.Mp }; P.att0 = pop.attitude; } if (pop.hivernants) pops[pop.biome].hiv = { ...pop.hivernants }; if (pop.savoirs?.routes) pops[pop.biome].routes = pop.savoirs.routes; if (pop.recouvrement != null) pops[pop.biome].rec0 = pop.recouvrement; if (pop.recouvrement_avant != null) pops[pop.biome].recAvant = pop.recouvrement_avant; if (pop.infection) pops[pop.biome].inf0 = pop.infection;
       if (GEN && !syn) { const P = pops[pop.biome], Q = P.Q = lireQ(pop.quant);   // ce que ses traits continus pèsent : risque d'être mangé, naissances, maladie
         P.fp = penteQ(Q, 'predation'); P.ff = penteQ(Q, 'fecondite') * chargeQ(Q, t.plan, biomes[pop.biome]); P.fm = penteQ(Q, 'maladie'); }
       const s0 = pop.satiete ?? 0;   // (la satiété du cycle précédent : un omnivore qui trouve des proies pèse moins sur la place)
@@ -826,16 +827,18 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   for (const mg of migrations) {
     const E = etat.get(mg.taxon), t = taxons.find(x => x.id === mg.taxon);
     if (!E.pops[mg.vers]) E.pops[mg.vers] = { N: new Array(t.phenotypes.length).fill(0), depuis: n, avant: 0, maladie: null, flux0: 1, immig: 0 };
-    const D = E.pops[mg.vers]; D.immig = (D.immig || 0) + mg.N.reduce((a, x) => a + x, 0);   // le flux de gènes reçu
+    const D = E.pops[mg.vers]; if (ME && D.n0 == null) D.n0 = D.N.reduce((a, x) => a + x, 0);   // (docs/50) ceux qui étaient là avant toute arrivée
+    D.immig = (D.immig || 0) + mg.N.reduce((a, x) => a + x, 0);   // le flux de gènes reçu
     if (D.hiv || mg.hiv) { const na = D.N.reduce((a, x) => a + x, 0), nb = mg.N.reduce((a, x) => a + x, 0), tot = na + nb;   // (docs/38) la part d'hivernants
       if (tot > 0) { const H = {}; for (const k in D.hiv || {}) H[k] = D.hiv[k] * na / tot; if (mg.hiv) H[mg.hiv] = (H[mg.hiv] || 0) + nb / tot; D.hiv = H; } }
     if (mg.saison) D.saisonnier = true;
     if (GEN && mg.Q) { const na = D.N.reduce((a, x) => a + x, 0), nb = mg.N.reduce((a, x) => a + x, 0); D.Q = D.Q && na > 0 ? melangerQ(D.Q, na, mg.Q, nb) : copieQ(mg.Q); }   // les migrants apportent leurs gènes
     if (SEX && mg.A) { const na = D.N.reduce((a, x) => a + x, 0), nb = mg.N.reduce((a, x) => a + x, 0), n = na + nb;
       if (!D.A || na <= 0) D.A = { ...mg.A }; else if (n > 0) { const o = {}; for (const id of new Set([...Object.keys(D.A), ...Object.keys(mg.A)])) o[id] = ((D.A[id] || 0) * na + (mg.A[id] || 0) * nb) / n; D.A = o; } }
-    if (ME && 'M' in mg) D.M = ME.meler(D.M, D.N.reduce((a, x) => a + x, 0), mg.M, mg.N.reduce((a, x) => a + x, 0));   // (docs/50) les migrants mêlent leur mémoire à celle du lieu
+    if (ME && 'M' in mg) ME.recevoir(D, mg.M, mg.N.reduce((a, x) => a + x, 0));   // (docs/50) ce que les migrants apportent de mémoire : additionné, puis mêlé une fois (plus bas)
     mg.N.forEach((x, i) => { D.N[i] += x; });
   }
+  if (ME) for (const E of etat.values()) for (const D of Object.values(E.pops)) ME.installer(D);   // (docs/50) la mémoire du lieu et celle de ses arrivants, mêlées par les effectifs, quel que soit l'ordre des arrivées
 
   if (SP) SP.apres();   // la contagion, la guérison, les souches qui naissent et s'éteignent (docs/18)
   if (SF) SF.apres();   // la pousse des plantes, sous la dent des brouteurs (docs/17)

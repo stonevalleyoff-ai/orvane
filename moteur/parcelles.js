@@ -123,8 +123,13 @@ function moyenne(objs, poids) {
   }
   return out;
 }
+// (docs/50) l'attitude d'une population se relit avec les règles que le monde s'est choisies (regles.memoire), comme dans son cycle
 function regrouper(inst) {
   if (!estParcellaire(inst)) return inst;
+  const rendre = MEM && inst.monde?.memoire ? MEM.regler(inst.monde.regles?.memoire) : null;
+  try { return regrouperBrut(inst); } finally { if (rendre) rendre(); }
+}
+function regrouperBrut(inst) {
   const P = inst.monde.parcelles, types = P.types, parId = new Map(inst.biomes.map(b => [b.id, b])), out = { ...inst };
   out.biomes = types.map(b => { const L = inst.biomes.filter(p => typeDe(p) === b.id), x = { ...clone(b) };
     if (L.length) { x.capacite = +L.reduce((s, p) => s + (p.capacite || 0), 0).toFixed(2); if (b.capacite_base != null) x.capacite_base = +L.reduce((s, p) => s + (p.capacite_base || 0), 0).toFixed(2);
@@ -145,8 +150,10 @@ function regrouper(inst) {
       const eff = L.map(p => p.effectif), poidsL = eff.map(e => Math.max(e, 1e-9)), m = moyenne(L.map(p => { const { biome, effectif, depuis, parcelles, hivernants, ...r } = p; return r; }), poidsL);
       completer(m, L, poidsL);
       // (docs/50) la mémoire du biome : une parcelle qui n'a rien appris compte pour neutre (et non pour absente) ; le mot qui
-      // la résume se relit sur la population entière
-      if (MEM && inst.monde.memoire) { const mm = MEM.regrouper(L, poidsL); if (mm) m.memoire = mm; else delete m.memoire;
+      // la résume se relit sur la population entière. La méfiance et l'habituation y sont alors pesées de même (ailleurs, une
+      // parcelle qui n'en publie pas est laissée de côté, docs/15) : le mot et les nombres publiés disent la même chose
+      if (MEM && inst.monde.memoire) { const mm = MEM.regrouper(L, poidsL), W = poidsL.reduce((s, x) => s + x, 0) || 1; if (mm) m.memoire = mm; else delete m.memoire;
+        for (const k of ['mefiance', 'habituation']) if (L.some(p => typeof p[k] === 'number')) { const v = +(L.reduce((s, p, i) => s + (typeof p[k] === 'number' ? p[k] : 0) * poidsL[i], 0) / W).toFixed(6); if (v > 0) m[k] = v; else delete m[k]; }
         const att = MEM.attitude(m, t.plan); if (att) m.attitude = att; else delete m.attitude; }
       if (L.some(p => p.hivernants)) { const H = {}, T = eff.reduce((s, x) => s + x, 0) || 1;   // (docs/38) la part du biome venue d'ailleurs pour l'hiver, par biome d'origine
         L.forEach((p, i) => { for (const [de, h] of Object.entries(p.hivernants || {})) { const ty = typeDe(parId.get(de) || { id: de }); if (ty !== typeDe(parId.get(p.biome) || { id: p.biome })) H[ty] = (H[ty] || 0) + h * eff[i]; } });
