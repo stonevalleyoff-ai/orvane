@@ -29,6 +29,7 @@
     "formes": true,
     "esprit": true,
     "collectif": true,
+    "memoire": true,
     "regles": { "derive": { "tolerance": 0.35, "formes": 1, "organes": 0.15 }, "hivernage": { "actif": 1, "rude": 0.85 } },
     "fusions": [
       { "id": "mer-1", "source": "mondes/marin/amorce.json", "part": 0.5 },
