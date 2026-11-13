@@ -73,7 +73,7 @@ Dans un monde éveillé, le tampon joint aux pressions de chaque population `vec
 Rien n'y est retiré du monde ; ses protections portent donc sur les contacts.
 
 - **Par compte** : au plus 2 joueurs tombés et 5 pillages par population et par cycle. Puis toute son activité est ramenée à une activité normale (`exposition_ref` contacts, 60 si le profil ne le dit pas), ses proportions gardées. Un compte qui ne déclare que 9 000 assauts, sans une rencontre, ne pèse pas plus qu'un autre.
-- **La part d'un jeu** (`part_max_jeu`), avec un plancher de 200 contacts : un jeu de vingt comptes face à un jeu de cinq ne pèse pas plus que lui.
+- **La part d'un jeu** (`part_max_jeu`), avec un plancher de 3 000 contacts, soit cinquante comptes actifs : au-delà, un jeu ne pèse pas plus que la moitié de ce qu'une population a vécu. En deçà, rien n'est raboté : un petit jeu, ou un jeu fantôme de deux faux comptes, ne fait pas baisser la voix des autres.
 
 Il n'y a pas de part par compte, comme pour les retraits : entre peu de joueurs, elle rabotait des comptes égaux et grossissait d'autant un compte léger.
 
@@ -161,6 +161,16 @@ Un groupe pourrait vouloir rendre une espèce hostile partout. Les comptes et le
 Le cycle de nuit l'éveille une fois (`monde.memoire: { depuis }`). Ses règles sont celles de `moteur/memoire.js` (`REGLES`) ; un monde règle les siennes dans `regles.memoire`. Seules les règles que la mémoire connaît, et de la bonne forme, sont prises : le reste est ignoré.
 
 **L'ordre compte.** D'abord le serveur (`hebergement/supabase.sql` : la liste des actions de `orvane_deposer`), puis le profil. Un monde qui annoncerait la mémoire avant que son serveur accepte les actions nouvelles ferait refuser les lots des jeux.
+
+## Le simulateur
+
+[Le simulateur de joueurs](https://stonevalleyoff-ai.github.io/orvane/simulateur/) (`simulateur/`) fait jouer des joueurs fictifs face aux bêtes du monde publié. On choisit un lieu, jusqu'à quatre bêtes, et combien de joueurs de chaque sorte jouent chaque nuit : passants, terrés derrière leur feu, chasseurs, nourrisseurs, piégeurs, campeurs pillés, faux comptes. On fait passer les nuits, et on lit ce que chaque population apprend, son attitude, le journal, et ce que Lisière en ferait.
+
+Le calcul est celui du monde : les lots passent par `Tampon.agreger`, la méfiance par `Orvane.apprendre`, la mémoire par `moteur/memoire.js`, dans l'ordre de la nuit (`simulateur/coeur.js`). Rien n'est envoyé.
+
+Ce qu'il ne fait pas : l'écosystème ne tourne pas. Les effectifs ne bougent pas et aucun migrant n'apporte sa mémoire. Sur le monde d'essai, dix nuits de cinq compositions de joueurs donnent les mêmes attitudes que la vraie nuit, à 0,005 près sur chaque disposition (`bancs/simulateur.js`).
+
+Son premier essai a montré qu'un faux compte inscrit sous un jeu à lui faisait raboter le jeu des autres : le plancher de la part d'un jeu est passé de 200 à 3 000 contacts.
 
 ## Ce que le banc vérifie
 

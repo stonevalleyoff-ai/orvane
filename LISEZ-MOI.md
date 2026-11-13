@@ -39,6 +39,7 @@ tampon/directeur.js   le directeur de mise en scène : ce qu'un jeu devrait mont
 tampon/individus.js   les individus : une bête tirée de la population réelle (son génotype, ses valeurs, ses savoirs), deux bêtes croisées, la parenté, le génome relâché (docs/35, 36)
 tampon/morceaux.js    le monde par morceaux : découper l'instantané (l'index, chaque biome, chaque lignée), et lire seulement les biomes d'un jeu (docs/21)
 monde/index.html      l’observatoire : ce que vit un monde (espèces, biomes, lignées, chaîne alimentaire, journal), et une simulation locale
+simulateur/           le simulateur de joueurs : des joueurs fictifs face aux bêtes du monde publié, nuit après nuit, par le vrai tampon et la vraie mémoire (coeur.js : le calcul ; page.js, index.html : la page) (docs/50)
 monde/silhouette.js   les silhouettes de l'observatoire : chaque lignée dessinée d'après son corps et sa façon de vivre (masse, déplacements, régime, heure), chaque forme à son dessin, les machines d'après leurs modules ; un jeu peut le reprendre
 monde/herbier.js      l'herbier : chaque plante dessinée d'après sa forme, son stade, son feuillage, ce qu'elle a subi ; publié à chaque cycle dans morceaux/herbier/ (docs/49)
 BRANCHER-UN-JEU.md    brancher un jeu, pas à pas : s'inscrire, lire le monde, traduire, régler l'exposition, déposer des lots, les erreurs
@@ -85,6 +86,7 @@ bancs/grammaire.js    le banc de la grammaire : qui peut dire quoi, où ça port
 bancs/formes.js       le banc des corps et des vies nouvelles : la colonie qui gagne, le mille-pattes, l'étoile, la pieuvre, la naïade
 bancs/esprit.js       le banc de l'esprit : qui apprend, une tradition, la perte, chasser ensemble, la curiosité
 bancs/memoire.js      le banc de la mémoire : le jour un, les équilibres, les plafonds du tampon, l'abus, ce qui voyage, deux styles de jeu et deux faunes
+bancs/simulateur.js   le banc du simulateur : chaque style de joueurs fait la faune attendue, et le simulateur donne ce que donne la vraie nuit
 bancs/individus.js    le banc des individus et de l'élevage : Mendel, les porteurs cachés, l'héritabilité, la parenté, les hybrides, l'élevage qui revient au monde
 bancs/milieu.js       le banc du milieu transformé : la savane sans brouteurs, les terriers, les barrages, la forêt défrichée, les parcelles
 bancs/tampon.js       le banc du tampon : chaque attaque de l'audit du 5 novembre (lot mal formé, n infini, déplacements sans plafond, mille comptes d'un jeu, allèle inventé) neutralisée, et le jour un

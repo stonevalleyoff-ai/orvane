@@ -138,10 +138,10 @@ console.log('3. Le tampon');
   verif(six.rencontres === 360 && six.blessures === 12 && six.comptes === 6 && sansRef.blessures + sansRef.effarouchements + sansRef.attaques <= Tampon.VECU.activite + .1,
     `six comptes égaux gardent tout ce qu'ils ont vécu (${fx(six.rencontres, 0)} rencontres, ${fx(six.blessures, 0)} blessures) ; un profil sans activité de référence prend celle du tampon (${Tampon.VECU.activite} contacts : ${fx(sansRef.blessures + sansRef.effarouchements + sansRef.attaques, 0)} retenus sur 39 000)`);
   // la part d'un jeu
-  const gros = Array.from({ length: 20 }, (_, i) => lot('g' + i, [[t, b, 'attaque', 60]], 'jeu-a')), petit = n => Array.from({ length: n }, (_, i) => lot('p' + i, [[t, b, 'rencontre', 60]], 'jeu-b'));
-  const j1 = V(P([...gros, ...petit(1)])), j5 = V(P([...gros, ...petit(5)]));
-  verif(j1.jeux === 2 && Math.abs(j1.attaques - Tampon.VECU.plancher_jeu) < 1 && Math.abs(j5.attaques - j5.rencontres) < 1,
-    `un jeu de vingt comptes face à un jeu d'un seul garde ${fx(j1.attaques, 0)} contacts sur 1 200 (son plancher) ; face à un jeu de cinq comptes, autant que lui (${fx(j5.attaques, 0)} et ${fx(j5.rencontres, 0)}) : aucun jeu ne fait seul l'histoire d'une population que d'autres montrent`);
+  const gros = n => Array.from({ length: n }, (_, i) => lot('g' + i, [[t, b, 'attaque', 60]], 'jeu-a')), petit = n => Array.from({ length: n }, (_, i) => lot('p' + i, [[t, b, 'rencontre', 60]], 'jeu-b'));
+  const j1 = V(P([...gros(200), ...petit(1)])), j80 = V(P([...gros(200), ...petit(80)])), j20 = V(P([...gros(20), ...petit(1)]));
+  verif(j1.jeux === 2 && Math.abs(j1.attaques - Tampon.VECU.plancher_jeu) < 1 && Math.abs(j80.attaques - j80.rencontres) < 1 && j20.attaques === 1200 && j20.rencontres === 60,
+    `un jeu de deux cents comptes face à un jeu d'un seul garde ${fx(j1.attaques, 0)} contacts sur 12 000 (son plancher) ; face à un jeu de quatre-vingts comptes, autant que lui (${fx(j80.attaques, 0)} et ${fx(j80.rencontres, 0)}) ; un jeu de vingt comptes n'est pas raboté (${fx(j20.attaques, 0)}) : la part d'un jeu ne mord que sur un jeu très joué`);
   // un monde sans mémoire ; des lots d'avant
   const sans = P([lot('a', riche)], I0), sansN = P([lot('a', riche.filter(e => !NOUVELLES.includes(e[2])))], I0);
   verif(!V(sans) && JSON.stringify(sans.pressions) === JSON.stringify(sansN.pressions), 'dans un monde sans mémoire, le tampon laisse les actions nouvelles : mêmes pressions, même compte d\'événements reçus');
@@ -158,7 +158,10 @@ console.log('4. L\'abus');
   const tombes = n => Array.from({ length: n }, (_, i) => lot('m' + i, [[t, b, 'joueur_tombe', 500], [t, b, 'pillage', 500]])), feu = lot('f', [[t, b, 'effarouchement', 60, 'feu']]);
   // un compte seul, face à dix joueurs paisibles
   const seul = jouer(W0, 20, () => [...paisibles, ...tombes(1)]).X, feu5 = jouer(W0, 5, () => [...paisibles, feu]).X;
+  // (le même faux compte, inscrit sous un jeu à lui : il ne fait pas raboter le jeu des dix passants, et ne pèse pas plus)
+  const sousUnJeu = jouer(W0, 20, () => [...paisibles, ...tombes(1).map(l => ({ ...l, source: { ...l.source, jeu: 'jeu-fantome' } }))]).X;
   verif(tr(seul) < .3 && at(seul) !== 'traqueuse' && ne(feu5) > .3, `un compte seul ne fait pas une traqueuse : dix joueurs paisibles et un compte qui déclare 500 joueurs tombés par nuit, vingt cycles, traque ${fx(tr(seul))}, « ${at(seul)} » ; un seul compte à son feu soixante fois par nuit n'accoutume pas la population en cinq nuits (néophobie ${fx(ne(feu5))})`);
+  verif(Math.abs(tr(sousUnJeu) - tr(seul)) < 1e-9 && at(sousUnJeu) === at(seul), `inscrit sous un jeu à lui, ce faux compte ne pèse pas plus (traque ${fx(tr(sousUnJeu))}) : un jeu fantôme ne fait pas raboter le jeu des autres`);
   // combien il en faut : les faux comptes valent autant de joueurs malchanceux au possible, pas davantage
   let seuil = null; for (let n = 1; n <= 10 && seuil == null; n++) if (at(jouer(W0, 20, () => [...paisibles, ...tombes(n)]).X) === 'traqueuse') seuil = n;
   verif(seuil >= 3, `face à dix joueurs qui ne font que passer, il faut ${seuil ?? 'plus de dix'} comptes qui déclarent chacun le plus de joueurs tombés possible, chaque nuit, pour faire une traqueuse : une minorité décidée y arrive, comme autant de vrais joueurs qui se laisseraient prendre`);

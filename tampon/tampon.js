@@ -207,8 +207,10 @@ const VECUES = { blessure: 'blessures', effarouchement: 'effarouchements', pilla
 const MOYENS = new Set(['melee', 'distance', 'piege', 'feu', 'lumiere', 'bruit']), DISPOSITIFS = new Set(['piege', 'feu', 'lumiere', 'bruit']);
 // par compte, par population et par cycle : au plus tant de joueurs tombés et de pillages (ce qui fait une traqueuse ou une
 // quémandeuse ne se déclare pas par centaines) ; activite : l'activité normale d'un compte, en contacts, si le profil ne la dit
-// pas (influence.exposition_ref) ; plancher_jeu : les contacts qu'un jeu garde toujours sous la règle des parts
-const VECU = { tombes: 2, pillages: 5, activite: 60, plancher_jeu: 200 };
+// pas (influence.exposition_ref) ; plancher_jeu : les contacts qu'un jeu garde toujours sous la règle des parts — cinquante comptes
+// actifs. Plus bas, un jeu de deux faux comptes suffisait à faire raboter un jeu honnête de dix joueurs, et pesait d'autant plus
+// (le simulateur l'a montré) ; la règle des parts ne doit mordre que sur un jeu très joué.
+const VECU = { tombes: 2, pillages: 5, activite: 60, plancher_jeu: 3000 };
 const CLES_VECU = ['rencontres', 'prises', 'blessures', 'dispositif', 'effarouchements', 'nourrissages', 'pillages', 'attaques', 'tombes'];
 const N_MAX = 1e4;                                         // un événement compte au plus dix mille bêtes ou unités
 const INTERDITS = new Set(['__proto__', 'constructor', 'prototype']);
