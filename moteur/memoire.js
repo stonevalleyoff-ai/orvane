@@ -46,19 +46,21 @@ const REGLES = {
   // pillage contre un effarouchement ; paix : combien le mal subi (de la main du joueur aussi) empêche de s'accoutumer à ce qui arrête : un feu
   // que des joueurs défendent reste un feu qu'on craint
   neophobie: { neutre: .5, demi_vie: 20, preuve: 12, habitude: 120, pillage: 3, paix: 20 },
-  // l'agressivité : retombe de moitié en demi_vie cycles ; sensibilite : ce que pèse la part des contacts qui tournent à
-  // l'affrontement ; preuve : l'échelle des contacts ; contre 1 pour un mal qu'on lui fait de près — victoire : un joueur qu'elle
-  // fait tomber, assaut : un assaut qu'elle donne sans que personne tombe (peu : un compte seul en déclarerait des dizaines),
-  // rencontre : une rencontre sans suite, effarouchement : un assaut arrêté sans mal, loin : un mal venu de loin ou d'un
-  // piège (rien à charger : il apprend à fuir, pas à se battre) ; ce qui marche et ce qui coûte : issue est l'échelle des combats
-  // qui finissent (joueurs tombés, bêtes prises de près), succes ce qu'une victoire ajoute à ce que la lignée a de combatif,
-  // cout ce qu'une défaite en retire ; frustration : ce que pèse, chez une bête qui attend sa nourriture des joueurs, une
-  // rencontre où on ne lui donne rien — à la mesure du carré de son attrait : qui n'attend presque rien ne s'offusque pas
-  // (rassasie : les rencontres qu'un nourrissage, ou un pillage, contente ; paix : combien le mal subi la fait taire : une
-  // bête qu'on frappe ne réclame plus) ; extinction : la
+  // l'agressivité : retombe de moitié en demi_vie cycles ; part : la part des contacts qui tournent à l'affrontement où elle
+  // est à mi-hauteur de ce que la lignée a de combatif — en dessous, presque rien : une poignée d'affrontements parmi des
+  // centaines de rencontres paisibles ne fait pas une agressive, et un compte seul n'y suffit pas ; preuve : l'échelle des
+  // contacts ; contre 1 pour un mal qu'on lui fait de près — victoire : un joueur qu'elle fait tomber, assaut : un assaut
+  // qu'elle donne sans que personne tombe (peu : un compte seul en déclarerait des dizaines), rencontre : une rencontre sans
+  // suite, effarouchement : un assaut arrêté sans mal, loin : un mal venu de loin ou d'un piège (rien à charger : il apprend
+  // à fuir, pas à se battre) ; ce qui marche et ce qui coûte : issue est l'échelle des combats qui finissent (joueurs tombés,
+  // bêtes prises de près), succes ce qu'une victoire ajoute à ce que la lignée a de combatif, cout ce qu'une défaite en
+  // retire ; frustration : ce que pèse, chez une bête qui attend sa nourriture des joueurs, une rencontre où on ne lui donne
+  // rien — à la mesure du carré de son attrait : qui n'attend presque rien ne s'offusque pas (rassasie : les rencontres
+  // qu'un nourrissage, ou un pillage, contente ; attente : celles, au plus, qu'un nourrissage laisse sur leur faim — on
+  // n'attend pas plus qu'on n'a reçu de la main ; paix : combien le mal subi la fait taire : une bête qu'on frappe ne réclame plus) ; extinction : la
   // vitesse à laquelle des contacts sans affrontement la défont ; sang_froid : la part du danger qu'une population
   // agressive ne change plus en méfiance (elle rend les coups au lieu de fuir)
-  agressivite: { demi_vie: 10, sensibilite: 4, preuve: 6, victoire: 1, assaut: .1, rencontre: .2, effarouchement: .3, loin: 1, issue: 4, succes: .8, cout: .25, frustration: 1.5, rassasie: 4, paix: 20, extinction: .5, sang_froid: .5 },
+  agressivite: { demi_vie: 10, part: .3, preuve: 6, victoire: 1, assaut: .1, rencontre: .3, effarouchement: .1, loin: 1, issue: 4, succes: .8, cout: .25, frustration: 4, rassasie: 4, attente: 2, paix: 20, extinction: .5, sang_froid: .5 },
   // le caractère d'une lignée, avant d'avoir rien appris. repere : le tempérament médian (au-dessus, hardie) ; ecart : ce que
   // vaut un écart-type d'audace (docs/8) en tempérament ; audace : ce que le tempérament de la lignée pèse dans la vitesse
   // d'apprendre, à côté de l'audace de la population ; leger_kg : la masse (meute comprise) sous laquelle le gabarit ne compte
@@ -69,9 +71,9 @@ const REGLES = {
   // l'individu : ce qu'un écart-type d'audace déplace les dispositions d'une bête de celles de sa population (en logit)
   individu: { ecart: .7 },
   // l'attitude, le mot qui résume : seuil (traque, attrait, agressivité), mefiance (au-dessus, une traqueuse n'est que rôdeuse),
-  // craintive, familiere, defensive (la masse, en joueurs, d'une bête qui fait front par sa seule taille) ; alerte : les seuils
-  // de néophobie d'un événement
-  attitudes: { seuil: .4, mefiance: .4, craintive: .5, familiere: .5, defensive: 1.5, alerte: [.25, .75] }
+  // craintive, familiere ; alerte : les seuils de néophobie d'un événement. (Une bête ne fait plus front par sa seule masse :
+  // c'est son agressivité qui le dit, et sa masse y entre par la combativité de sa lignée.)
+  attitudes: { seuil: .4, mefiance: .4, craintive: .5, familiere: .5, alerte: [.25, .75] }
 };
 // ce qu'un jeu lit : chaque disposition, sa valeur neutre (celle d'une population qui ne la publie pas), ce qu'un jeu en montre
 const DISPOSITIONS = {
@@ -162,19 +164,22 @@ function corpsDe(plan, appetence) {
 //    joueur), ses armes et son armure (ARMES), la chair qu'elle mange ; moins si elle vole (elle a mieux à faire que de se battre) ;
 //  - l'opportunisme : sa hardiesse et son régime (qui mange de tout prend ce qu'on lui tend).
 function caractereDe(plan, za = 0) {
-  const C = REGLES.caractere, P = plan || {}, [cb, ct, cg, ca, cc, cv] = C.combativite, [ob, ot, oo, oc, of] = C.opportunisme;
-  const h = clamp((fini(P.temperament) ? P.temperament : C.repere) + C.ecart * clamp(+za || 0, -3, 3));
-  const m = Math.max(1e-6, (P.masse_kg > 0 ? P.masse_kg : 1) * (1 + REGLES.traque.meute * clamp(P.sociabilite || 0)));
-  const gabarit = clamp(Math.log(m / C.leger_kg) / Math.log(REGLES.joueur_kg / C.leger_kg));
-  let sans = 1; for (const o of P.corps?.organes || []) { const w = ARMES[o?.type]; if (w) sans *= 1 - clamp(w * (.5 + (fini(o.taille) ? o.taille : .5))); }
+  const C = REGLES.caractere, P = plan && typeof plan === 'object' ? plan : {}, [cb, ct, cg, ca, cc, cv] = C.combativite, [ob, ot, oo, oc, of] = C.opportunisme;
+  // (un plan mal formé, des règles de travers : jamais un nombre qui n'en est pas un, jamais une erreur qui arrête le cycle)
+  const sain = (x, d) => Number.isFinite(x) ? clamp(x) : x === Infinity ? 1 : d;
+  const h = sain((fini(P.temperament) ? P.temperament : C.repere) + C.ecart * clamp(+za || 0, -3, 3), .45);
+  const leger = C.leger_kg > 0 ? C.leger_kg : .1, joueur = REGLES.joueur_kg > leger ? REGLES.joueur_kg : leger * 700;
+  const m = Math.max(1e-6, (P.masse_kg > 0 ? +P.masse_kg : 1) * (1 + (REGLES.traque.meute > 0 ? REGLES.traque.meute : 0) * (fini(P.sociabilite) ? clamp(P.sociabilite) : 0)));
+  const gabarit = sain(Math.log(m / leger) / Math.log(joueur / leger), .5);
+  let sans = 1; for (const o of Array.isArray(P.corps?.organes) ? P.corps.organes : []) { const w = o && typeof o.type === 'string' && propre(ARMES, o.type) ? ARMES[o.type] : 0; if (w) sans *= 1 - clamp(w * (.5 + (fini(o.taille) ? o.taille : .5))); }
   const vol = Array.isArray(P.locomotion) && P.locomotion.includes('vol') ? 1 : 0;
-  const c = clamp(cb + ct * (h - .5) + cg * (gabarit - .5) + ca * (1 - sans) + cc * Math.min(1, chair(P)) - cv * vol);
-  const o = clamp(ob + ot * (h - .5) + (P.regime === 'omnivore' || P.regime === 'detritivore' ? oo : P.regime === 'carnivore' ? oc : P.regime === 'filtreur' ? of : 0));
+  const c = sain(cb + ct * (h - .5) + cg * (gabarit - .5) + ca * (1 - sans) + cc * Math.min(1, chair(P)) - cv * vol, .35);
+  const o = sain(ob + ot * (h - .5) + (P.regime === 'omnivore' || P.regime === 'detritivore' ? oo : P.regime === 'carnivore' ? oc : P.regime === 'filtreur' ? of : 0), .4);
   return { hardiesse: +h.toFixed(3), combativite: +c.toFixed(3), opportunisme: +o.toFixed(3) };
 }
 // l'audace qui règle la vitesse d'apprendre (la méfiance, docs/12, et la mémoire) : celle de la population, plus ce que le
 // tempérament de sa lignée s'écarte du tempérament médian. Deux lignées ne craignent pas à la même vitesse.
-const audaceDe = (plan, za = 0) => clamp((+za || 0) + REGLES.caractere.audace * ((fini(plan?.temperament) ? plan.temperament : REGLES.caractere.repere) - REGLES.caractere.repere) / REGLES.caractere.ecart, -3, 3);
+const audaceDe = (plan, za = 0) => { const C = REGLES.caractere, z = fini(+za) ? +za : 0, a = z + (C.ecart > 0 ? C.audace * ((fini(plan?.temperament) ? plan.temperament : C.repere) - C.repere) / C.ecart : 0); return clamp(Number.isFinite(a) ? a : z, -3, 3); };
 // le plafond de l'habituation et de l'attrait d'une population : une lignée craintive ne devient jamais familière, ni quémandeuse
 const plafondHabitude = car => clamp(REGLES.caractere.habitude[0] + REGLES.caractere.habitude[1] * car.hardiesse);
 
@@ -217,10 +222,15 @@ function apprendre(M, v, x = {}) {
   { const loin = D + B > 0 ? Math.min(1, (P + Math.min(de('distance'), D + B - P)) / (D + B)) : 0, malPres = mal * (1 - loin), Dp = D * (1 - loin), assauts = Math.max(K, V);
     const issue = V + Dp > 0 ? 1 - Math.exp(-(V + Dp) / H.issue) : 0, q = V + Dp > 0 ? V / (V + Dp) : 0, c0 = car.combativite;
     const c = clamp(c0 + issue * (q * H.succes * (1 - c0) - (1 - q) * H.cout * c0));
-    const affront = malPres + H.victoire * V + H.assaut * (assauts - V) + H.frustration * M.a * M.a * Math.max(0, R - H.rassasie * (F + A.pillage * G)) * (mal > 0 ? Math.exp(-H.paix * mal / (mal + R)) : 1), tot = affront + H.rencontre * R + H.effarouchement * E + H.loin * (mal - malPres);
-    if (tot > 0) { const cible = c * (1 - Math.exp(-H.sensibilite * affront / tot)), e = Math.min(REGLES.pas, 1 - Math.exp(-tot / (H.preuve * ka)));
+    // (les rencontres qui la laissent sur sa faim : celles que ni un nourrissage ni un pillage n'ont contentées, et pas plus
+    // qu'on ne lui a donné de la main — ce qu'elle a pris seule, elle ne l'attend de personne)
+    const vides = Math.min(Math.max(0, R - H.rassasie * (F + A.pillage * G)), H.attente * F);
+    const affront = malPres + H.victoire * V + H.assaut * (assauts - V) + H.frustration * M.a * M.a * vides * (mal > 0 ? Math.exp(-H.paix * mal / (mal + R)) : 1), tot = affront + H.rencontre * R + H.effarouchement * E + H.loin * (mal - malPres);
+    // (la part des affrontements pèse peu tant qu'elle est petite, puis vite : à « part », la moitié ; à 1, tout)
+    if (tot > 0) { const p = affront / tot, k2 = H.part * H.part, cible = p > 0 ? c * (1 + k2) * p * p / (p * p + k2) : 0, e = Math.min(REGLES.pas, 1 - Math.exp(-tot / (H.preuve * ka)));
       s.g += e * (cible - s.g) * (cible > s.g ? 1 : H.extinction); } }
-  for (const k of ETAT) s[k] = clamp(clamp(s[k], (M[k] || 0) - REGLES.pas, (M[k] || 0) + REGLES.pas));
+  // (rien ne bascule en une nuit ; et des comptes démesurés, des règles de travers n'effacent rien : la disposition reste ce qu'elle était)
+  for (const k of ETAT) { const avant = fini(M[k]) ? clamp(M[k]) : k === 'o' ? N.neutre : 0; s[k] = Number.isFinite(s[k]) ? clamp(clamp(s[k], avant - REGLES.pas, avant + REGLES.pas)) : avant; }
   s.t = Math.min(s.t, corps);   // (un corps qui ne peut pas faire d'un joueur sa proie ne garde pas une traque héritée)
   return s;
 }
@@ -233,7 +243,7 @@ function attitude(p, plan) {
   if (g >= S.seuil) return m >= S.craintive ? 'defensive' : a >= S.seuil ? 'exigeante' : 'agressive';
   if ((t >= S.seuil || a >= S.seuil) && m >= S.mefiance) return 'rodeuse';
   if (a >= S.seuil) return 'quemandeuse';
-  if (m >= S.craintive) return (plan?.masse_kg || 1) >= S.defensive * REGLES.joueur_kg ? 'defensive' : 'fuyante';
+  if (m >= S.craintive) return 'fuyante';
   if (h >= S.familiere) return 'familiere';
   return null;
 }
@@ -281,8 +291,10 @@ function preparer(ctx = {}) {
     // plafond. c : ses contacts ; v : ce qu'elle a vécu ; g : son agressivité d'avant. Demande ctx.mefiance (moteur/orvane.js, apprendre).
     mefiance(plan, m, h, c, v, za, g) {
       if (horsMemoire(plan)) return ctx.mefiance(m, h, danger(c, v, 0), za);   // (une machine a sa Mère, docs/16 : pas de caractère)
-      const [m1, h1] = ctx.mefiance(m, h, danger(c, v, g), audaceDe(plan, za));
-      return [m1, Math.min(h1, Math.max(plafondHabitude(caractereDe(plan, za)), 0))];
+      const r = ctx.mefiance(m, h, danger(c, v, g), audaceDe(plan, za)), m1 = Number.isFinite(r[0]) ? r[0] : m, h1 = Number.isFinite(r[1]) ? r[1] : h;   // (des comptes démesurés n'effacent rien)
+      // le plafond se rejoint sans saut : une habituation qui le dépasse (le jour de l'éveil, une lignée fille plus craintive
+      // que sa mère) n'en redescend pas de plus d'un pas par cycle
+      return [m1, Math.min(h1, Math.max(plafondHabitude(caractereDe(plan, za)), h - REGLES.pas))];
     },
     // p : la population telle qu'elle va être publiée (sa méfiance du cycle y est déjà) ; pop : son état de cycle (M : sa
     // mémoire, mêlée de celle de ses migrants ; Mp : celle qu'elle publiait au cycle d'avant, absente d'une population née ce
@@ -292,6 +304,7 @@ function preparer(ctx = {}) {
       const M = apprendre(pop.M || lire(null), v, { plan: t.plan, za, satiete: pop.satiete, corps: corpsLu(t) }), Mp = pop.Mp;
       // rien ne bascule en une nuit, migrants compris : le pas se compte depuis ce que la population publiait
       if (Mp) for (const k of ETAT) M[k] = clamp(M[k], Math.max(0, (Mp[k] || 0) - REGLES.pas), Math.min(1, (Mp[k] || 0) + REGLES.pas));
+      M.t = Math.min(M.t, corpsLu(t));   // (le corps l'emporte sur le pas : une lignée devenue herbivore ne publie pas une traque héritée, même une nuit)
       const m = ecrire(M); if (m) p.memoire = m;
       const att = attitude(p, t.plan); if (att) p.attitude = att;
       if (!ev) return;

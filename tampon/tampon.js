@@ -210,7 +210,10 @@ const MOYENS = new Set(['melee', 'distance', 'piege', 'feu', 'lumiere', 'bruit']
 // pas (influence.exposition_ref) ; plancher_jeu : les contacts qu'un jeu garde toujours sous la règle des parts — cinquante comptes
 // actifs. Plus bas, un jeu de deux faux comptes suffisait à faire raboter un jeu honnête de dix joueurs, et pesait d'autant plus
 // (le simulateur l'a montré) ; la règle des parts ne doit mordre que sur un jeu très joué.
-const VECU = { tombes: 2, pillages: 5, activite: 60, plancher_jeu: 3000 };
+// Par compte aussi, au plus tant de bêtes prises, de bêtes blessées et de nourrissages : un compte seul qui en déclarait des
+// dizaines suffisait, face à dix joueurs paisibles, à rendre une population agressive ou exigeante (la relecture l'a montré).
+// Les retraits et le contact de la méfiance, eux, gardent leurs propres règles : ces plafonds ne valent que pour « vecu ».
+const VECU = { tombes: 2, pillages: 5, prises: 4, blessures: 3, nourrissages: 12, activite: 60, plancher_jeu: 3000 };
 const CLES_VECU = ['rencontres', 'prises', 'blessures', 'dispositif', 'distance', 'effarouchements', 'nourrissages', 'pillages', 'attaques', 'tombes'];
 const N_MAX = 1e4;                                         // un événement compte au plus dix mille bêtes ou unités
 const INTERDITS = new Set(['__proto__', 'constructor', 'prototype']);
@@ -395,7 +398,10 @@ function agreger(lots, inst, profil, etat = {}, gen0 = null, jeux = null) {
   // plancher : aucun jeu ne fait seul la mémoire d'une population que d'autres montrent. Rien n'est lissé : la mémoire a ses demi-vies.
   if (MEMO) { const ref = I.exposition_ref > 0 ? I.exposition_ref : VECU.activite, pop = new Map();
     for (const compte in parCompte) for (const tid in parCompte[compte].v) for (const bid in parCompte[compte].v[tid]) { const V = parCompte[compte].v[tid][bid];
-      V.tombes = Math.min(V.tombes, VECU.tombes); V.pillages = Math.min(V.pillages, VECU.pillages); V.dispositif = Math.min(V.dispositif, V.prises + V.blessures); V.distance = Math.min(V.distance, V.prises + V.blessures - V.dispositif);
+      V.tombes = Math.min(V.tombes, VECU.tombes); V.pillages = Math.min(V.pillages, VECU.pillages); V.nourrissages = Math.min(V.nourrissages, VECU.nourrissages);
+      // (le mal plafonné garde ses proportions : la même part vient d'un dispositif, la même de loin)
+      { const mal0 = V.prises + V.blessures; V.prises = Math.min(V.prises, VECU.prises); V.blessures = Math.min(V.blessures, VECU.blessures); const k = mal0 > 0 ? (V.prises + V.blessures) / mal0 : 1; V.dispositif *= k; V.distance *= k; }
+      V.dispositif = Math.min(V.dispositif, V.prises + V.blessures); V.distance = Math.min(V.distance, V.prises + V.blessures - V.dispositif);
       const tot = Math.max(V.rencontres, V.prises + V.blessures + V.effarouchements + V.nourrissages + V.pillages + V.attaques + V.tombes); if (!(tot > 0) || !Number.isFinite(tot)) continue;
       const a = tot > ref ? ref / tot : 1, k = tid + '\u0000' + bid; if (!pop.has(k)) pop.set(k, { tid, bid, L: [] });
       pop.get(k).L.push({ jeu: jeuDe[compte] ?? '', poids: tot * a, a, V }); }
