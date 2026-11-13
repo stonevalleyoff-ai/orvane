@@ -70,14 +70,18 @@ Ce qui se rapporte : les bêtes tirées d'une lignée, comme en docs/4. Une cré
 
 Dans un monde éveillé, le tampon joint aux pressions de chaque population `vecu` : ce qu'elle a vécu des joueurs ce cycle. Il le tient à part de tout le reste : les retraits, le contact de la méfiance et la part de chacun sont ceux d'un monde sans mémoire qui recevrait les mêmes lots.
 
-Rien n'y est retiré du monde ; ses protections portent donc sur les contacts.
+Rien n'y est retiré du monde ; sa protection porte donc sur les contacts, compte par compte.
 
 - **Par compte** : au plus 2 joueurs tombés et 5 pillages par population et par cycle. Puis toute son activité est ramenée à une activité normale (`exposition_ref` contacts, 60 si le profil ne le dit pas), ses proportions gardées. Un compte qui ne déclare que 9 000 assauts, sans une rencontre, ne pèse pas plus qu'un autre.
-- **La part d'un jeu** (`part_max_jeu`), avec un plancher de 200 contacts : un jeu de vingt comptes face à un jeu de cinq ne pèse pas plus que lui.
 
-Il n'y a pas de part par compte, comme pour les retraits : entre peu de joueurs, elle rabotait des comptes égaux et grossissait d'autant un compte léger.
+C'est la seule. Il n'y a **ni part par compte, ni part par jeu**. Pour les retraits, rogner un grand jeu ne fait que retirer moins de bêtes. Ici, ce qu'une population apprend dépend de proportions : la part des contacts qui nourrissent, la part des assauts où un joueur tombe. Rogner les uns y grossit d'autant les autres.
 
-Le `contact` de la méfiance (docs/12) a les mêmes protections, dans tous les mondes : l'activité d'un compte mesurée sur tous ses contacts, puis la part d'un jeu.
+- Une part par compte, entre peu de joueurs, rabotait des comptes égaux et grossissait d'autant un compte léger.
+- Une part par jeu ramenait cent passants au poids de trois comptes, dès que ceux-ci s'inscrivaient sous un jeu à eux (« L'abus », plus bas).
+
+Un compte pèse donc le même poids sous n'importe quel jeu, et une population apprend de tous ses joueurs, à proportion de leur nombre. La part d'un jeu (`part_max_jeu`) reste aux retraits.
+
+Le `contact` de la méfiance (docs/12) a la même protection, dans tous les mondes : l'activité d'un compte mesurée sur tous ses contacts, et rien d'autre.
 
 Dans un monde sans mémoire, le tampon laisse les cinq actions nouvelles : les mêmes pressions que si les jeux ne les envoyaient pas.
 
@@ -145,12 +149,60 @@ Lisière (`jeux/lisiere/`, et son dépôt) est le premier jeu à s'en servir, da
 
 ## L'abus
 
-Un groupe pourrait vouloir rendre une espèce hostile partout. Les comptes et les jeux s'inscrivent librement : rien ne remplace une identité. Un faux compte vaut donc, au plus, un vrai joueur malchanceux au possible. Ce qui tient, et ce qui ne tient pas :
+Un groupe pourrait vouloir rendre une espèce hostile partout. Les comptes et les jeux s'inscrivent librement : rien ne remplace une identité. Un faux compte vaut donc, au plus, un vrai joueur malchanceux au possible, sous quelque jeu qu'il s'inscrive. Ce qui tient, et ce qui ne tient pas :
 
 - **Un compte seul ne gagne pas.** Dix joueurs qui ne font que passer, et un compte qui déclare 500 joueurs tombés par nuit : après vingt cycles, la traque est à 0,18. Un seul compte à son feu soixante fois par nuit laisse la néophobie à 0,34 après cinq nuits ; elle continue de baisser s'il ne s'arrête pas.
-- **Une minorité décidée gagne une population paisible.** Face à ces dix passants, il faut quatre comptes qui déclarent chaque nuit le plus de joueurs tombés possible pour faire une traqueuse.
-- **Elle ne gagne pas des joueurs qui se défendent.** Dix comptes qui blessent et prennent des bêtes, plus cinq faux comptes : la traque reste à 0,17, la population reste fuyante.
+- **Une minorité décidée gagne une population paisible, à proportion de ceux qui passent.** Face à dix passants, il faut quatre comptes qui déclarent chaque nuit le plus de joueurs tombés possible pour faire une traqueuse. Face à cent, trente-deux : un faux compte pour trois passants.
+- **S'inscrire sous un jeu à soi n'y change rien.** Le monde est le même, au caractère près, que si ces comptes étaient du jeu des passants.
+- **Elle ne fait pas une traqueuse de bêtes dont les joueurs se défendent.** Dix comptes qui blessent et prennent des bêtes, plus cinq faux comptes : la traque reste à 0,17, la population reste fuyante. À huit faux comptes, elle est rôdeuse : ce qu'ils déclarent piller l'attire. La traque passe 0,4 à seize, et vaut 0,69 à cent. La population se méfie toujours (0,64) : elle ne devient pas traqueuse.
+- **Un grand jeu fait la mémoire d'une population qu'un petit jeu montre aussi.** Mille joueurs d'un jeu qui se laissent prendre font une traqueuse (traque 0,41) de la population que cinq joueurs d'un autre jeu défendent. C'est ce que veut dire un monde partagé, et chaque jeu borne ce qu'il rend. Mille faux comptes pèsent autant. Un jeu entier de faux comptes se suspend (`orvane_jeux.actif`, `hebergement/supabase.sql` : ses dépôts sont refusés, ses lots en attente écartés) ; des faux comptes glissés parmi les joueurs d'un vrai jeu, non.
 - **Ce qui borne toujours** : la mémoire ne retire pas une bête, et ne change pas la chasse des autres ; elle ne bouge pas de plus de 0,35 par nuit ; elle reste dans son biome ; elle retombe quand les joueurs s'en vont ; chaque jeu borne ce qu'il rend.
+
+### La part d'un jeu : mesurée dans les deux sens, puis retirée
+
+À sa sortie, la mémoire avait une part par jeu (`part_max_jeu`, 0,5 sur le monde d'Orvane), comme les retraits : aucun jeu ne pesait plus que les autres réunis, et un jeu gardait toujours 200 contacts. Elle protégeait un petit jeu d'un grand. Elle faisait aussi d'un petit jeu hostile l'égal d'un grand jeu paisible, et un jeu s'inscrit aussi librement qu'un compte.
+
+`node outils/parts.js` mesure les deux sens, sous quatre règles : sur le monde `sv-1`, la population `traqueur` de la prairie, vingt nuits, par le tampon puis le moteur. Toutes gardent l'activité normale par compte.
+
+| règle | ce qu'un jeu garde toujours |
+| --- | --- |
+| plancher 200 | 200 contacts : la règle d'avant |
+| 60 × √comptes | l'activité normale d'autant de comptes que la racine de leur nombre |
+| 30 × comptes | la moitié de l'activité normale de ses comptes |
+| sans part | tout : il n'y a pas de part par jeu |
+
+**Le sens qu'elle ouvrait : un petit jeu hostile face à un grand jeu paisible.** Des passants à 30 rencontres chacun ; des faux comptes qui déclarent chacun le plus de joueurs tombés possible. Combien il en faut pour faire une traqueuse :
+
+| passants | du jeu des passants | sous un jeu à eux : plancher 200 | 60 × √comptes | 30 × comptes | sans part |
+| --- | --- | --- | --- | --- | --- |
+| 10 | 4 | 3 | 3 | 4 | 4 |
+| 100 | 32 | 3 | 7 | 32 | 32 |
+
+Avec la règle d'avant, trois faux comptes inscrits sous un jeu à eux faisaient une traqueuse (traque 0,48) de la population de cent passants, comme de celle de dix : le nombre des vrais joueurs ne protégeait plus rien. Du jeu des passants, les mêmes trois comptes laissent la traque à 0,06. La méfiance s'ouvrait de la même façon (docs/12) : un seul compte hostile la portait à 0,74, face à dix passants comme face à cent.
+
+**Le sens qu'elle protégeait : un grand jeu face à un petit jeu de vrais joueurs.** La traque après vingt nuits, et l'attitude :
+
+| qui joue | plancher 200 | 60 × √comptes | 30 × comptes | sans part |
+| --- | --- | --- | --- | --- |
+| 100 faux comptes d'un jeu, dix joueurs d'un autre qui se défendent | 0,53 rôdeuse | 0,68 rôdeuse | 0,69 rôdeuse | 0,69 rôdeuse |
+| 1 000 faux comptes, les mêmes dix | 0,53 rôdeuse | 0,73 rôdeuse | 0,74 rôdeuse | 0,74 rôdeuse |
+| 100 vrais joueurs d'un jeu qui se laissent prendre, cinq d'un autre qui se défendent | 0,23 | 0,33 | 0,39 | 0,39 |
+| 1 000 joueurs qui se laissent prendre, les mêmes cinq | 0,23 | 0,38 | 0,41 traqueuse | 0,41 traqueuse |
+| 100 passants d'un jeu, cinq joueurs d'un autre qui se laissent prendre | 0,33 | 0,24 | 0,09 | 0,09 |
+| 1 000 passants, les mêmes cinq | 0,33 | 0,12 | 0 | 0 |
+
+Un joueur qui se défend : 20 rencontres, 2 bêtes blessées, 2 assauts par nuit. Un joueur qui se laisse prendre : 30 rencontres, 8 assauts, 2 fois tombé.
+
+Ce que ces mesures disent :
+
+- **Ce qu'elle protégeait.** Les joueurs d'un petit jeu, de ce que font les vrais joueurs d'un grand : face à mille joueurs qui se laissent prendre, elle tenait la traque à 0,23 pour cinq joueurs qui se défendent ; sans elle, 0,41, tout juste traqueuse. Contre des faux comptes, elle protégeait peu : 0,53 au lieu de 0,74, rôdeuse dans les deux cas. Ce qui empêche alors la traqueuse, c'est la méfiance que font ceux qui se défendent, pas la part. Pour la méfiance, dont la cible sature dès la moitié des contacts, presque rien (docs/12).
+- **Ce qu'elle protégeait et ce qu'elle ouvrait sont une seule opération.** Protéger un petit jeu d'un grand, c'est ramener le grand à la taille du petit. Les deux dernières lignes sont la menace du premier tableau, vue de l'autre côté : cinq comptes d'un petit jeu y pèsent autant que mille passants. Rien ne distingue cinq vrais joueurs d'un petit jeu de cinq faux comptes inscrits sous un jeu à eux.
+- **Un plancher qui suit le nombre de comptes ne fait que choisir entre les deux.** Avec 60 × √comptes, sept faux comptes suffisent encore face à cent passants, et le petit jeu n'est presque plus protégé. Avec 30 × comptes, c'est la règle sans part, à un facteur deux près pour la méfiance.
+- **La règle retenue est la seule que le nom du jeu ne change pas** : chaque compte pèse ce que la population a vécu de lui, au plus une activité normale. Tricher coûte alors des comptes à proportion des vrais joueurs à contredire : un pour trois passants pour la traque, un pour sept pour la méfiance.
+
+Entre trois comptes qui écrivent la mémoire de cent joueurs et mille joueurs qui écrivent celle de cinq, la règle choisit les mille : eux, au moins, la population les a vécus.
+
+Ce changement **modifie la mémoire et la méfiance des mondes qui reçoivent des lots**, dans un cas : une population que plusieurs jeux montrent, quand l'un d'eux dépassait sa part et ses 200 contacts. Il n'est plus rogné. Ailleurs, le vécu et le contact sont les mêmes, au caractère près ; les retraits ne changent nulle part.
 
 ## L'éveiller
 
@@ -164,11 +216,11 @@ Le cycle de nuit l'éveille une fois (`monde.memoire: { depuis }`). Ses règles 
 
 ## Ce que le banc vérifie
 
-`bancs/memoire.js`, en une minute :
+`bancs/memoire.js`, en une minute et demie :
 1. un monde sans mémoire tourne exactement comme le moteur sans ce fichier ; le jour de l'éveil, rien ne bouge ; éveillée, elle ne change ni un effectif ni la chasse des autres ;
 2. les équilibres du tableau, le corps, l'oubli et sa fin, la riposte, le pas, l'audace, les règles d'un monde, une bascule pile sur un seuil ;
-3. le tampon : ce qu'il compte, ses plafonds par compte et par jeu, ce qu'il laisse dans un monde sans mémoire ; le contact de la méfiance, plafonné de même ;
-4. l'abus : un compte seul, combien il en faut, des joueurs qui se défendent, deux cents faux comptes en une nuit ; un compte qui déclare 9 000 prélèvements ;
+3. le tampon : ce qu'il compte, son plafond par compte, le nom du jeu qui n'y change rien, ce qu'il laisse dans un monde sans mémoire ; le contact de la méfiance, plafonné de même ;
+4. l'abus : un compte seul, combien il en faut face à dix passants et face à cent, sous le jeu des passants ou sous un jeu à eux ; des joueurs qui se défendent, face à cinq faux comptes et face à cent ; deux cents faux comptes en une nuit ; un compte qui déclare 9 000 prélèvements, des comptes hostiles face à cent passants ;
 5. les migrants et l'ordre de leurs arrivées, les bêtes déplacées, la séparation ; la nuit d'un monde par parcelles par le chemin du cycle hébergé, et la vue par biome ;
 6. deux styles de jeu, deux faunes : chez ceux qui se terrent derrière leur feu, des traqueuses qui ne craignent plus le feu ; chez ceux qui chassent, des fuyantes qui le craignent encore ;
 7. le schéma, les listes d'actions (le schéma, le tampon, le serveur, le vérificateur, les kits), le cycle de nuit.
@@ -176,9 +228,10 @@ Le cycle de nuit l'éveille une fois (`monde.memoire: { depuis }`). Ses règles 
 ```
 node bancs/memoire.js
 node outils/vitesse.js --contre origin/main --cycles 3
+node outils/parts.js
 ```
 
-La seconde commande compare le moteur à celui de `main` sur le monde d'Orvane : le banc, lui, ne compare le moteur qu'à lui-même. À lancer après tout changement du moteur.
+La deuxième commande compare le moteur à celui de `main` sur le monde d'Orvane : le banc, lui, ne compare le moteur qu'à lui-même. À lancer après tout changement du moteur. La troisième refait les mesures de « L'abus » sous chaque règle, et dit laquelle le tampon applique : à lancer avant de toucher à ce que le tampon retient des joueurs.
 
 ## Ce qui vient ensuite
 

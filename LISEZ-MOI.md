@@ -51,6 +51,7 @@ outils/verifier.js    vérifier un lot, un instantané ou un profil avant de le 
 outils/bancs.js       tous les bancs d'un coup, en parallèle : les rapides à chaque PR, les longs la nuit (hebergement/LISEZ-MOI.md, « La fiabilité »)
 outils/contrat.js     le garde-fou du contrat : ce qui casse un jeu, ce qui s'ajoute ; un changement cassant demande une version majeure (docs/43)
 outils/vitesse.js     la vitesse du moteur sur un monde réel ; contre une autre version : plus vite ? le même monde, au caractère près ? (docs/44)
+outils/parts.js       la part d'un jeu, mesurée : ce que quelques comptes hostiles font à la mémoire et à la méfiance d'une population, sous chaque règle (docs/50, « L'abus »)
 kits/unity/           le kit Unity : lire le monde en classes C#, compter, déposer les lots ; essayé avec .NET (kits/LISEZ-MOI.md)
 kits/godot/           le kit Godot 4 : le singleton Orvane, lire, compter, déposer (kits/LISEZ-MOI.md)
 package.json, index.js  le paquet : npm install github:stonevalleyoff-ai/orvane#v1.0.0, puis require('orvane') (docs/43)

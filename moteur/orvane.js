@@ -43,7 +43,7 @@
 // FORMAT DES PRESSIONS, en plus : taxons[t][b].q = { [trait continu]: z moyen des bêtes retirées par les joueurs } ;
 // taxons[t][b].contact = { rencontres, danger, aide } : ce que les bêtes ont vécu des joueurs (tampon, docs/12).
 // taxons[t][b].vecu = { rencontres, prises, blessures, dispositif, effarouchements, nourrissages, pillages, attaques, tombes } :
-// la même chose, plus fine et plafonnée par compte et par jeu, dans un monde à la mémoire éveillée (tampon, docs/50).
+// la même chose, plus fine, chaque compte ramené à une activité normale, dans un monde à la mémoire éveillée (tampon, docs/50).
 // taxons[t][b].apport = { n, N: { [phenotype]: n }, alleles, a } : des bêtes nées en élevage, relâchées avec leurs gènes (docs/36).
 //
 // FORMAT DES PRESSIONS reçues (sortie du tampon) :

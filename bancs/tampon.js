@@ -11,7 +11,8 @@
 //     d'un monde découpé après son éveil ;
 //  8. le jour un : un monde sans lots tourne exactement comme avant ;
 //  9. le contact de la méfiance (docs/12) : un compte ramené à une activité normale sur tous ses contacts (9 000 prélèvements sans
-//     une rencontre aussi), la part d'un jeu et son plancher, pas de part par compte ; sous l'activité normale, rien ne bouge.
+//     une rencontre aussi) ; pas de part par compte ni par jeu, le nom du jeu n'y change rien (la part d'un jeu reste aux retraits) ;
+//     un petit jeu hostile face à un grand jeu paisible, un grand jeu face à un petit ; sous l'activité normale, rien ne bouge.
 //   node bancs/tampon.js
 'use strict';
 const fs = require('fs'), path = require('path');
@@ -115,7 +116,7 @@ console.log('8. Le jour un');
   verif(JSON.stringify(a) === JSON.stringify(b), 'sans lots, le tampon ne rend que la mémoire lissée : même monde au bit près (deux passes, deux cycles de sv-1)'); }
 
 console.log('9. Le contact de la méfiance');
-{ const ref = profil.influence.exposition_ref, sol = Tampon.VECU.plancher_jeu, ev = (action, n) => ({ taxon: 'jagra', biome: 'toundra', action, n }), C = (lots, P = profil) => Tampon.agreger(lots, I, P, {}).pressions.taxons.jagra?.toundra?.contact;
+{ const ref = profil.influence.exposition_ref, ev = (action, n) => ({ taxon: 'jagra', biome: 'toundra', action, n }), C = (lots, P = profil) => Tampon.agreger(lots, I, P, {}).pressions.taxons.jagra?.toundra?.contact;
   const nuit = c => Orvane.apprendre(0, 0, c, 0)[0], avant = (R, D) => nuit({ rencontres: R, danger: D });   // la méfiance qu'une population sans histoire en tire en une nuit ; avant : avec le contact que le tampon rendait
   const passants = (n, R, jeu) => Array.from({ length: n }, (_, i) => lot('p' + i, [ev('rencontre', R)], jeu));
   // le défaut : un compte, 9 000 prélèvements, pas une rencontre — le contact n'était ramené à une activité normale que par les rencontres
@@ -137,18 +138,36 @@ console.log('9. Le contact de la méfiance');
   const egaux = n => Array.from({ length: n }, (_, i) => lot('e' + i, [ev('rencontre', 60), ev('prelevement', 6)])), six = C(egaux(6)), leger = C([...egaux(5), lot('l', [ev('rencontre', 3)])]);
   verif(PL.part_max_compte > 0 && six.rencontres === 360 && six.danger === 36 && leger.rencontres === 303 && leger.danger === 30,
     `pas de part par compte : six comptes égaux d'un même jeu gardent tout ce que la population a vécu d'eux (${fx(six.rencontres, 0)} rencontres, ${fx(six.danger, 0)} prises) ; cinq et un compte léger aussi (${fx(leger.rencontres, 0)} et ${fx(leger.danger, 0)})`);
-  // la part d'un jeu : deux jeux inégaux
-  const grand = n => Array.from({ length: n }, (_, i) => lot('g' + i, [ev('rencontre', 60), ev('prelevement', 6)], 'jeu-a')), seul = C(grand(20)), j1 = C([...grand(20), ...passants(1, 60, 'jeu-b')]), j5 = C([...grand(20), ...passants(5, 60, 'jeu-b')]);
-  verif(seul.rencontres === 1200 && seul.danger === 120 && Math.abs(j1.rencontres - (sol + 60)) < .01 && Math.abs(j1.danger - sol / 10) < .01 && Math.abs(j5.rencontres - 600) < .01 && Math.abs(j5.danger - 30) < .01,
-    `deux jeux inégaux : vingt comptes du jeu A (1 200 rencontres, 120 prises) face à un seul du jeu B gardent ${fx(j1.rencontres - 60, 0)} rencontres et ${fx(j1.danger, 0)} prises (le plancher d'un jeu, proportions gardées) ; face à cinq comptes du jeu B, autant qu'eux (${fx(j5.rencontres - 300, 0)} et 300) ; seul à montrer la population, le jeu A garde tout`);
-  const sous = C([...grand(3), ...passants(2, 60, 'jeu-b')]), mille = C([...Array.from({ length: 1500 }, (_, i) => lot('m' + i, [ev('rencontre', 60)], 'jeu-a')), ...passants(1, 60, 'jeu-b')]);
-  verif(sous.rencontres === 300 && sous.danger === 18 && Math.abs(mille.rencontres - (sol + 60)) < .01,
-    `sous le plancher (${sol} contacts), la part d'un jeu ne rogne rien (trois comptes et deux : ${fx(sous.rencontres, 0)} rencontres) ; 1 500 comptes d'un jeu face à un compte d'un autre : ${fx(mille.rencontres - 60, 0)} rencontres gardées sur 90 000`);
-  // … et dans l'autre sens : un petit jeu hostile face à un grand jeu paisible. Le grand garde son plancher ; le petit pèse davantage
-  // que s'il était du même jeu (c'est la règle des parts, la même que pour la mémoire, docs/50)
-  const meme = C([...passants(20, 60, 'jeu-a'), lot('h', [ev('prelevement', 9000)], 'jeu-a')]), autre = C([...passants(20, 60, 'jeu-a'), lot('h', [ev('prelevement', 9000)], 'jeu-b')]);
-  verif(meme.rencontres === 1200 && meme.danger === ref && autre.danger === ref && Math.abs(autre.rencontres - sol) < .01 && nuit(autre) < .8 && avant(1200, 9000) > .99,
-    `vingt passants d'un jeu, et un compte qui déclare 9 000 prélèvements : du même jeu, la méfiance d'une nuit passe de ${fx(avant(1200, 9000), 2)} à ${fx(nuit(meme), 2)} ; inscrit sous un autre jeu, à ${fx(nuit(autre), 2)} (les passants gardent leur plancher, ${sol} rencontres : un jeu ne pèse jamais plus que l'autre)`); }
+  // pas de part par jeu non plus : la méfiance s'apprend d'une proportion, et rogner un grand jeu y grossirait d'autant un petit
+  // (docs/12, docs/50 « L'abus » ; outils/parts.js le mesure). Deux jeux inégaux gardent chacun tout ce que la population a vécu d'eux
+  const grand = n => Array.from({ length: n }, (_, i) => lot('g' + i, [ev('rencontre', 60), ev('prelevement', 6)], 'jeu-a')), j1 = C([...grand(20), ...passants(1, 60, 'jeu-b')]);
+  const mille = C([...Array.from({ length: 1500 }, (_, i) => lot('m' + i, [ev('rencontre', 60)], 'jeu-a')), ...passants(1, 60, 'jeu-b')]);
+  verif(PL.part_max_jeu > 0 && j1.rencontres === 1260 && j1.danger === 120 && mille.rencontres === 90060,
+    `pas de part par jeu (le profil en a une pour les retraits : ${pc(PL.part_max_jeu)}) : vingt comptes du jeu A (1 200 rencontres, 120 prises) face à un seul du jeu B gardent tout (${fx(j1.rencontres - 60, 0)} et ${fx(j1.danger, 0)}) ; 1 500 comptes d'un jeu face à un compte d'un autre aussi (${fx(mille.rencontres - 60, 0)} rencontres)`);
+  // le nom du jeu ne change rien : les mêmes comptes sous un seul jeu, chacun sous un jeu à lui, ou répartis en trois
+  const divers = [...grand(7), ...passants(9, 45), lot('x', [ev('prelevement', 9000)]), lot('y', [ev('rencontre', 30), ev('prelevement', 200), ev('nourrissage', 100)]), lot('z', [ev('capture', 7), ev('liberation', 3)])];
+  const sous = f => JSON.stringify(C(divers.map((l, i) => ({ ...l, jeu: f(i), source: { ...l.source, jeu: f(i) } })))), unSeul = sous(() => 'jeu-a');
+  verif(unSeul === sous(i => 'jeu-' + i) && unSeul === sous(i => 'jeu-' + i % 3) && unSeul === sous(i => i < 16 ? 'jeu-a' : 'jeu-b'),
+    `le nom du jeu ne change rien : ${divers.length} comptes de toutes sortes, sous un seul jeu, chacun sous un jeu à lui, répartis en trois, ou les passants d'un côté et les autres de l'autre — le même contact, au caractère près`);
+  // … mais la part d'un jeu reste aux retraits : là, rogner un grand jeu ne fait que retirer moins de bêtes
+  const deux = agr([...Array.from({ length: 1500 }, (_, i) => lot('r' + i, [ev('rencontre', 60), ev('prelevement', 30)], 'jeu-a')), lot('b', [ev('rencontre', 60), ev('prelevement', 1)], 'jeu-b')]).pressions.taxons.jagra.toundra;
+  verif(ote(deux) <= PL.part_max_jeu * pmax * effJ + 1 + 1e-6 && deux.contact.rencontres === 90060 && deux.contact.danger === 45001,
+    `la part d'un jeu reste aux retraits : 1 500 comptes du jeu A prennent 30 jagra chacun, un compte du jeu B une seule ; le jeu A n'en ôte que ${fx(ote(deux) - 1, 0)} (sa part), et la population a vécu tous leurs contacts (${fx(deux.contact.rencontres, 0)} rencontres, ${fx(deux.contact.danger, 0)} prises)`);
+  // un petit jeu hostile face à un grand jeu paisible : il pèse ses comptes, pas davantage, sous quelque jeu qu'ils s'inscrivent.
+  // (Avec une part par jeu, les passants étaient ramenés à 200 rencontres, ou au poids du petit jeu : partJeu)
+  const hostiles = (n, jeu) => Array.from({ length: n }, (_, i) => lot('h' + i, [ev('prelevement', 9000)], jeu)), partJeu = n => nuit({ rencontres: Math.max(200, ref * n), danger: ref * n });
+  const meme = C([...passants(20, 60, 'jeu-a'), ...hostiles(1, 'jeu-a')]), autre = C([...passants(20, 60, 'jeu-a'), ...hostiles(1, 'jeu-b')]);
+  verif(JSON.stringify(meme) === JSON.stringify(autre) && autre.rencontres === 1200 && autre.danger === ref && nuit(autre) < .3 && avant(1200, 9000) > .99 && partJeu(1) > .7,
+    `vingt passants d'un jeu, et un compte qui déclare 9 000 prélèvements : du même jeu ou inscrit sous un jeu à lui, le même contact (${fx(autre.rencontres, 0)} rencontres, ${fx(autre.danger, 0)} prises), et la méfiance d'une nuit passe de ${fx(avant(1200, 9000), 2)} à ${fx(nuit(autre), 2)} ; une part par jeu la laissait à ${fx(partJeu(1), 2)} sous un jeu à lui`);
+  const cent = n => nuit(C([...passants(100, 60, 'jeu-a'), ...hostiles(n, 'jeu-b')]));
+  verif(cent(1) < .1 && cent(4) < .25 && cent(13) < .5 && cent(14) >= .5 && partJeu(1) > .7 && partJeu(4) > .9,
+    `le nombre des vrais joueurs protège : face à cent passants (60 rencontres chacun), un compte hostile inscrit sous un jeu à lui fait ${fx(cent(1), 2)} de méfiance en une nuit, quatre ${fx(cent(4), 2)}, et il en faut quatorze pour passer 0,5 (${fx(cent(14), 2)}) ; avec une part par jeu, un seul suffisait (${fx(partJeu(1), 2)} ; ${fx(partJeu(4), 2)} à quatre), aussi nombreux que soient les passants`);
+  // … et l'autre sens, ce qu'une part par jeu protégeait : un grand jeu fait la méfiance d'une population qu'un petit jeu montre aussi.
+  // Elle protégeait peu : la cible sature vite (1 − e^(−6 × la part des contacts qui finissent mal) : 0,95 dès la moitié)
+  const petit = passants(5, 60, 'jeu-b'), chasse = nuit(C([...grand(100), ...petit])), tout = nuit(C([...Array.from({ length: 100 }, (_, i) => lot('t' + i, [ev('prelevement', 60)], 'jeu-a')), ...petit]));
+  const chasseAvant = nuit({ rencontres: 300 + 300 * 10 / 11, danger: 300 / 11 }), toutAvant = nuit({ rencontres: 300, danger: 300 });
+  verif(chasse > .35 && chasse < .45 && chasseAvant > .2 && chasseAvant < .3 && tout > .99 && toutAvant > .94,
+    `un grand jeu face à un petit : cent chasseurs d'un jeu (60 rencontres, 6 prises) et cinq passants d'un autre, la méfiance d'une nuit est celle que font cent chasseurs (${fx(chasse, 2)} ; une part par jeu la tenait à ${fx(chasseAvant, 2)}) ; cent comptes à 60 prélèvements, ${fx(tout, 2)} (une part par jeu : ${fx(toutAvant, 2)} — la cible sature, elle n'y protégeait presque rien)`); }
 
 function pc(x) { return fx(100 * (x || 0), 1) + ' %'; }
 console.log(`\n${ok ? 'tout est vérifié' : 'ÉCHEC'} (${((Date.now() - t0) / 1000).toFixed(0)} s)`);

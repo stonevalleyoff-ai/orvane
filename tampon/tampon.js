@@ -10,7 +10,8 @@
 //                                   venus de tous les jeux branchés sur le monde, deviennent les pressions du moteur. Chaque lot
 //                                   est lu avec l'exposition de SON jeu (jeux : { id: { exposition } }, hebergement/LISEZ-MOI.md) :
 //      1. rapporter l'activité d'un compte à une activité normale (exposition_ref rencontres par cycle) ;
-//         ce que les bêtes ont vécu de lui (contact, docs/12) aussi, mesuré sur tous ses contacts, puis la part d'un jeu ;
+//         ce que les bêtes ont vécu de lui (contact, docs/12 ; vecu, docs/50) aussi, mesuré sur tous ses contacts, et rien de
+//         plus : ce qu'une population apprend dépend de proportions, et n'a de part ni par compte ni par jeu (plus bas) ;
 //      2. dénormaliser : les prélèvements par phénotype sont redistribués selon les fréquences RÉELLES, à taux
 //         par tête constant (une variante montrée à 2 % mais réelle à 20 % voit ses pertes ×10) ;
 //      3. plafonner : par compte, part maximale d'un seul compte, d'un seul jeu, part maximale d'une population ;
@@ -208,9 +209,8 @@ const VECUES = { blessure: 'blessures', effarouchement: 'effarouchements', pilla
 const MOYENS = new Set(['melee', 'distance', 'piege', 'feu', 'lumiere', 'bruit']), DISPOSITIFS = new Set(['piege', 'feu', 'lumiere', 'bruit']);
 // par compte, par population et par cycle : au plus tant de joueurs tombés et de pillages (ce qui fait une traqueuse ou une
 // quémandeuse ne se déclare pas par centaines) ; activite : l'activité normale d'un compte, en contacts, si le profil ne la dit
-// pas (influence.exposition_ref) ; plancher_jeu : les contacts qu'un jeu garde toujours sous la règle des parts. Ces deux-là
-// servent aussi au contact de la méfiance (docs/12), dans tous les mondes
-const VECU = { tombes: 2, pillages: 5, activite: 60, plancher_jeu: 200 };
+// pas (influence.exposition_ref). Celle-ci sert aussi au contact de la méfiance (docs/12), dans tous les mondes
+const VECU = { tombes: 2, pillages: 5, activite: 60 };
 const CLES_VECU = ['rencontres', 'prises', 'blessures', 'dispositif', 'effarouchements', 'nourrissages', 'pillages', 'attaques', 'tombes'];
 const N_MAX = 1e4;                                         // un événement compte au plus dix mille bêtes ou unités
 const INTERDITS = new Set(['__proto__', 'constructor', 'prototype']);
@@ -266,7 +266,7 @@ function agreger(lots, inst, profil, etat = {}, gen0 = null, jeux = null) {
   const effDe = (tid, bid) => taxons[tid]?.populations?.find(p => p.biome === bid)?.effectif || 0;
   const parCompte = dico(), jeuDe = dico(), vues = dico();   // jeuDe : compte → son jeu ; vues : jeu → le profil vu par ce jeu
   const MEMO = !!inst.monde?.memoire;   // (docs/50) la mémoire du monde est éveillée : ce que les bêtes vivent des joueurs se compte aussi
-  // parCompte : compte → { t: taxon → biome → { retrait: {pheno|'*': n}, deplacement: [], rencontres, danger, aide, contact, activite }, b: biome → { habitat, milieu },
+  // parCompte : compte → { t: taxon → biome → { retrait: {pheno|'*': n}, deplacement: [], rencontres, danger, aide, contact }, b: biome → { habitat, milieu },
   //   v: taxon → biome → ce que la population a vécu de ce compte (docs/50 : tenu à part, pour ne rien changer au reste) }
   const Q = {};                // taxon → biome → trait → { s: Σ poids × z, w: Σ poids } : la valeur des bêtes retirées
   let nombre = 0; const rejetes = { lots: 0, evenements: 0 };
@@ -341,7 +341,7 @@ function agreger(lots, inst, profil, etat = {}, gen0 = null, jeux = null) {
       // prélèvements, sans une rencontre, aussi — et se ramène à une activité normale, ses proportions gardées : un compte qui court
       // partout, ou qui déclare 9 000 prises, ne pèse pas plus qu'un autre. (Les retraits gardent leurs propres plafonds.)
       const vu = Math.max(T.rencontres, T.danger + T.aide), ac = vu > normale ? normale / vu : 1;
-      T.contact = { rencontres: T.rencontres * ac, danger: T.danger * ac, aide: T.aide * ac }; T.activite = vu * ac;
+      T.contact = { rencontres: T.rencontres * ac, danger: T.danger * ac, aide: T.aide * ac };
       ote += Object.values(T.retrait).reduce((a, x) => a + Math.max(0, x), 0) + T.deplacement.reduce((a, d) => a + d.n, 0);
       rendu += Object.values(T.retrait).reduce((a, x) => a + Math.max(0, -x), 0);
     }
@@ -358,12 +358,13 @@ function agreger(lots, inst, profil, etat = {}, gen0 = null, jeux = null) {
     const fact = plafondPart(contrib.map(([c, T]) => [c, poidsDe(T)]), PL.part_max_compte, bas(PL.part_max_compte));
     if (PL.part_max_jeu != null) { const parJeu = dico(); for (const [c, T] of contrib) { const j = jeuDe[c] ?? ''; parJeu[j] = (parJeu[j] || 0) + poidsDe(T) * fact[c]; }
       const fj = plafondPart(Object.entries(parJeu), PL.part_max_jeu, bas(PL.part_max_jeu)); for (const [c] of contrib) fact[c] *= fj[jeuDe[c] ?? '']; }
-    // (docs/12) le contact : après l'activité normale de chaque compte, la part d'un jeu (part_max_jeu) et son plancher, comme pour
-    // la mémoire (docs/50) : aucun jeu ne fait seul la méfiance d'une population que d'autres montrent. Pas de part par compte :
-    // entre peu de joueurs, elle raboterait des comptes égaux et grossirait d'autant un compte léger. Tant qu'aucun jeu ne dépasse
-    // sa part, la somme est celle d'avant, arrondie compte après compte ; sinon elle se fait entière, arrondie une fois
-    const vuJeu = dico(); for (const [c, T] of contrib) if (T.activite > 0) { const j = jeuDe[c] ?? ''; vuJeu[j] = (vuJeu[j] || 0) + T.activite; }
-    const fv = PL.part_max_jeu != null ? plafondPart(Object.entries(vuJeu), PL.part_max_jeu, VECU.plancher_jeu) : null, rogne = !!fv && Object.values(fv).some(f => f < 1);
+    // (docs/12) le contact : la somme de ce que la population a vécu de chaque compte, chacun ramené à une activité normale, et
+    // rien de plus. Ni part par compte, ni part par jeu : la méfiance s'apprend d'une PROPORTION (la part des contacts qui finissent
+    // mal), et rogner les uns y grossit d'autant les autres. Une part par compte rabotait des comptes égaux au profit d'un compte
+    // léger ; une part par jeu ramenait cent passants à 200 contacts, le poids de trois comptes, dès qu'un autre jeu montrait la
+    // population — et les jeux s'inscrivent librement. Le nom du jeu ne change donc rien ici (docs/50, « L'abus » ;
+    // outils/parts.js le mesure). La part d'un jeu reste aux retraits, juste au-dessus : là, rogner un grand jeu ne fait que
+    // retirer moins de bêtes
     const O = (out[tid] ??= {})[bid] ??= { retrait: {}, deplacement: [] };
     for (const [c, T] of contrib) {
       for (const k in T.retrait) O.retrait[k] = (O.retrait[k] || 0) + T.retrait[k] * fact[c];
@@ -371,10 +372,8 @@ function agreger(lots, inst, profil, etat = {}, gen0 = null, jeux = null) {
       if (T.apport) { const K = O.apport ??= { n: 0, N: {}, A: {}, a: {}, na: {} }, f = cap != null && T.apport.n > cap ? cap / T.apport.n : 1;
         K.n += T.apport.n * f; for (const [x, v] of Object.entries(T.apport.N)) K.N[x] = (K.N[x] || 0) + v * f; for (const [x, v] of Object.entries(T.apport.A)) K.A[x] = (K.A[x] || 0) + v * f;
         for (const [x, v] of Object.entries(T.apport.a)) { K.a[x] = (K.a[x] || 0) + v * f; K.na[x] = (K.na[x] || 0) + T.apport.na[x] * f; } }
-      if (T.contact && (T.contact.rencontres || T.contact.danger || T.contact.aide)) { const K = O.contact ??= { rencontres: 0, danger: 0, aide: 0 }, f = rogne ? fv[jeuDe[c] ?? ''] : 1;
-        for (const k in K) K[k] = rogne ? K[k] + T.contact[k] * f : +(K[k] + T.contact[k]).toFixed(2); }
+      if (T.contact && (T.contact.rencontres || T.contact.danger || T.contact.aide)) { const K = O.contact ??= { rencontres: 0, danger: 0, aide: 0 }; for (const k in K) K[k] = +(K[k] + T.contact[k]).toFixed(2); }
     }
-    if (rogne && O.contact) for (const k in O.contact) O.contact[k] = +O.contact[k].toFixed(2);
     if (!O.deplacement.length && !Object.keys(O.retrait).length && !O.apport && !O.contact) { delete out[tid][bid]; if (!Object.keys(out[tid]).length) delete out[tid]; }
   }
   // part maximale d'une population en un cycle : ce qu'on lui ôte (retraits, déplacements) et ce qu'on lui rend (libérations,
@@ -403,19 +402,20 @@ function agreger(lots, inst, profil, etat = {}, gen0 = null, jeux = null) {
   for (const [bid, O] of Object.entries(biomes)) { const lim = pH * Math.max(0, lieux[bid]?.capacite || 0); O.habitat = clamp(O.habitat, -lim, lim); if (!O.habitat) O.habitat = 0; }
   // (docs/50) ce que chaque population a vécu des joueurs (« vecu »), à part de tout ce qui précède. Par compte : au plus
   // VECU.tombes joueurs tombés et VECU.pillages pillages, puis toute son activité ramenée à une activité normale (un compte qui ne
-  // déclare que des assauts, sans une rencontre, aussi), ses proportions gardées. Puis la part d'un jeu (part_max_jeu), avec son
-  // plancher : aucun jeu ne fait seul la mémoire d'une population que d'autres montrent. Rien n'est lissé : la mémoire a ses demi-vies.
+  // déclare que des assauts, sans une rencontre, aussi), ses proportions gardées. Puis la somme des comptes, sans part par compte
+  // ni par jeu, comme le contact (plus haut) : la mémoire s'apprend de proportions, et un compte y pèse le même poids sous
+  // n'importe quel jeu. comptes, jeux : de combien de comptes et de jeux elle vient (pour qui surveille un monde ; le moteur ne
+  // les lit pas). Rien n'est lissé : la mémoire a ses demi-vies.
   if (MEMO) { const ref = normale, pop = new Map();
     for (const compte in parCompte) for (const tid in parCompte[compte].v) for (const bid in parCompte[compte].v[tid]) { const V = parCompte[compte].v[tid][bid];
       V.tombes = Math.min(V.tombes, VECU.tombes); V.pillages = Math.min(V.pillages, VECU.pillages); V.dispositif = Math.min(V.dispositif, V.prises + V.blessures);
       const tot = Math.max(V.rencontres, V.prises + V.blessures + V.effarouchements + V.nourrissages + V.pillages + V.attaques + V.tombes); if (!(tot > 0) || !Number.isFinite(tot)) continue;
       const a = tot > ref ? ref / tot : 1, k = tid + '\u0000' + bid; if (!pop.has(k)) pop.set(k, { tid, bid, L: [] });
-      pop.get(k).L.push({ jeu: jeuDe[compte] ?? '', poids: tot * a, a, V }); }
-    for (const { tid, bid, L } of pop.values()) { const parJeu = dico(); for (const x of L) parJeu[x.jeu] = (parJeu[x.jeu] || 0) + x.poids;
-      const fj = PL.part_max_jeu != null ? plafondPart(Object.entries(parJeu), PL.part_max_jeu, VECU.plancher_jeu) : null, K = Object.fromEntries(CLES_VECU.map(k => [k, 0]));
-      for (const x of L) { const f = x.a * (fj ? fj[x.jeu] : 1); for (const k of CLES_VECU) K[k] += x.V[k] * f; }
+      pop.get(k).L.push({ jeu: jeuDe[compte] ?? '', a, V }); }
+    for (const { tid, bid, L } of pop.values()) { const K = Object.fromEntries(CLES_VECU.map(k => [k, 0]));
+      for (const x of L) for (const k of CLES_VECU) K[k] += x.V[k] * x.a;
       for (const k of CLES_VECU) K[k] = +K[k].toFixed(2);
-      if (CLES_VECU.some(k => K[k] > 0)) ((out[tid] ??= {})[bid] ??= { retrait: {}, deplacement: [] }).vecu = { ...K, comptes: L.length, jeux: Object.keys(parJeu).length }; } }
+      if (CLES_VECU.some(k => K[k] > 0)) ((out[tid] ??= {})[bid] ??= { retrait: {}, deplacement: [] }).vecu = { ...K, comptes: L.length, jeux: new Set(L.map(x => x.jeu)).size }; } }
   // lissage : moyenne mobile exponentielle sur memoire_cycles
   const mem = I.memoire_cycles || 1, a = 2 / (mem + 1), prev = etat.lisse || {}, lisse = {};
   for (const tid of new Set([...Object.keys(out), ...Object.keys(prev)])) for (const bid of new Set([...Object.keys(out[tid] || {}), ...Object.keys(prev[tid] || {})])) {

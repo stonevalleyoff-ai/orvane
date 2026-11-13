@@ -1178,7 +1178,7 @@ export interface Profil {
       part_max_compte: number;
       /** Part maximale d'une population qu'un cycle de pressions peut retirer (empêche une extinction en un cycle). */
       part_max_population?: number;
-      /** Part maximale de la pression totale d'un taxon venant d'un seul jeu, quand plusieurs jeux en montrent le taxon (comptée avant ce plafond, comme part_max_compte) : un jeu de mille joueurs ne fait pas seul l'histoire d'une espèce. Elle vaut aussi pour ce que les bêtes ont vécu des joueurs (le contact de la méfiance, docs/12 ; la mémoire, docs/50), avec un plancher de 200 contacts par jeu. */
+      /** Part maximale de la pression totale d'un taxon venant d'un seul jeu, quand plusieurs jeux en montrent le taxon (comptée avant ce plafond, comme part_max_compte) : un jeu de mille joueurs ne fait pas seul l'histoire d'une espèce. Elle ne vaut que pour ce qui ôte ou rend des bêtes (retraits, déplacements, libérations). Ce que les bêtes ont vécu des joueurs (le contact de la méfiance, docs/12 ; la mémoire, docs/50) n'a pas de part par jeu : cela s'apprend de proportions, et rogner un grand jeu y grossirait d'autant un petit ; un compte y pèse le même poids sous n'importe quel jeu. */
       part_max_jeu?: number;
     };
     /** Les pressions sont lissées sur autant de cycles (une chasse ponctuelle pèse peu, une chasse soutenue pèse). */
