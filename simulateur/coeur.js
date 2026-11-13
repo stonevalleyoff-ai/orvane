@@ -47,7 +47,7 @@ const DISPOSITIONS = [
   { id: 'agressivite', nom: 'Agressivité', dit: 'elle fait front au lieu de fuir', neutre: 0, seuil: () => Memoire.REGLES.attitudes.seuil }
 ];
 // le caractère d'une lignée, dit en mots : pour chaque trait, le mot de chaque tiers (bas, entre les deux, haut)
-const MOTS = { hardiesse: ['craintive', 'posée', 'hardie'], combativite: ['fuyarde', 'ni l\'un ni l\'autre', 'combative'], opportunisme: ['difficile', 'curieuse', 'opportuniste'] };
+const MOTS = { hardiesse: ['craintive', 'posée', 'hardie'], combativite: ['fuyarde', 'entre les deux', 'combative'], opportunisme: ['difficile', 'curieuse', 'opportuniste'] };
 const motDe = (trait, v) => MOTS[trait][v < .34 ? 0 : v < .56 ? 1 : 2];
 // ce que la population publie : ce qu'il faut pour lire son attitude, et celle de chacune de ses bêtes
 const publie = b => ({ mefiance: b.m, habituation: b.h, memoire: Memoire.ecrire(b.M) || undefined });

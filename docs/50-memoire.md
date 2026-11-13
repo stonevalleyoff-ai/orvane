@@ -230,7 +230,7 @@ Orvane.compter("tiskata", "foret", "effarouchement", 1.0, "", "", "", "feu")
 
 Dire le `moyen` d'un prélèvement ou d'une blessure compte désormais : c'est lui qui dit si la bête avait quelqu'un à charger.
 
-Lisière (`jeux/lisiere/`, et son dépôt) est le premier jeu à s'en servir, dans les deux sens. Il raconte les bêtes blessées, celles que le feu ou la torche ont tenues, les assauts et les veilleuses tombées. Et ses bêtes se conduisent d'après la mémoire : une population méfiante fuit de plus loin, une traqueuse suit la veilleuse et revient après un coup, une population accoutumée au feu se laisse moins tenir par la torche. Le feu vivant reste une loi, quelle que soit la mémoire.
+Lisière (`jeux/lisiere/`, et son dépôt) est le premier jeu à s'en servir, dans les deux sens. Il raconte les bêtes blessées, celles que le feu ou la torche ont tenues, les assauts et les veilleuses tombées. Et ses bêtes se conduisent d'après la mémoire : une population méfiante fuit de plus loin, une traqueuse suit la veilleuse et revient après un coup, une population accoutumée au feu se laisse moins tenir par la torche. Une proie d'une population agressive ne fuit plus : là où elle se serait enfuie, elle s'arrête, fait face et gronde, puis charge si la veilleuse insiste ; frappée, elle se retourne. Chaque bête tire son audace une fois (`Orvane.individu`) : dans un troupeau qui fuit, la plus hardie fait front. Le feu vivant reste une loi, quelle que soit la mémoire.
 
 ## L'abus
 
