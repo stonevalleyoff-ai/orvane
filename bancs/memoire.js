@@ -3,7 +3,8 @@
 //     bouge ; éveillée, la mémoire ne change pas un effectif ;
 //  2. apprendre : les équilibres de docs/50 (nourrie, pillée, proie facile, défense, feu tenu, feu défendu, piège), le corps,
 //     l'oubli, la riposte, le pas, l'audace ;
-//  3. le tampon : ce qu'il compte, ce qu'il plafonne (par compte, par jeu), ce qu'il laisse dans un monde sans mémoire ;
+//  3. le tampon : ce qu'il compte, ce qu'il plafonne (par compte, par jeu), ce qu'il laisse dans un monde sans mémoire ; le
+//     contact de la méfiance (docs/12) a les mêmes plafonds ;
 //  4. l'abus : un compte seul, une minorité, une nuit ; ce qui tient et ce qui ne tient pas ;
 //  5. ce qui voyage : les migrants, une lignée qui se sépare ; la nuit d'un monde par parcelles, et la vue par biome ;
 //  6. deux styles de jeu, deux faunes ;
@@ -142,6 +143,14 @@ console.log('3. Le tampon');
   const j1 = V(P([...gros, ...petit(1)])), j5 = V(P([...gros, ...petit(5)]));
   verif(j1.jeux === 2 && Math.abs(j1.attaques - Tampon.VECU.plancher_jeu) < 1 && Math.abs(j5.attaques - j5.rencontres) < 1,
     `un jeu de vingt comptes face à un jeu d'un seul garde ${fx(j1.attaques, 0)} contacts sur 1 200 (son plancher) ; face à un jeu de cinq comptes, autant que lui (${fx(j5.attaques, 0)} et ${fx(j5.rencontres, 0)}) : aucun jeu ne fait seul l'histoire d'une population que d'autres montrent`);
+  // (docs/12) le contact de la méfiance a les mêmes protections, dans un monde éveillé ou non : sur des lots d'avant, il dit ce
+  // que dit le vécu — un compte ramené à une activité normale sur tous ses contacts, puis la part d'un jeu
+  const K = r => r.pressions.taxons?.[t]?.[b]?.contact, neuf = [lot('a', [[t, b, 'prelevement', 9000]])], chasseurs = Array.from({ length: 20 }, (_, i) => lot('c' + i, [[t, b, 'rencontre', 60], [t, b, 'prelevement', 6]], 'jeu-a'));
+  const d1 = P(neuf), d0 = P(neuf, I0), d2 = P([...chasseurs, ...petit(1)]), d20 = P([...chasseurs, ...petit(1)], I0);
+  verif(K(d1).danger <= profil.influence.exposition_ref && K(d1).danger === V(d1).prises && JSON.stringify(K(d0)) === JSON.stringify(K(d1)),
+    `le contact de la méfiance est plafonné de même : 9 000 prélèvements d'un seul compte, sans une rencontre, font ${fx(K(d1).danger, 0)} contacts qui finissent mal (${fx(V(d1).prises, 0)} prises au vécu), dans un monde éveillé comme dans un monde sans mémoire`);
+  verif(Math.abs(K(d2).rencontres - (Tampon.VECU.plancher_jeu + 60)) < .01 && K(d2).rencontres === V(d2).rencontres && K(d2).danger === V(d2).prises && JSON.stringify(K(d20)) === JSON.stringify(K(d2)),
+    `deux jeux inégaux : vingt chasseurs d'un jeu (1 200 rencontres, 120 prises) face à un passant d'un autre ; le contact garde ${fx(K(d2).rencontres - 60, 0)} rencontres et ${fx(K(d2).danger, 0)} prises du grand jeu, ce que garde le vécu (${fx(V(d2).rencontres - 60, 0)} et ${fx(V(d2).prises, 0)})`);
   // un monde sans mémoire ; des lots d'avant
   const sans = P([lot('a', riche)], I0), sansN = P([lot('a', riche.filter(e => !NOUVELLES.includes(e[2])))], I0);
   verif(!V(sans) && JSON.stringify(sans.pressions) === JSON.stringify(sansN.pressions), 'dans un monde sans mémoire, le tampon laisse les actions nouvelles : mêmes pressions, même compte d\'événements reçus');
@@ -164,6 +173,10 @@ console.log('4. L\'abus');
   verif(seuil >= 3, `face à dix joueurs qui ne font que passer, il faut ${seuil ?? 'plus de dix'} comptes qui déclarent chacun le plus de joueurs tombés possible, chaque nuit, pour faire une traqueuse : une minorité décidée y arrive, comme autant de vrais joueurs qui se laisseraient prendre`);
   const sain = jouer(W0, 20, () => defenseurs).X, cinq = jouer(W0, 20, () => [...defenseurs, ...tombes(5)]).X;
   verif(tr(sain) < .05 && at(sain) === 'fuyante' && tr(cinq) < M.REGLES.attitudes.seuil && at(cinq) === 'fuyante', `mais dès que les autres se défendent, non : dix comptes qui blessent et prennent des bêtes (« ${at(sain)} », traque ${fx(tr(sain))}), plus cinq faux comptes : traque ${fx(tr(cinq))}, toujours « ${at(cinq)} »`);
+  // (docs/12) la méfiance a les mêmes plafonds : un compte seul ne fait pas fuir les bêtes de dix passants, ni n'en retire une de plus
+  const braco = k => [...paisibles, lot('x', [[t, b, 'prelevement', 9000]])], honnete = k => [...paisibles, lot('x', [[t, b, 'prelevement', 60]])], n9 = jouer(W0, 1, braco), n60 = jouer(W0, 1, honnete);
+  verif(Pop(n9.X, t, b).mefiance < .8 && empreinte(n9.X) === empreinte(n60.X) && n9.pressions.taxons[t][b].contact.danger === profil.influence.exposition_ref,
+    `dix joueurs paisibles et un compte qui déclare 9 000 prélèvements, sans une rencontre : après une nuit, méfiance ${fx(Pop(n9.X, t, b).mefiance)} — le monde exact d'un compte qui en déclare 60 (une activité normale), au caractère près`);
   const nuit = jouer(W0, 1, () => [...paisibles, ...tombes(200)]).X;
   verif(tr(nuit) <= M.REGLES.pas + 1e-9 && (Pop(nuit, t, b).memoire?.attrait || 0) <= M.REGLES.pas + 1e-9, `deux cents faux comptes en une nuit : la traque ne dépasse pas ${M.REGLES.pas} (${fx(tr(nuit))}) ; tout retombe quand ils s'en vont`);
   const avec = jouer(W0, 3, () => [...defenseurs, ...tombes(200)]), sansF = jouer(W0, 3, () => defenseurs);

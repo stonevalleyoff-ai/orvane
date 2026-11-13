@@ -9,7 +9,9 @@
 //  6. l'élevage : un allèle inventé (« <img…> ») n'entre pas dans le monde ;
 //  7. ce que publie la vue par biome (une infection dans une parcelle sur quatre), ce que les parcelles gardent d'un apport, la Mère
 //     d'un monde découpé après son éveil ;
-//  8. le jour un : un monde sans lots tourne exactement comme avant.
+//  8. le jour un : un monde sans lots tourne exactement comme avant ;
+//  9. le contact de la méfiance (docs/12) : un compte ramené à une activité normale sur tous ses contacts (9 000 prélèvements sans
+//     une rencontre aussi), la part d'un jeu et son plancher, pas de part par compte ; sous l'activité normale, rien ne bouge.
 //   node bancs/tampon.js
 'use strict';
 const fs = require('fs'), path = require('path');
@@ -111,6 +113,42 @@ console.log('8. Le jour un');
   let a = W, b = W; const ta = JSON.parse(JSON.stringify(tamponW)), tb = JSON.parse(JSON.stringify(tamponW));
   for (let k = 0; k < 2; k++) { const r1 = Tampon.agreger([], a, P, ta); a = Orvane.cycle(a, r1.pressions); ta.lisse = r1.etat.lisse; const r2 = Tampon.agreger([], b, P, tb); b = Orvane.cycle(b, r2.pressions); tb.lisse = r2.etat.lisse; }
   verif(JSON.stringify(a) === JSON.stringify(b), 'sans lots, le tampon ne rend que la mémoire lissée : même monde au bit près (deux passes, deux cycles de sv-1)'); }
+
+console.log('9. Le contact de la méfiance');
+{ const ref = profil.influence.exposition_ref, sol = Tampon.VECU.plancher_jeu, ev = (action, n) => ({ taxon: 'jagra', biome: 'toundra', action, n }), C = (lots, P = profil) => Tampon.agreger(lots, I, P, {}).pressions.taxons.jagra?.toundra?.contact;
+  const nuit = c => Orvane.apprendre(0, 0, c, 0)[0], avant = (R, D) => nuit({ rencontres: R, danger: D });   // la méfiance qu'une population sans histoire en tire en une nuit ; avant : avec le contact que le tampon rendait
+  const passants = (n, R, jeu) => Array.from({ length: n }, (_, i) => lot('p' + i, [ev('rencontre', R)], jeu));
+  // le défaut : un compte, 9 000 prélèvements, pas une rencontre — le contact n'était ramené à une activité normale que par les rencontres
+  const fou = agr([lot('x', [ev('prelevement', 9000)])]).pressions.taxons.jagra.toundra, dix = C([lot('x', [ev('prelevement', 9000)]), ...passants(10, 30)]);
+  verif(fou.contact.danger <= ref && fou.contact.danger === ref && fou.contact.rencontres === 0 && ote(fou) <= PL.par_compte_cycle + 1e-6,
+    `un compte déclare 9 000 prélèvements sans une rencontre : la population n'en a vécu que ${fx(fou.contact.danger, 0)} contacts qui finissent mal (l'activité normale d'un compte : ${ref}), pas 9 000 ; ${fx(ote(fou), 0)} bêtes retirées, comme avant`);
+  verif(dix.danger === ref && dix.rencontres === 300 && nuit(dix) < .7 && avant(300, 9000) > .99,
+    `face à dix joueurs qui ne font que passer (30 rencontres chacun), ce compte pèse ce que pèse un joueur : la méfiance apprise en une nuit passe de ${fx(avant(300, 9000), 2)} à ${fx(nuit(dix), 2)} ; seul avec une population, il reste tout ce qu'elle connaît des joueurs (${fx(nuit(fou.contact), 2)}, comme d'un chasseur qui prendrait tout ce qu'il croise)`);
+  // l'activité se mesure sur tous les contacts, les proportions gardées
+  const mixte = C([lot('x', [ev('rencontre', 30), ev('prelevement', 200), ev('nourrissage', 100)])]), coureur = C([lot('x', [ev('rencontre', 600), ev('prelevement', 60), ev('nourrissage', 30)])]);
+  const sansRef = C([lot('x', [ev('prelevement', 9000)])], { ...profil, influence: { ...profil.influence, exposition_ref: undefined } });
+  verif(mixte.rencontres === 6 && mixte.danger === 40 && mixte.aide === 20 && coureur.rencontres === 60 && coureur.danger === 6 && coureur.aide === 3 && sansRef.danger === Tampon.VECU.activite,
+    `l'activité d'un compte se mesure sur tous ses contacts, ses proportions gardées : 30 rencontres, 200 prises et 100 nourrissages en font ${fx(mixte.rencontres, 0)}, ${fx(mixte.danger, 0)} et ${fx(mixte.aide, 0)} ; 600 rencontres et 60 prises, 60 et 6, comme avant ; un profil sans activité de référence prend celle du tampon (${Tampon.VECU.activite})`);
+  // sous l'activité normale, rien ne bouge : les régimes du tableau de docs/12 passent tels quels, et donnent les mêmes équilibres
+  const regimes = [[60, 0, 0, .92], [60, 1.2, .11, .63], [60, 6, .42, .07], [30, 6, .62, 0]], lus = regimes.map(([R, D]) => { const c = C([lot('a', [ev('rencontre', R), ...(D ? [ev('prelevement', D)] : [])])]); let m = 0, h = 0; for (let k = 0; k < 20; k++) [m, h] = Orvane.apprendre(m, h, c, 0); return { c, m, h }; });
+  verif(regimes.every(([R, D, m, h], i) => lus[i].c.rencontres === R && lus[i].c.danger === D && lus[i].c.aide === 0 && Math.abs(lus[i].m - m) < .006 && Math.abs(lus[i].h - h) < .006),
+    `sous l'activité normale, rien ne bouge : les quatre régimes du tableau de docs/12 passent le tampon tels quels, et donnent après vingt cycles les mêmes équilibres (méfiance ${lus.map(x => fx(x.m, 2)).join(' · ')} ; habituation ${lus.map(x => fx(x.h, 2)).join(' · ')})`);
+  // pas de part par compte (le profil en a une pour les retraits : 15 %) : des comptes égaux ne sont pas rabotés
+  const egaux = n => Array.from({ length: n }, (_, i) => lot('e' + i, [ev('rencontre', 60), ev('prelevement', 6)])), six = C(egaux(6)), leger = C([...egaux(5), lot('l', [ev('rencontre', 3)])]);
+  verif(PL.part_max_compte > 0 && six.rencontres === 360 && six.danger === 36 && leger.rencontres === 303 && leger.danger === 30,
+    `pas de part par compte : six comptes égaux d'un même jeu gardent tout ce que la population a vécu d'eux (${fx(six.rencontres, 0)} rencontres, ${fx(six.danger, 0)} prises) ; cinq et un compte léger aussi (${fx(leger.rencontres, 0)} et ${fx(leger.danger, 0)})`);
+  // la part d'un jeu : deux jeux inégaux
+  const grand = n => Array.from({ length: n }, (_, i) => lot('g' + i, [ev('rencontre', 60), ev('prelevement', 6)], 'jeu-a')), seul = C(grand(20)), j1 = C([...grand(20), ...passants(1, 60, 'jeu-b')]), j5 = C([...grand(20), ...passants(5, 60, 'jeu-b')]);
+  verif(seul.rencontres === 1200 && seul.danger === 120 && Math.abs(j1.rencontres - (sol + 60)) < .01 && Math.abs(j1.danger - sol / 10) < .01 && Math.abs(j5.rencontres - 600) < .01 && Math.abs(j5.danger - 30) < .01,
+    `deux jeux inégaux : vingt comptes du jeu A (1 200 rencontres, 120 prises) face à un seul du jeu B gardent ${fx(j1.rencontres - 60, 0)} rencontres et ${fx(j1.danger, 0)} prises (le plancher d'un jeu, proportions gardées) ; face à cinq comptes du jeu B, autant qu'eux (${fx(j5.rencontres - 300, 0)} et 300) ; seul à montrer la population, le jeu A garde tout`);
+  const sous = C([...grand(3), ...passants(2, 60, 'jeu-b')]), mille = C([...Array.from({ length: 1500 }, (_, i) => lot('m' + i, [ev('rencontre', 60)], 'jeu-a')), ...passants(1, 60, 'jeu-b')]);
+  verif(sous.rencontres === 300 && sous.danger === 18 && Math.abs(mille.rencontres - (sol + 60)) < .01,
+    `sous le plancher (${sol} contacts), la part d'un jeu ne rogne rien (trois comptes et deux : ${fx(sous.rencontres, 0)} rencontres) ; 1 500 comptes d'un jeu face à un compte d'un autre : ${fx(mille.rencontres - 60, 0)} rencontres gardées sur 90 000`);
+  // … et dans l'autre sens : un petit jeu hostile face à un grand jeu paisible. Le grand garde son plancher ; le petit pèse davantage
+  // que s'il était du même jeu (c'est la règle des parts, la même que pour la mémoire, docs/50)
+  const meme = C([...passants(20, 60, 'jeu-a'), lot('h', [ev('prelevement', 9000)], 'jeu-a')]), autre = C([...passants(20, 60, 'jeu-a'), lot('h', [ev('prelevement', 9000)], 'jeu-b')]);
+  verif(meme.rencontres === 1200 && meme.danger === ref && autre.danger === ref && Math.abs(autre.rencontres - sol) < .01 && nuit(autre) < .8 && avant(1200, 9000) > .99,
+    `vingt passants d'un jeu, et un compte qui déclare 9 000 prélèvements : du même jeu, la méfiance d'une nuit passe de ${fx(avant(1200, 9000), 2)} à ${fx(nuit(meme), 2)} ; inscrit sous un autre jeu, à ${fx(nuit(autre), 2)} (les passants gardent leur plancher, ${sol} rencontres : un jeu ne pèse jamais plus que l'autre)`); }
 
 function pc(x) { return fx(100 * (x || 0), 1) + ' %'; }
 console.log(`\n${ok ? 'tout est vérifié' : 'ÉCHEC'} (${((Date.now() - t0) / 1000).toFixed(0)} s)`);

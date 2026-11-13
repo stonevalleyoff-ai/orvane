@@ -42,7 +42,7 @@ Dans les deux cas, le bestiaire d'un jeu n'est pas un équilibre écologique : t
 
 **Influence (jeu → Orvane).**
 - `poids` : un prélèvement vaut 1 individu retiré ; les autres actions sont relatives ; négatif = favorable.
-- `exposition_ref` : rencontres par compte et par cycle considérées comme une activité normale ; au-delà, la pression du compte est ramenée à ce niveau.
+- `exposition_ref` : rencontres par compte et par cycle considérées comme une activité normale ; au-delà, la pression du compte est ramenée à ce niveau. Ce que les bêtes ont vécu de lui (la méfiance, chapitre 12 ; la mémoire, chapitre 50) y est ramené aussi, mesuré sur tous ses contacts.
 - `pseudo_comptes` : le lissage de la dénormalisation (20 par défaut).
 - `plafonds` : `par_compte_cycle` (individus équivalents par taxon et par compte), `part_max_compte` (un seul compte ne pèse pas plus que cette part du total), `part_max_population` (un cycle ne retire pas plus que cette part d'une population : pas d'extinction en une nuit).
 - `memoire_cycles` : le lissage dans le temps.

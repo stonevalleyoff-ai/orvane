@@ -77,6 +77,8 @@ Rien n'y est retiré du monde ; ses protections portent donc sur les contacts.
 
 Il n'y a pas de part par compte, comme pour les retraits : entre peu de joueurs, elle rabotait des comptes égaux et grossissait d'autant un compte léger.
 
+Le `contact` de la méfiance (docs/12) a les mêmes protections, dans tous les mondes : l'activité d'un compte mesurée sur tous ses contacts, puis la part d'un jeu.
+
 Dans un monde sans mémoire, le tampon laisse les cinq actions nouvelles : les mêmes pressions que si les jeux ne les envoyaient pas.
 
 ## Comment une population apprend
@@ -150,8 +152,6 @@ Un groupe pourrait vouloir rendre une espèce hostile partout. Les comptes et le
 - **Elle ne gagne pas des joueurs qui se défendent.** Dix comptes qui blessent et prennent des bêtes, plus cinq faux comptes : la traque reste à 0,17, la population reste fuyante.
 - **Ce qui borne toujours** : la mémoire ne retire pas une bête, et ne change pas la chasse des autres ; elle ne bouge pas de plus de 0,35 par nuit ; elle reste dans son biome ; elle retombe quand les joueurs s'en vont ; chaque jeu borne ce qu'il rend.
 
-À savoir : le `contact` de docs/12 (la méfiance d'avant) n'a pas ces plafonds. Il n'est ramené à une activité normale que par les rencontres, et il n'a pas de part par jeu.
-
 ## L'éveiller
 
 ```json
@@ -167,8 +167,8 @@ Le cycle de nuit l'éveille une fois (`monde.memoire: { depuis }`). Ses règles 
 `bancs/memoire.js`, en une minute :
 1. un monde sans mémoire tourne exactement comme le moteur sans ce fichier ; le jour de l'éveil, rien ne bouge ; éveillée, elle ne change ni un effectif ni la chasse des autres ;
 2. les équilibres du tableau, le corps, l'oubli et sa fin, la riposte, le pas, l'audace, les règles d'un monde, une bascule pile sur un seuil ;
-3. le tampon : ce qu'il compte, ses plafonds par compte et par jeu, ce qu'il laisse dans un monde sans mémoire ;
-4. l'abus : un compte seul, combien il en faut, des joueurs qui se défendent, deux cents faux comptes en une nuit ;
+3. le tampon : ce qu'il compte, ses plafonds par compte et par jeu, ce qu'il laisse dans un monde sans mémoire ; le contact de la méfiance, plafonné de même ;
+4. l'abus : un compte seul, combien il en faut, des joueurs qui se défendent, deux cents faux comptes en une nuit ; un compte qui déclare 9 000 prélèvements ;
 5. les migrants et l'ordre de leurs arrivées, les bêtes déplacées, la séparation ; la nuit d'un monde par parcelles par le chemin du cycle hébergé, et la vue par biome ;
 6. deux styles de jeu, deux faunes : chez ceux qui se terrent derrière leur feu, des traqueuses qui ne craignent plus le feu ; chez ceux qui chassent, des fuyantes qui le craignent encore ;
 7. le schéma, les listes d'actions (le schéma, le tampon, le serveur, le vérificateur, les kits), le cycle de nuit.
@@ -187,5 +187,4 @@ La seconde commande compare le moteur à celui de `main` sur le monde d'Orvane :
 - **Les machines** : la Mère conçoit déjà d'après ce qui tue les siennes ; avec le `moyen`, elle saura contre quoi.
 - **Ce que chaque jeu rend** : une exposition de la mémoire dans le profil (`exposition.memoire`), comme pour la méfiance.
 - **Le moment** : des populations chassées le jour qui deviennent nocturnes.
-- **Le plafond du contact** de la méfiance, un correctif à part : il change la méfiance des mondes qui reçoivent des lots.
 - **La chronique et le directeur** (docs/37, 40) : faire d'une bascule un moment à mettre en scène.

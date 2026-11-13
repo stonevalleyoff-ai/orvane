@@ -1169,7 +1169,7 @@ export interface Profil {
     };
     /** Rapporter les comptes à la fréquence exposée (une variante montrée à 2 % mais réelle à 20 % voit ses pertes multipliées par 10). Recommandé : true. */
     denormaliser?: boolean;
-    /** Nombre de rencontres par compte et par cycle considéré comme activité normale ; au-delà, la pression d'un compte est ramenée à ce niveau. */
+    /** Nombre de rencontres par compte et par cycle considéré comme activité normale ; au-delà, la pression d'un compte est ramenée à ce niveau. Ce que les bêtes ont vécu de lui (le contact de la méfiance, docs/12 ; la mémoire, docs/50) y est ramené aussi, mesuré sur tous ses contacts ; absent : 60 contacts. */
     exposition_ref?: number;
     plafonds: {
       /** Pression maximale qu'un seul compte peut exercer sur un taxon par cycle (en individus équivalents). */
@@ -1178,7 +1178,7 @@ export interface Profil {
       part_max_compte: number;
       /** Part maximale d'une population qu'un cycle de pressions peut retirer (empêche une extinction en un cycle). */
       part_max_population?: number;
-      /** Part maximale de la pression totale d'un taxon venant d'un seul jeu, quand plusieurs jeux en montrent le taxon (comptée avant ce plafond, comme part_max_compte) : un jeu de mille joueurs ne fait pas seul l'histoire d'une espèce. */
+      /** Part maximale de la pression totale d'un taxon venant d'un seul jeu, quand plusieurs jeux en montrent le taxon (comptée avant ce plafond, comme part_max_compte) : un jeu de mille joueurs ne fait pas seul l'histoire d'une espèce. Elle vaut aussi pour ce que les bêtes ont vécu des joueurs (le contact de la méfiance, docs/12 ; la mémoire, docs/50), avec un plancher de 200 contacts par jeu. */
       part_max_jeu?: number;
     };
     /** Les pressions sont lissées sur autant de cycles (une chasse ponctuelle pèse peu, une chasse soutenue pèse). */
