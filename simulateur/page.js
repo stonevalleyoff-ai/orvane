@@ -10,7 +10,9 @@
   const REGIME = { herbivore: 'herbivore', omnivore: 'omnivore', carnivore: 'carnivore', filtreur: 'filtreur', detritivore: 'charognard' };
   const ATTITUDES = { traqueuse: 'traqueuse', agressive: 'agressive', defensive: 'défensive', exigeante: 'exigeante', rodeuse: 'rôdeuse', quemandeuse: 'quémandeuse', fuyante: 'fuyante', familiere: 'familière' };
   // sur cent bêtes : ce que fait chacune (le pluriel de son attitude)
-  const FONT = { traqueuse: 'traquent le joueur', agressive: 'font front et chargent', defensive: 'se méfient et font front', exigeante: 'exigent leur nourriture', rodeuse: 'rôdent sans oser', quemandeuse: 'quémandent', fuyante: 'fuient', familiere: 'se laissent approcher', '': 'n’ont rien de marqué' };
+  const FONT = { traqueuse: ['traque le joueur', 'traquent le joueur'], agressive: ['fait front et charge', 'font front et chargent'], defensive: ['se méfie et fait front', 'se méfient et font front'], exigeante: ['exige sa nourriture', 'exigent leur nourriture'],
+    rodeuse: ['rôde sans oser', 'rôdent sans oser'], quemandeuse: ['quémande', 'quémandent'], fuyante: ['fuit', 'fuient'], familiere: ['se laisse approcher', 'se laissent approcher'], '': ['n’a rien de marqué', 'n’ont rien de marqué'] };
+  const font = (k, n) => (FONT[k] || [k, k])[n > 1 ? 1 : 0];
   const TRAITS = [['hardiesse', 'Hardiesse'], ['combativite', 'Combativité'], ['opportunisme', 'Opportunisme']];
   const nb = v => Math.round(v).toLocaleString('fr-FR'), dec = v => (+v).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const masse = kg => kg >= 1 ? `${(+kg.toFixed(kg >= 10 ? 0 : 1)).toLocaleString('fr-FR')} kg` : `${Math.max(1, Math.round(kg * 1000)).toLocaleString('fr-FR')} g`;
@@ -111,8 +113,8 @@
   function parts(b) {
     const L = Object.entries(b.parts).filter(([, v]) => v >= .005).sort((a, c) => c[1] - a[1]);
     return h('div', { class: 'parts' }, h('h4', null, 'Sur cent bêtes de cette population'),
-      L.length === 1 ? h('p', { class: 'note' }, `Toutes pareilles pour l’instant : elles ${FONT[L[0][0]]}.`)
-        : h('ul', null, L.map(([k, v]) => h('li', null, h('span', { class: 'part-n' }, String(Math.round(v * 100))), h('span', { class: 'part-nom' }, FONT[k] || k), h('span', { class: 'part-barre' + (k ? '' : ' neutre'), 'aria-hidden': 'true' }, h('i', { style: `width:${(v * 100).toFixed(1)}%` }))))),
+      L.length === 1 ? h('p', { class: 'note' }, `Toutes pareilles pour l’instant : elles ${font(L[0][0], 100)}.`)
+        : h('ul', null, L.map(([k, v]) => h('li', null, h('span', { class: 'part-n' }, String(Math.round(v * 100))), h('span', { class: 'part-nom' }, font(k, Math.round(v * 100))), h('span', { class: 'part-barre' + (k ? '' : ' neutre'), 'aria-hidden': 'true' }, h('i', { style: `width:${(v * 100).toFixed(1)}%` }))))),
       L.length > 1 ? h('p', { class: 'note' }, 'Une bête n’est pas sa population : les plus hardies osent ce que les autres n’osent pas.') : null);
   }
 

@@ -52,12 +52,13 @@ const REGLES = {
   // rencontre : une rencontre sans suite, effarouchement : un assaut arrêté sans mal, loin : un mal venu de loin ou d'un
   // piège (rien à charger : il apprend à fuir, pas à se battre) ; ce qui marche et ce qui coûte : issue est l'échelle des combats
   // qui finissent (joueurs tombés, bêtes prises de près), succes ce qu'une victoire ajoute à ce que la lignée a de combatif,
-  // cout ce qu'une défaite en retire ; frustration : ce que pèse, chez une bête qui attend sa nourriture des joueurs (son
-  // attrait), une rencontre où on ne lui donne rien (rassasie : les rencontres qu'un nourrissage, ou un pillage, contente ;
-  // paix : combien le mal subi la fait taire : une bête qu'on frappe ne réclame plus) ; extinction : la
+  // cout ce qu'une défaite en retire ; frustration : ce que pèse, chez une bête qui attend sa nourriture des joueurs, une
+  // rencontre où on ne lui donne rien — à la mesure du carré de son attrait : qui n'attend presque rien ne s'offusque pas
+  // (rassasie : les rencontres qu'un nourrissage, ou un pillage, contente ; paix : combien le mal subi la fait taire : une
+  // bête qu'on frappe ne réclame plus) ; extinction : la
   // vitesse à laquelle des contacts sans affrontement la défont ; sang_froid : la part du danger qu'une population
   // agressive ne change plus en méfiance (elle rend les coups au lieu de fuir)
-  agressivite: { demi_vie: 10, sensibilite: 4, preuve: 6, victoire: 1, assaut: .1, rencontre: .2, effarouchement: .3, loin: 1, issue: 4, succes: .8, cout: .25, frustration: .5, rassasie: 3, paix: 20, extinction: .5, sang_froid: .5 },
+  agressivite: { demi_vie: 10, sensibilite: 4, preuve: 6, victoire: 1, assaut: .1, rencontre: .2, effarouchement: .3, loin: 1, issue: 4, succes: .8, cout: .25, frustration: 1.5, rassasie: 4, paix: 20, extinction: .5, sang_froid: .5 },
   // le caractère d'une lignée, avant d'avoir rien appris. repere : le tempérament médian (au-dessus, hardie) ; ecart : ce que
   // vaut un écart-type d'audace (docs/8) en tempérament ; audace : ce que le tempérament de la lignée pèse dans la vitesse
   // d'apprendre, à côté de l'audace de la population ; leger_kg : la masse (meute comprise) sous laquelle le gabarit ne compte
@@ -216,7 +217,7 @@ function apprendre(M, v, x = {}) {
   { const loin = D + B > 0 ? Math.min(1, (P + Math.min(de('distance'), D + B - P)) / (D + B)) : 0, malPres = mal * (1 - loin), Dp = D * (1 - loin), assauts = Math.max(K, V);
     const issue = V + Dp > 0 ? 1 - Math.exp(-(V + Dp) / H.issue) : 0, q = V + Dp > 0 ? V / (V + Dp) : 0, c0 = car.combativite;
     const c = clamp(c0 + issue * (q * H.succes * (1 - c0) - (1 - q) * H.cout * c0));
-    const affront = malPres + H.victoire * V + H.assaut * (assauts - V) + H.frustration * M.a * Math.max(0, R - H.rassasie * (F + A.pillage * G)) * (mal > 0 ? Math.exp(-H.paix * mal / (mal + R)) : 1), tot = affront + H.rencontre * R + H.effarouchement * E + H.loin * (mal - malPres);
+    const affront = malPres + H.victoire * V + H.assaut * (assauts - V) + H.frustration * M.a * M.a * Math.max(0, R - H.rassasie * (F + A.pillage * G)) * (mal > 0 ? Math.exp(-H.paix * mal / (mal + R)) : 1), tot = affront + H.rencontre * R + H.effarouchement * E + H.loin * (mal - malPres);
     if (tot > 0) { const cible = c * (1 - Math.exp(-H.sensibilite * affront / tot)), e = Math.min(REGLES.pas, 1 - Math.exp(-tot / (H.preuve * ka)));
       s.g += e * (cible - s.g) * (cible > s.g ? 1 : H.extinction); } }
   for (const k of ETAT) s[k] = clamp(clamp(s[k], (M[k] || 0) - REGLES.pas, (M[k] || 0) + REGLES.pas));

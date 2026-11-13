@@ -208,7 +208,7 @@ console.log('4. L\'abus');
   const seul = jouer(W0, 20, () => [...paisibles, ...tombes(1)]).X, feu5 = jouer(W0, 5, () => [...paisibles, feu]).X;
   // (le même faux compte, inscrit sous un jeu à lui : il ne fait pas raboter le jeu des dix passants, et ne pèse pas plus)
   const sousUnJeu = jouer(W0, 20, () => [...paisibles, ...tombes(1).map(l => ({ ...l, source: { ...l.source, jeu: 'jeu-fantome' } }))]).X;
-  verif(tr(seul) < .3 && at(seul) !== 'traqueuse' && ne(feu5) > M.REGLES.attitudes.alerte[0], `un compte seul ne fait pas une traqueuse : dix joueurs paisibles et un compte qui déclare 500 joueurs tombés par nuit, vingt cycles, traque ${fx(tr(seul))}, « ${at(seul)} » ; un seul compte à son feu soixante fois par nuit n'accoutume pas la population en cinq nuits (néophobie ${fx(ne(feu5))})`);
+  verif(tr(seul) < .3 && at(seul) !== 'traqueuse' && ag(seul) < M.REGLES.attitudes.seuil - .05 && ne(feu5) > M.REGLES.attitudes.alerte[0], `un compte seul ne fait pas une traqueuse : dix joueurs paisibles et un compte qui déclare 500 joueurs tombés par nuit, vingt cycles, traque ${fx(tr(seul))}, agressivité ${fx(ag(seul))}, « ${at(seul)} » ; un seul compte à son feu soixante fois par nuit n'accoutume pas la population en cinq nuits (néophobie ${fx(ne(feu5))})`);
   verif(Math.abs(tr(sousUnJeu) - tr(seul)) < 1e-9 && at(sousUnJeu) === at(seul), `inscrit sous un jeu à lui, ce faux compte ne pèse pas plus (traque ${fx(tr(sousUnJeu))}) : un jeu fantôme ne fait pas raboter le jeu des autres`);
   // combien il en faut : les faux comptes valent autant de joueurs malchanceux au possible, pas davantage
   let seuil = null; for (let n = 1; n <= 10 && seuil == null; n++) if (at(jouer(W0, 20, () => [...paisibles, ...tombes(n)]).X) === 'traqueuse') seuil = n;
