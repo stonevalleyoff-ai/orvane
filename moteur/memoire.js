@@ -33,12 +33,14 @@ const REGLES = {
   // cent passants) ; petits : le plafond d'un mangeur de chair pour qui un joueur n'est pas à sa taille, meute : ce que pèse la vie
   // en groupe dans cette taille
   traque: { demi_vie: 10, sensibilite: 4, preuve: 6, mal: 3, effarouchement: .1, rencontre: .1, petits: .6, meute: 3, faim: .5 },
-  // la néophobie : revient vers neutre de moitié en demi_vie cycles ; preuve : le mal fait par un dispositif qui la monte aux
-  // deux tiers ; habitude : l'échelle des effarouchements sans mal qui la défont, pesés par leur part dans ce que la population
-  // vit des joueurs (un seul joueur à son feu n'accoutume pas vite une population que cent autres croisent) ; pillage : un
-  // pillage contre un effarouchement ; paix : combien le mal subi (de la main du joueur aussi) empêche de s'accoutumer à ce qui arrête : un feu
+  // la néophobie : revient vers neutre de moitié en demi_vie cycles ; sensibilite : ce que pèse la part des contacts où un
+  // dispositif fait mal — elle va vers cette part, comme la méfiance vers la part des contacts qui finissent mal (un seul joueur à
+  // ses pièges ne rend pas craintive une population que cent autres croisent) ; preuve : le mal fait par un dispositif qui l'y
+  // mène aux deux tiers ; habitude : l'échelle des effarouchements sans mal qui la défont, pesés par leur part dans ce que la
+  // population vit des joueurs (un seul joueur à son feu ne l'accoutume pas vite non plus) ; pillage : un pillage contre un
+  // effarouchement ; paix : combien le mal subi (de la main du joueur aussi) empêche de s'accoutumer à ce qui arrête : un feu
   // que des joueurs défendent reste un feu qu'on craint
-  neophobie: { neutre: .5, demi_vie: 20, preuve: 12, habitude: 120, pillage: 3, paix: 20 },
+  neophobie: { neutre: .5, demi_vie: 20, sensibilite: 60, preuve: 12, habitude: 120, pillage: 3, paix: 20 },
   // l'attitude, le mot qui résume : seuil (traque, attrait), mefiance (au-dessus, une traqueuse n'est que rôdeuse), craintive,
   // familiere, defensive (la masse, en joueurs, d'une bête qui fait front au lieu de fuir) ; alerte : les seuils de néophobie
   // d'un événement
@@ -132,11 +134,12 @@ function apprendre(M, v, x = {}) {
     if (corps > 0 && essais > 0) { const kt = chair(plan) > 0 && x.satiete != null ? 1 + T.faim * (1 - clamp(x.satiete)) : 1, cible = corps * (1 - Math.exp(-T.sensibilite * kt * V / essais)),
       e = Math.min(REGLES.pas, 1 - Math.exp(-(Math.max(K, V) + mal) * (1 + s.a) / (T.preuve * ka)));
       s.t += e * (cible - s.t); } }
-  // la néophobie : le mal fait par un dispositif la monte ; ce qui l'arrête sans mal, et ce qu'elle pille, l'y accoutument,
-  // tant que les joueurs ne lui font pas de mal par ailleurs
+  // la néophobie : le mal fait par un dispositif la monte, vers ce que dit sa part dans ce que la population vit des joueurs et
+  // de leurs choses (d'autant plus vite qu'il est nombreux) ; ce qui l'arrête sans mal, et ce qu'elle pille, l'y accoutument,
+  // tant que les joueurs ne lui font pas de mal par ailleurs. Rien ici ne dépend du seul nombre : comme le reste de la mémoire
   s.o = N.neutre + (s.o - N.neutre) * 2 ** (-1 / N.demi_vie);
   { const calme = E + N.pillage * G, part = calme > 0 ? calme / (calme + R) : 0;
-    if (P > 0) s.o += (1 - s.o) * (1 - Math.exp(-P * ka / N.preuve));
+    if (P > 0) { const cible = N.neutre + (1 - N.neutre) * (1 - Math.exp(-N.sensibilite * P / (P + R + calme))); if (cible > s.o) s.o += (cible - s.o) * (1 - Math.exp(-P * ka / N.preuve)); }
     if (calme > 0) s.o -= s.o * Math.exp(-N.paix * mal / (mal + calme)) * (1 - Math.exp(-calme * part / (N.habitude * ka))); }
   for (const k of ['a', 't', 'o']) s[k] = clamp(clamp(s[k], M[k] - REGLES.pas, M[k] + REGLES.pas));
   s.t = Math.min(s.t, corps);   // (un corps qui ne peut pas faire d'un joueur sa proie ne garde pas une traque héritée)

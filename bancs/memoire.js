@@ -5,8 +5,8 @@
 //     l'oubli, la riposte, le pas, l'audace ;
 //  3. le tampon : ce qu'il compte, ce qu'il plafonne (par compte ; ni part par compte ni part par jeu : le nom du jeu n'y change
 //     rien), ce qu'il laisse dans un monde sans mémoire ; le contact de la méfiance (docs/12) a les mêmes protections ;
-//  4. l'abus : un compte seul, une minorité, une nuit ; un petit jeu hostile face à un grand jeu paisible (la traque, la méfiance),
-//     un grand jeu face à un petit ; ce qui tient et ce qui ne tient pas ;
+//  4. l'abus : un compte seul (la traque, le feu, les pièges), une minorité, une nuit ; un petit jeu hostile face à un grand jeu
+//     paisible (la traque, la méfiance), un grand jeu face à un petit ; ce qui tient et ce qui ne tient pas ;
 //  5. ce qui voyage : les migrants, une lignée qui se sépare ; la nuit d'un monde par parcelles, et la vue par biome ;
 //  6. deux styles de jeu, deux faunes ;
 //  7. le contrat, les listes d'actions, le cycle de nuit.
@@ -91,6 +91,10 @@ const R = {
   verif(R.L1.o < .2 && R.L1b.o > .4 && R.L5.o > .85 && R.P6.o > .9,
     `un feu qui arrête sans jamais faire mal, on s'y accoutume (néophobie ${fx(R.L1.o)}) ; défendu par des joueurs qui frappent, il reste craint (${fx(R.L1b.o)}) ; un piège qui tue apprend à tout craindre (${fx(R.L5.o)})`);
   verif(R.P6.m < R.P2.m && R.P6.o > .9, `prise au piège plutôt qu'à la main, une population craint les pièges (${fx(R.P6.o)}) plus que les joueurs (méfiance ${fx(R.P6.m)})`);
+  // … à proportion de ce qu'elle vit des joueurs, comme le reste : les mêmes trois prises au piège, parmi de plus en plus de rencontres
+  const pieges = Rn => regime(plans.cerf, { rencontres: Rn, prises: 3, dispositif: 3 }).o, [n30, n330, n3030] = [30, 330, 3030].map(pieges), haut = M.REGLES.attitudes.alerte[1];
+  verif(n30 > .9 && n330 > .6 && n330 < haut && n3030 > .5 && n3030 < .56,
+    `la néophobie suit la part des contacts où un dispositif fait mal, pas leur seul nombre : trois prises au piège par nuit font ${fx(n30)} parmi 30 rencontres, ${fx(n330)} parmi 330, ${fx(n3030)} parmi 3 030 — un piégeur seul ne rend pas craintive une population que cent autres croisent`);
   const c = k => M.corpsDe(plans[k], Orvane.appetence);
   verif(c('loup') === 1 && c('ours') === 1 && Math.abs(c('renard') - M.REGLES.traque.petits) < 1e-9 && c('cerf') === 0 && c('bison') === 0 && R.L7.t > .3 && R.L7.t <= M.REGLES.traque.petits && R.P8.t === 0 && R.P8.att === 'defensive',
     `le corps : une meute de loups ou un ours peuvent faire d'un joueur une proie (1), un renard à moitié (${fx(c('renard'))} : traque ${fx(R.L7.t)} au même régime), un herbivore jamais (un bison qui fait tomber des joueurs est « défensive », traque ${fx(R.P8.t)})`);
@@ -128,8 +132,9 @@ console.log('3. Le tampon');
   const r = P([lot('a', riche)]), v = V(r);
   verif(v && v.rencontres === 30 && v.attaques === 8 && v.blessures === 4 && v.nourrissages === 5 && v.tombes === Tampon.VECU.tombes && v.pillages === Tampon.VECU.pillages && v.comptes === 1 && v.jeux === 1,
     `ce qu'une population a vécu d'un compte, compté tel quel ; mais pas des joueurs tombés ni des pillages par dizaines : ${Tampon.VECU.tombes} et ${Tampon.VECU.pillages} au plus par population et par cycle (5 et 30 déclarés)`);
-  verif(v && v.dispositif === 4 + 3 + 1 && v.prises === 3 + 1 && v.effarouchements === 12 && r.rejetes.evenements === 0,
-    'le moyen : une blessure, une prise au piège ou par le feu comptent au dispositif (une capture pour moitié) ; un moyen inconnu est ignoré, l\'événement gardé');
+  const leger = V(P([lot('a', [[t, b, 'rencontre', 30], [t, b, 'blessure', 1, 'piege'], [t, b, 'prelevement', 1, 'feu'], [t, b, 'capture', 1, 'piege'], [t, b, 'blessure', 2, 'melee']])]));
+  verif(leger.dispositif === 2.5 && leger.prises === 1.5 && leger.blessures === 3 && v && v.dispositif === Tampon.VECU.dispositif && v.prises === 3 + 1 && v.blessures === 4 && v.effarouchements === 12 && r.rejetes.evenements === 0,
+    `le moyen : une blessure, une prise au piège ou par le feu comptent au dispositif (une capture pour moitié), pas une blessure de la main du joueur ; au plus ${Tampon.VECU.dispositif} par compte, par population et par cycle (8 déclarées : elles restent ${fx(v.prises, 0)} prises et ${fx(v.blessures, 0)} blessures) ; un moyen inconnu est ignoré, l'événement gardé`);
   const actif = V(P([lot('a', riche.map(e => [e[0], e[1], e[2], e[3] * 10, e[4]]))])), somme = actif.prises + actif.blessures + actif.effarouchements + actif.nourrissages + actif.pillages + actif.attaques + actif.tombes;
   verif(Math.max(actif.rencontres, somme) <= profil.influence.exposition_ref + .1 && Math.abs(actif.attaques / actif.rencontres - 8 / 30) < .01, `un compte dix fois plus actif est ramené à une activité normale sur tous ses contacts (${fx(Math.max(actif.rencontres, somme), 0)} pour ${profil.influence.exposition_ref}), ses proportions gardées`);
   const fou = V(P([lot('a', [[t, b, 'attaque', 9000], [t, b, 'joueur_tombe', 9000]])]));
@@ -172,6 +177,18 @@ console.log('4. L\'abus');
   // un compte seul, face à dix joueurs paisibles
   const seul = jouer(W0, 20, () => [...paisibles, ...tombes(1)]).X, feu5 = jouer(W0, 5, () => [...paisibles, feu]).X;
   verif(tr(seul) < .3 && at(seul) !== 'traqueuse' && ne(feu5) > .3, `un compte seul ne fait pas une traqueuse : dix joueurs paisibles et un compte qui déclare 500 joueurs tombés par nuit, vingt cycles, traque ${fx(tr(seul))}, « ${at(seul)} » ; un seul compte à son feu soixante fois par nuit n'accoutume pas la population en cinq nuits (néophobie ${fx(ne(feu5))})`);
+  // la néophobie monte, elle aussi, à proportion : un compte seul à ses pièges ne la porte pas au seuil, et le nombre protège
+  const piege = (n, jeu) => Array.from({ length: n }, (_, i) => lot('q' + i, [[t, b, 'blessure', 60, 'piege']], jeu)), neo = (np, n, nuits = 20, jeu = 'faux') => ne(jouer(W0, nuits, () => [...Array.from({ length: np }, (_, i) => lot('p' + i, [[t, b, 'rencontre', 30]])), ...piege(n, jeu)]).X);
+  const haut = M.REGLES.attitudes.alerte[1], p1 = [1, 2, 20].map(k => neo(10, 1, k)), c1 = neo(100, 1);
+  verif(p1.every(x => x < haut) && p1[0] < .6 && neo(10, 1, 20, undefined) === p1[2] && neo(10, 2) >= haut && c1 < .55 && neo(100, 11) < haut && neo(100, 12) >= haut,
+    `ni une population néophobe : dix passants et un compte qui déclare 60 bêtes blessées au piège par nuit, néophobie ${fx(p1[0])} après une nuit, ${fx(p1[1])} après deux, ${fx(p1[2])} après vingt (avant : 0,85 puis 1, quel que soit le nombre des passants) ; sous le jeu des passants ou sous un jeu à lui, la même ; il en faut deux pour passer ${haut} face à dix passants, douze face à cent (un seul : ${fx(c1)})`);
+  // … et ce qui était, ou qui n'aurait pas suffi, retrouvé en réglant le monde (une sensibilité sans mesure : la montée au seul
+  // nombre, comme avant) et le tampon (sans plafond par compte)
+  const Wn = clone(W0); Wn.monde.regles = { ...(Wn.monde.regles || {}), memoire: { ...(Wn.monde.regles?.memoire || {}), neophobie: { sensibilite: 1e9 } } };
+  const sur = (W, np, nuits) => ne(jouer(W, nuits, () => [...Array.from({ length: np }, (_, i) => lot('p' + i, [[t, b, 'rencontre', 30]])), ...piege(1, 'faux')]).X), capD = Tampon.VECU.dispositif; let avantN, plafondSeul, partSeule;
+  try { plafondSeul = [10, 100].map(np => sur(Wn, np, 20)); Tampon.VECU.dispositif = Infinity; avantN = [10, 100].map(np => sur(Wn, np, 1)); partSeule = sur(W0, 100, 20); } finally { Tampon.VECU.dispositif = capD; }
+  verif(avantN.every(x => x >= .5 + M.REGLES.pas - 1e-9) && plafondSeul.every(x => x > .9) && Math.abs(plafondSeul[0] - plafondSeul[1]) < 1e-9 && partSeule >= haut && M.REGLES.neophobie.sensibilite === 60 && Tampon.VECU.dispositif === capD,
+    `ce qui était, et ce qui n'aurait pas suffi : au seul nombre, ce compte portait la néophobie à ${fx(avantN[0])} en une nuit, face à dix passants comme face à cent (${fx(avantN[1])}) ; avec le seul plafond par compte, à ${fx(plafondSeul[0])} en vingt nuits, toujours quel que soit leur nombre (${fx(plafondSeul[1])}) ; avec la seule proportion, à ${fx(partSeule)} face à cent passants — il fallait les deux`);
   // combien il en faut : les faux comptes valent autant de joueurs malchanceux au possible, pas davantage
   let seuil = null; for (let n = 1; n <= 10 && seuil == null; n++) if (at(jouer(W0, 20, () => [...paisibles, ...tombes(n)]).X) === 'traqueuse') seuil = n;
   verif(seuil >= 3, `face à dix joueurs qui ne font que passer, il faut ${seuil ?? 'plus de dix'} comptes qui déclarent chacun le plus de joueurs tombés possible, chaque nuit, pour faire une traqueuse : une minorité décidée y arrive, comme autant de vrais joueurs qui se laisseraient prendre`);

@@ -19,7 +19,7 @@ La méfiance et l'habituation (docs/12) en étaient les deux premières disposit
 | `habituation` (docs/12) | le joueur ne fait rien : elle le laisse approcher | les rencontres sans suite, l'aide | ce qui finit mal | 0 |
 | `attrait` | le joueur et son camp valent de la nourriture | les nourrissages, les pillages | des visites sans gain ; le mal subi, trois fois plus vite | 0 |
 | `traque` | le joueur lui-même est une proie | les joueurs tombés, rapportés aux assauts | le mal subi, les assauts vains, les rencontres sans assaut | 0 |
-| `neophobie` | la peur des choses des joueurs : le feu, la lumière, les pièges | le mal fait par un dispositif | ce qui l'arrête sans jamais faire mal ; ce qu'elle pille | 0,5 |
+| `neophobie` | la peur des choses des joueurs : le feu, la lumière, les pièges | le mal fait par un dispositif, selon sa part dans ce qu'elle vit des joueurs | ce qui l'arrête sans jamais faire mal ; ce qu'elle pille | 0,5 |
 
 Une disposition absente vaut sa valeur neutre (`catalogue.memoire.dispositions.<id>.neutre`). Une disposition revenue à moins de 0,005 de sa valeur neutre n'est plus publiée : l'oubli a une fin. La néophobie a deux versants : au-dessus de 0,5, le feu tient mieux et les pièges ne prennent plus ; en dessous, la bête s'y est accoutumée.
 
@@ -72,7 +72,7 @@ Dans un monde éveillé, le tampon joint aux pressions de chaque population `vec
 
 Rien n'y est retiré du monde ; sa protection porte donc sur les contacts, compte par compte.
 
-- **Par compte** : au plus 2 joueurs tombés et 5 pillages par population et par cycle. Puis toute son activité est ramenée à une activité normale (`exposition_ref` contacts, 60 si le profil ne le dit pas), ses proportions gardées. Un compte qui ne déclare que 9 000 assauts, sans une rencontre, ne pèse pas plus qu'un autre.
+- **Par compte** : au plus 2 joueurs tombés, 5 pillages et 3 bêtes blessées ou prises par un dispositif, par population et par cycle. Au-delà de trois, ces bêtes restent des prises et des blessures : le dispositif n'en marque pas davantage. Puis toute son activité est ramenée à une activité normale (`exposition_ref` contacts, 60 si le profil ne le dit pas), ses proportions gardées. Un compte qui ne déclare que 9 000 assauts, sans une rencontre, ne pèse pas plus qu'un autre.
 
 C'est la seule. Il n'y a **ni part par compte, ni part par jeu**. Pour les retraits, rogner un grand jeu ne fait que retirer moins de bêtes. Ici, ce qu'une population apprend dépend de proportions : la part des contacts qui nourrissent, la part des assauts où un joueur tombe. Rogner les uns y grossit d'autant les autres.
 
@@ -92,7 +92,7 @@ Dans un monde sans mémoire, le tampon laisse les cinq actions nouvelles : les m
 - **L'attrait** retombe de moitié en 10 cycles. Il va vers la part des contacts qui nourrissent. Un omnivore ou un charognard l'apprend plus haut ; un mangeur de chair affamé aussi.
 - **La traque** retombe de moitié en 10 cycles. Elle va vers la part des assauts où un joueur tombe. Ce que la population subit pèse trois assauts vains, et dix rencontres sans assaut en pèsent un : deux joueurs tombés ne font pas une traqueuse parmi cent passants.
 - **Le corps borne la traque**, de 0 à 1 : 0 pour qui ne mange pas de chair ; 0,6 pour un mangeur de chair dont un joueur n'est pas la proie (trop gros pour un renard, trop petit pour un géant) ; jusqu'à 1 pour celui, seul ou en meute, dont il est la proie idéale. Il borne aussi ce qu'une lignée hérite à sa séparation.
-- **La néophobie** revient vers 0,5 de moitié en 20 cycles. Le mal fait par un dispositif la monte. Ce qui arrête sans mal l'use, à proportion de sa part dans ce que la population vit des joueurs, **sauf si les joueurs font du mal par ailleurs** : un feu que des joueurs défendent reste un feu qu'on craint.
+- **La néophobie** revient vers 0,5 de moitié en 20 cycles. Le mal fait par un dispositif la monte, vers ce que dit sa part dans ce que la population vit des joueurs : un contact sur cent la mène vers 0,73, un sur vingt vers 0,98. Trois prises au piège par nuit font 0,94 parmi 30 rencontres, 0,69 parmi 330, 0,53 parmi 3 030. Ce qui arrête sans mal l'use, à proportion de sa part aussi, **sauf si les joueurs font du mal par ailleurs** : un feu que des joueurs défendent reste un feu qu'on craint.
 - **L'audace** (docs/8) reste le seul étage hérité. Une population audacieuse apprend la peur moins vite, et le reste plus vite.
 
 Vingt cycles au même régime, par cycle :
@@ -151,8 +151,8 @@ Lisière (`jeux/lisiere/`, et son dépôt) est le premier jeu à s'en servir, da
 
 Un groupe pourrait vouloir rendre une espèce hostile partout. Les comptes et les jeux s'inscrivent librement : rien ne remplace une identité. Un faux compte vaut donc, au plus, un vrai joueur malchanceux au possible, sous quelque jeu qu'il s'inscrive. Ce qui tient, et ce qui ne tient pas :
 
-- **Un compte seul ne gagne pas.** Dix joueurs qui ne font que passer, et un compte qui déclare 500 joueurs tombés par nuit : après vingt cycles, la traque est à 0,18. Un seul compte à son feu soixante fois par nuit laisse la néophobie à 0,34 après cinq nuits ; elle continue de baisser s'il ne s'arrête pas.
-- **Une minorité décidée gagne une population paisible, à proportion de ceux qui passent.** Face à dix passants, il faut quatre comptes qui déclarent chaque nuit le plus de joueurs tombés possible pour faire une traqueuse. Face à cent, trente-deux : un faux compte pour trois passants.
+- **Un compte seul ne gagne pas.** Dix joueurs qui ne font que passer, et un compte qui déclare 500 joueurs tombés par nuit : après vingt cycles, la traque est à 0,18. Un seul compte à son feu soixante fois par nuit laisse la néophobie à 0,34 après cinq nuits ; elle continue de baisser s'il ne s'arrête pas. Un compte qui déclare 60 bêtes blessées au piège par nuit la monte à 0,55 après une nuit et 0,70 après vingt, sous le seuil de 0,75 ; face à cent passants, 0,53.
+- **Une minorité décidée gagne une population paisible, à proportion de ceux qui passent.** Face à dix passants, il faut quatre comptes qui déclarent chaque nuit le plus de joueurs tombés possible pour faire une traqueuse. Face à cent, trente-deux : un faux compte pour trois passants. Pour une population qui craint les pièges (néophobie 0,75), deux comptes face à dix passants, douze face à cent.
 - **S'inscrire sous un jeu à soi n'y change rien.** Le monde est le même, au caractère près, que si ces comptes étaient du jeu des passants.
 - **Elle ne fait pas une traqueuse de bêtes dont les joueurs se défendent.** Dix comptes qui blessent et prennent des bêtes, plus cinq faux comptes : la traque reste à 0,17, la population reste fuyante. À huit faux comptes, elle est rôdeuse : ce qu'ils déclarent piller l'attire. La traque passe 0,4 à seize, et vaut 0,69 à cent. La population se méfie toujours (0,64) : elle ne devient pas traqueuse.
 - **Un grand jeu fait la mémoire d'une population qu'un petit jeu montre aussi.** Mille joueurs d'un jeu qui se laissent prendre font une traqueuse (traque 0,41) de la population que cinq joueurs d'un autre jeu défendent. C'est ce que veut dire un monde partagé, et chaque jeu borne ce qu'il rend. Mille faux comptes pèsent autant. Un jeu entier de faux comptes se suspend (`orvane_jeux.actif`, `hebergement/supabase.sql` : ses dépôts sont refusés, ses lots en attente écartés) ; des faux comptes glissés parmi les joueurs d'un vrai jeu, non.
@@ -204,6 +204,30 @@ Entre trois comptes qui écrivent la mémoire de cent joueurs et mille joueurs q
 
 Ce changement **modifie la mémoire et la méfiance des mondes qui reçoivent des lots**, dans un cas : une population que plusieurs jeux montrent, quand l'un d'eux dépassait sa part et ses 200 contacts. Il n'est plus rogné. Ailleurs, le vécu et le contact sont les mêmes, au caractère près ; les retraits ne changent nulle part.
 
+### La néophobie : au nombre, puis à proportion
+
+À sa sortie, la néophobie montait avec le *nombre* de bêtes blessées ou prises par un dispositif, quoi que la population vive d'autre. C'était la seule disposition qui ne dépendait pas d'une proportion : le nombre des vrais joueurs n'y protégeait rien. Un compte qui déclare 60 bêtes blessées au piège par nuit, sans une rencontre, face à des passants à 30 rencontres chacun :
+
+| règle | dix passants : 1, 2, 20 nuits | cent passants, 20 nuits | mille | comptes pour passer 0,75, face à dix et à cent |
+| --- | --- | --- | --- | --- |
+| au nombre : la règle d'avant | 0,85 · 1 · 1 | 1 | 1 | 1 et 1 |
+| au nombre, 3 par compte | 0,61 · 0,69 · 0,94 | 0,94 | 0,94 | 1 et 1 |
+| à proportion, sans plafond par compte | 0,85 · 1 · 1 | 0,85 | 0,56 | 1 et 1 |
+| à proportion, 3 par compte : la règle retenue | 0,55 · 0,58 · 0,70 | 0,53 | 0,50 | 2 et 12 |
+
+- **Un plafond par compte ne suffit pas** : il ralentit, et le compte finit seul à 0,94, face à dix passants comme face à mille.
+- **La proportion ne suffit pas** : un compte tout entier à ses pièges vaut à lui seul 2 % des contacts de cent passants, et la néophobie est très sensible au mal (trois prises au piège parmi 30 rencontres font 0,94).
+- **Il faut les deux**, comme pour la traque, qui a son plafond par compte (2 joueurs tombés) et sa proportion.
+
+`bancs/memoire.js` (section 4) vérifie la règle retenue, celle d'avant et les deux demi-mesures.
+
+Ce changement **modifie la néophobie des mondes qui reçoivent des lots**, dans deux cas :
+
+- le mal fait par un dispositif est une petite part de ce que la population vit des joueurs : elle monte moins. Un piégeur seul (3 prises au piège, 30 rencontres) parmi dix passants : 0,68 au lieu de 0,94 ; parmi cent, 0,53 ;
+- un compte déclare plus de 3 bêtes d'une population blessées ou prises par un dispositif en une nuit : le dispositif n'en marque que 3.
+
+Les équilibres du tableau plus haut ne bougent pas (le cerf pris au piège reste à 0,94). Sans mal fait par un dispositif, le monde est le même, au caractère près ; avec, seule la néophobie change. Un monde peut régler la sensibilité (`regles.memoire.neophobie.sensibilite`, 60).
+
 ## L'éveiller
 
 ```json
@@ -218,9 +242,9 @@ Le cycle de nuit l'éveille une fois (`monde.memoire: { depuis }`). Ses règles 
 
 `bancs/memoire.js`, en une minute et demie :
 1. un monde sans mémoire tourne exactement comme le moteur sans ce fichier ; le jour de l'éveil, rien ne bouge ; éveillée, elle ne change ni un effectif ni la chasse des autres ;
-2. les équilibres du tableau, le corps, l'oubli et sa fin, la riposte, le pas, l'audace, les règles d'un monde, une bascule pile sur un seuil ;
-3. le tampon : ce qu'il compte, son plafond par compte, le nom du jeu qui n'y change rien, ce qu'il laisse dans un monde sans mémoire ; le contact de la méfiance, plafonné de même ;
-4. l'abus : un compte seul, combien il en faut face à dix passants et face à cent, sous le jeu des passants ou sous un jeu à eux ; des joueurs qui se défendent, face à cinq faux comptes et face à cent ; deux cents faux comptes en une nuit ; un compte qui déclare 9 000 prélèvements, des comptes hostiles face à cent passants ;
+2. les équilibres du tableau, la néophobie qui suit une part, le corps, l'oubli et sa fin, la riposte, le pas, l'audace, les règles d'un monde, une bascule pile sur un seuil ;
+3. le tampon : ce qu'il compte, ses plafonds par compte (les joueurs tombés, les pillages, le mal fait par un dispositif, l'activité), le nom du jeu qui n'y change rien, ce qu'il laisse dans un monde sans mémoire ; le contact de la méfiance, plafonné de même ;
+4. l'abus : un compte seul (la traque, le feu, les pièges), combien il en faut face à dix passants et face à cent, sous le jeu des passants ou sous un jeu à eux ; la néophobie d'avant et les deux demi-mesures qui ne suffisaient pas ; des joueurs qui se défendent, face à cinq faux comptes et face à cent ; deux cents faux comptes en une nuit ; un compte qui déclare 9 000 prélèvements, des comptes hostiles face à cent passants ;
 5. les migrants et l'ordre de leurs arrivées, les bêtes déplacées, la séparation ; la nuit d'un monde par parcelles par le chemin du cycle hébergé, et la vue par biome ;
 6. deux styles de jeu, deux faunes : chez ceux qui se terrent derrière leur feu, des traqueuses qui ne craignent plus le feu ; chez ceux qui chassent, des fuyantes qui le craignent encore ;
 7. le schéma, les listes d'actions (le schéma, le tampon, le serveur, le vérificateur, les kits), le cycle de nuit.

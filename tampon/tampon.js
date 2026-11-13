@@ -207,10 +207,12 @@ const AGES = new Set(['oeuf', 'jeune', 'adulte', 'vieux']);
 // monde à la mémoire éveillée ; ailleurs, le tampon les laisse. Le moyen dit comment : de la main du joueur, ou par un dispositif
 const VECUES = { blessure: 'blessures', effarouchement: 'effarouchements', pillage: 'pillages', attaque: 'attaques', joueur_tombe: 'tombes' };
 const MOYENS = new Set(['melee', 'distance', 'piege', 'feu', 'lumiere', 'bruit']), DISPOSITIFS = new Set(['piege', 'feu', 'lumiere', 'bruit']);
-// par compte, par population et par cycle : au plus tant de joueurs tombés et de pillages (ce qui fait une traqueuse ou une
-// quémandeuse ne se déclare pas par centaines) ; activite : l'activité normale d'un compte, en contacts, si le profil ne la dit
-// pas (influence.exposition_ref). Celle-ci sert aussi au contact de la méfiance (docs/12), dans tous les mondes
-const VECU = { tombes: 2, pillages: 5, activite: 60 };
+// par compte, par population et par cycle : au plus tant de joueurs tombés, de pillages, et de bêtes blessées ou prises par un
+// dispositif (ce qui fait une traqueuse, une quémandeuse ou une population qui craint les pièges ne se déclare pas par centaines :
+// ces bêtes-là restent des prises et des blessures, le dispositif n'en marque que trois) ; activite : l'activité normale d'un
+// compte, en contacts, si le profil ne la dit pas (influence.exposition_ref). Celle-ci sert aussi au contact de la méfiance
+// (docs/12), dans tous les mondes
+const VECU = { tombes: 2, pillages: 5, dispositif: 3, activite: 60 };
 const CLES_VECU = ['rencontres', 'prises', 'blessures', 'dispositif', 'effarouchements', 'nourrissages', 'pillages', 'attaques', 'tombes'];
 const N_MAX = 1e4;                                         // un événement compte au plus dix mille bêtes ou unités
 const INTERDITS = new Set(['__proto__', 'constructor', 'prototype']);
@@ -401,14 +403,15 @@ function agreger(lots, inst, profil, etat = {}, gen0 = null, jeux = null) {
   const pH = PL.part_max_habitat ?? .02;
   for (const [bid, O] of Object.entries(biomes)) { const lim = pH * Math.max(0, lieux[bid]?.capacite || 0); O.habitat = clamp(O.habitat, -lim, lim); if (!O.habitat) O.habitat = 0; }
   // (docs/50) ce que chaque population a vécu des joueurs (« vecu »), à part de tout ce qui précède. Par compte : au plus
-  // VECU.tombes joueurs tombés et VECU.pillages pillages, puis toute son activité ramenée à une activité normale (un compte qui ne
-  // déclare que des assauts, sans une rencontre, aussi), ses proportions gardées. Puis la somme des comptes, sans part par compte
+  // VECU.tombes joueurs tombés, VECU.pillages pillages et VECU.dispositif bêtes blessées ou prises par un dispositif, puis toute
+  // son activité ramenée à une activité normale (un compte qui ne déclare que des assauts, sans une rencontre, aussi), ses
+  // proportions gardées. Puis la somme des comptes, sans part par compte
   // ni par jeu, comme le contact (plus haut) : la mémoire s'apprend de proportions, et un compte y pèse le même poids sous
   // n'importe quel jeu. comptes, jeux : de combien de comptes et de jeux elle vient (pour qui surveille un monde ; le moteur ne
   // les lit pas). Rien n'est lissé : la mémoire a ses demi-vies.
   if (MEMO) { const ref = normale, pop = new Map();
     for (const compte in parCompte) for (const tid in parCompte[compte].v) for (const bid in parCompte[compte].v[tid]) { const V = parCompte[compte].v[tid][bid];
-      V.tombes = Math.min(V.tombes, VECU.tombes); V.pillages = Math.min(V.pillages, VECU.pillages); V.dispositif = Math.min(V.dispositif, V.prises + V.blessures);
+      V.tombes = Math.min(V.tombes, VECU.tombes); V.pillages = Math.min(V.pillages, VECU.pillages); V.dispositif = Math.min(V.dispositif, V.prises + V.blessures, VECU.dispositif);
       const tot = Math.max(V.rencontres, V.prises + V.blessures + V.effarouchements + V.nourrissages + V.pillages + V.attaques + V.tombes); if (!(tot > 0) || !Number.isFinite(tot)) continue;
       const a = tot > ref ? ref / tot : 1, k = tid + '\u0000' + bid; if (!pop.has(k)) pop.set(k, { tid, bid, L: [] });
       pop.get(k).L.push({ jeu: jeuDe[compte] ?? '', a, V }); }
