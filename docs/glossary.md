@@ -71,6 +71,7 @@ Orvane's files use French field names. This page translates them all, object by 
 | `parent` | parent | the lineage it split from |
 | `apparu`, `eteint` | appeared, extinct | the cycle of its birth, of its extinction (`null` while alive) |
 | `statut` | status | `croissance` growing, `stable`, `declin` declining, `menace` threatened, `eteint` extinct |
+| `caractere` | temperament | in a world with the memory awake (docs/50), what the lineage is before it has learnt anything, read from its body and temper, three traits from 0 to 1: `hardiesse` boldness (shy … bold), `combativite` fight or flight (flees … fights back), `opportunisme` opportunism (picky … takes whatever players offer). Two lineages do not learn the same lesson from the same players |
 | `origine` | origin | it arrived from another world through a merger |
 | `nom_commun`, `decrit` | common name, described | the common name the first player who described the lineage gave it, and who (`par` by, `jeu` game, `cycle`, `date`) (docs/37); the engine's `nom` stays |
 | `plan` | body plan | below |
@@ -117,8 +118,8 @@ Orvane's files use French field names. This page translates them all, object by 
 | `flux`, `divergence` | gene flow, divergence | immigrants per cycle; genetic distance to the rest of the species |
 | `hybride` | hybrid zone | a related lineage lives here and interbreeds |
 | `mefiance`, `habituation` | wariness, habituation | what the population has learnt from players |
-| `memoire` | memory | what else it has learnt, in a world with the memory awake (docs/50): `attrait` attraction (players mean food), `traque` stalking (players are prey), `neophobie` neophobia (fear of fire, light, traps; neutral at 0.5). An absent value is neutral |
-| `attitude` | attitude | one word for the population: `traqueuse` stalker, `rodeuse` prowler, `quemandeuse` beggar, `defensive`, `fuyante` skittish, `familiere` tame |
+| `memoire` | memory | what else it has learnt, in a world with the memory awake (docs/50): `attrait` attraction (players mean food), `traque` stalking (players are prey), `neophobie` neophobia (fear of fire, light, traps; neutral at 0.5), `agressivite` aggression (it stands its ground instead of fleeing). An absent value is neutral. These are population means: one animal departs from them with its own boldness (`catalogue.memoire.individu`) |
+| `attitude` | attitude | one word for the population: `traqueuse` stalker, `agressive` aggressive (charges whoever comes close), `defensive` (wary, yet stands its ground), `exigeante` demanding (expects food, turns on those who give none), `rodeuse` prowler, `quemandeuse` beggar, `fuyante` skittish, `familiere` tame |
 | `parcelles` | plots | the head count in each plot of the biome |
 | `nourriture`, `recouvrement` | food, overlap | a grazer: what it finds to eat, relative to the awakening of the flora; what it shares with its size band |
 | `savoirs` | knowledge | for each piece of knowledge (`catalogue.savoirs`), the share of the population that knows it: a local tradition |

@@ -2,7 +2,8 @@
 //  1. le jour un : un monde sans mémoire tourne exactement comme le moteur sans moteur/memoire.js ; le jour de l'éveil, rien ne
 //     bouge ; éveillée, la mémoire ne change pas un effectif ;
 //  2. apprendre : les équilibres de docs/50 (nourrie, pillée, proie facile, défense, feu tenu, feu défendu, piège), le corps,
-//     l'oubli, la riposte, le pas, l'audace ;
+//     l'oubli, la riposte, le pas, l'audace ; le caractère : les mêmes joueurs, des bêtes différentes (de près, de loin, ce qui
+//     marche et ce qui coûte, la frustration), et l'individu dans sa population ;
 //  3. le tampon : ce qu'il compte, ce qu'il plafonne (par compte, par jeu), ce qu'il laisse dans un monde sans mémoire ;
 //  4. l'abus : un compte seul, une minorité, une nuit ; ce qui tient et ce qui ne tient pas ;
 //  5. ce qui voyage : les migrants, une lignée qui se sépare ; la nuit d'un monde par parcelles, et la vue par biome ;
@@ -28,8 +29,11 @@ const profil = { ...lireJ('mondes/sv-1/profil.json'), influence: lireJ('mondes/o
 const Tx = (X, id) => X.taxons.find(t => t.id === id), Pop = (X, tid, bid) => Tx(X, tid)?.populations.find(p => p.biome === bid);
 const effectifs = I => I.taxons.map(t => [t.id, t.populations.map(p => [p.biome, p.effectif]), t.phenotypes.map(p => [p.id, p.frequence])]);
 // l'instantané sans ce que la mémoire y ajoute
-const sansMemoire = I => { const X = clone(I); delete X.monde.memoire; if (X.catalogue) delete X.catalogue.memoire; for (const t of X.taxons) for (const p of t.populations || []) { delete p.memoire; delete p.attitude; }
+const sansMemoire = I => { const X = clone(I); delete X.monde.memoire; if (X.catalogue) delete X.catalogue.memoire; for (const t of X.taxons) { delete t.caractere; for (const p of t.populations || []) { delete p.memoire; delete p.attitude; } }
   X.evenements = (X.evenements || []).filter(e => e.type !== 'memoire'); return X; };
+// … et sans la méfiance ni l'habituation (docs/12), qu'un monde éveillé prend au caractère de chaque lignée
+const sansConduite = I => { const X = sansMemoire(I); for (const t of X.taxons) for (const p of t.populations || []) { delete p.mefiance; delete p.habituation; } X.evenements = X.evenements.filter(e => e.type !== 'mefiance'); return X; };
+const animale = t => !t.eteint && !['vegetal', 'synthetique'].includes(t.plan?.regime);
 const lot = (compte, ev, jeu = 'lisiere', monde = I0.monde.id) => ({ orvane: '1.0', monde, instantane: 0, source: { jeu, compte }, evenements: ev.map(([taxon, biome, action, n, moyen]) => ({ taxon, biome, action, n, ...(moyen ? { moyen } : {}) })) });
 // un monde qui joue n cycles avec les lots que rend « lots(k) » : le tampon, puis le moteur
 const jouer = (X, n, lots, P = profil) => { let te = {}, dernier = null; for (let k = 0; k < n; k++) { const r = Tampon.agreger(lots ? lots(k) : [], X, P, te); te = r.etat; dernier = r; X = Orvane.cycle(X, r.pressions); } return { X, pressions: dernier?.pressions }; };
@@ -41,12 +45,14 @@ console.log('1. Le jour un');
   let A = O0, C = O0; for (let k = 0; k < 2; k++) { A = Orvane.cycle(A, {}); C = mod.exports.cycle(C, {}); }
   verif(empreinte(A) === empreinte(C), 'un monde sans mémoire tourne exactement comme le moteur sans moteur/memoire.js (le monde d\'Orvane, deux cycles)');
   const a = Orvane.cycle(I0, {}), b = Orvane.cycle(W0, {});
-  verif(empreinte(sansMemoire(b)) === empreinte(a) && b.monde.memoire && b.catalogue.memoire?.dispositions?.traque && !b.taxons.some(t => t.populations.some(p => p.memoire || p.attitude)),
-    'le jour de l\'éveil, rien ne bouge : le même monde, plus monde.memoire et catalogue.memoire ; aucune population n\'a encore rien appris');
+  verif(empreinte(sansConduite(b)) === empreinte(sansConduite(a)) && b.monde.memoire && b.catalogue.memoire?.dispositions?.agressivite && b.catalogue.memoire.caractere?.combativite && !b.taxons.some(t => t.populations.some(p => p.memoire || p.attitude === 'traqueuse' || p.attitude === 'agressive'))
+    && b.taxons.filter(animale).every(t => t.caractere && Object.keys(t.caractere).join() === 'hardiesse,combativite,opportunisme') && !b.taxons.some(t => !animale(t) && t.caractere) && !a.taxons.some(t => t.caractere),
+    'le jour de l\'éveil, rien ne bouge : le même monde, plus monde.memoire, catalogue.memoire et le caractère de chaque lignée animale (taxons[].caractere) ; aucune population n\'a encore rien appris');
   // des lots d'avant (aucune action nouvelle) : la mémoire éveillée laisse tout le reste au caractère près, méfiance comprise
   const car = 'traqueur', bid = 'prairie', anciens = k => ['a', 'b', 'c'].map(c => lot(c + k % 2, [[car, bid, 'rencontre', 30], [car, bid, 'prelevement', 2, 'melee'], ['brouteur', 'prairie', 'rencontre', 20], ['brouteur', 'prairie', 'nourrissage', 6]]));
   const sA = jouer(I0, 5, anciens), sB = jouer(W0, 5, anciens);
-  verif(empreinte(sansMemoire(sB.X)) === empreinte(sA.X), 'des lots sans action nouvelle, cinq cycles : la mémoire éveillée ou non, le même monde (effectifs, gènes, méfiance) au caractère près');
+  verif(empreinte(sansConduite(sB.X)) === empreinte(sansConduite(sA.X)) && Pop(sB.X, car, bid).mefiance < Pop(sA.X, car, bid).mefiance - .02,
+    `des lots sans action nouvelle, cinq cycles : la mémoire éveillée ou non, le même monde (effectifs, gènes) au caractère près ; seule la méfiance se prend désormais au caractère de la lignée (le traqueur, hardi : ${fx(Pop(sB.X, car, bid).mefiance)} contre ${fx(Pop(sA.X, car, bid).mefiance)})`);
   verif(Pop(sB.X, 'brouteur', 'prairie')?.memoire?.attrait > 0 && !Pop(sA.X, 'brouteur', 'prairie')?.memoire, `et pourtant elle apprend déjà de ces lots : le brouteur qu'on nourrit prend de l'attrait (${fx(Pop(sB.X, 'brouteur', 'prairie')?.memoire?.attrait)})`);
   // des lots d'aujourd'hui : un monde sans mémoire laisse les actions nouvelles ; éveillée, elle ne change pas un effectif
   const neufs = k => ['a', 'b', 'c'].map(c => lot(c, [[car, bid, 'rencontre', 30], [car, bid, 'prelevement', 2, 'melee'], [car, bid, 'blessure', 3, 'melee'], [car, bid, 'attaque', 6], [car, bid, 'joueur_tombe', 1], [car, bid, 'effarouchement', 8, 'feu']]));
@@ -62,72 +68,136 @@ console.log('1. Le jour un');
 }
 
 console.log('2. Apprendre');
-const plans = { loup: { regime: 'carnivore', masse_kg: 40, sociabilite: .8, perception: .7, taille_m: 1.2, vitesse_rel: 6 }, renard: { regime: 'carnivore', masse_kg: 8, sociabilite: .2, perception: .7, taille_m: .7, vitesse_rel: 6 },
-  ours: { regime: 'omnivore', masse_kg: 250, sociabilite: .1, perception: .6, taille_m: 2, vitesse_rel: 4 }, cerf: { regime: 'herbivore', masse_kg: 90, sociabilite: .7, perception: .6, taille_m: 1.6, vitesse_rel: 7 },
-  bison: { regime: 'herbivore', masse_kg: 600, sociabilite: .7, perception: .5, taille_m: 2.5, vitesse_rel: 5 } };
-// une population au même régime pendant n cycles : sa mémoire, et sa méfiance comme le moteur la tient (docs/12)
+// six lignées, six caractères : un loup et un ours hardis et combatifs, un renard entre les deux, un bison posé et armé, un cerf
+// craintif, un lièvre qui ne sait que fuir
+const plans = { loup: { regime: 'carnivore', masse_kg: 40, sociabilite: .8, perception: .7, taille_m: 1.2, vitesse_rel: 6, temperament: .65 }, renard: { regime: 'carnivore', masse_kg: 8, sociabilite: .2, perception: .7, taille_m: .7, vitesse_rel: 6, temperament: .55 },
+  ours: { regime: 'omnivore', masse_kg: 250, sociabilite: .1, perception: .6, taille_m: 2, vitesse_rel: 4, temperament: .6 }, cerf: { regime: 'herbivore', masse_kg: 90, sociabilite: .7, perception: .6, taille_m: 1.6, vitesse_rel: 7, temperament: .25 },
+  bison: { regime: 'herbivore', masse_kg: 600, sociabilite: .7, perception: .5, taille_m: 2.5, vitesse_rel: 5, temperament: .5, corps: { organes: [{ type: 'cornes', taille: .5 }] } },
+  lievre: { regime: 'herbivore', masse_kg: 3, sociabilite: .1, perception: .8, taille_m: .5, vitesse_rel: 9, temperament: .15 } };
+const MEb = M.preparer({ appetence: Orvane.appetence, mefiance: Orvane.apprendre }), ETAT = ['a', 't', 'o', 'g'];
+// une population au même régime pendant n cycles : sa mémoire, et sa méfiance comme le moteur la tient dans un monde éveillé
+// (docs/12, au caractère de la lignée : ME.mefiance). v : ce qu'elle vit (« vecu ») ; le contact du tampon ne compte que les prises.
 const regime = (plan, v, n = 20, d = { M: M.lire(null), m: 0, h: 0 }, za = 0) => { const corps = M.corpsDe(plan, Orvane.appetence); let { M: X, m, h } = d; const pas = [];
-  for (let k = 0; k < n; k++) { const c = { rencontres: v?.rencontres || 0, danger: (v?.prises || 0) + M.REGLES.blessure * (v?.blessures || 0), aide: v?.nourrissages || 0 }, Y = M.apprendre(X, v, { plan, za, corps });
-    pas.push(Math.max(Math.abs(Y.a - X.a), Math.abs(Y.t - X.t), Math.abs(Y.o - X.o))); [m, h] = Orvane.apprendre(m, h, c, za); X = Y; }
-  return { M: X, a: X.a, t: X.t, o: X.o, m, h, pas: Math.max(0, ...pas), att: M.attitude({ mefiance: m, habituation: h, memoire: M.ecrire(X) || {} }, plan) || 'neutre' }; };
-const R = {
-  P1: regime(plans.cerf, { rencontres: 60 }), P2: regime(plans.cerf, { rencontres: 30, prises: 6 }), P4: regime(plans.cerf, { rencontres: 60, nourrissages: 20 }),
-  P5: regime(plans.cerf, { rencontres: 30, prises: 3, blessures: 6 }), P6: regime(plans.cerf, { rencontres: 40, prises: 3, dispositif: 3 }), P7: regime(plans.cerf, { rencontres: 60, pillages: 10, effarouchements: 20 }),
-  P8: regime(plans.bison, { rencontres: 30, blessures: 6, attaques: 4, tombes: 2 }),
-  L1: regime(plans.loup, { rencontres: 40, effarouchements: 30 }), L1b: regime(plans.loup, { rencontres: 40, effarouchements: 30, prises: 2, blessures: 2 }),
-  L2: regime(plans.loup, { rencontres: 30, attaques: 8, tombes: 6, pillages: 4 }), L3: regime(plans.loup, { rencontres: 40, prises: 5, blessures: 4, attaques: 5, tombes: 1 }),
-  L4: regime(plans.loup, { rencontres: 30, pillages: 8, blessures: 3 }), L5: regime(plans.loup, { rencontres: 40, effarouchements: 30, prises: 4, dispositif: 4 }),
-  L6: regime(plans.loup, { rencontres: 40, nourrissages: 15 }), L7: regime(plans.renard, { rencontres: 30, attaques: 8, tombes: 6, pillages: 4 }) };
-{ verif(Math.abs(R.P1.h - .92) < .01 && R.P1.att === 'familiere' && Math.abs(R.P2.m - .62) < .01 && R.P2.att === 'fuyante' && R.P1.a === 0 && R.P1.t === 0 && R.P1.o === .5,
-    `sans action nouvelle, la méfiance et l'habituation sont celles de docs/12 (habituation ${fx(R.P1.h)}, méfiance ${fx(R.P2.m)}), et la mémoire reste neutre`);
-  verif(R.P4.att === 'quemandeuse' && R.P4.a > .5 && R.L6.att === 'quemandeuse' && R.L6.a > .5 && R.L6.t === 0,
-    `nourrie, une population prend de l'attrait (le cerf ${fx(R.P4.a)}, le loup ${fx(R.L6.a)} : « quémandeuse ») ; nourrir un loup n'en fait jamais un traqueur (traque ${fx(R.L6.t)})`);
-  verif(R.P7.att === 'quemandeuse' && R.P7.a > .35 && R.P7.o < .1 && R.L4.att === 'rodeuse' && R.L4.a > .4 && R.L4.m > .5,
-    `pillé sans défense, le camp attire et n'effraie plus (attrait ${fx(R.P7.a)}, néophobie ${fx(R.P7.o)}) ; pillé et défendu, il fait des rôdeuses (attrait ${fx(R.L4.a)}, méfiance ${fx(R.L4.m)})`);
-  verif(R.L2.att === 'traqueuse' && R.L2.t > .7 && R.L3.att === 'fuyante' && R.L3.t < .1 && R.L3.m > .7,
-    `proie facile (des joueurs tombent, personne ne riposte) : traque ${fx(R.L2.t)}, « traqueuse » ; défense (des bêtes prises, blessées) : traque ${fx(R.L3.t)}, méfiance ${fx(R.L3.m)}, « fuyante »`);
-  verif(R.L1.o < .2 && R.L1b.o > .4 && R.L5.o > .85 && R.P6.o > .9,
-    `un feu qui arrête sans jamais faire mal, on s'y accoutume (néophobie ${fx(R.L1.o)}) ; défendu par des joueurs qui frappent, il reste craint (${fx(R.L1b.o)}) ; un piège qui tue apprend à tout craindre (${fx(R.L5.o)})`);
-  verif(R.P6.m < R.P2.m && R.P6.o > .9, `prise au piège plutôt qu'à la main, une population craint les pièges (${fx(R.P6.o)}) plus que les joueurs (méfiance ${fx(R.P6.m)})`);
+  for (let k = 0; k < n; k++) { const c = { rencontres: v?.rencontres || 0, danger: v?.prises || 0, aide: v?.nourrissages || 0 }, Y = M.apprendre(X, v, { plan, za, corps });
+    pas.push(Math.max(...ETAT.map(e => Math.abs(Y[e] - (X[e] || 0))))); [m, h] = MEb.mefiance(plan, m, h, c, v, za, X.g || 0); X = Y; }
+  return { M: X, a: X.a, t: X.t, o: X.o, g: X.g, m, h, pas: Math.max(0, ...pas), att: M.attitude({ mefiance: m, habituation: h, memoire: M.ecrire(X) || {} }, plan) || 'neutre' }; };
+const V = { passants: { rencontres: 60 }, chasse: { rencontres: 30, prises: 3, blessures: 6 }, arc: { rencontres: 30, prises: 3, blessures: 6, distance: 9 }, piege: { rencontres: 40, prises: 3, dispositif: 3 },
+  nourrie: { rencontres: 40, nourrissages: 15 }, frustree: { rencontres: 90, nourrissages: 15 }, pille: { rencontres: 60, pillages: 10, effarouchements: 20 }, pilleDefendu: { rencontres: 30, pillages: 8, blessures: 3 }, pilleArc: { rencontres: 30, pillages: 8, blessures: 3, distance: 3 },
+  feu: { rencontres: 40, effarouchements: 30 }, feuDefendu: { rencontres: 40, effarouchements: 30, prises: 2, blessures: 2 }, feuPiege: { rencontres: 40, effarouchements: 30, prises: 4, dispositif: 4 },
+  facile: { rencontres: 30, attaques: 8, tombes: 6, pillages: 4 }, defense: { rencontres: 40, prises: 5, blessures: 4, attaques: 5, tombes: 1 }, front: { rencontres: 30, prises: 3, blessures: 6, attaques: 6, tombes: 3 } };
+const R = {}; for (const b of Object.keys(plans)) { R[b] = {}; for (const [k, v] of Object.entries(V)) R[b][k] = regime(plans[b], v); }
+{ const car = Object.fromEntries(Object.keys(plans).map(k => [k, M.caractereDe(plans[k])])), pl = k => M.plafondHabitude(car[k]);
+  verif(R.loup.passants.h > .9 && R.loup.passants.att === 'familiere' && Math.abs(R.cerf.passants.h - pl('cerf')) < .01 && R.cerf.passants.att === 'neutre' && R.lievre.passants.h < R.cerf.passants.h && ['loup', 'cerf', 'lievre'].every(k => ETAT.every(e => R[k].passants[e] === (e === 'o' ? .5 : 0))),
+    `des joueurs qui ne font que passer : le loup, hardi, s'y habitue (habituation ${fx(R.loup.passants.h)}, « familière ») ; le cerf, craintif, plafonne à ${fx(R.cerf.passants.h)}, le lièvre à ${fx(R.lievre.passants.h)} (rien de marqué) ; et la mémoire reste neutre`);
+  verif(R.loup.nourrie.att === 'quemandeuse' && R.loup.nourrie.a > .5 && R.loup.nourrie.t === 0 && R.ours.nourrie.att === 'quemandeuse' && R.cerf.nourrie.att === 'neutre' && R.cerf.nourrie.a < .3 && R.lievre.nourrie.a < R.cerf.nourrie.a && R.loup.nourrie.g < .05,
+    `nourris de la même main : le loup et l'ours quémandent (attrait ${fx(R.loup.nourrie.a)} et ${fx(R.ours.nourrie.a)}) ; le cerf et le lièvre prennent ce qu'on leur laisse sans s'attacher (${fx(R.cerf.nourrie.a)} et ${fx(R.lievre.nourrie.a)}, rien de marqué) ; nourrir un loup n'en fait jamais un traqueur (traque ${fx(R.loup.nourrie.t)})`);
+  verif(R.ours.pille.a > R.cerf.pille.a + .15 && R.ours.pille.o < .1 && R.ours.pilleDefendu.att === 'exigeante' && R.ours.pilleArc.att === 'rodeuse' && R.lievre.pilleDefendu.att === 'fuyante',
+    `pillé sans défense, le camp attire et n'effraie plus (l'ours : attrait ${fx(R.ours.pille.a)}, néophobie ${fx(R.ours.pille.o)} ; le cerf : attrait ${fx(R.cerf.pille.a)}) ; défendu de près, il fait de l'ours une « exigeante » (agressivité ${fx(R.ours.pilleDefendu.g)}) ; défendu de loin, une « rôdeuse » (méfiance ${fx(R.ours.pilleArc.m)}) ; le lièvre, lui, fuit`);
+  verif(R.loup.facile.att === 'traqueuse' && R.loup.facile.t > .7 && R.loup.defense.t < .1 && R.loup.defense.m > .5 && R.loup.defense.att === 'defensive' && R.renard.facile.t <= M.REGLES.traque.petits,
+    `proie facile (des joueurs tombent, personne ne riposte) : traque ${fx(R.loup.facile.t)}, « traqueuse » ; défense (des bêtes prises, blessées) : traque ${fx(R.loup.defense.t)}, méfiance ${fx(R.loup.defense.m)} — et le loup, combatif, fait front : « défensive »`);
+  verif(R.loup.feu.o < .2 && R.loup.feuDefendu.o > .4 && R.loup.feuPiege.o > .85 && R.cerf.piege.o > .9,
+    `un feu qui arrête sans jamais faire mal, on s'y accoutume (néophobie ${fx(R.loup.feu.o)}) ; défendu par des joueurs qui frappent, il reste craint (${fx(R.loup.feuDefendu.o)}) ; un piège qui tue apprend à tout craindre (${fx(R.loup.feuPiege.o)})`);
+  verif(R.cerf.piege.m < R.cerf.chasse.m && R.cerf.piege.o > .9 && R.cerf.piege.g === 0, `prise au piège plutôt qu'à la main, une population craint les pièges (${fx(R.cerf.piege.o)}) plus que les joueurs (méfiance ${fx(R.cerf.piege.m)} contre ${fx(R.cerf.chasse.m)}), et n'apprend pas à se battre : un piège n'offre rien à charger`);
   const c = k => M.corpsDe(plans[k], Orvane.appetence);
-  verif(c('loup') === 1 && c('ours') === 1 && Math.abs(c('renard') - M.REGLES.traque.petits) < 1e-9 && c('cerf') === 0 && c('bison') === 0 && R.L7.t > .3 && R.L7.t <= M.REGLES.traque.petits && R.P8.t === 0 && R.P8.att === 'defensive',
-    `le corps : une meute de loups ou un ours peuvent faire d'un joueur une proie (1), un renard à moitié (${fx(c('renard'))} : traque ${fx(R.L7.t)} au même régime), un herbivore jamais (un bison qui fait tomber des joueurs est « défensive », traque ${fx(R.P8.t)})`);
+  verif(c('loup') === 1 && c('ours') === 1 && Math.abs(c('renard') - M.REGLES.traque.petits) < 1e-9 && c('cerf') === 0 && c('bison') === 0 && R.renard.facile.t > .3 && R.bison.front.t === 0 && R.bison.front.att === 'defensive',
+    `le corps : une meute de loups ou un ours peuvent faire d'un joueur une proie (1), un renard à moitié (${fx(c('renard'))} : traque ${fx(R.renard.facile.t)} au même régime), un herbivore jamais (un bison qui fait tomber des joueurs est « défensive », traque ${fx(R.bison.front.t)})`);
   const geant = M.corpsDe({ regime: 'carnivore', masse_kg: 4000, sociabilite: 0 }, Orvane.appetence), meute = M.corpsDe({ regime: 'carnivore', masse_kg: 200, sociabilite: .8, taille_m: 2, vitesse_rel: 5 }, Orvane.appetence), seul = M.corpsDe({ regime: 'carnivore', masse_kg: 200, sociabilite: 0, taille_m: 2, vitesse_rel: 5 }, Orvane.appetence);
   const herite = M.apprendre({ a: 0, t: .7, o: .5 }, null, { plan: plans.cerf, corps: 0 }), petit = M.apprendre({ a: 0, t: .9, o: .5 }, null, { plan: plans.renard, corps: c('renard') });
   verif(Math.abs(geant - M.REGLES.traque.petits) < 1e-9 && meute >= seul && herite.t === 0 && petit.t <= c('renard'),
     `le corps borne aussi ce qu'on hérite : une lignée devenue herbivore ne garde pas la traque de sa mère (0,7 → ${fx(herite.t)}), un renard ne passe pas ${fx(c('renard'))} ; vivre en meute n'ôte rien (${fx(meute)} pour ${fx(seul)} seul), et pour un géant de quatre tonnes un joueur n'est pas une proie à sa taille (${fx(geant)})`);
   // l'oubli, la riposte
-  const o5 = regime(plans.loup, null, 5, R.L2), o15 = regime(plans.loup, null, 15, R.L2), o30 = regime(plans.loup, null, 30, R.L2);
-  verif(o5.att === 'traqueuse' && o15.t < M.REGLES.attitudes.seuil && o30.t < .15 && Math.abs(o30.o - .5) < .15 && Math.abs(regime(plans.loup, null, 10, R.L2).t / R.L2.t - .5) < .01,
-    `l'oubli : les joueurs partis, la traque retombe de moitié en dix cycles (${fx(R.L2.t)}, puis ${fx(o5.t)} à 5 cycles, ${fx(o15.t)} à 15, ${fx(o30.t)} à 30) ; la néophobie revient vers 0,5 (${fx(o30.o)})`);
-  const r1 = regime(plans.loup, { rencontres: 40, prises: 5, blessures: 4, attaques: 5, tombes: 1 }, 1, R.L2), r2 = regime(plans.loup, { rencontres: 40, prises: 5, blessures: 4, attaques: 5, tombes: 1 }, 2, R.L2);
-  verif(r1.att === 'rodeuse' && r2.att === 'fuyante' && r2.t < r1.t, `la riposte : des traqueuses qu'on se met à chasser sont « rôdeuse » au premier cycle (traque ${fx(r1.t)}, méfiance ${fx(r1.m)}), « fuyante » au deuxième`);
-  const gros = Object.fromEntries(Object.entries({ rencontres: 30, attaques: 8, tombes: 6, pillages: 4, prises: 3, dispositif: 3, effarouchements: 30 }).map(([k, v]) => [k, v * 1000]));
-  verif(Object.values(R).every(r => r.pas <= M.REGLES.pas + 1e-9) && regime(plans.loup, gros).pas <= M.REGLES.pas + 1e-9, `rien ne bascule en une nuit : aucune disposition ne bouge de plus de ${M.REGLES.pas} par cycle, même avec mille fois plus de comptes`);
+  const L2 = R.loup.facile, o5 = regime(plans.loup, null, 5, L2), o15 = regime(plans.loup, null, 15, L2), o30 = regime(plans.loup, null, 30, L2), o10 = regime(plans.loup, null, 10, L2), C0 = R.loup.chasse, c10 = regime(plans.loup, null, 10, C0), p10 = regime(plans.loup, V.passants, 10, C0);
+  verif(o5.att === 'traqueuse' && o15.t < M.REGLES.attitudes.seuil && o30.t < .15 && Math.abs(o30.o - .5) < .15 && Math.abs(o10.t / L2.t - .5) < .01 && Math.abs(c10.g / C0.g - .5) < .01 && p10.g < c10.g / 2,
+    `l'oubli : les joueurs partis, la traque retombe de moitié en dix cycles (${fx(L2.t)}, puis ${fx(o5.t)} à 5 cycles, ${fx(o15.t)} à 15, ${fx(o30.t)} à 30), l'agressivité aussi (${fx(C0.g)} → ${fx(c10.g)}) ; la néophobie revient vers 0,5 (${fx(o30.o)}) ; des joueurs qui passent sans rien faire éteignent l'agressivité plus vite que leur absence (${fx(p10.g)})`);
+  const r1 = regime(plans.loup, V.defense, 1, L2), r3 = regime(plans.loup, V.defense, 3, L2), a2 = regime(plans.loup, { ...V.defense, distance: 9 }, 2, L2), a6 = regime(plans.loup, { ...V.defense, distance: 9 }, 6, L2);
+  verif(r1.t < L2.t && r3.att === 'defensive' && r3.t < r1.t && a6.att === 'fuyante' && a6.g < r3.g - .2 && a2.m > .4,
+    `la riposte : des traqueuses qu'on se met à chasser de près perdent la traque (${fx(L2.t)} → ${fx(r1.t)} en une nuit) et font front (« ${r3.att} » au troisième cycle, agressivité ${fx(r3.g)}) ; chassées de loin, elles n'ont personne à charger : « ${a2.att} » au deuxième cycle, « ${a6.att} » au sixième (agressivité ${fx(a6.g)})`);
+  const gros = Object.fromEntries(Object.entries({ rencontres: 30, attaques: 8, tombes: 6, pillages: 4, prises: 3, blessures: 5, dispositif: 3, effarouchements: 30 }).map(([k, v]) => [k, v * 1000]));
+  verif(Object.values(R).every(B => Object.values(B).every(r => r.pas <= M.REGLES.pas + 1e-9)) && regime(plans.loup, gros).pas <= M.REGLES.pas + 1e-9 && regime(plans.bison, gros).pas <= M.REGLES.pas + 1e-9, `rien ne bascule en une nuit : aucune disposition ne bouge de plus de ${M.REGLES.pas} par cycle, même avec mille fois plus de comptes`);
   // l'oubli a une fin ; des comptes insensés n'effacent rien ; les règles d'un monde ne cassent pas le moteur
-  const tard = regime(plans.loup, null, 200, { M: { a: .5, t: .8, o: .1 }, m: 0, h: 0 }), fou = M.apprendre({ a: .3, t: .4, o: .2 }, { blessures: Infinity, tombes: NaN, attaques: -5, rencontres: 'x' }, { plan: plans.loup, corps: 1 }), calme = M.apprendre({ a: .3, t: .4, o: .2 }, null, { plan: plans.loup, corps: 1 });
+  const tard = regime(plans.loup, null, 200, { M: { a: .5, t: .8, o: .1, g: .9 }, m: 0, h: 0 }), fou = M.apprendre({ a: .3, t: .4, o: .2, g: .3 }, { blessures: Infinity, tombes: NaN, attaques: -5, rencontres: 'x', distance: 'y' }, { plan: plans.loup, corps: 1 }), calme = M.apprendre({ a: .3, t: .4, o: .2, g: .3 }, null, { plan: plans.loup, corps: 1 });
   verif(M.ecrire(tard.M) === null && JSON.stringify(fou) === JSON.stringify(calme), 'deux cents cycles sans joueurs : la population ne publie plus rien (l\'oubli a une fin) ; des comptes infinis ou qui ne sont pas des nombres ne comptent pas, et n\'effacent rien');
   const avantR = JSON.stringify(M.REGLES); let casse = null;
-  for (const o of [JSON.parse('{"__proto__":{"pollue":1},"constructor":5,"toString":7}'), { attitudes: null }, { attitudes: { alerte: 5 } }, { pas: 'x' }, { traque: { demi_vie: 'dix', inconnue: 3 } }, [1, 2], 'x']) { try { const rendre = M.regler(o); if (JSON.stringify(M.REGLES) !== avantR || M.REGLES.pollue !== undefined) casse = JSON.stringify(o); rendre(); } catch (e) { casse = String(e); } }
-  const rr = M.regler({ traque: { demi_vie: 40 }, attitudes: { alerte: [.2, .8] }, pas: .2 }), prises = M.REGLES.traque.demi_vie === 40 && M.REGLES.attitudes.alerte[0] === .2 && M.REGLES.pas === .2 && M.REGLES.traque.preuve === 6; rr();
+  for (const o of [JSON.parse('{"__proto__":{"pollue":1},"constructor":5,"toString":7}'), { attitudes: null }, { attitudes: { alerte: 5 } }, { pas: 'x' }, { traque: { demi_vie: 'dix', inconnue: 3 } }, { caractere: { combativite: [1, 2] } }, { agressivite: 3 }, [1, 2], 'x']) { try { const rendre = M.regler(o); if (JSON.stringify(M.REGLES) !== avantR || M.REGLES.pollue !== undefined) casse = JSON.stringify(o); rendre(); } catch (e) { casse = String(e); } }
+  const rr = M.regler({ traque: { demi_vie: 40 }, attitudes: { alerte: [.2, .8] }, pas: .2, agressivite: { cout: .5 }, caractere: { habitude: [0, 1] } }), prises = M.REGLES.traque.demi_vie === 40 && M.REGLES.attitudes.alerte[0] === .2 && M.REGLES.pas === .2 && M.REGLES.traque.preuve === 6 && M.REGLES.agressivite.cout === .5 && M.REGLES.caractere.habitude[1] === 1; rr();
   verif(casse === null && prises && JSON.stringify(M.REGLES) === avantR && Object.getPrototypeOf(M.REGLES) === Object.prototype, 'les règles d\'un monde (regles.memoire) : seules celles que la mémoire connaît, et de la bonne forme, sont prises, puis rendues ; le reste (un nom réservé, un mot pour un nombre, une liste de travers) est ignoré sans casser le cycle' + (casse ? ' ; cassé par ' + casse : ''));
   // le journal ne manque pas une bascule qui tombe pile sur le seuil : on cherche le feu qui publie exactement 0,25
-  { const ME = M.preparer({ appetence: Orvane.appetence }), T = { id: 'loup', plan: plans.loup }, une = E => { const p = {}, ev = []; ME.publier(T, 'b', { M: { a: 0, t: 0, o: .3 }, Mp: { a: 0, t: 0, o: .3 } }, p, { rencontres: 10, effarouchements: E }, 0, ev); return [p, ev]; };
+  { const T = { id: 'loup', plan: plans.loup }, une = E => { const p = {}, ev = []; MEb.publier(T, 'b', { M: { a: 0, t: 0, o: .3, g: 0 }, Mp: { a: 0, t: 0, o: .3, g: 0 } }, p, { rencontres: 10, effarouchements: E }, 0, ev); return [p, ev]; };
     let lo = 0, hi = 200, pile = null; for (let i = 0; i < 60 && pile == null; i++) { const E = (lo + hi) / 2, o = une(E)[0].memoire?.neophobie; if (o === .25) pile = E; else if (o > .25) lo = E; else hi = E; }
-    const [p1, e1] = pile == null ? [{}, []] : une(pile), ev2 = [], p2 = {}; if (pile != null) ME.publier(T, 'b', { M: M.lire(p1.memoire), Mp: M.lire(p1.memoire) }, p2, { rencontres: 10, effarouchements: 40 }, 0, ev2);
+    const [p1, e1] = pile == null ? [{}, []] : une(pile), ev2 = [], p2 = {}; if (pile != null) MEb.publier(T, 'b', { M: M.lire(p1.memoire), Mp: M.lire(p1.memoire) }, p2, { rencontres: 10, effarouchements: 40 }, 0, ev2);
     verif(pile != null && e1.filter(e => /ne craignent plus/.test(e.detail)).length === 1 && p2.memoire.neophobie < .25 && !ev2.length, 'une néophobie qui tombe pile sur le seuil (0,25 publié) est notée au journal ce cycle-là, une fois, et pas au suivant'); }
-  const timide = regime(plans.loup, { rencontres: 40, effarouchements: 30 }, 5, undefined, -1.5), hardi = regime(plans.loup, { rencontres: 40, effarouchements: 30 }, 5, undefined, 1.5);
+  const timide = regime(plans.loup, V.feu, 5, undefined, -1.5), hardi = regime(plans.loup, V.feu, 5, undefined, 1.5);
   verif(hardi.o < timide.o - .1, `l'audace, elle, est dans les gènes (docs/8) : au même feu, une population audacieuse s'accoutume plus vite (néophobie ${fx(hardi.o)} en cinq cycles, contre ${fx(timide.o)} chez une timide)`);
+}
+
+console.log('2 bis. Le caractère : les mêmes joueurs, des bêtes différentes');
+{ const car = Object.fromEntries(Object.keys(plans).map(k => [k, M.caractereDe(plans[k])])), cb = k => car[k].combativite;
+  // ce qui fait le caractère
+  const sansCornes = M.caractereDe({ ...plans.bison, corps: {} }).combativite, petitBison = M.caractereDe({ ...plans.bison, masse_kg: 2, sociabilite: 0 }).combativite, volant = M.caractereDe({ ...plans.renard, locomotion: ['vol'] }).combativite;
+  verif(cb('loup') > cb('renard') && cb('renard') > cb('cerf') && cb('cerf') > cb('lievre') && cb('bison') > sansCornes + .1 && cb('bison') > petitBison + .1 && volant < cb('renard') && car.ours.opportunisme > car.loup.opportunisme && car.loup.opportunisme > car.cerf.opportunisme
+    && Object.values(car).every(c => Object.values(c).every(x => x >= 0 && x <= 1)) && M.caractereDe(plans.cerf, 2).hardiesse > car.cerf.hardiesse + .15 && M.caractereDe({}).hardiesse === M.REGLES.caractere.repere,
+    `le caractère se lit sur le corps et le tempérament : combativité du loup ${fx(cb('loup'))}, du renard ${fx(cb('renard'))}, du cerf ${fx(cb('cerf'))}, du lièvre ${fx(cb('lievre'))} ; un bison ${fx(cb('bison'))}, sans ses cornes ${fx(sansCornes)}, de la taille d'un lièvre ${fx(petitBison)} ; qui mange de tout est plus opportuniste (l'ours ${fx(car.ours.opportunisme)}, le cerf ${fx(car.cerf.opportunisme)}) ; une population plus audacieuse que sa lignée est plus hardie`);
+  // le monde d'Orvane : des caractères qui ne se ressemblent pas
+  { const L = lireJ('mondes/orvane/instantane.json').taxons.filter(t => !t.eteint && !['vegetal', 'synthetique'].includes(t.plan.regime)).map(t => M.caractereDe(t.plan)), q = (k, p) => L.map(c => c[k]).sort((x, y) => x - y)[Math.floor(p * (L.length - 1))];
+    const combatives = L.filter(c => c.combativite >= .55).length, fuyardes = L.filter(c => c.combativite < .2).length, farouches = L.filter(c => M.plafondHabitude(c) < M.REGLES.attitudes.familiere).length;
+    verif(['hardiesse', 'combativite', 'opportunisme'].every(k => q(k, .9) - q(k, .1) >= .35) && combatives >= L.length * .1 && fuyardes >= L.length * .15 && farouches >= L.length * .1 && farouches <= L.length * .5,
+      `dans le monde d'Orvane (${L.length} lignées), les caractères s'étalent : du premier au dernier dixième, la hardiesse va de ${fx(q('hardiesse', .1))} à ${fx(q('hardiesse', .9))}, la combativité de ${fx(q('combativite', .1))} à ${fx(q('combativite', .9))}, l'opportunisme de ${fx(q('opportunisme', .1))} à ${fx(q('opportunisme', .9))} ; ${combatives} lignées sont franchement combatives, ${fuyardes} ne savent que fuir, ${farouches} ne deviendront jamais familières`); }
+  // chassées de près, de la même façon
+  verif(R.loup.chasse.g >= M.REGLES.attitudes.seuil && R.bison.chasse.att === 'defensive' && R.loup.chasse.att === 'defensive' && R.cerf.chasse.att === 'fuyante' && R.lievre.chasse.att === 'fuyante' && R.lievre.chasse.g < .15 && R.lievre.chasse.m > R.cerf.chasse.m && R.cerf.chasse.m > R.bison.chasse.m && R.bison.chasse.m > R.loup.chasse.m,
+    `chassées de près par les mêmes joueurs : le lièvre fuit (méfiance ${fx(R.lievre.chasse.m)}, agressivité ${fx(R.lievre.chasse.g)}), le cerf fuit (${fx(R.cerf.chasse.m)} et ${fx(R.cerf.chasse.g)}), le bison et le loup font front (« ${R.bison.chasse.att} » : agressivité ${fx(R.bison.chasse.g)} et ${fx(R.loup.chasse.g)}, méfiance ${fx(R.bison.chasse.m)} et ${fx(R.loup.chasse.m)})`);
+  const peu = regime(plans.loup, { rencontres: 30, prises: 6 }), peuB = regime(plans.bison, { rencontres: 30, prises: 6 });
+  verif(peu.att === 'agressive' && ['agressive', 'defensive'].includes(peuB.att) && peu.m < M.REGLES.attitudes.craintive && peu.m < R.loup.chasse.m - .15, `moins durement chassé (des bêtes prises, aucune blessée), le loup ne craint pas assez pour reculer : « ${peu.att} » (méfiance ${fx(peu.m)} contre ${fx(R.loup.chasse.m)}, agressivité ${fx(peu.g)}), il charge qui l'approche`);
+  // de près, de loin, au piège
+  verif(['loup', 'bison', 'ours'].every(k => R[k].arc.g === 0 && R[k].piege.g === 0 && R[k].chasse.g > .4) && R.loup.arc.att === 'fuyante' && R.loup.arc.m > R.loup.chasse.m,
+    `le même mal, de loin : personne à charger. Le loup chassé à l'arc n'apprend pas à se battre (agressivité ${fx(R.loup.arc.g)} contre ${fx(R.loup.chasse.g)} de près) et fuit davantage (méfiance ${fx(R.loup.arc.m)} contre ${fx(R.loup.chasse.m)}) ; au piège non plus (${fx(R.loup.piege.g)})`);
+  // ce qui marche se renforce, ce qui coûte se défait
+  const vaincue = regime(plans.cerf, { rencontres: 30, prises: 9, attaques: 6 }), blessee = regime(plans.cerf, { rencontres: 30, blessures: 6, attaques: 6 }), gagne = regime(plans.cerf, { rencontres: 30, blessures: 6, attaques: 6, tombes: 3 });
+  verif(gagne.g > blessee.g + .1 && blessee.g > vaincue.g && gagne.att === 'defensive' && vaincue.att === 'fuyante' && R.lievre.front.g > R.lievre.chasse.g + .15,
+    `ce qui marche se renforce : un cerf qui charge et perd ses bêtes reste fuyard (agressivité ${fx(vaincue.g)}) ; blessé sans être pris, ${fx(blessee.g)} ; s'il fait tomber des joueurs, ${fx(gagne.g)}, « ${gagne.att} ». Même un lièvre l'apprend (${fx(R.lievre.chasse.g)} → ${fx(R.lievre.front.g)})`);
+  // nourrie, puis frustrée
+  // (on n'attend pas plus qu'on n'a reçu : mille passants de plus ne frustrent pas davantage)
+  const foule = regime(plans.loup, { rencontres: 2000, nourrissages: 15 });
+  verif(R.loup.nourrie.att === 'quemandeuse' && R.loup.frustree.g > R.loup.nourrie.g + .3 && ['agressive', 'exigeante'].includes(R.loup.frustree.att) && R.cerf.frustree.g < .2 && R.cerf.frustree.att === 'neutre' && foule.g < .1,
+    `nourrie par les uns, croisée par d'autres qui ne donnent rien : la frustration. Le loup, « quémandeuse » tant qu'on le nourrit à chaque rencontre (agressivité ${fx(R.loup.nourrie.g)}), devient « ${R.loup.frustree.att} » (${fx(R.loup.frustree.g)}) ; le cerf, non (${fx(R.cerf.frustree.g)}) ; et quinze nourrissages perdus parmi deux mille rencontres ne frustrent personne (${fx(foule.g)})`);
+  // une population agressive change moins le danger en peur
+  const sang = MEb.mefiance(plans.loup, 0, 0, { rencontres: 30, danger: 6, aide: 0 }, null, 0, .8)[0], peur = MEb.mefiance(plans.loup, 0, 0, { rencontres: 30, danger: 6, aide: 0 }, null, 0, 0)[0], nue = Orvane.apprendre(0, 0, { rencontres: 30, danger: 6, aide: 0 }, 0)[0], craintif = MEb.mefiance(plans.lievre, 0, 0, { rencontres: 30, danger: 6, aide: 0 }, null, 0, 0)[0];
+  verif(sang < peur - .03 && peur < nue && nue < craintif, `la méfiance (docs/12) se prend au caractère de la lignée : le même danger fait ${fx(craintif)} de méfiance en une nuit chez le lièvre, ${fx(peur)} chez le loup (${fx(nue)} sans caractère), et ${fx(sang)} chez des loups déjà agressifs : qui rend les coups a moins peur`);
+  // ce qui ne doit rien casser : un plan mal formé, des règles de travers, des comptes démesurés
+  { const tordus = [null, 5, {}, { corps: { organes: 5 } }, { corps: { organes: {} } }, { corps: { organes: [null, { type: 'toString', taille: .5 }, { type: 'constructor' }, { type: 'cornes', taille: 'x' }, { type: {} }] } }, { sociabilite: 'x', masse_kg: -3, temperament: NaN }, { masse_kg: Infinity, sociabilite: Infinity }, { locomotion: 'vol', regime: 7 }];
+    const entre = c => c && ['hardiesse', 'combativite', 'opportunisme'].every(k => Number.isFinite(c[k]) && c[k] >= 0 && c[k] <= 1); let casse = null;
+    for (const p of tordus) { try { if (!entre(M.caractereDe(p)) || !Number.isFinite(M.audaceDe(p, NaN)) || !Number.isFinite(M.plafondHabitude(M.caractereDe(p)))) casse = JSON.stringify(p); } catch (e) { casse = JSON.stringify(p) + ' : ' + e.message; } }
+    for (const o of [{ caractere: { leger_kg: 0 } }, { caractere: { ecart: 0 } }, { joueur_kg: -1 }, { caractere: { leger_kg: 70, repere: .65, ecart: 0 } }, { agressivite: { part: 0, issue: 0, preuve: 0 } }, { traque: { meute: -5 } }]) { const rendre = M.regler(o);
+      try { const c = M.caractereDe(plans.loup, 1), s = M.apprendre({ a: .3, t: .4, o: .2, g: .5 }, V.front, { plan: plans.loup, corps: 1 }), mh = MEb.mefiance(plans.loup, .3, .4, { rencontres: 30, danger: 6, aide: 0 }, V.front, 0, .5);
+        if (!entre(c) || !ETAT.every(k => Number.isFinite(s[k]) && s[k] >= 0 && s[k] <= 1) || !mh.every(x => Number.isFinite(x) && x >= 0 && x <= 1)) casse = JSON.stringify(o); } catch (e) { casse = JSON.stringify(o) + ' : ' + e.message; } rendre(); }
+    const avant = { a: .3, t: .4, o: .2, g: .5 }, enorme = M.apprendre(avant, { rencontres: 30, prises: 1e308, blessures: 1e308, tombes: 1e308, attaques: 1e308, nourrissages: 1e308, pillages: 1e308, effarouchements: 1e308 }, { plan: plans.loup, corps: 1 });
+    const mhE = MEb.mefiance(plans.loup, .3, .4, { rencontres: 1e308, danger: 1e308, aide: 1e308 }, { blessures: 1e308 }, 0, .5);
+    verif(casse === null && ETAT.every(k => Number.isFinite(enorme[k]) && Math.abs(enorme[k] - avant[k]) <= M.REGLES.pas + 1e-9) && mhE.every(Number.isFinite) && M.caractereDe({ ...plans.bison, corps: { organes: [{ type: 'toString', taille: 1 }] } }).combativite === M.caractereDe({ ...plans.bison, corps: {} }).combativite,
+      'rien ne casse le cycle ni ne publie un nombre qui n\'en est pas un : un plan mal formé (des organes qui ne sont pas une liste, un organe au nom réservé, une sociabilité qui est un mot, une masse infinie), des règles de travers (une masse légère nulle, un écart nul, un joueur de masse négative), des comptes démesurés (ils n\'effacent rien)' + (casse ? ' ; cassé par ' + casse : '')); }
+  // l'habituation rejoint son plafond sans saut ; la masse seule ne fait pas une « défensive » ; le corps l'emporte sur le pas
+  { const [, h1] = MEb.mefiance(plans.lievre, 0, .9, null, null, 0, 0); let h = .9, n = 0; while (h > M.plafondHabitude(car.lievre) + 1e-9 && n < 20) { h = MEb.mefiance(plans.lievre, 0, h, null, null, 0, 0)[1]; n++; }
+    const p = {}; MEb.publier({ id: 'cerf', plan: plans.cerf }, 'b', { M: { a: 0, t: .8, o: .5, g: 0 }, Mp: { a: 0, t: .8, o: .5, g: 0 } }, p, null, 0, []);
+    verif(h1 < .9 && h1 >= .9 - M.REGLES.pas - 1e-9 && n >= 2 && n <= 4 && Math.abs(h - M.plafondHabitude(car.lievre)) < 1e-9 && M.attitude({ mefiance: .8 }, plans.bison) === 'fuyante' && R.bison.arc.att === 'fuyante' && !p.memoire?.traque && p.attitude !== 'traqueuse',
+      `une habituation au-dessus du plafond de sa lignée (le jour de l'éveil, une lignée fille plus craintive) le rejoint sans saut : 0,9 → ${fx(h1)} en une nuit, ${fx(h)} en ${n} ; un bison de six cents kilos tiré de loin fuit (« ${R.bison.arc.att} » : sa masse seule ne fait plus une « défensive ») ; une lignée devenue herbivore ne publie pas la traque héritée, même une nuit`); }
+  // l'individu : une bête n'est pas sa population
+  const troupeau = { mefiance: .7, memoire: { agressivite: .3 } }, hardie = M.individu(troupeau, 1.5, plans.cerf), moyenne = M.individu(troupeau, 0, plans.cerf), craintive = M.individu(troupeau, -1.5, plans.cerf), parts = M.partage(troupeau, plans.cerf), somme = Object.values(parts).reduce((s, x) => s + x, 0);
+  const rien = M.individu({}, 2, plans.cerf), vierge = M.partage({}, plans.cerf), etroit = M.partage(troupeau, plans.cerf, .01);
+  verif(hardie.memoire.agressivite > .4 && hardie.mefiance < moyenne.mefiance && craintive.mefiance > moyenne.mefiance && Math.abs(moyenne.mefiance - .7) < 1e-4 && Math.abs(moyenne.memoire.agressivite - .3) < 1e-4 && craintive.attitude === 'fuyante' && ['defensive', 'agressive'].includes(hardie.attitude)
+    && Math.abs(somme - 1) < .01 && parts.fuyante > .5 && (parts.defensive || 0) + (parts.agressive || 0) > .1 && Object.keys(rien.memoire || {}).join() === 'neophobie' && rien.memoire.neophobie < .5 && !rien.mefiance && vierge[''] === 1 && etroit.fuyante === 1,
+    `une bête n'est pas sa population : dans un troupeau qui fuit (méfiance 0,7, agressivité 0,3), la plus hardie fait front (agressivité ${fx(hardie.memoire.agressivite)}, « ${hardie.attitude} »), la plus craintive fuit de plus loin (méfiance ${fx(craintive.mefiance)}) ; sur cent bêtes, ${fx(parts.fuyante * 100, 0)} fuient et ${fx(((parts.defensive || 0) + (parts.agressive || 0)) * 100, 0)} font front. Une population qui n'a rien appris n'a que des bêtes sans histoire (la plus hardie craint seulement moins le feu : néophobie ${fx(rien.memoire?.neophobie)}), et une population sans variance, que des bêtes pareilles`);
 }
 
 console.log('3. Le tampon');
 { const t = 'traqueur', b = 'prairie', P = (lots, X = W0) => Tampon.agreger(lots, X, profil), V = r => r.pressions.taxons?.[t]?.[b]?.vecu;
   const riche = [[t, b, 'rencontre', 30], [t, b, 'attaque', 8], [t, b, 'joueur_tombe', 5], [t, b, 'pillage', 30], [t, b, 'blessure', 4, 'piege'], [t, b, 'prelevement', 3, 'feu'], [t, b, 'capture', 2, 'piege'], [t, b, 'nourrissage', 5], [t, b, 'effarouchement', 12, 'laser']];
   const r = P([lot('a', riche)]), v = V(r);
-  verif(v && v.rencontres === 30 && v.attaques === 8 && v.blessures === 4 && v.nourrissages === 5 && v.tombes === Tampon.VECU.tombes && v.pillages === Tampon.VECU.pillages && v.comptes === 1 && v.jeux === 1,
-    `ce qu'une population a vécu d'un compte, compté tel quel ; mais pas des joueurs tombés ni des pillages par dizaines : ${Tampon.VECU.tombes} et ${Tampon.VECU.pillages} au plus par population et par cycle (5 et 30 déclarés)`);
-  verif(v && v.dispositif === 4 + 3 + 1 && v.prises === 3 + 1 && v.effarouchements === 12 && r.rejetes.evenements === 0,
-    'le moyen : une blessure, une prise au piège ou par le feu comptent au dispositif (une capture pour moitié) ; un moyen inconnu est ignoré, l\'événement gardé');
+  verif(v && v.rencontres === 30 && v.attaques === 8 && v.blessures === Tampon.VECU.blessures && v.nourrissages === 5 && v.tombes === Tampon.VECU.tombes && v.pillages === Tampon.VECU.pillages && v.comptes === 1 && v.jeux === 1,
+    `ce qu'une population a vécu d'un compte, compté tel quel ; mais pas des joueurs tombés, des pillages ni des bêtes blessées par dizaines : ${Tampon.VECU.tombes}, ${Tampon.VECU.pillages} et ${Tampon.VECU.blessures} au plus par population et par cycle (5, 30 et 4 déclarés)`);
+  verif(v && v.dispositif === 7 && v.prises === 3 + 1 && v.effarouchements === 12 && r.rejetes.evenements === 0,
+    'le moyen : une blessure, une prise au piège ou par le feu comptent au dispositif (une capture pour moitié), à proportion de ce que le plafond garde ; un moyen inconnu est ignoré, l\'événement gardé');
+  // les plafonds par compte : ce qu'un compte seul ne doit pas pouvoir déclarer par dizaines ; et de loin
+  const gave = V(P([lot('a', [[t, b, 'rencontre', 30], [t, b, 'prelevement', 40, 'distance'], [t, b, 'blessure', 40, 'distance'], [t, b, 'nourrissage', 60]])])), mixte = V(P([lot('a', [[t, b, 'rencontre', 30], [t, b, 'prelevement', 2, 'distance'], [t, b, 'prelevement', 2, 'melee'], [t, b, 'blessure', 1, 'piege']])]));
+  verif(gave.prises <= Tampon.VECU.prises && gave.blessures <= Tampon.VECU.blessures && gave.nourrissages <= Tampon.VECU.nourrissages && Math.abs(gave.distance - (gave.prises + gave.blessures)) < .01 && mixte.distance === 2 && mixte.dispositif === 1 && mixte.prises === 4,
+    `par compte, par population et par cycle : au plus ${Tampon.VECU.prises} bêtes prises, ${Tampon.VECU.blessures} blessées et ${Tampon.VECU.nourrissages} nourrissages comptent pour la mémoire (40, 40 et 60 déclarés : ${fx(gave.prises)}, ${fx(gave.blessures)} et ${fx(gave.nourrissages)} retenus) ; le mal fait à distance est compté à part (${fx(mixte.distance)} sur 5), celui d'un dispositif aussi`);
   const actif = V(P([lot('a', riche.map(e => [e[0], e[1], e[2], e[3] * 10, e[4]]))])), somme = actif.prises + actif.blessures + actif.effarouchements + actif.nourrissages + actif.pillages + actif.attaques + actif.tombes;
   verif(Math.max(actif.rencontres, somme) <= profil.influence.exposition_ref + .1 && Math.abs(actif.attaques / actif.rencontres - 8 / 30) < .01, `un compte dix fois plus actif est ramené à une activité normale sur tous ses contacts (${fx(Math.max(actif.rencontres, somme), 0)} pour ${profil.influence.exposition_ref}), ses proportions gardées`);
   const fou = V(P([lot('a', [[t, b, 'attaque', 9000], [t, b, 'joueur_tombe', 9000]])]));
@@ -153,20 +223,32 @@ console.log('3. Le tampon');
 }
 
 console.log('4. L\'abus');
-{ const t = 'traqueur', b = 'prairie', tr = X => Pop(X, t, b)?.memoire?.traque || 0, ne = X => Pop(X, t, b)?.memoire?.neophobie ?? .5, at = X => Pop(X, t, b)?.attitude || 'neutre';
+{ const t = 'traqueur', b = 'prairie', tr = X => Pop(X, t, b)?.memoire?.traque || 0, ag = X => Pop(X, t, b)?.memoire?.agressivite || 0, ne = X => Pop(X, t, b)?.memoire?.neophobie ?? .5, at = X => Pop(X, t, b)?.attitude || 'neutre';
   const paisibles = Array.from({ length: 10 }, (_, i) => lot('p' + i, [[t, b, 'rencontre', 30]])), defenseurs = Array.from({ length: 10 }, (_, i) => lot('h' + i, [[t, b, 'rencontre', 20], [t, b, 'prelevement', .3, 'melee'], [t, b, 'blessure', 2, 'melee'], [t, b, 'attaque', 2]]));
   const tombes = n => Array.from({ length: n }, (_, i) => lot('m' + i, [[t, b, 'joueur_tombe', 500], [t, b, 'pillage', 500]])), feu = lot('f', [[t, b, 'effarouchement', 60, 'feu']]);
   // un compte seul, face à dix joueurs paisibles
   const seul = jouer(W0, 20, () => [...paisibles, ...tombes(1)]).X, feu5 = jouer(W0, 5, () => [...paisibles, feu]).X;
   // (le même faux compte, inscrit sous un jeu à lui : il ne fait pas raboter le jeu des dix passants, et ne pèse pas plus)
   const sousUnJeu = jouer(W0, 20, () => [...paisibles, ...tombes(1).map(l => ({ ...l, source: { ...l.source, jeu: 'jeu-fantome' } }))]).X;
-  verif(tr(seul) < .3 && at(seul) !== 'traqueuse' && ne(feu5) > .3, `un compte seul ne fait pas une traqueuse : dix joueurs paisibles et un compte qui déclare 500 joueurs tombés par nuit, vingt cycles, traque ${fx(tr(seul))}, « ${at(seul)} » ; un seul compte à son feu soixante fois par nuit n'accoutume pas la population en cinq nuits (néophobie ${fx(ne(feu5))})`);
+  verif(tr(seul) < .3 && at(seul) !== 'traqueuse' && ag(seul) < M.REGLES.attitudes.seuil - .05 && ne(feu5) > M.REGLES.attitudes.alerte[0], `un compte seul ne fait pas une traqueuse : dix joueurs paisibles et un compte qui déclare 500 joueurs tombés par nuit, vingt cycles, traque ${fx(tr(seul))}, agressivité ${fx(ag(seul))}, « ${at(seul)} » ; un seul compte à son feu soixante fois par nuit n'accoutume pas la population en cinq nuits (néophobie ${fx(ne(feu5))})`);
   verif(Math.abs(tr(sousUnJeu) - tr(seul)) < 1e-9 && at(sousUnJeu) === at(seul), `inscrit sous un jeu à lui, ce faux compte ne pèse pas plus (traque ${fx(tr(sousUnJeu))}) : un jeu fantôme ne fait pas raboter le jeu des autres`);
   // combien il en faut : les faux comptes valent autant de joueurs malchanceux au possible, pas davantage
   let seuil = null; for (let n = 1; n <= 10 && seuil == null; n++) if (at(jouer(W0, 20, () => [...paisibles, ...tombes(n)]).X) === 'traqueuse') seuil = n;
   verif(seuil >= 3, `face à dix joueurs qui ne font que passer, il faut ${seuil ?? 'plus de dix'} comptes qui déclarent chacun le plus de joueurs tombés possible, chaque nuit, pour faire une traqueuse : une minorité décidée y arrive, comme autant de vrais joueurs qui se laisseraient prendre`);
   const sain = jouer(W0, 20, () => defenseurs).X, cinq = jouer(W0, 20, () => [...defenseurs, ...tombes(5)]).X;
-  verif(tr(sain) < .05 && at(sain) === 'fuyante' && tr(cinq) < M.REGLES.attitudes.seuil && at(cinq) === 'fuyante', `mais dès que les autres se défendent, non : dix comptes qui blessent et prennent des bêtes (« ${at(sain)} », traque ${fx(tr(sain))}), plus cinq faux comptes : traque ${fx(tr(cinq))}, toujours « ${at(cinq)} »`);
+  verif(tr(sain) < .05 && at(sain) !== 'traqueuse' && tr(cinq) < M.REGLES.attitudes.seuil && at(cinq) !== 'traqueuse', `mais dès que les autres se défendent, non : dix comptes qui blessent et prennent des bêtes (« ${at(sain)} », traque ${fx(tr(sain))}), plus cinq faux comptes : traque ${fx(tr(cinq))}, toujours « ${at(cinq)} »`);
+  // un compte seul qui déclare tout ce qu'il peut, soixante de chaque : des bêtes prises et blessées de près, des joueurs tombés,
+  // des pillages, des nourrissages, des assauts ; puis par la seule voie de la nourriture
+  const tout = n => Array.from({ length: n }, (_, i) => lot('m' + i, [[t, b, 'prelevement', 60, 'melee'], [t, b, 'blessure', 60, 'melee'], [t, b, 'joueur_tombe', 60], [t, b, 'pillage', 60], [t, b, 'nourrissage', 60], [t, b, 'attaque', 60]]));
+  const nourri = n => Array.from({ length: n }, (_, i) => lot('m' + i, [[t, b, 'nourrissage', 60], [t, b, 'pillage', 60], [t, b, 'joueur_tombe', 60]])), front = X => ['agressive', 'defensive', 'exigeante'].includes(at(X));
+  const m1 = jouer(W0, 20, () => [...paisibles, ...tout(1)]).X, n1 = jouer(W0, 20, () => [...paisibles, ...nourri(1)]).X, b1 = jouer(W0, 20, () => [...paisibles, lot('m', [[t, b, 'blessure', 60, 'melee']])]).X, n2 = jouer(W0, 20, () => [...paisibles, ...nourri(2)]).X, m3 = jouer(W0, 20, () => [...paisibles, ...tout(3)]).X;
+  verif(ag(m1) < .25 && !front(m1) && ag(n1) < .25 && !front(n1) && at(n1) !== 'quemandeuse' && ag(b1) < .25 && !front(b1) && ag(n2) < M.REGLES.attitudes.seuil && ag(m3) > ag(m1) + .15,
+    `un compte seul qui déclare tout ce qu'il peut, soixante de chaque, vingt cycles, face aux dix paisibles : agressivité ${fx(ag(m1))} ; par la seule voie de la nourriture (nourrissages, pillages, joueurs tombés) : ${fx(ag(n1))} ; soixante blessures de près : ${fx(ag(b1))}. À deux par la nourriture : ${fx(ag(n2))}, toujours sous le seuil ; à trois qui déclarent tout : ${fx(ag(m3))}`);
+  // l'agressivité : un compte qui déclare des assauts par dizaines et des joueurs tombés, face à dix joueurs paisibles
+  const charges = n => Array.from({ length: n }, (_, i) => lot('c' + i, [[t, b, 'attaque', 500], [t, b, 'joueur_tombe', 500]])), un = jouer(W0, 20, () => [...paisibles, ...charges(1)]).X;
+  let seuilG = null; for (let n = 2; n <= 10 && seuilG == null; n++) if (ag(jouer(W0, 20, () => [...paisibles, ...charges(n)]).X) >= M.REGLES.attitudes.seuil) seuilG = n;
+  verif(ag(un) < M.REGLES.attitudes.seuil && !['agressive', 'defensive', 'exigeante'].includes(at(un)) && seuilG >= 3,
+    `un compte seul ne fait pas non plus une agressive : 500 assauts et 500 joueurs tombés déclarés chaque nuit, vingt cycles, face à dix joueurs paisibles : agressivité ${fx(ag(un))}, « ${at(un)} » ; il en faut ${seuilG ?? 'plus de dix'} pour y arriver (et ce traqueur est une des lignées les plus combatives)`);
   const nuit = jouer(W0, 1, () => [...paisibles, ...tombes(200)]).X;
   verif(tr(nuit) <= M.REGLES.pas + 1e-9 && (Pop(nuit, t, b).memoire?.attrait || 0) <= M.REGLES.pas + 1e-9, `deux cents faux comptes en une nuit : la traque ne dépasse pas ${M.REGLES.pas} (${fx(tr(nuit))}) ; tout retombe quand ils s'en vont`);
   const avec = jouer(W0, 3, () => [...defenseurs, ...tombes(200)]), sansF = jouer(W0, 3, () => defenseurs);
@@ -231,13 +313,14 @@ console.log('6. Deux styles de jeu, deux faunes');
   const chasseurs = () => ['a', 'b', 'c'].map(c => lot(c, [[pred, bp, 'rencontre', 30], [pred, bp, 'attaque', 3], [pred, bp, 'blessure', 3, 'melee'], [pred, bp, 'prelevement', 2, 'melee'], [pred, bp, 'effarouchement', 20, 'feu'], [proie, bq, 'rencontre', 30], [proie, bq, 'prelevement', 4, 'distance'], [proie, bq, 'blessure', 2, 'distance']]));
   const A = jouer(W0, 15, terres).X, B = jouer(W0, 15, chasseurs).X, pa = Pop(A, pred, bp), pb = Pop(B, pred, bp), qa = Pop(A, proie, bq), qb = Pop(B, proie, bq);
   const fuite = p => 2.2 ** (p.mefiance || 0) * .5 ** (p.habituation || 0);   // la distance de fuite, au profil de Stone Valley (docs/12)
-  verif(pa.attitude === 'traqueuse' && pb.attitude === 'fuyante' && (pa.memoire?.traque || 0) > (pb.memoire?.traque || 0) + .3,
-    `le prédateur (${pred}, ${bp}) : chez ceux qui se terrent, « ${pa.attitude} » (traque ${fx(pa.memoire?.traque || 0)}, néophobie ${fx(pa.memoire?.neophobie ?? .5)}) ; chez ceux qui chassent, « ${pb.attitude} » (traque ${fx(pb.memoire?.traque || 0)}, néophobie ${fx(pb.memoire?.neophobie ?? .5)})`);
+  verif(pa.attitude === 'traqueuse' && ['agressive', 'defensive'].includes(pb.attitude) && (pa.memoire?.traque || 0) > (pb.memoire?.traque || 0) + .3 && (pb.mefiance || 0) > (pa.mefiance || 0) + .2,
+    `le prédateur (${pred}, ${bp}), hardi et combatif : chez ceux qui se terrent, « ${pa.attitude} » (traque ${fx(pa.memoire?.traque || 0)}, néophobie ${fx(pa.memoire?.neophobie ?? .5)}) ; chez ceux qui chassent, il ne traque plus personne mais fait front, « ${pb.attitude} » (traque ${fx(pb.memoire?.traque || 0)}, agressivité ${fx(pb.memoire?.agressivite || 0)}, méfiance ${fx(pb.mefiance || 0)})`);
   verif((pa.memoire?.neophobie ?? .5) < .2 && (pb.memoire?.neophobie ?? .5) > .35, 'le même feu, vingt fois par nuit : il ne tient plus les bêtes de ceux qui se terrent, il tient encore celles de ceux qui chassent');
-  verif(qa.attitude === 'quemandeuse' && qb.attitude === 'fuyante' && fuite(qb) / fuite(qa) >= 2.5,
-    `la proie (${proie}, ${bq}) : nourrie, « ${qa.attitude} » (attrait ${fx(qa.memoire?.attrait || 0)}) ; chassée, « ${qb.attitude} » ; elle fuit de ${fx(fuite(qb) / fuite(qa), 1)} fois plus loin`);
+  verif(!qa.attitude && (qa.memoire?.attrait || 0) < .2 && qb.attitude === 'fuyante' && !(qb.memoire?.agressivite > .1) && fuite(qb) / fuite(qa) >= 2,
+    `la proie (${proie}, ${bq}), la plus craintive des lignées : nourrie, elle ne s'attache pas (attrait ${fx(qa.memoire?.attrait || 0)}, rien de marqué) ; chassée, « ${qb.attitude} », sans jamais faire front ; elle fuit de ${fx(fuite(qb) / fuite(qa), 1)} fois plus loin`);
   const ev = []; { let X = W0, te = {}; for (let k = 0; k < 8; k++) { const r = Tampon.agreger(terres(), X, profil, te); te = r.etat; X = Orvane.cycle(X, r.pressions); ev.push(...X.evenements.filter(e => e.type === 'memoire').map(e => `cycle ${X.cycle.n} : ${e.detail}`)); } }
-  verif(ev.some(e => /proie/.test(e)) && ev.some(e => /nourriture/.test(e)) && ev.some(e => /ne craignent plus le feu/.test(e)), `le journal le dit, une fois par bascule (${ev.length} événements « memoire » en huit cycles) : « ${ev.find(e => /proie/.test(e))} »`);
+  const evB = []; { let X = W0, te = {}; for (let k = 0; k < 8; k++) { const r = Tampon.agreger(chasseurs(), X, profil, te); te = r.etat; X = Orvane.cycle(X, r.pressions); evB.push(...X.evenements.filter(e => e.type === 'memoire').map(e => `cycle ${X.cycle.n} : ${e.detail}`)); } }
+  verif(ev.some(e => /proie/.test(e)) && ev.some(e => /ne craignent plus le feu/.test(e)) && evB.some(e => /font front/.test(e)) && evB.filter(e => /font front/.test(e)).length <= 2, `le journal le dit, une fois par bascule (${ev.length} événements « memoire » en huit cycles chez les uns, ${evB.length} chez les autres) : « ${ev.find(e => /proie/.test(e))} » ; « ${evB.find(e => /font front/.test(e))} »`);
 }
 
 console.log('7. Le contrat, les listes d\'actions, le cycle de nuit');
