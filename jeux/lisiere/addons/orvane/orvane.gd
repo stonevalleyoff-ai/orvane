@@ -14,7 +14,9 @@
 #   Orvane.compter("dunvi", "savane", "attaque")        # la mémoire (docs/50) : blessure, effarouchement, pillage, attaque,
 #                                                        # joueur_tombe ; comptées seulement si le monde lu la tient (memoire_eveillee)
 #   var d = Orvane.dispositions("dunvi", "savane")      # ce que cette population a appris des joueurs : { mefiance, habituation,
-#                                                        # attrait, traque, neophobie, attitude } (absente : sa valeur neutre)
+#                                                        # attrait, traque, neophobie, agressivite, attitude } (absente : neutre)
+#   var moi = Orvane.individu(d, randfn(0.0, 1.0))      # … et ce qu'en a retenu une de ses bêtes : plus hardie, elle ose plus
+#   var c = Orvane.caractere("dunvi")                   # le caractère de la lignée : { hardiesse, combativite, opportunisme }
 #   Orvane.clore(compte_opaque)                          # à un moment naturel : une sauvegarde, une fin de partie
 #   Orvane.deposer(compte_opaque)                        # dépose le prochain lot ; un lot refusé reste en attente
 #
@@ -38,7 +40,7 @@ const ACTIONS_MEMOIRE := ["blessure", "effarouchement", "pillage", "attaque", "j
 const MOYENS := ["melee", "distance", "piege", "feu", "lumiere", "bruit"]
 # ce que vaut une disposition qu'une population ne porte pas (la néophobie est neutre au milieu : en dessous, la bête s'est
 # accoutumée aux choses des joueurs ; au-dessus, elle les craint)
-const DISPOSITIONS_NEUTRES := {"mefiance": 0.0, "habituation": 0.0, "attrait": 0.0, "traque": 0.0, "neophobie": 0.5, "attitude": ""}
+const DISPOSITIONS_NEUTRES := {"mefiance": 0.0, "habituation": 0.0, "attrait": 0.0, "traque": 0.0, "neophobie": 0.5, "agressivite": 0.0, "attitude": ""}
 
 @export var monde_url := "https://stonevalleyoff-ai.github.io/orvane/mondes/orvane/"
 @export var supabase_url := "https://rospodujiyltmxitykwc.supabase.co"
@@ -347,8 +349,8 @@ func memoire_eveillee(inst: Dictionary = {}) -> bool:
 	return typeof(m["memoire"]) != TYPE_NIL and not (typeof(m["memoire"]) == TYPE_BOOL and not m["memoire"])
 
 
-# les dispositions d'une lignée dans un biome : { mefiance, habituation, attrait, traque, neophobie (de 0 à 1), attitude (un mot,
-# "" si neutre) }. lignee : la lignée (un taxon de l'instantané) ou son identifiant. Une disposition absente, une lignée ou un
+# les dispositions d'une lignée dans un biome : { mefiance, habituation, attrait, traque, neophobie, agressivite (de 0 à 1),
+# attitude (un mot, "" si neutre) }. lignee : la lignée (un taxon de l'instantané) ou son identifiant. Une disposition absente, une lignée ou un
 # lieu inconnus : les valeurs neutres. Plusieurs populations dans le biome (des parcelles) : leur moyenne, pesée par l'effectif.
 func dispositions(lignee, biome: String) -> Dictionary:
 	var t = lignee
@@ -395,6 +397,48 @@ func dispositions_de(population: Dictionary) -> Dictionary:
 		elif typeof(m) == TYPE_DICTIONARY:
 			d[k] = clampf(_nombre(m.get(k), d[k]), 0.0, 1.0)
 	return d
+
+
+# une bête n'est pas sa population : les dispositions d'une bête dont l'audace s'écarte de « ecart » écarts-types de celle de sa
+# population (ecart > 0 : plus hardie). À tirer une fois par bête, d'une loi normale : randfn(0.0, 1.0). Plus hardie, elle craint
+# moins (mefiance, neophobie) et ose plus (habituation, attrait, traque, agressivite). Chaque disposition est déplacée en logit,
+# de ce que dit le monde (catalogue.memoire.individu.ecart ; 0,7 sinon) : une disposition nulle le reste, rien d'appris, rien à
+# déplacer. Dans un troupeau qui fuit, la plus hardie peut ainsi faire front. Le mot « attitude » reste celui de la population.
+func individu(d: Dictionary, ecart: float) -> Dictionary:
+	var pas := 0.7
+	var c = instantane.get("catalogue", {})
+	if typeof(c) == TYPE_DICTIONARY and typeof(c.get("memoire")) == TYPE_DICTIONARY and typeof(c["memoire"].get("individu")) == TYPE_DICTIONARY:
+		pas = _nombre(c["memoire"]["individu"].get("ecart"), pas)
+	var k := pas * clampf(ecart, -3.0, 3.0)
+	var o: Dictionary = DISPOSITIONS_NEUTRES.duplicate()
+	for cle in o:
+		if cle == "attitude":
+			o[cle] = str(d.get(cle, ""))
+			continue
+		var x := clampf(_nombre(d.get(cle), float(DISPOSITIONS_NEUTRES[cle])), 0.0, 1.0)
+		var sens := -1.0 if (cle == "mefiance" or cle == "neophobie") else 1.0
+		o[cle] = x if (x <= 0.0 or x >= 1.0) else 1.0 / (1.0 + exp(-(log(x / (1.0 - x)) + sens * k)))
+	return o
+
+
+# le caractère d'une lignée : { hardiesse, combativite, opportunisme }, de 0 à 1 — ce qu'elle est avant d'avoir rien appris des
+# joueurs, lu par le monde sur son corps et son tempérament (taxons[].caractere, dans un monde à la mémoire éveillée). Craintive
+# ou hardie, fuyarde ou combative, difficile ou opportuniste : deux lignées ne tirent pas la même leçon des mêmes joueurs.
+# lignee : la lignée (un taxon de l'instantané) ou son identifiant. Un monde sans mémoire, une lignée inconnue : {}.
+func caractere(lignee) -> Dictionary:
+	var t = lignee
+	if typeof(t) == TYPE_STRING or typeof(t) == TYPE_STRING_NAME:
+		t = null
+		for x in instantane.get("taxons", []):
+			if typeof(x) == TYPE_DICTIONARY and str(x.get("id", "")) == str(lignee):
+				t = x
+				break
+	var o := {}
+	if typeof(t) != TYPE_DICTIONARY or typeof(t.get("caractere")) != TYPE_DICTIONARY:
+		return o
+	for k in t["caractere"]:
+		o[str(k)] = clampf(_nombre(t["caractere"][k], 0.0), 0.0, 1.0)
+	return o
 
 
 func _nombre(x, defaut: float) -> float:
