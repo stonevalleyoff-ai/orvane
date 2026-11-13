@@ -425,7 +425,7 @@ export interface Instantane {
         [cle: string]: unknown;
       };
     };
-    /** (docs/50) Ce que la mémoire publie : ses dispositions (dispositions : pour chacune son nom, sa valeur neutre — celle d'une population qui ne la publie pas —, ce qu'un jeu en montre, son présage) et les attitudes (attitudes : pour chacune son nom, et quand une population la prend). */
+    /** (docs/50) Ce que la mémoire publie : ses dispositions (dispositions : pour chacune son nom, sa valeur neutre — celle d'une population qui ne la publie pas —, ce qu'un jeu en montre, son présage), les attitudes (attitudes : pour chacune son nom, et quand une population la prend), les trois traits du caractère d'une lignée (caractere : pour chacun son nom, le mot de chaque bout, ce qu'il change ; lus dans taxons[].caractere), et ce qui sépare une bête de sa population (individu.ecart : ce qu'un écart-type d'audace déplace chaque disposition, en logit). */
     memoire?: {
       dispositions?: {
         [cle: string]: {
@@ -436,6 +436,14 @@ export interface Instantane {
         [cle: string]: {
           [cle: string]: unknown;
         };
+      };
+      caractere?: {
+        [cle: string]: {
+          [cle: string]: unknown;
+        };
+      };
+      individu?: {
+        ecart?: number;
       };
     };
     /** Les traits des plantes (docs/17) : toxique, epineux. */
@@ -582,6 +590,10 @@ export interface Instantane {
     apparu: number;
     /** Cycle d'extinction, sinon null. Un taxon éteint reste listé 10 cycles. */
     eteint?: number | null;
+    /** (docs/50) Dans un monde à la mémoire éveillée, le caractère de la lignée : ce qu'elle est avant d'avoir rien appris des joueurs, lu sur son corps et son tempérament. Trois traits de 0 à 1 (catalogue.memoire.caractere) — hardiesse : craintive ou hardie (elle apprend la peur vite ou lentement, s'habitue peu ou beaucoup) ; combativite : fuyarde ou combative (ce qu'elle fait du mal qu'on lui fait : fuir, ou faire front) ; opportunisme : difficile ou opportuniste (ce que la nourriture des joueurs l'attache). Deux lignées ne tirent pas la même leçon des mêmes joueurs. Absent : un monde sans mémoire, une plante, une machine. */
+    caractere?: {
+      [cle: string]: number;
+    };
     statut: "croissance" | "stable" | "declin" | "menace" | "eteint";
     /** Le plan corporel de base, commun à tous les phénotypes. */
     plan: {
@@ -777,11 +789,11 @@ export interface Instantane {
       mefiance?: number;
       /** L'habituation, nourrie des rencontres sans suite et de l'aide (nourrissage, libération), défaite par ce qui finit mal, retombe de moitié en 15 cycles. Absente : 0. */
       habituation?: number;
-      /** (docs/50) Ce que la population a appris d'autre des joueurs, dans un monde à la mémoire éveillée : pour chaque disposition (catalogue.memoire.dispositions), sa valeur de 0 à 1. attrait : le joueur et son camp valent de la nourriture ; traque : le joueur est une proie ; neophobie : la peur du feu, de la lumière, des pièges. Une disposition absente vaut sa valeur neutre : 0, et 0,5 pour la néophobie. */
+      /** (docs/50) Ce que la population a appris d'autre des joueurs, dans un monde à la mémoire éveillée : pour chaque disposition (catalogue.memoire.dispositions), sa valeur de 0 à 1. attrait : le joueur et son camp valent de la nourriture ; traque : le joueur est une proie ; neophobie : la peur du feu, de la lumière, des pièges ; agressivite : face au joueur, elle fait front au lieu de fuir. Une disposition absente vaut sa valeur neutre : 0, et 0,5 pour la néophobie. C'est la moyenne de la population : une bête s'en écarte selon sa propre audace (catalogue.memoire.individu). */
       memoire?: {
         [cle: string]: number;
       };
-      /** (docs/50) Le mot qui résume la population face aux joueurs (catalogue.memoire.attitudes) : traqueuse, rodeuse, quemandeuse, defensive, fuyante, familiere. Absente : rien de marqué. Un jeu qui ne connaît pas un mot l'ignore. */
+      /** (docs/50) Le mot qui résume la population face aux joueurs (catalogue.memoire.attitudes) : traqueuse, agressive, defensive, exigeante, rodeuse, quemandeuse, fuyante, familiere. Absente : rien de marqué. Un jeu qui ne connaît pas un mot l'ignore. */
       attitude?: string;
       /** (monde à parcelles, docs/15) l'effectif de la population dans chacune des parcelles de son biome. */
       parcelles?: {

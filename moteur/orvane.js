@@ -42,7 +42,7 @@
 //
 // FORMAT DES PRESSIONS, en plus : taxons[t][b].q = { [trait continu]: z moyen des bêtes retirées par les joueurs } ;
 // taxons[t][b].contact = { rencontres, danger, aide } : ce que les bêtes ont vécu des joueurs (tampon, docs/12).
-// taxons[t][b].vecu = { rencontres, prises, blessures, dispositif, effarouchements, nourrissages, pillages, attaques, tombes } :
+// taxons[t][b].vecu = { rencontres, prises, blessures, dispositif, distance, effarouchements, nourrissages, pillages, attaques, tombes } :
 // la même chose, plus fine et plafonnée par compte et par jeu, dans un monde à la mémoire éveillée (tampon, docs/50).
 // taxons[t][b].apport = { n, N: { [phenotype]: n }, alleles, a } : des bêtes nées en élevage, relâchées avec leurs gènes (docs/36).
 //
@@ -519,7 +519,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   const SV = STA && inst.monde?.stades ? STA.preparer() : null;   // (docs/26) les cycles de vie
   const SCa = CAS && inst.monde?.castes ? CAS.preparer() : null;   // (docs/33) les colonies
   const ES = ESP && inst.monde?.esprit ? ESP.preparer({ taxons: inst.taxons, biomes }) : null;   // (docs/34) ce que savent les populations
-  const ME = MEM && inst.monde?.memoire ? MEM.preparer({ appetence }) : null;   // (docs/50) ce que les populations ont appris des joueurs ; rien n'y touche aux effectifs
+  const ME = MEM && inst.monde?.memoire ? MEM.preparer({ appetence, mefiance: apprendre }) : null;   // (docs/50) ce que les populations ont appris des joueurs ; rien n'y touche aux effectifs
   for (const b of Object.values(biomes)) {
     b.capacite_base ??= b.capacite;
     b.capacite = Math.max(0, b.capacite + (prB[b.id]?.habitat || 0) * (opt.unite_habitat ?? 1));
@@ -901,7 +901,8 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
       if (pop.flux != null) p.flux = +clamp(pop.flux, 0, 1).toFixed(4);
       if (pop.hiv) { const h = {}; for (const k of Object.keys(pop.hiv).sort()) if (pop.hiv[k] >= 1e-4) h[k] = +Math.min(1, pop.hiv[k]).toFixed(4); if (Object.keys(h).length) p.hivernants = h; }   // (docs/38)
       if (REGLES.mefiance.actif && opt.mefiance !== false) {                 // ce que la population a appris des joueurs (docs/12)
-        const [m, h] = apprendre(pop.mef0 || 0, pop.hab0 || 0, ME ? ME.danger(prT[t.id]?.[bid]?.contact, prT[t.id]?.[bid]?.vecu) : prT[t.id]?.[bid]?.contact, GEN ? pop.Q?.audace?.m || 0 : 0);   // (docs/50 : une bête blessée qui survit apprend aussi)
+        // (docs/50, dans un monde à la mémoire éveillée : une bête blessée qui survit apprend aussi, et chaque lignée à son caractère)
+        const za = GEN ? pop.Q?.audace?.m || 0 : 0, [m, h] = ME ? ME.mefiance(t.plan, pop.mef0 || 0, pop.hab0 || 0, prT[t.id]?.[bid]?.contact, prT[t.id]?.[bid]?.vecu, za, pop.Mp?.g || 0) : apprendre(pop.mef0 || 0, pop.hab0 || 0, prT[t.id]?.[bid]?.contact, za);
         if (m >= 1e-3) p.mefiance = +m.toFixed(3); if (h >= 1e-3) p.habituation = +h.toFixed(3);
         if (m >= REGLES.mefiance.alerte && (pop.mef0 || 0) < REGLES.mefiance.alerte) ev.push({ type: 'mefiance', taxon: t.id, biome: bid, detail: (SY && SY.texteMefiance(t, m)) || `les bêtes se méfient des joueurs (${Math.round(m * 100)} %)` }); }
       if (ME) ME.publier(t, bid, pop, p, prT[t.id]?.[bid]?.vecu, GEN ? pop.Q?.audace?.m || 0 : 0, ev, biomes[bid]?.nom);   // (docs/50) ce qu'elle a appris des joueurs : l'attrait, la traque, la néophobie, et le mot qui la résume
@@ -941,6 +942,8 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
     t.phenotypes = garde;
     const avant = Object.values(E.pops).reduce((a, p) => a + p.avant, 0), tend = avant > 0 ? (total - avant) / avant : 1;
     t.statut = total < REGLES.menace ? 'menace' : tend > .05 ? 'croissance' : tend < -.05 ? 'declin' : 'stable';
+    // (docs/50) le caractère de la lignée : ce qu'elle est avant d'avoir rien appris des joueurs, lu sur son corps et son tempérament
+    if (ME) { const car = ME.caractere(t); if (car) t.caractere = car; else delete t.caractere; }
     sortie.push(t);
   }
 
