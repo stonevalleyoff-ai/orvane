@@ -197,9 +197,19 @@ const MILIEU = { defrichage: ['couvert', -1], reboisement: ['couvert', 1], assec
 
 // --- la garde à l'entrée : ce qu'un événement doit être pour compter (schemas/pression.schema.json) ---
 const ACTIONS = new Set(['rencontre', 'prelevement', 'capture', 'liberation', 'nourrissage', 'reproduction', 'deplacement', 'habitat_perdu', 'habitat_gagne',
-  'defrichage', 'reboisement', 'assechement', 'irrigation', 'construction', 'transformation']);
+  'defrichage', 'reboisement', 'assechement', 'irrigation', 'construction', 'transformation',
+  'blessure', 'effarouchement', 'pillage', 'attaque', 'joueur_tombe']);
 const LIEUX = new Set(['habitat_perdu', 'habitat_gagne', 'defrichage', 'reboisement', 'assechement', 'irrigation', 'construction', 'transformation']);
 const AGES = new Set(['oeuf', 'jeune', 'adulte', 'vieux']);
+// (docs/50) la mémoire : ce que les bêtes vivent des joueurs sans qu'aucune ne soit retirée. Ces actions ne comptent que dans un
+// monde à la mémoire éveillée ; ailleurs, le tampon les laisse. Le moyen dit comment : de la main du joueur, ou par un dispositif
+const VECUES = { blessure: 'blessures', effarouchement: 'effarouchements', pillage: 'pillages', attaque: 'attaques', joueur_tombe: 'tombes' };
+const MOYENS = new Set(['melee', 'distance', 'piege', 'feu', 'lumiere', 'bruit']), DISPOSITIFS = new Set(['piege', 'feu', 'lumiere', 'bruit']);
+// par compte, par population et par cycle : au plus tant de joueurs tombés et de pillages (ce qui fait une traqueuse ou une
+// quémandeuse ne se déclare pas par centaines) ; plancher : les contacts qu'un compte garde toujours sous la règle des parts
+// (le tiers d'une activité normale) ; plancher_jeu : ceux qu'un jeu garde toujours
+const VECU = { tombes: 2, pillages: 5, plancher: 20, plancher_jeu: 200 };
+const CLES_VECU = ['rencontres', 'prises', 'blessures', 'dispositif', 'effarouchements', 'nourrissages', 'pillages', 'attaques', 'tombes'];
 const N_MAX = 1e4;                                         // un événement compte au plus dix mille bêtes ou unités
 const INTERDITS = new Set(['__proto__', 'constructor', 'prototype']);
 const QUANT_DEFAUT = { taille: 1, vitesse: 1, audace: 1, sociabilite: 1 };
@@ -221,6 +231,7 @@ function valider(e, X) {
   if (e.action === 'deplacement') { if (!propre(X.biomes, e.vers)) return null; o.vers = e.vers; }
   if (e.phenotype != null) { if (!chaine(e.phenotype)) return null; o.phenotype = e.phenotype; }
   if (AGES.has(e.age)) o.age = e.age;
+  if (MOYENS.has(e.moyen)) o.moyen = e.moyen;
   if (estObjet(e.q)) { const q = {}; for (const [k, z] of Object.entries(e.q)) if (propre(X.quant, k) && fini(z, -10, 10) && Math.abs(z) < 10) q[k] = z; if (Object.keys(q).length) o.q = q; }
   // (docs/36) le génome d'une bête relâchée : seulement des allèles de traits que le monde connaît, et ses traits continus
   if (e.action === 'liberation' && estObjet(e.genome)) { const A = {}, a = {};
@@ -252,6 +263,7 @@ function agreger(lots, inst, profil, etat = {}, gen0 = null, jeux = null) {
   const X = { taxons, biomes: lieux, cat: { ...(inst.catalogue?.monde?.traits || {}), ...cat }, quant: inst.catalogue?.quantitatifs || QUANT_DEFAUT, axes: inst.catalogue?.monde?.axes || {} };
   const effDe = (tid, bid) => taxons[tid]?.populations?.find(p => p.biome === bid)?.effectif || 0;
   const parCompte = dico(), jeuDe = dico(), vues = dico();   // jeuDe : compte → son jeu ; vues : jeu → le profil vu par ce jeu
+  const MEMO = !!inst.monde?.memoire;   // (docs/50) la mémoire du monde est éveillée : ce que les bêtes vivent des joueurs se compte aussi
   // parCompte : compte → { t: taxon → biome → { retrait: {pheno|'*': n}, deplacement: [], rencontres, danger, aide }, b: biome → { habitat, milieu } }
   const Q = {};                // taxon → biome → trait → { s: Σ poids × z, w: Σ poids } : la valeur des bêtes retirées
   let nombre = 0; const rejetes = { lots: 0, evenements: 0 };
@@ -268,6 +280,7 @@ function agreger(lots, inst, profil, etat = {}, gen0 = null, jeux = null) {
       // les familles que ce jeu joue : son exposition, et ce que dit le lot (lot.familles) ; animale seule sinon
       const vj = jeuDe[compte] ?? '', fams = new Set([...famillesDe((vues[vj] ??= vueJeu(profil, jeux, jeuDe[compte])).exposition), ...(Array.isArray(lot.familles) ? lot.familles.filter(f => FAMILLES.includes(f)) : [])]);
       for (const e of E) {
+        if (VECUES[e.action] && !MEMO) continue;   // (docs/50) un monde sans mémoire ne connaît pas ces actions : il les laisse
         nombre++;
         if (e.action === 'habitat_perdu' || e.action === 'habitat_gagne') { (C.b[e.biome] ??= { habitat: 0, milieu: {} }).habitat += e.n * (poids[e.action] ?? (e.action === 'habitat_perdu' ? 5 : -5)) * -1; continue; }
         // (docs/22) ce que le jeu fait au milieu : défricher, reboiser, assécher, irriguer, construire (qui retire aussi de l'habitat),
@@ -277,6 +290,12 @@ function agreger(lots, inst, profil, etat = {}, gen0 = null, jeux = null) {
           if (e.action === 'construction') B.habitat -= e.n * (poids.habitat_perdu ?? 5); continue; }
         if (!fams.has(familleDe(taxons[e.taxon]))) continue;   // une famille que ce jeu ne joue pas (filtrer)
         const T = (C.t[e.taxon] ??= {})[e.biome] ??= { retrait: {}, brut: {}, deplacement: [], rencontres: 0, danger: 0, aide: 0 };
+        // (docs/50) la mémoire : ce que la population vit des joueurs, compté à part (rien n'y est retiré) ; et, de ce que le
+        // tampon comptait déjà, les nourrissages et le mal fait par un dispositif (un piège, le feu : sans la main du joueur)
+        if (MEMO) { const V = T.v ??= { blessures: 0, effarouchements: 0, pillages: 0, attaques: 0, tombes: 0, nourrissages: 0, dispositif: 0 };
+          if (VECUES[e.action]) { V[VECUES[e.action]] += e.n; if (e.action === 'blessure' && DISPOSITIFS.has(e.moyen)) V.dispositif += e.n; continue; }
+          if (e.action === 'nourrissage') V.nourrissages += e.n;
+          if (DISPOSITIFS.has(e.moyen) && (e.action === 'prelevement' || e.action === 'capture')) V.dispositif += e.action === 'capture' ? .5 * e.n : e.n; }
         if (e.action === 'rencontre') { T.rencontres += e.n; continue; }
         // ce que les bêtes vivent des joueurs (docs/12) : une mort ou une capture finit mal (la capture moitié moins : la bête
         // est emmenée, pas tuée sous les yeux des autres) ; nourrir, relâcher, aide
@@ -313,6 +332,13 @@ function agreger(lots, inst, profil, etat = {}, gen0 = null, jeux = null) {
       if (brut['*']) T.retrait['*'] = brut['*'] * act;
       for (const k in T.retrait) if (!Number.isFinite(T.retrait[k])) delete T.retrait[k];
       T.contact = { rencontres: T.rencontres * act, danger: T.danger * act, aide: T.aide * act };   // un compte qui court partout ne pèse pas plus qu'un autre
+      // (docs/50) ce que la mémoire retient de ce compte : son activité se mesure sur tous ses contacts (un compte qui ne déclare
+      // que des assauts, sans une rencontre, est ramené lui aussi à une activité normale), après ses plafonds propres
+      if (MEMO) { const V = T.v || {}, tombes = Math.min(V.tombes || 0, VECU.tombes), pillages = Math.min(V.pillages || 0, VECU.pillages);
+        const tot = Math.max(T.rencontres, T.danger + (V.blessures || 0) + (V.effarouchements || 0) + (V.nourrissages || 0) + pillages + (V.attaques || 0) + tombes);
+        const a = I.exposition_ref && tot > I.exposition_ref ? I.exposition_ref / tot : 1;
+        T.vecu = { poids: tot * a, rencontres: T.rencontres * a, prises: T.danger * a, blessures: (V.blessures || 0) * a, dispositif: (V.dispositif || 0) * a, effarouchements: (V.effarouchements || 0) * a,
+          nourrissages: (V.nourrissages || 0) * a, pillages: pillages * a, attaques: (V.attaques || 0) * a, tombes: tombes * a }; }
       ote += Object.values(T.retrait).reduce((a, x) => a + Math.max(0, x), 0) + T.deplacement.reduce((a, d) => a + d.n, 0);
       rendu += Object.values(T.retrait).reduce((a, x) => a + Math.max(0, -x), 0);
     }
@@ -329,8 +355,16 @@ function agreger(lots, inst, profil, etat = {}, gen0 = null, jeux = null) {
     const fact = plafondPart(contrib.map(([c, T]) => [c, poidsDe(T)]), PL.part_max_compte, bas(PL.part_max_compte));
     if (PL.part_max_jeu != null) { const parJeu = dico(); for (const [c, T] of contrib) { const j = jeuDe[c] ?? ''; parJeu[j] = (parJeu[j] || 0) + poidsDe(T) * fact[c]; }
       const fj = plafondPart(Object.entries(parJeu), PL.part_max_jeu, bas(PL.part_max_jeu)); for (const [c] of contrib) fact[c] *= fj[jeuDe[c] ?? '']; }
+    // (docs/50) ce que la population a vécu : la part d'un compte, puis d'un jeu, se prend sur les contacts (rien n'est retiré)
+    let factV = null; const jeuxV = new Set();
+    if (MEMO) { const cv = contrib.filter(([, T]) => T.vecu && T.vecu.poids > 0);
+      if (cv.length) { factV = plafondPart(cv.map(([c, T]) => [c, T.vecu.poids]), PL.part_max_compte, VECU.plancher);
+        if (PL.part_max_jeu != null) { const parJeu = dico(); for (const [c, T] of cv) { const j = jeuDe[c] ?? ''; parJeu[j] = (parJeu[j] || 0) + T.vecu.poids * factV[c]; }
+          const fj = plafondPart(Object.entries(parJeu), PL.part_max_jeu, VECU.plancher_jeu); for (const [c] of cv) factV[c] *= fj[jeuDe[c] ?? '']; } } }
     const O = (out[tid] ??= {})[bid] ??= { retrait: {}, deplacement: [] };
     for (const [c, T] of contrib) {
+      if (factV && factV[c] != null) { const K = O.vecu ??= { ...Object.fromEntries(CLES_VECU.map(k => [k, 0])), comptes: 0, jeux: 0 };
+        for (const k of CLES_VECU) K[k] += T.vecu[k] * factV[c]; K.comptes++; jeuxV.add(jeuDe[c] ?? ''); }
       for (const k in T.retrait) O.retrait[k] = (O.retrait[k] || 0) + T.retrait[k] * fact[c];
       for (const d of T.deplacement) if (d.n * fact[c] > 0) O.deplacement.push({ vers: d.vers, n: d.n * fact[c] });
       if (T.apport) { const K = O.apport ??= { n: 0, N: {}, A: {}, a: {}, na: {} }, f = cap != null && T.apport.n > cap ? cap / T.apport.n : 1;
@@ -339,7 +373,8 @@ function agreger(lots, inst, profil, etat = {}, gen0 = null, jeux = null) {
       if (T.contact && (T.contact.rencontres || T.contact.danger || T.contact.aide)) { const K = O.contact ??= { rencontres: 0, danger: 0, aide: 0 };
         for (const k in K) K[k] = +(K[k] + T.contact[k]).toFixed(2); }
     }
-    if (!O.deplacement.length && !Object.keys(O.retrait).length && !O.apport && !O.contact) { delete out[tid][bid]; if (!Object.keys(out[tid]).length) delete out[tid]; }
+    if (O.vecu) { for (const k of CLES_VECU) O.vecu[k] = +O.vecu[k].toFixed(2); O.vecu.jeux = jeuxV.size; if (!CLES_VECU.some(k => O.vecu[k] > 0)) delete O.vecu; }
+    if (!O.deplacement.length && !Object.keys(O.retrait).length && !O.apport && !O.contact && !O.vecu) { delete out[tid][bid]; if (!Object.keys(out[tid]).length) delete out[tid]; }
   }
   // part maximale d'une population en un cycle : ce qu'on lui ôte (retraits, déplacements) et ce qu'on lui rend (libérations,
   // nourrissage), chacun au plus part_max_population de son effectif
@@ -389,6 +424,6 @@ function agreger(lots, inst, profil, etat = {}, gen0 = null, jeux = null) {
   return { pressions: { taxons: out, biomes, nombre, ...(pmax != null ? { part_max_population: pmax } : {}) }, etat: { lisse, lisseQ }, rejetes };
 }
 
-const API = { regimeDe, vueJeu, assainir, valider, plafondPart, ACTIONS, N_MAX, NEUTRE, FAMILLES, familleDe, famillesDe, filtrer, exposer, exposerRelatif, partsRelatif, nonRendus, referenceDe, signature, quantDe, sachantMere, exprimer, agreger, compression };
+const API = { regimeDe, vueJeu, assainir, valider, plafondPart, ACTIONS, VECUES, MOYENS, DISPOSITIFS, VECU, N_MAX, NEUTRE, FAMILLES, familleDe, famillesDe, filtrer, exposer, exposerRelatif, partsRelatif, nonRendus, referenceDe, signature, quantDe, sachantMere, exprimer, agreger, compression };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else racine.OrvaneTampon = API;
 })(globalThis);

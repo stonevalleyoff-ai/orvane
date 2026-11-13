@@ -334,6 +334,15 @@
             }
           }
         },
+        "memoire": {
+          "type": "object",
+          "description": "(docs/50) La mémoire : les populations retiennent ce que les joueurs leur font (populations[].memoire, populations[].attitude), et le monde lit les actions blessure, effarouchement, pillage, attaque, joueur_tombe. Depuis quand.",
+          "properties": {
+            "depuis": {
+              "type": "integer"
+            }
+          }
+        },
         "collectif": {
           "type": "object",
           "description": "(docs/38) La vie en groupe est publiée (populations[].groupe, populations[].migration, biomes[].visiteurs) : depuis quand.",
@@ -1054,6 +1063,11 @@
           "type": "object",
           "description": "(docs/34) Les savoirs que le monde connaît : pour chacun, son nom, son geste (casser, pecher, encercler, alerter, cacher, laver, migrer, tisser), son outil (pierre, brindille, brindilles), son présage, ce qu'il fait.",
           "additionalProperties": { "type": "object" }
+        },
+        "memoire": {
+          "type": "object",
+          "description": "(docs/50) Ce que la mémoire publie : ses dispositions (dispositions : pour chacune son nom, sa valeur neutre — celle d'une population qui ne la publie pas —, ce qu'un jeu en montre, son présage) et les attitudes (attitudes : pour chacune son nom, et quand une population la prend).",
+          "properties": { "dispositions": { "type": "object", "additionalProperties": { "type": "object" } }, "attitudes": { "type": "object", "additionalProperties": { "type": "object" } } }
         },
         "flore": {
           "type": "object",
@@ -2059,6 +2073,15 @@
                   "maximum": 1,
                   "description": "L'habituation, nourrie des rencontres sans suite et de l'aide (nourrissage, libération), défaite par ce qui finit mal, retombe de moitié en 15 cycles. Absente : 0."
                 },
+                "memoire": {
+                  "type": "object",
+                  "description": "(docs/50) Ce que la population a appris d'autre des joueurs, dans un monde à la mémoire éveillée : pour chaque disposition (catalogue.memoire.dispositions), sa valeur de 0 à 1. attrait : le joueur et son camp valent de la nourriture ; traque : le joueur est une proie ; neophobie : la peur du feu, de la lumière, des pièges. Une disposition absente vaut sa valeur neutre : 0, et 0,5 pour la néophobie.",
+                  "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 }
+                },
+                "attitude": {
+                  "type": "string",
+                  "description": "(docs/50) Le mot qui résume la population face aux joueurs (catalogue.memoire.attitudes) : traqueuse, rodeuse, quemandeuse, defensive, fuyante, familiere. Absente : rien de marqué. Un jeu qui ne connaît pas un mot l'ignore."
+                },
                 "parcelles": {
                   "type": "object",
                   "additionalProperties": {
@@ -2292,7 +2315,8 @@
               "nature",
               "climat",
               "meteo",
-              "savoir"
+              "savoir",
+              "memoire"
             ]
           },
           "taxon": {

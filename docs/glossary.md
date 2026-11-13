@@ -117,6 +117,8 @@ Orvane's files use French field names. This page translates them all, object by 
 | `flux`, `divergence` | gene flow, divergence | immigrants per cycle; genetic distance to the rest of the species |
 | `hybride` | hybrid zone | a related lineage lives here and interbreeds |
 | `mefiance`, `habituation` | wariness, habituation | what the population has learnt from players |
+| `memoire` | memory | what else it has learnt, in a world with the memory awake (docs/50): `attrait` attraction (players mean food), `traque` stalking (players are prey), `neophobie` neophobia (fear of fire, light, traps; neutral at 0.5). An absent value is neutral |
+| `attitude` | attitude | one word for the population: `traqueuse` stalker, `rodeuse` prowler, `quemandeuse` beggar, `defensive`, `fuyante` skittish, `familiere` tame |
 | `parcelles` | plots | the head count in each plot of the biome |
 | `nourriture`, `recouvrement` | food, overlap | a grazer: what it finds to eat, relative to the awakening of the flora; what it shares with its size band |
 | `savoirs` | knowledge | for each piece of knowledge (`catalogue.savoirs`), the share of the population that knows it: a local tradition |
@@ -159,7 +161,7 @@ Orvane's files use French field names. This page translates them all, object by 
 
 ### `evenements[].type` (event types)
 
-`apparition` appearance · `extinction` · `separation` split · `migration` · `effondrement` collapse · `explosion` outbreak · `nouveau_trait` new trait · `epidemie` epidemic · `remission` · `catastrophe` disaster · `hybridation` · `mefiance` wariness · `eveil` awakening · `transformation` (an axis of a place has moved) · `conception` (the Mother designs a machine) · `transfert` (machines pass a module on) · `invention` (the world invents a trait) · `nature` (a place changes nature) · `climat` (the climate shifts, a land bridge, a new island) · `meteo` (a storm, a heatwave, the first snow, a drought setting in) · `savoir` (an animal invents, or a population loses, a piece of knowledge)
+`apparition` appearance · `extinction` · `separation` split · `migration` · `effondrement` collapse · `explosion` outbreak · `nouveau_trait` new trait · `epidemie` epidemic · `remission` · `catastrophe` disaster · `hybridation` · `mefiance` wariness · `eveil` awakening · `transformation` (an axis of a place has moved) · `conception` (the Mother designs a machine) · `transfert` (machines pass a module on) · `invention` (the world invents a trait) · `nature` (a place changes nature) · `climat` (the climate shifts, a land bridge, a new island) · `meteo` (a storm, a heatwave, the first snow, a drought setting in) · `savoir` (an animal invents, or a population loses, a piece of knowledge) · `memoire` (a population turns stalker, prowler or beggar, or loses its fear of fire)
 
 ## The batch (`schemas/pression.schema.json`)
 
@@ -171,7 +173,8 @@ Orvane's files use French field names. This page translates them all, object by 
 | `source` | source | `jeu` game, `compte` opaque player id, `zone` area |
 | `periode` | period | `debut` start, `fin` end |
 | `evenements[]` | events | `taxon`, `biome`, `action`, `n` (count), `phenotype`, `age` (`oeuf` egg, `jeune`, `adulte`, `vieux`), `q` (mean continuous traits), `genome` (with `liberation`: the alleles and breeding values of animals bred by players, docs/36), `vers` (to), `parcelle` (plot) |
-| `action` | action | `rencontre` encounter, `prelevement` kill, `capture`, `liberation` release, `nourrissage` feeding, `reproduction` breeding, `deplacement` relocation, `habitat_perdu` habitat lost, `habitat_gagne` habitat gained, `defrichage` clearing, `reboisement` reforesting, `assechement` draining, `irrigation`, `construction` building, `transformation` (with `axe` axis and `sens` direction) |
+| `action` | action | `rencontre` encounter, `prelevement` kill, `capture`, `liberation` release, `nourrissage` feeding, `reproduction` breeding, `deplacement` relocation, `habitat_perdu` habitat lost, `habitat_gagne` habitat gained, `defrichage` clearing, `reboisement` reforesting, `assechement` draining, `irrigation`, `construction` building, `transformation` (with `axe` axis and `sens` direction) ; in a world with the memory awake (docs/50): `blessure` wounded, `effarouchement` scared off, `pillage` raid, `attaque` attack on a player, `joueur_tombe` player down |
+| `moyen` | means | how: `melee`, `distance` ranged, `piege` trap, `feu` fire, `lumiere` light, `bruit` noise |
 
 ## The exposure (`exposition`, in `schemas/profil.schema.json`)
 

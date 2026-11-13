@@ -28,6 +28,7 @@ moteur/grammaire.js   la grammaire des effets et des conduites : une lueur qui a
 moteur/castes.js      les castes : des colonies, une reine, des ouvrières, des soldats (docs/33)
 moteur/formes.js      les formes nouvelles : le corps segmenté, rayonné, à tentacules (docs/33)
 moteur/esprit.js      l'esprit : des savoirs qui s'apprennent, se transmettent, se perdent ; des outils ; la curiosité (docs/34)
+moteur/memoire.js     la mémoire : ce que les bêtes apprennent des joueurs, tous jeux confondus (l'attrait, la traque, la néophobie, l'attitude) ; elle ne change pas un effectif (docs/50)
 moteur/chronique.js   l'histoire du monde : la chronique (ce qui compte, par année), le muséum (un spécimen par lignée, gardé après sa mort), les noms que donnent les joueurs (docs/37)
 moteur/collectif.js   la vie en groupe : troupeaux, meutes, bancs, colonies, hiérarchie, migrations des saisons, lue dans l'état à la publication (docs/38)
 moteur/solo.js        un monde solo, dans le jeu : parti de l'instantané publié, il avance en temps réel ou en accéléré (docs/19)
@@ -83,6 +84,7 @@ bancs/meteo.js        le banc de la météo : des fronts qui passent, une séche
 bancs/grammaire.js    le banc de la grammaire : qui peut dire quoi, où ça porte, des phrases variées, la sélection
 bancs/formes.js       le banc des corps et des vies nouvelles : la colonie qui gagne, le mille-pattes, l'étoile, la pieuvre, la naïade
 bancs/esprit.js       le banc de l'esprit : qui apprend, une tradition, la perte, chasser ensemble, la curiosité
+bancs/memoire.js      le banc de la mémoire : le jour un, les équilibres, les plafonds du tampon, l'abus, ce qui voyage, deux styles de jeu et deux faunes
 bancs/individus.js    le banc des individus et de l'élevage : Mendel, les porteurs cachés, l'héritabilité, la parenté, les hybrides, l'élevage qui revient au monde
 bancs/milieu.js       le banc du milieu transformé : la savane sans brouteurs, les terriers, les barrages, la forêt défrichée, les parcelles
 bancs/tampon.js       le banc du tampon : chaque attaque de l'audit du 5 novembre (lot mal formé, n infini, déplacements sans plafond, mille comptes d'un jeu, allèle inventé) neutralisée, et le jour un

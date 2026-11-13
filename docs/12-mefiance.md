@@ -57,6 +57,6 @@ Stone Valley (§216) lit la population **du biome où naît la bête** et multip
 
 ## Ce qui vient ensuite
 
-- **La traque** : un prédateur qui apprend, lui aussi, et suit les joueurs au lieu de les fuir (le genre horreur).
-- **La méfiance qui voyage** : des migrants qui l'emportent vers une population voisine.
+- **La traque** : un prédateur qui apprend, lui aussi, et suit les joueurs au lieu de les fuir (le genre horreur). *Fait : c'est une disposition de la mémoire (docs/50), avec l'attrait et la néophobie ; dans un monde qui l'éveille, une bête blessée qui survit nourrit aussi la méfiance, deux fois plus qu'une bête prise.*
+- **La méfiance qui voyage** : des migrants qui l'emportent vers une population voisine. *La mémoire voyage ainsi (docs/50) ; la méfiance pas encore.*
 - **Les prédateurs de l'île** : une méfiance nourrie aussi de la prédation naturelle, pour que les proies d'un biome riche en chasseurs soient farouches d'emblée.

@@ -17,6 +17,7 @@
 (function (racine) {
 const clone = o => JSON.parse(JSON.stringify(o));
 const MET = (typeof require === 'function' ? require('./meteo.js') : racine.OrvaneMeteo) || null;   // (docs/45) la météo : le temps d'un biome est celui de ses parcelles
+const MEM = (typeof require === 'function' ? require('./memoire.js') : racine.OrvaneMemoire) || null;   // (docs/50) la mémoire : celle d'un biome est la moyenne de ses parcelles
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 function generateur(graine) { let g = ((graine | 0) ^ 0x9a7c) >>> 0; return () => { g = (Math.imul(g, 1664525) + 1013904223) >>> 0; return g / 4294967296; }; }
 const AXES = ['temperature', 'humidite', 'altitude', 'lumiere', 'couvert'];
@@ -143,6 +144,10 @@ function regrouper(inst) {
       if (L.length === 1 && L[0].biome === ty) return L[0];
       const eff = L.map(p => p.effectif), poidsL = eff.map(e => Math.max(e, 1e-9)), m = moyenne(L.map(p => { const { biome, effectif, depuis, parcelles, hivernants, ...r } = p; return r; }), poidsL);
       completer(m, L, poidsL);
+      // (docs/50) la mémoire du biome : une parcelle qui n'a rien appris compte pour neutre (et non pour absente) ; le mot qui
+      // la résume se relit sur la population entière
+      if (MEM && inst.monde.memoire) { const mm = MEM.regrouper(L, poidsL); if (mm) m.memoire = mm; else delete m.memoire;
+        const att = MEM.attitude(m, t.plan); if (att) m.attitude = att; else delete m.attitude; }
       if (L.some(p => p.hivernants)) { const H = {}, T = eff.reduce((s, x) => s + x, 0) || 1;   // (docs/38) la part du biome venue d'ailleurs pour l'hiver, par biome d'origine
         L.forEach((p, i) => { for (const [de, h] of Object.entries(p.hivernants || {})) { const ty = typeDe(parId.get(de) || { id: de }); if (ty !== typeDe(parId.get(p.biome) || { id: p.biome })) H[ty] = (H[ty] || 0) + h * eff[i]; } });
         const h = Object.fromEntries(Object.keys(H).sort().map(k => [k, +(H[k] / T).toFixed(4)]).filter(([, v]) => v >= 1e-4)); if (Object.keys(h).length) m.hivernants = h; }
@@ -169,7 +174,8 @@ function regrouper(inst) {
 // été compté, le reste selon les effectifs ; puis aucune parcelle ne perd plus que part_max_population d'elle-même.
 // Seules les quantités se partagent (n, N, retraits, habitat, milieu) : les fréquences d'allèles et les valeurs génétiques d'un
 // apport, le z des retirés (q), les chaînes restent ce qu'elles sont ; ce que les bêtes ont vécu des joueurs (contact) n'est pas
-// partagé : chaque parcelle le vit entier, et sa méfiance est celle qu'aurait eue le biome (docs/12, docs/15).
+// partagé : chaque parcelle le vit entier, et sa méfiance est celle qu'aurait eue le biome (docs/12, docs/15) ; de même ce que
+// retient la mémoire (vecu, docs/50).
 const QTE = new Set(['n', 'N']);
 function fois(o, f, prof = 0) {
   if (typeof o === 'number') return Number.isFinite(o) ? +(o * f).toFixed(4) : 0;
@@ -178,7 +184,7 @@ function fois(o, f, prof = 0) {
   const r = {}; for (const k of Object.keys(o)) r[k] = k === 'vers' ? o[k] : fois(o[k], f, prof + 1); return r;
 }
 function partager(k, v, f) {
-  if (k === 'q' || k === 'contact') return v;
+  if (k === 'q' || k === 'contact' || k === 'vecu') return v;
   if (k === 'apport' && v && typeof v === 'object') { const r = { ...v }; for (const c of Object.keys(v)) if (QTE.has(c)) r[c] = fois(v[c], f); return r; }
   return fois(v, f);
 }

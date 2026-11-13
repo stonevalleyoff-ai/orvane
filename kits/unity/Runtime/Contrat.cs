@@ -209,6 +209,7 @@ namespace Orvane
         [JsonProperty("n")] public double N;
         [JsonProperty("vers")] public string Vers;                             // pour un déplacement
         [JsonProperty("age")] public string Age;
+        [JsonProperty("moyen")] public string Moyen;                           // (docs/50) comment : melee, distance, piege, feu, lumiere, bruit
         [JsonProperty("q")] public Dictionary<string, double> Q;               // la valeur moyenne des traits continus des bêtes prises
     }
 
@@ -228,5 +229,8 @@ namespace Orvane
             Nourrissage = "nourrissage", Reproduction = "reproduction", Deplacement = "deplacement",
             HabitatPerdu = "habitat_perdu", HabitatGagne = "habitat_gagne", Defrichage = "defrichage", Reboisement = "reboisement",
             Assechement = "assechement", Irrigation = "irrigation", Construction = "construction";
+        /// <summary>La mémoire (docs/50) : ce que les bêtes vivent des joueurs sans être retirées. À n'envoyer qu'à un monde qui
+        /// l'annonce (instantane.monde.memoire) : ailleurs, le serveur refuse le lot entier.</summary>
+        public const string Blessure = "blessure", Effarouchement = "effarouchement", Pillage = "pillage", Attaque = "attaque", JoueurTombe = "joueur_tombe";
     }
 }

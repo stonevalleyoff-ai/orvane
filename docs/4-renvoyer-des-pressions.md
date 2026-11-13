@@ -25,6 +25,7 @@ Le jeu renvoie des **comptes bruts**, jamais des conclusions. Le tampon fait le 
 | `deplacement` (+ `vers`) | emportée sur un autre biome | fonde ou renforce une population ailleurs |
 | `habitat_perdu` / `habitat_gagne` | surface détruite / créée (en unités de votre jeu : cases, arbres…) | la capacité du biome bouge |
 | `defrichage`, `reboisement`, `assechement`, `irrigation`, `construction` ; `transformation` (+ `axe`, `sens`) | le joueur change le milieu, en `n` unités de surface ; sans `taxon` | dans un monde au milieu éveillé, les axes du lieu bougent ; construire retire aussi de l'habitat (docs/22) |
+| `blessure`, `effarouchement`, `pillage`, `attaque`, `joueur_tombe` (+ `moyen`) | ce que les bêtes vivent des joueurs sans être retirées : frappée et survivante, arrêtée par un feu, servie dans les vivres ; un assaut sur un joueur, un joueur tombé | dans un monde à la mémoire éveillée (`monde.memoire`), la population l'apprend : l'attrait, la traque, la néophobie. **À n'envoyer qu'à un monde qui l'annonce** (docs/50) |
 
 **La valeur des bêtes.** Si votre jeu tire les traits continus (chapitre 8), joignez à un prélèvement ou à une capture `q` : la valeur moyenne z, par trait, des bêtes de l'événement, telle qu'elles l'ont tirée à la naissance (`"q": { "taille": 1.3 }`). C'est ainsi qu'Orvane sait si vos joueurs prennent les plus grandes ou les plus audacieuses ; sans `q`, il suppose qu'ils prennent au hasard.
 

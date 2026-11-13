@@ -105,9 +105,11 @@ begin
         or not coalesce(case when jsonb_typeof(e->'n') = 'number' then (e->>'n')::numeric between 0 and 10000 end, false)
         or jsonb_typeof(e->'biome') is distinct from 'string'
         or not coalesce(e->>'action' = any (array['rencontre','prelevement','capture','liberation','nourrissage','reproduction','deplacement',
-             'habitat_perdu','habitat_gagne','defrichage','reboisement','assechement','irrigation','construction','transformation']), false)
+             'habitat_perdu','habitat_gagne','defrichage','reboisement','assechement','irrigation','construction','transformation',
+             'blessure','effarouchement','pillage','attaque','joueur_tombe']), false)   -- (docs/50) les cinq dernières : la mémoire
         or coalesce(jsonb_typeof(e->'taxon'), 'string') <> 'string' or coalesce(jsonb_typeof(e->'vers'), 'string') <> 'string'
         or coalesce(jsonb_typeof(e->'phenotype'), 'string') <> 'string' or coalesce(jsonb_typeof(e->'parcelle'), 'string') <> 'string'
+        or coalesce(jsonb_typeof(e->'moyen'), 'string') <> 'string'
         or concat_ws('|', e->>'taxon', e->>'biome', e->>'vers', e->>'parcelle', e->>'phenotype') ~ '(^|\|)(__proto__|constructor|prototype)(\||$)')
   then return jsonb_build_object('ok', false, 'erreur', 'événement mal formé (schemas/pression.schema.json)'); end if;
   perform pg_advisory_xact_lock(hashtext('orvane_deposer:' || j.id));   -- les comptages des quotas qui suivent, sans course entre deux dépôts

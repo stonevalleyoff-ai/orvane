@@ -35,7 +35,7 @@ function valider(s, v, ou, racineS, E) {
       else if (s.additionalProperties && typeof s.additionalProperties === 'object') valider(s.additionalProperties, x, `${ou}.${k}`, racineS, E); } }
 }
 // ce que le Supabase d'Orvane refusera, en plus du schéma (hebergement/supabase.sql, orvane_deposer)
-const ACTIONS = ['rencontre', 'prelevement', 'capture', 'liberation', 'nourrissage', 'reproduction', 'deplacement', 'habitat_perdu', 'habitat_gagne', 'defrichage', 'reboisement', 'assechement', 'irrigation', 'construction', 'transformation'];
+const ACTIONS = ['rencontre', 'prelevement', 'capture', 'liberation', 'nourrissage', 'reproduction', 'deplacement', 'habitat_perdu', 'habitat_gagne', 'defrichage', 'reboisement', 'assechement', 'irrigation', 'construction', 'transformation', 'blessure', 'effarouchement', 'pillage', 'attaque', 'joueur_tombe'];
 function depot(lot) {
   const E = [], ev = Array.isArray(lot?.evenements) ? lot.evenements : [];
   if (Buffer.byteLength(JSON.stringify(lot)) > 65536) E.push('le lot dépasse 64 Ko : orvane_deposer le refusera (« lot trop gros »)');

@@ -10,6 +10,11 @@
 #   await Orvane.lire_silhouettes("foret")               # les planches : chaque bête du lieu dessinée, et ses yeux
 #   sprite.texture = Orvane.texture("dunvi", 96.0)       # l'image d'une lignée, à 96 pixels de large ; Orvane.yeux("dunvi")
 #   Orvane.compter("dunvi", "savane", "rencontre")      # au moment où ça arrive, dans un biome d'Orvane (déjà traduit)
+#   Orvane.compter("dunvi", "savane", "prelevement", 1.0, "", "", "", "melee")   # … et par quel moyen (melee, distance, piege, feu…)
+#   Orvane.compter("dunvi", "savane", "attaque")        # la mémoire (docs/12) : blessure, effarouchement, pillage, attaque,
+#                                                        # joueur_tombe ; comptées seulement si le monde lu la tient (memoire_eveillee)
+#   var d = Orvane.dispositions("dunvi", "savane")      # ce que cette population a appris des joueurs : { mefiance, habituation,
+#                                                        # attrait, traque, neophobie, attitude } (absente : sa valeur neutre)
 #   Orvane.clore(compte_opaque)                          # à un moment naturel : une sauvegarde, une fin de partie
 #   Orvane.deposer(compte_opaque)                        # dépose le prochain lot ; un lot refusé reste en attente
 #
@@ -26,6 +31,14 @@ signal herbier_lu(biome: String, herbier: Dictionary)
 const CONTRAT := "1.0"
 const MAX_EVENEMENTS := 500
 const SAUVEGARDE := "user://orvane.json"
+# la mémoire (docs/12) : ce que les bêtes font aux joueurs, et ce que les joueurs leur font sans les tuer. Un monde qui ne la tient
+# pas encore refuserait le lot entier pour une action qu'il ne connaît pas : le kit ne les compte que si le monde lu l'annonce
+const ACTIONS_MEMOIRE := ["blessure", "effarouchement", "pillage", "attaque", "joueur_tombe"]
+# par quel moyen (facultatif, sur un événement qui porte une lignée) ; un moyen inconnu n'est pas écrit
+const MOYENS := ["melee", "distance", "piege", "feu", "lumiere", "bruit"]
+# ce que vaut une disposition qu'une population ne porte pas (la néophobie est neutre au milieu : en dessous, la bête s'est
+# accoutumée aux choses des joueurs ; au-dessus, elle les craint)
+const DISPOSITIONS_NEUTRES := {"mefiance": 0.0, "habituation": 0.0, "attrait": 0.0, "traque": 0.0, "neophobie": 0.5, "attitude": ""}
 
 @export var monde_url := "https://stonevalleyoff-ai.github.io/orvane/mondes/orvane/"
 @export var supabase_url := "https://rospodujiyltmxitykwc.supabase.co"
@@ -55,6 +68,10 @@ func _ready() -> void:
 
 func lire(url: String = "") -> void:
 	var r := HTTPRequest.new()
+	# dans un navigateur, la page reçoit le document déjà décompressé : Godot ne doit pas le décompresser une seconde fois. Sinon,
+	# quand le jeu est servi du même site que le monde (le navigateur lui montre alors l'en-tête Content-Encoding), la lecture
+	# échoue, et le jeu se croit hors ligne. Ailleurs, Godot décompresse lui-même, comme avant.
+	r.accept_gzip = not OS.has_feature("web")
 	add_child(r)
 	r.request_completed.connect(_lu.bind(r))
 	var e := r.request(url if url != "" else monde_url.trim_suffix("/") + "/instantane.json", PackedStringArray(["Cache-Control: no-cache"]))
@@ -263,6 +280,7 @@ func _base() -> String:
 # S'attend : var index = await Orvane.lire_json(Orvane.monde_url + "morceaux/index.json")
 func lire_json(url: String) -> Variant:
 	var r := HTTPRequest.new()
+	r.accept_gzip = not OS.has_feature("web")     # (voir lire)
 	r.timeout = 20.0
 	add_child(r)
 	var sep := "&" if url.contains("?") else "?"
@@ -318,12 +336,87 @@ func effectif(lignee: Dictionary, biome: String = "") -> float:
 	return n
 
 
+# --- la mémoire : ce qu'une population a appris des joueurs (docs/12) ---
+
+# le monde lu tient-il la mémoire ? (instantane.monde.memoire) Sans elle, les actions de ACTIONS_MEMOIRE ne sont pas comptées.
+func memoire_eveillee(inst: Dictionary = {}) -> bool:
+	var i := inst if not inst.is_empty() else instantane
+	var m = i.get("monde", {})
+	if typeof(m) != TYPE_DICTIONARY or not m.has("memoire"):
+		return false
+	return typeof(m["memoire"]) != TYPE_NIL and not (typeof(m["memoire"]) == TYPE_BOOL and not m["memoire"])
+
+
+# les dispositions d'une lignée dans un biome : { mefiance, habituation, attrait, traque, neophobie (de 0 à 1), attitude (un mot,
+# "" si neutre) }. lignee : la lignée (un taxon de l'instantané) ou son identifiant. Une disposition absente, une lignée ou un
+# lieu inconnus : les valeurs neutres. Plusieurs populations dans le biome (des parcelles) : leur moyenne, pesée par l'effectif.
+func dispositions(lignee, biome: String) -> Dictionary:
+	var t = lignee
+	if typeof(t) == TYPE_STRING or typeof(t) == TYPE_STRING_NAME:
+		t = null
+		for x in instantane.get("taxons", []):
+			if typeof(x) == TYPE_DICTIONARY and str(x.get("id", "")) == str(lignee):
+				t = x
+				break
+	var d: Dictionary = DISPOSITIONS_NEUTRES.duplicate()
+	if typeof(t) != TYPE_DICTIONARY:
+		return d
+	var poids := 0.0
+	var plus_grande := -1.0
+	var somme := {}
+	for p in t.get("populations", []):
+		if typeof(p) != TYPE_DICTIONARY or str(p.get("biome", "")) != biome:
+			continue
+		var une := dispositions_de(p)
+		var n := maxf(_nombre(p.get("effectif"), 0.0), 0.0) + 1.0
+		poids += n
+		for k in une:
+			if k != "attitude":
+				somme[k] = float(somme.get(k, 0.0)) + float(une[k]) * n
+		if n > plus_grande:
+			plus_grande = n
+			d["attitude"] = une["attitude"]
+	if poids > 0.0:
+		for k in somme:
+			d[k] = float(somme[k]) / poids
+	return d
+
+
+# les mêmes, pour une population de l'instantané (celle de Orvane.dans(biome), par exemple)
+func dispositions_de(population: Dictionary) -> Dictionary:
+	var d: Dictionary = DISPOSITIONS_NEUTRES.duplicate()
+	var m = population.get("memoire", {})
+	for k in d:
+		if k == "attitude":
+			if typeof(population.get(k)) == TYPE_STRING:
+				d[k] = population[k]
+		elif k == "mefiance" or k == "habituation":
+			d[k] = clampf(_nombre(population.get(k), d[k]), 0.0, 1.0)
+		elif typeof(m) == TYPE_DICTIONARY:
+			d[k] = clampf(_nombre(m.get(k), d[k]), 0.0, 1.0)
+	return d
+
+
+func _nombre(x, defaut: float) -> float:
+	return float(x) if (typeof(x) == TYPE_FLOAT or typeof(x) == TYPE_INT) and is_finite(float(x)) else defaut
+
+
 # --- compter ce que font les joueurs (docs/4) ---
 
-func compter(taxon: String, biome: String, action: String, n: float = 1.0, phenotype: String = "", parcelle: String = "", age: String = "") -> void:
+# moyen (facultatif) : par quoi c'est arrivé (MOYENS : melee, distance, piege, feu, lumiere, bruit). Les actions de la mémoire
+# (ACTIONS_MEMOIRE) ne sont comptées que si le monde lu la tient (memoire_eveillee) : sinon elles sont ignorées, sans bruit.
+func compter(taxon: String, biome: String, action: String, n: float = 1.0, phenotype: String = "", parcelle: String = "", age: String = "", moyen: String = "") -> void:
+	if ACTIONS_MEMOIRE.has(action) and not memoire_eveillee():
+		return
+	_compter(taxon, biome, action, n, phenotype, parcelle, age, moyen)
+
+
+func _compter(taxon: String, biome: String, action: String, n: float, phenotype: String, parcelle: String, age: String, moyen: String) -> void:
 	if biome == "" or action == "" or n <= 0.0:
 		return
-	var cle := "|".join(PackedStringArray([taxon, phenotype, biome, parcelle, action, age]))
+	if taxon == "" or not MOYENS.has(moyen):
+		moyen = ""
+	var cle := "|".join(PackedStringArray([taxon, phenotype, biome, parcelle, action, age, moyen]))
 	if _evenements.has(cle):
 		_evenements[cle]["n"] += n
 		return
@@ -336,6 +429,8 @@ func compter(taxon: String, biome: String, action: String, n: float = 1.0, pheno
 		e["parcelle"] = parcelle
 	if age != "":
 		e["age"] = age
+	if moyen != "":
+		e["moyen"] = moyen
 	_evenements[cle] = e
 
 
@@ -405,6 +500,7 @@ func deposer(compte: String) -> void:
 		return
 	_depot_en_cours = true
 	var r := HTTPRequest.new()
+	r.accept_gzip = not OS.has_feature("web")     # (voir lire)
 	add_child(r)
 	r.request_completed.connect(_depose.bind(r))
 	var corps := '{"p_cle":%s,"p_compte":%s,"p_lot":%s}' % [JSON.stringify(cle_jeu), JSON.stringify(compte), _en_attente[0]]
@@ -449,7 +545,8 @@ func _charger() -> void:
 		if e.get("action") == "deplacement":
 			deplacer(str(e.get("taxon", "")), str(e.get("biome", "")), str(e.get("vers", "")), float(e.get("n", 0)))
 		else:
-			compter(str(e.get("taxon", "")), str(e.get("biome", "")), str(e.get("action", "")), float(e.get("n", 0)), str(e.get("phenotype", "")), str(e.get("parcelle", "")), str(e.get("age", "")))
+			# (ce qui était compté le reste : le monde n'est pas encore lu, au lancement, pour redemander s'il tient la mémoire)
+			_compter(str(e.get("taxon", "")), str(e.get("biome", "")), str(e.get("action", "")), float(e.get("n", 0)), str(e.get("phenotype", "")), str(e.get("parcelle", "")), str(e.get("age", "")), str(e.get("moyen", "")))
 	if s.get("debut", "") != "":
 		_debut = str(s["debut"])
 

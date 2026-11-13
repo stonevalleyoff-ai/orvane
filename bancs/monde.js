@@ -27,6 +27,7 @@ function parBiome(E, opt = {}) {
 // Ce qu'un mécanisme laisse dans le monde part avec lui quand le moteur le relirait : les savoirs des populations (l'esprit).
 function sans(E, cles = []) { if (!cles.length) return E; E = JSON.parse(JSON.stringify(E)); for (const k of cles) delete E.monde[k];
   if (cles.includes('esprit')) { for (const t of E.taxons) for (const p of t.populations || []) delete p.savoirs; if (E.catalogue) delete E.catalogue.savoirs; }
+  if (cles.includes('memoire')) { for (const t of E.taxons) for (const p of t.populations || []) { delete p.memoire; delete p.attitude; } if (E.catalogue) delete E.catalogue.memoire; }
   return E; }
 const etat = (cles = []) => sans(JSON.parse(fs.readFileSync(racine('mondes/orvane/etat.json'), 'utf8')), cles);
 const orvane = (opt = {}) => parBiome(etat(opt.sans || []), opt);
