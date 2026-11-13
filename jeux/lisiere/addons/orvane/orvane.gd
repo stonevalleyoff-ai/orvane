@@ -11,7 +11,7 @@
 #   sprite.texture = Orvane.texture("dunvi", 96.0)       # l'image d'une lignée, à 96 pixels de large ; Orvane.yeux("dunvi")
 #   Orvane.compter("dunvi", "savane", "rencontre")      # au moment où ça arrive, dans un biome d'Orvane (déjà traduit)
 #   Orvane.compter("dunvi", "savane", "prelevement", 1.0, "", "", "", "melee")   # … et par quel moyen (melee, distance, piege, feu…)
-#   Orvane.compter("dunvi", "savane", "attaque")        # la mémoire (docs/12) : blessure, effarouchement, pillage, attaque,
+#   Orvane.compter("dunvi", "savane", "attaque")        # la mémoire (docs/50) : blessure, effarouchement, pillage, attaque,
 #                                                        # joueur_tombe ; comptées seulement si le monde lu la tient (memoire_eveillee)
 #   var d = Orvane.dispositions("dunvi", "savane")      # ce que cette population a appris des joueurs : { mefiance, habituation,
 #                                                        # attrait, traque, neophobie, attitude } (absente : sa valeur neutre)
@@ -31,7 +31,7 @@ signal herbier_lu(biome: String, herbier: Dictionary)
 const CONTRAT := "1.0"
 const MAX_EVENEMENTS := 500
 const SAUVEGARDE := "user://orvane.json"
-# la mémoire (docs/12) : ce que les bêtes font aux joueurs, et ce que les joueurs leur font sans les tuer. Un monde qui ne la tient
+# la mémoire (docs/50) : ce que les bêtes font aux joueurs, et ce que les joueurs leur font sans les tuer. Un monde qui ne la tient
 # pas encore refuserait le lot entier pour une action qu'il ne connaît pas : le kit ne les compte que si le monde lu l'annonce
 const ACTIONS_MEMOIRE := ["blessure", "effarouchement", "pillage", "attaque", "joueur_tombe"]
 # par quel moyen (facultatif, sur un événement qui porte une lignée) ; un moyen inconnu n'est pas écrit
@@ -336,7 +336,7 @@ func effectif(lignee: Dictionary, biome: String = "") -> float:
 	return n
 
 
-# --- la mémoire : ce qu'une population a appris des joueurs (docs/12) ---
+# --- la mémoire : ce qu'une population a appris des joueurs (docs/50) ---
 
 # le monde lu tient-il la mémoire ? (instantane.monde.memoire) Sans elle, les actions de ACTIONS_MEMOIRE ne sont pas comptées.
 func memoire_eveillee(inst: Dictionary = {}) -> bool:
