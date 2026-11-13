@@ -102,6 +102,10 @@
           "description": "L'esprit (docs/34) : le cycle de nuit l'éveille, une fois ; les bêtes apprennent, transmettent, se servent d'outils ; chaque population a ses savoirs.",
           "type": "boolean"
         },
+        "memoire": {
+          "description": "La mémoire (docs/50) : le cycle de nuit l'éveille, une fois ; les populations retiennent ce que les joueurs leur font (l'attrait, la traque, la néophobie), et le monde lit les actions blessure, effarouchement, pillage, attaque, joueur_tombe. Elle ne change rien aux effectifs. Ses règles : monde.regles.memoire.",
+          "type": "boolean"
+        },
         "genre": {
           "enum": ["neutre", "horreur", "cozy", "collection", "voxel", "survie", "strategie", "mmo"],
           "description": "(docs/41) Le genre du jeu qui fait vivre ce monde : ses règles du moteur (moteur/genres.js) passent sur celles de la genèse, celles de monde.regles par-dessus ; ses poids des joueurs passent dans l'influence. « neutre » : le moteur tel qu'il est."

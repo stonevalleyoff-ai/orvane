@@ -37,9 +37,13 @@
 //    la rendent méfiante, des rencontres sans suite l'habituent ; l'une et l'autre retombent avec le temps (demi-vies), et
 //    une population audacieuse s'habitue plus vite, se méfie moins. Le moteur ne fait que tenir cette mémoire : c'est le
 //    jeu qui la rend, en distance de fuite.
+//  - la mémoire (docs/50, moteur/memoire.js) : dans un monde qui l'éveille, trois dispositions de plus, apprises des joueurs
+//    elles aussi (l'attrait, la traque, la néophobie), et un mot qui résume chaque population (son attitude).
 //
 // FORMAT DES PRESSIONS, en plus : taxons[t][b].q = { [trait continu]: z moyen des bêtes retirées par les joueurs } ;
 // taxons[t][b].contact = { rencontres, danger, aide } : ce que les bêtes ont vécu des joueurs (tampon, docs/12).
+// taxons[t][b].vecu = { rencontres, prises, blessures, dispositif, effarouchements, nourrissages, pillages, attaques, tombes } :
+// la même chose, plus fine et plafonnée par compte et par jeu, dans un monde à la mémoire éveillée (tampon, docs/50).
 // taxons[t][b].apport = { n, N: { [phenotype]: n }, alleles, a } : des bêtes nées en élevage, relâchées avec leurs gènes (docs/36).
 //
 // FORMAT DES PRESSIONS reçues (sortie du tampon) :
@@ -69,6 +73,7 @@ const GRA = typeof require === 'function' ? require('./grammaire.js') : racine.O
 const CAS = typeof require === 'function' ? require('./castes.js') : racine.OrvaneCastes;   // les castes, les insectes sociaux (moteur/castes.js, docs/33)
 const FOR = typeof require === 'function' ? require('./formes.js') : racine.OrvaneFormes;   // les formes nouvelles (moteur/formes.js, docs/33)
 const ESP = typeof require === 'function' ? require('./esprit.js') : racine.OrvaneEsprit;   // l'esprit : apprendre, transmettre, des outils (moteur/esprit.js, docs/34)
+const MEM = typeof require === 'function' ? require('./memoire.js') : racine.OrvaneMemoire;   // la mémoire : ce que les bêtes apprennent des joueurs (moteur/memoire.js, docs/50)
 // (docs/43) la version du contrat : MAJEUR.MINEUR, celle de package.json ; chaque instantané la porte (instantane.orvane)
 const CONTRAT = '1.0';
 const AXES = ['temperature', 'humidite', 'altitude', 'lumiere', 'couvert'];
@@ -473,7 +478,7 @@ const biomasse = (plans, N) => N.reduce((s, n, i) => s + n * (plans[i].masse_kg 
 // (dans un navigateur, un module se charge par sa balise <script>, AVANT orvane.js ; un monde qui a éveillé un mécanisme dont le
 // module manque tournerait sans lui, sans rien dire : on le dit, une fois — docs/19)
 const MODULES = [['mere', SYN, 'synthetique'], ['flore', FLO, 'flore'], ['pathogenes', PAT, 'pathogenes'], ['milieu', MIL, 'milieu'], ['ponte', PON, 'ponte'], ['stades', STA, 'stades'], ['invention', INV, 'invention'],
-  ['natures', NAT, 'natures'], ['derives', DER, 'derives'], ['dietes', DI, 'dietes'], ['climat', CLI, 'climat'], ['meteo', MET, 'meteo'], ['phenologie', PHE, 'phenologie'], ['succession', SUC, 'succession'], ['diversite', DIV, 'diversite'], ['grammaire', GRA, 'grammaire'], ['castes', CAS, 'castes'], ['formes', FOR, 'formes'], ['esprit', ESP, 'esprit']], AVERTIS = new Set();
+  ['natures', NAT, 'natures'], ['derives', DER, 'derives'], ['dietes', DI, 'dietes'], ['climat', CLI, 'climat'], ['meteo', MET, 'meteo'], ['phenologie', PHE, 'phenologie'], ['succession', SUC, 'succession'], ['diversite', DIV, 'diversite'], ['grammaire', GRA, 'grammaire'], ['castes', CAS, 'castes'], ['formes', FOR, 'formes'], ['esprit', ESP, 'esprit'], ['memoire', MEM, 'memoire']], AVERTIS = new Set();
 function cycle(inst, pressions = {}, opt = {}) {
   for (const [cle, M, f] of MODULES) if (inst?.monde?.[cle] && !M && !AVERTIS.has(cle)) { AVERTIS.add(cle); if (typeof console !== 'undefined') console.warn(`Orvane : ce monde a éveillé « ${cle} », mais moteur/${f}.js n'est pas chargé (avant orvane.js) : ce mécanisme est ignoré (docs/19).`); }
   const propres = inst?.monde?.regles, M = inst?.catalogue?.monde, avant = {}, ax = AX, ext = CORPS?.etendre ? CORPS.etendre(M) : null;
@@ -482,7 +487,8 @@ function cycle(inst, pressions = {}, opt = {}) {
   if (propres && typeof propres === 'object') { for (const k in propres) { if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue; avant[k] = REGLES[k];
     const v = propres[k], b = REGLES[k]; REGLES[k] = v && typeof v === 'object' && !Array.isArray(v) && b && typeof b === 'object' && !Array.isArray(b) ? { ...b, ...v } : v; } }
   if (M?.axes) AX = [...AXES, ...Object.keys(M.axes).filter(k => !AXES.includes(k))];
-  try { return cycleBrut(inst, pressions, opt); } finally { Object.assign(REGLES, avant); AX = ax; if (CORPS?.etendre) CORPS.etendre(ext); }
+  const rendre = MEM && inst?.monde?.memoire ? MEM.regler(REGLES.memoire) : null;   // (docs/50) les règles de la mémoire que le monde s'est choisies (regles.memoire)
+  try { return cycleBrut(inst, pressions, opt); } finally { if (rendre) rendre(); Object.assign(REGLES, avant); AX = ax; if (CORPS?.etendre) CORPS.etendre(ext); }
 }
 function cycleBrut(inst, pressions = {}, opt = {}) {
   const n = inst.cycle.n + 1, R = rng(inst.monde.graine, n);
@@ -513,6 +519,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   const SV = STA && inst.monde?.stades ? STA.preparer() : null;   // (docs/26) les cycles de vie
   const SCa = CAS && inst.monde?.castes ? CAS.preparer() : null;   // (docs/33) les colonies
   const ES = ESP && inst.monde?.esprit ? ESP.preparer({ taxons: inst.taxons, biomes }) : null;   // (docs/34) ce que savent les populations
+  const ME = MEM && inst.monde?.memoire ? MEM.preparer({ appetence }) : null;   // (docs/50) ce que les populations ont appris des joueurs ; rien n'y touche aux effectifs
   for (const b of Object.values(biomes)) {
     b.capacite_base ??= b.capacite;
     b.capacite = Math.max(0, b.capacite + (prB[b.id]?.habitat || 0) * (opt.unite_habitat ?? 1));
@@ -551,7 +558,8 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
       const N = F.map(f => SF > 0 ? pop.effectif * f / SF : 0); if (SF <= 0 && N.length) N[0] = pop.effectif;
       pops[pop.biome] = { N, depuis: pop.depuis ?? t.apparu, avant: pop.effectif, predation: new Array(N.length).fill(0), ration: new Array(N.length).fill(0), satiete: null, maladie: pop.maladie ? { ...pop.maladie } : null, malade0: !!pop.maladie };
       if (SEX && !syn) pops[pop.biome].A = allelesDe(t.phenotypes, N, cat, pop.alleles);   // les fréquences d'allèles (un monde d'avant : déduites des phénotypes)
-      Object.assign(pops[pop.biome], { flux0: pop.flux ?? 0, hyb0: pop.hybride?.part ?? 0, immig: 0, mef0: pop.mefiance ?? 0, hab0: pop.habituation ?? 0 }); if (pop.hivernants) pops[pop.biome].hiv = { ...pop.hivernants }; if (pop.savoirs?.routes) pops[pop.biome].routes = pop.savoirs.routes; if (pop.recouvrement != null) pops[pop.biome].rec0 = pop.recouvrement; if (pop.recouvrement_avant != null) pops[pop.biome].recAvant = pop.recouvrement_avant; if (pop.infection) pops[pop.biome].inf0 = pop.infection;
+      // (docs/50, dans un monde à la mémoire éveillée : Mp, ce que la population publiait ; M, ce que ses migrants y mêleront ; att0, son attitude)
+      Object.assign(pops[pop.biome], { flux0: pop.flux ?? 0, hyb0: pop.hybride?.part ?? 0, immig: 0, mef0: pop.mefiance ?? 0, hab0: pop.habituation ?? 0 }); if (ME) { const P = pops[pop.biome]; P.Mp = ME.lire(pop.memoire); if (pop.memoire) P.M = { ...P.Mp }; P.att0 = pop.attitude; } if (pop.hivernants) pops[pop.biome].hiv = { ...pop.hivernants }; if (pop.savoirs?.routes) pops[pop.biome].routes = pop.savoirs.routes; if (pop.recouvrement != null) pops[pop.biome].rec0 = pop.recouvrement; if (pop.recouvrement_avant != null) pops[pop.biome].recAvant = pop.recouvrement_avant; if (pop.infection) pops[pop.biome].inf0 = pop.infection;
       if (GEN && !syn) { const P = pops[pop.biome], Q = P.Q = lireQ(pop.quant);   // ce que ses traits continus pèsent : risque d'être mangé, naissances, maladie
         P.fp = penteQ(Q, 'predation'); P.ff = penteQ(Q, 'fecondite') * chargeQ(Q, t.plan, biomes[pop.biome]); P.fm = penteQ(Q, 'maladie'); }
       const s0 = pop.satiete ?? 0;   // (la satiété du cycle précédent : un omnivore qui trouve des proies pèse moins sur la place)
@@ -731,7 +739,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
       // vague vers un voisin tiré au sort (qui faisait d'une petite population voisine une suite d'explosions et d'effondrements)
       const essaimer = (part, filtre) => { const cibles = (b.voisins || []).filter(v => biomes[v] && (!filtre || filtre(biomes[v])) && (!b.traversees?.includes(v) || CLI.traverse(t.plan))).map(v => [v, convenance(t.plan, biomes[v])]).filter(([, c]) => c > 0), W = cibles.reduce((a, [, c]) => a + c, 0);
         if (!(W > 0) || !(part > 0)) return;
-        for (const [vers, c] of cibles) { const f = part * c / W; migrations.push({ taxon: t.id, vers, N: suiv.map(x => x * f), Q: pop.Q && copieQ(pop.Q), A: pop.A && { ...pop.A } }); }
+        for (const [vers, c] of cibles) { const f = part * c / W; migrations.push({ taxon: t.id, vers, N: suiv.map(x => x * f), Q: pop.Q && copieQ(pop.Q), A: pop.A && { ...pop.A }, ...(ME ? { M: pop.M || null } : {}) }); }   // (docs/50) ils emportent ce qu'ils ont appris des joueurs
         for (let i = 0; i < K; i++) suiv[i] *= 1 - part; };
       // la faim pousse un prédateur vers ses voisins
       if (faim > 1 - REGLES.faim_migration) essaimer(.05 * (faim - (1 - REGLES.faim_migration)) / REGLES.faim_migration);
@@ -743,7 +751,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
       // déplacements imposés (le joueur emporte des bêtes ailleurs)
       for (const d of pr.deplacement || []) if (biomes[d.vers] && d.n > 0) {
         const part = Math.min(1, d.n / Math.max(1, suiv.reduce((a, x) => a + x, 0)));
-        migrations.push({ taxon: t.id, vers: d.vers, N: suiv.map(x => x * part), Q: pop.Q && copieQ(pop.Q), A: pop.A && { ...pop.A } }); for (let i = 0; i < K; i++) suiv[i] *= 1 - part;
+        migrations.push({ taxon: t.id, vers: d.vers, N: suiv.map(x => x * part), Q: pop.Q && copieQ(pop.Q), A: pop.A && { ...pop.A }, ...(ME ? { M: pop.M || null } : {}) }); for (let i = 0; i < K; i++) suiv[i] *= 1 - part;
       }
       // (docs/36) des bêtes nées en élevage et relâchées : elles arrivent avec leurs gènes, comme des migrants
       const AP = pr.apport; if (AP && AP.n > 0) { const Na = new Array(K).fill(0);
@@ -819,15 +827,18 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   for (const mg of migrations) {
     const E = etat.get(mg.taxon), t = taxons.find(x => x.id === mg.taxon);
     if (!E.pops[mg.vers]) E.pops[mg.vers] = { N: new Array(t.phenotypes.length).fill(0), depuis: n, avant: 0, maladie: null, flux0: 1, immig: 0 };
-    const D = E.pops[mg.vers]; D.immig = (D.immig || 0) + mg.N.reduce((a, x) => a + x, 0);   // le flux de gènes reçu
+    const D = E.pops[mg.vers]; if (ME && D.n0 == null) D.n0 = D.N.reduce((a, x) => a + x, 0);   // (docs/50) ceux qui étaient là avant toute arrivée
+    D.immig = (D.immig || 0) + mg.N.reduce((a, x) => a + x, 0);   // le flux de gènes reçu
     if (D.hiv || mg.hiv) { const na = D.N.reduce((a, x) => a + x, 0), nb = mg.N.reduce((a, x) => a + x, 0), tot = na + nb;   // (docs/38) la part d'hivernants
       if (tot > 0) { const H = {}; for (const k in D.hiv || {}) H[k] = D.hiv[k] * na / tot; if (mg.hiv) H[mg.hiv] = (H[mg.hiv] || 0) + nb / tot; D.hiv = H; } }
     if (mg.saison) D.saisonnier = true;
     if (GEN && mg.Q) { const na = D.N.reduce((a, x) => a + x, 0), nb = mg.N.reduce((a, x) => a + x, 0); D.Q = D.Q && na > 0 ? melangerQ(D.Q, na, mg.Q, nb) : copieQ(mg.Q); }   // les migrants apportent leurs gènes
     if (SEX && mg.A) { const na = D.N.reduce((a, x) => a + x, 0), nb = mg.N.reduce((a, x) => a + x, 0), n = na + nb;
       if (!D.A || na <= 0) D.A = { ...mg.A }; else if (n > 0) { const o = {}; for (const id of new Set([...Object.keys(D.A), ...Object.keys(mg.A)])) o[id] = ((D.A[id] || 0) * na + (mg.A[id] || 0) * nb) / n; D.A = o; } }
+    if (ME && 'M' in mg) ME.recevoir(D, mg.M, mg.N.reduce((a, x) => a + x, 0));   // (docs/50) ce que les migrants apportent de mémoire : additionné, puis mêlé une fois (plus bas)
     mg.N.forEach((x, i) => { D.N[i] += x; });
   }
+  if (ME) for (const E of etat.values()) for (const D of Object.values(E.pops)) ME.installer(D);   // (docs/50) la mémoire du lieu et celle de ses arrivants, mêlées par les effectifs, quel que soit l'ordre des arrivées
 
   if (SP) SP.apres();   // la contagion, la guérison, les souches qui naissent et s'éteignent (docs/18)
   if (SF) SF.apres();   // la pousse des plantes, sous la dent des brouteurs (docs/17)
@@ -890,9 +901,10 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
       if (pop.flux != null) p.flux = +clamp(pop.flux, 0, 1).toFixed(4);
       if (pop.hiv) { const h = {}; for (const k of Object.keys(pop.hiv).sort()) if (pop.hiv[k] >= 1e-4) h[k] = +Math.min(1, pop.hiv[k]).toFixed(4); if (Object.keys(h).length) p.hivernants = h; }   // (docs/38)
       if (REGLES.mefiance.actif && opt.mefiance !== false) {                 // ce que la population a appris des joueurs (docs/12)
-        const [m, h] = apprendre(pop.mef0 || 0, pop.hab0 || 0, prT[t.id]?.[bid]?.contact, GEN ? pop.Q?.audace?.m || 0 : 0);
+        const [m, h] = apprendre(pop.mef0 || 0, pop.hab0 || 0, ME ? ME.danger(prT[t.id]?.[bid]?.contact, prT[t.id]?.[bid]?.vecu) : prT[t.id]?.[bid]?.contact, GEN ? pop.Q?.audace?.m || 0 : 0);   // (docs/50 : une bête blessée qui survit apprend aussi)
         if (m >= 1e-3) p.mefiance = +m.toFixed(3); if (h >= 1e-3) p.habituation = +h.toFixed(3);
         if (m >= REGLES.mefiance.alerte && (pop.mef0 || 0) < REGLES.mefiance.alerte) ev.push({ type: 'mefiance', taxon: t.id, biome: bid, detail: (SY && SY.texteMefiance(t, m)) || `les bêtes se méfient des joueurs (${Math.round(m * 100)} %)` }); }
+      if (ME) ME.publier(t, bid, pop, p, prT[t.id]?.[bid]?.vecu, GEN ? pop.Q?.audace?.m || 0 : 0, ev, biomes[bid]?.nom);   // (docs/50) ce qu'elle a appris des joueurs : l'attrait, la traque, la néophobie, et le mot qui la résume
       if (SY) SY.publier(t, bid, pop, p, morts);
       if (SF) SF.publier(t, bid, p, pop);
       if (SP) SP.publier(t, bid, pop, p);
@@ -958,7 +970,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   return {
     orvane: CONTRAT, monde: (m => m === inst.monde ? clone(m) : m)((m => SDi ? SDi.monde(m) : m)((m => SP ? SP.monde(m) : m)((m => SY ? SY.monde(m) : m)(SN ? SN.monde(SC ? SC.monde(inst.monde) : inst.monde) : SC ? SC.monde(inst.monde) : inst.monde)))),
     cycle: { n, date: new Date((Number.isFinite(d0) ? d0 : 0) + duree).toISOString(), pressions_recues: pressions.nombre ?? 0, ...(saison ? { saison } : {}) },
-    biomes: Object.values(biomes).map(b => phase == null ? b : { ...b, axes_saison: axesSaison(b, phase) }), catalogue: { version: inst.catalogue?.version || '0.1', traits, ...(GEN ? { quantitatifs: clone(QUANT) } : {}), organes: CORPS.catalogueOrganes(), ...(SF ? { flore: FLO.TRAITS } : {}), ...(SDi ? { flore_riche: DIV.catalogue() } : {}), ...(SAV ? { savoirs: SAV } : {}), ...(MC ? { monde: MC } : {}) },
+    biomes: Object.values(biomes).map(b => phase == null ? b : { ...b, axes_saison: axesSaison(b, phase) }), catalogue: { version: inst.catalogue?.version || '0.1', traits, ...(GEN ? { quantitatifs: clone(QUANT) } : {}), organes: CORPS.catalogueOrganes(), ...(SF ? { flore: FLO.TRAITS } : {}), ...(SDi ? { flore_riche: DIV.catalogue() } : {}), ...(SAV ? { savoirs: SAV } : {}), ...(ME ? { memoire: MEM.catalogue() } : {}), ...(MC ? { monde: MC } : {}) },
     taxons: sortie, evenements: ev
   };
 }

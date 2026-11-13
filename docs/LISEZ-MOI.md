@@ -55,6 +55,7 @@ Pour s'inscrire, recevoir ses clés et faire ses premiers appels au Supabase d'O
 | [47. Les plantes sous le feu](47-succession.md) | les catastrophes et le sec prennent des pieds aux plantes ; la succession : l'herbe, puis les buissons, puis les arbres ; le couvert d'un lieu suit ses arbres, une forêt brûlée s'ouvre puis se referme |
 | [48. La flore riche](48-flore-riche.md) | quarante-sept formes de plantes de plus, chacune avec son port, sa hauteur, ce qu'elle donne et les lieux où elle se plaît ; douze caractères hérités ; la radiation de l'éveil ; la concurrence pour la place, les séparations, la colonisation, les extinctions |
 | [49. L'herbier](49-herbier.md) | chaque plante de chaque biome dessinée à chaque cycle, selon sa forme, son stade, son feuillage, ce qu'elle a subi ; `morceaux/herbier/<biome>.json`, avec le temps qu'il fait |
+| [50. La mémoire](50-memoire.md) | ce que les bêtes apprennent des joueurs, tous jeux confondus : l'attrait, la traque, la néophobie, et un mot par population (son attitude) ; cinq actions de plus dans les lots (blessure, effarouchement, pillage, attaque, joueur_tombe) et le moyen ; ce que le tampon plafonne, ce qui voyage, ce qui tient face à l'abus |
 
 ## En une page
 

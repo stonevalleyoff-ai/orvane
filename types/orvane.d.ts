@@ -135,6 +135,10 @@ export interface Instantane {
     esprit?: {
       depuis?: number;
     };
+    /** (docs/50) La mémoire : les populations retiennent ce que les joueurs leur font (populations[].memoire, populations[].attitude), et le monde lit les actions blessure, effarouchement, pillage, attaque, joueur_tombe. Depuis quand. */
+    memoire?: {
+      depuis?: number;
+    };
     /** (docs/38) La vie en groupe est publiée (populations[].groupe, populations[].migration, biomes[].visiteurs) : depuis quand. */
     collectif?: {
       depuis?: number;
@@ -419,6 +423,19 @@ export interface Instantane {
     savoirs?: {
       [cle: string]: {
         [cle: string]: unknown;
+      };
+    };
+    /** (docs/50) Ce que la mémoire publie : ses dispositions (dispositions : pour chacune son nom, sa valeur neutre — celle d'une population qui ne la publie pas —, ce qu'un jeu en montre, son présage) et les attitudes (attitudes : pour chacune son nom, et quand une population la prend). */
+    memoire?: {
+      dispositions?: {
+        [cle: string]: {
+          [cle: string]: unknown;
+        };
+      };
+      attitudes?: {
+        [cle: string]: {
+          [cle: string]: unknown;
+        };
       };
     };
     /** Les traits des plantes (docs/17) : toxique, epineux. */
@@ -760,6 +777,12 @@ export interface Instantane {
       mefiance?: number;
       /** L'habituation, nourrie des rencontres sans suite et de l'aide (nourrissage, libération), défaite par ce qui finit mal, retombe de moitié en 15 cycles. Absente : 0. */
       habituation?: number;
+      /** (docs/50) Ce que la population a appris d'autre des joueurs, dans un monde à la mémoire éveillée : pour chaque disposition (catalogue.memoire.dispositions), sa valeur de 0 à 1. attrait : le joueur et son camp valent de la nourriture ; traque : le joueur est une proie ; neophobie : la peur du feu, de la lumière, des pièges. Une disposition absente vaut sa valeur neutre : 0, et 0,5 pour la néophobie. */
+      memoire?: {
+        [cle: string]: number;
+      };
+      /** (docs/50) Le mot qui résume la population face aux joueurs (catalogue.memoire.attitudes) : traqueuse, rodeuse, quemandeuse, defensive, fuyante, familiere. Absente : rien de marqué. Un jeu qui ne connaît pas un mot l'ignore. */
+      attitude?: string;
       /** (monde à parcelles, docs/15) l'effectif de la population dans chacune des parcelles de son biome. */
       parcelles?: {
         [cle: string]: number;
@@ -870,7 +893,7 @@ export interface Instantane {
   }[];
   /** Ce qui s'est passé de notable dans le cycle : lisible par le visualiseur et par un jeu qui veut le raconter. */
   evenements?: {
-    type: "apparition" | "extinction" | "separation" | "migration" | "effondrement" | "explosion" | "nouveau_trait" | "epidemie" | "remission" | "catastrophe" | "hybridation" | "mefiance" | "eveil" | "conception" | "transfert" | "transformation" | "invention" | "nature" | "climat" | "meteo" | "savoir";
+    type: "apparition" | "extinction" | "separation" | "migration" | "effondrement" | "explosion" | "nouveau_trait" | "epidemie" | "remission" | "catastrophe" | "hybridation" | "mefiance" | "eveil" | "conception" | "transfert" | "transformation" | "invention" | "nature" | "climat" | "meteo" | "savoir" | "memoire";
     taxon: string;
     biome?: string;
     detail?: string;
@@ -928,8 +951,8 @@ export interface Lot {
     phenotype?: string;
     /** Biome Orvane (déjà traduit par le traducteur, pas le biome du jeu). */
     biome: string;
-    /** rencontre : vu/approché, sans conséquence (mesure l'exposition). prelevement : mort causée par le joueur. capture : retiré du sauvage (apprivoisé). liberation : rendu au sauvage. nourrissage/reproduction : aide à la population. deplacement : emporté vers un autre biome (voir « vers »). defrichage, reboisement, assechement, irrigation, construction, transformation : le jeu change le milieu, en « n » unités de surface (docs/22) ; construction retire aussi de l'habitat ; transformation dit son axe et son sens. Ces actions, comme habitat_*, n'ont pas de taxon. habitat_* : surface d'habitat détruite/créée, en « n » unités. */
-    action: "rencontre" | "prelevement" | "capture" | "liberation" | "nourrissage" | "reproduction" | "deplacement" | "habitat_perdu" | "habitat_gagne" | "defrichage" | "reboisement" | "assechement" | "irrigation" | "construction" | "transformation";
+    /** rencontre : vu/approché, sans conséquence (mesure l'exposition). prelevement : mort causée par le joueur. capture : retiré du sauvage (apprivoisé). liberation : rendu au sauvage. nourrissage/reproduction : aide à la population. deplacement : emporté vers un autre biome (voir « vers »). defrichage, reboisement, assechement, irrigation, construction, transformation : le jeu change le milieu, en « n » unités de surface (docs/22) ; construction retire aussi de l'habitat ; transformation dit son axe et son sens. Ces actions, comme habitat_*, n'ont pas de taxon. habitat_* : surface d'habitat détruite/créée, en « n » unités. (docs/50) Ce que les bêtes vivent des joueurs sans être retirées, compté dans un monde à la mémoire éveillée (monde.memoire ; ailleurs, laissé) : blessure, frappée par un joueur, elle survit ; effarouchement, arrêtée sans mal par un dissuasif (un feu, une lumière, un bruit) ; pillage, elle s'est servie chez le joueur (vivres, cultures, appât) ; attaque, elle a porté un assaut sur un joueur, qu'il touche ou non ; joueur_tombe, un joueur mort ou hors de combat de son fait. */
+    action: "rencontre" | "prelevement" | "capture" | "liberation" | "nourrissage" | "reproduction" | "deplacement" | "habitat_perdu" | "habitat_gagne" | "defrichage" | "reboisement" | "assechement" | "irrigation" | "construction" | "transformation" | "blessure" | "effarouchement" | "pillage" | "attaque" | "joueur_tombe";
     /** Compte brut sur la période : un nombre fini, de 0 à 10 000. Un événement hors de ces bornes, ou dont la lignée, le lieu, l'action ou la destination sont inconnus du monde, est écarté par le tampon (compté dans « rejetes ») ; le reste du lot est lu. */
     n: number;
     /** Biome de destination pour « deplacement ». */
@@ -940,6 +963,8 @@ export interface Lot {
     sens?: number;
     /** Si le jeu le sait : prélever des adultes reproducteurs pèse plus ; un œuf pris pèse moins qu'un jeune (docs/25). */
     age?: "oeuf" | "jeune" | "adulte" | "vieux";
+    /** (docs/50) Si le jeu le sait : comment. De la main du joueur (melee, distance) ou par un dispositif (piege, feu, lumiere, bruit). Sur un prélèvement, une capture, une blessure : ce qui a fait le mal (un dispositif nourrit la néophobie). Sur un effarouchement : ce qui a arrêté la bête. Une valeur inconnue est ignorée. */
+    moyen?: "melee" | "distance" | "piege" | "feu" | "lumiere" | "bruit";
     /** Traits continus (docs/8) : la valeur moyenne z des bêtes de cet événement, telle qu'elles l'ont tirée à la naissance. C'est ce qui dit à Orvane si les joueurs prennent les plus grandes, les plus audacieuses… */
     q?: {
       [cle: string]: number;
@@ -1009,6 +1034,8 @@ export interface Profil {
     invention?: boolean;
     /** L'esprit (docs/34) : le cycle de nuit l'éveille, une fois ; les bêtes apprennent, transmettent, se servent d'outils ; chaque population a ses savoirs. */
     esprit?: boolean;
+    /** La mémoire (docs/50) : le cycle de nuit l'éveille, une fois ; les populations retiennent ce que les joueurs leur font (l'attrait, la traque, la néophobie), et le monde lit les actions blessure, effarouchement, pillage, attaque, joueur_tombe. Elle ne change rien aux effectifs. Ses règles : monde.regles.memoire. */
+    memoire?: boolean;
     /** (docs/41) Le genre du jeu qui fait vivre ce monde : ses règles du moteur (moteur/genres.js) passent sur celles de la genèse, celles de monde.regles par-dessus ; ses poids des joueurs passent dans l'influence. « neutre » : le moteur tel qu'il est. */
     genre?: "neutre" | "horreur" | "cozy" | "collection" | "voxel" | "survie" | "strategie" | "mmo";
     /** Des règles du moteur (REGLES de moteur/orvane.js) réglées pour ce monde vivant : elles complètent, d'un niveau, celles de sa genèse (monde.regles de l'instantané) et ne valent que pour ce qui arrive ensuite. Exemple : { "derive": { "tolerance": 0.35, "formes": 1 } } laisse la largeur de la niche dériver à la séparation, et fait naître les formes nouvelles du monde à la séparation (docs/33). ; { "hivernage": { "actif": 1, "rude": 0.85 } } fait partir pour de bon les bêtes dont l'hiver est rude (docs/38). */

@@ -24,12 +24,12 @@ namespace Orvane
         public Compteur(string jeu, string monde = "orvane") { Jeu = jeu; Monde = monde; }
 
         /// <summary>Ce que le jeu a vu ou fait à une bête d'une lignée, dans un biome d'Orvane (déjà traduit).</summary>
-        public void Compter(string taxon, string biome, string action, double n = 1, string phenotype = null, string parcelle = null, string age = null)
+        public void Compter(string taxon, string biome, string action, double n = 1, string phenotype = null, string parcelle = null, string age = null, string moyen = null)
         {
             if (string.IsNullOrEmpty(biome) || string.IsNullOrEmpty(action) || !(n > 0)) return;
-            var cle = string.Join("|", taxon, phenotype, biome, parcelle, action, age);
+            var cle = string.Join("|", taxon, phenotype, biome, parcelle, action, age, moyen);
             if (evenements.TryGetValue(cle, out var e)) e.N += n;
-            else evenements[cle] = new EvenementLot { Taxon = taxon, Phenotype = phenotype, Biome = biome, Parcelle = parcelle, Action = action, N = n, Age = age };
+            else evenements[cle] = new EvenementLot { Taxon = taxon, Phenotype = phenotype, Biome = biome, Parcelle = parcelle, Action = action, N = n, Age = age, Moyen = moyen };
         }
         /// <summary>Ce que le joueur a fait au milieu (défricher, assécher, construire…) : sans lignée, en unités de surface.</summary>
         public void Milieu(string biome, string action, double n, string parcelle = null) => Compter(null, biome, action, n, null, parcelle);
@@ -72,7 +72,7 @@ namespace Orvane
             if (string.IsNullOrEmpty(texte)) return; var s = JsonConvert.DeserializeObject<Sauvegarde>(texte); if (s == null) return;
             enAttente.AddRange(s.Lots ?? new List<string>());
             foreach (var e in s.Evenements ?? new List<EvenementLot>())
-                if (e.Action == Actions.Deplacement) Deplacer(e.Taxon, e.Biome, e.Vers, e.N); else Compter(e.Taxon, e.Biome, e.Action, e.N, e.Phenotype, e.Parcelle, e.Age);
+                if (e.Action == Actions.Deplacement) Deplacer(e.Taxon, e.Biome, e.Vers, e.N); else Compter(e.Taxon, e.Biome, e.Action, e.N, e.Phenotype, e.Parcelle, e.Age, e.Moyen);
             if (DateTime.TryParse(s.Debut, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal, out var d) && d < debut) debut = d;
         }
 

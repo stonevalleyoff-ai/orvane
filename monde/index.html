@@ -47,6 +47,7 @@
 <script src="../moteur/castes.js"></script>
 <script src="../moteur/formes.js"></script>
 <script src="../moteur/esprit.js"></script>
+<script src="../moteur/memoire.js"></script>
 <script src="../moteur/orvane.js"></script>
 <script src="../tampon/tampon.js"></script>
 <script src="../moteur/parcelles.js"></script>
@@ -81,7 +82,7 @@ const plantesDe = I => [...I.taxons, ...(I === inst() && E.flore?.taxons || [])]
 const nomEsp = t => t ? (t.nom_commun || t.nom || t.id) : '';   // (docs/37) le nom commun qu'un joueur lui a donné, sinon celui du moteur
 // les fichiers que le moteur charge dans un Web Worker pour simuler sans figer la page (les mêmes que les balises <script> ci-dessus)
 const MODULES = ['moteur/catalogue.js', 'moteur/corps.js', 'moteur/dietes.js', 'moteur/phenologie.js', 'moteur/flore.js', 'moteur/derives.js', 'moteur/pathogenes.js', 'moteur/milieu.js', 'moteur/synthetique.js',
-  'moteur/ponte.js', 'moteur/stades.js', 'moteur/invention.js', 'moteur/natures.js', 'moteur/climat.js', 'moteur/meteo.js', 'moteur/succession.js', 'moteur/diversite.js', 'moteur/grammaire.js', 'moteur/castes.js', 'moteur/formes.js', 'moteur/esprit.js', 'moteur/orvane.js'];
+  'moteur/ponte.js', 'moteur/stades.js', 'moteur/invention.js', 'moteur/natures.js', 'moteur/climat.js', 'moteur/meteo.js', 'moteur/succession.js', 'moteur/diversite.js', 'moteur/grammaire.js', 'moteur/castes.js', 'moteur/formes.js', 'moteur/esprit.js', 'moteur/memoire.js', 'moteur/orvane.js'];
 const SAISON_EN = { printemps: 'au printemps', 'été': 'en été', automne: 'en automne', hiver: 'en hiver' }, enSaison = nom => SAISON_EN[nom] || `en ${nom}`;
 const cyc = n => String(n).replace('-', '−');   // un cycle d'avant le cycle 0 (la genèse) : avec un vrai signe moins
 // une lignée née pendant la genèse : avant le cycle 0 (apparu négatif) ; ou, dans un monde publié avant que ses dates soient recalées,
@@ -93,7 +94,7 @@ const STATUT = { croissance: ['en croissance', 'vif'], stable: ['stable', ''], d
 const REGIME = { herbivore: 'herbivore', omnivore: 'omnivore', carnivore: 'carnivore', filtreur: 'filtreur', detritivore: 'charognard', synthetique: 'machine' };   // (docs/16 : une machine)
 const EVT = { apparition: ['apparition', 'apparitions'], extinction: ['extinction', 'extinctions'], separation: ['nouvelle lignée', 'nouvelles lignées'], migration: ['migration', 'migrations'],
   effondrement: ['effondrement', 'effondrements'], explosion: ['explosion démographique', 'explosions démographiques'], nouveau_trait: ['trait nouveau', 'traits nouveaux'],
-  epidemie: ['épidémie', 'épidémies'], remission: ['épidémie éteinte', 'épidémies éteintes'], catastrophe: ['catastrophe', 'catastrophes'], hybridation: ['zone hybride', 'zones hybrides'], mefiance: ['méfiance', 'méfiances'],
+  epidemie: ['épidémie', 'épidémies'], remission: ['épidémie éteinte', 'épidémies éteintes'], catastrophe: ['catastrophe', 'catastrophes'], hybridation: ['zone hybride', 'zones hybrides'], mefiance: ['méfiance', 'méfiances'], memoire: ['bascule de la mémoire', 'bascules de la mémoire'],
   eveil: ['éveil de la Mère', 'éveils de la Mère'], conception: ['plan conçu par la Mère', 'plans conçus par la Mère'], transfert: ['module adopté', 'modules adoptés'] };
 const evtNom = (type, n = 1) => (EVT[type] || [type, type])[n > 1 ? 1 : 0];
 const bandeau = (html, cls = '') => { $('#bandeau').innerHTML = html ? `<p class="${cls}">${html}</p>` : ''; };
@@ -438,6 +439,11 @@ function fiche() {
   if (appris.length) h += `<h2>Méfiance et habituation</h2><div class="defile"><table><tr><th>biome</th><th class="n">méfiance</th><th class="n">habituation</th><th class="n">distance de fuite</th></tr>
     ${appris.map(q => { const f = (XM.fuite ?? 2.2) ** (q.mefiance || 0) * (XM.habitude ?? .5) ** (q.habituation || 0); return `<tr><td>${ESC(nomBiome(q.biome))}</td><td class="n ${q.mefiance >= .5 ? 'declin' : ''}">${q.mefiance ? pct(q.mefiance) : '—'}</td><td class="n">${q.habituation ? pct(q.habituation) : '—'}</td><td class="n ${f > 1.05 ? 'ambre' : ''}">× ${fx(f, 2)}</td></tr>`; }).join('')}</table></div>
     <p class="note">Des rencontres qui finissent mal (une bête tuée, une bête capturée) rendent une population méfiante ; des rencontres sans suite l'habituent. La méfiance retombe de moitié en 6 cycles, l'habituation en 15. Le jeu en fait une distance de fuite${XM.rendue === false ? ' (ce monde ne la montre pas)' : ''}.</p>`;
+  // (docs/50) la mémoire : ce que la population a appris d'autre des joueurs, et le mot qui la résume
+  const souvenirs = t.populations.filter(q => q.memoire || q.attitude), ATT = I.catalogue?.memoire?.attitudes || {}, neo = q => q.memoire?.neophobie ?? .5;
+  if (souvenirs.length) h += `<h2>La mémoire</h2><div class="defile"><table><tr><th>biome</th><th>attitude</th><th class="n">attrait</th><th class="n">traque</th><th class="n">néophobie</th></tr>
+    ${souvenirs.map(q => `<tr><td>${ESC(nomBiome(q.biome))}</td><td class="${q.attitude === 'traqueuse' ? 'declin' : q.attitude === 'rodeuse' ? 'ambre' : ''}">${q.attitude ? ESC(ATT[q.attitude]?.nom || q.attitude) : '—'}</td><td class="n">${q.memoire?.attrait ? pct(q.memoire.attrait) : '—'}</td><td class="n ${q.memoire?.traque >= .4 ? 'declin' : ''}">${q.memoire?.traque ? pct(q.memoire.traque) : '—'}</td><td class="n ${neo(q) < .25 ? 'ambre' : ''}">${q.memoire?.neophobie != null ? pct(q.memoire.neophobie) : '—'}</td></tr>`).join('')}</table></div>
+    <p class="note">Ce que les joueurs de tous les jeux ont appris à cette population. L'attrait : on la nourrit, elle pille. La traque : des joueurs tombent sous ses assauts. La néophobie : sous 50 %, elle s'est accoutumée au feu et aux lumières des joueurs ; au-dessus, elle craint ce qu'ils posent. Tout retombe quand les joueurs s'en vont.</p>`;
   // les phénotypes
   const expo = E.profil ? (() => { try { return OrvaneTampon.exposer(t, E.profil, cat, null, OrvaneTampon.referenceDe ? OrvaneTampon.referenceDe(t.id, I, E.gen0) : null); } catch (e) { return null; } })() : null;
   h += `<h2>Ce qui se voit</h2><div class="defile"><table><tr><th>phénotype</th><th class="n">part réelle</th>${expo ? '<th class="n">dans le jeu</th>' : ''}<th class="n">coût</th><th class="n">sur le cycle</th></tr>
