@@ -1,0 +1,295 @@
+{
+ "lisse": {
+  "soel": {
+   "prairie": {
+    "*": 0.333
+   }
+  },
+  "umedun": {
+   "prairie": {
+    "*": 0.333
+   }
+  },
+  "noufir": {
+   "prairie": {
+    "*": 0.333
+   }
+  },
+  "silbel": {
+   "montagne": {
+    "metabolisme-lent": 0.031
+   },
+   "steppe": {
+    "metabolisme-lent": 0.01
+   },
+   "prairie": {
+    "metabolisme-lent": 0.01
+   }
+  },
+  "muphene": {
+   "montagne": {
+    "metabolisme-lent": 0.059
+   }
+  },
+  "lomuel": {
+   "montagne": {
+    "metabolisme-lent": 0.055
+   }
+  },
+  "silmevi": {
+   "jungle": {
+    "base": 0.011
+   }
+  }
+ },
+ "dernier_id": 43,
+ "lisseQ": {
+  "muphene": {
+   "montagne": {
+    "audace": {
+     "s": 0.029,
+     "w": 0.0487
+    },
+    "taille": {
+     "s": 0.0617,
+     "w": 0.0487
+    },
+    "vitesse": {
+     "s": -0.0186,
+     "w": 0.0487
+    }
+   }
+  },
+  "lomuel": {
+   "steppe": {
+    "audace": {
+     "s": 0.019,
+     "w": 0.013
+    },
+    "taille": {
+     "s": 0.003,
+     "w": 0.013
+    },
+    "vitesse": {
+     "s": 0.0046,
+     "w": 0.013
+    }
+   },
+   "cote": {
+    "audace": {
+     "s": 0.0089,
+     "w": 0.026
+    },
+    "taille": {
+     "s": 0.0276,
+     "w": 0.026
+    },
+    "vitesse": {
+     "s": 0.0268,
+     "w": 0.026
+    }
+   },
+   "montagne": {
+    "audace": {
+     "s": 0.033,
+     "w": 0.065
+    },
+    "taille": {
+     "s": 0.0797,
+     "w": 0.065
+    },
+    "vitesse": {
+     "s": 0.0295,
+     "w": 0.065
+    }
+   }
+  },
+  "dunouro": {
+   "cote": {
+    "audace": {
+     "s": 0.0013,
+     "w": 0.013
+    },
+    "taille": {
+     "s": 0.0044,
+     "w": 0.013
+    },
+    "vitesse": {
+     "s": -0.0147,
+     "w": 0.013
+    }
+   }
+  },
+  "silmevi": {
+   "jungle": {
+    "audace": {
+     "s": 0.0071,
+     "w": 0.013
+    },
+    "taille": {
+     "s": 0.0029,
+     "w": 0.013
+    },
+    "vitesse": {
+     "s": -0.0079,
+     "w": 0.013
+    }
+   },
+   "desert": {
+    "audace": {
+     "s": 0.0145,
+     "w": 0.026
+    },
+    "taille": {
+     "s": -0.0216,
+     "w": 0.026
+    },
+    "vitesse": {
+     "s": -0.0161,
+     "w": 0.026
+    }
+   }
+  },
+  "tisne": {
+   "montagne": {
+    "audace": {
+     "s": -0.0091,
+     "w": 0.026
+    },
+    "taille": {
+     "s": 0.0119,
+     "w": 0.026
+    },
+    "vitesse": {
+     "s": -0.0037,
+     "w": 0.026
+    }
+   }
+  },
+  "anphevi": {
+   "montagne": {
+    "audace": {
+     "s": -0.007,
+     "w": 0.013
+    },
+    "taille": {
+     "s": 0.0217,
+     "w": 0.013
+    },
+    "vitesse": {
+     "s": -0.0029,
+     "w": 0.013
+    }
+   },
+   "cote": {
+    "audace": {
+     "s": 0.0372,
+     "w": 0.013
+    },
+    "taille": {
+     "s": 0.0117,
+     "w": 0.013
+    },
+    "vitesse": {
+     "s": -0.0129,
+     "w": 0.013
+    }
+   },
+   "prairie": {
+    "audace": {
+     "s": 0.0137,
+     "w": 0.0138
+    },
+    "taille": {
+     "s": 0.02,
+     "w": 0.0138
+    },
+    "vitesse": {
+     "s": -0.0022,
+     "w": 0.0138
+    }
+   }
+  },
+  "silbel": {
+   "prairie": {
+    "audace": {
+     "s": -0.0059,
+     "w": 0.013
+    },
+    "taille": {
+     "s": -0.0081,
+     "w": 0.013
+    },
+    "vitesse": {
+     "s": 0.0155,
+     "w": 0.013
+    }
+   },
+   "montagne": {
+    "audace": {
+     "s": 0.0386,
+     "w": 0.039
+    },
+    "taille": {
+     "s": 0.0007,
+     "w": 0.039
+    },
+    "vitesse": {
+     "s": -0.0335,
+     "w": 0.039
+    }
+   },
+   "steppe": {
+    "audace": {
+     "s": 0.0007,
+     "w": 0.013
+    },
+    "taille": {
+     "s": 0.0001,
+     "w": 0.013
+    },
+    "vitesse": {
+     "s": 0.0073,
+     "w": 0.013
+    }
+   }
+  },
+  "tismusil": {
+   "montagne": {
+    "audace": {
+     "s": 0.0381,
+     "w": 0.013
+    },
+    "taille": {
+     "s": 0.0061,
+     "w": 0.013
+    },
+    "vitesse": {
+     "s": -0.0035,
+     "w": 0.013
+    }
+   }
+  },
+  "phemeva": {
+   "prairie": {
+    "audace": {
+     "s": 0.0803,
+     "w": 0.0751
+    },
+    "taille": {
+     "s": 0.0898,
+     "w": 0.0751
+    },
+    "vitesse": {
+     "s": 0.0427,
+     "w": 0.0751
+    },
+    "sociabilite": {
+     "s": 0.0253,
+     "w": 0.0751
+    }
+   }
+  }
+ },
+ "derniere_lecture": "2026-11-13T08:19:27.366212+00:00"
+}

@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Le simulateur de joueurs — Orvane</title>
+<meta name="description" content="Des joueurs fictifs face aux bêtes du monde d’Orvane : choisissez un lieu, des bêtes, des façons de jouer, faites passer les nuits, et voyez ce que chaque population apprend, selon son caractère.">
+<link rel="icon" href="../assets/embleme.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/orvane.css">
+<style>
+  body.sim { background: var(--paper); color: var(--ink); --trait: #3d7f4f; --seuil: #a9b2a1; }
+  .sim-main { max-width: var(--wrap); margin: 0 auto; padding: 40px 24px 80px; }
+  .sim-tete { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 40px; align-items: end; margin-bottom: 34px; }
+  .sim-tete h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(32px, 5vw, 54px); line-height: 1.05; margin: 8px 0 14px; color: var(--green); }
+  .sim-tete h1 em { color: var(--muted); }
+  .sim-tete p { margin: 0; line-height: 1.6; color: var(--muted); max-width: 62ch; }
+  .choix { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px; }
+  .choix label { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); min-width: 64px; }
+  .choix select { font: 15px var(--sans); padding: 10px 12px; border: 1px solid var(--line); background: var(--paper-light); color: var(--ink); min-width: 0; width: 100%; flex: 1 1 220px; max-width: 100%; text-overflow: ellipsis; }
+  .etat-monde, .note { font-size: 13px; color: var(--muted); margin: 6px 0 0; line-height: 1.55; }
+  h2.titre { font-family: var(--serif); font-weight: 400; font-size: 26px; margin: 0 0 6px; color: var(--green); }
+  .sous-titre { font-size: 14px; color: var(--muted); margin: 0 0 16px; max-width: 70ch; line-height: 1.6; }
+  section.bloc { margin-top: 44px; }
+  .styles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .style { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: start; background: var(--paper-light); border: 1px solid var(--line); border-left: 3px solid var(--line); padding: 12px 14px; }
+  .style.actif { border-left-color: var(--gold); }
+  .style h3 { font-family: var(--serif); font-weight: 400; font-size: 18px; margin: 0; color: var(--green); }
+  .style p { font-size: 13px; line-height: 1.55; color: var(--muted); margin: 2px 0 0; }
+  .style details { margin-top: 6px; }
+  .compteur { display: flex; align-items: center; gap: 2px; }
+  .compteur button { width: 36px; height: 36px; font: 600 18px var(--sans); border: 1px solid var(--green); background: transparent; color: var(--green); cursor: pointer; line-height: 1; }
+  .compteur output { min-width: 34px; text-align: center; font: 600 17px var(--sans); color: var(--ink); font-variant-numeric: tabular-nums; }
+  summary { cursor: pointer; font-size: 13px; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+  .temps { position: sticky; bottom: 0; z-index: 5; margin-top: 36px; background: var(--deep); color: var(--paper-light); padding: 14px 18px; display: flex; flex-wrap: wrap; gap: 12px 18px; align-items: center; }
+  .temps p { margin: 0; font-size: 13px; color: var(--sage); flex: 1 1 260px; line-height: 1.5; }
+  .temps #nuit { font: 400 22px var(--serif); color: var(--paper-light); flex: 0 0 auto; }
+  .temps .boutons { display: flex; gap: 10px; flex-wrap: wrap; }
+  .temps button { font: 600 13px var(--sans); padding: 11px 16px; border: 1px solid var(--gold); background: transparent; color: var(--gold); cursor: pointer; }
+  .temps button.fort { background: var(--gold); color: var(--deep); }
+  .temps button:disabled { opacity: .45; cursor: default; }
+  button:hover:not(:disabled) { filter: brightness(1.12); }
+  button:focus-visible, select:focus-visible, summary:focus-visible, .courbe:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .betes { display: grid; gap: 18px; }
+  .bete { background: var(--paper-light); border: 1px solid var(--line); padding: 18px; }
+  .bete-tete { display: grid; grid-template-columns: 130px minmax(0, 1fr) auto; gap: 16px; align-items: center; margin-bottom: 14px; }
+  .dessin svg { width: 100%; height: auto; max-height: 84px; display: block; }
+  .bete h3 { font-family: var(--serif); font-weight: 400; font-size: 22px; margin: 0; color: var(--green); line-height: 1.2; }
+  .infos { font-size: 13px; color: var(--muted); line-height: 1.5; margin: 4px 0 0; }
+  .cote { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+  .attitude { margin: 0; font: 600 13px var(--sans); letter-spacing: .04em; padding: 6px 12px; border: 1px solid var(--green); color: var(--green); white-space: nowrap; }
+  .attitude.traqueuse, .attitude.rodeuse { background: var(--green); color: var(--paper-light); }
+  .attitude.neutre { border-color: var(--line); color: var(--muted); font-weight: 400; }
+  .retirer { font: 12px var(--sans); background: none; border: 0; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; padding: 2px 0; }
+  .tuiles { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; }
+  .portrait { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 28px; margin: 0 0 14px; padding: 12px 0 14px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .portrait h4 { margin: 0 0 8px; font: 400 12px var(--sans); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .portrait .note { font-size: 12px; margin: 8px 0 0; }
+  .trait-car { display: grid; grid-template-columns: 104px minmax(0, 1fr) 150px; gap: 10px; align-items: center; font-size: 13px; padding: 3px 0; }
+  .trait-nom { color: var(--ink); } .trait-mot { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .jauge, .part-barre { display: block; height: 8px; background: var(--paper); border: 1px solid var(--line); }
+  .jauge i, .part-barre i { display: block; height: 100%; background: var(--trait); }
+  .part-barre.neutre i { background: var(--seuil); }
+  .parts ul { list-style: none; margin: 0; padding: 0; }
+  .parts li { display: grid; grid-template-columns: 30px minmax(0, 190px) minmax(0, 1fr); gap: 10px; align-items: center; font-size: 13px; padding: 3px 0; }
+  .part-n { font: 600 14px var(--sans); text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); }
+  .part-nom { color: var(--ink); }
+  .attitude.agressive, .attitude.defensive, .attitude.exigeante { background: var(--green); color: var(--paper-light); }
+  .tuile { border: 1px solid var(--line); background: var(--paper); padding: 10px 10px 6px; min-width: 0; }
+  .tuile-nom { margin: 0; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .tuile-valeur { margin: 2px 0 0; font: 600 26px/1.1 var(--sans); color: var(--ink); }
+  .tuile-dit { margin: 2px 0 6px; font-size: 12px; color: var(--muted); line-height: 1.4; min-height: 2.8em; }
+  .courbe { display: block; width: 100%; height: auto; touch-action: pan-y; }
+  .courbe .axe { stroke: var(--line); stroke-width: 1; vector-effect: non-scaling-stroke; }
+  .courbe .seuil { stroke: var(--seuil); stroke-width: 1; vector-effect: non-scaling-stroke; }
+  .courbe .trait { fill: none; stroke: var(--trait); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+  .courbe .point { fill: var(--trait); stroke: var(--paper); stroke-width: 2; vector-effect: non-scaling-stroke; }
+  .courbe .repere { stroke: var(--muted); stroke-width: 1; vector-effect: non-scaling-stroke; }
+  .legende-courbes { font-size: 12px; color: var(--muted); margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 4px 18px; align-items: center; }
+  .legende-courbes i { display: inline-block; width: 22px; height: 0; border-top: 2px solid var(--trait); vertical-align: middle; margin-right: 6px; }
+  .legende-courbes i.s { border-top: 1px solid var(--seuil); }
+  .jeu { font-size: 14px; line-height: 1.6; margin: 14px 0 4px; color: var(--ink); max-width: 90ch; }
+  .bete details { margin-top: 8px; }
+  table { border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+  th, td { padding: 5px 12px 5px 0; text-align: right; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; font-weight: 400; }
+  th[scope="row"], thead th:first-child { text-align: left; }
+  thead th { color: var(--muted); font-size: 12px; }
+  .defile { overflow-x: auto; }
+  .journal { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+  .journal li { padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; line-height: 1.55; }
+  .vide { color: var(--muted); font-size: 14px; }
+  .ensuite { margin-top: 48px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+  .ensuite article { border-top: 1px solid var(--line); padding-top: 16px; }
+  .ensuite h3 { font-family: var(--serif); font-weight: 400; font-size: 20px; margin: 0 0 8px; color: var(--green); }
+  .ensuite p { font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; }
+  #bulle { position: absolute; z-index: 40; pointer-events: none; background: var(--deep); color: var(--paper-light); padding: 7px 10px; font-size: 12px; line-height: 1.35; max-width: 240px; box-shadow: 0 4px 14px rgba(17, 35, 29, .25); }
+  #bulle strong { display: block; font: 600 16px var(--sans); }
+  #bulle span { color: var(--sage); }
+  @media (max-width: 1000px) { .tuiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } .portrait { grid-template-columns: minmax(0, 1fr); } }
+  @media (max-width: 900px) { .sim-tete, .styles, .ensuite { grid-template-columns: minmax(0, 1fr); } .sim-main { padding: 28px 16px 60px; } }
+  @media (max-width: 640px) { .tuiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .bete-tete { grid-template-columns: 96px minmax(0, 1fr); } .cote { grid-column: 1 / -1; flex-direction: row; align-items: center; justify-content: space-between; } .bete { padding: 14px; } .trait-car { grid-template-columns: 96px minmax(0, 1fr); } .trait-mot { grid-column: 1 / -1; margin-top: -4px; } .parts li { grid-template-columns: 26px minmax(0, 1fr) 64px; } .temps { padding: 12px 14px; } .temps p:not(#nuit) { display: none; } }
+</style>
+</head>
+<body class="sim"><a class="skip" href="#contenu">Aller au contenu</a>
+<header class="site-header"><div class="header-inner">
+<a class="brand" href="../" aria-label="Orvane, accueil"><svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M20 35V19M20 26C8 27 4 18 5 7c11 0 17 6 15 19ZM20 21C19 11 26 5 35 5c1 10-4 17-15 16Z" stroke="currentColor" stroke-width="1.5"/><path d="m11 14 9 12M28 12l-8 9" stroke="currentColor" stroke-width="1.3"/></svg><span>orvane<span class="brand-caption">MOTEUR DU VIVANT</span></span></a>
+<nav class="desktop-nav" aria-label="Navigation principale">
+<a href="../studios/">Pour les studios</a>
+<a href="../monde/?monde=orvane">L’Observatoire <span aria-hidden="true">↗</span></a>
+<a href="https://github.com/stonevalleyoff-ai/orvane/blob/main/EN-UNE-HEURE.md">En une heure <span aria-hidden="true">↗</span></a>
+<a class="nav-cta" href="../inscription/">Brancher un jeu <span aria-hidden="true">→</span></a>
+</nav>
+<details class="mobile-menu"><summary>Menu <span aria-hidden="true">☰</span></summary><nav aria-label="Navigation mobile"><a href="../studios/">Pour les studios</a><a href="../monde/?monde=orvane">L’Observatoire <span aria-hidden="true">↗</span></a><a href="https://github.com/stonevalleyoff-ai/orvane/blob/main/EN-UNE-HEURE.md">En une heure <span aria-hidden="true">↗</span></a><a href="../inscription/">Brancher un jeu →</a></nav></details>
+</div></header>
+<main id="contenu" class="sim-main">
+  <div class="sim-tete">
+    <div>
+      <p class="eyebrow dark-ink">LE SIMULATEUR · DES JOUEURS FICTIFS, DES BÊTES VRAIES</p>
+      <h1>Faites jouer des joueurs.<br><em>Voyez ce que les bêtes en retiennent.</em></h1>
+      <p>Choisissez un lieu du monde d’Orvane et quelques-unes de ses bêtes. Composez des joueurs fictifs, faites passer les nuits : chaque population apprend, comme elle l’apprendra de vrais joueurs. Le calcul est celui du monde, le vrai tampon et la vraie mémoire. <b>Rien n’est envoyé.</b></p>
+    </div>
+    <div>
+      <div class="choix"><label for="lieu">Le lieu</label><select id="lieu" aria-describedby="etat-monde"><option>…</option></select></div>
+      <div class="choix"><label for="bete">Les bêtes</label><select id="bete" aria-describedby="note-betes"><option>…</option></select></div>
+      <p class="etat-monde" id="etat-monde" role="status" aria-live="polite">Lecture du monde…</p>
+      <p class="note" id="note-betes"></p>
+    </div>
+  </div>
+
+  <section class="bloc" aria-labelledby="t-joueurs">
+    <h2 class="titre" id="t-joueurs">Les joueurs fictifs</h2>
+    <p class="sous-titre">Combien de joueurs de chaque sorte jouent ici chaque nuit. Changez-les en cours de route : mettez des chasseurs après des nuits faciles, mêlez des passants aux nourrisseurs, ou retirez tout le monde pour voir l’oubli.</p>
+    <div class="styles" id="joueurs"></div>
+  </section>
+
+  <section class="bloc" aria-labelledby="t-betes">
+    <h2 class="titre" id="t-betes">Ce que les bêtes ont appris</h2>
+    <p class="sous-titre">Chaque lignée a son caractère, et n’apprend pas la même chose des mêmes joueurs : chassée, l’une fuit, l’autre fait front. Six dispositions par population, de 0 à 1, nuit après nuit ; la néophobie part de 0,5 : en dessous, la bête s’est accoutumée au feu.</p>
+    <div class="betes" id="betes"><p class="vide">…</p></div>
+    <p class="legende-courbes"><span><i></i>la disposition, nuit après nuit</span><span><i class="s"></i>son seuil : au-delà, l’attitude de la population change (sous 0,25 pour la néophobie)</span><span>Survolez une courbe, ou prenez-la au clavier, pour lire une nuit.</span></p>
+  </section>
+
+  <section class="bloc" aria-labelledby="t-journal">
+    <h2 class="titre" id="t-journal">Le journal</h2>
+    <p class="sous-titre">Ce que le monde noterait, la nuit où une population bascule.</p>
+    <ul class="journal" id="journal"></ul>
+  </section>
+
+  <div class="temps" role="group" aria-label="Faire passer les nuits">
+    <p id="nuit" tabindex="-1" role="status" aria-live="polite">Avant la première nuit</p>
+    <p id="resume-joueurs"></p>
+    <div class="boutons"><button type="button" class="fort" id="une">Une nuit</button><button type="button" id="dix">Dix nuits</button><button type="button" id="recommencer">Recommencer</button></div>
+  </div>
+
+  <section class="ensuite" aria-label="Ce que fait ce simulateur">
+    <article><h3>Ce qui est vrai</h3><p>Les bêtes, leur nombre et leur corps viennent du dernier cycle publié. Les lots des joueurs fictifs passent par le tampon du monde, avec ses plafonds, puis par la mémoire du moteur : les mêmes fonctions que la nuit.</p></article>
+    <article><h3>Ce qui est simplifié</h3><p>L’écosystème ne tourne pas : les effectifs ne bougent pas, aucun migrant n’apporte sa mémoire. Et une supposition : quand une bête devient agressive, les joueurs fictifs déclarent des assauts, et quelques chutes, à proportion. Dans un vrai jeu, c’est la partie qui le décide.</p></article>
+    <article><h3>Ce qu’un jeu en fait</h3><p>Le monde ne publie que des nombres et un mot. Chaque jeu les rend à sa façon : les phrases « dans Lisière » suivent les règles de ce jeu au 13 novembre 2026. Le chapitre : <a href="https://github.com/stonevalleyoff-ai/orvane/blob/main/docs/50-memoire.md">docs/50, la mémoire</a>.</p></article>
+  </section>
+</main>
+<div id="bulle" role="tooltip" hidden></div>
+<footer class="site-footer"><div class="wrap footer-top"><a class="brand" href="../"><svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M20 35V19M20 26C8 27 4 18 5 7c11 0 17 6 15 19ZM20 21C19 11 26 5 35 5c1 10-4 17-15 16Z" stroke="currentColor" stroke-width="1.5"/><path d="m11 14 9 12M28 12l-8 9" stroke="currentColor" stroke-width="1.3"/></svg><span>orvane<span class="brand-caption">MOTEUR DU VIVANT</span></span></a><p>Un monde partagé.<br>Des histoires qui évoluent.</p><nav aria-label="Ressources"><a href="https://github.com/stonevalleyoff-ai/orvane">GitHub <span aria-hidden="true">↗</span></a><a href="https://github.com/stonevalleyoff-ai/orvane/blob/main/BRANCHER-UN-JEU.md">Guide d’intégration <span aria-hidden="true">↗</span></a><a href="../llms.txt">Orvane pour les IA <span aria-hidden="true">↗</span></a></nav></div><div class="wrap footer-bottom"><span>© StoneValley · Orvane</span><span>Licence <a href="../LICENSE">PolyForm Shield 1.0.0</a></span><span>Les créatures sont celles du monde, au dernier cycle publié</span></div></footer>
+<script src="../moteur/catalogue.js"></script>
+<script src="../moteur/corps.js"></script>
+<script src="../moteur/dietes.js"></script>
+<script src="../moteur/phenologie.js"></script>
+<script src="../moteur/flore.js"></script>
+<script src="../moteur/derives.js"></script>
+<script src="../moteur/pathogenes.js"></script>
+<script src="../moteur/milieu.js"></script>
+<script src="../moteur/synthetique.js"></script>
+<script src="../moteur/ponte.js"></script>
+<script src="../moteur/stades.js"></script>
+<script src="../moteur/invention.js"></script>
+<script src="../moteur/natures.js"></script>
+<script src="../moteur/climat.js"></script>
+<script src="../moteur/meteo.js"></script>
+<script src="../moteur/succession.js"></script>
+<script src="../moteur/diversite.js"></script>
+<script src="../moteur/grammaire.js"></script>
+<script src="../moteur/castes.js"></script>
+<script src="../moteur/formes.js"></script>
+<script src="../moteur/esprit.js"></script>
+<script src="../moteur/memoire.js"></script>
+<script src="../moteur/orvane.js"></script>
+<script src="../tampon/tampon.js"></script>
+<script src="../tampon/morceaux.js"></script>
+<script src="../monde/silhouette.js"></script>
+<script src="coeur.js"></script>
+<script src="page.js"></script>
+</body>
+</html>

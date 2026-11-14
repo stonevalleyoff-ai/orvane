@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Pour les studios — Orvane</title>
+<meta name="description" content="Orvane donne à votre jeu une faune qui vit vraiment : des centaines d'espèces qui naissent, migrent, évoluent et disparaissent, partagées entre tous les jeux branchés.">
+<meta property="og:title" content="Orvane pour les studios : une faune qui vit vraiment, sans l'écrire">
+<meta property="og:description" content="Votre jeu lit le monde et le montre à sa façon ; ce que font vos joueurs le change, pour tous les jeux branchés. Kits Unity, Godot et JavaScript.">
+<meta property="og:type" content="website">
+<link rel="icon" href="../assets/embleme.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/orvane.css">
+<style>
+  body.studios { background: var(--paper); color: var(--ink); }
+  .s-main { max-width: var(--wrap); margin: 0 auto; padding: 0 24px 80px; }
+  .s-hero { padding: 56px 0 40px; display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 48px; align-items: end; border-bottom: 1px solid var(--line); }
+  .s-hero h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(36px, 6vw, 68px); line-height: 1.02; margin: 10px 0 18px; color: var(--green); }
+  .s-hero h1 em { color: var(--muted); }
+  .s-hero p { font-size: 17px; line-height: 1.6; color: var(--muted); margin: 0 0 24px; max-width: 58ch; }
+  .s-actions { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+  .s-chiffres { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 24px; }
+  .s-chiffres div { border-top: 1px solid var(--line); padding-top: 10px; }
+  .s-chiffres b { display: block; font-family: var(--serif); font-weight: 400; font-size: 34px; color: var(--green); line-height: 1.1; }
+  .s-chiffres span { font-size: 12px; color: var(--muted); }
+  .s-etat { grid-column: 1 / -1; font-size: 12px; color: var(--muted); margin: 0; }
+  .s-section { padding: 56px 0 0; }
+  .s-section > h2 { font-family: var(--serif); font-weight: 400; font-size: clamp(26px, 3.4vw, 38px); margin: 8px 0 24px; color: var(--green); }
+  .s-cartes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+  .s-cartes article { background: var(--paper-light); border: 1px solid var(--line); padding: 20px; }
+  .s-cartes h3 { font-family: var(--serif); font-weight: 400; font-size: 21px; margin: 0 0 8px; color: var(--green); }
+  .s-cartes p { font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; }
+  .s-cartes .num { font: 600 11px var(--sans); letter-spacing: .1em; color: var(--gold); display: block; margin-bottom: 6px; }
+  .s-garanties { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 32px; }
+  .s-garanties li { border-top: 1px solid var(--line); padding: 14px 0; font-size: 15px; line-height: 1.55; }
+  .s-garanties b { color: var(--green); }
+  .s-en { background: var(--deep); color: var(--paper-light); padding: 28px; margin-top: 56px; }
+  .s-en h2 { font-family: var(--serif); font-weight: 400; font-size: 26px; margin: 4px 0 10px; }
+  .s-en p { color: var(--sage); line-height: 1.65; margin: 0 0 10px; max-width: 80ch; }
+  .s-en a { color: var(--gold); }
+  .s-fin { padding: 56px 0 0; display: flex; flex-wrap: wrap; gap: 20px; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); padding-bottom: 40px; }
+  .s-fin h2 { font-family: var(--serif); font-weight: 400; font-size: clamp(26px, 3.4vw, 38px); margin: 0; color: var(--green); }
+  a:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  @media (max-width: 900px) { .s-hero, .s-garanties { grid-template-columns: 1fr; } .s-cartes { grid-template-columns: 1fr; } .s-main { padding: 0 16px 64px; } }
+</style>
+</head>
+<body class="studios"><a class="skip" href="#contenu">Aller au contenu</a>
+<header class="site-header"><div class="header-inner">
+<a class="brand" href="../" aria-label="Orvane, accueil"><svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M20 35V19M20 26C8 27 4 18 5 7c11 0 17 6 15 19ZM20 21C19 11 26 5 35 5c1 10-4 17-15 16Z" stroke="currentColor" stroke-width="1.5"/><path d="m11 14 9 12M28 12l-8 9" stroke="currentColor" stroke-width="1.3"/></svg><span>orvane<span class="brand-caption">MOTEUR DU VIVANT</span></span></a>
+<nav class="desktop-nav" aria-label="Navigation principale">
+<a href="../studios/" aria-current="page">Pour les studios</a>
+<a href="../demo/">La démo</a>
+<a href="../monde/?monde=orvane">L’Observatoire <span aria-hidden="true">↗</span></a>
+<a class="nav-cta" href="../inscription/">Brancher un jeu <span aria-hidden="true">→</span></a>
+</nav>
+<details class="mobile-menu"><summary>Menu <span aria-hidden="true">☰</span></summary><nav aria-label="Navigation mobile"><a href="../studios/">Pour les studios</a><a href="../demo/">La démo</a><a href="../monde/?monde=orvane">L’Observatoire <span aria-hidden="true">↗</span></a><a href="../inscription/">Brancher un jeu →</a></nav></details>
+</div></header>
+<main id="contenu" class="s-main">
+  <section class="s-hero" aria-labelledby="t-hero">
+    <div>
+      <p class="eyebrow dark-ink">POUR LES STUDIOS</p>
+      <h1 id="t-hero">Une faune qui vit vraiment.<br><em>Sans l’écrire.</em></h1>
+      <p>Orvane fait vivre des centaines d’espèces qui naissent, se nourrissent, migrent, se séparent et disparaissent. Votre jeu les lit et les montre à sa façon. Ce que font vos joueurs change le monde, pour tous les jeux branchés.</p>
+      <div class="s-actions"><a class="button button-dark" href="../demo/">Essayer la démo <span aria-hidden="true">→</span></a><a class="text-link" href="../inscription/">Brancher mon jeu <span aria-hidden="true">→</span></a></div>
+    </div>
+    <div class="s-chiffres" aria-label="Le monde d’Orvane, au dernier cycle publié">
+      <div><b id="c-lignees">—</b><span>lignées de bêtes vivantes</span></div>
+      <div><b id="c-lieux">—</b><span>lieux, de la banquise aux sources chaudes</span></div>
+      <div><b id="c-cycle">—</b><span>le cycle du monde : un nouveau chaque jour</span></div>
+      <div><b id="c-jeux">—</b><span>jeux branchés</span></div>
+      <p class="s-etat" id="c-etat" role="status" aria-live="polite">Lecture du monde…</p>
+    </div>
+  </section>
+
+  <section class="s-section" aria-labelledby="t-genres">
+    <p class="eyebrow dark-ink">CE QUE VOTRE JEU Y GAGNE</p>
+    <h2 id="t-genres">Un monde qui répond, quel que soit votre genre</h2>
+    <div class="s-cartes">
+      <article><h3>Survie</h3><p>Une chasse qui raréfie une espèce et la rend méfiante. Des maladies qui courent. Le joueur est un prédateur parmi d’autres, et le monde s’en souvient.</p></article>
+      <article><h3>Cozy</h3><p>Un écosystème qui se répare, des bêtes qui s’habituent au joueur, des troupeaux qui partent hiverner et reviennent au printemps, des espèces que les joueurs nomment.</p></article>
+      <article><h3>Collection</h3><p>Des lignées qui se séparent pour de vrai, des hybrides, des formes rares, un bestiaire que le monde écrit lui-même : rien n’est fixé à l’avance.</p></article>
+      <article><h3>Horreur</h3><p>Des prédateurs qui se multiplient, des corps qui changent et dérangent, une évolution rapide. Le directeur de mise en scène choisit quoi montrer, et quand.</p></article>
+      <article><h3>Monde partagé</h3><p>Un seul monde pour tous vos joueurs, et pour les joueurs d’autres jeux : une épidémie, une migration, une extinction deviennent des événements de serveur.</p></article>
+      <article><h3>Stratégie, gestion</h3><p>Le joueur défriche, assèche, irrigue, et voit la sélection répondre. Un monde à soi, en accéléré, pour tester ses choix.</p></article>
+    </div>
+    <p class="eyebrow dark-ink" style="margin-top:14px">Chaque genre a son réglage tout prêt : <a href="https://github.com/stonevalleyoff-ai/orvane/blob/main/docs/41-profils-de-genre.md">les profils de genre ↗</a></p>
+  </section>
+
+  <section class="s-section" aria-labelledby="t-brancher">
+    <p class="eyebrow dark-ink">CE QUE ÇA DEMANDE</p>
+    <h2 id="t-brancher">Un après-midi pour se brancher</h2>
+    <div class="s-cartes">
+      <article><span class="num">01 · 2 MINUTES</span><h3>S’inscrire</h3><p>Le nom du jeu suffit. Vous recevez la clé du jeu, publique, et sa clé d’administration, secrète.</p></article>
+      <article><span class="num">02 · 10 MINUTES</span><h3>Lire le monde</h3><p>Un fichier JSON, publié chaque jour, lisible par tous les moteurs. En Unity, en Godot ou en JavaScript, un kit le lit pour vous.</p></article>
+      <article><span class="num">03 · VOTRE PART</span><h3>Traduire</h3><p>Vos terrains deviennent ses lieux, ses lignées deviennent vos créatures. Chaque lignée dit sa masse, son régime, sa silhouette, sa façon de vivre.</p></article>
+      <article><span class="num">04 · 20 MINUTES</span><h3>Renvoyer</h3><p>Des comptes, pas des conclusions : « 12 croisés, 3 chassés ». Les kits les additionnent et les déposent, et les gardent si le réseau manque.</p></article>
+      <article><span class="num">05 · 10 MINUTES</span><h3>Vérifier</h3><p>Un banc d’essai fait lire sept mondes à votre traducteur, un monde piège compris, et vous dit ce qu’il oublie.</p></article>
+      <article><span class="num">→</span><h3>Le parcours complet</h3><p><a href="https://github.com/stonevalleyoff-ai/orvane/blob/main/EN-UNE-HEURE.md">En une heure ↗</a>, pas à pas, avec un monde bac à sable pour essayer sans rien toucher.</p></article>
+    </div>
+  </section>
+
+  <section class="s-section" aria-labelledby="t-garanties">
+    <p class="eyebrow dark-ink">CE QU’ORVANE VOUS GARANTIT</p>
+    <h2 id="t-garanties">Un monde sur lequel vous pouvez construire</h2>
+    <ul class="s-garanties">
+      <li><b>Un contrat versionné.</b> Le format que lit votre jeu est à la version 1.0 : rien ne casse sans être annoncé dans <a href="https://github.com/stonevalleyoff-ai/orvane/blob/main/CHANGELOG.md">le journal</a>, et une vérification refuse tout changement cassant sans version majeure.</li>
+      <li><b>Vérifié à chaque changement.</b> Le contrat, trente bancs d’essai et les kits tournent avant toute modification du moteur.</li>
+      <li><b>Un monde surveillé.</b> Une alerte si un cycle manque, des sauvegardes de trente jours, un retour en arrière en un clic.</li>
+      <li><b>Vos joueurs restent anonymes.</b> Orvane ne reçoit que des comptes et un identifiant opaque : aucune donnée personnelle.</li>
+      <li><b>Aucun jeu ne domine.</b> Un jeu ne pèse qu’en proportion de ses joueurs, et jamais plus de la moitié de la pression sur une espèce.</li>
+      <li><b>Gratuit pour brancher un jeu</b>, même commercial ou au code fermé (licence <a href="../LICENSE">PolyForm Shield 1.0.0</a>).</li>
+    </ul>
+  </section>
+
+  <section class="s-en" aria-labelledby="t-en" lang="en">
+    <p class="eyebrow" style="color:var(--gold)">IN ENGLISH</p>
+    <h2 id="t-en">Living wildlife for your game, without writing it</h2>
+    <p>Orvane runs a shared world where hundreds of species are born, feed, migrate, split into new lineages and go extinct. Your game reads that world (one JSON file a day, or only the biomes it plays) and shows it its own way. What your players do (encounters, hunting, taming, clearing land) is counted and sent back, and it changes the world for every connected game.</p>
+    <p>Unity, Godot and JavaScript kits read the world and send the counts for you. The contract is versioned (1.0) and never breaks without notice. Connecting a game is free, even a commercial one. Start with the <a href="../demo/">demo</a>, then <a href="https://github.com/stonevalleyoff-ai/orvane/blob/main/CONNECT-A-GAME.md">CONNECT-A-GAME.md</a>.</p>
+  </section>
+
+  <section class="s-fin" aria-labelledby="t-fin">
+    <h2 id="t-fin">Votre jeu dans le monde d’Orvane ?</h2>
+    <div class="s-actions"><a class="button button-gold" href="../inscription/">Brancher mon jeu <span aria-hidden="true">→</span></a><a class="text-link" href="https://github.com/stonevalleyoff-ai/orvane/issues/new?title=Brancher%20mon%20jeu%20sur%20Orvane">En parler d’abord <span aria-hidden="true">↗</span></a></div>
+  </section>
+</main>
+<footer class="site-footer"><div class="wrap footer-top"><a class="brand" href="../"><svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M20 35V19M20 26C8 27 4 18 5 7c11 0 17 6 15 19ZM20 21C19 11 26 5 35 5c1 10-4 17-15 16Z" stroke="currentColor" stroke-width="1.5"/><path d="m11 14 9 12M28 12l-8 9" stroke="currentColor" stroke-width="1.3"/></svg><span>orvane<span class="brand-caption">MOTEUR DU VIVANT</span></span></a><p>Un monde partagé.<br>Des histoires qui évoluent.</p><nav aria-label="Ressources"><a href="https://github.com/stonevalleyoff-ai/orvane">GitHub <span aria-hidden="true">↗</span></a><a href="https://github.com/stonevalleyoff-ai/orvane/blob/main/BRANCHER-UN-JEU.md">Guide d’intégration <span aria-hidden="true">↗</span></a><a href="../llms.txt">Orvane pour les IA <span aria-hidden="true">↗</span></a></nav></div><div class="wrap footer-bottom"><span>© StoneValley · Orvane</span><span>Licence <a href="../LICENSE">PolyForm Shield 1.0.0</a></span><span>Les chiffres sont ceux du dernier cycle publié</span></div></footer>
+<script>
+/* Les chiffres du monde, lus dans ses données publiées : rien n'est inventé ; sans elles, des tirets. */
+(async () => {
+  const $ = id => document.getElementById(id), nb = v => Math.round(v).toLocaleString('fr-FR');
+  try {
+    const [index, jeux] = await Promise.all(['morceaux/index.json', 'jeux.json'].map(f => fetch('../mondes/orvane/' + f, { cache: 'no-cache' }).then(r => r.ok ? r.json() : null).catch(() => null)));
+    if (!index || !index.cycle) { $('c-etat').textContent = 'Le monde ne se lit pas pour l’instant : l’Observatoire le montre aussi.'; return; }
+    const betes = (index.taxons || []).filter(t => t.famille === 'animale' && t.statut !== 'eteint');
+    $('c-lignees').textContent = nb(betes.length);
+    $('c-lieux').textContent = nb((index.biomes || []).length);
+    $('c-cycle').textContent = nb(index.cycle.n);
+    $('c-jeux').textContent = Array.isArray(jeux) ? nb(jeux.filter(j => j.actif !== false).length) : '—';
+    $('c-etat').textContent = `Au cycle ${index.cycle.n}${index.cycle.saison && index.cycle.saison.nom ? ', ' + index.cycle.saison.nom : ''} : ${nb(betes.reduce((s, t) => s + (t.effectif || 0), 0))} bêtes en tout.`;
+  } catch (_) { $('c-etat').textContent = 'Le monde ne se lit pas pour l’instant : l’Observatoire le montre aussi.'; }
+})();
+</script>
+</body>
+</html>

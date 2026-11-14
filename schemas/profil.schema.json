@@ -1,0 +1,480 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orvane/schemas/profil.schema.json",
+  "title": "Orvane — profil d'un monde (réglage du tampon)",
+  "description": "Un fichier par monde. Il règle le tampon dans le sens jeu → Orvane : comment les actes des joueurs de tous les jeux branchés pèsent sur le monde. Ce que chaque jeu montre du monde (exposition) est réglé par le jeu lui-même dans le Supabase d'Orvane (orvane_regler_jeu, hebergement/LISEZ-MOI.md) et publié dans jeux.json ; l'exposition d'un profil de monde ne sert plus qu'aux lots sans jeu (et aux mondes d'avant, comme sv-1). Rien ici ne touche à la biologie elle-même.",
+  "type": "object",
+  "required": [
+    "orvane",
+    "monde",
+    "influence"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "orvane": { "type": "string", "description": "Version du contrat que suit le profil, MAJEUR.MINEUR (« 1.0 » ; docs/43). Orvane accepte les profils des versions 0.x et 1.x." },
+    "jeu": {
+      "type": "string",
+      "description": "Le jeu pour lequel le monde a été fait (mondes d'avant, comme sv-1). Un monde universel n'en a pas."
+    },
+    "monde": {
+      "type": "object",
+      "required": [
+        "id",
+        "graine",
+        "cycle"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "graine": {
+          "type": "integer"
+        },
+        "cycle": {
+          "type": "string",
+          "description": "Durée réelle d'un cycle : « 24h », « 6h », « 1h », « 30min », « 7d » (docs/19). Le workflow passe chaque heure et ne fait tourner le monde qu'à ses heures de cycle (monde.heure, cycle.js --auto)."
+        },
+        "heure": {
+          "type": "string",
+          "pattern": "^[0-2][0-9]:[0-5][0-9]$",
+          "description": "L'heure de cycle, en UTC (« 03:00 » par défaut) : les heures de cycle en partent et reviennent toutes les monde.cycle (docs/19)."
+        },
+        "catalogue": {
+          "type": "string",
+          "description": "Chemin du catalogue propre du monde (axes, traits, organes, formes de corps), relu à chaque cycle (docs/20)."
+        },
+        "rattrapage": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Combien de cycles dus le monde rattrape d'un coup, au plus, après une absence (3 par défaut, docs/19)."
+        },
+        "biomes": {
+          "type": "string",
+          "description": "Chemin du fichier décrivant les biomes du monde (axes, capacités, voisins) ; sinon les biomes par défaut d'Orvane."
+        },
+        "amorce": {
+          "type": "string",
+          "description": "Chemin d'un instantané de départ (génération 0) si le jeu part d'un bestiaire existant."
+        },
+        "fusions": {
+          "type": "array",
+          "description": "Les fusions que le cycle de nuit doit appliquer à ce monde (docs/14) : chacune une seule fois, avant le cycle ; l'état en garde la trace (monde.fusions de l'instantané).",
+          "items": {
+            "type": "object",
+            "required": ["id", "source"],
+            "additionalProperties": false,
+            "properties": {
+              "id": { "type": "string", "description": "Le nom de la fusion : une fusion faite ne se refait pas." },
+              "source": { "type": "string", "description": "Le monde qui arrive : un instantané ou une amorce, chemin depuis la racine du dépôt (ex. mondes/marin/amorce.json)." },
+              "biomes": { "type": "array", "items": { "type": "string" }, "description": "Les biomes où ses lignées arrivent (par défaut, tous ceux que les deux mondes partagent)." },
+              "part": { "type": "number", "minimum": 0, "maximum": 1, "description": "La part de ses effectifs qui arrive (0,5 par défaut ; 1 pour une fusion par ponts)." },
+              "nom": { "type": "string", "description": "(docs/23) Le nom du continent, dans les noms de ses parcelles et au journal (celui de la source, sinon)." },
+              "ponts": { "type": ["integer", "array"], "items": { "type": "array", "items": { "type": "string" }, "minItems": 2, "maxItems": 2 }, "description": "(docs/23) Une fusion par ponts : la source devient un continent du monde, relié par autant de ponts (un nombre), ou par ceux-là ([[biome de la source, biome de la cible], …])." }
+            }
+          }
+        },
+        "pathogenes": {
+          "description": "Les souches (docs/18) : le cycle de nuit donne au monde ses souches, une fois ; les épidémies sont désormais les leurs.",
+          "type": "boolean"
+        },
+        "flore": {
+          "description": "La flore (docs/17) : le cycle de nuit éveille la flore, une fois : une lignée de plantes par forme et par biome, à l'équilibre avec les brouteurs du moment.",
+          "type": "boolean"
+        },
+        "milieu": {
+          "description": "Le milieu transformé (docs/22) : le cycle de nuit l'éveille, une fois ; les brouteurs, les fouisseurs, les bâtisseurs et les joueurs changent désormais les lieux.",
+          "type": "boolean"
+        },
+        "ponte": {
+          "description": "Pondre ou mettre bas (docs/25) : le cycle de nuit donne à chaque lignée son mode, une fois.",
+          "type": "boolean"
+        },
+        "stades": {
+          "description": "Les cycles de vie (docs/26) : le cycle de nuit les éveille, une fois ; la métamorphose peut alors naître par mutation.",
+          "type": "boolean"
+        },
+        "invention": {
+          "description": "Un monde inventif (docs/27) : le cycle de nuit l'éveille, une fois ; ses lignées peuvent inventer des traits que personne n'a décrits.",
+          "type": "boolean"
+        },
+        "esprit": {
+          "description": "L'esprit (docs/34) : le cycle de nuit l'éveille, une fois ; les bêtes apprennent, transmettent, se servent d'outils ; chaque population a ses savoirs.",
+          "type": "boolean"
+        },
+        "memoire": {
+          "description": "La mémoire (docs/50) : le cycle de nuit l'éveille, une fois ; les populations retiennent ce que les joueurs leur font (l'attrait, la traque, la néophobie), et le monde lit les actions blessure, effarouchement, pillage, attaque, joueur_tombe. Elle ne change rien aux effectifs. Ses règles : monde.regles.memoire.",
+          "type": "boolean"
+        },
+        "genre": {
+          "enum": ["neutre", "horreur", "cozy", "collection", "voxel", "survie", "strategie", "mmo"],
+          "description": "(docs/41) Le genre du jeu qui fait vivre ce monde : ses règles du moteur (moteur/genres.js) passent sur celles de la genèse, celles de monde.regles par-dessus ; ses poids des joueurs passent dans l'influence. « neutre » : le moteur tel qu'il est."
+        },
+        "regles": {
+          "type": "object",
+          "description": "Des règles du moteur (REGLES de moteur/orvane.js) réglées pour ce monde vivant : elles complètent, d'un niveau, celles de sa genèse (monde.regles de l'instantané) et ne valent que pour ce qui arrive ensuite. Exemple : { \"derive\": { \"tolerance\": 0.35, \"formes\": 1 } } laisse la largeur de la niche dériver à la séparation, et fait naître les formes nouvelles du monde à la séparation (docs/33). ; { \"hivernage\": { \"actif\": 1, \"rude\": 0.85 } } fait partir pour de bon les bêtes dont l'hiver est rude (docs/38)."
+        },
+        "renaitre": {
+          "type": "string",
+          "maxLength": 40,
+          "description": "Faire renaître le monde (hebergement/publication.js) : une date, par exemple « 2026-11-06 ». Quand elle change, la passe suivante de l'action repart de l'état que porte main (supprimé, pour un monde neuf) au lieu de celui de la branche publication."
+        },
+        "collectif": {
+          "description": "La vie en groupe (docs/38) : le monde publie, pour chaque population, son groupe (troupeau, meute, banc…), sa hiérarchie et ses migrations saisonnières. Une lecture de l'état : rien ne change dans la simulation.",
+          "type": "boolean"
+        },
+        "castes": {
+          "description": "Les castes (docs/33) : le cycle de nuit les éveille, une fois ; de petits hexapodes grégaires peuvent devenir des colonies (une reine, des ouvrières, des soldats).",
+          "type": "boolean"
+        },
+        "formes": {
+          "description": "Les formes nouvelles (docs/33) : le cycle de nuit les éveille, une fois ; un corps segmenté, rayonné ou à tentacules peut naître.",
+          "type": "boolean"
+        },
+        "grammaire": {
+          "description": "La grammaire des effets et des conduites (docs/32) : le cycle de nuit l'éveille, une fois ; le monde compose des traits d'un genre neuf (une lueur qui attire, une décharge qui foudroie, un cri qui alerte, une odeur qui repousse).",
+          "type": "boolean"
+        },
+        "diversite": {
+          "description": "La flore riche (docs/48) : le cycle de nuit l'éveille, une fois, dans un monde qui a une flore ; quarante formes de plantes de plus (conifère, palmier, fougère, liane, bambou, cactus, varech, plancton…), douze caractères hérités, et une flore qui vit : les lignées se disputent la place, se séparent, gagnent les lieux voisins, s'éteignent.",
+          "type": "boolean"
+        },
+        "succession": {
+          "description": "Les plantes subissent et transforment (docs/47) : le cycle de nuit l'éveille, une fois, dans un monde qui a une flore ; le feu, la crue et le sec prennent des pieds aux plantes, l'herbe puis les buissons reprennent la place des arbres disparus, et le couvert d'un lieu suit ses arbres (avec le milieu, docs/22).",
+          "type": "boolean"
+        },
+        "phenologie": {
+          "description": "Les saisons des plantes (docs/46) : le cycle de nuit les éveille, une fois, dans un monde qui a une flore et une année ; les arbres caducs perdent leurs feuilles, la pousse suit la belle saison et le temps qu'il fait, le nectar, les fruits et les graines ont leur saison.",
+          "type": "boolean"
+        },
+        "meteo": {
+          "description": "La météo (docs/45) : le cycle de nuit l'éveille, une fois ; chaque lieu (chaque parcelle d'un monde par parcelles) a son temps du cycle, la pluie, la neige, le gel, les orages, les canicules, qui déplace la température, l'humidité et la production de la saison.",
+          "type": "boolean"
+        },
+        "climat": {
+          "description": "Le climat et la géologie lente (docs/31) : le cycle de nuit l'éveille, une fois ; le monde se réchauffe et se refroidit de lui-même, la mer monte et baisse, des volcans font des îles.",
+          "type": "boolean"
+        },
+        "dietes": {
+          "description": "Les régimes en spectre (docs/30) : le cycle de nuit les éveille, une fois, après la flore ; chaque lignée mange des feuilles, des fruits, des graines, du nectar, des insectes, de la viande ou du sang, en parts qui lui sont propres.",
+          "type": "boolean"
+        },
+        "derives": {
+          "description": "Les dérives (docs/29) : le cycle de nuit les éveille, une fois ; les régimes changent à la séparation, les plantes se séparent, les souches mutent, les insectes les portent.",
+          "type": "boolean"
+        },
+        "natures": {
+          "description": "Les lieux qui changent de nature (docs/28) : le cycle de nuit l'éveille, une fois, dans un monde au milieu transformé ; un lieu dont les axes ressemblent à un autre type de lieu en prend la nature.",
+          "type": "boolean"
+        },
+        "synthetique": {
+          "description": "La vie synthétique (docs/16) : le cycle de nuit éveille la Mère, une fois, dans le biome dit (le volcan par défaut). true : avec ses réglages par défaut.",
+          "oneOf": [
+            { "type": "boolean" },
+            { "type": "object", "additionalProperties": false, "properties": { "biome": { "type": "string" }, "nom": { "type": "string" }, "effectif": { "type": "number", "minimum": 1 } } }
+          ]
+        },
+        "parcelles": {
+          "type": "object",
+          "description": "Faire tourner ce monde par parcelles (docs/15) : au prochain cycle, chaque biome est découpé en « par » parcelles voisines, une fois pour toutes.",
+          "additionalProperties": false,
+          "properties": {
+            "par": { "type": ["integer", "object"], "minimum": 1, "description": "Le nombre de parcelles par biome (4 par défaut), ou par biome ({ \"prairie\": 6 })." },
+            "graine": { "type": "integer", "description": "La graine du découpage (celle du monde par défaut)." }
+          }
+        },
+        "rodage": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Au premier cycle, le monde tourne seul autant de cycles avant d’être publié : la génération 0 est alors un équilibre, pas une amorce brute."
+        },
+        "annee": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Durée de l’année en cycles (120 : quatre saisons de 30 jours avec un cycle de 24 h). 0 : pas de saisons. Recopié dans monde.annee de l’instantané à chaque cycle."
+        },
+        "historique": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Combien de cycles allégés garder dans historique.json (365 par défaut)."
+        },
+        "nocturne": {
+          "type": "boolean",
+          "default": true,
+          "description": "false : le cycle nocturne passe ce monde (hebergement/cycle.js --forcer pour le faire tourner quand même)."
+        },
+        "pressions": {
+          "type": "object",
+          "description": "Où l'action nocturne lit les lots de pressions de ce monde : le Supabase d'Orvane (url), sa clé PUBLIQUE (cle), la fonction de lecture des lots (orvane_lire_lots), celle des jeux (jeux : orvane_lire_jeux) et le NOM de la variable d'environnement qui porte le secret de lecture d'Orvane. Le secret lui-même n'est jamais dans le profil.",
+          "properties": {
+            "url": {
+              "type": "string"
+            },
+            "cle": {
+              "type": "string"
+            },
+            "fonction": {
+              "type": "string"
+            },
+            "secret": {
+              "type": "string"
+            },
+            "jeux": {
+              "type": "string",
+              "description": "La fonction qui liste les jeux et leur exposition (orvane_lire_jeux). Sans elle, les lots sont lus avec l'exposition du profil."
+            },
+            "noms": {
+              "type": "string",
+              "description": "La fonction qui lit les noms proposés par les joueurs (orvane_lire_noms, docs/37). Sans elle, seuls les noms du dossier noms/ du monde comptent."
+            }
+          },
+          "required": [
+            "url",
+            "cle"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "exposition": {
+      "type": "object",
+      "description": "Sens Orvane → jeu. Le même objet est l'exposition d'un jeu, envoyée par orvane_regler_jeu.",
+      "required": [
+        "compression",
+        "propagation_cycles"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "familles": {
+          "type": "array",
+          "items": { "enum": ["animale", "synthetique", "vegetale"] },
+          "description": "Les familles de lignées que ce jeu sait jouer (animale seule par défaut). Il ne reçoit pas les autres (Tampon.filtrer), et le tampon ne lit pas ses événements sur elles : une nouveauté du monde n'arrive chez un jeu que s'il la demande."
+        },
+        "compression": {
+          "type": "object",
+          "required": [
+            "defaut"
+          ],
+          "additionalProperties": false,
+          "description": "Facteur k appliqué à la COTE d’un phénotype (f/(1−f)) avant exposition : avec k = 0,1, 20 % dans Orvane devient 2,4 % dans le jeu, mais 99 % reste 91 % (une variante devenue majoritaire l’est aussi dans le jeu). Le phénotype de base absorbe le reste.",
+          "properties": {
+            "defaut": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "par_domaine": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "par_trait": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "par_biome": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        },
+        "propagation_cycles": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Un changement de fréquence dans Orvane est étalé sur autant de cycles côté jeu (interpolation linéaire entre instantanés)."
+        },
+        "inertie_max": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Variation maximale d'une fréquence exposée par cycle (0.05 = 5 points)."
+        },
+        "traits_rendus": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Traits que le jeu sait représenter. Les autres sont masqués : leurs phénotypes sont fusionnés avec le phénotype de base à l'exposition (ils continuent d'évoluer dans Orvane)."
+        },
+        "seuil_extinction_jeu": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Effectif Orvane sous lequel le jeu cesse de faire apparaître le taxon (avant l'extinction réelle)."
+        },
+        "retour_apres_extinction": {
+          "type": "boolean",
+          "description": "Un taxon éteint peut-il revenir par recolonisation d'un biome voisin ?"
+        },
+        "mode": {
+          "enum": [
+            "compression",
+            "relatif"
+          ],
+          "default": "compression",
+          "description": "compression : la fréquence réelle d'un phénotype passe par la compression (sur la cote). relatif : le jeu garde ses propres taux (taux_jeu) à la génération 0, et ne suit que l'ÉCART d'Orvane depuis elle — une variante deux fois plus répandue qu'à la génération 0 l'est deux fois plus dans le jeu (sur la cote). Le jour un, le jeu est exactement ce qu'il était."
+        },
+        "taux_jeu": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "description": "Mode relatif : par trait rendu, la chance qu'avait une naissance de le porter avant Orvane. Un phénotype à plusieurs traits rendus : le produit."
+        },
+        "reference_min": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.01,
+          "description": "Mode relatif : la fréquence de référence plancher, pour une combinaison absente de la génération 0 (elle n'apparaît dans le jeu qu'une fois installée)."
+        },
+        "seuil_extinction_part": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.25,
+          "description": "Une espèce disparaît du jeu sur une île quand son effectif sur les sols de l'île tombe sous seuil_extinction_jeu ET sous cette part de ce qu'il était à la génération 0 : une espèce rare dès le départ n'est pas rayée pour autant."
+        },
+        "non_rendus": {
+          "enum": [
+            "reel",
+            "base"
+          ],
+          "default": "reel",
+          "description": "Mode relatif : un phénotype dont aucun trait n'est rendu garde sa fréquence réelle (reel) — le jeu peut faire agir ses traits (docs/7-conduites.md) — ou se fond dans le plan de base (base)."
+        },
+        "quantitatifs": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Les traits continus (docs/8) que le jeu montre, et combien de leur variation naturelle.",
+          "properties": {
+            "rendus": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Les traits continus que le jeu sait jouer (taille, vitesse, audace, sociabilite) : il en tire une valeur par bête et la rapporte."
+            },
+            "variation": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Part de la variation individuelle montrée. 0 : toutes les bêtes d’une population ont l’allure de sa moyenne (seul l’écart depuis la génération 0 se voit ; le jour un ne change rien). 1 : toute la variation naturelle."
+            }
+          }
+        },
+        "mefiance": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "La méfiance et l'habituation (docs/12) : comment le jeu rend ce qu'une population a appris des joueurs. La distance de fuite est multipliée par fuite^méfiance × habitude^habituation.",
+          "properties": {
+            "rendue": {
+              "type": "boolean",
+              "description": "false : le jeu ne le montre pas (Orvane le tient quand même)."
+            },
+            "fuite": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 5,
+              "description": "Le facteur de la distance de fuite à méfiance 1 (2,2 par défaut)."
+            },
+            "habitude": {
+              "type": "number",
+              "minimum": 0.1,
+              "maximum": 1,
+              "description": "Le facteur à habituation 1 (0,5 par défaut)."
+            }
+          }
+        },
+        "bestiaire": {
+          "enum": [
+            "jeu",
+            "orvane"
+          ],
+          "description": "Qui peuple les îles : « jeu » (par défaut) — la faune du jeu, suivie par Orvane, et les lignées qui en descendent ; « orvane » — la faune du jeu qu'Orvane ne simule pas dans ce monde (un monde né de la genèse) cède sa place aux lignées du monde, régime par régime, autant de bêtes qu'avant (traducteur de Stone Valley, §217)."
+        }
+      }
+    },
+    "influence": {
+      "type": "object",
+      "description": "Sens jeu → Orvane.",
+      "required": [
+        "poids",
+        "plafonds"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "poids": {
+          "type": "object",
+          "description": "Poids d'une unité de chaque action, après dénormalisation, en individus équivalents retirés : 1 prélèvement = 1 ; négatif = favorable à la population (libération, nourrissage, habitat gagné).",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "denormaliser": {
+          "type": "boolean",
+          "description": "Rapporter les comptes à la fréquence exposée (une variante montrée à 2 % mais réelle à 20 % voit ses pertes multipliées par 10). Recommandé : true."
+        },
+        "exposition_ref": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Nombre de rencontres par compte et par cycle considéré comme activité normale ; au-delà, la pression d'un compte est ramenée à ce niveau."
+        },
+        "plafonds": {
+          "type": "object",
+          "required": [
+            "par_compte_cycle",
+            "part_max_compte"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "par_compte_cycle": {
+              "type": "number",
+              "description": "Pression maximale qu'un seul compte peut exercer sur un taxon par cycle (en individus équivalents)."
+            },
+            "part_max_compte": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Part maximale de la pression totale d'un taxon venant d'un seul compte."
+            },
+            "part_max_population": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Part maximale d'une population qu'un cycle de pressions peut retirer (empêche une extinction en un cycle)."
+            },
+            "part_max_jeu": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Part maximale de la pression totale d'un taxon venant d'un seul jeu, quand plusieurs jeux en montrent le taxon (comptée avant ce plafond, comme part_max_compte) : un jeu de mille joueurs ne fait pas seul l'histoire d'une espèce."
+            }
+          }
+        },
+        "memoire_cycles": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Les pressions sont lissées sur autant de cycles (une chasse ponctuelle pèse peu, une chasse soutenue pèse)."
+        },
+        "pseudo_comptes": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Lissage de la dénormalisation : autant de prélèvements fictifs répartis selon les fréquences exposées sont ajoutés aux comptes observés, pour qu’une seule bête rare tuée ne vaille pas une persécution (20 par défaut)."
+        }
+      }
+    }
+  }
+}
