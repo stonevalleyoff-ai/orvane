@@ -114,9 +114,16 @@ L'état publié du cycle 57, un cycle, les carnivores de la genèse 7 (par tête
 | 0,4 (le moteur) | 0,052 | 0,025 | 0,076 | 0,088 | −1,2 % |
 | 1 (leur genèse) | 0,130 | 0,025 | 0,154 | 0,088 | +6,6 % |
 
-La viande compte presque autant que les plantes, mais elle a déjà donné ce qu'elle pouvait. Le recul ralentit parce qu'ils sont moins nombreux : chacun a plus de place et plus de proies. Il ne s'arrête pas.
+La viande compte presque autant que les plantes, mais elle a déjà donné ce qu'elle pouvait. Le recul ralentit parce qu'ils sont moins nombreux : chacun a plus de place et plus de proies. Il ne s'arrête qu'une fois tombé très bas.
 
-<!-- OU-CELA-MENE -->
+## Où cela mène
+
+Le même monde, sans rien changer, un an de plus : 120 cycles depuis l'état du cycle 57, jusqu'au cycle 177, à la même saison.
+- **Les carnivores de la genèse 7 perdent encore 81 %.** Ils sont 290 000 au cycle 177, contre 3,09 millions au cycle 42 et 3,28 millions chez eux. Ils reculent de 3 % par cycle jusqu'à l'hiver, touchent 239 000 au cycle 140, puis regagnent 0,4 % par cycle au printemps : ils sont alors si peu que leurs proies abondent (satiété 0,65). Ils s'installent à moins d'un dixième de ce qu'ils étaient chez eux.
+- **Les omnivores de la genèse 7 suivent** : −51 % en un an, −66 % au cœur de l'hiver.
+- **Aucune lignée ne s'éteint dans l'année**, mais les plus petites n'en sont pas loin : au cycle 96, `vacor` et `angraume.ossuaire` comptaient chacune 16 bêtes.
+
+Le recul ralentit en tombant. Il ne trouve un plancher que très bas.
 
 ## Ce qu'on propose : les règles d'origine
 
@@ -163,13 +170,32 @@ Le contrat ne change pas : `monde.regles` est un objet libre (`schemas/instantan
 
 Sans `origines`, le moteur donne le même monde au caractère près (la genèse 7, cinq cycles ; sv-1, vingt cycles : même empreinte SHA-256).
 
-<!-- RESULTATS -->
+### Ce qu'elle donne
+
+Le monde vivant, depuis l'état publié du cycle 57, pendant un an. Les saisons pèsent plus que la règle d'un cycle à l'autre : chaque monde est donc comparé au monde sans la règle, au même cycle (entre parenthèses, le rapport). Le cycle 116 est le cœur de l'hiver, le cycle 177 la même saison que le cycle 57.
+
+| groupe | cycle 57 | sans la règle, cycle 116 | règles d'origine, cycle 116 | première version, cycle 116 | sans la règle, cycle 177 | règles d'origine, cycle 177 |
+| --- | --- | --- | --- | --- | --- | --- |
+| carnivores de la genèse 7 | 1,53 M | −81 % | −30 % (× 3,66) | −23 % (× 4,03) | −81 % | +123 % (× 11,77) |
+| omnivores de la genèse 7 | 16,64 M | −66 % | +6 % (× 3,08) | +18 % (× 3,44) | −51 % | +9 % (× 2,22) |
+| herbivores de la genèse 7 | 12,81 M | +25 % | −44 % (× 0,45) | −40 % (× 0,48) | +33 % | −33 % (× 0,51) |
+| herbivores d'Orvane | 52,63 M | −31 % | −32 % (× 0,98) | −33 % (× 0,97) | +32 % | +30 % (× 0,99) |
+| carnivores d'Orvane | 0,23 M | −14 % | −14 % (× 1,00) | −15 % (× 0,99) | −19 % | −28 % (× 0,90) |
+| omnivores d'Orvane | 2,89 M | −43 % | −43 % (× 1,01) | −42 % (× 1,02) | −88 % | −87 % (× 1,08) |
+| herbivores de la mer d'Orvane | 1,00 M | −6 % | −7 % (× 0,99) | −15 % (× 0,90) | +45 % | +35 % (× 0,93) |
+| carnivores de la mer d'Orvane | 0,05 M | +3 % | +1 % (× 0,98) | +1 % (× 0,98) | +3 % | +33 % (× 1,29) |
+| carnivores des eaux douces | 0,08 M | −4 % | −5 % (× 0,99) | −4 % (× 1,01) | +17 % | +18 % (× 1,01) |
+| herbivores des eaux douces | 9,74 M | +3 % | +3 % (× 1,00) | +4 % (× 1,01) | +76 % | +76 % (× 1,00) |
+
+- **Le recul s'arrête.** Les carnivores de la genèse 7 perdent 30 % de l'été à l'hiver (chez eux, sous le moteur de leur genèse, l'hiver leur en prenait 48 %), puis regagnent ce qu'ils avaient perdu depuis la fusion : 3,41 millions au cycle 177, onze fois plus que sans la règle. Ils restent sous ce qu'ils étaient chez eux au même moment de l'année (de 4,9 à 5,8 millions), et ne gagnent plus que de 0,2 % à 0,8 % par cycle, comme chez eux en été.
+- **Le continent se refait.** Ses omnivores reviennent (× 2,2), ses herbivores redescendent vers ce qu'ils étaient chez eux (× 0,51). Aucune lignée ne se perd : les deux seules lignées perdues dans l'année, `beltor` et `phenouel`, sont des herbivores d'Orvane, perdues aussi sans la règle.
+- **Ce qu'il en coûte au reste du monde.** Les eaux douces ne voient rien (× 1,00). Les herbivores d'Orvane et de la mer d'Orvane perdent un peu (× 0,99 et × 0,93), les omnivores d'Orvane et les carnivores de la mer d'Orvane gagnent (× 1,08 et × 1,29). **Les carnivores d'Orvane perdent 28 % en un an au lieu de 19 % (× 0,90)** : c'est le prix le plus net. La règle ne change que les naissances des lignées de la genèse 7 sur leur continent : ce qui arrive aux carnivores d'Orvane passe donc par les bêtes du continent qui passent les ponts. Par où exactement (les proies qu'ils partagent, la place des omnivores), nous ne l'avons pas mesuré : c'est à suivre si la règle est adoptée.
 
 ### Une première version : la règle partout
 
 La première version suivait les lignées de la genèse 7 où qu'elles aillent. Elle arrêtait aussi le recul, mais le continent passait les ponts avec ses règles : sur une parcelle d'Orvane, un omnivore de la genèse 7 tirait des plantes 100 % de ce qu'en tire un herbivore, un omnivore d'Orvane 60 %. Le premier l'emportait.
 
-<!-- PREMIERE-CHIFFRES -->
+Au cycle 116, elle sauvait un peu plus de carnivores de la genèse 7 (× 4,03 contre × 3,66), mais les herbivores de la mer d'Orvane y perdaient 10 % au lieu de 1 %, et ceux d'Orvane 3 % au lieu de 2 % (la table plus haut). Sur le banc des ponts, le continent gagnait 37 parcelles d'Orvane en 80 cycles, au lieu de 12 sans la règle et de 16 avec la règle sur le continent seulement (plus bas).
 
 Elle faisait aussi échouer une vérification de `bancs/ponts.js`, sans que la règle y soit pour rien :
 - au cycle 116, `jadunou`, un carnivore du continent de 3,6 kg, se sépare dans la forêt d'Orvane (`foret~3`, au bout du pont bois-forêt) ;
@@ -220,10 +246,10 @@ console.log(`satiété ${f(a.s)} · naissances ${f(a.nais)} (plantes ${f(a.nais 
 ```
 node bilan.js genese-7.json                              # chez elle : −7,2 % par cycle
 node bilan.js genese-7.json '{"omnivore_vegetal": 1}'    # −2,3 %
-node bilan.js etat-57.json                               # le monde d'Orvane, cycle 57 : −3,8 % (25 secondes)
+node bilan.js etat-57.json                               # le monde d'Orvane, cycle 57 : −3,9 % (40 secondes)
 ```
 
-La part des plantes est l'écart avec un cycle où elles ne donnent rien. Un moteur d'avant se prend dans l'historique, et le script le lit dans le dossier d'où on le lance :
+La part des plantes est l'écart avec un cycle où elles ne donnent rien. Le script compte les naissances après la ponte et les hybrides (docs/25, docs/10) : à un millième près, ce sont celles des tables. Un moteur d'avant se prend dans l'historique, et le script le lit dans le dossier d'où on le lance :
 
 ```
 mkdir ancien && git archive a0aa297 moteur | tar -x -C ancien
