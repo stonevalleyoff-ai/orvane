@@ -120,34 +120,42 @@ La viande compte presque autant que les plantes, mais elle a déjà donné ce qu
 
 ## Ce qu'on propose : les règles d'origine
 
-Une règle de plus au moteur, `REGLES.origines`, vide par défaut. Les lignées venues d'une fusion (`origine.fusion`) et leurs filles tirent des plantes ce que leur donnait le monde où elles sont nées : `omnivore_vegetal` (un carnivore porteur d'`estomac-large`) et `omnivore_vegetal_base` (un omnivore de naissance). Le monde d'Orvane la reçoit par son profil, comme `derive` et `hivernage` (docs/13) :
+Une règle de plus au moteur, `REGLES.origines`, vide par défaut. **Sur les parcelles de leur continent**, les lignées venues d'une fusion par ponts (docs/23) et leurs filles tirent des plantes ce que leur donnait le monde où elles sont nées : `omnivore_vegetal` (un carnivore porteur d'`estomac-large`) et `omnivore_vegetal_base` (un omnivore de naissance). Ailleurs, et pour les autres lignées, rien ne change. Le monde d'Orvane la reçoit par son profil, comme `derive` et `hivernage` (docs/13) :
 
 ```json
 "regles": { …, "origines": { "genese-7": { "omnivore_vegetal": 1, "omnivore_vegetal_base": 1 } } }
 ```
 
-- **Ces deux règles seulement.** Elles ne valent que pour les naissances d'une lignée, sur sa propre place. Ce que les lignées se disputent reste réglé par le monde : la viande que cherchent les omnivores (`viande_omnivore`), la chasse, la place. Deux lignées qui chassent la même proie la chassent sous la même règle.
+- **Ces deux règles seulement.** Elles ne valent que pour les naissances d'une lignée, sur sa propre place. Ce que les lignées se disputent reste réglé par le monde : la viande que cherchent les omnivores (`viande_omnivore`), la chasse. Deux lignées qui chassent la même proie la chassent sous la même règle.
 - **La valeur 1.** C'est ce que donnait le moteur sous lequel la genèse 7 s'est faite. Le coût du trait (20 %) reste celui du catalogue.
-- **Les filles.** Une lignée née dans le monde d'Orvane d'une lignée de la genèse 7 suit sa mère : le moteur remonte sa parenté jusqu'à la première ancêtre venue d'ailleurs.
+- **Sur le continent seulement.** Une lignée de la genèse 7 qui passe un pont vit, de l'autre côté, sous les règles du monde d'Orvane, comme les lignées d'Orvane qu'elle y rencontre. Une première version suivait les lignées partout : elles l'emportaient alors sur les lignées d'Orvane, chez elles (plus bas).
+- **Le continent.** Ses parcelles portent la marque de la fusion (`prairie~genese-7-4`) ; le moteur la lit sur un de ses ponts (`monde.fusions[].ponts`). Une fusion biome par biome (docs/14), qui n'a pas de continent, ne s'en sert pas.
+- **Les filles.** Une lignée née d'une lignée de la genèse 7 suit sa mère : le moteur remonte sa parenté jusqu'à la première ancêtre venue d'ailleurs.
 - **Les autres fusions.** Les eaux douces et la mer d'Orvane n'ont pas d'entrée : elles gardent les règles du monde d'Orvane, qui étaient déjà celles de leur genèse.
 
-Le contrat ne change pas : `monde.regles` est un objet libre (`schemas/instantane.schema.json`), et le cycle de nuit y verse déjà les règles du profil. Dans le moteur, dix lignes (`moteur/orvane.js`) :
+Le contrat ne change pas : `monde.regles` est un objet libre (`schemas/instantane.schema.json`), et le cycle de nuit y verse déjà les règles du profil. Dans le moteur, treize lignes (`moteur/orvane.js`) :
 
 ```diff
    faim_migration: .4,        // satiété sous laquelle un prédateur s'en va chercher ailleurs
-+  // (docs/51) les règles d'origine : les lignées venues d'un autre monde (origine.fusion) et leurs filles tirent des plantes ce que leur
-+  // donnait le monde où elles sont nées, et non ce que donne celui-ci : { [fusion]: { omnivore_vegetal?, omnivore_vegetal_base? } } ;
-+  // vide, rien ne change
++  // (docs/51) les règles d'origine : sur les parcelles d'un continent relié par des ponts (docs/23), ses lignées et leurs filles tirent des
++  // plantes ce que leur donnait le monde où elles sont nées : { [fusion]: { omnivore_vegetal?, omnivore_vegetal_base? } } ; ailleurs, et
++  // pour les autres, les règles du monde ; vide, rien ne change
 +  origines: {},
 @@ cycleBrut
    const prT = pressions.taxons || {}, prB = pressions.biomes || {};
-+  // (docs/51) les règles d'origine : la fusion dont vient une lignée (la sienne, ou celle de sa plus proche ancêtre venue d'ailleurs)
++  // (docs/51) les règles d'origine : la fusion dont vient une lignée (la sienne, ou celle de sa plus proche ancêtre venue d'ailleurs), et
++  // les parcelles de son continent (leur marque, lue sur un pont : « prairie~genese-7-4 » → « ~genese-7- »)
 +  const RO = REGLES.origines && typeof REGLES.origines === 'object' && Object.keys(REGLES.origines).length ? REGLES.origines : null, TO = RO ? new Map(tousT.map(t => [t.id, t])) : null;
-+  const vegetalDe = t => { if (RO) for (let id = t.id, k = 0; id && k < 60; id = parentDe(id, TO), k++) { const f = TO.get(id)?.origine?.fusion; if (f) { const o = RO[f]; if (o && typeof o === 'object') return { omnivore_vegetal: o.omnivore_vegetal ?? REGLES.omnivore_vegetal, omnivore_vegetal_base: o.omnivore_vegetal_base ?? REGLES.omnivore_vegetal_base }; break; } }
-+    return REGLES; };
++  const origineDe = t => { if (RO) for (let id = t.id, k = 0; id && k < 60; id = parentDe(id, TO), k++) { const f = TO.get(id)?.origine?.fusion; if (!f) continue;
++      const o = RO[f], p = o && typeof o === 'object' ? (inst.monde.fusions || []).find(x => x.id === f)?.ponts?.[0]?.[0] : null;
++      return p && p.includes('~') ? { sur: '~' + p.slice(p.indexOf('~') + 1).replace(/-\d+b*$/, '') + '-', omnivore_vegetal: o.omnivore_vegetal ?? REGLES.omnivore_vegetal, omnivore_vegetal_base: o.omnivore_vegetal_base ?? REGLES.omnivore_vegetal_base } : null; }
++    return null; };
 @@ 4. la dynamique, taxon par taxon
 -    const E = etat.get(t.id), K = t.phenotypes.length;
-+    const E = etat.get(t.id), K = t.phenotypes.length, RV = vegetalDe(t);   // (docs/51) ce que ses plantes lui donnent
++    const E = etat.get(t.id), K = t.phenotypes.length, OR = origineDe(t);
+     for (const [bid, pop] of Object.entries(E.pops)) {
+       const b = biomes[bid]; if (!b) { delete E.pops[bid]; continue; }
++      const RV = OR && bid.includes(OR.sur) ? OR : REGLES;   // (docs/51) ce que ses plantes lui donnent, ici
 @@ les naissances d'un omnivore
 -        … * (t.plan.regime === 'carnivore' ? REGLES.omnivore_vegetal ?? 1 : REGLES.omnivore_vegetal_base ?? 1) * …
 +        … * (t.plan.regime === 'carnivore' ? RV.omnivore_vegetal ?? 1 : RV.omnivore_vegetal_base ?? 1) * …
@@ -157,38 +165,33 @@ Sans `origines`, le moteur donne le même monde au caractère près (la genèse 
 
 <!-- RESULTATS -->
 
+### Une première version : la règle partout
+
+La première version suivait les lignées de la genèse 7 où qu'elles aillent. Elle arrêtait aussi le recul, mais le continent passait les ponts avec ses règles : sur une parcelle d'Orvane, un omnivore de la genèse 7 tirait des plantes 100 % de ce qu'en tire un herbivore, un omnivore d'Orvane 60 %. Le premier l'emportait.
+
+<!-- PREMIERE-CHIFFRES -->
+
+Elle faisait aussi échouer une vérification de `bancs/ponts.js`, sans que la règle y soit pour rien :
+- au cycle 116, `jadunou`, un carnivore du continent de 3,6 kg, se sépare dans la forêt d'Orvane (`foret~3`, au bout du pont bois-forêt) ;
+- sa fille, `jadunou.foret~3`, n'est pas dans la liste des lignées du continent que le banc dresse le jour de la fusion, et elle ne porte pas d'`origine` (une séparation ne la transmet pas) ;
+- le banc la compte donc parmi les lignées d'Orvane, et trouve deux zones hybrides « entre les deux mondes » (avec `orkifir`, du continent) et deux paires apparentées (avec sa mère). Les deux côtés sont du continent.
+
+Rangée avec le continent, cette fille ne fait plus rien échouer. Le défaut est dans le banc et attend la première lignée du continent qui se séparera de l'autre côté d'un pont (plus bas, ce qui reste ouvert).
+
 ### Les bancs
 
 Les deux bancs ne lisent pas le profil : pour les juger avec la règle, on la pose dans les mondes qu'ils lisent (`regles.origines` dans `mondes/orvane/generation-0.json` pour `bancs/ponts.js`, dans `mondes/orvane/instantane.json` pour la section 3 de `bancs/stabilite.js`).
 
-**`bancs/ponts.js`.** Sans la règle, tout passe. Avec elle, tout passe sauf une vérification, et ce n'est pas la règle qu'elle prend en faute :
-- au cycle 116, `jadunou`, un carnivore du continent de 3,6 kg, se sépare dans la forêt d'Orvane (`foret~3`, au bout du pont bois-forêt) ;
-- sa fille, `jadunou.foret~3`, n'est pas dans la liste des lignées du continent que le banc a faite le jour de la fusion, et elle ne porte pas d'`origine` (une séparation ne la transmet pas) ;
-- le banc la compte donc parmi les lignées d'Orvane, et y trouve deux zones hybrides « entre les deux mondes » (avec `orkifir`, du continent) et deux paires apparentées (avec sa mère). Les deux côtés sont du continent.
+**`bancs/ponts.js` passe tel quel.** Avec la règle, les douze vérifications passent, sans rien changer au banc. Le continent gagne un peu plus vite les parcelles d'Orvane : il est mieux portant, il a plus de bêtes à envoyer. Mais de l'autre côté des ponts, ses lignées vivent sous les règles d'Orvane :
 
-Sans la règle, les six séparations des 80 cycles sont des lignées d'Orvane, et le cas ne se présente pas. Le banc range désormais une lignée née d'une lignée du continent avec le continent (`bancs/ponts.js`, vérification 4) :
+| `bancs/ponts.js`, 80 cycles | sans la règle | règles d'origine (sur le continent) | première version (partout) |
+| --- | --- | --- | --- |
+| lignées du continent qui gagnent Orvane en 10 cycles | 53 | 54 | 55 |
+| parcelles d'Orvane gagnées par le continent | 12 | 16 | 37 |
+| présences à un pas des ponts, cycles 20 et 80 | 27, 51 | 39, 85 | 52, 144 |
+| zones hybrides ; entre les deux mondes | 2 966 ; aucune | 2 991 ; aucune | 3 030 ; aucune |
 
-```diff
--{ const hy = …, croises = hy.filter(([a, b]) => b && src.has(a) !== src.has(b));
--  const M = new Map(X.taxons.map(t => [t.id, t])), A = X.taxons.filter(t => src.has(t.id)), B = X.taxons.filter(t => !src.has(t.id)); let liees = 0;
-+{ // (docs/51) une lignée née après la fusion d'une lignée du continent est du continent : sa fille n'est pas dans src, et ne porte pas d'origine
-+  const M = new Map(X.taxons.map(t => [t.id, t])), venue = id => { for (let k = 0; id && k < 60; k++) { if (src.has(id)) return true; id = M.get(id)?.parent || (id.includes('.') ? id.slice(0, id.lastIndexOf('.')) : null); } return false; };
-+  const hy = …, croises = hy.filter(([a, b]) => b && venue(a) !== venue(b));
-+  const A = X.taxons.filter(t => venue(t.id)), B = X.taxons.filter(t => !venue(t.id)); let liees = 0;
-```
-
-Avec la règle et cette correction, tout passe. Ce qui change :
-
-| `bancs/ponts.js`, 80 cycles | sans la règle | avec les règles d'origine |
-| --- | --- | --- |
-| lignées du continent qui gagnent Orvane en 10 cycles | 53 | 55 |
-| parcelles d'Orvane gagnées par le continent | 12 (6 à un pas des ponts, 3 à deux pas) | 37 (12 à un pas, 21 à deux pas, 1 à trois) |
-| présences à un pas des ponts, cycles 20 et 80 | 27, 51 | 52, 144 |
-| zones hybrides ; entre les deux mondes | 2 966 ; aucune | 3 030 ; aucune |
-
-**Le continent passe les ponts bien plus vite.** Ses lignées gardent leurs règles là où elles vont. Sur une parcelle d'Orvane, un omnivore de la genèse 7 tire des plantes 100 % de ce qu'en tire un herbivore, un omnivore d'Orvane 60 % : le premier l'emporte. C'est l'effet de bord de la règle (plus bas, ce qu'il coûte aux lignées d'Orvane dans le monde vivant).
-
-<!-- STABILITE -->
+**`bancs/stabilite.js` ne change pas.** Ses sections 1, 2, 4, 5 et 6 font tourner sv-1, qui n'a pas de fusion. Sa section 3 fait tourner le monde d'Orvane vu par biome (`instantane.json`), qui n'a pas de parcelles : la règle n'y trouve pas de continent, et le monde est le même au caractère près, cinq cycles plus tard. Tout passe. (La première version, qui ne regardait pas la parcelle, passait aussi : 243 → 272 lignées au lieu de 266, le monde entre 0,95 et 1,66 fois son effectif au lieu de 0,89 et 1,51, 0,15 % de sursauts par cycle au lieu de 0,11 %.) Ce banc ne peut donc pas juger la règle : seul le monde par parcelles le peut, plus haut.
 
 ## Pour refaire les mesures
 
@@ -232,6 +235,18 @@ cd ancien && node ../bilan.js ../genese-7.json           # le moteur du 28 octob
 ## Ce qui reste ouvert
 
 - **Les règles changent, les mondes figés non.** La genèse 7 est la première à vivre sous une règle venue après elle. Ce ne sera pas la dernière : chaque correction du moteur touche aussi les mondes déjà faits. Une fusion pourrait écrire elle-même les règles d'origine de ce qu'elle apporte, en lisant le `monde.regles` de sa source. Pour la genèse 7, il faut les écrire à la main : elle n'en a pas, ses règles étaient celles du moteur d'alors.
-- **Le coût d'`estomac-large`.** Il est passé de 5 % à 20 % pour tous les mondes (le catalogue). Les règles d'origine ne le rendent pas : les carnivores de la genèse 7 tiennent sans lui.
+- **Le coût d'`estomac-large`.** Il est passé de 5 % à 20 % pour tous les mondes (le catalogue). Les règles d'origine ne le rendent pas aux carnivores de la genèse 7, et ils tiennent sans cela.
 - **Le régime affiché.** Les 40 lignées disent encore « carnivore » dans leur plan. Les jeux voient des omnivores (`Tampon.regimeDe`), mais un compte par `plan.regime`, comme le tableau du début, cherche des carnivores qui n'en sont pas. Les compter par leur régime de fait le dirait d'emblée.
+- **Le banc des ponts et les filles du continent.** `bancs/ponts.js` range les lignées d'après la liste du jour de la fusion. La première fille du continent née de l'autre côté d'un pont (avec ou sans règle : il suffit d'une séparation) le fera échouer, à tort. La correction, une vérification à changer :
+
+  ```diff
+  -{ const hy = …, croises = hy.filter(([a, b]) => b && src.has(a) !== src.has(b));
+  -  const M = new Map(X.taxons.map(t => [t.id, t])), A = X.taxons.filter(t => src.has(t.id)), B = X.taxons.filter(t => !src.has(t.id)); let liees = 0;
+  +{ // une lignée née après la fusion d'une lignée du continent est du continent : sa fille n'est pas dans src, et ne porte pas d'origine
+  +  const M = new Map(X.taxons.map(t => [t.id, t])), venue = id => { for (let k = 0; id && k < 60; k++) { if (src.has(id)) return true; id = M.get(id)?.parent || (id.includes('.') ? id.slice(0, id.lastIndexOf('.')) : null); } return false; };
+  +  const hy = …, croises = hy.filter(([a, b]) => b && venue(a) !== venue(b));
+  +  const A = X.taxons.filter(t => venue(t.id)), B = X.taxons.filter(t => !venue(t.id)); let liees = 0;
+  ```
+
+  Avec elle, la première version passe aussi tout le banc.
 - **Revenir en arrière.** Le cycle de nuit complète les règles du monde par celles du profil, d'un niveau, et l'état les garde : retirer la ligne du profil ne suffit pas. On écrit `"origines": { "genese-7": {} }`, et la genèse 7 retrouve les règles du monde d'Orvane.
