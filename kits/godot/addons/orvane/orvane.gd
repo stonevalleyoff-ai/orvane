@@ -17,11 +17,13 @@
 #                                                        # attrait, traque, neophobie, agressivite, attitude } (absente : neutre)
 #   var moi = Orvane.individu(d, randfn(0.0, 1.0))      # … et ce qu'en a retenu une de ses bêtes : plus hardie, elle ose plus
 #   var c = Orvane.caractere("dunvi")                   # le caractère de la lignée : { hardiesse, combativite, opportunisme }
+#   Orvane.garder()                                      # à chaque sauvegarde du jeu : ce qui est compté se garde, sans clore
 #   Orvane.clore(compte_opaque)                          # à un moment naturel : une sauvegarde, une fin de partie
 #   Orvane.deposer(compte_opaque)                        # dépose le prochain lot ; un lot refusé reste en attente
 #
 # Un jeu ignore ce qu'il ne connaît pas (docs/43) : l'instantané reste un Dictionary, tel que le contrat le publie. Les lots pas
-# encore déposés sont gardés dans user://orvane.json, et repris au lancement suivant.
+# encore déposés sont gardés dans user://orvane.json, et repris au lancement suivant ; ce qui est compté et pas encore clos
+# aussi, dès que le jeu appelle garder() (ou clore, ou oublier).
 extends Node
 
 signal instantane_lu(inst: Dictionary)
@@ -569,6 +571,13 @@ func _depose(resultat: int, code: int, _entetes: PackedStringArray, corps: Packe
 
 
 # --- garder ce qui n'est pas encore déposé ---
+
+# garde sur l'appareil ce qui est compté et pas encore clos, avec les lots en attente (user://orvane.json), sans clore de lot :
+# à chaque sauvegarde du jeu, quand il passe derrière une autre application. Fermé d'un coup, il le retrouve au lancement
+# suivant. Clore à chaque sauvegarde ferait un lot à chaque fois (48 par joueur et par jour au plus) ; garder n'en fait aucun.
+func garder() -> void:
+	_sauver()
+
 
 func _sauver() -> void:
 	var f := FileAccess.open(SAUVEGARDE, FileAccess.WRITE)
