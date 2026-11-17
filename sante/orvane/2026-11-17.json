@@ -1,0 +1,3294 @@
+{
+ "orvane_sante": 1,
+ "monde": "orvane",
+ "date": "2026-11-17",
+ "cycle": 57,
+ "titre": "Des prédateurs affamés, des joueurs qui pèsent peu",
+ "resume": "Dix-sept cycles depuis la naissance du monde, trois continents versés, un été qui monte vers son sommet. Les joueurs ont envoyé 345 événements en tout : assez pour que quelques bêtes de la prairie s'en souviennent, beaucoup trop peu pour peser sur les effectifs. La dynamique qui domine le monde ne vient pas d'eux : les carnivores arrivés avec la genèse 7 ont perdu la moitié de leurs bêtes depuis la fusion, alors que leurs proies ont triplé.",
+ "chiffres": [
+  {
+   "valeur": "303",
+   "libelle": "lignées animales vivantes, dont 3 de machines"
+  },
+  {
+   "valeur": "125,6 M",
+   "libelle": "bêtes, sur 47 lieux et 201 parcelles"
+  },
+  {
+   "valeur": "345",
+   "libelle": "événements de joueurs en 17 cycles"
+  },
+  {
+   "valeur": "0",
+   "libelle": "population ayant pris une attitude"
+  }
+ ],
+ "constats": [
+  {
+   "niveau": "alerte",
+   "titre": "Les carnivores de la genèse 7 ont perdu la moitié de leurs bêtes",
+   "texte": "De 3,09 à 1,53 million en 15 cycles, à −4 % par cycle, avec une satiété moyenne de 0,23 contre 0,54 chez les carnivores d'Orvane. Leurs herbivores ont triplé dans le même temps : ces prédateurs ont faim au milieu de proies qui pullulent. Les joueurs n'y sont pour rien. À ce rythme, ils perdent encore la moitié de leurs bêtes vers le 4 décembre."
+  },
+  {
+   "niveau": "alerte",
+   "titre": "Deux tiers des retraits de joueurs ne tuent personne",
+   "texte": "Sur 5,66 bêtes retirées par cycle, 3,79 visent des lignées de la genèse 7 en prairie (Jadunou, Orkifir, Soel, Umedun) et n'apparaissent dans aucune mortalité. Un prélèvement localisé dans une parcelle où la lignée n'a aucune bête est ramené à zéro par `Parcelles.repartir`. Correction suivie dans l'issue n° 32."
+  },
+  {
+   "niveau": "surveiller",
+   "titre": "La pression des joueurs est un signal, pas une force",
+   "texte": "Une seule population sent vraiment les joueurs : Noufir en prairie (163 bêtes), où ils causent 6,4 % des morts. Partout ailleurs, c'est 0,2 % ou moins. Les joueurs prennent les plus grandes bêtes (+1,2 écart-type de taille), mais avec quelques centièmes de bête par cycle l'effet génétique reste invisible."
+  },
+  {
+   "niveau": "surveiller",
+   "titre": "Les machines de la Mère ont été multipliées par vingt",
+   "texte": "De 95 machines au cycle 42 à 1 898 au cycle 57. La croissance ralentit, de +24 % à +11 % par cycle. La Mère peut concevoir une nouvelle machine au cycle 65."
+  },
+  {
+   "niveau": "surveiller",
+   "titre": "Une souche portée par un insecte",
+   "texte": "Goteose α, apparue cette nuit chez Phéva, filtreur de lac, atteint 39 % de virulence et passe par Orlingra, tondeur de mangrove. Les 6 souches vivantes n'infectent que 3 lignées, environ 32 000 bêtes."
+  },
+  {
+   "niveau": "info",
+   "titre": "Méki tondeur de prairie s'est éteinte",
+   "texte": "Elle tenait à 11 bêtes depuis des dizaines de cycles, en a perdu une par cycle à partir du cycle 46, et s'est éteinte au cycle 57. Le muséum note : trop peu nombreuse pour tenir. Les joueurs ne comptaient pas pour 35 % de ses morts."
+  }
+ ],
+ "notes": {
+  "vivant": "Quatre faunes se mêlent : la genèse universelle d'Orvane (115 lignées), la genèse 7 versée par trois ponts (99), les eaux douces par trois ponts (60) et la mer d'Orvane par fusion (29). Chaque arrivée se lit dans les effectifs : de 54 à 90 millions de bêtes au cycle 42, puis 110 millions au cycle 46. Sur les 75 lignées carnivores du monde, 42 ont perdu plus de 10 % depuis le cycle 46. Un prédateur qui a faim alors que ses proies triplent ne suit pas une oscillation proies-prédateurs ordinaire : quelque chose l'empêche d'atteindre ce qui pousse.",
+  "joueurs": "Le flux est irrégulier et faible : huit cycles sur dix-sept n'ont reçu aucun lot, et trois nuits concentrent les trois quarts des événements (73 au cycle 46, 95 au cycle 55, 98 au cycle 57, en 4 lots). Cinq jeux sont inscrits ; seul Stone Valley a réglé son exposition. Lisière, tel qu'il est dans `main`, dépose dans le bac à sable « essai », qu'aucun monde ne lit. Les entrées de montagne portent un phénotype et la valeur des bêtes prises : la signature du réglage de Stone Valley. Celles de prairie et de rivière n'en portent pas ; les données publiées ne permettent pas d'attribuer chaque lot à un jeu.",
+  "memoire": "La mémoire est éveillée depuis le cycle 54. 111 populations sur 1 757 portent une trace des joueurs : 103 un peu d'habituation, 18 de la méfiance, 9 de l'agressivité. Les marques les plus fortes sont chez des carnivores combatifs de la prairie (Orvi, Katorgra, Rograka, Noufir, Umedun) : l'agressivité ne monte que si le mal est fait de près, ou si le jeu ne dit pas le moyen. Aucune ne franchit un seuil : pour devenir fuyante, une population doit voir mal finir environ un contact sur neuf, une vingtaine de contacts par cycle, plusieurs nuits de suite. Sans nouveaux lots, la méfiance d'Orvi (0,26) passerait sous 0,1 en 8 cycles, son agressivité en 14.",
+  "souches": "Sept souches sont nées depuis l'éveil, six vivent. Elles restent chez leurs lignées d'origine : Phéva (Goteose et ses deux mutantes), Vaor (Vuphiose et sa mutante), Grane (Vergoose). Un jeu qui voudrait des bêtes infectées hors de la jungle, des eaux et de la forêt n'en trouverait presque pas.",
+  "cycles": "Le monde fait un pas par jour, à 03:05 UTC depuis le 7 novembre (le README dit 03:17). Avant, il y a eu six jours sans cycle après sa naissance, puis des passages vers 10:50, et deux jours à deux cycles (le 4 et le 11 novembre). Une année dure 120 cycles : le plein été tombe au cycle 60, l'automne commence au cycle 75 avec les départs d'hivernage de 96 populations, le cœur de l'hiver arrive au cycle 120. Le climat lent descend vers un âge glaciaire : des ponts de terre peuvent émerger vers fin mai 2027."
+ },
+ "actions": [
+  {
+   "titre": "Ne plus perdre les retraits localisés.",
+   "texte": "Dans `moteur/parcelles.js`, reporter un retrait localisé dans une parcelle vide sur les parcelles où la lignée vit (issue n° 32)."
+  },
+  {
+   "titre": "Comprendre la faim des carnivores de la genèse 7.",
+   "texte": "Comparer ce qu'ils peuvent atteindre (masse, vitesse, heure, parcelle) avec les herbivores qui pullulent. À −4 % par cycle, les plus petites populations s'éteindront avant la fin de l'année."
+  },
+  {
+   "titre": "Donner du volume aux joueurs.",
+   "texte": "Au rythme actuel, aucune attitude n'apparaîtra : la promesse d'Orvane (une espèce trop chassée devient méfiante dans tous les jeux) ne peut pas se voir. Vérifier que les jeux inscrits déposent bien leurs lots."
+  },
+  {
+   "titre": "Garder la trace des pressions.",
+   "texte": "L'historique ne garde que les effectifs. Y ajouter, par population, la part des morts due aux joueurs, la méfiance et l'agressivité permettrait de suivre une chasse dans le temps."
+  }
+ ],
+ "auteur": "rédigé par Claude",
+ "mesures": {
+  "monde": {
+   "id": "orvane",
+   "nom": "Le monde d'Orvane",
+   "ne": "2026-10-29T15:30:11.656Z",
+   "cycle": 57,
+   "date": "2026-11-17T03:05:19.730Z",
+   "annee": 120,
+   "saison": {
+    "phase": 0.475,
+    "nom": "été",
+    "production": 1.247
+   },
+   "duree_cycle_h": 24,
+   "contrat": "1.0"
+  },
+  "effectifs": {
+   "lignees_animales": 300,
+   "machines": 3,
+   "lignees_plantes": 569,
+   "betes": 125612575,
+   "lieux": 47,
+   "parcelles": 201,
+   "populations": 1757,
+   "statuts": {
+    "stable": 263,
+    "menace": 24,
+    "declin": 6,
+    "croissance": 10,
+    "eteint": 1
+   },
+   "menacees": [
+    {
+     "taxon": "beltor",
+     "nom": "Beltor tondeur de taïga",
+     "regime": "herbivore",
+     "origine": "Orvane",
+     "effectif": 6
+    },
+    {
+     "taxon": "mucorja",
+     "nom": "Mucorja rôdeur de mangrove",
+     "regime": "carnivore",
+     "origine": "La mer d'Orvane",
+     "effectif": 6
+    },
+    {
+     "taxon": "orjator",
+     "nom": "Orjator fureteur de côte",
+     "regime": "omnivore",
+     "origine": "Orvane",
+     "effectif": 7
+    },
+    {
+     "taxon": "talonou",
+     "nom": "Talonou fureteur de savane",
+     "regime": "omnivore",
+     "origine": "Orvane",
+     "effectif": 7
+    },
+    {
+     "taxon": "phevaren",
+     "nom": "Phévaren glaneur de maquis",
+     "regime": "omnivore",
+     "origine": "Orvane",
+     "effectif": 8
+    },
+    {
+     "taxon": "memu",
+     "nom": "Mému traqueur de steppe",
+     "regime": "carnivore",
+     "origine": "Orvane",
+     "effectif": 9
+    },
+    {
+     "taxon": "rokivi",
+     "nom": "Rokivi fureteur de jungle",
+     "regime": "omnivore",
+     "origine": "Orvane",
+     "effectif": 10
+    },
+    {
+     "taxon": "noujays",
+     "nom": "Noujays chasseur d'abysses",
+     "regime": "carnivore",
+     "origine": "La mer d'Orvane",
+     "effectif": 11
+    },
+    {
+     "taxon": "visoka",
+     "nom": "Visoka rôdeur de marais",
+     "regime": "carnivore",
+     "origine": "Orvane",
+     "effectif": 13
+    },
+    {
+     "taxon": "solinel",
+     "nom": "Solinel tamiseur de côte",
+     "regime": "filtreur",
+     "origine": "La mer d'Orvane",
+     "effectif": 14
+    },
+    {
+     "taxon": "sogra",
+     "nom": "Sogra picoreur des fonds de torrent",
+     "regime": "carnivore",
+     "origine": "les eaux douces",
+     "effectif": 14
+    },
+    {
+     "taxon": "nouou",
+     "nom": "Nouou picoreur des fonds de roselière",
+     "regime": "carnivore",
+     "origine": "les eaux douces",
+     "effectif": 14
+    },
+    {
+     "taxon": "nouloor",
+     "nom": "Nouloor brouteur d'algues de marais",
+     "regime": "herbivore",
+     "origine": "Orvane",
+     "effectif": 15
+    },
+    {
+     "taxon": "angraume.ossuaire",
+     "nom": "Angraume chasseur de bois (Ossuaire)",
+     "regime": "carnivore",
+     "origine": "la genèse 7",
+     "effectif": 16
+    },
+    {
+     "taxon": "kafir",
+     "nom": "Kafir glaneur de delta",
+     "regime": "carnivore",
+     "origine": "les eaux douces",
+     "effectif": 17
+    },
+    {
+     "taxon": "vacor",
+     "nom": "Vacor chasseur de braises",
+     "regime": "carnivore",
+     "origine": "la genèse 7",
+     "effectif": 21
+    },
+    {
+     "taxon": "belta",
+     "nom": "Belta glaneur de montagne",
+     "regime": "omnivore",
+     "origine": "Orvane",
+     "effectif": 22
+    },
+    {
+     "taxon": "ysro",
+     "nom": "Ysro glaneur de côte",
+     "regime": "omnivore",
+     "origine": "Orvane",
+     "effectif": 25
+    },
+    {
+     "taxon": "sonouan",
+     "nom": "Sonouan glaneur de récif",
+     "regime": "carnivore",
+     "origine": "La mer d'Orvane",
+     "effectif": 32
+    },
+    {
+     "taxon": "eltor",
+     "nom": "Eltor fouilleur de delta",
+     "regime": "carnivore",
+     "origine": "les eaux douces",
+     "effectif": 33
+    },
+    {
+     "taxon": "nesil",
+     "nom": "Nesil glaneur de mangrove",
+     "regime": "carnivore",
+     "origine": "La mer d'Orvane",
+     "effectif": 38
+    },
+    {
+     "taxon": "neta",
+     "nom": "Neta filtreur de haute mer",
+     "regime": "filtreur",
+     "origine": "La mer d'Orvane",
+     "effectif": 40
+    },
+    {
+     "taxon": "kaorvi",
+     "nom": "Kaorvi picoreur des fonds de haute mer",
+     "regime": "carnivore",
+     "origine": "La mer d'Orvane",
+     "effectif": 48
+    },
+    {
+     "taxon": "phenouel",
+     "nom": "Phénouel brouteur de montagne",
+     "regime": "herbivore",
+     "origine": "Orvane",
+     "effectif": 49
+    }
+   ],
+   "eteintes": [
+    {
+     "taxon": "meki",
+     "nom": "Méki tondeur de prairie",
+     "cycle": 57,
+     "cause": "trop peu nombreuse pour tenir"
+    }
+   ]
+  },
+  "serie": [
+   {
+    "n": 41,
+    "date": "2026-10-29T15:30:12.491Z",
+    "evenements_joueurs": 0,
+    "saison": "printemps",
+    "production": 1.136,
+    "betes": 54414912,
+    "lignees": 112,
+    "evenements": {
+     "catastrophe": 1,
+     "epidemie": 2,
+     "remission": 2,
+     "hybridation": 124,
+     "explosion": 3,
+     "migration": 4
+    },
+    "groupes": {
+     "herbivore|Orvane": 48779089,
+     "carnivore|Orvane": 221414,
+     "filtreur|Orvane": 2531520,
+     "omnivore|Orvane": 2882889
+    }
+   },
+   {
+    "n": 42,
+    "date": "2026-11-04T07:58:47.841Z",
+    "evenements_joueurs": 8,
+    "saison": "printemps",
+    "production": 1.147,
+    "betes": 90046612,
+    "lignees": 243,
+    "evenements": {
+     "apparition": 128,
+     "eveil": 4,
+     "nouveau_trait": 4,
+     "remission": 4,
+     "epidemie": 1,
+     "transfert": 1,
+     "separation": 1,
+     "migration": 329,
+     "explosion": 39,
+     "hybridation": 201,
+     "effondrement": 55
+    },
+    "groupes": {
+     "herbivore|Orvane": 48604253,
+     "carnivore|Orvane": 222013,
+     "filtreur|Orvane": 2379584,
+     "omnivore|Orvane": 2886449,
+     "carnivore|La mer d'Orvane": 46213,
+     "herbivore|La mer d'Orvane": 721196,
+     "filtreur|La mer d'Orvane": 9654359,
+     "omnivore|La mer d'Orvane": 398702,
+     "herbivore|la genèse 7": 4212486,
+     "omnivore|la genèse 7": 17808126,
+     "filtreur|la genèse 7": 18965,
+     "carnivore|la genèse 7": 3094171,
+     "synthetique|Orvane": 95
+    }
+   },
+   {
+    "n": 43,
+    "date": "2026-11-04T10:51:47.504Z",
+    "evenements_joueurs": 0,
+    "saison": "printemps",
+    "production": 1.157,
+    "betes": 90766026,
+    "lignees": 243,
+    "evenements": {
+     "nouveau_trait": 2,
+     "remission": 20,
+     "explosion": 89,
+     "migration": 68,
+     "hybridation": 52,
+     "effondrement": 15
+    },
+    "groupes": {
+     "herbivore|Orvane": 48647292,
+     "carnivore|Orvane": 222514,
+     "filtreur|Orvane": 2238713,
+     "omnivore|Orvane": 2887078,
+     "carnivore|La mer d'Orvane": 46181,
+     "herbivore|La mer d'Orvane": 721129,
+     "filtreur|La mer d'Orvane": 10011372,
+     "omnivore|La mer d'Orvane": 437824,
+     "herbivore|la genèse 7": 4733031,
+     "omnivore|la genèse 7": 17874234,
+     "filtreur|la genèse 7": 21043,
+     "carnivore|la genèse 7": 2925481,
+     "synthetique|Orvane": 134
+    }
+   },
+   {
+    "n": 44,
+    "date": "2026-11-05T10:49:26.183Z",
+    "evenements_joueurs": 0,
+    "saison": "printemps",
+    "production": 1.167,
+    "betes": 91884011,
+    "lignees": 243,
+    "evenements": {
+     "eveil": 11,
+     "nouveau_trait": 2,
+     "remission": 14,
+     "epidemie": 1,
+     "explosion": 66,
+     "migration": 7,
+     "hybridation": 11,
+     "effondrement": 5,
+     "savoir": 3
+    },
+    "groupes": {
+     "herbivore|Orvane": 48888637,
+     "carnivore|Orvane": 222966,
+     "filtreur|Orvane": 2125042,
+     "omnivore|Orvane": 2887163,
+     "carnivore|La mer d'Orvane": 46137,
+     "herbivore|La mer d'Orvane": 731891,
+     "filtreur|La mer d'Orvane": 10498146,
+     "omnivore|La mer d'Orvane": 479017,
+     "herbivore|la genèse 7": 5282244,
+     "omnivore|la genèse 7": 17928131,
+     "filtreur|la genèse 7": 23373,
+     "carnivore|la genèse 7": 2771085,
+     "synthetique|Orvane": 179
+    }
+   },
+   {
+    "n": 45,
+    "date": "2026-11-06T10:04:54.020Z",
+    "evenements_joueurs": 0,
+    "saison": "été",
+    "production": 1.177,
+    "betes": 93533963,
+    "lignees": 243,
+    "evenements": {
+     "eveil": 1,
+     "nouveau_trait": 3,
+     "remission": 5,
+     "explosion": 13,
+     "migration": 3,
+     "savoir": 2
+    },
+    "groupes": {
+     "herbivore|Orvane": 49492063,
+     "carnivore|Orvane": 223346,
+     "filtreur|Orvane": 2044182,
+     "omnivore|Orvane": 2890181,
+     "carnivore|La mer d'Orvane": 46085,
+     "herbivore|La mer d'Orvane": 749771,
+     "filtreur|La mer d'Orvane": 11064967,
+     "omnivore|La mer d'Orvane": 526122,
+     "herbivore|la genèse 7": 5860540,
+     "omnivore|la genèse 7": 17981530,
+     "filtreur|la genèse 7": 25966,
+     "carnivore|la genèse 7": 2628979,
+     "synthetique|Orvane": 231
+    }
+   },
+   {
+    "n": 46,
+    "date": "2026-11-07T03:05:13.801Z",
+    "evenements_joueurs": 73,
+    "saison": "été",
+    "production": 1.186,
+    "betes": 109576980,
+    "lignees": 303,
+    "evenements": {
+     "apparition": 60,
+     "nouveau_trait": 9,
+     "remission": 13,
+     "epidemie": 1,
+     "migration": 63,
+     "explosion": 9,
+     "hybridation": 18,
+     "savoir": 2
+    },
+    "groupes": {
+     "herbivore|Orvane": 49845939,
+     "carnivore|Orvane": 223713,
+     "filtreur|Orvane": 1987972,
+     "omnivore|Orvane": 2891319,
+     "carnivore|La mer d'Orvane": 46049,
+     "herbivore|La mer d'Orvane": 771503,
+     "filtreur|La mer d'Orvane": 11653890,
+     "omnivore|La mer d'Orvane": 576191,
+     "herbivore|la genèse 7": 6446122,
+     "omnivore|la genèse 7": 18004715,
+     "filtreur|la genèse 7": 28844,
+     "carnivore|la genèse 7": 2497574,
+     "synthetique|Orvane": 291,
+     "omnivore|les eaux douces": 6689571,
+     "carnivore|les eaux douces": 77549,
+     "herbivore|les eaux douces": 7463231,
+     "detritivore|les eaux douces": 372507
+    }
+   },
+   {
+    "n": 47,
+    "date": "2026-11-08T03:05:15.389Z",
+    "evenements_joueurs": 31,
+    "saison": "été",
+    "production": 1.194,
+    "betes": 111572171,
+    "lignees": 303,
+    "evenements": {
+     "nouveau_trait": 6,
+     "remission": 9,
+     "explosion": 37,
+     "migration": 5,
+     "hybridation": 3,
+     "savoir": 2
+    },
+    "groupes": {
+     "herbivore|Orvane": 50089181,
+     "carnivore|Orvane": 224075,
+     "filtreur|Orvane": 1948390,
+     "omnivore|Orvane": 2890687,
+     "carnivore|La mer d'Orvane": 46037,
+     "herbivore|La mer d'Orvane": 795454,
+     "filtreur|La mer d'Orvane": 12230264,
+     "omnivore|La mer d'Orvane": 628267,
+     "herbivore|la genèse 7": 7031794,
+     "omnivore|la genèse 7": 17997887,
+     "filtreur|la genèse 7": 32028,
+     "carnivore|la genèse 7": 2375820,
+     "synthetique|Orvane": 360,
+     "omnivore|les eaux douces": 7010120,
+     "carnivore|les eaux douces": 78193,
+     "herbivore|les eaux douces": 7811492,
+     "detritivore|les eaux douces": 382122
+    }
+   },
+   {
+    "n": 48,
+    "date": "2026-11-09T03:05:15.856Z",
+    "evenements_joueurs": 12,
+    "saison": "été",
+    "production": 1.202,
+    "betes": 113435184,
+    "lignees": 303,
+    "evenements": {
+     "nouveau_trait": 6,
+     "remission": 12,
+     "explosion": 44,
+     "migration": 19,
+     "savoir": 4
+    },
+    "groupes": {
+     "herbivore|Orvane": 50300619,
+     "carnivore|Orvane": 224430,
+     "filtreur|Orvane": 1920371,
+     "omnivore|Orvane": 2888493,
+     "carnivore|La mer d'Orvane": 46051,
+     "herbivore|La mer d'Orvane": 820385,
+     "filtreur|La mer d'Orvane": 12781033,
+     "omnivore|La mer d'Orvane": 681361,
+     "herbivore|la genèse 7": 7612706,
+     "omnivore|la genèse 7": 17962839,
+     "filtreur|la genèse 7": 35535,
+     "carnivore|la genèse 7": 2262563,
+     "synthetique|Orvane": 443,
+     "omnivore|les eaux douces": 7301382,
+     "carnivore|les eaux douces": 78816,
+     "herbivore|les eaux douces": 8127384,
+     "detritivore|les eaux douces": 390773
+    }
+   },
+   {
+    "n": 49,
+    "date": "2026-11-10T03:05:16.561Z",
+    "evenements_joueurs": 0,
+    "saison": "été",
+    "production": 1.21,
+    "betes": 115175231,
+    "lignees": 303,
+    "evenements": {
+     "climat": 1,
+     "nouveau_trait": 9,
+     "remission": 16,
+     "explosion": 21,
+     "migration": 13,
+     "savoir": 5
+    },
+    "groupes": {
+     "herbivore|Orvane": 50511905,
+     "carnivore|Orvane": 224789,
+     "filtreur|Orvane": 1900177,
+     "omnivore|Orvane": 2885096,
+     "carnivore|La mer d'Orvane": 46090,
+     "herbivore|La mer d'Orvane": 845289,
+     "filtreur|La mer d'Orvane": 13294347,
+     "omnivore|La mer d'Orvane": 734480,
+     "herbivore|la genèse 7": 8184939,
+     "omnivore|la genèse 7": 17902475,
+     "filtreur|la genèse 7": 39378,
+     "carnivore|la genèse 7": 2157498,
+     "synthetique|Orvane": 541,
+     "omnivore|les eaux douces": 7561087,
+     "carnivore|les eaux douces": 79420,
+     "herbivore|les eaux douces": 8409253,
+     "detritivore|les eaux douces": 398467
+    }
+   },
+   {
+    "n": 50,
+    "date": "2026-11-11T03:05:20.799Z",
+    "evenements_joueurs": 1,
+    "saison": "été",
+    "production": 1.217,
+    "betes": 116743916,
+    "lignees": 303,
+    "evenements": {
+     "remission": 8,
+     "nouveau_trait": 7,
+     "explosion": 5,
+     "migration": 39,
+     "effondrement": 1,
+     "hybridation": 2,
+     "savoir": 5
+    },
+    "groupes": {
+     "herbivore|Orvane": 50730090,
+     "carnivore|Orvane": 225156,
+     "filtreur|Orvane": 1886562,
+     "omnivore|Orvane": 2880314,
+     "carnivore|La mer d'Orvane": 46155,
+     "herbivore|La mer d'Orvane": 869570,
+     "filtreur|La mer d'Orvane": 13763514,
+     "omnivore|La mer d'Orvane": 786642,
+     "herbivore|la genèse 7": 8757360,
+     "omnivore|la genèse 7": 17767655,
+     "filtreur|la genèse 7": 43571,
+     "carnivore|la genèse 7": 2057827,
+     "synthetique|Orvane": 659,
+     "omnivore|les eaux douces": 7788181,
+     "carnivore|les eaux douces": 79980,
+     "herbivore|les eaux douces": 8655474,
+     "detritivore|les eaux douces": 405206
+    }
+   },
+   {
+    "n": 51,
+    "date": "2026-11-11T11:25:46.985Z",
+    "evenements_joueurs": 0,
+    "saison": "été",
+    "production": 1.223,
+    "betes": 118589885,
+    "lignees": 303,
+    "evenements": {
+     "eveil": 4,
+     "nouveau_trait": 5,
+     "remission": 18,
+     "epidemie": 2,
+     "migration": 6,
+     "explosion": 6,
+     "hybridation": 5,
+     "savoir": 6
+    },
+    "groupes": {
+     "herbivore|Orvane": 51217749,
+     "carnivore|Orvane": 225533,
+     "filtreur|Orvane": 1876407,
+     "omnivore|Orvane": 2891860,
+     "carnivore|La mer d'Orvane": 46247,
+     "herbivore|La mer d'Orvane": 892025,
+     "filtreur|La mer d'Orvane": 14185210,
+     "omnivore|La mer d'Orvane": 837052,
+     "herbivore|la genèse 7": 9404214,
+     "omnivore|la genèse 7": 17636718,
+     "filtreur|la genèse 7": 48122,
+     "carnivore|la genèse 7": 1966429,
+     "synthetique|Orvane": 795,
+     "omnivore|les eaux douces": 7988848,
+     "carnivore|les eaux douces": 80512,
+     "herbivore|les eaux douces": 8881077,
+     "detritivore|les eaux douces": 411087
+    }
+   },
+   {
+    "n": 52,
+    "date": "2026-11-12T03:05:16.627Z",
+    "evenements_joueurs": 0,
+    "saison": "été",
+    "production": 1.228,
+    "betes": 120148120,
+    "lignees": 303,
+    "evenements": {
+     "remission": 18,
+     "nouveau_trait": 6,
+     "migration": 21,
+     "explosion": 13,
+     "savoir": 2,
+     "invention": 1
+    },
+    "groupes": {
+     "herbivore|Orvane": 51619941,
+     "carnivore|Orvane": 225904,
+     "filtreur|Orvane": 1871140,
+     "omnivore|Orvane": 2895330,
+     "carnivore|La mer d'Orvane": 46369,
+     "herbivore|La mer d'Orvane": 913445,
+     "filtreur|La mer d'Orvane": 14555690,
+     "omnivore|La mer d'Orvane": 885900,
+     "herbivore|la genèse 7": 10002596,
+     "omnivore|la genèse 7": 17457361,
+     "filtreur|la genèse 7": 52943,
+     "carnivore|la genèse 7": 1880648,
+     "synthetique|Orvane": 954,
+     "omnivore|les eaux douces": 8162560,
+     "carnivore|les eaux douces": 81012,
+     "herbivore|les eaux douces": 9080371,
+     "detritivore|les eaux douces": 415956
+    }
+   },
+   {
+    "n": 53,
+    "date": "2026-11-13T03:05:19.367Z",
+    "evenements_joueurs": 0,
+    "saison": "été",
+    "production": 1.233,
+    "betes": 121684027,
+    "lignees": 304,
+    "evenements": {
+     "nouveau_trait": 5,
+     "remission": 6,
+     "conception": 1,
+     "migration": 22,
+     "hybridation": 1,
+     "explosion": 16,
+     "savoir": 7
+    },
+    "groupes": {
+     "herbivore|Orvane": 51961112,
+     "carnivore|Orvane": 226128,
+     "filtreur|Orvane": 1864908,
+     "omnivore|Orvane": 2898154,
+     "carnivore|La mer d'Orvane": 46498,
+     "herbivore|La mer d'Orvane": 933729,
+     "filtreur|La mer d'Orvane": 14888124,
+     "omnivore|La mer d'Orvane": 931323,
+     "herbivore|la genèse 7": 10649009,
+     "omnivore|la genèse 7": 17347517,
+     "filtreur|la genèse 7": 58213,
+     "carnivore|la genèse 7": 1802266,
+     "synthetique|Orvane": 1156,
+     "omnivore|les eaux douces": 8313782,
+     "carnivore|les eaux douces": 81510,
+     "herbivore|les eaux douces": 9260231,
+     "detritivore|les eaux douces": 420367
+    }
+   },
+   {
+    "n": 54,
+    "date": "2026-11-14T03:05:17.780Z",
+    "evenements_joueurs": 20,
+    "saison": "été",
+    "production": 1.238,
+    "betes": 122923159,
+    "lignees": 304,
+    "evenements": {
+     "eveil": 1,
+     "nouveau_trait": 6,
+     "remission": 12,
+     "migration": 18,
+     "explosion": 13,
+     "hybridation": 1,
+     "savoir": 1
+    },
+    "groupes": {
+     "herbivore|Orvane": 52113188,
+     "carnivore|Orvane": 226326,
+     "filtreur|Orvane": 1855070,
+     "omnivore|Orvane": 2900229,
+     "carnivore|La mer d'Orvane": 46637,
+     "herbivore|La mer d'Orvane": 953685,
+     "filtreur|La mer d'Orvane": 15190460,
+     "omnivore|La mer d'Orvane": 972388,
+     "herbivore|la genèse 7": 11308571,
+     "omnivore|la genèse 7": 17254664,
+     "filtreur|la genèse 7": 64149,
+     "carnivore|la genèse 7": 1729749,
+     "synthetique|Orvane": 1335,
+     "omnivore|les eaux douces": 8422007,
+     "carnivore|les eaux douces": 81946,
+     "herbivore|les eaux douces": 9379189,
+     "detritivore|les eaux douces": 423566
+    }
+   },
+   {
+    "n": 55,
+    "date": "2026-11-15T03:05:19.921Z",
+    "evenements_joueurs": 95,
+    "saison": "été",
+    "production": 1.241,
+    "betes": 124095887,
+    "lignees": 304,
+    "evenements": {
+     "remission": 20,
+     "nouveau_trait": 4,
+     "transfert": 2,
+     "migration": 9,
+     "explosion": 10,
+     "hybridation": 6,
+     "savoir": 6
+    },
+    "groupes": {
+     "herbivore|Orvane": 52445678,
+     "carnivore|Orvane": 226595,
+     "filtreur|Orvane": 1848711,
+     "omnivore|Orvane": 2900386,
+     "carnivore|La mer d'Orvane": 46804,
+     "herbivore|La mer d'Orvane": 972754,
+     "filtreur|La mer d'Orvane": 15460735,
+     "omnivore|La mer d'Orvane": 1009759,
+     "herbivore|la genèse 7": 11836324,
+     "omnivore|la genèse 7": 17061882,
+     "filtreur|la genèse 7": 70098,
+     "carnivore|la genèse 7": 1659587,
+     "synthetique|Orvane": 1522,
+     "omnivore|les eaux douces": 8536354,
+     "carnivore|les eaux douces": 82394,
+     "herbivore|les eaux douces": 9509067,
+     "detritivore|les eaux douces": 427237
+    }
+   },
+   {
+    "n": 56,
+    "date": "2026-11-16T03:05:20.828Z",
+    "evenements_joueurs": 7,
+    "saison": "été",
+    "production": 1.245,
+    "betes": 125261350,
+    "lignees": 304,
+    "evenements": {
+     "nouveau_trait": 5,
+     "remission": 12,
+     "migration": 12,
+     "explosion": 5,
+     "hybridation": 1,
+     "savoir": 3
+    },
+    "groupes": {
+     "herbivore|Orvane": 52825815,
+     "carnivore|Orvane": 226930,
+     "filtreur|Orvane": 1845852,
+     "omnivore|Orvane": 2897407,
+     "carnivore|La mer d'Orvane": 47004,
+     "herbivore|La mer d'Orvane": 988869,
+     "filtreur|La mer d'Orvane": 15675539,
+     "omnivore|La mer d'Orvane": 1042863,
+     "herbivore|la genèse 7": 12378663,
+     "omnivore|la genèse 7": 16894932,
+     "filtreur|la genèse 7": 76083,
+     "carnivore|la genèse 7": 1594445,
+     "synthetique|Orvane": 1711,
+     "omnivore|les eaux douces": 8629855,
+     "carnivore|les eaux douces": 82870,
+     "herbivore|les eaux douces": 9621635,
+     "detritivore|les eaux douces": 430877
+    }
+   },
+   {
+    "n": 57,
+    "date": "2026-11-17T03:05:19.730Z",
+    "evenements_joueurs": 98,
+    "saison": "été",
+    "production": 1.247,
+    "betes": 125612575,
+    "lignees": 303,
+    "evenements": {
+     "remission": 7,
+     "nouveau_trait": 8,
+     "epidemie": 2,
+     "migration": 10,
+     "explosion": 14,
+     "extinction": 1,
+     "savoir": 5
+    },
+    "groupes": {
+     "herbivore|Orvane": 52631781,
+     "carnivore|Orvane": 227145,
+     "filtreur|Orvane": 1840784,
+     "omnivore|Orvane": 2890381,
+     "carnivore|La mer d'Orvane": 47217,
+     "herbivore|La mer d'Orvane": 1004865,
+     "filtreur|La mer d'Orvane": 15862863,
+     "omnivore|La mer d'Orvane": 1072757,
+     "herbivore|la genèse 7": 12806517,
+     "omnivore|la genèse 7": 16643097,
+     "filtreur|la genèse 7": 82521,
+     "carnivore|la genèse 7": 1531565,
+     "synthetique|Orvane": 1898,
+     "omnivore|les eaux douces": 8713923,
+     "carnivore|les eaux douces": 83342,
+     "herbivore|les eaux douces": 9737607,
+     "detritivore|les eaux douces": 434312
+    }
+   }
+  ],
+  "groupes": [
+   {
+    "cle": "synthetique|Orvane",
+    "regime": "synthetique",
+    "origine": "Orvane",
+    "lignees": 3,
+    "depuis": 42,
+    "debut": 95,
+    "fin": 1898,
+    "variation": 18.9789,
+    "pentes": [
+     0.2181,
+     0.2064,
+     0.2,
+     0.2117,
+     0.1548,
+     0.1401,
+     0.1242,
+     0.1093
+    ],
+    "satiete": null
+   },
+   {
+    "cle": "filtreur|la genèse 7",
+    "regime": "filtreur",
+    "origine": "la genèse 7",
+    "lignees": 1,
+    "depuis": 42,
+    "debut": 18965,
+    "fin": 82521,
+    "variation": 3.3512,
+    "pentes": [
+     0.1065,
+     0.1045,
+     0.1002,
+     0.0995,
+     0.102,
+     0.0927,
+     0.0854,
+     0.0846
+    ],
+    "satiete": null
+   },
+   {
+    "cle": "herbivore|la genèse 7",
+    "regime": "herbivore",
+    "origine": "la genèse 7",
+    "lignees": 21,
+    "depuis": 42,
+    "debut": 4212486,
+    "fin": 12806517,
+    "variation": 2.0401,
+    "pentes": [
+     0.0699,
+     0.0739,
+     0.0636,
+     0.0646,
+     0.0619,
+     0.0467,
+     0.0458,
+     0.0346
+    ],
+    "satiete": null
+   },
+   {
+    "cle": "omnivore|La mer d'Orvane",
+    "regime": "omnivore",
+    "origine": "La mer d'Orvane",
+    "lignees": 3,
+    "depuis": 42,
+    "debut": 398702,
+    "fin": 1072757,
+    "variation": 1.6906,
+    "pentes": [
+     0.071,
+     0.0641,
+     0.0584,
+     0.0513,
+     0.0441,
+     0.0384,
+     0.0328,
+     0.0287
+    ],
+    "satiete": 0.006
+   },
+   {
+    "cle": "filtreur|La mer d'Orvane",
+    "regime": "filtreur",
+    "origine": "La mer d'Orvane",
+    "lignees": 10,
+    "depuis": 42,
+    "debut": 9654359,
+    "fin": 15862863,
+    "variation": 0.6431,
+    "pentes": [
+     0.0353,
+     0.0306,
+     0.0261,
+     0.0228,
+     0.0203,
+     0.0178,
+     0.0139,
+     0.012
+    ],
+    "satiete": null
+   },
+   {
+    "cle": "carnivore|la genèse 7",
+    "regime": "carnivore",
+    "origine": "la genèse 7",
+    "lignees": 40,
+    "depuis": 42,
+    "debut": 3094171,
+    "fin": 1531565,
+    "variation": -0.505,
+    "pentes": [
+     -0.0462,
+     -0.0444,
+     -0.0436,
+     -0.0417,
+     -0.0402,
+     -0.0406,
+     -0.0393,
+     -0.0394
+    ],
+    "satiete": 0.229
+   },
+   {
+    "cle": "herbivore|La mer d'Orvane",
+    "regime": "herbivore",
+    "origine": "La mer d'Orvane",
+    "lignees": 6,
+    "depuis": 42,
+    "debut": 721196,
+    "fin": 1004865,
+    "variation": 0.3933,
+    "pentes": [
+     0.0287,
+     0.0258,
+     0.024,
+     0.0222,
+     0.0214,
+     0.02,
+     0.0166,
+     0.0162
+    ],
+    "satiete": null
+   },
+   {
+    "cle": "herbivore|les eaux douces",
+    "regime": "herbivore",
+    "origine": "les eaux douces",
+    "lignees": 10,
+    "depuis": 46,
+    "debut": 7463231,
+    "fin": 9737607,
+    "variation": 0.3047,
+    "pentes": [
+     0.0293,
+     0.0261,
+     0.0224,
+     0.0198,
+     0.0128,
+     0.0138,
+     0.0118,
+     0.0121
+    ],
+    "satiete": null
+   },
+   {
+    "cle": "omnivore|les eaux douces",
+    "regime": "omnivore",
+    "origine": "les eaux douces",
+    "lignees": 29,
+    "depuis": 46,
+    "debut": 6689571,
+    "fin": 8713923,
+    "variation": 0.3026,
+    "pentes": [
+     0.03,
+     0.0258,
+     0.0217,
+     0.0185,
+     0.013,
+     0.0136,
+     0.011,
+     0.0097
+    ],
+    "satiete": 0.051
+   },
+   {
+    "cle": "filtreur|Orvane",
+    "regime": "filtreur",
+    "origine": "Orvane",
+    "lignees": 3,
+    "depuis": 41,
+    "debut": 2531520,
+    "fin": 1840784,
+    "variation": -0.2729,
+    "pentes": [
+     -0.0072,
+     -0.0054,
+     -0.0028,
+     -0.0033,
+     -0.0053,
+     -0.0034,
+     -0.0015,
+     -0.0027
+    ],
+    "satiete": null
+   },
+   {
+    "cle": "detritivore|les eaux douces",
+    "regime": "detritivore",
+    "origine": "les eaux douces",
+    "lignees": 1,
+    "depuis": 46,
+    "debut": 372507,
+    "fin": 434312,
+    "variation": 0.1659,
+    "pentes": [
+     0.0169,
+     0.0145,
+     0.0118,
+     0.0106,
+     0.0076,
+     0.0087,
+     0.0085,
+     0.008
+    ],
+    "satiete": null
+   },
+   {
+    "cle": "herbivore|Orvane",
+    "regime": "herbivore",
+    "origine": "Orvane",
+    "lignees": 71,
+    "depuis": 41,
+    "debut": 48779089,
+    "fin": 52631781,
+    "variation": 0.079,
+    "pentes": [
+     0.0043,
+     0.0096,
+     0.0079,
+     0.0066,
+     0.0029,
+     0.0064,
+     0.0072,
+     -0.0037
+    ],
+    "satiete": null
+   },
+   {
+    "cle": "omnivore|la genèse 7",
+    "regime": "omnivore",
+    "origine": "la genèse 7",
+    "lignees": 37,
+    "depuis": 42,
+    "debut": 17808126,
+    "fin": 16643097,
+    "variation": -0.0654,
+    "pentes": [
+     -0.0075,
+     -0.0074,
+     -0.0102,
+     -0.0063,
+     -0.0054,
+     -0.0112,
+     -0.0098,
+     -0.0149
+    ],
+    "satiete": 0.019
+   },
+   {
+    "cle": "carnivore|les eaux douces",
+    "regime": "carnivore",
+    "origine": "les eaux douces",
+    "lignees": 20,
+    "depuis": 46,
+    "debut": 77549,
+    "fin": 83342,
+    "variation": 0.0747,
+    "pentes": [
+     0.0071,
+     0.0067,
+     0.0062,
+     0.0061,
+     0.0053,
+     0.0055,
+     0.0058,
+     0.0057
+    ],
+    "satiete": 0.39
+   },
+   {
+    "cle": "carnivore|Orvane",
+    "regime": "carnivore",
+    "origine": "Orvane",
+    "lignees": 16,
+    "depuis": 41,
+    "debut": 221414,
+    "fin": 227145,
+    "variation": 0.0259,
+    "pentes": [
+     0.0016,
+     0.0017,
+     0.0016,
+     0.001,
+     0.0009,
+     0.0012,
+     0.0015,
+     0.0009
+    ],
+    "satiete": 0.544
+   },
+   {
+    "cle": "carnivore|La mer d'Orvane",
+    "regime": "carnivore",
+    "origine": "La mer d'Orvane",
+    "lignees": 10,
+    "depuis": 42,
+    "debut": 46213,
+    "fin": 47217,
+    "variation": 0.0217,
+    "pentes": [
+     0.0014,
+     0.002,
+     0.0026,
+     0.0028,
+     0.003,
+     0.0036,
+     0.0043,
+     0.0045
+    ],
+    "satiete": 0.599
+   },
+   {
+    "cle": "omnivore|Orvane",
+    "regime": "omnivore",
+    "origine": "Orvane",
+    "lignees": 22,
+    "depuis": 41,
+    "debut": 2882889,
+    "fin": 2890381,
+    "variation": 0.0026,
+    "pentes": [
+     -0.0017,
+     0.004,
+     0.0012,
+     0.001,
+     0.0007,
+     0.0001,
+     -0.001,
+     -0.0024
+    ],
+    "satiete": 0.093
+   }
+  ],
+  "pressions": {
+   "evenements": 345,
+   "cycles": 17,
+   "cycles_avec_lots": 9,
+   "dernier_lot": 53,
+   "derniere_lecture": "2026-11-16T20:55:34.894897+00:00",
+   "jeux": [
+    {
+     "id": "braise",
+     "nom": "Braise",
+     "actif": true,
+     "expose": false
+    },
+    {
+     "id": "cataclysm-dark-days-ahead",
+     "nom": "Cataclysm: Dark Days Ahead",
+     "actif": true,
+     "expose": false
+    },
+    {
+     "id": "last-embers",
+     "nom": "Last Embers",
+     "actif": true,
+     "expose": false
+    },
+    {
+     "id": "lisiere",
+     "nom": "Lisière",
+     "actif": true,
+     "expose": false
+    },
+    {
+     "id": "stone-valley",
+     "nom": "Stone Valley",
+     "actif": true,
+     "expose": true
+    }
+   ],
+   "retrait_total": 5.663,
+   "retrait_perdu": 3.79,
+   "retraits": [
+    {
+     "taxon": "jadunou",
+     "nom": "Jadunou guetteur de prairie",
+     "origine": "la genèse 7",
+     "regime": "carnivore",
+     "biome": "prairie",
+     "phenotypes": [
+      "*"
+     ],
+     "retrait": 1.148,
+     "effectif": 17054,
+     "pression": null,
+     "applique": false,
+     "juge": true
+    },
+    {
+     "taxon": "orkifir",
+     "nom": "Orkifir rôdeur de prairie",
+     "origine": "la genèse 7",
+     "regime": "carnivore",
+     "biome": "prairie",
+     "phenotypes": [
+      "*"
+     ],
+     "retrait": 1.111,
+     "effectif": 8901,
+     "pression": null,
+     "applique": false,
+     "juge": true
+    },
+    {
+     "taxon": "soel",
+     "nom": "Soel fureteur de prairie",
+     "origine": "la genèse 7",
+     "regime": "omnivore",
+     "biome": "prairie",
+     "phenotypes": [
+      "*"
+     ],
+     "retrait": 1.099,
+     "effectif": 3485,
+     "pression": null,
+     "applique": false,
+     "juge": true
+    },
+    {
+     "taxon": "muphene",
+     "nom": "Muphéne rôdeur de prairie",
+     "origine": "Orvane",
+     "regime": "carnivore",
+     "biome": "prairie",
+     "phenotypes": [
+      "*"
+     ],
+     "retrait": 0.481,
+     "effectif": 9258,
+     "pression": 0.001527,
+     "applique": true,
+     "juge": true
+    },
+    {
+     "taxon": "umedun",
+     "nom": "Umedun traqueur de lande",
+     "origine": "la genèse 7",
+     "regime": "carnivore",
+     "biome": "prairie",
+     "phenotypes": [
+      "*"
+     ],
+     "retrait": 0.432,
+     "effectif": 13,
+     "pression": null,
+     "applique": false,
+     "juge": true
+    },
+    {
+     "taxon": "noufir",
+     "nom": "Noufir fureteur de marais",
+     "origine": "Orvane",
+     "regime": "carnivore",
+     "biome": "prairie",
+     "phenotypes": [
+      "*"
+     ],
+     "retrait": 0.395,
+     "effectif": 163,
+     "pression": 0.064472,
+     "applique": true,
+     "juge": true
+    },
+    {
+     "taxon": "belgrane",
+     "nom": "Belgrane broutard de prairie",
+     "origine": "Orvane",
+     "regime": "herbivore",
+     "biome": "prairie",
+     "phenotypes": [
+      "*"
+     ],
+     "retrait": 0.333,
+     "effectif": 14444,
+     "pression": 0.000506,
+     "applique": true,
+     "juge": true
+    },
+    {
+     "taxon": "dunvi",
+     "nom": "Dunvi mangeur d'herbe de savane",
+     "origine": "Orvane",
+     "regime": "herbivore",
+     "biome": "prairie",
+     "phenotypes": [
+      "*"
+     ],
+     "retrait": 0.333,
+     "effectif": 9104,
+     "pression": 0.00075,
+     "applique": true,
+     "juge": true
+    },
+    {
+     "taxon": "duntismu",
+     "nom": "Duntismu glaneur de delta",
+     "origine": "les eaux douces",
+     "regime": "carnivore",
+     "biome": "riviere",
+     "phenotypes": [
+      "*"
+     ],
+     "retrait": 0.297,
+     "effectif": 3993,
+     "pression": 0.002,
+     "applique": true,
+     "juge": true
+    },
+    {
+     "taxon": "muphene",
+     "nom": "Muphéne rôdeur de prairie",
+     "origine": "Orvane",
+     "regime": "carnivore",
+     "biome": "montagne",
+     "phenotypes": [
+      "metabolisme-lent"
+     ],
+     "retrait": 0.017,
+     "effectif": 1016,
+     "pression": 0.000539,
+     "applique": true,
+     "juge": false
+    },
+    {
+     "taxon": "lomuel",
+     "nom": "Lomuel tondeur de forêt",
+     "origine": "Orvane",
+     "regime": "herbivore",
+     "biome": "montagne",
+     "phenotypes": [
+      "metabolisme-lent"
+     ],
+     "retrait": 0.017,
+     "effectif": 129,
+     "pression": 0.002,
+     "applique": true,
+     "juge": false
+    }
+   ],
+   "prises": [
+    {
+     "taxon": "phemeva",
+     "nom": "Phéméva brouteur de montagne",
+     "biome": "prairie",
+     "trait": "taille",
+     "z": 1.19,
+     "poids": 0.0223
+    },
+    {
+     "taxon": "phemeva",
+     "nom": "Phéméva brouteur de montagne",
+     "biome": "prairie",
+     "trait": "audace",
+     "z": 1.07,
+     "poids": 0.0223
+    },
+    {
+     "taxon": "phemeva",
+     "nom": "Phéméva brouteur de montagne",
+     "biome": "prairie",
+     "trait": "vitesse",
+     "z": 0.57,
+     "poids": 0.0223
+    },
+    {
+     "taxon": "phemeva",
+     "nom": "Phéméva brouteur de montagne",
+     "biome": "prairie",
+     "trait": "sociabilite",
+     "z": 0.34,
+     "poids": 0.0223
+    },
+    {
+     "taxon": "lomuel",
+     "nom": "Lomuel tondeur de forêt",
+     "biome": "montagne",
+     "trait": "taille",
+     "z": 1.22,
+     "poids": 0.0193
+    },
+    {
+     "taxon": "lomuel",
+     "nom": "Lomuel tondeur de forêt",
+     "biome": "montagne",
+     "trait": "audace",
+     "z": 0.51,
+     "poids": 0.0193
+    },
+    {
+     "taxon": "lomuel",
+     "nom": "Lomuel tondeur de forêt",
+     "biome": "montagne",
+     "trait": "vitesse",
+     "z": 0.45,
+     "poids": 0.0193
+    },
+    {
+     "taxon": "muphene",
+     "nom": "Muphéne rôdeur de prairie",
+     "biome": "montagne",
+     "trait": "taille",
+     "z": 1.26,
+     "poids": 0.0145
+    },
+    {
+     "taxon": "muphene",
+     "nom": "Muphéne rôdeur de prairie",
+     "biome": "montagne",
+     "trait": "audace",
+     "z": 0.59,
+     "poids": 0.0145
+    },
+    {
+     "taxon": "muphene",
+     "nom": "Muphéne rôdeur de prairie",
+     "biome": "montagne",
+     "trait": "vitesse",
+     "z": -0.38,
+     "poids": 0.0145
+    },
+    {
+     "taxon": "silbel",
+     "nom": "Silbel brouteur de prairie",
+     "biome": "montagne",
+     "trait": "audace",
+     "z": 0.99,
+     "poids": 0.0115
+    },
+    {
+     "taxon": "silbel",
+     "nom": "Silbel brouteur de prairie",
+     "biome": "montagne",
+     "trait": "vitesse",
+     "z": -0.86,
+     "poids": 0.0115
+    }
+   ],
+   "plafonds": {
+    "par_compte_cycle": 30,
+    "part_max_compte": 0.15,
+    "part_max_jeu": 0.5,
+    "part_max_population": 0.2
+   },
+   "memoire_cycles": 5
+  },
+  "memoire": {
+   "eveillee": 53,
+   "avec_trace": 111,
+   "populations": 1757,
+   "mefiance": {
+    "n": 18,
+    "max": {
+     "taxon": "orvi",
+     "nom": "Orvi rôdeur de savane",
+     "biome": "prairie",
+     "effectif": 13,
+     "mefiance": 0.259,
+     "habituation": 0,
+     "agressivite": 0.2568,
+     "attrait": 0,
+     "traque": 0,
+     "attitude": null,
+     "combativite": 0.455
+    }
+   },
+   "habituation": {
+    "n": 103,
+    "max": {
+     "taxon": "somene",
+     "nom": "Soméne mangeur d'herbe de prairie",
+     "biome": "montagne",
+     "effectif": 352850,
+     "mefiance": 0,
+     "habituation": 0.093498,
+     "agressivite": 0,
+     "attrait": 0,
+     "traque": 0,
+     "attitude": null,
+     "combativite": 0
+    }
+   },
+   "agressivite": {
+    "n": 9,
+    "max": {
+     "taxon": "orvi",
+     "nom": "Orvi rôdeur de savane",
+     "biome": "prairie",
+     "effectif": 13,
+     "mefiance": 0.259,
+     "habituation": 0,
+     "agressivite": 0.2568,
+     "attrait": 0,
+     "traque": 0,
+     "attitude": null,
+     "combativite": 0.455
+    }
+   },
+   "attitudes": {},
+   "seuils": {
+    "fuyante": 0.5,
+    "agressive": 0.4,
+    "familiere": 0.5
+   },
+   "top": [
+    {
+     "taxon": "orvi",
+     "nom": "Orvi rôdeur de savane",
+     "biome": "prairie",
+     "effectif": 13,
+     "mefiance": 0.259,
+     "habituation": 0,
+     "agressivite": 0.2568,
+     "attrait": 0,
+     "traque": 0,
+     "attitude": null,
+     "combativite": 0.455
+    },
+    {
+     "taxon": "katorgra",
+     "nom": "Katorgra chasseur de bois",
+     "biome": "prairie",
+     "effectif": 578,
+     "mefiance": 0.238218,
+     "habituation": 0.011,
+     "agressivite": 0.193,
+     "attrait": 0,
+     "traque": 0,
+     "attitude": null,
+     "combativite": 0.663
+    },
+    {
+     "taxon": "rograka",
+     "nom": "Rograka traqueur de prairie",
+     "biome": "prairie",
+     "effectif": 82,
+     "mefiance": 0.104,
+     "habituation": 0.007,
+     "agressivite": 0.2073,
+     "attrait": 0,
+     "traque": 0,
+     "attitude": null,
+     "combativite": 0.72
+    },
+    {
+     "taxon": "noufir",
+     "nom": "Noufir fureteur de marais",
+     "biome": "prairie",
+     "effectif": 163,
+     "mefiance": 0.106601,
+     "habituation": 0,
+     "agressivite": 0.1658,
+     "attrait": 0,
+     "traque": 0,
+     "attitude": null,
+     "combativite": 0.486
+    },
+    {
+     "taxon": "umedun",
+     "nom": "Umedun traqueur de lande",
+     "biome": "prairie",
+     "effectif": 13,
+     "mefiance": 0.059,
+     "habituation": 0,
+     "agressivite": 0.1513,
+     "attrait": 0,
+     "traque": 0,
+     "attitude": null,
+     "combativite": 0.781
+    },
+    {
+     "taxon": "lomuel",
+     "nom": "Lomuel tondeur de forêt",
+     "biome": "montagne",
+     "effectif": 129,
+     "mefiance": 0.097341,
+     "habituation": 0.011,
+     "agressivite": 0,
+     "attrait": 0,
+     "traque": 0,
+     "attitude": null,
+     "combativite": 0.143
+    },
+    {
+     "taxon": "soel",
+     "nom": "Soel fureteur de prairie",
+     "biome": "prairie",
+     "effectif": 3485,
+     "mefiance": 0.088,
+     "habituation": 0,
+     "agressivite": 0.0716,
+     "attrait": 0,
+     "traque": 0,
+     "attitude": null,
+     "combativite": 0.51
+    },
+    {
+     "taxon": "muphene",
+     "nom": "Muphéne rôdeur de prairie",
+     "biome": "prairie",
+     "effectif": 9258,
+     "mefiance": 0.035119,
+     "habituation": 0.028728,
+     "agressivite": 0.0774,
+     "attrait": 0,
+     "traque": 0,
+     "attitude": null,
+     "combativite": 0.649
+    },
+    {
+     "taxon": "somene",
+     "nom": "Soméne mangeur d'herbe de prairie",
+     "biome": "montagne",
+     "effectif": 352850,
+     "mefiance": 0,
+     "habituation": 0.093498,
+     "agressivite": 0,
+     "attrait": 0,
+     "traque": 0,
+     "attitude": null,
+     "combativite": 0
+    },
+    {
+     "taxon": "dunvi",
+     "nom": "Dunvi mangeur d'herbe de savane",
+     "biome": "prairie",
+     "effectif": 9104,
+     "mefiance": 0.044269,
+     "habituation": 0.006,
+     "agressivite": 0.0109,
+     "attrait": 0,
+     "traque": 0,
+     "attitude": null,
+     "combativite": 0.154
+    },
+    {
+     "taxon": "lomuel",
+     "nom": "Lomuel tondeur de forêt",
+     "biome": "prairie",
+     "effectif": 8,
+     "mefiance": 0,
+     "habituation": 0.086,
+     "agressivite": 0,
+     "attrait": 0,
+     "traque": 0,
+     "attitude": null,
+     "combativite": 0.143
+    },
+    {
+     "taxon": "belgrane",
+     "nom": "Belgrane broutard de prairie",
+     "biome": "prairie",
+     "effectif": 14444,
+     "mefiance": 0.041247,
+     "habituation": 0.029735,
+     "agressivite": 0.0053,
+     "attrait": 0,
+     "traque": 0,
+     "attitude": null,
+     "combativite": 0.089
+    },
+    {
+     "taxon": "somene",
+     "nom": "Soméne mangeur d'herbe de prairie",
+     "biome": "prairie",
+     "effectif": 3278347,
+     "mefiance": 0,
+     "habituation": 0.074971,
+     "agressivite": 0,
+     "attrait": 0,
+     "traque": 0,
+     "attitude": null,
+     "combativite": 0
+    },
+    {
+     "taxon": "silbel",
+     "nom": "Silbel brouteur de prairie",
+     "biome": "montagne",
+     "effectif": 4913,
+     "mefiance": 0.036,
+     "habituation": 0.025534,
+     "agressivite": 0,
+     "attrait": 0,
+     "traque": 0,
+     "attitude": null,
+     "combativite": 0.178
+    }
+   ],
+   "caractere": {
+    "lignees": 300,
+    "combatives": 40,
+    "fuyardes": 77,
+    "jamais_familieres": 82,
+    "opportunistes": 44,
+    "combativite": [
+     0.07,
+     0.34,
+     0.65
+    ]
+   }
+  },
+  "souches": {
+   "liste": [
+    {
+     "id": "souche-3",
+     "nom": "Goteose",
+     "virulence": 0.282,
+     "transmission": 1.097,
+     "origine": "pheva",
+     "apparu": 46,
+     "hotes": [
+      "pheva"
+     ],
+     "infectes": 21145,
+     "vecteur": null,
+     "parent": null
+    },
+    {
+     "id": "souche-2",
+     "nom": "Vuphiose",
+     "virulence": 0.138,
+     "transmission": 0.857,
+     "origine": "vaor",
+     "apparu": 44,
+     "hotes": [
+      "vaor"
+     ],
+     "infectes": 9927,
+     "vecteur": null,
+     "parent": null
+    },
+    {
+     "id": "souche-5",
+     "nom": "Vuphiose α",
+     "virulence": 0.084,
+     "transmission": 0.735,
+     "origine": "vaor",
+     "apparu": 51,
+     "hotes": [
+      "vaor"
+     ],
+     "infectes": 408,
+     "vecteur": null,
+     "parent": "souche-2"
+    },
+    {
+     "id": "souche-4",
+     "nom": "Vergoose",
+     "virulence": 0.13,
+     "transmission": 0.841,
+     "origine": "grane",
+     "apparu": 51,
+     "hotes": [
+      "grane"
+     ],
+     "infectes": 344,
+     "vecteur": null,
+     "parent": null
+    },
+    {
+     "id": "souche-6",
+     "nom": "Goteose α",
+     "virulence": 0.391,
+     "transmission": 1.238,
+     "origine": "pheva",
+     "apparu": 57,
+     "hotes": [
+      "pheva"
+     ],
+     "infectes": 215,
+     "vecteur": "orlingra",
+     "parent": "souche-3"
+    },
+    {
+     "id": "souche-7",
+     "nom": "Goteose β",
+     "virulence": 0.189,
+     "transmission": 0.952,
+     "origine": "pheva",
+     "apparu": 57,
+     "hotes": [
+      "pheva"
+     ],
+     "infectes": 12,
+     "vecteur": null,
+     "parent": "souche-3"
+    }
+   ],
+   "infectes": 32051,
+   "lignees_infectees": 3,
+   "populations": [
+    {
+     "taxon": "pheva",
+     "nom": "Phéva filtreur de lac",
+     "biome": "mangrove",
+     "souche": "souche-3",
+     "effectif": 171916,
+     "infectes": 16192,
+     "part": 0.0942,
+     "immunises": 0.0615
+    },
+    {
+     "taxon": "vaor",
+     "nom": "Vaor brouteur de jungle",
+     "biome": "jungle",
+     "souche": "souche-2",
+     "effectif": 196033,
+     "infectes": 9905,
+     "part": 0.0505,
+     "immunises": 0.0428
+    },
+    {
+     "taxon": "pheva",
+     "nom": "Phéva filtreur de lac",
+     "biome": "cote",
+     "souche": "souche-3",
+     "effectif": 49327,
+     "infectes": 1737,
+     "part": 0.0352,
+     "immunises": 0.0159
+    },
+    {
+     "taxon": "pheva",
+     "nom": "Phéva filtreur de lac",
+     "biome": "marais",
+     "souche": "souche-3",
+     "effectif": 206250,
+     "infectes": 1425,
+     "part": 0.0069,
+     "immunises": 0.0018
+    },
+    {
+     "taxon": "pheva",
+     "nom": "Phéva filtreur de lac",
+     "biome": "riviere",
+     "souche": "souche-3",
+     "effectif": 275274,
+     "infectes": 1165,
+     "part": 0.0042,
+     "immunises": 0.0012
+    },
+    {
+     "taxon": "vaor",
+     "nom": "Vaor brouteur de jungle",
+     "biome": "jungle",
+     "souche": "souche-5",
+     "effectif": 196033,
+     "infectes": 406,
+     "part": 0.0021,
+     "immunises": 0.002
+    },
+    {
+     "taxon": "grane",
+     "nom": "Grane broutard de forêt",
+     "biome": "foret",
+     "souche": "souche-4",
+     "effectif": 22752,
+     "infectes": 336,
+     "part": 0.0148,
+     "immunises": 0.0087
+    },
+    {
+     "taxon": "pheva",
+     "nom": "Phéva filtreur de lac",
+     "biome": "mangrove",
+     "souche": "souche-6",
+     "effectif": 171916,
+     "infectes": 211,
+     "part": 0.0012,
+     "immunises": 0
+    },
+    {
+     "taxon": "pheva",
+     "nom": "Phéva filtreur de lac",
+     "biome": "lac",
+     "souche": "souche-3",
+     "effectif": 351392,
+     "infectes": 118,
+     "part": 0.0003,
+     "immunises": 0
+    },
+    {
+     "taxon": "pheva",
+     "nom": "Phéva filtreur de lac",
+     "biome": "cote",
+     "souche": "souche-7",
+     "effectif": 49327,
+     "infectes": 12,
+     "part": 0.0002,
+     "immunises": 0
+    }
+   ]
+  },
+  "vivant": {
+   "savoirs": {
+    "populations": 45,
+    "par_savoir": {
+     "laver": 17,
+     "cris-precis": 23,
+     "reserves": 5,
+     "chasse-concertee": 3,
+     "nids-tisses": 1,
+     "routes": 1
+    }
+   },
+   "hybrides": 198,
+   "groupes_de_vie": {
+    "troupeau": 21,
+    "bande": 56,
+    "solitaire": 652,
+    "famille": 774,
+    "meute": 37,
+    "banc": 199,
+    "volee": 11
+   },
+   "migratrices": 96,
+   "machines": {
+    "lignees": 3,
+    "serie": [
+     0,
+     95,
+     134,
+     179,
+     231,
+     291,
+     360,
+     443,
+     541,
+     659,
+     795,
+     954,
+     1156,
+     1335,
+     1522,
+     1711,
+     1898
+    ],
+    "pente": 0.1093
+   },
+   "mere": {
+    "biome": "volcan",
+    "conceptions": 1,
+    "prochaine": 65
+   },
+   "chronique": {
+    "eveil": 6,
+    "savoir": 50,
+    "souche": 6,
+    "hybridation": 7,
+    "naissance": 33,
+    "arrivee": 1,
+    "climat": 1,
+    "catastrophe": 2,
+    "invention": 1,
+    "conception": 1,
+    "extinction": 1
+   }
+  },
+  "rythme": {
+   "cycles": [
+    {
+     "n": 41,
+     "date": "2026-10-29T15:30:12.491Z"
+    },
+    {
+     "n": 42,
+     "date": "2026-11-04T07:58:47.841Z"
+    },
+    {
+     "n": 43,
+     "date": "2026-11-04T10:51:47.504Z"
+    },
+    {
+     "n": 44,
+     "date": "2026-11-05T10:49:26.183Z"
+    },
+    {
+     "n": 45,
+     "date": "2026-11-06T10:04:54.020Z"
+    },
+    {
+     "n": 46,
+     "date": "2026-11-07T03:05:13.801Z"
+    },
+    {
+     "n": 47,
+     "date": "2026-11-08T03:05:15.389Z"
+    },
+    {
+     "n": 48,
+     "date": "2026-11-09T03:05:15.856Z"
+    },
+    {
+     "n": 49,
+     "date": "2026-11-10T03:05:16.561Z"
+    },
+    {
+     "n": 50,
+     "date": "2026-11-11T03:05:20.799Z"
+    },
+    {
+     "n": 51,
+     "date": "2026-11-11T11:25:46.985Z"
+    },
+    {
+     "n": 52,
+     "date": "2026-11-12T03:05:16.627Z"
+    },
+    {
+     "n": 53,
+     "date": "2026-11-13T03:05:19.367Z"
+    },
+    {
+     "n": 54,
+     "date": "2026-11-14T03:05:17.780Z"
+    },
+    {
+     "n": 55,
+     "date": "2026-11-15T03:05:19.921Z"
+    },
+    {
+     "n": 56,
+     "date": "2026-11-16T03:05:20.828Z"
+    },
+    {
+     "n": 57,
+     "date": "2026-11-17T03:05:19.730Z"
+    }
+   ],
+   "ecarts": [
+    {
+     "de": 41,
+     "a": 42,
+     "heures": 136.5
+    }
+   ],
+   "meme_jour": [
+    {
+     "cycles": [
+      42,
+      43
+     ],
+     "date": "2026-11-04",
+     "heures": [
+      "07:58",
+      "10:51"
+     ]
+    },
+    {
+     "cycles": [
+      50,
+      51
+     ],
+     "date": "2026-11-11",
+     "heures": [
+      "03:05",
+      "11:25"
+     ]
+    }
+   ],
+   "heure_habituelle": "03:05"
+  },
+  "calendrier": [
+   {
+    "cycle": 60,
+    "date": "2026-11-20T03:05:19.730Z",
+    "quoi": "production au plus haut",
+    "production": 1.25
+   },
+   {
+    "cycle": 65,
+    "date": "2026-11-25T03:05:19.730Z",
+    "quoi": "la Mère peut concevoir une machine"
+   },
+   {
+    "cycle": 75,
+    "date": "2026-12-05T03:05:19.730Z",
+    "quoi": "début de l'automne",
+    "production": 1.177
+   },
+   {
+    "cycle": 105,
+    "date": "2027-01-04T03:05:19.730Z",
+    "quoi": "début de l'hiver",
+    "production": 0.823
+   },
+   {
+    "cycle": 120,
+    "date": "2027-01-19T03:05:19.730Z",
+    "quoi": "production au plus bas, une année nouvelle",
+    "production": 0.75
+   },
+   {
+    "cycle": 135,
+    "date": "2027-02-03T03:05:19.730Z",
+    "quoi": "début du printemps",
+    "production": 0.823
+   },
+   {
+    "cycle": 165,
+    "date": "2027-03-05T03:05:19.730Z",
+    "quoi": "début de l'été",
+    "production": 1.177
+   }
+  ],
+  "climat": {
+   "depuis": 43,
+   "ecart": 0.0015,
+   "marche": -0.0003,
+   "ponts": 0,
+   "iles": 1,
+   "seuils": {
+    "emerger": -0.06,
+    "sombrer": -0.04
+   },
+   "ondes": [
+    {
+     "periode": 1500,
+     "ampleur": 0.08
+    },
+    {
+     "periode": 400,
+     "ampleur": 0.03
+    }
+   ],
+   "reperes": [
+    {
+     "cycle": 244,
+     "date": "2027-05-23T03:05:19.730Z",
+     "quoi": "le monde passe sous −0,06 : des ponts de terre peuvent émerger"
+    },
+    {
+     "cycle": 355,
+     "date": "2027-09-11T03:05:19.730Z",
+     "quoi": "le plus froid de la grande onde (−0,107)"
+    },
+    {
+     "cycle": 540,
+     "date": "2028-03-14T03:05:19.730Z",
+     "quoi": "il remonte au-dessus de −0,04 : les ponts sombrent"
+    },
+    {
+     "cycle": 1316,
+     "date": "2030-04-29T03:05:19.730Z",
+     "quoi": "le plus chaud de la grande onde (+0,092)"
+    }
+   ],
+   "courbe": [
+    [
+     57,
+     0.0019
+    ],
+    [
+     60,
+     0.0022
+    ],
+    [
+     70,
+     0.0033
+    ],
+    [
+     80,
+     0.0041
+    ],
+    [
+     90,
+     0.0045
+    ],
+    [
+     100,
+     0.0045
+    ],
+    [
+     110,
+     0.0039
+    ],
+    [
+     120,
+     0.0027
+    ],
+    [
+     130,
+     0.0009
+    ],
+    [
+     140,
+     -0.0017
+    ],
+    [
+     150,
+     -0.0048
+    ],
+    [
+     160,
+     -0.0087
+    ],
+    [
+     170,
+     -0.0132
+    ],
+    [
+     180,
+     -0.0184
+    ],
+    [
+     190,
+     -0.024
+    ],
+    [
+     200,
+     -0.0301
+    ],
+    [
+     210,
+     -0.0366
+    ],
+    [
+     220,
+     -0.0434
+    ],
+    [
+     230,
+     -0.0504
+    ],
+    [
+     240,
+     -0.0574
+    ],
+    [
+     250,
+     -0.0643
+    ],
+    [
+     260,
+     -0.071
+    ],
+    [
+     270,
+     -0.0775
+    ],
+    [
+     280,
+     -0.0835
+    ],
+    [
+     290,
+     -0.089
+    ],
+    [
+     300,
+     -0.0938
+    ],
+    [
+     310,
+     -0.098
+    ],
+    [
+     320,
+     -0.1014
+    ],
+    [
+     330,
+     -0.104
+    ],
+    [
+     340,
+     -0.1057
+    ],
+    [
+     350,
+     -0.1066
+    ],
+    [
+     360,
+     -0.1066
+    ],
+    [
+     370,
+     -0.1057
+    ],
+    [
+     380,
+     -0.1041
+    ],
+    [
+     390,
+     -0.1016
+    ],
+    [
+     400,
+     -0.0985
+    ],
+    [
+     410,
+     -0.0948
+    ],
+    [
+     420,
+     -0.0906
+    ],
+    [
+     430,
+     -0.086
+    ],
+    [
+     440,
+     -0.0811
+    ],
+    [
+     450,
+     -0.076
+    ],
+    [
+     460,
+     -0.0708
+    ],
+    [
+     470,
+     -0.0658
+    ],
+    [
+     480,
+     -0.0608
+    ],
+    [
+     490,
+     -0.0562
+    ],
+    [
+     500,
+     -0.0519
+    ],
+    [
+     510,
+     -0.0481
+    ],
+    [
+     520,
+     -0.0447
+    ],
+    [
+     530,
+     -0.042
+    ],
+    [
+     540,
+     -0.0398
+    ],
+    [
+     550,
+     -0.0383
+    ],
+    [
+     560,
+     -0.0373
+    ],
+    [
+     570,
+     -0.037
+    ],
+    [
+     580,
+     -0.0372
+    ],
+    [
+     590,
+     -0.0379
+    ],
+    [
+     600,
+     -0.0391
+    ],
+    [
+     610,
+     -0.0406
+    ],
+    [
+     620,
+     -0.0424
+    ],
+    [
+     630,
+     -0.0444
+    ],
+    [
+     640,
+     -0.0464
+    ],
+    [
+     650,
+     -0.0484
+    ],
+    [
+     660,
+     -0.0502
+    ],
+    [
+     670,
+     -0.0518
+    ],
+    [
+     680,
+     -0.0529
+    ],
+    [
+     690,
+     -0.0536
+    ],
+    [
+     700,
+     -0.0538
+    ],
+    [
+     710,
+     -0.0533
+    ],
+    [
+     720,
+     -0.0521
+    ],
+    [
+     730,
+     -0.0502
+    ],
+    [
+     740,
+     -0.0476
+    ],
+    [
+     750,
+     -0.0442
+    ],
+    [
+     760,
+     -0.04
+    ],
+    [
+     770,
+     -0.035
+    ],
+    [
+     780,
+     -0.0294
+    ],
+    [
+     790,
+     -0.0232
+    ],
+    [
+     800,
+     -0.0164
+    ],
+    [
+     810,
+     -0.0092
+    ],
+    [
+     820,
+     -0.0016
+    ],
+    [
+     830,
+     0.0063
+    ],
+    [
+     840,
+     0.0142
+    ],
+    [
+     850,
+     0.0222
+    ],
+    [
+     860,
+     0.0301
+    ],
+    [
+     870,
+     0.0377
+    ],
+    [
+     880,
+     0.045
+    ],
+    [
+     890,
+     0.0518
+    ],
+    [
+     900,
+     0.0581
+    ],
+    [
+     910,
+     0.0637
+    ],
+    [
+     920,
+     0.0686
+    ],
+    [
+     930,
+     0.0728
+    ],
+    [
+     940,
+     0.0762
+    ],
+    [
+     950,
+     0.0787
+    ],
+    [
+     960,
+     0.0804
+    ],
+    [
+     970,
+     0.0814
+    ],
+    [
+     980,
+     0.0815
+    ],
+    [
+     990,
+     0.081
+    ],
+    [
+     1000,
+     0.0798
+    ],
+    [
+     1010,
+     0.078
+    ],
+    [
+     1020,
+     0.0757
+    ],
+    [
+     1030,
+     0.0731
+    ],
+    [
+     1040,
+     0.0702
+    ],
+    [
+     1050,
+     0.0671
+    ],
+    [
+     1060,
+     0.064
+    ],
+    [
+     1070,
+     0.061
+    ],
+    [
+     1080,
+     0.0582
+    ],
+    [
+     1090,
+     0.0556
+    ],
+    [
+     1100,
+     0.0534
+    ],
+    [
+     1110,
+     0.0516
+    ],
+    [
+     1120,
+     0.0503
+    ],
+    [
+     1130,
+     0.0496
+    ],
+    [
+     1140,
+     0.0495
+    ],
+    [
+     1150,
+     0.05
+    ],
+    [
+     1160,
+     0.051
+    ],
+    [
+     1170,
+     0.0527
+    ],
+    [
+     1180,
+     0.0548
+    ],
+    [
+     1190,
+     0.0575
+    ],
+    [
+     1200,
+     0.0605
+    ],
+    [
+     1210,
+     0.0639
+    ],
+    [
+     1220,
+     0.0675
+    ],
+    [
+     1230,
+     0.0712
+    ],
+    [
+     1240,
+     0.075
+    ],
+    [
+     1250,
+     0.0786
+    ],
+    [
+     1260,
+     0.082
+    ],
+    [
+     1270,
+     0.0852
+    ],
+    [
+     1280,
+     0.0878
+    ],
+    [
+     1290,
+     0.09
+    ],
+    [
+     1300,
+     0.0915
+    ],
+    [
+     1310,
+     0.0923
+    ],
+    [
+     1320,
+     0.0924
+    ],
+    [
+     1330,
+     0.0917
+    ],
+    [
+     1340,
+     0.0901
+    ],
+    [
+     1350,
+     0.0877
+    ],
+    [
+     1360,
+     0.0844
+    ],
+    [
+     1370,
+     0.0804
+    ],
+    [
+     1380,
+     0.0755
+    ],
+    [
+     1390,
+     0.07
+    ],
+    [
+     1400,
+     0.0639
+    ],
+    [
+     1410,
+     0.0572
+    ],
+    [
+     1420,
+     0.05
+    ],
+    [
+     1430,
+     0.0426
+    ],
+    [
+     1440,
+     0.0349
+    ],
+    [
+     1450,
+     0.0271
+    ],
+    [
+     1460,
+     0.0193
+    ],
+    [
+     1470,
+     0.0117
+    ],
+    [
+     1480,
+     0.0044
+    ],
+    [
+     1490,
+     -0.0026
+    ],
+    [
+     1500,
+     -0.0091
+    ],
+    [
+     1510,
+     -0.015
+    ],
+    [
+     1520,
+     -0.0204
+    ],
+    [
+     1530,
+     -0.025
+    ],
+    [
+     1540,
+     -0.029
+    ],
+    [
+     1550,
+     -0.0322
+    ],
+    [
+     1560,
+     -0.0346
+    ],
+    [
+     1570,
+     -0.0364
+    ],
+    [
+     1580,
+     -0.0374
+    ],
+    [
+     1590,
+     -0.0378
+    ],
+    [
+     1600,
+     -0.0377
+    ],
+    [
+     1610,
+     -0.037
+    ],
+    [
+     1620,
+     -0.036
+    ],
+    [
+     1630,
+     -0.0346
+    ],
+    [
+     1640,
+     -0.033
+    ],
+    [
+     1650,
+     -0.0314
+    ],
+    [
+     1660,
+     -0.0297
+    ],
+    [
+     1670,
+     -0.0282
+    ],
+    [
+     1680,
+     -0.027
+    ],
+    [
+     1690,
+     -0.026
+    ],
+    [
+     1700,
+     -0.0255
+    ],
+    [
+     1710,
+     -0.0254
+    ],
+    [
+     1720,
+     -0.026
+    ],
+    [
+     1730,
+     -0.0271
+    ],
+    [
+     1740,
+     -0.0288
+    ],
+    [
+     1750,
+     -0.0312
+    ],
+    [
+     1760,
+     -0.0342
+    ],
+    [
+     1770,
+     -0.0378
+    ],
+    [
+     1780,
+     -0.0419
+    ],
+    [
+     1790,
+     -0.0466
+    ],
+    [
+     1800,
+     -0.0517
+    ],
+    [
+     1810,
+     -0.0571
+    ],
+    [
+     1820,
+     -0.0627
+    ],
+    [
+     1830,
+     -0.0685
+    ],
+    [
+     1840,
+     -0.0744
+    ],
+    [
+     1850,
+     -0.0801
+    ],
+    [
+     1860,
+     -0.0856
+    ],
+    [
+     1870,
+     -0.0907
+    ],
+    [
+     1880,
+     -0.0955
+    ],
+    [
+     1890,
+     -0.0996
+    ],
+    [
+     1900,
+     -0.1032
+    ],
+    [
+     1910,
+     -0.106
+    ],
+    [
+     1920,
+     -0.1081
+    ],
+    [
+     1930,
+     -0.1093
+    ],
+    [
+     1940,
+     -0.1096
+    ],
+    [
+     1950,
+     -0.1091
+    ],
+    [
+     1960,
+     -0.1077
+    ],
+    [
+     1970,
+     -0.1055
+    ],
+    [
+     1980,
+     -0.1024
+    ],
+    [
+     1990,
+     -0.0986
+    ],
+    [
+     2000,
+     -0.0941
+    ],
+    [
+     2010,
+     -0.089
+    ],
+    [
+     2020,
+     -0.0834
+    ],
+    [
+     2030,
+     -0.0774
+    ],
+    [
+     2040,
+     -0.0712
+    ],
+    [
+     2050,
+     -0.0648
+    ],
+    [
+     2060,
+     -0.0583
+    ],
+    [
+     2070,
+     -0.052
+    ],
+    [
+     2080,
+     -0.0458
+    ],
+    [
+     2090,
+     -0.0399
+    ],
+    [
+     2100,
+     -0.0344
+    ],
+    [
+     2110,
+     -0.0294
+    ],
+    [
+     2120,
+     -0.025
+    ],
+    [
+     2130,
+     -0.0211
+    ],
+    [
+     2140,
+     -0.0179
+    ],
+    [
+     2150,
+     -0.0153
+    ],
+    [
+     2160,
+     -0.0134
+    ],
+    [
+     2170,
+     -0.0121
+    ],
+    [
+     2180,
+     -0.0114
+    ],
+    [
+     2190,
+     -0.0113
+    ],
+    [
+     2200,
+     -0.0116
+    ],
+    [
+     2210,
+     -0.0124
+    ],
+    [
+     2220,
+     -0.0135
+    ],
+    [
+     2230,
+     -0.0148
+    ],
+    [
+     2240,
+     -0.0162
+    ],
+    [
+     2250,
+     -0.0176
+    ],
+    [
+     2260,
+     -0.0189
+    ],
+    [
+     2270,
+     -0.02
+    ],
+    [
+     2280,
+     -0.0208
+    ],
+    [
+     2290,
+     -0.0212
+    ],
+    [
+     2300,
+     -0.0211
+    ],
+    [
+     2310,
+     -0.0204
+    ],
+    [
+     2320,
+     -0.019
+    ],
+    [
+     2330,
+     -0.017
+    ],
+    [
+     2340,
+     -0.0143
+    ],
+    [
+     2350,
+     -0.0109
+    ],
+    [
+     2360,
+     -0.0068
+    ],
+    [
+     2370,
+     -0.002
+    ],
+    [
+     2380,
+     0.0034
+    ],
+    [
+     2390,
+     0.0094
+    ],
+    [
+     2400,
+     0.0159
+    ],
+    [
+     2410,
+     0.0228
+    ],
+    [
+     2420,
+     0.03
+    ],
+    [
+     2430,
+     0.0373
+    ],
+    [
+     2440,
+     0.0448
+    ],
+    [
+     2450,
+     0.0522
+    ]
+   ]
+  },
+  "alertes": [
+   {
+    "niveau": "alerte",
+    "sujet": "groupe",
+    "cle": "carnivore|la genèse 7",
+    "titre": "Les carnivores (la genèse 7) reculent à chaque cycle",
+    "texte": "40 lignées, −51 % depuis le cycle 42 (de 3 094 171 à 1 531 565 bêtes), −4 % au dernier cycle ; satiété moyenne 0,23."
+   },
+   {
+    "niveau": "alerte",
+    "sujet": "retraits",
+    "titre": "Des retraits de joueurs ne tuent personne",
+    "texte": "3,79 des 5,663 bêtes retirées par cycle (moyenne lissée du tampon) n'apparaissent dans aucune mortalité : Jadunou guetteur de prairie (prairie), Orkifir rôdeur de prairie (prairie), Soel fureteur de prairie (prairie), Umedun traqueur de lande (prairie)."
+   },
+   {
+    "niveau": "surveiller",
+    "sujet": "groupe",
+    "cle": "herbivore|la genèse 7",
+    "titre": "Les herbivores (la genèse 7) ont plus que doublé",
+    "texte": "21 lignées, +204 % depuis le cycle 42."
+   },
+   {
+    "niveau": "surveiller",
+    "sujet": "machines",
+    "titre": "Les machines croissent vite",
+    "texte": "+11 % au dernier cycle, 1 898 machines."
+   },
+   {
+    "niveau": "surveiller",
+    "sujet": "souche",
+    "titre": "Goteose α, portée par un insecte",
+    "texte": "Virulence 39 % par cycle, 215 bêtes infectées, vecteur Orlingra tondeur de mangrove."
+   },
+   {
+    "niveau": "info",
+    "sujet": "extinction",
+    "titre": "Méki tondeur de prairie s'est éteinte",
+    "texte": "Au cycle 57 : trop peu nombreuse pour tenir."
+   },
+   {
+    "niveau": "info",
+    "sujet": "rythme",
+    "titre": "Le rythme des cycles a eu des trous",
+    "texte": "1 écart de plus de 30 h (41→42, 136,5 h) ; 2 jours à deux cycles (2026-11-04, 2026-11-11)."
+   }
+  ],
+  "comparaison": null,
+  "seuils": {
+   "groupe_min": 5,
+   "recul": 0.2,
+   "recul_suite": 5,
+   "essor": 2,
+   "machines": 0.1,
+   "retrait_min": 0.05,
+   "silence": 7,
+   "ecart_h": 30,
+   "virulence": 0.35
+  }
+ }
+}
