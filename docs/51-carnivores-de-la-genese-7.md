@@ -157,6 +157,39 @@ Sans `origines`, le moteur donne le même monde au caractère près (la genèse 
 
 <!-- RESULTATS -->
 
+### Les bancs
+
+Les deux bancs ne lisent pas le profil : pour les juger avec la règle, on la pose dans les mondes qu'ils lisent (`regles.origines` dans `mondes/orvane/generation-0.json` pour `bancs/ponts.js`, dans `mondes/orvane/instantane.json` pour la section 3 de `bancs/stabilite.js`).
+
+**`bancs/ponts.js`.** Sans la règle, tout passe. Avec elle, tout passe sauf une vérification, et ce n'est pas la règle qu'elle prend en faute :
+- au cycle 116, `jadunou`, un carnivore du continent de 3,6 kg, se sépare dans la forêt d'Orvane (`foret~3`, au bout du pont bois-forêt) ;
+- sa fille, `jadunou.foret~3`, n'est pas dans la liste des lignées du continent que le banc a faite le jour de la fusion, et elle ne porte pas d'`origine` (une séparation ne la transmet pas) ;
+- le banc la compte donc parmi les lignées d'Orvane, et y trouve deux zones hybrides « entre les deux mondes » (avec `orkifir`, du continent) et deux paires apparentées (avec sa mère). Les deux côtés sont du continent.
+
+Sans la règle, les six séparations des 80 cycles sont des lignées d'Orvane, et le cas ne se présente pas. Le banc range désormais une lignée née d'une lignée du continent avec le continent (`bancs/ponts.js`, vérification 4) :
+
+```diff
+-{ const hy = …, croises = hy.filter(([a, b]) => b && src.has(a) !== src.has(b));
+-  const M = new Map(X.taxons.map(t => [t.id, t])), A = X.taxons.filter(t => src.has(t.id)), B = X.taxons.filter(t => !src.has(t.id)); let liees = 0;
++{ // (docs/51) une lignée née après la fusion d'une lignée du continent est du continent : sa fille n'est pas dans src, et ne porte pas d'origine
++  const M = new Map(X.taxons.map(t => [t.id, t])), venue = id => { for (let k = 0; id && k < 60; k++) { if (src.has(id)) return true; id = M.get(id)?.parent || (id.includes('.') ? id.slice(0, id.lastIndexOf('.')) : null); } return false; };
++  const hy = …, croises = hy.filter(([a, b]) => b && venue(a) !== venue(b));
++  const A = X.taxons.filter(t => venue(t.id)), B = X.taxons.filter(t => !venue(t.id)); let liees = 0;
+```
+
+Avec la règle et cette correction, tout passe. Ce qui change :
+
+| `bancs/ponts.js`, 80 cycles | sans la règle | avec les règles d'origine |
+| --- | --- | --- |
+| lignées du continent qui gagnent Orvane en 10 cycles | 53 | 55 |
+| parcelles d'Orvane gagnées par le continent | 12 (6 à un pas des ponts, 3 à deux pas) | 37 (12 à un pas, 21 à deux pas, 1 à trois) |
+| présences à un pas des ponts, cycles 20 et 80 | 27, 51 | 52, 144 |
+| zones hybrides ; entre les deux mondes | 2 966 ; aucune | 3 030 ; aucune |
+
+**Le continent passe les ponts bien plus vite.** Ses lignées gardent leurs règles là où elles vont. Sur une parcelle d'Orvane, un omnivore de la genèse 7 tire des plantes 100 % de ce qu'en tire un herbivore, un omnivore d'Orvane 60 % : le premier l'emporte. C'est l'effet de bord de la règle (plus bas, ce qu'il coûte aux lignées d'Orvane dans le monde vivant).
+
+<!-- STABILITE -->
+
 ## Pour refaire les mesures
 
 L'état publié :
