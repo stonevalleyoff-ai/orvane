@@ -17,6 +17,8 @@ Le monde publié (branche `publication`, `historique.json` et `instantane.json`)
 
 Les carnivores de la genèse 7 perdent 5,7 % au cycle 42, puis un peu moins à chaque cycle : 3,9 % au cycle 57. Leur satiété moyenne (pondérée par l'effectif) est de 0,23, contre 0,54 chez ceux d'Orvane. Deux petites lignées sont déjà menacées : `vacor` (21 bêtes) et `angraume.ossuaire` (16). Les joueurs n'y sont pour rien : ils retirent environ six bêtes par cycle, dans tout le monde.
 
+La saison rend le constat plus net. Chez elle, sous le moteur de sa genèse, la genèse 7 voit ses carnivores suivre l'année : de 3,0 millions en hiver à 5,8 millions en été, de −2,2 % par cycle à la fin de l'automne à +1,4 % au printemps. Aux phases des cycles 42 à 57 (de la fin du printemps au cœur de l'été), ils gagnaient de 1,2 % à 0,4 % par cycle. Dans le monde d'Orvane, à la même saison, ils perdent de 5,7 % à 3,9 %. Pour juger d'une règle, on compare donc deux mondes au même cycle, ou un monde à lui-même un an plus tard.
+
 Toutes les mesures qui suivent viennent de ces fichiers, ou d'un cycle refait sur la machine depuis l'état publié (`etat.json`, par parcelle, cycle 57). Le moteur est déterministe, et un cycle refait depuis cet état continue la tendance publiée : −3,9 % au cycle 58.
 
 ## Ce que ce n'est pas
