@@ -82,14 +82,15 @@ verif(Math.abs(ret(RL.taxons[tP.id][laP]) - attendu) < .01 && Math.abs(cles.redu
     for (const [ty, L] of Object.entries(g)) if (parType[ty] && L.length >= 2 && L.length < parType[ty].length) cand.push({ t, ty, L, W: L.reduce((s, p) => s + p.effectif, 0) }); }
   const { t: tA, ty: bA, L: LA, W: WA } = cand.sort((x, y) => y.W - x.W || (x.t.id < y.t.id ? -1 : 1))[0];
   const vide = parType[bA].find(p => !LA.some(q => q.biome === p.id)).id, peu = LA.slice().sort((x, y) => x.effectif - y.effectif)[0], pmaxA = .2;
-  const prA = { taxons: { [tA.id]: { [bA]: { retrait: { '*': +(.1 * WA).toFixed(3) }, deplacement: [{ vers: bP, n: +(.02 * WA).toFixed(3) }], q: { taille: 1.2 } } } }, biomes: {}, nombre: 1, part_max_population: pmaxA };
+  const prA = { taxons: { [tA.id]: { [bA]: { retrait: { '*': +(.1 * WA).toFixed(3) }, deplacement: [{ vers: bP, n: +(.02 * WA).toFixed(3) }], q: { taille: 1.2 }, contact: { rencontres: 40, danger: 10, aide: 0 }, vecu: { rencontres: 40, prises: 3 } } } }, biomes: {}, nombre: 1, part_max_population: pmaxA };
   const dite = p => Parcelles.localiser([{ evenements: [{ taxon: tA.id, biome: bA, action: 'prelevement', n: 3, parcelle: p }, { taxon: tA.id, biome: bA, action: 'deplacement', vers: bP, n: 1, parcelle: p }] }], D);
   const oteA = x => (x?.retrait?.['*'] || 0) + (x?.deplacement || []).reduce((s, d) => s + d.n, 0), tot = R => Object.values(R).reduce((s, x) => s + oteA(x), 0);
   const effA = pid => LA.find(p => p.biome === pid)?.effectif || 0, sousPlafond = R => Object.entries(R).every(([pid, x]) => oteA(x) <= pmaxA * effA(pid) + 1e-3);
   const R0 = Parcelles.repartir(prA, D).taxons[tA.id], RV = Parcelles.repartir(prA, D, dite(vide)).taxons[tA.id], RP = Parcelles.repartir(prA, D, dite(peu.biome)).taxons[tA.id], n0 = Object.keys(R0).length;
-  verif(oteA(RV[vide]) === 0 && Math.abs(tot(RV) - tot(R0)) < 1e-3 * n0 && LA.every(p => Math.abs(oteA(RV[p.biome]) - oteA(R0[p.biome])) < 1e-3) && RV[LA[0].biome]?.q?.taille === 1.2
+  verif(oteA(RV[vide]) === 0 && Math.abs(tot(RV) - tot(R0)) < 1e-3 * n0 && LA.every(p => Math.abs(oteA(RV[p.biome]) - oteA(R0[p.biome])) < 1e-3) && LA.every(p => RV[p.biome]?.q?.taille === 1.2 && RV[p.biome]?.contact?.rencontres === 40 && RV[p.biome]?.vecu?.prises === 3)
+    && Object.keys(RP).filter(k => RP[k].contact || RP[k].vecu).join() === peu.biome
     && Math.abs(tot(RP) - tot(R0)) < 1e-3 * n0 && Math.abs(oteA(RP[peu.biome]) - pmaxA * peu.effectif) < 1e-3 && sousPlafond(RV) && sousPlafond(RP),
-    `${tA.id} vit dans ${LA.length} des ${parType[bA].length} parcelles de ${bA} : sa chasse et son déplacement dits en ${vide}, où elle n'est pas, sont pris dans les siennes selon leurs effectifs (${fx(tot(RV), 1)} bêtes, comme sans parcelle : ${fx(tot(R0), 1)}) ; dits en ${peu.biome}, qui n'en a que ${fx(peu.effectif, 0)}, elle y perd ${fx(pmaxA * 100, 0)} % d'elle-même et le reste ailleurs (${fx(tot(RP), 1)} en tout)`); }
+    `${tA.id} vit dans ${LA.length} des ${parType[bA].length} parcelles de ${bA} : sa chasse et son déplacement dits en ${vide}, où elle n'est pas, sont pris dans les siennes selon leurs effectifs (${fx(tot(RV), 1)} bêtes, comme sans parcelle : ${fx(tot(R0), 1)}), qui vivent chacune le contact et le vécu entiers ; dits en ${peu.biome}, qui n'en a que ${fx(peu.effectif, 0)}, elle y perd ${fx(pmaxA * 100, 0)} % d'elle-même et le reste ailleurs (${fx(tot(RP), 1)} en tout), et le contact y reste`); }
 
 console.log(`\n3. Le monde tourne : ${CYCLES} cycles, par parcelles et par biomes`);
 const tourner = (I, n, pressions) => { let J = I, sauts = 0, mesures = 0, prev = null, sep = 0; const t0 = Date.now();

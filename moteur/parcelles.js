@@ -201,31 +201,39 @@ const propre = (o, k) => typeof k === 'string' && k !== '__proto__' && k !== 'co
 // part_max_population de ce que la lignée y compte (toute sa population, sans ce plafond), et rien là où la lignée n'est pas : un
 // jeu montre la lignée là où se tient son joueur, sans savoir qu'Orvane ne l'a pas mise dans cette parcelle. Ce qui dépasse va aux
 // parcelles du biome où la lignée vit, selon leur effectif (comme une pression qui n'est pas localisée), chacune jusqu'à son
-// plafond ; une parcelle pleine laisse sa part aux autres. Ne se reportent que les bêtes ôtées (retraits, déplacements) et le z
-// des retirés (q) qui les dit ; le contact et le vécu restent là où le jeu a dit ses joueurs. Ce qu'aucune parcelle ne peut
-// prendre (la lignée n'est nulle part dans le biome) se perd, comme avant.
+// plafond ; une parcelle pleine laisse sa part aux autres. Les bêtes ôtées (retraits, déplacements) se reportent, avec le z des
+// retirés (q) qui les dit. Le contact et le vécu restent là où le jeu a dit ses joueurs, si la lignée y vit ; dits dans une parcelle
+// où elle n'est pas, ils sont vécus entiers par chaque parcelle où elle vit, comme sans parcelle (docs/12, docs/50). Ce qu'aucune
+// parcelle ne peut prendre (la lignée n'est nulle part dans le biome) se perd, comme avant.
 const oteDe = x => Object.values(x.retrait || {}).reduce((s, r) => s + Math.max(0, r), 0) + (x.deplacement || []).reduce((s, d) => s + d.n, 0);
 function plafonner(parts, effs, effDe, pmax, O, vers) {
-  const lim = pid => (pmax ?? 1) * effDe(pid), mR = Object.create(null), mD = [], pleines = new Set();
+  const lim = pid => (pmax ?? 1) * effDe(pid), mR = Object.create(null), mD = [], pleines = new Set(), neuves = new Set();
+  const vide = [...parts.keys()].some(pid => !(effDe(pid) > 0));   // (une parcelle dite où la lignée n'est pas)
+  const prendre = pid => { let x = parts.get(pid);
+    if (!x) { x = { retrait: {}, deplacement: (Array.isArray(O.deplacement) ? O.deplacement : []).map(d => ({ ...d, vers: vers(d.vers), n: 0 })) }; if (O.q != null) x.q = O.q; parts.set(pid, x); neuves.add(pid); }
+    return x; };
   for (const [pid, x] of parts) { const ote = oteDe(x), L = lim(pid); if (!(ote > L)) continue;
     const g = ote > 0 ? L / ote : 0; pleines.add(pid);
     for (const k in x.retrait || {}) if (x.retrait[k] > 0) { const v = +(x.retrait[k] * g).toFixed(4); mR[k] = (mR[k] || 0) + x.retrait[k] - v; x.retrait[k] = v; }
     for (const [i, d] of (x.deplacement || []).entries()) { const v = +(d.n * g).toFixed(4); mD[i] = (mD[i] || 0) + d.n - v; d.n = v; } }
-  const S = Object.values(mR).reduce((s, v) => s + v, 0) + mD.reduce((s, v) => s + (v || 0), 0); if (!(S > 0)) return;
-  // le report, selon l'effectif, entre les parcelles qui ont encore de la marge ; celle qui atteint son plafond laisse le reste
-  // aux autres, au tour suivant (chaque tour en remplit une au moins, ou donne tout)
-  const charge = new Map(effs.map(([pid]) => [pid, parts.has(pid) ? oteDe(parts.get(pid)) : 0])), recu = new Map(); let reste = S;
-  while (reste > 1e-9) {
-    const libres = effs.filter(([pid, e]) => e > 0 && !pleines.has(pid)), W = libres.reduce((s, [, e]) => s + e, 0); if (!(W > 0)) break;
-    let donne = 0, plein = false;
-    for (const [pid, e] of libres) { let a = reste * e / W; const m = Math.max(0, lim(pid) - charge.get(pid)); if (a >= m) { a = m; pleines.add(pid); plein = true; }
-      charge.set(pid, charge.get(pid) + a); recu.set(pid, (recu.get(pid) || 0) + a); donne += a; }
-    reste -= donne; if (!plein) break; }
-  for (const [pid, a] of recu) { if (!(a > 0)) continue; const h = a / S; let x = parts.get(pid), neuve = false;
-    if (!x) { neuve = true; x = { retrait: {}, deplacement: (Array.isArray(O.deplacement) ? O.deplacement : []).map(d => ({ ...d, vers: vers(d.vers), n: 0 })) }; if (O.q != null) x.q = O.q; parts.set(pid, x); }
-    for (const k in mR) (x.retrait ??= {})[k] = +((x.retrait[k] || 0) + mR[k] * h).toFixed(4);
-    for (const [i, m] of mD.entries()) if (m > 0 && x.deplacement?.[i]) x.deplacement[i].n = +(x.deplacement[i].n + m * h).toFixed(4);
-    if (neuve) { x.deplacement = x.deplacement.filter(d => d.n > 0); if (!x.deplacement.length) delete x.deplacement; if (!Object.keys(x.retrait).length) delete x.retrait; } }
+  const S = Object.values(mR).reduce((s, v) => s + v, 0) + mD.reduce((s, v) => s + (v || 0), 0);
+  if (S > 0) {
+    // le report, selon l'effectif, entre les parcelles qui ont encore de la marge ; celle qui atteint son plafond laisse le reste
+    // aux autres, au tour suivant (chaque tour en remplit une au moins, ou donne tout)
+    const charge = new Map(effs.map(([pid]) => [pid, parts.has(pid) ? oteDe(parts.get(pid)) : 0])), recu = new Map(); let reste = S;
+    while (reste > 1e-9) {
+      const libres = effs.filter(([pid, e]) => e > 0 && !pleines.has(pid)), W = libres.reduce((s, [, e]) => s + e, 0); if (!(W > 0)) break;
+      let donne = 0, plein = false;
+      for (const [pid, e] of libres) { let a = reste * e / W; const m = Math.max(0, lim(pid) - charge.get(pid)); if (a >= m) { a = m; pleines.add(pid); plein = true; }
+        charge.set(pid, charge.get(pid) + a); recu.set(pid, (recu.get(pid) || 0) + a); donne += a; }
+      reste -= donne; if (!plein) break; }
+    for (const [pid, a] of recu) { if (!(a > 0)) continue; const h = a / S, x = prendre(pid);
+      for (const k in mR) (x.retrait ??= {})[k] = +((x.retrait[k] || 0) + mR[k] * h).toFixed(4);
+      for (const [i, m] of mD.entries()) if (m > 0 && x.deplacement?.[i]) x.deplacement[i].n = +(x.deplacement[i].n + m * h).toFixed(4); } }
+  // ce que les bêtes ont vécu des joueurs, dit là où la lignée n'est pas : chaque parcelle où elle vit le vit entier
+  if (vide) for (const k of ['contact', 'vecu']) if (O[k] != null) for (const [pid, e] of effs) if (e > 0) { const x = prendre(pid); if (x[k] == null) x[k] = O[k]; }
+  for (const pid of neuves) { const x = parts.get(pid); x.deplacement = x.deplacement.filter(d => d.n > 0);
+    if (!x.deplacement.length) delete x.deplacement; if (!Object.keys(x.retrait).length) delete x.retrait; }
 }
 function repartir(pressions, inst, loc) {
   if (!estParcellaire(inst) || !pressions) return pressions;

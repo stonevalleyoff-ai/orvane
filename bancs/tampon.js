@@ -6,7 +6,7 @@
 //  4. un jeu de 1 500 comptes contre un autre jeu : la part d'un compte, d'un jeu, d'une population ; un petit jeu ne peut pas
 //     effacer la chasse d'un grand ;
 //  5. les parcelles : une rencontre localisée ne détourne rien, une chasse localisée ne vide pas une parcelle, et ne se perd pas
-//     quand la parcelle dite n'a pas la lignée, ou trop peu ;
+//     quand la parcelle dite n'a pas la lignée, ou trop peu (ni son contact, quand la lignée n'y est pas) ;
 //  6. l'élevage : un allèle inventé (« <img…> ») n'entre pas dans le monde ;
 //  7. ce que publie la vue par biome (une infection dans une parcelle sur quatre), ce que les parcelles gardent d'un apport, la Mère
 //     d'un monde découpé après son éveil ;
@@ -99,11 +99,14 @@ console.log('5. Les parcelles');
     for (const [ty, L] of Object.entries(g)) { const Ps = E.biomes.filter(b => b.type === ty), ici = I.taxons.find(x => x.id === t.id)?.populations.find(p => p.biome === ty);
       if (ici && L.length >= 2 && L.length < Ps.length) cand.push({ tid: t.id, ty, vide: Ps.find(b => !L.some(p => p.biome === b.id)).id, k: L.length, W: L.reduce((a, p) => a + p.effectif, 0) }); } }
   const A = cand.sort((x, y) => y.W - x.W || (x.tid < y.tid ? -1 : 1))[0], versA = I.biomes.find(b => b.id === A.ty)?.voisins?.[0] ?? I.biomes.find(b => b.id !== A.ty).id;
-  const lotsA = parcelle => Array.from({ length: 200 }, (_, i) => lot('v' + i, [chasse(A.tid, A.ty, 13.11, parcelle ? { parcelle } : {}), ...(i % 4 ? [] : [{ taxon: A.tid, biome: A.ty, action: 'deplacement', vers: versA, n: 2, ...(parcelle ? { parcelle } : {}) }])]));
+  const lotsA = parcelle => Array.from({ length: 200 }, (_, i) => lot('v' + i, [chasse(A.tid, A.ty, 13.11, parcelle ? { parcelle } : {}), { taxon: A.tid, biome: A.ty, action: 'rencontre', n: 3, ...(parcelle ? { parcelle } : {}) }, ...(i % 4 ? [] : [{ taxon: A.tid, biome: A.ty, action: 'deplacement', vers: versA, n: 2, ...(parcelle ? { parcelle } : {}) }])]));
   const RA = l => Parcelles.repartir(agr(l).pressions, E, Parcelles.localiser(l, E)).taxons[A.tid], VA = RA(lotsA(A.vide)), SA = RA(lotsA(null));
   const dep = R => Object.values(R || {}).reduce((a, x) => a + (x.deplacement || []).reduce((s, d) => s + d.n, 0), 0), nP = Object.keys(SA).length;
+  const vit = k => JSON.stringify([VA[k]?.contact, VA[k]?.vecu]) === JSON.stringify([SA[k].contact, SA[k].vecu]);
   verif(ote(VA[A.vide]) === 0 && Math.abs(somme(VA) - somme(SA)) < 1e-3 * nP && Math.abs(dep(VA) - dep(SA)) < 1e-3 * nP && dep(SA) > 0 && Object.keys(SA).every(k => Math.abs(ote(VA[k]) - ote(SA[k])) < 1e-3),
-    `200 chasseurs disent avoir pris ${A.tid} en ${A.vide}, où la lignée n'est pas : ses ${A.k} parcelles perdent ${fx(somme(VA), 0)} bêtes, dont ${fx(dep(VA), 0)} déplacées, selon leurs effectifs, comme si le jeu n'avait rien dit (${fx(somme(SA), 0)}) — rien ne se perd`); }
+    `200 chasseurs disent avoir pris ${A.tid} en ${A.vide}, où la lignée n'est pas : ses ${A.k} parcelles perdent ${fx(somme(VA), 0)} bêtes, dont ${fx(dep(VA), 0)} déplacées, selon leurs effectifs, comme si le jeu n'avait rien dit (${fx(somme(SA), 0)}) — rien ne se perd`);
+  verif(Object.values(SA).every(x => x.contact) && Object.keys(SA).every(vit),
+    `et ses ${A.k} parcelles vivent chacune le contact entier de ces chasseurs (${fx(SA[Object.keys(SA)[0]].contact.rencontres, 0)} rencontres${SA[Object.keys(SA)[0]].vecu ? ', et leur vécu' : ''}), comme sans parcelle : la lignée apprend à se méfier de qui la chasse`); }
 
 console.log('6. L\'élevage');
 { const L = Array.from({ length: 500 }, (_, i) => lot('e' + i, [{ taxon: 'jagra', biome: 'toundra', action: 'liberation', n: 30, genome: { n: 30, alleles: { '<img src=x onerror=alert(1)>': 1, albinisme: 1, __proto__x: 1, constructor: 1 }, a: { taille: 2, inventee: 3, vitesse: 1e9 } } }]));
