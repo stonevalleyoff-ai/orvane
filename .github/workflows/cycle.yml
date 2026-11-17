@@ -120,6 +120,16 @@ jobs:
             echo "le jeu est exporté"
           fi
           ls -la lisiere
+      - name: les rapports de santé (la branche sante, docs/51)
+        continue-on-error: true          # sans rapport, le site se publie comme avant
+        run: |
+          # le rapport de chaque semaine est écrit sur la branche sante (sante/<monde>/), jamais sur main : il part avec le site
+          if git fetch -q --depth=1 origin sante 2>/dev/null; then
+            rm -rf sante && git archive FETCH_HEAD sante | tar -x
+            echo "rapports de santé : $(ls sante | tr '\n' ' ')"
+          else
+            echo "pas encore de branche sante : pas de rapport à publier"
+          fi
       - name: publier (la branche publication, réécrite en un seul commit)
         run: |
           git config user.name "orvane"
