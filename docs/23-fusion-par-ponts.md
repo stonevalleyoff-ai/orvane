@@ -44,7 +44,7 @@ Les eaux douces (docs/42) rejoignent le monde d'Orvane de la même façon, par t
   - Le monde d'Orvane n'est pas touché : ses lignées et leurs populations restent ce qu'elles étaient.
 - **Les ponts.** Sans pont, rien ne passe en 10 cycles. Avec trois ponts, 48 lignées du continent gagnent Orvane, et 14 lignées d'Orvane gagnent le continent.
 - **De proche en proche.** Les lignées du continent gagnent d'abord les trois parcelles des ponts, dès le premier cycle. Elles gagnent les six parcelles à un pas vers le cycle 11, et les trois à deux pas vers le cycle 79. À un pas des ponts, on compte 27 présences (une lignée dans une parcelle) au cycle 20, et 51 au cycle 80.
-- **Deux mondes ne se croisent pas.** Au bout de 80 cycles, le monde compte 2 961 zones hybrides, et aucune entre une lignée du continent et une lignée d'Orvane. Sur 11 583 paires, aucune n'a d'ancêtre commun.
+- **Deux mondes ne se croisent pas.** Au bout de 80 cycles, le monde compte 2 961 zones hybrides, et aucune entre une lignée du continent et une lignée d'Orvane. Sur 11 583 paires, aucune n'a d'ancêtre commun. Une lignée née d'une lignée du continent compte avec le continent, même née de l'autre côté d'un pont (docs/51).
 - **La flore, le milieu.** Dans un monde à flore et à milieu transformé, le continent arrive avec ses plantes : 43 lignées, sur ses 64 parcelles. Chaque parcelle prend la base de son milieu, et ses brouteurs y trouvent 101 % de leur nourriture : rien ne manque à l'arrivée.
 
 Le banc vérifie aussi le contrat, le déterminisme (les mêmes mondes donnent le même continent, une fusion faite ne se refait pas) et le cycle de nuit (la fusion par ponts se fait une fois).

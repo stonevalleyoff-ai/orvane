@@ -61,8 +61,10 @@ let X = clone(X0);
 }
 
 console.log('4. Deux mondes, une flore, un milieu');
-{ const hy = X.taxons.flatMap(t => t.populations.filter(p => p.hybride).map(p => [t.id, p.hybride.avec])), croises = hy.filter(([a, b]) => b && src.has(a) !== src.has(b));
-  const M = new Map(X.taxons.map(t => [t.id, t])), A = X.taxons.filter(t => src.has(t.id)), B = X.taxons.filter(t => !src.has(t.id)); let liees = 0;
+{ // (docs/51) une lignée née après la fusion d'une lignée du continent est du continent : sa fille n'est pas dans src, et ne porte pas d'origine
+  const M = new Map(X.taxons.map(t => [t.id, t])), venue = id => { for (let k = 0; id && k < 60; k++) { if (src.has(id)) return true; id = M.get(id)?.parent || (id.includes('.') ? id.slice(0, id.lastIndexOf('.')) : null); } return false; };
+  const hy = X.taxons.flatMap(t => t.populations.filter(p => p.hybride).map(p => [t.id, p.hybride.avec])), croises = hy.filter(([a, b]) => b && venue(a) !== venue(b));
+  const A = X.taxons.filter(t => venue(t.id)), B = X.taxons.filter(t => !venue(t.id)); let liees = 0;
   for (const a of A) for (const b of B) if (Orvane.parente(a, b, M)) liees++;
   verif(hy.length > 0 && croises.length === 0 && liees === 0, `${hy.length} zones hybrides au bout de ${CYCLES} cycles, aucune entre une lignée du continent et une lignée d'Orvane : sur ${A.length * B.length} paires, aucune n'a d'ancêtre commun`);
   const F = Mi.eveiller(Flore.eveiller(T).inst).inst, RF = Fusion.relier(F, G, { id: 'genese-7' }), W = RF.inst, P = W.taxons.filter(t => t.plan?.regime === 'vegetal' && t.origine?.fusion === 'genese-7');
