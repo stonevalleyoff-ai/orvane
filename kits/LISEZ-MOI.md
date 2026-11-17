@@ -70,12 +70,16 @@ func _on_bete_tuee(taxon: String, biome: String) -> void:
 	Orvane.compter(taxon, biome, "prelevement")
 
 func _on_sauvegarde() -> void:
+	Orvane.garder()                  # ce qui est compté se garde sur l'appareil, sans faire de lot
+
+func _on_fin_de_partie() -> void:   # (ou un moment naturel : un retour au menu, un quart d'heure de jeu)
 	Orvane.clore(compte_opaque)
 	Orvane.deposer(compte_opaque)
 ```
 
 - L'instantané reste un `Dictionary`, tel que le contrat le publie : `inst.taxons`, `inst.biomes`, `inst.cycle.n`.
-- Les lots pas encore déposés sont gardés dans `user://orvane.json`, et repris au lancement suivant.
+- Les lots pas encore déposés sont gardés dans `user://orvane.json`, et repris au lancement suivant. Ce qui est compté et pas encore clos aussi, dès que le jeu appelle `Orvane.garder()` : à chaque sauvegarde, il ne perd rien s'il est fermé d'un coup, sans faire un lot de plus (Orvane en accepte 48 par joueur et par jour).
+- `Orvane.deposer(compte)` dépose un lot à la fois (le plus ancien) : pour vider la file, rappelez-le à chaque `lot_depose` accepté, tant que `Orvane.lots_en_attente()` n'est pas nul.
 - Les aides : `vivantes()`, `dans(biome)`, `effectif(lignee, biome)`, `majeur()`, `identite()`.
 - **Seulement les lieux qu'on joue** (le monde par morceaux, docs/21) : `var inst = await Orvane.lire_lieux(["foret"])` lit l'index du monde et ces biomes, et rend l'instantané réduit à ces biomes, au même contrat : quelques centaines de Ko au lieu de plusieurs Mo. `Orvane.assembler(index, morceaux)` fait de même avec des morceaux gardés dans le jeu (pour jouer hors ligne).
 - **Dessiner les bêtes sans moteur de dessin** : `await Orvane.lire_silhouettes("foret")` lit la planche du lieu (chaque bête dessinée de profil, et ses yeux) ; `Orvane.texture("dunvi", 96.0)` rend l'image d'une lignée à 96 pixels de large (`Image.load_svg_from_string`), `Orvane.yeux("dunvi")` où sont ses yeux dans le cadre de 170 × 90. Une planche gardée dans le jeu : `Orvane.ajouter_planche(biome, silhouettes)`.
