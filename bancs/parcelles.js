@@ -2,7 +2,8 @@
 // Le monde d'Orvane découpé en parcelles, vérifié contre le même monde par biomes :
 //  1. le découpage : rien ne se perd, une petite population n'est pas émiettée, les parcelles d'un biome se suivent en
 //     boucle, des passages seulement vers les biomes voisins, un aller-retour exact vers la vue par biome, le contrat ;
-//  2. les pressions des jeux, données par biome, réparties entre les parcelles sans rien perdre ;
+//  2. les pressions des jeux, données par biome, réparties entre les parcelles sans rien perdre, même dites dans une parcelle où
+//     la lignée n'est pas ;
 //  3. le monde tourne : autant de lignées, autant de bêtes, pas plus de sursauts qu'avec les biomes ;
 //  4. le premier critère de la phase 2 : une espèce introduite sur une parcelle gagne ses voisines de proche en proche ;
 //  5. le second : un défrichage sur une parcelle en chasse les bêtes vers les parcelles voisines ;
@@ -75,6 +76,20 @@ const tout = Parcelles.localiser([{ evenements: [{ taxon: tP.id, biome: bP, acti
 verif(Math.abs(ret(RL.taxons[tP.id][laP]) - attendu) < .01 && Math.abs(cles.reduce((a, k) => a + ret(RL.taxons[tP.id][k]), 0) - 150) < .01 && Object.keys(RL.biomes).join() === ailleurs
   && Object.keys(RT.taxons[tP.id]).join() === laP && Math.abs(ret(RT.taxons[tP.id][laP]) - 150) < .01,
   `un lot qui dit sa parcelle (${laP}) y pose sa part de la chasse (${fx(ret(RL.taxons[tP.id][laP]), 0)} sur 150 : 12 bêtes localisées sur 17), toute la chasse quand tout y est dit, et le défrichage dans la sienne (${ailleurs}) ; une parcelle d'un autre biome est ignorée`);
+// un jeu montre une lignée là où se tient son joueur, et dit cette parcelle ; Orvane ne l'y a pas mise, ou trop peu : ce qui ne peut
+// y être pris (rien, ou part_max_population de ce qui y vit) l'est dans les parcelles où la lignée vit, selon leurs effectifs
+{ const cand = []; for (const t of vivants(D)) { const g = {}; for (const p of t.populations) if (p.effectif > 0) (g[D.biomes.find(b => b.id === p.biome)?.type] ??= []).push(p);
+    for (const [ty, L] of Object.entries(g)) if (parType[ty] && L.length >= 2 && L.length < parType[ty].length) cand.push({ t, ty, L, W: L.reduce((s, p) => s + p.effectif, 0) }); }
+  const { t: tA, ty: bA, L: LA, W: WA } = cand.sort((x, y) => y.W - x.W || (x.t.id < y.t.id ? -1 : 1))[0];
+  const vide = parType[bA].find(p => !LA.some(q => q.biome === p.id)).id, peu = LA.slice().sort((x, y) => x.effectif - y.effectif)[0], pmaxA = .2;
+  const prA = { taxons: { [tA.id]: { [bA]: { retrait: { '*': +(.1 * WA).toFixed(3) }, deplacement: [{ vers: bP, n: +(.02 * WA).toFixed(3) }], q: { taille: 1.2 } } } }, biomes: {}, nombre: 1, part_max_population: pmaxA };
+  const dite = p => Parcelles.localiser([{ evenements: [{ taxon: tA.id, biome: bA, action: 'prelevement', n: 3, parcelle: p }, { taxon: tA.id, biome: bA, action: 'deplacement', vers: bP, n: 1, parcelle: p }] }], D);
+  const oteA = x => (x?.retrait?.['*'] || 0) + (x?.deplacement || []).reduce((s, d) => s + d.n, 0), tot = R => Object.values(R).reduce((s, x) => s + oteA(x), 0);
+  const effA = pid => LA.find(p => p.biome === pid)?.effectif || 0, sousPlafond = R => Object.entries(R).every(([pid, x]) => oteA(x) <= pmaxA * effA(pid) + 1e-3);
+  const R0 = Parcelles.repartir(prA, D).taxons[tA.id], RV = Parcelles.repartir(prA, D, dite(vide)).taxons[tA.id], RP = Parcelles.repartir(prA, D, dite(peu.biome)).taxons[tA.id], n0 = Object.keys(R0).length;
+  verif(oteA(RV[vide]) === 0 && Math.abs(tot(RV) - tot(R0)) < 1e-3 * n0 && LA.every(p => Math.abs(oteA(RV[p.biome]) - oteA(R0[p.biome])) < 1e-3) && RV[LA[0].biome]?.q?.taille === 1.2
+    && Math.abs(tot(RP) - tot(R0)) < 1e-3 * n0 && Math.abs(oteA(RP[peu.biome]) - pmaxA * peu.effectif) < 1e-3 && sousPlafond(RV) && sousPlafond(RP),
+    `${tA.id} vit dans ${LA.length} des ${parType[bA].length} parcelles de ${bA} : sa chasse et son déplacement dits en ${vide}, où elle n'est pas, sont pris dans les siennes selon leurs effectifs (${fx(tot(RV), 1)} bêtes, comme sans parcelle : ${fx(tot(R0), 1)}) ; dits en ${peu.biome}, qui n'en a que ${fx(peu.effectif, 0)}, elle y perd ${fx(pmaxA * 100, 0)} % d'elle-même et le reste ailleurs (${fx(tot(RP), 1)} en tout)`); }
 
 console.log(`\n3. Le monde tourne : ${CYCLES} cycles, par parcelles et par biomes`);
 const tourner = (I, n, pressions) => { let J = I, sauts = 0, mesures = 0, prev = null, sep = 0; const t0 = Date.now();

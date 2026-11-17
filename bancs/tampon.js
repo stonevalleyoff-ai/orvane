@@ -5,7 +5,8 @@
 //  3. ce qui n'est pas un retrait est plafonné aussi : déplacements, libérations, habitat, milieu ;
 //  4. un jeu de 1 500 comptes contre un autre jeu : la part d'un compte, d'un jeu, d'une population ; un petit jeu ne peut pas
 //     effacer la chasse d'un grand ;
-//  5. les parcelles : une rencontre localisée ne détourne rien, une chasse localisée ne vide pas une parcelle ;
+//  5. les parcelles : une rencontre localisée ne détourne rien, une chasse localisée ne vide pas une parcelle, et ne se perd pas
+//     quand la parcelle dite n'a pas la lignée, ou trop peu ;
 //  6. l'élevage : un allèle inventé (« <img…> ») n'entre pas dans le monde ;
 //  7. ce que publie la vue par biome (une infection dans une parcelle sur quatre), ce que les parcelles gardent d'un apport, la Mère
 //     d'un monde découpé après son éveil ;
@@ -86,7 +87,23 @@ console.log('5. Les parcelles');
   const un = [...honnetes, lot('y', [chasse('jagra', 'toundra', 1, { parcelle: 'toundra~2' })])], m = Parcelles.repartir(agr(un).pressions, E, Parcelles.localiser(un, E)).taxons.jagra;
   verif(ote(m['toundra~2']) < 1.01 * ote(sans['toundra~2']) + 1, `une chasse localisée d'une bête parmi ${fx(ote(r.taxons.jagra.toundra), 0)} : la parcelle reçoit sa part, plus une bête (${fx(ote(m['toundra~2']), 0)})`);
   const tous = honnetes.map(l => ({ ...l, evenements: l.evenements.map(e => ({ ...e, parcelle: 'toundra~2' })) })), M = Parcelles.repartir(agr(tous).pressions, E, Parcelles.localiser(tous, E)).taxons.jagra;
-  verif(ote(M['toundra~2']) <= pmax * e2 + 1e-3, `les 200 chasseurs tous en toundra~2 : la parcelle perd au plus ${pc(pmax)} d'elle-même (${fx(ote(M['toundra~2']), 0)} sur ${fx(e2, 0)}), pas 92 %`); }
+  verif(ote(M['toundra~2']) <= pmax * e2 + 1e-3, `les 200 chasseurs tous en toundra~2 : la parcelle perd au plus ${pc(pmax)} d'elle-même (${fx(ote(M['toundra~2']), 0)} sur ${fx(e2, 0)}), pas 92 %`);
+  const somme = R => Object.values(R || {}).reduce((a, x) => a + ote(x), 0), autres = Object.keys(M).filter(k => k !== 'toundra~2');
+  verif(Math.abs(somme(M) - somme(sans)) < 1e-2 && autres.length && autres.every(k => ote(M[k]) <= pmax * effDe('jagra', k, E) + 1e-3),
+    `ce que toundra~2 ne peut pas perdre est pris dans les ${autres.length} autres parcelles, chacune sous son plafond : ${fx(somme(M), 0)} jagra en tout, comme sans parcelle (${fx(somme(sans), 0)})`);
+  // un jeu montre une lignée là où se tient son joueur, et dit cette parcelle ; Orvane ne l'y a pas mise (le monde publié, au cycle 57 :
+  // des lignées qui ne vivent que dans les parcelles nées de la genèse 7, chassées en prairie~2). La chasse ne se perd pas : elle est
+  // prise dans les parcelles où la lignée vit, selon leurs effectifs, comme si le jeu n'avait rien dit
+  const cand = []; for (const t of E.taxons) { if (t.eteint != null) continue; const g = {};
+    for (const p of t.populations) { const b = E.biomes.find(x => x.id === p.biome), ty = b?.type; if (ty && p.effectif > 0) (g[ty] ??= []).push(p); }
+    for (const [ty, L] of Object.entries(g)) { const Ps = E.biomes.filter(b => b.type === ty), ici = I.taxons.find(x => x.id === t.id)?.populations.find(p => p.biome === ty);
+      if (ici && L.length >= 2 && L.length < Ps.length) cand.push({ tid: t.id, ty, vide: Ps.find(b => !L.some(p => p.biome === b.id)).id, k: L.length, W: L.reduce((a, p) => a + p.effectif, 0) }); } }
+  const A = cand.sort((x, y) => y.W - x.W || (x.tid < y.tid ? -1 : 1))[0], versA = I.biomes.find(b => b.id === A.ty)?.voisins?.[0] ?? I.biomes.find(b => b.id !== A.ty).id;
+  const lotsA = parcelle => Array.from({ length: 200 }, (_, i) => lot('v' + i, [chasse(A.tid, A.ty, 13.11, parcelle ? { parcelle } : {}), ...(i % 4 ? [] : [{ taxon: A.tid, biome: A.ty, action: 'deplacement', vers: versA, n: 2, ...(parcelle ? { parcelle } : {}) }])]));
+  const RA = l => Parcelles.repartir(agr(l).pressions, E, Parcelles.localiser(l, E)).taxons[A.tid], VA = RA(lotsA(A.vide)), SA = RA(lotsA(null));
+  const dep = R => Object.values(R || {}).reduce((a, x) => a + (x.deplacement || []).reduce((s, d) => s + d.n, 0), 0), nP = Object.keys(SA).length;
+  verif(ote(VA[A.vide]) === 0 && Math.abs(somme(VA) - somme(SA)) < 1e-3 * nP && Math.abs(dep(VA) - dep(SA)) < 1e-3 * nP && dep(SA) > 0 && Object.keys(SA).every(k => Math.abs(ote(VA[k]) - ote(SA[k])) < 1e-3),
+    `200 chasseurs disent avoir pris ${A.tid} en ${A.vide}, où la lignée n'est pas : ses ${A.k} parcelles perdent ${fx(somme(VA), 0)} bêtes, dont ${fx(dep(VA), 0)} déplacées, selon leurs effectifs, comme si le jeu n'avait rien dit (${fx(somme(SA), 0)}) — rien ne se perd`); }
 
 console.log('6. L\'élevage');
 { const L = Array.from({ length: 500 }, (_, i) => lot('e' + i, [{ taxon: 'jagra', biome: 'toundra', action: 'liberation', n: 30, genome: { n: 30, alleles: { '<img src=x onerror=alert(1)>': 1, albinisme: 1, __proto__x: 1, constructor: 1 }, a: { taille: 2, inventee: 3, vitesse: 1e9 } } }]));
