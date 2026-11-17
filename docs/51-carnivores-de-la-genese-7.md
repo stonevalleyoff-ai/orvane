@@ -219,6 +219,8 @@ Les deux bancs ne lisent pas le profil : pour les juger avec la règle, on la po
 
 **`bancs/stabilite.js` ne change pas.** Ses sections 1, 2, 4, 5 et 6 font tourner sv-1, qui n'a pas de fusion. Sa section 3 fait tourner le monde d'Orvane vu par biome (`instantane.json`), qui n'a pas de parcelles : la règle n'y trouve pas de continent, et le monde est le même au caractère près, cinq cycles plus tard. Tout passe. (La première version, qui ne regardait pas la parcelle, passait aussi : 243 → 272 lignées au lieu de 266, le monde entre 0,95 et 1,66 fois son effectif au lieu de 0,89 et 1,51, 0,15 % de sursauts par cycle au lieu de 0,11 %.) Ce banc ne peut donc pas juger la règle : seul le monde par parcelles le peut, plus haut.
 
+**Tous les bancs.** Avec la règle dans le profil du monde d'Orvane, les 38 bancs passent (`npm test`, leurs versions courtes). `bancs/esprit.js` dépasse son délai de 1 200 s quand quatre bancs tournent à la fois ; seul, il passe en 1 089 s avec la règle et en 1 087 s sans elle.
+
 ## Pour refaire les mesures
 
 L'état publié :
