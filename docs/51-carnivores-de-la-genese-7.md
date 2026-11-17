@@ -1,6 +1,6 @@
 # 51. Les carnivores de la genèse 7 : des règles qui ne sont pas les leurs
 
-Depuis que la genèse 7 a rejoint le monde d'Orvane par trois ponts (docs/23, cycle 42, 4 novembre), ses carnivores reculent à chaque cycle, alors que ses herbivores triplent. Ce chapitre dit pourquoi, chiffres à l'appui, et propose une règle pour l'arrêter.
+Depuis que la genèse 7 a rejoint le monde d'Orvane par trois ponts (docs/23, cycle 42, 4 novembre), ses carnivores reculent à chaque cycle, alors que ses herbivores triplent. Ce chapitre dit pourquoi, chiffres à l'appui, et la règle qui l'arrête.
 
 **Ce ne sont pas les proies qui manquent.** Les « carnivores » de la genèse 7 sont des omnivores de fait. Presque toutes leurs naissances venaient des plantes, sous des règles qui ont changé le lendemain de leur genèse. Le monde d'Orvane ne leur laisse qu'un cinquième de ce qu'ils en tiraient.
 
@@ -125,9 +125,9 @@ Le même monde, sans rien changer, un an de plus : 120 cycles depuis l'état du 
 
 Le recul ralentit en tombant. Il ne trouve un plancher que très bas.
 
-## Ce qu'on propose : les règles d'origine
+## Les règles d'origine
 
-Une règle de plus au moteur, `REGLES.origines`, vide par défaut. **Sur les parcelles de leur continent**, les lignées venues d'une fusion par ponts (docs/23) et leurs filles tirent des plantes ce que leur donnait le monde où elles sont nées : `omnivore_vegetal` (un carnivore porteur d'`estomac-large`) et `omnivore_vegetal_base` (un omnivore de naissance). Ailleurs, et pour les autres lignées, rien ne change. Le monde d'Orvane la reçoit par son profil, comme `derive` et `hivernage` (docs/13) :
+Une règle de plus au moteur, `REGLES.origines`, vide par défaut. **Sur les parcelles de leur continent**, les lignées venues d'une fusion par ponts (docs/23) et leurs filles tirent des plantes ce que leur donnait le monde où elles sont nées : `omnivore_vegetal` (un carnivore porteur d'`estomac-large`) et `omnivore_vegetal_base` (un omnivore de naissance). Ailleurs, et pour les autres lignées, rien ne change. Le monde d'Orvane la reçoit par son profil (`mondes/orvane/profil.json`), comme `derive` et `hivernage` (docs/13) :
 
 ```json
 "regles": { …, "origines": { "genese-7": { "omnivore_vegetal": 1, "omnivore_vegetal_base": 1 } } }
@@ -140,7 +140,7 @@ Une règle de plus au moteur, `REGLES.origines`, vide par défaut. **Sur les par
 - **Les filles.** Une lignée née d'une lignée de la genèse 7 suit sa mère : le moteur remonte sa parenté jusqu'à la première ancêtre venue d'ailleurs.
 - **Les autres fusions.** Les eaux douces et la mer d'Orvane n'ont pas d'entrée : elles gardent les règles du monde d'Orvane, qui étaient déjà celles de leur genèse.
 
-Le contrat ne change pas : `monde.regles` est un objet libre (`schemas/instantane.schema.json`), et le cycle de nuit y verse déjà les règles du profil. Dans le moteur, treize lignes (`moteur/orvane.js`) :
+Le contrat ne change pas : `monde.regles` est un objet libre (`schemas/instantane.schema.json`, `schemas/profil.schema.json`), et le cycle de nuit y verse déjà les règles du profil. Dans le moteur, treize lignes (`moteur/orvane.js`) :
 
 ```diff
    faim_migration: .4,        // satiété sous laquelle un prédateur s'en va chercher ailleurs
@@ -189,7 +189,7 @@ Le monde vivant, depuis l'état publié du cycle 57, pendant un an. Les saisons 
 
 - **Le recul s'arrête.** Les carnivores de la genèse 7 perdent 30 % de l'été à l'hiver (chez eux, sous le moteur de leur genèse, l'hiver leur en prenait 48 %), puis regagnent ce qu'ils avaient perdu depuis la fusion : 3,41 millions au cycle 177, onze fois plus que sans la règle. Ils restent sous ce qu'ils étaient chez eux au même moment de l'année (de 4,9 à 5,8 millions), et ne gagnent plus que de 0,2 % à 0,8 % par cycle, comme chez eux en été.
 - **Le continent se refait.** Ses omnivores reviennent (× 2,2), ses herbivores redescendent vers ce qu'ils étaient chez eux (× 0,51). Aucune lignée ne se perd : les deux seules lignées perdues dans l'année, `beltor` et `phenouel`, sont des herbivores d'Orvane, perdues aussi sans la règle.
-- **Ce qu'il en coûte au reste du monde.** Les eaux douces ne voient rien (× 1,00). Les herbivores d'Orvane et de la mer d'Orvane perdent un peu (× 0,99 et × 0,93), les omnivores d'Orvane et les carnivores de la mer d'Orvane gagnent (× 1,08 et × 1,29). **Les carnivores d'Orvane perdent 28 % en un an au lieu de 19 % (× 0,90)** : c'est le prix le plus net. La règle ne change que les naissances des lignées de la genèse 7 sur leur continent : ce qui arrive aux carnivores d'Orvane passe donc par les bêtes du continent qui passent les ponts. Par où exactement (les proies qu'ils partagent, la place des omnivores), nous ne l'avons pas mesuré : c'est à suivre si la règle est adoptée.
+- **Ce qu'il en coûte au reste du monde.** Les eaux douces ne voient rien (× 1,00). Les herbivores d'Orvane et de la mer d'Orvane perdent un peu (× 0,99 et × 0,93), les omnivores d'Orvane et les carnivores de la mer d'Orvane gagnent (× 1,08 et × 1,29). **Les carnivores d'Orvane perdent 28 % en un an au lieu de 19 % (× 0,90)** : c'est le prix le plus net. La règle ne change que les naissances des lignées de la genèse 7 sur leur continent : ce qui arrive aux carnivores d'Orvane passe donc par les bêtes du continent qui passent les ponts. Par où exactement (les proies qu'ils partagent, la place des omnivores), nous ne l'avons pas mesuré : c'est à suivre, cycle après cycle.
 
 ### Une première version : la règle partout
 

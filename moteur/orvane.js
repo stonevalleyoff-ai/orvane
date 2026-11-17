@@ -107,6 +107,10 @@ const REGLES = {
   cadavres: 0,               // (6 novembre) la part de ce que la mort naturelle laisse dans un lieu dont vivent ses charognards ; 0 : ils broutent, comme avant
   vers_carnivore: .35,       // à la dérive du régime, la chance qu'un omnivore devienne carnivore (sinon herbivore)
   faim_migration: .4,        // satiété sous laquelle un prédateur s'en va chercher ailleurs
+  // (docs/51) les règles d'origine : sur les parcelles d'un continent relié par des ponts (docs/23), ses lignées et leurs filles tirent des
+  // plantes ce que leur donnait le monde où elles sont nées : { [fusion]: { omnivore_vegetal?, omnivore_vegetal_base? } } ; ailleurs, et
+  // pour les autres, les règles du monde ; vide, rien ne change
+  origines: {},
   // (docs/38) l'hivernage : une population d'un lieu à saisons, mobile, dont l'hiver est rude (sa place y vaut moins de rude × celle
   // de l'été) part à la fin de l'automne vers le voisin d'un autre lieu le plus doux en hiver (au moins marge de mieux, et min), et
   // en revient au printemps ; la part qui part grandit avec le gain, la sociabilité et le savoir des routes (part_min…part_max).
@@ -499,6 +503,13 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   const DT = !!(DI && inst.monde?.dietes); if (DT) for (const t of tousT) DI.completer(t);   // (docs/30) chaque lignée a son spectre
   const taxons = plantes.length ? tousT.filter(t => t.plan?.regime !== 'vegetal') : tousT;
   const prT = pressions.taxons || {}, prB = pressions.biomes || {};
+  // (docs/51) les règles d'origine : la fusion dont vient une lignée (la sienne, ou celle de sa plus proche ancêtre venue d'ailleurs), et
+  // les parcelles de son continent (leur marque, lue sur un pont : « prairie~genese-7-4 » → « ~genese-7- »)
+  const RO = REGLES.origines && typeof REGLES.origines === 'object' && Object.keys(REGLES.origines).length ? REGLES.origines : null, TO = RO ? new Map(tousT.map(t => [t.id, t])) : null;
+  const origineDe = t => { if (RO) for (let id = t.id, k = 0; id && k < 60; id = parentDe(id, TO), k++) { const f = TO.get(id)?.origine?.fusion; if (!f) continue;
+      const o = RO[f], p = o && typeof o === 'object' ? (inst.monde.fusions || []).find(x => x.id === f)?.ponts?.[0]?.[0] : null;
+      return p && p.includes('~') ? { sur: '~' + p.slice(p.indexOf('~') + 1).replace(/-\d+b*$/, '') + '-', omnivore_vegetal: o.omnivore_vegetal ?? REGLES.omnivore_vegetal, omnivore_vegetal_base: o.omnivore_vegetal_base ?? REGLES.omnivore_vegetal_base } : null; }
+    return null; };
   const saison = saisonDe(n, inst.monde.annee), phase = saison ? saison.phase : null;
   const GEN = REGLES.genetique !== false && opt.genetique !== false && Object.keys(QUANT).length > 0;
   const Rq = rng(((inst.monde.graine >>> 0) ^ 0x5bd1e995) >>> 0, n);   // la génétique a son propre tirage : l'écologie garde le sien
@@ -639,9 +650,10 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
     HIV.loin = HIV.depart || HIV.retour || fenetreDe(HIV.k, HIV.A, F.partie); }   // (hors de ces trois fenêtres, un hivernant attardé rentre)
   for (const t of taxons) {
     if (t.eteint) continue;
-    const E = etat.get(t.id), K = t.phenotypes.length;
+    const E = etat.get(t.id), K = t.phenotypes.length, OR = origineDe(t);
     for (const [bid, pop] of Object.entries(E.pops)) {
       const b = biomes[bid]; if (!b) { delete E.pops[bid]; continue; }
+      const RV = OR && bid.includes(OR.sur) ? OR : REGLES;   // (docs/51) ce que ses plantes lui donnent, ici
       const bS = phase == null && !SMe ? b : { ...b, axes: axesCycle(b) };                    // le biome tel qu'il est en cette saison
       const conv = convenance(t.plan, bS), Keff = b.capacite * prodCycle(b) * (SF ? SF.ratio(t, bid) : 1);   // (docs/17 : ce qui reste à brouter)
       const syn = SY && t.plan.regime === 'synthetique';                                        // (une machine : sa presse est celle de l'énergie, docs/16)
@@ -675,7 +687,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
         // REGLES.conversion (l'énergie vient des plantes : un prédateur ne vit pas de prédateurs qui vivent de lui) ; les deux pour l'omnivore
         const viande = REGLES.conversion * pop.ration[i] / (E.plans[i].masse_kg || 1);
         if (reg === 'carnivore') { nais[i] = Math.min(Np * r * s, viande); m *= 1 + (REGLES.faim_carnivore ?? 3) * (1 - s) * (1 - s); faim = Math.max(faim, 1 - s); }   // un carnivore affamé meurt plus
-        else if (reg === 'omnivore') nais[i] = Np * r * place * (1 - .3 * s) * (t.plan.regime === 'carnivore' ? REGLES.omnivore_vegetal ?? 1 : REGLES.omnivore_vegetal_base ?? 1) * (DT ? DI.vegetal(E.plans[i]) : 1) + Math.min(Np * r * .3 * s * (DT ? DI.viande(E.plans[i]) : 1), viande);
+        else if (reg === 'omnivore') nais[i] = Np * r * place * (1 - .3 * s) * (t.plan.regime === 'carnivore' ? RV.omnivore_vegetal ?? 1 : RV.omnivore_vegetal_base ?? 1) * (DT ? DI.vegetal(E.plans[i]) : 1) + Math.min(Np * r * .3 * s * (DT ? DI.viande(E.plans[i]) : 1), viande);
         else if (reg === 'detritivore' && REGLES.cadavres > 0) { nais[i] = Np * r * s; m *= 1 + (REGLES.faim_carnivore ?? 3) * (1 - s) * (1 - s); faim = Math.max(faim, 1 - s); }   // (les morts du lieu sont sa place : il naît d'autant plus qu'il est rassasié ; affamé, il meurt plus et s'en va)
         else nais[i] = Np * r * place * (reg === 'detritivore' ? REGLES.detritivore_vegetal ?? 1 : 1);
         morts[i] = Np * m; mortsNat += morts[i];

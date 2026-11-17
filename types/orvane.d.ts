@@ -1050,7 +1050,7 @@ export interface Profil {
     memoire?: boolean;
     /** (docs/41) Le genre du jeu qui fait vivre ce monde : ses règles du moteur (moteur/genres.js) passent sur celles de la genèse, celles de monde.regles par-dessus ; ses poids des joueurs passent dans l'influence. « neutre » : le moteur tel qu'il est. */
     genre?: "neutre" | "horreur" | "cozy" | "collection" | "voxel" | "survie" | "strategie" | "mmo";
-    /** Des règles du moteur (REGLES de moteur/orvane.js) réglées pour ce monde vivant : elles complètent, d'un niveau, celles de sa genèse (monde.regles de l'instantané) et ne valent que pour ce qui arrive ensuite. Exemple : { "derive": { "tolerance": 0.35, "formes": 1 } } laisse la largeur de la niche dériver à la séparation, et fait naître les formes nouvelles du monde à la séparation (docs/33). ; { "hivernage": { "actif": 1, "rude": 0.85 } } fait partir pour de bon les bêtes dont l'hiver est rude (docs/38). */
+    /** Des règles du moteur (REGLES de moteur/orvane.js) réglées pour ce monde vivant : elles complètent, d'un niveau, celles de sa genèse (monde.regles de l'instantané) et ne valent que pour ce qui arrive ensuite. Exemple : { "derive": { "tolerance": 0.35, "formes": 1 } } laisse la largeur de la niche dériver à la séparation, et fait naître les formes nouvelles du monde à la séparation (docs/33). ; { "hivernage": { "actif": 1, "rude": 0.85 } } fait partir pour de bon les bêtes dont l'hiver est rude (docs/38) ; { "origines": { "genese-7": { "omnivore_vegetal": 1, "omnivore_vegetal_base": 1 } } } laisse aux lignées d'un continent relié par des ponts, sur ses parcelles, ce que leurs plantes leur donnaient dans leur monde (docs/51). */
     regles?: {
       [cle: string]: unknown;
     };
