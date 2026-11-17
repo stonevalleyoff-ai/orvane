@@ -33,6 +33,15 @@ Stone Valley le fait (§222 du jeu). Chaque île tire de sa graine, pour chacun 
 - **sa faune** suit ce qui vit dans cette parcelle ; une espèce qui n'y est pas encore arrivée n'y paraît pas. Sur le monde d'Orvane découpé en quatre, 19 des 41 lignées de la prairie ne paraissent que sur une partie des îles ;
 - **ses lots** disent la parcelle : les joueurs d'une île ne chassent et ne défrichent que la leur.
 
+**Ce qu'une parcelle ne peut pas perdre est pris ailleurs.** Une parcelle ne perd pas plus de `part_max_population` de ce que la lignée y compte (20 % ; sans ce plafond, toute sa population). Or un jeu qui lit la vue par biome montre la lignée là où se tient son joueur, et dit cette parcelle, même quand Orvane n'y a mis aucune de ses bêtes, ou très peu. Ce qui dépassait le plafond se perdait. Au cycle 57, le monde publié lissait 5,7 bêtes prises par cycle, dont 3,8 dans la prairie, sur quatre lignées qui ne vivent presque que dans les parcelles nées de la genèse 7. Les lots les disaient en `prairie~2`, où elles ne sont pas, et aucune de leurs parcelles ne portait de `pression`. Désormais :
+- la parcelle dite garde ce qu'elle peut perdre : le jeu qui dit une parcelle où vit la lignée y chasse comme avant ;
+- le reste va aux autres parcelles du biome où la lignée vit, selon leur effectif, comme une chasse qui n'est pas localisée, chacune jusqu'à son propre plafond ; une parcelle pleine laisse sa part aux autres ;
+- les déplacements suivent la même règle que les retraits ;
+- la valeur des bêtes prises (`q`) suit les bêtes ôtées ;
+- le contact et le vécu des bêtes (docs/12, docs/50) restent là où le jeu a dit ses joueurs, si la lignée y vit. Dits dans une parcelle où elle n'est pas, chaque parcelle où elle vit les vit entiers : sans cela, une lignée chassée ainsi n'apprenait jamais à se méfier de ses chasseurs.
+
+Une chasse dite dans une parcelle où la lignée n'est pas revient ainsi exactement à une chasse sans parcelle, méfiance comprise. Le tampon borne déjà la chasse à `part_max_population` de la population du biome, si bien que ses parcelles ont de quoi la prendre. Ce qu'aucune parcelle ne peut prendre se perd, comme avant : c'est le cas d'une lignée absente du biome entier.
+
 Une fusion (docs/14) dans un monde à parcelles répartit les arrivées entre les parcelles de leurs biomes.
 
 ## La commande : le profil du monde
@@ -63,7 +72,7 @@ Le banc vérifie aussi :
 - que le découpage ne perd ni bête ni capacité et n'émiette pas les petites populations ;
 - que l'aller-retour vers la vue par biome est exact, et que le découpage est déterministe ;
 - le contrat ;
-- que les pressions des jeux sont réparties sans perte ;
+- que les pressions des jeux sont réparties sans perte, même dites dans une parcelle où la lignée n'est pas, ou trop peu (et `bancs/tampon.js`, du lot du jeu jusqu'aux parcelles) ;
 - le cycle de nuit : un découpage une seule fois, un instantané et un historique par biome, le lot d'un jeu bien lu ;
 - une fusion dans un monde à parcelles.
 
