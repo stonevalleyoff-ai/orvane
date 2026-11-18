@@ -1641,6 +1641,11 @@
                 "minimum": 0,
                 "description": "(docs/52) Dans un monde réel : les petits qui survivent à leur première année, par tête et par an. Avec elle, la croissance ne se déduit plus de la portée."
               },
+              "place": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "description": "(docs/52) Dans un monde réel : la part de la capacité d'un lieu que trouve l'espèce, rapportée à ce que sa bande de masse lui donnerait (1). Calée à l'assemblage, pour que ses effectifs comptés soient son équilibre."
+              },
               "metabolisme": {
                 "type": "number",
                 "exclusiveMinimum": 0,

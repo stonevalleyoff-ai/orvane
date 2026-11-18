@@ -49,10 +49,11 @@ Ce que le pas ne change pas, parce que cela vit au rythme du joueur et non à ce
 - la méfiance et la mémoire (docs/12, docs/50) ;
 - la météo (docs/45), qui était déjà le temps d'une journée.
 
-**Quatre champs du plan, pour une espèce réelle :**
+**Cinq champs du plan, pour une espèce réelle :**
 - `natalite` : les petits qui passent leur première année, par tête et par an. Avec elle, la croissance ne se déduit plus de la portée et de la masse : elle est celle de l'espèce (le cerf 0,25 ; le loup 0,4). L'assemblage la calcule d'après la portée, la maturité, la longévité et la survie des jeunes ;
 - `meute` : un chasseur en meute (le loup, 6) abat ce que la meute peut abattre. Seul, un prédateur ne prend pas plus de 1,5 fois sa masse ; la meute de loups vit de cerfs de 150 kg ;
 - `naissances` : `{ centre, largeur }`, la fenêtre de l'année où naissent les petits, à la phase du lieu. Sans elle, c'est celle du monde (`regles.naissances` : vers la mi-mai, pour la force que le monde lui donne) ;
+- `place` : la part de la capacité d'un lieu que l'espèce trouve vraiment, rapportée à ce que sa bande de masse lui donnerait. L'assemblage la cale pour que ses effectifs comptés soient son équilibre (plus bas, « L'équilibre observé ») ;
 - `metabolisme` : ce que la bête brûle, rapporté à un mammifère de sa masse. Il vaut 1 par défaut, et l'assemblage met 0,15 aux poissons, aux reptiles, aux amphibiens et aux invertébrés. La bête mange d'autant moins, et fait d'autant plus de petits de ce qu'elle mange.
 
 **Ce qu'un prédateur mange, dans un monde réel.**
@@ -94,7 +95,7 @@ Une Terre qui laisserait l'évolution inventer serait un autre monde, copié à 
 | `parcelles[].lieu`, `parcelles[].saison`, `parcelles[].soleil` | la même chose dans la vue publiée, parcelle par parcelle |
 | `taxons[].reel` | l'espèce réelle : nom scientifique, identifiant GBIF, classe, ordre, famille |
 | `taxons[].guilde`, `taxons[].especes` | une guilde : les espèces réelles qu'elle rassemble, et leur part |
-| `plan.natalite`, `plan.meute`, `plan.naissances`, `plan.metabolisme` | plus haut |
+| `plan.natalite`, `plan.meute`, `plan.naissances`, `plan.place`, `plan.metabolisme` | plus haut |
 | `attributions` | d'où viennent les données, sous quelle licence : un jeu qui montre ce monde les crédite |
 
 Tout est ajouté, rien n'est retiré (`node outils/contrat.js` : le contrat tient). Un jeu qui ne connaît pas ces champs lit un monde réel comme un autre. Les biomes publiés sont les biomes universels (`foret`, `prairie`, `taiga`, `lac`…), et chaque lieu réel est une de leurs parcelles. Un jeu qui joue la Bourgogne lit la parcelle de sa forêt : `populations[].parcelles` donne l'effectif de chaque lignée, parcelle par parcelle.
@@ -113,6 +114,18 @@ Tout est ajouté, rien n'est retiré (`node outils/contrat.js` : le contrat tien
    - la niche d'une espèce est la moyenne des lieux où elle vit, sa tolérance leur dispersion ;
    - les effectifs viennent de sa densité et de la surface des lieux ;
    - la place de chaque port de plante se partage entre les plantes de ce port.
+
+**L'équilibre observé.** Dans la nature, les effectifs que l'on compte sont ceux d'un équilibre. L'assemblage cale donc le monde pour que les brouteurs comptés ne croissent ni ne décroissent, en moyenne sur l'année :
+- **la capacité d'un lieu** : la médiane de ce qu'il faudrait à chacun de ses brouteurs pour être à l'équilibre. C'est la charge de sa bande de masse, rapportée à la saturation où ses naissances égalent ses morts. La médiane est pesée par la racine des biomasses, et la capacité reste entre 0,1 et 10 fois ce que donne la production primaire ;
+- **la place de chaque espèce** (`plan.place`), parce qu'une seule capacité par lieu ne peut convenir à tous.
+
+Sans ce calage, les lapins partaient bien sous la place que leur donnait la production : au premier printemps, ils triplaient en un mois. Avec lui, la croissance que promet le premier jour est en médiane de −0,03 par an (chevreuil −0,05, cerf −0,03, sanglier −0,01, lapin 0).
+
+**Une vie sauvage, une croissance à sa mesure.** Pour un oiseau ou un mammifère, l'assemblage borne deux valeurs :
+- la longévité du moteur, à une vie sauvage : au plus 3 × masse^0,3 années (un cerf ~14 ans, un chevreuil 7,5, un lapin 3,6, un mulot 1). La moitié du record faisait vivre un lapin neuf ans ;
+- la croissance la plus forte, à deux fois la loi de Fenchel (0,025 × g^−0,26 par jour).
+
+Une espèce qui pond par milliers (le hareng, la truite, le cabillaud) se renouvelle vite : ~5 / sa longévité en années, au plus 2 / sa maturité (une tortue reste lente).
 
 **Les licences.** Les jeux branchés peuvent être commerciaux. Un monde réel ne prend donc que des données qu'un usage commercial permet (domaine public, CC0, CC-BY, OGL) et les crédite (`attributions`, `mondes/<monde>/sources.json`). Restent dehors :
 - WorldClim, l'API gratuite d'Open-Meteo, FishBase, iNaturalist ;

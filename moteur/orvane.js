@@ -701,7 +701,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
     for (const [bid, pop] of Object.entries(E.pops)) {
       const b = biomes[bid]; if (!b) { delete E.pops[bid]; continue; }
       const bS = phase == null && !SMe ? b : { ...b, axes: axesCycle(b) };                    // le biome tel qu'il est en cette saison
-      const conv = convenance(t.plan, bS), Keff = b.capacite * prodCycle(b) * (SF ? SF.ratio(t, bid) : 1);   // (docs/17 : ce qui reste à brouter)
+      const conv = convenance(t.plan, bS), Keff = b.capacite * prodCycle(b) * (SF ? SF.ratio(t, bid) : 1) * (t.plan.place ?? 1);   // (docs/52 : la place qu'une espèce réelle trouve, plan.place)   // (docs/17 : ce qui reste à brouter)
       const syn = SY && t.plan.regime === 'synthetique';                                        // (une machine : sa presse est celle de l'énergie, docs/16)
       const sat = syn ? SY.sat(bid) : Keff > 0 ? charge(B[bid], t.plan.masse_kg || 1) / (Keff * BANDE) * (SF ? SF.concurrence(t, bid) : 1) : 9;   // (docs/17 : pesée par ce qu'on mange en commun)
       pop.satC = sat;

@@ -32,7 +32,8 @@ const A = {
   plancher: 4,                // une population de moins de bêtes n'est pas posée
   sang_chaud: new Set(['Mammalia', 'Aves']), sang_froid: .15,   // ce que brûlent les autres, rapporté à un mammifère de leur masse
   natalite_pontes: [0, 1.2],
-  vie_sauvage: 3               // la vie sauvage d'un oiseau ou d'un mammifère, en années : 3 × masse^0,3 (un cerf ~14 ans, un lapin 3,6, un mulot 1)
+  vie_sauvage: 3,              // la vie sauvage d'un oiseau ou d'un mammifère, en années : 3 × masse^0,3 (un cerf ~14 ans, un lapin 3,6, un mulot 1)
+  equilibre: [.1, 10]          // la capacité d'un lieu : celle où ses brouteurs comptés sont à l'équilibre, entre 0,1 et 10 fois ce que donne sa production (plus bas)
 };
 // --- les règles du moteur pour un monde réel (monde.regles) ---
 const REGLES = {
@@ -137,6 +138,28 @@ for (const e of vivant.especes || vivant.taxons || vivant) {
   t.plan = plan; t.phenotypes = e.phenotypes || [{ id: 'base', frequence: 1, traits: [] }]; t.populations = populations;
   taxons.push(t);
 }
+// l'équilibre observé : dans la nature, les effectifs comptés sont ceux d'un équilibre. La capacité d'un lieu est donc celle où ses
+// brouteurs, tels qu'on les a posés, ne croissent ni ne décroissent en moyenne sur l'année : pour chacun, la charge de sa bande de masse
+// rapportée à la saturation où ses naissances égalent ses morts (1 − mort / naissance) ; la capacité du lieu est la médiane de ces
+// besoins, pesée par la racine des biomasses (une guilde d'insectes ne décide pas pour le cerf). Elle reste entre 0,1 et 10 fois ce que
+// sa production primaire lui donnait. Sans cela, les lapins, partis bien sous la place que leur donnait la production, la gagnaient
+// en un printemps
+if (A.equilibre) { const SIG = .35, BANDE = Math.sqrt(2 * Math.PI) * SIG / 4, rec = (x, y) => { const d = Math.log10(x / y); return Math.exp(-(d * d) / (2 * SIG * SIG)); };
+  const PARTK = { herbivore: 1, omnivore: .85, detritivore: .3, filtreur: .3 }, parLieuA = new Map();
+  for (const t of taxons) { const w = PARTK[t.plan.regime]; if (!w) continue; for (const p of t.populations) (parLieuA.get(p.biome) || parLieuA.set(p.biome, []).get(p.biome)).push({ t, B: p.effectif * (t.plan.masse_kg || 1) * w, m: t.plan.masse_kg || 1 }); }
+  for (const b of biomes) { const ici = parLieuA.get(b.id); if (!ici?.length) continue;
+    const besoins = ici.map(h => { const r = h.t.plan.natalite / 365.25 * Orvane.convenance(h.t.plan, b), mort = 1 / Math.max(2, h.t.plan.longevite), se = clamp(1 - mort / Math.max(1e-12, r), .2, .95);
+      return [somme(ici.map(j => j.B * rec(h.m, j.m))) / (BANDE * se), Math.sqrt(h.B)]; }).sort((x, y) => x[0] - y[0]);
+    const W = somme(besoins.map(x => x[1])); let acc = 0, K = besoins[besoins.length - 1][0]; for (const [k, w] of besoins) { acc += w; if (acc >= W / 2) { K = k; break; } }
+    b.capacite = b.capacite_base = Math.round(clamp(K, b.capacite * A.equilibre[0], b.capacite * A.equilibre[1])); }
+  // … et, une capacité par lieu ne pouvant convenir à tous, chaque espèce y trouve sa place (plan.place) : la part de la capacité qui
+  // fait de ses effectifs comptés son équilibre, médiane de ses lieux pesée par sa biomasse, entre 0,001 et 50
+  for (const t of taxons) { const w = PARTK[t.plan.regime]; if (!w) continue; const L = [];
+    for (const p of t.populations) { const b = parId.get(p.biome), ici = parLieuA.get(p.biome), h = ici.find(x => x.t === t); if (!h) continue;
+      const r = t.plan.natalite / 365.25 * Orvane.convenance(t.plan, b), mort = 1 / Math.max(2, t.plan.longevite), se = clamp(1 - mort / Math.max(1e-12, r), .2, .95);
+      L.push([somme(ici.map(j => j.B * rec(h.m, j.m))) / (BANDE * se * b.capacite), h.B]); }
+    if (!L.length) continue; L.sort((x, y) => x[0] - y[0]); const W = somme(L.map(x => x[1])); let acc = 0, v = L[L.length - 1][0]; for (const [k, x] of L) { acc += x; if (acc >= W / 2) { v = k; break; } }
+    t.plan.place = +clamp(v, .001, 50).toPrecision(4); } }
 // les plantes : la place de chaque port dans un lieu (celle de la flore d'Orvane, d'après ses axes) se partage entre celles de ce port
 // qui y vivent ; une plante qui n'y trouve pas son port s'y voit la place du port le plus proche, s'il n'a personne
 const PH = Flore.PHENOS, DEPART = [.85, .06, .06, .03];
