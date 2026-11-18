@@ -51,6 +51,7 @@ const REGLES = {
 };
 
 const U = Object.fromEntries(require('../../moteur/biomes-universels.json').map(b => [b.id, b]));
+const CORPS_OK = new Set(Object.keys(require('../../schemas/instantane.schema.json').properties.taxons.items.properties.plan.properties.corps.properties));
 const carte = lire(path.join(D, 'lieux.json')), vivant = lire(path.join(D, 'especes.json')), sources = lire(path.join(D, 'sources.json'), []);
 if (!carte) { console.error(`pas de carte : ${path.join(D, 'lieux.json')}`); process.exit(1); }
 if (!vivant) { console.error(`pas de vivant : ${path.join(D, 'especes.json')}`); process.exit(1); }
@@ -128,6 +129,7 @@ for (const e of vivant.especes || vivant.taxons || vivant) {
   if ((plan.portee || 0) > 50 && plan.longevite >= 730) plan.natalite = r4(Math.max(plan.natalite, clamp(Math.min(5 / (plan.longevite / 365.25), 2 / (Math.max(30, plan.maturite) / 365.25)), A.natalite_pontes[0], A.natalite_pontes[1])));
   if (plan.metabolisme == null && !A.sang_chaud.has(e.reel?.classe ?? String(e.reel?.groupe || '').split(' ')[0])) plan.metabolisme = A.sang_froid;   // (un poisson, un reptile, un insecte brûlent peu)
   if (plan.diete && !plan.diete0) plan.diete0 = { ...plan.diete };
+  if (plan.corps) plan.corps = Object.fromEntries(Object.entries(plan.corps).filter(([k]) => CORPS_OK.has(k)));   // (la silhouette ne garde que ce que le contrat connaît)
   plan.locomotion ??= ['marche']; plan.activite ??= 'diurne'; plan.sociabilite ??= .3; plan.temperament ??= .4; plan.vitesse_rel ??= 4; plan.perception ??= .5;
   const d = +e.densite_km2 || 1, populations = [];
   for (const b of L) { const c = Orvane.convenance(plan, b), eff = d * (b.lieu.surface_km2 || 1) * Math.max(.05, c);
@@ -191,13 +193,17 @@ for (const e of plantesE) { const P = popsPlante.get(e.id); if (!P?.length) { ab
   t.plan = plan; t.populations = P; t.phenotypes = PH.map(([pid, traits], k) => ({ id: pid, frequence: DEPART[k], traits }));
   taxons.push(t); }
 
+// (docs/33) une forme de corps que les jeux ne savent pas forcément dessiner (la méduse : rayonnée) est dite au catalogue du monde, avec son
+// repli (le serpent), comme dans un monde aux formes nouvelles
+const FORMES = require('../../moteur/formes.js').FORMES || {};
+const formesNeuves = T => { const o = {}; for (const t of T) { const f = t.plan.corps?.forme; if (f && FORMES[f]) o[f] = FORMES[f]; } return Object.keys(o).length ? o : null; };
 // --- 3. le monde ---
 const jour = Date.parse(arg('--date', new Date().toISOString().slice(0, 10)) + 'T03:17:00Z');
 let inst = { orvane: Orvane.CONTRAT,
   monde: { id: MONDE, graine: 1, nom: carte.nom || "L'Europe", annee: 365, calendrier: { hemisphere: 'nord' }, temps: { jours: 1 }, regles: { ...REGLES, dispersion: .005, fuite: .5 },
     parcelles: { types, par: 0, graine: 1 }, flore: { depuis: 0, lignees: plantesE.length - absents.filter(x => plantesE.some(e => e.id === x)).length }, phenologie: { depuis: -365 }, dietes: { depuis: 0 } },
   cycle: { n: 0, date: new Date(jour - 864e5).toISOString(), pressions_recues: 0 },
-  biomes, catalogue: { version: '0.1', traits: {} }, taxons, evenements: [],
+  biomes, catalogue: { version: '0.1', traits: {}, ...(formesNeuves(taxons) ? { monde: { formes: formesNeuves(taxons) } } : {}) }, taxons, evenements: [],
   ...(sources.length ? { attributions: sources.map(s => ({ source: s.nom || s.source, licence: s.licence, url: s.url, usage: s.usage || s.ce_quon_en_tire })) } : {}) };
 inst = Meteo.eveiller(inst).inst; inst.monde.meteo = { depuis: 0 };
 // le calage par le moteur : l'équilibre observé, cette fois avec ce que le premier jour mesure vraiment — les naissances, les morts, et ce
