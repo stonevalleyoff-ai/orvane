@@ -7,7 +7,7 @@
 # terre et par mer qui ne se touchent pas : l'Angleterre et la France n'y partagent pas leur prairie. Chaque lieu porte des valeurs
 # PHYSIQUES (altitude, surface, couvert d'arbres, normales mensuelles 1991–2020) : le moteur les traduit en axes.
 # Déterministe : mêmes données, même fichier. Environ une minute à la résolution 2.
-import argparse, datetime, json, math, os, sys, time
+import argparse, json, math, os, sys, time
 from collections import Counter
 import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -19,6 +19,7 @@ a.add_argument('--donnees', required=True, help='le dossier rempli par telecharg
 a.add_argument('--resolution', type=int, default=2, help='la résolution H3 (2 : ~87 000 km² la cellule ; 3 : ~12 400)')
 a.add_argument('--sortie', default=os.path.join(RACINE, 'mondes/europe/lieux.json'))
 a.add_argument('--sources', default=os.path.join(RACINE, 'mondes/europe/sources.json'))
+a.add_argument('--regle', action='append', default=[], metavar='CLE=VALEUR', help="changer une règle, par exemple --regle part_type=0.25 (voir R)")
 A = a.parse_args()
 D, RESH = os.path.abspath(A.donnees), A.resolution
 t0 = time.time()
@@ -44,6 +45,10 @@ R = dict(
   sommets=(2200, 1500),        # sommets : au-dessus de 2 200 m, ou de 1 500 m sur roche, glace ou mousses
   maquis_t=12.,            # °C : sous un été sec (Köppen Cs), les arbres, arbustes et herbes d'un lieu plus chaud sont un maquis
 )
+for x in A.regle:
+    k, v = x.split('=', 1)
+    if k not in R: sys.exit(f'règle inconnue : {k}')
+    R[k] = json.loads(v)
 TERRE = ['toundra', 'taiga', 'foret', 'prairie', 'steppe', 'maquis', 'montagne', 'sommets', 'banquise', 'desert-froid']
 EAUX, MERS = ['lac', 'riviere', 'marais', 'cote'], ['large', 'mer-froide', 'abysses']
 SORTES = TERRE + EAUX + MERS; K = {s: i for i, s in enumerate(SORTES)}; NS = len(SORTES)
@@ -91,6 +96,9 @@ def iso_de(p):
 iso = np.array([''] + [iso_de(p) for _, p in PAYS])
 euro = np.array([False] + [p.get('CONTINENT') == 'Europe' for _, p in PAYS])
 nom_reg = np.array([''] + [p.get('name') or '' for _, p in REG])
+# (le pays suit la norme ISO 3166 : la Crimée et Sébastopol sont UA-43 et UA-40, là où Natural Earth suit le contrôle de fait)
+ukr = [i + 1 for i, (_, p) in enumerate(PAYS) if p.get('ADMIN') == 'Ukraine']
+if ukr: pays[np.isin(nom_reg[reg], ['Crimea', 'Sevastopol'])] = ukr[0]
 eu = euro[pays] & (LON2 >= -25) & (LAT2 >= 34) & (LON2 <= 60)          # (ni les Açores, ni Madère, ni les Canaries, ni l'outre-mer)
 eu |= (pays > 0) & (LON2 >= 32) & (LON2 <= 34.7) & (LAT2 >= 34.4) & (LAT2 <= 35.8)   # Chypre
 nr = nom_reg[reg]
@@ -145,9 +153,8 @@ m1, m2 = ndimage.uniform_filter(z.astype(np.float64), 7), ndimage.uniform_filter
 relief = np.sqrt(np.maximum(m2 - m1 ** 2, 0)).astype(np.float32); del m1, m2
 def classer(w, zz, rel):
     # WorldCover : 10 arbres, 20 arbustes, 30 herbe, 40 cultures, 50 bâti, 60 sol nu, 70 neige et glace, 80 eau, 90 zone humide, 100 mousses
-    t = np.full(w.shape, K['prairie'], np.int8)                     # les champs, les prés, le bâti : prairie
+    t = np.full(w.shape, K['prairie'], np.int8)                     # les champs, les prés, le bâti : prairie (les champs le restent, même au sec)
     t[np.isin(w, (0, 30, 50)) & (ai < .5)] = K['steppe']            # une prairie sèche est une steppe
-    t[(w == 40) & (ai < .4)] = K['steppe']                          # des champs en climat semi-aride aussi
     x = w == 20                                                     # les arbustes : une steppe au sec, une lande (prairie) sinon, la taïga au froid
     t[x] = np.where(ai[x] < .5, K['steppe'], np.where(tann[x] < 4, K['taiga'], K['prairie']))
     x = w == 10                                                     # les arbres : la taïga au froid, la forêt sinon
@@ -214,11 +221,9 @@ for g, (c, r, s) in enumerate(GR[:NGt]):
         lieux[(g, K['mer-froide'] if SST_g[g] < R['mer_froide'] else K['large'])] = None
         if A_abysses[g] >= max(R['abysses_min'], R['abysses_part'] * A_mer[g]): lieux[(g, K['abysses'])] = None
 # les îlots (une terre de moins de 300 km² dans la cellule) : la côte de la plus grande terre de la cellule qui en a une ; sinon, une côte à eux
-ilot = (gp < 0) & la_bande.copy()
 cible_ilots = {}
 cel_ilots = np.unique(ce[(gp < 0)])
 for c in cel_ilots.tolist():
-    if not mer_de_cellule.get(c) and not (A_mer.size and False): pass
     gs = [g for g, (c2, r, s) in enumerate(GR[:NGt]) if c2 == c and s == 'terre' and (g, K['cote']) in lieux]
     if gs: cible_ilots[c] = gs[0]; continue
     aire_ilots = ae[(ce == c) & (gp < 0) & la_bande].sum()
@@ -297,6 +302,16 @@ L = np.full((NY, NX), -1, np.int32); L[ei, ej] = Le; L[mi, mj] = Lm
 dire(f"pixels posés : {AIRE[ei[Le >= 0], ej[Le >= 0]].sum() / ae.sum():.2%} des terres d'Europe, {am[Lm >= 0].sum() / 1e6:.2f} M km² de mer")
 
 # --- 9. ce que chaque lieu porte ---
+REGION_PAR = {'FR', 'ES', 'IT', 'GB', 'PT'}                              # (ces pays-là : la région, plutôt que le département ou la province)
+PREFIXES = ('voïvodie de ', "voïvodie d'", 'voïvodie des ', 'voblast de ', "voblast d'", 'oblast de ', "oblast d'", 'kraï de ', "d'", 'de ')
+def nom_region(k):
+    if k <= 0: return ''
+    p = REG[k - 1][1]
+    if (p.get('iso_a2') or '') in REGION_PAR and p.get('region'): return p['region']
+    x = p.get('name_fr') or p.get('name') or ''
+    for q in PREFIXES:
+        if x.startswith(q): x = x[len(q):]; break
+    return x[:1].upper() + x[1:]
 def somme(idx, val, poids):
     k = idx >= 0; return np.bincount(idx[k], weights=(val[k] * poids[k]) if val is not None else poids[k], minlength=NL)
 Wt, Wm, Wab = somme(Le, None, ae), somme(Lm, None, am), somme(Lab, None, am); W = Wt + Wm
@@ -320,8 +335,17 @@ def dominant(idx, val, poids, nb):
     k = (idx >= 0) & (val > 0); M = np.bincount(idx[k] * nb + val[k], weights=poids[k], minlength=NL * nb).reshape(NL, nb)
     return np.where(M.max(1) > 0, M.argmax(1), 0)
 pays_l = dominant(Le, pays[ei, ej].astype(np.int64), ae, len(PAYS) + 1)
-reg_l = dominant(Le, reg[ei, ej].astype(np.int64), ae, len(REG) + 1)
-mar_l = dominant(np.where(Lm >= 0, Lm, Lab), mars[mi, mj].astype(np.int64), am, len(MARS) + 1)
+# la région : la plus répandue parmi les pixels du lieu qui sont dans son pays, comptée par nom (une région française fait plusieurs
+# départements de Natural Earth ; sans cela, un Land allemand l'emportait sur des départements français plus petits que lui)
+NOMS_REG, poly_de_nom, nom_de_poly = [''], [0], np.zeros(len(REG) + 1, np.int64)
+_ix = {}
+for k in range(1, len(REG) + 1):
+    cle = (REG[k - 1][1].get('iso_a2') or '', nom_region(k))
+    if cle not in _ix: _ix[cle] = len(NOMS_REG); NOMS_REG.append(cle[1]); poly_de_nom.append(k)
+    nom_de_poly[k] = _ix[cle]
+ok = (Le >= 0) & (pays[ei, ej] == pays_l[np.maximum(Le, 0)])
+reg_l = dominant(np.where(ok, Le, -1), nom_de_poly[reg[ei, ej]], ae, len(NOMS_REG))
+mar_l = np.maximum(dominant(Lm, mars[mi, mj].astype(np.int64), am, len(MARS) + 1), dominant(Lab, mars[mi, mj].astype(np.int64), am, len(MARS) + 1))
 pi_, pj_ = np.nonzero(europe & (pays > 0) & (reg > 0)); arbre_eu = cKDTree(xyz(lat[pi_], lon[pj_]))
 rl = chercher(riv[:, 0], K['riviere']) if len(riv) else np.zeros(0, np.int64)
 R_z = np.maximum(z[riv[:, 1], riv[:, 2]], 0).astype(float)
@@ -376,6 +400,25 @@ for n in np.flatnonzero(sorte_de == K['cote']):
     if any(SURF[y] for y in voisins[n]): continue
     cands = surf_de_cel.get(int(cell_de[n])) or [y for b_ in mer_vois.get(int(cell_de[n]), ()) for y in surf_de_cel.get(b_, [])]
     for y_ in cands: lier(int(n), y_)
+# une île dont la côte, trop petite, a été fondue : son plus grand lieu touche la mer de sa cellule (sans quoi rien n'y arriverait)
+def composantes():
+    vu = np.full(NL, -1); k = 0
+    for s0 in range(NL):
+        if vu[s0] >= 0: continue
+        pile = [s0]; vu[s0] = k
+        while pile:
+            x = pile.pop()
+            for y in voisins[x]:
+                if vu[y] < 0: vu[y] = k; pile.append(y)
+        k += 1
+    return vu
+comp = composantes(); principale = np.bincount(comp).argmax()
+for k in np.unique(comp[comp != principale]).tolist():
+    Ls = np.flatnonzero(comp == k)
+    if SURF[Ls].any(): continue
+    n = int(max(Ls, key=lambda n: (TER[n], Wt[n])))
+    cands = surf_de_cel.get(int(cell_de[n])) or [y for b_ in mer_vois.get(int(cell_de[n]), ()) for y in surf_de_cel.get(b_, [])]
+    for y_ in cands: lier(n, y_)
 # les rivières : d'un groupe au suivant, le long du fleuve (vers sa rivière, sinon son lac)
 if len(riv):
     r_ = riv[np.lexsort((riv[:, 4], riv[:, 3]))]
@@ -401,16 +444,6 @@ def fuseau(iso2, region, la_, lo_):
     if iso2 == 'CY': return 'Asia/Famagusta' if lo_ > 33.4 and la_ > 35.1 else 'Asia/Nicosia'
     if iso2 == 'XK': return 'Europe/Belgrade'
     return (ZT.get(iso2) or ['Europe/London'])[0]                       # (le fuseau principal du pays : le premier de zone.tab)
-REGION_PAR = {'FR', 'ES', 'IT', 'GB', 'PT'}                              # (ces pays-là : la région, plutôt que le département ou la province)
-PREFIXES = ('voïvodie de ', "voïvodie d'", 'voïvodie des ', 'voblast de ', "voblast d'", 'oblast de ', "oblast d'", 'kraï de ', "d'", 'de ')
-def nom_region(k):
-    if k <= 0: return ''
-    p = REG[k - 1][1]
-    if (p.get('iso_a2') or '') in REGION_PAR and p.get('region'): return p['region']
-    x = p.get('name_fr') or p.get('name') or ''
-    for q in PREFIXES:
-        if x.startswith(q): x = x[len(q):]; break
-    return x[:1].upper() + x[1:]
 def nom_mer(k):
     if k <= 0: return ''
     p = MARS[k - 1][1]; return p.get('name_fr') or p.get('name') or ''
@@ -433,7 +466,8 @@ for n, (g, s) in enumerate(cles):
         bi_, bj_ = riv[k, 1] // 30, riv[k, 2] // 30; dzr = (R['gradient'] * (zcase[bi_, bj_] - R_z[k])).mean()
         t_ = [tmp[m][bi_, bj_].mean() + dzr for m in range(12)]; p_ = [pre[m][bi_, bj_].mean() for m in range(12)]
         e_ = [pet[m][bi_, bj_].mean() * JOURS[m] for m in range(12)]; nn = [cld[m][bi_, bj_].mean() for m in range(12)]
-        arb = float(np.mean(wc[riv[k, 1], riv[k, 2]] == 10)); pk = np.bincount(pays[riv[k, 1], riv[k, 2]]).argmax(); rk = np.bincount(reg[riv[k, 1], riv[k, 2]]).argmax()
+        arb = float(np.mean(wc[riv[k, 1], riv[k, 2]] == 10)); pk = np.bincount(pays[riv[k, 1], riv[k, 2]]).argmax()
+        dans = pays[riv[k, 1], riv[k, 2]] == pk; rk = np.bincount(nom_de_poly[reg[riv[k, 1], riv[k, 2]][dans]]).argmax()
     elif S_ == 'abysses':
         la_, lo_ = SLAT_AB[n] / Wab[n], SLON_AB[n] / Wab[n]; surf = Wab[n]; alt = rel = arb = 0.; t_, p_, e_, nn = CT_ab[n], CP[TAB[g * NS + K['large']] if TAB[g * NS + K['large']] >= 0 else TAB[g * NS + K['mer-froide']]], None, CN[TAB[g * NS + K['large']] if TAB[g * NS + K['large']] >= 0 else TAB[g * NS + K['mer-froide']]]
         pk = rk = 0
@@ -443,8 +477,8 @@ for n, (g, s) in enumerate(cles):
         t_, p_, e_, nn = CT[n], CP[n], CE[n], CN[n]; arb = SARB[n] / Wt[n] if Wt[n] > 0 else 0.
         pk, rk = pays_l[n], reg_l[n]
     if pk == 0 or rk == 0:                                              # (la mer : la terre d'Europe la plus proche)
-        q = arbre_eu.query(xyz(np.array([la_]), np.array([lo_])))[1][0]; pk = pk or pays[pi_[q], pj_[q]]; rk = rk or reg[pi_[q], pj_[q]]
-    iso2 = iso[pk]; region = nom_region(rk); reg_brut = REG[rk - 1][1].get('name', '') if rk > 0 else ''
+        q = arbre_eu.query(xyz(np.array([la_]), np.array([lo_])))[1][0]; pk = pk or pays[pi_[q], pj_[q]]; rk = rk or nom_de_poly[reg[pi_[q], pj_[q]]]
+    iso2 = iso[pk]; region = NOMS_REG[rk]; reg_brut = REG[poly_de_nom[rk] - 1][1].get('name', '') if rk > 0 else ''
     h = HEX[c]
     lieu = {'lat': round(float(la_), 3), 'lon': round(float(lo_), 3), 'h3': h, 'pays': iso2, 'region': region, 'fuseau': fuseau(iso2, reg_brut, la_, lo_),
             'altitude_m': 0 if mer_ else round(alt), 'relief_m': None if mer_ else round(rel), 'surface_km2': round(float(surf), 1),
@@ -462,14 +496,20 @@ for n in range(NL): out[n]['voisins'] = sorted(out[y]['id'] for y in voisins[n])
 assert len({l['id'] for l in out}) == NL, 'identifiants en double'
 
 os.makedirs(os.path.dirname(A.sortie), exist_ok=True)
-tete = {'resolution': RESH, 'grille': 'H3', 'genere': datetime.date.today().isoformat(), 'normales': '1991–2020', 'sources': 'sources.json',
+tete = {'resolution': RESH, 'grille': 'H3', 'normales': '1991–2020',   # (pas de date : refait, le fichier est le même à l'octet près)
+        'sources': 'sources.json',
         'unites': {'t': '°C (la mer et les abysses : température de surface)', 'p': 'mm/mois', 'etp': 'mm/mois', 'rad': 'MJ/m²/jour', 'npp': 'g/m²/an (vide : à calculer)',
                    'altitude_m': 'm', 'relief_m': 'm (écart-type)', 'surface_km2': 'km²', 'profondeur_m': 'm', 'couvert_arbre': 'part (0–1)'},
         'regles': R}
 with open(A.sortie, 'w', encoding='utf-8') as f:
     f.write(json.dumps(tete, ensure_ascii=False)[:-1] + ', "lieux": [\n' + ',\n'.join(json.dumps(l, ensure_ascii=False) for l in out) + '\n]}\n')
+# sources.json : les nôtres, et celles que d'autres outils y ont mises (le vivant), gardées telles quelles
+try: avant = json.load(open(A.sources, encoding='utf-8'))
+except (OSError, ValueError): avant = {}
+miennes = {x['nom'] for x in SOURCES}
+autres = [x for x in avant.get('sources', []) if x.get('nom') not in miennes and not str(x.get('nom', '')).startswith(('Natural Earth', 'ETOPO', 'ESA WorldCover', 'CRU TS', 'NOAA OISST', 'GPCP', 'Base de données des fuseaux', 'H3'))]
 with open(A.sources, 'w', encoding='utf-8') as f:
-    json.dump({'lieux': os.path.basename(A.sortie), 'outil': 'outils/terre/ (LISEZ-MOI.md)', 'sources': SOURCES}, f, ensure_ascii=False, indent=1); f.write('\n')
+    json.dump({**avant, 'lieux': os.path.basename(A.sortie), 'outil': 'outils/terre/ (LISEZ-MOI.md)', 'sources': SOURCES + autres}, f, ensure_ascii=False, indent=1); f.write('\n')
 cnt = Counter(l['type'] for l in out); seuls = [l['id'] for l in out if not l['voisins']]
 dire(f"{A.sortie} : {os.path.getsize(A.sortie) / 1e6:.2f} Mo, {NL} lieux, {len(set(cell_de.tolist()))} cellules")
 print('  par type : ' + ', '.join(f'{s} {cnt[s]}' for s in SORTES if cnt[s]))

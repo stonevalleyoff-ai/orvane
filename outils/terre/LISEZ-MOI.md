@@ -245,7 +245,7 @@ Les scripts :
 - **`especes-gbif.py`** : pour chaque nom, trois choses.
   - Sa clé et sa classification dans l'épine dorsale de GBIF.
   - Son élément Wikidata (par P846), son nom français, la comestibilité d'un champignon (P789).
-  - Sa présence par cellule H3 de résolution 2, sur les 275 cellules de `lieux.json`. Une requête compte, par cellule et par paquet de cent espèces, les observations GBIF depuis 2000 (une facette par espèce). Elle ne garde que les licences CC0 et CC-BY, sans problème géographique, ni fossiles ni bêtes captives. Il faut environ 900 requêtes, et chaque réponse est gardée : relancé, le script reprend où il s'était arrêté. Le service SPARQL de Wikidata limite parfois à une requête par minute ; le script attend.
+  - Sa présence par cellule H3 de résolution 2, sur les 271 cellules de `lieux.json`. Une requête compte, par cellule et par paquet de cent espèces, les observations GBIF depuis 2000 (une facette par espèce). Elle ne garde que les licences CC0 et CC-BY, sans problème géographique, ni fossiles ni bêtes captives. Il faut environ 900 requêtes, et chaque réponse est gardée : relancé, le script reprend où il s'était arrêté. Le service SPARQL de Wikidata limite parfois à une requête par minute ; le script attend.
 - **`especes-construire.py`** : les traits, tirés des bases. Le catalogue l'emporte sur les bases pour un champ qu'il force, et pour les poissons.
 - **`especes-controle.py`** : l'ordre de grandeur des effectifs (voir plus bas).
 
