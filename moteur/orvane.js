@@ -671,7 +671,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
         if (!f) return; x[k] = q.Bv * f * (ES ? ES.acces(p.t, bid) : 1) * (GR ? GR.acces(p.t, biomes[bid]) : 1); A += x[k]; });
       const puiss = x.map(v => v > 0 ? Math.pow(v, REGLES.report_proies) : 0), z = puiss.reduce((a, v) => a + v, 0);
       p.part = puiss.map(v => z ? v / z : 0); p.x = x; p.A = A;                       // la part de chaque proie dans ce que ce prédateur prélève
-      p.eff = p.E.chasse.map((c, i) => c * (.7 + .6 * (p.E.plans[i].perception ?? .5)) * (p.regime === 'omnivore' ? REGLES.chasse_omnivore : 1) * (GR ? GR.chasse(p.t, biomes[bid], i) : 1) * (ES ? ES.chasse(p.t, bid, i) : 1));
+      p.eff = p.E.chasse.map((c, i) => c * (.7 + .6 * (p.E.plans[i].perception ?? .5)) * (p.regime === 'omnivore' ? REGLES.chasse_omnivore : 1) * (GR ? GR.chasse(p.t, biomes[bid], i) : 1) * (ES ? ES.chasse(p.t, bid, i) : 1) * (p.t.plan.efficacite ?? 1));   // (docs/53 : plan.efficacite, l'adresse d'un chasseur réel, calée à l'assemblage)
       // (un omnivore ne cherche en viande qu'une part de ce qu'il mange : il ne dispute aux carnivores que cette part)
       // (docs/52 : un plan peut dire son métabolisme, ce qu'il brûle rapporté à un mammifère de sa masse : un poisson, un insecte mangent
       //  bien moins ; sans lui, 1)

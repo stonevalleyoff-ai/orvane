@@ -694,6 +694,8 @@ export interface Instantane {
       place?: number;
       /** (docs/52, docs/53) Dans un monde réel : ce que l'espèce porte loin ses jeunes, rapporté à la règle du monde (1). Elle fonde d'autant plus vite un lieu voisin où elle n'est pas : le loup bien plus que le chevreuil. */
       dispersion?: number;
+      /** (docs/53) Dans un monde réel : l'adresse d'un chasseur, rapportée à celle du moteur (1) : sa part des proies devant ses concurrents. Calée à l'assemblage. */
+      efficacite?: number;
       /** (docs/52) Dans un monde réel : ce que la bête brûle, rapporté à un mammifère de sa masse (1 ; un poisson, un reptile, un insecte ~0,15). Elle mange d'autant moins, et fait d'autant plus de petits de ce qu'elle mange. */
       metabolisme?: number;
       /** (docs/52) Un chasseur en meute : la taille du groupe qui chasse (le loup, ~6). La meute abat ce qu'une bête seule n'abattrait pas. */

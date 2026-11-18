@@ -35,6 +35,7 @@ const A = {
   natalite_pontes: [0, 1.2],
   front: 25,                  // le front d'une espèce qui s'étend avance chaque année de sa plus longue dispersion / 25 (calé sur le loup)
   dispersion_oiseau: 300,     // la plus longue dispersion d'un oiseau qui vole (km)
+  efficacite: [.02, 50],      // l'adresse d'un chasseur, que le calage règle (plus bas) : de 1/50 à 50 fois celle du moteur
   vie_sauvage: 3,              // la vie sauvage d'un oiseau ou d'un mammifère, en années : 3 × masse^0,3 (un cerf ~14 ans, un lapin 3,6, un mulot 1)
   equilibre: [.1, 10]          // la capacité d'un lieu : celle où ses brouteurs comptés sont à l'équilibre, entre 0,1 et 10 fois ce que donne sa production (plus bas)
 };
@@ -232,12 +233,14 @@ inst = Meteo.eveiller(inst).inst; inst.monde.meteo = { depuis: 0 };
 // que les prédateurs mangent. Chaque passe fait tourner un jour (sans rien garder) et ajuste :
 //  - un brouteur : sa place, pour que sa saturation de l'année (celle du jour, rapportée à la production moyenne) soit celle où ses
 //    naissances égalent ses morts naturelles ET les bêtes mangées : 1 − (mort + mangés) / (natalité × convenance) ;
-//  - un carnivore : son métabolisme (ce qu'il lui faut), pour que sa satiété soit celle où ses naissances (natalité × satiété) égalent
-//    ses morts (la faim les multiplie, 1 + 3 (1 − satiété)²) et les siens mangés ;
-// chacun entre des bornes (la place de 0,001 à 50, le métabolisme de 0,02 à 1,5). Quatre passes, la concurrence se répondant.
+//  - un carnivore : son efficacité de chasse (sa part des proies devant ses concurrents), pour que sa satiété soit celle où ses naissances
+//    (natalité × satiété) égalent ses morts (la faim les multiplie, 1 + 3 (1 − satiété)²) et les siens mangés. (Ce fut d'abord son métabolisme ;
+//    mais le métabolisme d'un chasseur fait aussi son poids devant les autres : relevé chez le renard, il affamait l'épervier, et l'épervier
+//    finissait au plus bas, sans rien y gagner — docs/53) ;
+// chacun entre des bornes (la place de 0,001 à 50, l'efficacité de 0,02 à 50). Quatre passes, la concurrence se répondant.
 // (--depuis <amorce> : reprendre les réglages calés d'une amorce d'avant — la place, le métabolisme — et ne pas refaire le calage d'un jour)
 const DEPUIS = arg('--depuis') ? JSON.parse(fs.readFileSync(path.resolve(arg('--depuis')), 'utf8')) : null;
-if (DEPUIS) { const P = new Map(DEPUIS.taxons.map(t => [t.id, t.plan])); for (const t of inst.taxons) { const q = P.get(t.id); if (!q) continue; for (const k of ['place', 'metabolisme']) if (q[k] != null) t.plan[k] = q[k]; } }
+if (DEPUIS) { const P = new Map(DEPUIS.taxons.map(t => [t.id, t.plan])); for (const t of inst.taxons) { const q = P.get(t.id); if (!q) continue; for (const k of ['place', 'efficacite']) if (q[k] != null) t.plan[k] = q[k]; } }
 const CALER = +arg('--caler', DEPUIS ? 0 : 4), OMNI = new Set(['herbivore', 'omnivore', 'filtreur', 'detritivore']);
 const seq = (r, m, p) => { if (r <= m + p) return 1; let lo = 0, hi = 1; for (let k = 0; k < 40; k++) { const s = (lo + hi) / 2; if (r * s - m * (1 + 3 * (1 - s) ** 2) - p > 0) hi = s; else lo = s; } return hi; };
 for (let pass = 0; pass < CALER; pass++) {
@@ -252,13 +255,13 @@ for (let pass = 0; pass < CALER; pass++) {
     if (OMNI.has(t.plan.regime)) { const sa = o.prodsat / o.N, cible = clamp(1 - (m + p) / Math.max(1e-9, r * conv), .2, .97);
       if (sa > 1e-6) { t.plan.place = +clamp((t.plan.place ?? 1) * sa / cible, .001, 50).toPrecision(4); nB++; ecart.push(Math.abs(Math.log(sa / cible))); } }
     else if (t.plan.regime === 'carnivore') { const s = clamp(o.s / o.N, .005, .995), cible = clamp(seq(r * conv, m, p), .02, .98), odds = x => x / (1 - x);
-      t.plan.metabolisme = +clamp((t.plan.metabolisme ?? 1) * odds(s) / odds(cible), .02, 1.5).toPrecision(4); nC++; ecart.push(Math.abs(Math.log(odds(s) / odds(cible)))); } }
+      t.plan.efficacite = +clamp((t.plan.efficacite ?? 1) * odds(cible) / odds(s), A.efficacite[0], A.efficacite[1]).toPrecision(4); nC++; ecart.push(Math.abs(Math.log(odds(s) / odds(cible)))); } }
   ecart.sort((x, y) => x - y); console.log(`calage, passe ${pass + 1} : ${nB} brouteurs, ${nC} carnivores ; écart médian à l'équilibre ${ecart.length ? Math.exp(ecart[ecart.length >> 1]).toFixed(2) : '-'} ×`);
 }
 // le calage sur une année entière (--caler-annee N, docs/53) : le calage d'un jour ne voit que novembre ; l'étalon a montré qu'au bout de deux
 // ans, les insectes chasseurs s'effondraient, les rapaces perdaient les deux tiers, les lapins et les lièvres doublaient. Chaque passe fait
 // vivre une année entière, puis compare chaque espèce à elle-même un an plus tôt (λ, à la même saison) : un brouteur qui a crû a trop de
-// place, un carnivore qui a crû a trop à manger pour ce qu'il brûle ; on corrige d'une part de l'écart (λ^0,8), et l'on recommence.
+// place, un carnivore qui a crû chasse trop bien ; on corrige d'une part de l'écart (λ^0,8), et l'on recommence.
 // Les grands carnivores (le loup, l'ours, les lynx, le glouton) n'y sont pas : en Europe, les hommes les tiennent bas, et sans joueurs ils
 // remontent, comme ils remontent en vrai ; les caler les figerait (et le retour du loup ne se ferait plus). Une passe : ~50 minutes.
 const ANNEE = +arg('--caler-annee', 0), TENUS = new Set(['loup', 'lynx-boreal', 'lynx-pardelle', 'ours-brun', 'glouton']);
@@ -269,7 +272,7 @@ for (let it = 0; it < ANNEE; it++) {
   for (const t of inst.taxons) { if (t.plan.regime === 'vegetal' || TENUS.has(t.id)) continue; const a0 = N0.get(t.id); if (!(a0 > 0)) continue;
     const lam = clamp((N1.get(t.id) || 0) / a0, .1, 10), k = .8; ec.push(Math.abs(Math.log(lam))); pires.push([t.id, lam]);
     if (OMNI.has(t.plan.regime)) t.plan.place = +clamp((t.plan.place ?? 1) * Math.pow(lam, -k), .0005, 100).toPrecision(4);
-    else if (t.plan.regime === 'carnivore') t.plan.metabolisme = +clamp((t.plan.metabolisme ?? 1) * Math.pow(lam, k), .005, 3).toPrecision(4); }
+    else if (t.plan.regime === 'carnivore') t.plan.efficacite = +clamp((t.plan.efficacite ?? 1) * Math.pow(lam, -k), A.efficacite[0], A.efficacite[1]).toPrecision(4); }
   ec.sort((x, y) => x - y); pires.sort((x, y) => Math.abs(Math.log(y[1])) - Math.abs(Math.log(x[1])));
   if (arg('--sortie')) fs.writeFileSync(arg('--sortie'), JSON.stringify(inst));   // (chaque passe est gardée : un arrêt n'en perd qu'une)
   console.log(`calage sur l'année, passe ${it + 1} (${Math.round((Date.now() - t0) / 6e4)} min) : écart médian ×${Math.exp(ec[ec.length >> 1]).toFixed(2)}, 90 % sous ×${Math.exp(ec[Math.floor(ec.length * .9)]).toFixed(2)} ; les plus loin : ${pires.slice(0, 6).map(([id, l]) => `${id} ×${l.toFixed(2)}`).join(', ')}`);

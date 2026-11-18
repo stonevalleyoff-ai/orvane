@@ -49,12 +49,13 @@ Ce que le pas ne change pas, parce que cela vit au rythme du joueur et non à ce
 - la méfiance et la mémoire (docs/12, docs/50) ;
 - la météo (docs/45), qui était déjà le temps d'une journée.
 
-**Six champs du plan, pour une espèce réelle :**
+**Sept champs du plan, pour une espèce réelle :**
 - `natalite` : les petits qui passent leur première année, par tête et par an. Avec elle, la croissance ne se déduit plus de la portée et de la masse : elle est celle de l'espèce (le cerf 0,25 ; le loup 0,4). L'assemblage la calcule d'après la portée, la maturité, la longévité et la survie des jeunes ;
 - `meute` : un chasseur en meute (le loup, 6) abat ce que la meute peut abattre. Seul, un prédateur ne prend pas plus de 1,5 fois sa masse ; la meute de loups vit de cerfs de 150 kg ;
 - `naissances` : `{ centre, largeur }`, la fenêtre de l'année où naissent les petits, à la phase du lieu. Sans elle, c'est celle du monde (`regles.naissances` : vers la mi-mai, pour la force que le monde lui donne) ;
 - `place` : la part de la capacité d'un lieu que l'espèce trouve vraiment, rapportée à ce que sa bande de masse lui donnerait. L'assemblage la cale pour que ses effectifs comptés soient son équilibre (plus bas, « L'équilibre observé ») ;
 - `dispersion` : ce que l'espèce porte loin ses jeunes, rapporté à la règle du monde (`regles.colonisation`). Elle fonde d'autant plus vite un lieu voisin où elle n'est pas : le loup 5,9, le chevreuil 0,23. L'assemblage la tire de la masse (Sutherland et al. 2000), et l'étalon l'a réglée sur le retour du loup en France (docs/53) ;
+- `efficacite` : l'adresse d'un chasseur, sa part des proies devant ses concurrents, calée à l'assemblage ;
 - `metabolisme` : ce que la bête brûle, rapporté à un mammifère de sa masse. Il vaut 1 par défaut, et l'assemblage met 0,15 aux poissons, aux reptiles, aux amphibiens et aux invertébrés. La bête mange d'autant moins, et fait d'autant plus de petits de ce qu'elle mange.
 
 **Ce qu'un prédateur mange, dans un monde réel.**
@@ -96,7 +97,7 @@ Une Terre qui laisserait l'évolution inventer serait un autre monde, copié à 
 | `parcelles[].lieu`, `parcelles[].saison`, `parcelles[].soleil` | la même chose dans la vue publiée, parcelle par parcelle |
 | `taxons[].reel` | l'espèce réelle : nom scientifique, identifiant GBIF, classe, ordre, famille |
 | `taxons[].guilde`, `taxons[].especes` | une guilde : les espèces réelles qu'elle rassemble, et leur part |
-| `plan.natalite`, `plan.meute`, `plan.naissances`, `plan.place`, `plan.dispersion`, `plan.metabolisme` | plus haut |
+| `plan.natalite`, `plan.meute`, `plan.naissances`, `plan.place`, `plan.dispersion`, `plan.efficacite`, `plan.metabolisme` | plus haut |
 | `attributions` | d'où viennent les données, sous quelle licence : un jeu qui montre ce monde les crédite |
 
 Tout est ajouté, rien n'est retiré (`node outils/contrat.js` : le contrat tient). Un jeu qui ne connaît pas ces champs lit un monde réel comme un autre. Les biomes publiés sont les biomes universels (`foret`, `prairie`, `taiga`, `lac`…), et chaque lieu réel est une de leurs parcelles. Un jeu qui joue la Bourgogne lit la parcelle de sa forêt : `populations[].parcelles` donne l'effectif de chaque lignée, parcelle par parcelle.
@@ -122,9 +123,9 @@ Tout est ajouté, rien n'est retiré (`node outils/contrat.js` : le contrat tien
 
 Puis **le calage par le moteur** : l'assemblage fait tourner un jour du vrai moteur, sans rien en garder. Il y mesure les naissances, les morts et ce que mangent les prédateurs, et il ajuste deux réglages :
 - **pour un brouteur, sa place** : sa saturation de l'année doit être celle où ses naissances égalent ses morts naturelles **et** les siens mangés ;
-- **pour un carnivore, son métabolisme** (ce qu'il lui faut) : sa satiété doit être celle où ses naissances, qui suivent la satiété, égalent ses morts (que la faim multiplie) et les siens mangés.
+- **pour un carnivore, son efficacité de chasse** (`plan.efficacite` : sa part des proies devant ses concurrents) : sa satiété doit être celle où ses naissances, qui suivent la satiété, égalent ses morts (que la faim multiplie) et les siens mangés. Ce fut d'abord son métabolisme. Mais le métabolisme d'un chasseur fait aussi son poids devant les autres : relevé chez le renard, il affamait l'épervier, qui finissait au plus bas sans rien y gagner. Le métabolisme est désormais celui de la physiologie (1 pour un oiseau ou un mammifère, 0,15 pour une bête à sang froid).
 
-Quatre passes, la concurrence se répondant (`--caler 4`). Sur l'Europe, l'écart médian à l'équilibre tombe de ×3,3 à ×1,00 pour 114 brouteurs et 86 carnivores.
+Quatre passes, la concurrence se répondant (`--caler 4`).
 
 Sans ce calage, les lapins partaient bien sous la place que leur donnait la production, et au premier printemps ils triplaient en un mois. Les truites et les cabillauds, affamés, fondaient de 5 % par mois, et le hareng, mangé plus vite qu'il ne naissait, aussi.
 
