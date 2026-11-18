@@ -22,7 +22,9 @@ const PHE = (typeof require === 'function' ? require('./phenologie.js') : racine
 // ce que les traits font devant les plantes, d'après leur champ flore (moteur/catalogue.js) : ceux du moteur, et ceux qu'un monde
 // porte (catalogue.monde.traits, docs/20) ; le moteur passe le catalogue du monde à chaque cycle (ctx.cat), l'éveil le lit
 const CATM = (typeof require === 'function' ? require('./catalogue.js') : racine.OrvaneCatalogue)?.TRAITS || {};
-let TR = CATM; const catDe = I => ({ ...(I?.catalogue?.traits || {}), ...(I?.catalogue?.monde?.traits || {}), ...CATM });
+let TR = CATM, PASF = 1; const catDe = I => ({ ...(I?.catalogue?.traits || {}), ...(I?.catalogue?.monde?.traits || {}), ...CATM });
+// (docs/52) le pas de temps d'un monde au jour (1 ailleurs) : la repousse, la dent, le renouveau suivent le jour, pas la « tranche de vie »
+const parPasF = p => PASF === 1 ? p : 1 - Math.pow(1 - p, PASF);
 // un butineur (docs/18) : un petit herbivore ou omnivore qui vole ou grimpe (moins de 100 g), ou un tout petit (moins de 20 g)
 const estButineur = t => { const m = t?.plan?.masse_kg || 1, L = t?.plan?.locomotion || []; return (t?.plan?.regime === 'herbivore' || t?.plan?.regime === 'omnivore') && (m < .02 || (m < .1 && (L.includes('vol') || L.includes('grimpe')))); };
 
@@ -111,7 +113,7 @@ function devantDe(h, traits) {
 
 // --- l'éveil de la flore : une lignée par forme et par biome, au point d'équilibre avec les brouteurs du moment ---
 function eveiller(inst, cfg = {}, ctx = {}) {
-  const out = JSON.parse(JSON.stringify(inst)); if (out.monde?.flore) return { inst: out, evenements: [] }; TR = catDe(out);
+  const out = JSON.parse(JSON.stringify(inst)); if (out.monde?.flore) return { inst: out, evenements: [] }; TR = catDe(out); PASF = 1;
   const n = out.cycle?.n ?? 0, types = out.monde?.parcelles?.types || out.biomes, ids = new Set(out.taxons.map(t => t.id)), ev = [];
   let g = ((out.monde?.graine ?? 1) ^ 0x51ab) >>> 0; const R = () => { g = (Math.imul(g, 1664525) + 1013904223) >>> 0; return g / 4294967296; };
   let nb = 0;
@@ -182,13 +184,13 @@ function pousser(inst, H, prod, disp, PH, SU) {
     const parts_ = DIE && herb.some(h => h.plan.diete), perteC = parts_ && plantes.some(({ p }) => !calageDe(p) && (p.reference_diete || p.reference)) ? plantes.map(() => [0, 0, 0, 0]) : null;
     // (toute bouchée vaut une feuille : la mesure d'avant les régimes en spectre)
     const classique = (h, R, P, V) => { const part = h.nectar ? .5 : 1, u = plantes.map(({ t, p }) => { const A = V.at(t.plan); return [0, 1, 2, 3].map(k => p.effectif * t.plan.masse_kg * (p.frequences[k] || 0) * A * V.g(k)); });
-      const S = somme(u.map(somme)); if (!(S > 0)) return; const I = REGLES.broutage * h.bio * part;   // (un butineur ne broute que la moitié de ce qu'il mange)
+      const S = somme(u.map(somme)); if (!(S > 0)) return; const I = REGLES.broutage * h.bio * part * PASF;   // (un butineur ne broute que la moitié de ce qu'il mange)
       u.forEach((v, i) => v.forEach((x, k) => { P[i][k] += I * x / S; })); };
     for (const h of herb) { const V = devantDe(h.plan, h.traits), R = V.R;
       if (h.plan.diete && DIE) {   // (docs/30) une bouchée de fruit, de nectar, de graine ne prend pas à la plante ce que prend une feuille
         if (perteC) classique(h, R, perteC, V);
         const u = plantes.map(({ t, p }) => { return [0, 1, 2, 3].map(k => { const B = p.effectif * t.plan.masse_kg * (p.frequences[k] || 0); if (!(B > 0)) return [0, 0]; const [x, l] = ph ? enSaison(V.pv(t.plan, k), ph) : V.parts(t.plan, k); return [B * x, B * l]; }); });
-        const S = somme(u.map(v => somme(v.map(x => x[0])))); if (!(S > 0)) continue; const I = REGLES.broutage * h.bio;
+        const S = somme(u.map(v => somme(v.map(x => x[0])))); if (!(S > 0)) continue; const I = REGLES.broutage * h.bio * PASF;
         u.forEach((v, i) => v.forEach(([, l], k) => { perte[i][k] += I * l / S; })); continue; }
       classique(h, R, perte, V); if (perteC) classique(h, R, perteC, V); }
     if (parts_) plantes.forEach(({ p }, i) => { let c = calageDe(p);
@@ -196,25 +198,25 @@ function pousser(inst, H, prod, disp, PH, SU) {
       if (c) perte[i] = perte[i].map((x, k) => x * (c[k] ?? 1)); });
     const bonus = SU ? plantes.map(({ t, p }) => SU.place(bid, t, p)) : null;   // (docs/47) la place que les pionnières prennent aux arbres disparus
     plantes.forEach(({ t, p }, i) => {
-      const m = t.plan.masse_kg, B = p.effectif * m, K = bonus && p.potentiel != null ? p.potentiel + bonus[i] : p.potentiel ?? B, sec = SU ? SU.sec(bid, t.plan) : 0, r = t.plan.croissance * (aFleurs(t.plan) && !t.plan.vent ? prod?.[bid] ?? 1 : 1) * (disp && aFruits(t.plan) ? disp[bid] ?? 1 : 1) * (PH ? PH.pousse(bid, t.plan) : 1);   // (docs/30 : qui mange les fruits sème)
+      const m = t.plan.masse_kg, B = p.effectif * m, K = bonus && p.potentiel != null ? p.potentiel + bonus[i] : p.potentiel ?? B, sec = SU ? SU.sec(bid, t.plan) : 0, r = t.plan.croissance * (aFleurs(t.plan) && !t.plan.vent ? prod?.[bid] ?? 1 : 1) * (disp && aFruits(t.plan) ? disp[bid] ?? 1 : 1) * (PH ? PH.pousse(bid, t.plan) : 1) * PASF;   // (docs/30 : qui mange les fruits sème)
       // (une place qui fond ne tue pas une plante d'un coup : au pire elle perd sa repousse chaque cycle, jusqu'à sa nouvelle place ;
       //  une place nulle — la forme n'a plus sa place ici — la fait décliner de même)
       const Bk = [0, 1, 2, 3].map(k => B * (p.frequences[k] || 0)), place = K > 0 ? Math.max(REGLES.declin, 1 - B / K) : REGLES.declin;
       const nv = Bk.map((x, k) => { const cout = PHENOS[k][1].reduce((c, d) => c + REGLES.defenses[d].cout, 0);
-        return Math.max(0, x + (r * place + REGLES.renouveau) * (1 - cout) * x - REGLES.renouveau * x - Math.min(dent === 1 ? perte[i][k] : perte[i][k] * dent, REGLES.prise_max * x) - (sec > 0 ? sec * x : 0)); });   // (docs/47 : le sec qui dure tue)
+        return Math.max(0, x + (r * place + REGLES.renouveau * PASF) * (1 - cout) * x - REGLES.renouveau * PASF * x - Math.min(dent === 1 ? perte[i][k] : perte[i][k] * dent, parPasF(REGLES.prise_max) * x) - (sec > 0 ? sec * PASF * x : 0)); });   // (docs/47 : le sec qui dure tue)
       const tot = somme(nv), semer = () => { if (p.graines > 0) p.effectif = +(p.effectif + p.graines).toFixed(m >= 1 ? 4 : 2); delete p.graines; };   // (docs/22 : les graines venues d'un voisin)
       if (!(tot > 0)) { p.effectif = 0; semer(); return; }
-      const f = nv.map(x => x / tot).map(x => (1 - REGLES.mutation) * x + REGLES.mutation / 4);
-      p.tendance = +(B > 0 ? (tot - B) / B : 0).toFixed(3); p.effectif = +(tot / m).toFixed(m >= 1 ? 4 : 2); p.frequences = f.map(x => +x.toFixed(5)); semer();
+      const mu = parPasF(REGLES.mutation), f = nv.map(x => x / tot).map(x => (1 - mu) * x + mu / 4);
+      p.tendance = +(B > 0 ? (tot - B) / B : 0).toFixed(PASF === 1 ? 3 : 6); p.effectif = +(tot / m).toFixed(m >= 1 ? 4 : PASF === 1 ? 2 : 4); p.frequences = f.map(x => +x.toFixed(PASF === 1 ? 5 : 9)); semer();
     });
   }
 }
 
 // --- un cycle : ce que le moteur appelle ---
 function preparer(ctx) {
-  const { plantes, etat, taxons, biomes, phase } = ctx; if (!plantes.length) return null; TR = ctx.cat || CATM; VC = new WeakMap();
+  const { plantes, etat, taxons, biomes, phase } = ctx; if (!plantes.length) return null; TR = ctx.cat || CATM; VC = new WeakMap(); PASF = ctx.pas ?? 1;
   const inst = { taxons: plantes }, L = parLieu(inst), cache = new Map();
-  const PH = PHE && ctx.monde?.phenologie ? PHE.preparer({ monde: ctx.monde, n: ctx.n, phase, biomes, saisons: ctx.saisons }) : null;   // (docs/46) les saisons des plantes
+  const PH = PHE && ctx.monde?.phenologie ? PHE.preparer({ monde: ctx.monde, n: ctx.n, phase, biomes, saisons: ctx.saisons, ...(ctx.saisons_lieux ? { saisons_lieux: ctx.saisons_lieux } : {}) }) : null;   // (docs/46) les saisons des plantes
   const broute = t => t.plan.regime === 'herbivore' || t.plan.regime === 'omnivore';
   // la nourriture d'un brouteur, phénotype par phénotype : maintenant et à la référence
   const nourriture = (t, bid) => { const k = t.id + '|' + bid; if (cache.has(k)) return cache.get(k);

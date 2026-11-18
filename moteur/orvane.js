@@ -74,6 +74,7 @@ const CAS = typeof require === 'function' ? require('./castes.js') : racine.Orva
 const FOR = typeof require === 'function' ? require('./formes.js') : racine.OrvaneFormes;   // les formes nouvelles (moteur/formes.js, docs/33)
 const ESP = typeof require === 'function' ? require('./esprit.js') : racine.OrvaneEsprit;   // l'esprit : apprendre, transmettre, des outils (moteur/esprit.js, docs/34)
 const MEM = typeof require === 'function' ? require('./memoire.js') : racine.OrvaneMemoire;   // la mémoire : ce que les bêtes apprennent des joueurs (moteur/memoire.js, docs/50)
+const CALEN = typeof require === 'function' ? require('./calendrier.js') : racine.OrvaneCalendrier;   // le calendrier : un monde au jour, la saison de chaque lieu (moteur/calendrier.js, docs/52)
 // (docs/43) la version du contrat : MAJEUR.MINEUR, celle de package.json ; chaque instantané la porte (instantane.orvane)
 const CONTRAT = '1.0';
 const AXES = ['temperature', 'humidite', 'altitude', 'lumiere', 'couvert'];
@@ -142,15 +143,27 @@ const REGLES = {
   // s'habituer (à 20, un sur dix suffit presque) ; audace : ce que l'audace moyenne (z) change à tout cela ; alerte : le
   // seuil d'un événement « mefiance »
   mefiance: { actif: true, demi_vie: 6, demi_vie_habitude: 15, preuve: 20, sensibilite: 6, habitude: 150, oubli: .3, paix: 20, audace: .5, alerte: .5 },
-  sexe: { actif: true, gain: 2e-4, perte: 2e-4, attrait: 1, nouveau: { dominant: .001, recessif: .03 } }   // gain, perte : mutation par allèle et par génération
+  sexe: { actif: true, gain: 2e-4, perte: 2e-4, attrait: 1, nouveau: { dominant: .001, recessif: .03 } },   // gain, perte : mutation par allèle et par génération
+  // (docs/52) dans un monde au calendrier, les naissances ont leur saison : une fenêtre de l'année (la phase du lieu, 0 : le cœur
+  // de l'hiver) où naît l'essentiel des petits, de moyenne 1 sur l'année ; force 0 : toute l'année pareil (un plan peut dire la sienne,
+  // plan.naissances = { centre, largeur })
+  naissances: { force: 0, centre: .42, largeur: .4, fond: .1 }
 };
+// (docs/52) le pas de temps : la part d'un cycle de référence (une « tranche de vie » d'environ 120 jours, celle sur laquelle le
+// moteur a été réglé) que fait un cycle de ce monde. 1 partout, sauf dans un monde au jour (monde.temps = { jours: 1 } : 1/120).
+// Les durées d'un plan (longevite, maturite) sont en cycles et n'ont pas à changer ; ce sont les constantes du moteur qui sont par
+// cycle de référence : on les met à l'échelle (un taux × pas, une chance par cycle 1 − (1 − p)^pas). À 1, rien ne change, au bit près.
+let PAS = 1, JOURS = null;
+const parPas = p => PAS === 1 ? p : 1 - Math.pow(1 - p, PAS);
 // --- les traits continus (docs/8) : par population, Q[trait] = { m : moyenne génétique, G : variance additive }, en
 // écarts-types naturels de la génération 0 ; la variance phénotypique est P = G + (1 − h2), l'environnement ne change pas ---
 const QUANT = CAT.QUANT || {};
 const lireQ = q => { const o = {}; for (const [k, d] of Object.entries(QUANT)) { const x = q?.[k];
   o[k] = x && Number.isFinite(x.m) ? { m: x.m, G: Number.isFinite(x.g) ? x.g : d.h2 } : { m: 0, G: d.h2 }; } return o; };
 const copieQ = Q => Object.fromEntries(Object.entries(Q).map(([k, x]) => [k, { m: x.m, G: x.G }]));
-const ecrireQ = Q => Object.fromEntries(Object.entries(Q).map(([k, x]) => [k, { m: +x.m.toFixed(5), v: +(x.G + 1 - QUANT[k].h2).toFixed(5), g: +x.G.toFixed(5) }]));
+// (docs/52 : au pas d'un monde au jour, ce qui change d'un cycle est cent fois plus petit : on l'écrit avec quatre chiffres de plus,
+//  sans quoi l'arrondi le perdrait chaque jour et rien ne bougerait plus)
+const ecrireQ = Q => { const d = PAS === 1 ? 5 : 9; return Object.fromEntries(Object.entries(Q).map(([k, x]) => [k, { m: +x.m.toFixed(d), v: +(x.G + 1 - QUANT[k].h2).toFixed(d), g: +x.G.toFixed(d) }])); };
 // l'optimum d'une population : la niche du taxon, déplacée par l'écart du biome sur l'axe du trait (plus froid : plus grand)
 const optimumQ = (d, plan, b) => d.optimum && plan.niche && b?.axes ? d.optimum.pente * ((b.axes[d.optimum.axe] ?? .5) - (plan.niche[d.optimum.axe] ?? .5)) : 0;
 // ce que pèse une pente exponentielle (risque ∝ e^(pente·z)) dans une population N(m, P), rapporté à la génération 0
@@ -383,8 +396,10 @@ const BANDE = Math.sqrt(2 * Math.PI) * SIGMA_BANDE / 4;   // ≈ 0,22 : la large
 // l'appétence d'un prédateur pour une proie : la masse (une proie d'un tiers de sa masse est idéale ; rien au-delà de 1,5 fois,
 // rien sous un cinquantième), la vitesse (une proie plus rapide échappe), le vol (hors de portée d'un marcheur), le groupe
 // (l'alerte collective) et l'heure (un diurne croise peu un nocturne)
+// (docs/52) un chasseur en meute (plan.meute : la taille du groupe qui chasse, le loup ~6) abat ce que la meute peut abattre : la masse
+// qui compte est celle du groupe, pour la plus grosse proie et la proie idéale ; la plus petite reste à la mesure d'une bête
 function appetence(pred, proie) {
-  const rap = (proie.masse_kg || 1) / (pred.masse_kg || 1); if (rap < .02 || rap > 1.5) return 0;
+  const rap = (proie.masse_kg || 1) / ((pred.masse_kg || 1) * (pred.meute > 1 ? pred.meute : 1)); if ((pred.meute > 1 ? (proie.masse_kg || 1) / (pred.masse_kg || 1) : rap) < .02 || rap > 1.5) return 0;
   const lg = Math.log10(rap) - Math.log10(.3); let f = Math.exp(-(lg * lg) / .5);
   const vp = (pred.vitesse_rel || 4) * (pred.taille_m || 1), vq = (proie.vitesse_rel || 4) * (proie.taille_m || 1);
   f *= clamp(Math.sqrt(vp / Math.max(.01, vq)), .6, 1.4);
@@ -396,6 +411,9 @@ function appetence(pred, proie) {
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const clone = o => JSON.parse(JSON.stringify(o));
 const dist = (a, b) => Math.sqrt(AX.reduce((s, k) => s + ((a[k] ?? .5) - (b[k] ?? .5)) ** 2, 0));
+// (docs/52) un tirage qui ne dépend que d'un nom, de la graine et du cycle : il ne prend rien au hasard du cycle
+const hasard = (s, g, n) => { let h = (2166136261 ^ (g >>> 0)) >>> 0; for (const c of String(s)) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0;
+  h = (Math.imul(h ^ 0x6d2b79f5, 2654435761) ^ Math.imul(n + 1, 0x85ebca6b)) >>> 0; h = Math.imul(h ^ (h >>> 15), 0x2c1b3c6d) >>> 0; return ((h ^ (h >>> 13)) >>> 0) / 4294967296; };
 function rng(graine, n) {           // un générateur par cycle, semé par la graine du monde et le numéro de cycle
   let g = ((graine >>> 0) ^ Math.imul(n + 1, 0x9e3779b9)) >>> 0;
   return () => { g = (Math.imul(g, 1664525) + 1013904223) >>> 0; return g / 4294967296; };
@@ -415,8 +433,11 @@ const ecartsDe = (traits, cat) => { const e = {}; for (const id of traits) for (
 // taux intrinsèques, par cycle
 // (la masse ramène tout : une bête de 100 kg ne se multiplie pas comme une de 1 kg — loi de Fenchel, r ∝ masse^-1/4 ;
 //  on garde la différence entre les stratégies, portée et maturité, à l'intérieur de ce que la masse permet)
-const croissance = p => { const rmax = .35 * Math.pow(Math.max(.1, p.masse_kg || 1), -.25), r = .6 * Math.log(1 + (p.portee || 2)) / Math.max(1, p.maturite || 1);
-  return clamp(r * Math.min(1, rmax / .35), .01, rmax); };
+// (docs/52) un plan réel peut dire sa natalité (plan.natalite : les petits qui survivent à leur première année, par tête et par an) :
+// dans un monde au jour, elle fait la croissance telle quelle ; sinon, la formule d'Orvane, mise à l'échelle du pas
+const croissance = p => { if (JOURS && Number.isFinite(p.natalite)) return Math.max(0, p.natalite) * JOURS / 365.25;
+  const rmax = .35 * Math.pow(Math.max(.1, p.masse_kg || 1), -.25), r = .6 * Math.log(1 + (p.portee || 2)) / Math.max(1, p.maturite || 1);
+  return PAS === 1 ? clamp(r * Math.min(1, rmax / .35), .01, rmax) : clamp(r * Math.min(1, rmax / .35), .01 * PAS, rmax * PAS); };
 const mortalite = p => 1 / Math.max(2, p.longevite || 20);
 // convenance d'un biome (0..1) : 1 dans la niche, décroît avec la distance ; nulle si le milieu est impossible
 // L'eau : un nageur vit en eau douce (plan.eau absent, ou 'douce'), en mer ('salee'), ou dans les deux ('mixte', comme
@@ -439,15 +460,17 @@ function plafonner(t, max) {
   const g = new Set(gardes); t.phenotypes = P.filter((p, i) => g.has(i));
 }
 
-function routeHiver(P, b, lieu, s = 0, routes = 0, H = REGLES.hivernage) {
+// (docs/52) axesA(x, phase) : les axes d'un lieu à une phase de SON année (un monde au calendrier : son hiver vient de son climat) ;
+// dans un monde réel (des lieux qui ont lieu.lat), une parcelle du même type peut avoir un autre hiver : elle compte
+function routeHiver(P, b, lieu, s = 0, routes = 0, H = REGLES.hivernage, axesA = axesSaison) {
   const L = P?.locomotion || [], m = P?.masse_kg || 1;
   if (!b || b.saisons === false || b.saisons === null || !P?.niche) return null;
   const vole = L.includes('vol'), marche = L.includes('marche') || L.includes('course'), nage = L.includes('nage');
   if (!(vole && m >= H.masse_volant) && !(marche && m >= H.masse_marcheur) && !(nage && m >= H.masse_marcheur)) return null;
-  const hiver = x => ({ ...x, axes: axesSaison(x, 0) }), ici = convenance(P, hiver(b));
-  if (ici >= H.rude * convenance(P, { ...b, axes: axesSaison(b, .5) })) return null;   // un hiver doux chez soi : on reste (le bœuf musqué ne quitte pas la toundra)
+  const hiver = x => ({ ...x, axes: axesA(x, 0) }), ici = convenance(P, hiver(b));
+  if (ici >= H.rude * convenance(P, { ...b, axes: axesA(b, .5) })) return null;   // un hiver doux chez soi : on reste (le bœuf musqué ne quitte pas la toundra)
   let best = null;
-  for (const vid of [...new Set(b.voisins || [])].sort()) { const v = lieu(vid); if (!v || lieuType(vid) === lieuType(b.id)) continue;   // (par parcelles : une parcelle d'un autre lieu)
+  for (const vid of [...new Set(b.voisins || [])].sort()) { const v = lieu(vid); if (!v || (!b.lieu && lieuType(vid) === lieuType(b.id))) continue;   // (par parcelles : une parcelle d'un autre lieu)
     if (b.traversees?.includes(vid) && !(CLI && CLI.traverse(P))) continue;
     const la = convenance(P, hiver(v)); if (la < H.min || la < ici * (1 + H.marge)) continue;
     if (!best || la > best.la) best = { v, la }; }
@@ -478,7 +501,7 @@ const biomasse = (plans, N) => N.reduce((s, n, i) => s + n * (plans[i].masse_kg 
 // (dans un navigateur, un module se charge par sa balise <script>, AVANT orvane.js ; un monde qui a éveillé un mécanisme dont le
 // module manque tournerait sans lui, sans rien dire : on le dit, une fois — docs/19)
 const MODULES = [['mere', SYN, 'synthetique'], ['flore', FLO, 'flore'], ['pathogenes', PAT, 'pathogenes'], ['milieu', MIL, 'milieu'], ['ponte', PON, 'ponte'], ['stades', STA, 'stades'], ['invention', INV, 'invention'],
-  ['natures', NAT, 'natures'], ['derives', DER, 'derives'], ['dietes', DI, 'dietes'], ['climat', CLI, 'climat'], ['meteo', MET, 'meteo'], ['phenologie', PHE, 'phenologie'], ['succession', SUC, 'succession'], ['diversite', DIV, 'diversite'], ['grammaire', GRA, 'grammaire'], ['castes', CAS, 'castes'], ['formes', FOR, 'formes'], ['esprit', ESP, 'esprit'], ['memoire', MEM, 'memoire']], AVERTIS = new Set();
+  ['natures', NAT, 'natures'], ['derives', DER, 'derives'], ['dietes', DI, 'dietes'], ['climat', CLI, 'climat'], ['meteo', MET, 'meteo'], ['phenologie', PHE, 'phenologie'], ['succession', SUC, 'succession'], ['diversite', DIV, 'diversite'], ['grammaire', GRA, 'grammaire'], ['castes', CAS, 'castes'], ['formes', FOR, 'formes'], ['esprit', ESP, 'esprit'], ['memoire', MEM, 'memoire'], ['calendrier', CALEN, 'calendrier']], AVERTIS = new Set();
 function cycle(inst, pressions = {}, opt = {}) {
   for (const [cle, M, f] of MODULES) if (inst?.monde?.[cle] && !M && !AVERTIS.has(cle)) { AVERTIS.add(cle); if (typeof console !== 'undefined') console.warn(`Orvane : ce monde a éveillé « ${cle} », mais moteur/${f}.js n'est pas chargé (avant orvane.js) : ce mécanisme est ignoré (docs/19).`); }
   const propres = inst?.monde?.regles, M = inst?.catalogue?.monde, avant = {}, ax = AX, ext = CORPS?.etendre ? CORPS.etendre(M) : null;
@@ -488,7 +511,8 @@ function cycle(inst, pressions = {}, opt = {}) {
     const v = propres[k], b = REGLES[k]; REGLES[k] = v && typeof v === 'object' && !Array.isArray(v) && b && typeof b === 'object' && !Array.isArray(b) ? { ...b, ...v } : v; } }
   if (M?.axes) AX = [...AXES, ...Object.keys(M.axes).filter(k => !AXES.includes(k))];
   const rendre = MEM && inst?.monde?.memoire ? MEM.regler(REGLES.memoire) : null;   // (docs/50) les règles de la mémoire que le monde s'est choisies (regles.memoire)
-  try { return cycleBrut(inst, pressions, opt); } finally { if (rendre) rendre(); Object.assign(REGLES, avant); AX = ax; if (CORPS?.etendre) CORPS.etendre(ext); }
+  const pas0 = PAS, jours0 = JOURS, T = inst?.monde?.temps; if (T && T.jours > 0) { PAS = T.jours / (T.reference || 120); JOURS = T.jours; }   // (docs/52) le pas de temps de ce monde
+  try { return cycleBrut(inst, pressions, opt); } finally { if (rendre) rendre(); Object.assign(REGLES, avant); AX = ax; if (CORPS?.etendre) CORPS.etendre(ext); PAS = pas0; JOURS = jours0; }
 }
 function cycleBrut(inst, pressions = {}, opt = {}) {
   const n = inst.cycle.n + 1, R = rng(inst.monde.graine, n);
@@ -499,7 +523,11 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   const DT = !!(DI && inst.monde?.dietes); if (DT) for (const t of tousT) DI.completer(t);   // (docs/30) chaque lignée a son spectre
   const taxons = plantes.length ? tousT.filter(t => t.plan?.regime !== 'vegetal') : tousT;
   const prT = pressions.taxons || {}, prB = pressions.biomes || {};
-  const saison = saisonDe(n, inst.monde.annee), phase = saison ? saison.phase : null;
+  // (docs/52) un monde au calendrier : le jour que vit ce cycle (la date du cycle qu'il publiera), et le nom de la saison du monde,
+  // celle de son hémisphère ; chaque lieu aura la sienne, plus bas
+  const d0c = Date.parse(inst.cycle.date), JOURC = CALEN && inst.monde?.calendrier ? (opt.jour != null ? +opt.jour : (Number.isFinite(d0c) ? d0c : 0) + (opt.duree_ms ?? 86400000)) : null;
+  const saison = JOURC != null ? (ph => ({ phase: ph, nom: CALEN.nomSaison(ph), production: +(1 + REGLES.saisons.capacite * -Math.cos(2 * Math.PI * ph)).toFixed(3) }))(CALEN.phaseReference(JOURC, inst.monde.calendrier?.hemisphere === 'sud'))
+    : saisonDe(n, inst.monde.annee), phase = saison ? saison.phase : null;
   const GEN = REGLES.genetique !== false && opt.genetique !== false && Object.keys(QUANT).length > 0;
   const Rq = rng(((inst.monde.graine >>> 0) ^ 0x5bd1e995) >>> 0, n);   // la génétique a son propre tirage : l'écologie garde le sien
   const gauss = () => Math.sqrt(-2 * Math.log(1 - Rq())) * Math.cos(2 * Math.PI * Rq());
@@ -513,8 +541,17 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   if (SC) { SC.appliquer(); ev.push(...SC.evenements); }
   const SN = NAT && inst.monde?.natures ? NAT.preparer(inst.monde, n) : null; if (SN) { for (const b of Object.values(biomes)) SN.changer(b); ev.push(...SN.evenements); }   // (docs/28) un lieu prend la nature dont ses axes sont le plus près
   // (docs/45) la météo : le temps qu'il fait dans chaque lieu ce cycle ; il déplace les axes et la production de la saison
-  const SMe = MET && inst.monde?.meteo ? MET.preparer({ monde: inst.monde, biomes, n, axes: b => axesSaison(b, phase) }) : null; if (SMe) ev.push(...SMe.evenements);
-  const axesCycle = SMe ? b => SMe.axes(b, axesSaison(b, phase)) : b => axesSaison(b, phase), prodCycle = SMe ? b => productionSaison(b, phase) * SMe.production(b) : b => productionSaison(b, phase);
+  // (docs/52) un monde au calendrier : la saison de chaque lieu, ce jour — sa phase, et s'il a ses normales (lieu.normales) ses axes et
+  // sa production du jour ; sans normales, ceux du moteur à la phase du lieu ; un lieu sans latitude garde la saison du monde
+  const SL = JOURC != null ? new Map() : null;
+  if (SL) for (const b of Object.values(biomes)) { const s = CALEN.saisonLieu(b, JOURC); if (!s) continue;
+    if (!s.axes) { s.axes = axesSaison(b, s.phase); s.production = productionSaison(b, s.phase); } SL.set(b.id, s); }
+  const axesS = SL ? b => SL.get(b.id)?.axes ?? axesSaison(b, phase) : b => axesSaison(b, phase), prodS = SL ? b => SL.get(b.id)?.production ?? productionSaison(b, phase) : b => productionSaison(b, phase);
+  const phaseDe = SL ? b => SL.get(b.id)?.phase ?? phase : () => phase;
+  // l'hiver et l'été d'un lieu (les routes de l'hiver) : dans un monde au calendrier, ceux de son climat
+  const axesA = SL ? (x, ph) => (x.normales ? CALEN.saisonLieu(x, CALEN.dateDeLaPhase(x, ph, JOURC))?.axes : null) ?? axesSaison(x, ph) : axesSaison;
+  const SMe = MET && inst.monde?.meteo ? MET.preparer({ monde: inst.monde, biomes, n, axes: axesS }) : null; if (SMe) ev.push(...SMe.evenements);
+  const axesCycle = SMe ? b => SMe.axes(b, axesS(b)) : axesS, prodCycle = SMe ? b => prodS(b) * SMe.production(b) : prodS;
   const SR = PON && inst.monde?.ponte ? PON.preparer({ taxons: tousT, biomes }) : null;   // (docs/25) les pondeurs, les mangeurs d'œufs, les nids pillés
   const SV = STA && inst.monde?.stades ? STA.preparer() : null;   // (docs/26) les cycles de vie
   const SCa = CAS && inst.monde?.castes ? CAS.preparer() : null;   // (docs/33) les colonies
@@ -523,7 +560,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   for (const b of Object.values(biomes)) {
     b.capacite_base ??= b.capacite;
     b.capacite = Math.max(0, b.capacite + (prB[b.id]?.habitat || 0) * (opt.unite_habitat ?? 1));
-    b.capacite += (b.capacite_base * (SM ? SM.fertilite(b.id) : 1) - b.capacite) * REGLES.regain_habitat;
+    b.capacite += (b.capacite_base * (SM ? SM.fertilite(b.id) : 1) - b.capacite) * parPas(REGLES.regain_habitat);
   }
 
   // 1b. les catastrophes : un incendie, une crue, une sécheresse peut frapper un biome ; sa capacité tombe (elle regagnera
@@ -531,17 +568,17 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   const sinistres = {};
   for (const b of Object.values(biomes)) {
     if (b.catastrophes === false) continue;
-    const ax = axesCycle(b), cause = SMe ? SMe.causes(b) : null, C = REGLES.catastrophes, ete = phase != null ? Math.max(0, -Math.cos(2 * Math.PI * phase)) : .5, printemps = phase != null ? Math.max(0, Math.sin(2 * Math.PI * phase)) : .5;
+    const ax = axesCycle(b), cause = SMe ? SMe.causes(b) : null, C = REGLES.catastrophes, phb = phaseDe(b), ete = phb != null ? Math.max(0, -Math.cos(2 * Math.PI * phb)) : .5, printemps = phb != null ? Math.max(0, Math.sin(2 * Math.PI * phb)) : .5;
     const chances = {
       incendie: C.incendie.chance * Math.max(0, ax.couvert - .3) * Math.max(0, 1 - ax.humidite) * 4 * (.5 + ete) * (cause ? cause.incendie : 1),
       crue: C.crue.chance * Math.max(0, ax.humidite - .5) * Math.max(0, 1 - ax.altitude) * 4 * (.5 + printemps) * (cause ? cause.crue : 1),
       secheresse: C.secheresse.chance * Math.max(0, .6 - ax.humidite) * 4 * ete * (cause ? cause.secheresse : 1)
     };
-    for (const [type, p] of Object.entries(chances)) if (p > 0 && R() < p) {
+    for (const [type, p0] of Object.entries(chances)) { const p = p0 * PAS; if (p > 0 && R() < p) {
       b.capacite = Math.max(0, b.capacite * (1 - C[type].capacite)); sinistres[b.id] = type;
       ev.push({ type: 'catastrophe', taxon: b.id, biome: b.id, detail: `${type} : ${C[type].detail}${cause ? ', ' + cause.dit[type] : ''} ; capacité −${Math.round(C[type].capacite * 100)} %` });
       break;
-    }
+    } }
   }
 
   // 2. l'état de départ : par taxon, les plans de chaque phénotype ; par biome, la biomasse qui pèse sur la capacité
@@ -575,7 +612,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
 
   // 2d. la flore (docs/17) : la nourriture de chaque brouteur ; rien, s'il n'y a pas de plantes
   const GR = GRA && inst.monde?.grammaire ? GRA.preparer({ cat, taxons }) : null;   // (docs/32) une lueur dans le noir, une décharge dans l'eau : lieu par lieu
-  const SF = FLO && plantes.length ? FLO.preparer({ plantes, etat, taxons, biomes, phase, monde: inst.monde, n, saisons: REGLES.saisons, succession: SSu, sinistres, productionSaison, PART_K, recouvrement, cat, dietes: DT }) : null;
+  const SF = FLO && plantes.length ? FLO.preparer({ plantes, etat, taxons, biomes, phase, monde: inst.monde, n, saisons: REGLES.saisons, succession: SSu, sinistres, productionSaison, PART_K, recouvrement, cat, dietes: DT, ...(SL ? { saisons_lieux: SL } : {}), ...(PAS !== 1 ? { pas: PAS } : {}) }) : null;   // (docs/52 : la saison de chaque lieu, le pas de temps)
 
   // 2e. les souches (docs/18) : rien, si le monde n'en a pas
   const SP = PAT && inst.monde?.pathogenes ? PAT.preparer({ inst, n, biomes, taxons, etat, ev, parente }) : null;
@@ -613,7 +650,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
       let C = 0;
       if (p.A > 0) for (const q of preds) { if (q === p || q.A <= 0) continue; let commun = 0; p.part.forEach((v, k) => { if (v && q.x[k] && (!DT || DI.mortel(p.t.plan, T[k].t.plan) === DI.mortel(q.t.plan, T[k].t.plan))) commun += v; }); C += q.Nt * (p.besoinMoy > 0 ? q.besoinMoy / p.besoinMoy : 0) * q.effMoy * commun; }
       let R = 0, sN = 0;   // (une bête qui ne chasse pas, ou ne mange pas de viande : rien, jamais 0/0)
-      p.pop.N.forEach((N, i) => { if (N <= 0) return; const den = p.Nt * p.effMoy + C, a = den > 0 ? p.A * p.eff[i] / den : 0, s = a > 0 ? a / (a + REGLES.demi_satiete * p.besoin[i]) : 0; const r = N * p.besoin[i] * s; R += r; sN += s * N; p.pop.ration[i] = r; });
+      p.pop.N.forEach((N, i) => { if (N <= 0) return; const den = p.Nt * p.effMoy + C, a = den > 0 ? p.A * p.eff[i] / den : 0, s = a > 0 ? a / (a + REGLES.demi_satiete * p.besoin[i]) : 0; const r = N * p.besoin[i] * s * PAS; R += r; sN += s * N; p.pop.ration[i] = r; });
       p.pop.satiete = sN / p.Nt;
       T.forEach((q, k) => { if (!p.part[k]) return; const Rq = R * p.part[k] * (DT ? DI.mortel(p.t.plan, q.t.plan) : 1); q.pop.N.forEach((N, i) => { if (q.poids[i]) q.pop.predation[i] += Rq * (q.poids[i] / q.Bv) / (q.E.plans[i].masse_kg || 1); }); });   // (docs/30 : une piqûre ne tue pas)
     }
@@ -623,20 +660,27 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
     // broutent comme avant
     if (REGLES.cadavres > 0) { const D = T.filter(q => q.regime === 'detritivore');
       if (D.length) { let offre = 0; for (const q of T) if (q.regime !== 'detritivore' && q.regime !== 'vegetal') q.pop.N.forEach((N, i) => { offre += N * (q.E.plans[i].masse_kg || 1) * mortalite(q.E.plans[i]); });
-        offre *= REGLES.cadavres; const besoinDe = pl => REGLES.besoin * Math.pow(pl.masse_kg || 1, .75);
+        offre *= REGLES.cadavres; const besoinDe = pl => REGLES.besoin * Math.pow(pl.masse_kg || 1, .75) * PAS;
         const demande = D.reduce((a, q) => a + q.pop.N.reduce((x, N, i) => x + N * besoinDe(q.E.plans[i]), 0), 0);
         for (const q of D) { let sN = 0; q.pop.N.forEach((N, i) => { if (N <= 0) return; const be = besoinDe(q.E.plans[i]), a = demande > 0 ? offre * be / demande : 0, sa = a / (a + be); q.pop.ration[i] = N * be * sa; sN += sa * N; });
           q.pop.satiete = q.Nt ? sN / q.Nt : 0; } } }
     if (SY) SY.reguler(bid, T, B[bid] || [], biomes[bid].capacite * prodCycle(biomes[bid]));   // les machines régulent (docs/16)
-    for (const q of T) q.pop.N.forEach((N, i) => { q.pop.predation[i] = Math.min(q.pop.predation[i], N * REGLES.predation_max); });   // nul ne mange plus qu'une part d'une population en un cycle
+    for (const q of T) q.pop.N.forEach((N, i) => { q.pop.predation[i] = Math.min(q.pop.predation[i], N * parPas(REGLES.predation_max)); });   // nul ne mange plus qu'une part d'une population en un cycle
   }
 
   // 4. la dynamique, taxon par taxon
   const migrations = [];      // { taxon, vers, N[] } à appliquer après la boucle
   // (docs/38) l'hivernage : seulement si le monde le veut (REGLES.hivernage.actif) et s'il a une année
   const HIV = REGLES.hivernage?.actif > 0 && phase != null ? { A: inst.monde.annee, k: n % inst.monde.annee } : null, hivEv = {};
-  if (HIV) { const F = REGLES.hivernage.fenetres; HIV.depart = fenetreDe(HIV.k, HIV.A, F.depart); HIV.retour = fenetreDe(HIV.k, HIV.A, F.retour);
-    HIV.loin = HIV.depart || HIV.retour || fenetreDe(HIV.k, HIV.A, F.partie); }   // (hors de ces trois fenêtres, un hivernant attardé rentre)
+  const fenetres = H => { const F = REGLES.hivernage.fenetres; H.depart = fenetreDe(H.k, H.A, F.depart); H.retour = fenetreDe(H.k, H.A, F.retour);
+    H.loin = H.depart || H.retour || fenetreDe(H.k, H.A, F.partie); return H; };   // (hors de ces trois fenêtres, un hivernant attardé rentre)
+  if (HIV) fenetres(HIV);
+  // (docs/52) dans un monde au calendrier, chaque lieu a ses fenêtres : celles de SON année
+  const HIVc = new Map(), HIVde = HIV && SL ? b => { let H = HIVc.get(b.id); if (!H) { const ph = SL.get(b.id)?.phase; H = ph == null ? HIV : fenetres({ A: HIV.A, k: Math.floor(ph * HIV.A) % HIV.A }); HIVc.set(b.id, H); } return H; } : () => HIV;
+  // (docs/52) les naissances ont leur saison, dans un monde au calendrier : la fenêtre de la lignée, à la phase du lieu
+  const NSR = REGLES.naissances, NS = SL && NSR?.force > 0 ? (t, b) => { const s = SL.get(b.id); if (!s) return 1; const W = t.plan.naissances || {}, c = W.centre ?? NSR.centre, L = W.largeur ?? NSR.largeur;
+    let d = Math.abs(s.phase - c); d = Math.min(d, 1 - d); const w = NSR.fond + (1 - NSR.fond) * (d < L / 2 ? Math.cos(Math.PI * d / L) ** 2 : 0) / (L / 2);
+    return 1 + NSR.force * (s.force ?? 1) * (w - 1); } : null;
   for (const t of taxons) {
     if (t.eteint) continue;
     const E = etat.get(t.id), K = t.phenotypes.length;
@@ -656,8 +700,8 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
       else if (tot >= 20 && !syn) {   // (un monde à souches : les épidémies sont les leurs, docs/18 — mais les tirages se font quand même, ce qui
         // garde le hasard du reste du monde le jour où l'on éveille les souches ; les voisins comptent tels qu'ils étaient au début du cycle)
         const M = REGLES.maladie, voisinsMalades = (b.voisins || []).some(v => E.pops[v]?.malade0);
-        if (R() < M.chance * Math.max(0, sat - .5) * 2 + (voisinsMalades ? M.contagion * M.chance * 10 : 0)) {
-          const reste = Math.round(M.duree[0] + R() * (M.duree[1] - M.duree[0])), virulence = +(M.virulence[0] + R() * (M.virulence[1] - M.virulence[0])).toFixed(3);
+        if (R() < (M.chance * Math.max(0, sat - .5) * 2 + (voisinsMalades ? M.contagion * M.chance * 10 : 0)) * PAS) {
+          const reste = Math.round((M.duree[0] + R() * (M.duree[1] - M.duree[0])) / PAS), virulence = +(M.virulence[0] + R() * (M.virulence[1] - M.virulence[0])).toFixed(3);
           if (!SP) { mal = pop.maladie = { reste, virulence }; ev.push({ type: 'epidemie', taxon: t.id, biome: bid, detail: `virulence ${Math.round(mal.virulence * 100)} % par cycle, ${mal.reste} cycles` }); }
         }
       }
@@ -669,7 +713,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
         if (syn) { const d = SY.vie(t, bid, pop, E.plans[i], Np, sinistres[bid], conv); nais[i] = d.nais; morts[i] = d.morts; mortsNat += d.morts; continue; }
         // (un phénotype dont la tolérance diffère de celle de la lignée — la graisse brune, docs/32 — a sa propre convenance ; les autres gardent celle de la lignée)
         const convI = E.plans[i].tolerance != null && E.plans[i].tolerance !== t.plan.tolerance ? convenance(E.plans[i], bS) : conv;
-        const r = croissance(E.plans[i]) * (1 - E.couts[i]) * convI * (pop.ff ?? 1); let m = mortalite(E.plans[i]) + (convI < .3 ? .08 : 0);
+        const r = croissance(E.plans[i]) * (1 - E.couts[i]) * convI * (pop.ff ?? 1); let m = mortalite(E.plans[i]) + (convI < .3 ? .08 * PAS : 0);
         const place = Math.max(0, 1 - sat * (SF ? SF.facteur(t, bid, i) : 1) * (SV ? SV.facteur(t, bid, i) : 1) * (SCa ? SCa.facteur(t, bid, i) : 1) * (ES ? ES.place(t, bid, i) : 1));   // (docs/26 : larve et adulte ne se disputent pas tout)   // (docs/17 : qui supporte les défenses des plantes y trouve plus)
         // ce qui nourrit les naissances : la place pour l'herbivore ; la viande mangée pour le carnivore, convertie en petits à
         // REGLES.conversion (l'énergie vient des plantes : un prédateur ne vit pas de prédateurs qui vivent de lui) ; les deux pour l'omnivore
@@ -680,7 +724,8 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
         else nais[i] = Np * r * place * (reg === 'detritivore' ? REGLES.detritivore_vegetal ?? 1 : 1);
         morts[i] = Np * m; mortsNat += morts[i];
         if (SR) nais[i] *= SR.naissances(t, bid, i);   // (docs/25) pondre ou mettre bas
-        if (mal) { const mm = Np * mal.virulence * E.resist[i] * (pop.fm ?? 1) * (.5 + Math.min(1.5, sat)); morts[i] += mm; mortsMal += mm; }   // la maladie frappe les faibles et les entassés
+        if (NS) nais[i] *= NS(t, b);   // (docs/52) la saison des naissances
+        if (mal) { const mm = Np * mal.virulence * PAS * E.resist[i] * (pop.fm ?? 1) * (.5 + Math.min(1.5, sat)); morts[i] += mm; mortsMal += mm; }   // la maladie frappe les faibles et les entassés
         if (SP) { const mp = SP.mortalite(t, bid); if (mp > 0) { const mm = Np * mp * E.resist[i] * (pop.fm ?? 1); morts[i] += mm; mortsMal += mm; } }   // les souches (docs/18)
         if (sinistres[bid]) { const loco = E.plans[i].locomotion || [], type = sinistres[bid];                                      // la catastrophe épargne qui peut s'y soustraire
           const echappe = type === 'incendie' ? loco.includes('vol') || loco.includes('fouissage') : type === 'crue' ? loco.includes('vol') || loco.includes('nage') : loco.includes('vol');
@@ -742,7 +787,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
         for (const [vers, c] of cibles) { const f = part * c / W; migrations.push({ taxon: t.id, vers, N: suiv.map(x => x * f), Q: pop.Q && copieQ(pop.Q), A: pop.A && { ...pop.A }, ...(ME ? { M: pop.M || null } : {}) }); }   // (docs/50) ils emportent ce qu'ils ont appris des joueurs
         for (let i = 0; i < K; i++) suiv[i] *= 1 - part; };
       // la faim pousse un prédateur vers ses voisins
-      if (faim > 1 - REGLES.faim_migration) essaimer(.05 * (faim - (1 - REGLES.faim_migration)) / REGLES.faim_migration);
+      if (faim > 1 - REGLES.faim_migration) essaimer(.05 * (faim - (1 - REGLES.faim_migration)) / REGLES.faim_migration * PAS);
       // (docs/31) par-delà la mer : qui vole, nage ou dérive gagne peu à peu les terres qu'on ne rejoint qu'en la traversant
       if (b.traversees?.length && CLI && CLI.traverse(t.plan)) { const Ns = suiv.reduce((a, x) => a + x, 0), f = CLI.REGLES.iles.derive * Ns;   // (un flux, ou de temps en temps un petit groupe de deux : de quoi fonder)
         if (Ns >= 4 && (f >= 2 || CLI.hasard(t.id + '|' + bid, n) < f / 2)) essaimer(Math.min(.5, Math.max(f, 2) / Ns), x => b.traversees.includes(x.id)); }
@@ -759,32 +804,33 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
         migrations.push({ taxon: t.id, vers: bid, N: Na, Q: pop.Q && Object.fromEntries(Object.entries(pop.Q).map(([k, x]) => [k, { m: Number.isFinite(AP.a?.[k]) ? AP.a[k] : x.m, G: x.G }])),
           A: pop.A && { ...Object.fromEntries(Object.keys(pop.A).map(id => [id, 0])), ...(AP.alleles || {}) } }); }
       // migration naturelle : sans place, on essaime (un carnivore, lui, part quand il a faim : plus haut)
-      if (t.plan.regime !== 'carnivore' && sat > REGLES.seuil_surpeuple) essaimer(REGLES.migration * clamp((sat - REGLES.seuil_surpeuple) / (1 - REGLES.seuil_surpeuple), 0, 2));
+      if (t.plan.regime !== 'carnivore' && sat > REGLES.seuil_surpeuple) essaimer(REGLES.migration * clamp((sat - REGLES.seuil_surpeuple) / (1 - REGLES.seuil_surpeuple), 0, 2) * PAS);
       // (docs/15) dans un monde à parcelles : une petite part s'en va toujours vers les parcelles voisines du même biome (c'est
       // ainsi qu'une espèce gagne de proche en proche), et une parcelle qui a perdu sa place chasse ses bêtes vers ses voisines
-      if (REGLES.dispersion > 0 && b.type) essaimer(REGLES.dispersion, v => v.type === b.type);
-      if (REGLES.fuite > 0 && sat > 1) essaimer(Math.min(.5, REGLES.fuite * (1 - 1 / sat)));
+      // (docs/52 : dans un monde réel, des lieux qui ont lieu.lat, on gagne aussi les lieux voisins d'un autre type où l'on peut vivre)
+      if (REGLES.dispersion > 0 && b.type) essaimer(parPas(REGLES.dispersion), b.lieu ? null : v => v.type === b.type);
+      if (REGLES.fuite > 0 && sat > 1) essaimer(parPas(Math.min(.5, REGLES.fuite * (1 - 1 / sat))));
       if (syn) essaimer(SY.exploration);                                                         // les machines explorent (docs/16)
       // (docs/38) l'hivernage : à la fin de l'automne, une part s'en va, cycle après cycle, vers le voisin le plus doux en hiver ;
       // au printemps, les hivernants (la part de la population venue d'ailleurs, avec les petits qu'ils y ont eus) rentrent chez eux
-      if (HIV && !syn && t.plan.regime !== 'vegetal') {
+      const HV = HIVde(b); if (HV && !syn && t.plan.regime !== 'vegetal') {
         const somme = () => suiv.reduce((a, x) => a + x, 0), noter = (sens, chez, autre, x) => ((hivEv[t.id] ??= {})[sens] ??= []).push([chez, autre, x]);
         const emporte = (vers, f, hiv) => { migrations.push({ taxon: t.id, vers, N: suiv.map(x => x * f), Q: pop.Q && copieQ(pop.Q), A: pop.A && { ...pop.A }, saison: true, ...(hiv ? { hiv } : {}) });
           for (let i = 0; i < K; i++) suiv[i] *= 1 - f; pop.saisonnier = true; };
         if (pop.hiv) for (const de of Object.keys(pop.hiv).sort()) { const h = pop.hiv[de], Ns = somme();   // ceux qui rentrent
           if (!biomes[de] || !(Ns > 0)) { delete pop.hiv[de]; continue; }   // (leur pays n'est plus : ils restent)
-          const f = HIV.retour ? h / HIV.retour.reste : HIV.loin ? 0 : h; if (!(f > 0)) continue;
-          if (HIV.retour?.rang === 0) noter('retour', de, bid, h * Ns);
+          const f = HV.retour ? h / HV.retour.reste : HV.loin ? 0 : h; if (!(f > 0)) continue;
+          if (HV.retour?.rang === 0) noter('retour', de, bid, h * Ns);
           emporte(de, f);
           if (f >= 1 - 1e-9) { pop.hiv = {}; break; }
           for (const k of Object.keys(pop.hiv)) pop.hiv[k] = k === de ? (h - f) / (1 - f) : pop.hiv[k] / (1 - f);
           if (!(pop.hiv[de] > 1e-6)) delete pop.hiv[de]; }
-        if (HIV.depart && somme() >= 2) {                                                                  // ceux qui partent
+        if (HV.depart && somme() >= 2) {                                                                  // ceux qui partent
           const greg = t.phenotypes.reduce((a, ph) => a + (ph.traits.includes('gregarisme') ? ph.frequence || 0 : 0), 0);
           const soc = clamp((t.plan.sociabilite ?? 0) + .08 * (pop.Q?.sociabilite?.m || 0), 0, 1) * (1 + .6 * greg);   // (celle de collectif.sociabiliteDe)
-          const r = routeHiver(t.plan, b, id => biomes[id], soc, pop.routes || 0);
-          if (r) { const q = Math.min(1, r.part * REGLES.hivernage.actif), f = 1 - Math.pow(1 - q, 1 / HIV.depart.long);   // (au bout de la fenêtre, q est parti)
-            if (HIV.depart.rang === 0) noter('depart', bid, r.vers.id, q * somme());
+          const r = routeHiver(t.plan, b, id => biomes[id], soc, pop.routes || 0, REGLES.hivernage, axesA);
+          if (r) { const q = Math.min(1, r.part * REGLES.hivernage.actif), f = 1 - Math.pow(1 - q, 1 / HV.depart.long);   // (au bout de la fenêtre, q est parti)
+            if (HV.depart.rang === 0) noter('depart', bid, r.vers.id, q * somme());
             emporte(r.vers.id, f, bid); } }
       }
       pop.N = suiv;
@@ -799,7 +845,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
       for (const [bid, fb, n] of M.parts) { const P = E.pops[bid]; if (!P) continue; const m = Math.min(n, P.N[fb]); P.N[fb] -= m; P.N[j] += m; } }
     delete E.manque; delete E.idx; delete E.proche;
     // un nouveau trait, parfois : sur le phénotype le plus nombreux du biome le plus peuplé
-    if (t.plan.regime !== 'synthetique' && R() < REGLES.nouveau_trait) {
+    if (t.plan.regime !== 'synthetique' && R() < REGLES.nouveau_trait * PAS) {
       const [bid, pop] = Object.entries(E.pops).sort((a, b) => b[1].N.reduce((x, y) => x + y, 0) - a[1].N.reduce((x, y) => x + y, 0))[0] || [];
       if (pop) {
         const i = pop.N.indexOf(Math.max(...pop.N)), base = t.phenotypes[i].traits;
@@ -824,9 +870,10 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
     const tot = L.reduce((a, x) => a + x[2], 0); if (tot < 20) continue; const [chez, autre] = L.slice().sort((a, b) => b[2] - a[2])[0], nom = id => biomes[id]?.nom || id;
     ev.push({ type: 'migration', taxon: tid, biome: chez, detail: sens === 'depart' ? `la migration d'automne commence : ≈ ${Math.round(tot)} bêtes partent hiverner vers ${nom(autre)}` : `la migration de printemps commence : ≈ ${Math.round(tot)} hivernants rentrent de ${nom(autre)}` }); }
   // 5. les arrivées
+  let fondees = null;   // (docs/52) les lieux qu'une lignée gagne ce cycle, au pas d'un monde au jour
   for (const mg of migrations) {
-    const E = etat.get(mg.taxon), t = taxons.find(x => x.id === mg.taxon);
-    if (!E.pops[mg.vers]) E.pops[mg.vers] = { N: new Array(t.phenotypes.length).fill(0), depuis: n, avant: 0, maladie: null, flux0: 1, immig: 0 };
+    const E = etat.get(mg.taxon), t = Tmap.get(mg.taxon);   // (vitesse : les lignées par leur nom, et non une recherche par arrivée)
+    if (!E.pops[mg.vers]) { E.pops[mg.vers] = { N: new Array(t.phenotypes.length).fill(0), depuis: n, avant: 0, maladie: null, flux0: 1, immig: 0 }; if (PAS !== 1) (fondees ??= []).push([mg.taxon, mg.vers]); }
     const D = E.pops[mg.vers]; if (ME && D.n0 == null) D.n0 = D.N.reduce((a, x) => a + x, 0);   // (docs/50) ceux qui étaient là avant toute arrivée
     D.immig = (D.immig || 0) + mg.N.reduce((a, x) => a + x, 0);   // le flux de gènes reçu
     if (D.hiv || mg.hiv) { const na = D.N.reduce((a, x) => a + x, 0), nb = mg.N.reduce((a, x) => a + x, 0), tot = na + nb;   // (docs/38) la part d'hivernants
@@ -838,6 +885,11 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
     if (ME && 'M' in mg) ME.recevoir(D, mg.M, mg.N.reduce((a, x) => a + x, 0));   // (docs/50) ce que les migrants apportent de mémoire : additionné, puis mêlé une fois (plus bas)
     mg.N.forEach((x, i) => { D.N[i] += x; });
   }
+  // (docs/52) au pas d'un monde au jour, ceux qui partent chaque cycle vers un lieu où la lignée n'est pas sont une fraction de bête :
+  // ils fondent un groupe de quatre, une fois sur autant que la fraction le dit (le même nombre en moyenne), sinon personne n'arrive.
+  // Sans cela, une lignée ne gagnerait jamais de lieu neuf : une population de moins de deux bêtes ne tient pas
+  if (fondees) for (const [tid, vers] of fondees) { const D = etat.get(tid).pops[vers], s = D.N.reduce((a, x) => a + x, 0); if (!(s < 4)) continue;
+    const u = hasard(`${tid}|${vers}`, inst.monde.graine, n); D.N = u < s / 4 && s > 0 ? D.N.map(x => x * 4 / s) : D.N.map(() => 0); }
   if (ME) for (const E of etat.values()) for (const D of Object.values(E.pops)) ME.installer(D);   // (docs/50) la mémoire du lieu et celle de ses arrivants, mêlées par les effectifs, quel que soit l'ordre des arrivées
 
   if (SP) SP.apres();   // la contagion, la guérison, les souches qui naissent et s'éteignent (docs/18)
@@ -855,14 +907,16 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
       const eff = effP.get(bid), b = biomes[bid];
       const s = REGLES.separation, nid = `${t.id}.${bid}`;
       // le flux de gènes reçu (une moyenne glissante de la part d'immigrants) et l'écart au reste de l'espèce
-      pop.flux = .85 * (pop.flux0 ?? 0) + .15 * Math.min(1, (pop.immig || 0) / Math.max(1, eff));
+      // (docs/52 : au pas d'un monde au jour, une moyenne sur le même temps, de la part d'immigrants par cycle de référence)
+      if (PAS === 1) pop.flux = .85 * (pop.flux0 ?? 0) + .15 * Math.min(1, (pop.immig || 0) / Math.max(1, eff));
+      else { const k = parPas(.15); pop.flux = (1 - k) * (pop.flux0 ?? 0) + k * Math.min(1, (pop.immig || 0) / Math.max(1, eff) / PAS); }
       const autres = Object.entries(E.pops).filter(([k]) => k !== bid && effP.get(k) >= 1);
       if (autres.length && (pop.A || pop.Q)) { const W = autres.reduce((a, [k]) => a + effP.get(k), 0), Ar = {}, Qr = {};
         for (const [k2, q] of autres) { const w = effP.get(k2) / W; for (const id in q.A || {}) Ar[id] = (Ar[id] || 0) + w * q.A[id]; for (const k in q.Q || {}) (Qr[k] ??= { m: 0 }).m += w * q.Q[k].m; }
         pop.div = divergence(pop.A, pop.Q, Ar, Qr); } else pop.div = 0;
-      const pret = n - pop.depuis >= s.cycles && eff >= s.effectif && !taxons.some(x => x.id === nid), isole = clamp(1 - Math.max(pop.flux, Object.values(pop.hiv || {}).reduce((a, x) => a + x, 0)) / s.flux, 0, 1);   // (des hivernants ne font pas une lignée : ils repartent, docs/38)
+      const pret = n - pop.depuis >= s.cycles / PAS && eff >= s.effectif && !taxons.some(x => x.id === nid), isole = clamp(1 - Math.max(pop.flux, Object.values(pop.hiv || {}).reduce((a, x) => a + x, 0)) / s.flux, 0, 1);   // (des hivernants ne font pas une lignée : ils repartent, docs/38)
       const ecolo = pret && t.plan.niche && dist(t.plan.niche, b.axes) >= s.distance * (t.plan.tolerance || .35), geno = pret && pop.div >= s.divergence;
-      if ((ecolo || geno) && isole > 0 && R() < s.chance * isole * ((ecolo ? 1 : 0) + (geno ? Math.min(4, pop.div / s.divergence) : 0))) {
+      if ((ecolo || geno) && isole > 0 && R() < s.chance * PAS * isole * ((ecolo ? 1 : 0) + (geno ? Math.min(4, pop.div / s.divergence) : 0))) {
         const plan = deriver(t.plan, b, R), mode = SR ? PON.separer(t.plan, plan, b, nid, n) : null;   // (docs/25)
         const glisse = DT ? DI.deriver(t.plan, plan, nid, n) : null;   // (docs/30) le spectre glisse
         const neuve = FOR && inst.monde?.formes ? FOR.noter(t.plan, plan, formesVues ??= new Set(tousT.map(x => x.plan?.corps?.forme))) : null;   // (docs/33) une forme nouvelle
@@ -888,17 +942,18 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
       if (eff < 2) { if (pop.avant >= 20 && !pop.saisonnier) ev.push({ type: 'extinction', taxon: t.id, biome: bid, detail: 'la population disparaît' }); continue; }   // (un groupe de migrants qui n'a pas pris ne fait pas un événement)
       const tend = pop.avant > 0 ? (eff - pop.avant) / pop.avant : 1;
       if (pop.avant < 2 && !pop.saisonnier) ev.push({ type: 'migration', taxon: t.id, biome: bid, detail: 'une population s\'installe' });   // (les arrivées trop maigres pour durer ne comptent pas)
-      if (pop.avant >= 20 && !pop.saisonnier && tend <= REGLES.effondrement) ev.push({ type: 'effondrement', taxon: t.id, biome: bid, detail: `${Math.round(tend * 100)} % sur le cycle` });
-      if (pop.avant >= 20 && !pop.saisonnier && tend >= REGLES.explosion) ev.push({ type: 'explosion', taxon: t.id, biome: bid, detail: `+${Math.round(tend * 100)} % sur le cycle` });
+      // (docs/52 : au pas d'un monde au jour, un cycle ne fait ni effondrement ni explosion : ils se lisent sur des mois, pas encore ici)
+      if (PAS === 1 && pop.avant >= 20 && !pop.saisonnier && tend <= REGLES.effondrement) ev.push({ type: 'effondrement', taxon: t.id, biome: bid, detail: `${Math.round(tend * 100)} % sur le cycle` });
+      if (PAS === 1 && pop.avant >= 20 && !pop.saisonnier && tend >= REGLES.explosion) ev.push({ type: 'explosion', taxon: t.id, biome: bid, detail: `+${Math.round(tend * 100)} % sur le cycle` });
       const morts = (pop.mortsNat || 0) + (pop.mortsExt || 0) + (pop.mortsPred || 0) + (pop.mortsMal || 0);
-      const p = { biome: bid, effectif: Math.round(eff), tendance: +tend.toFixed(3), depuis: pop.depuis };
+      const p = { biome: bid, effectif: PAS === 1 ? Math.round(eff) : +eff.toFixed(4), tendance: +tend.toFixed(PAS === 1 ? 3 : 6), depuis: pop.depuis };   // (docs/52 : l'effectif exact, au pas d'un monde au jour)
       if (pop.maladie) p.maladie = { reste: pop.maladie.reste, virulence: pop.maladie.virulence, part: +clamp((pop.mortsMal || 0) / Math.max(1e-9, morts), 0, 1).toFixed(3) };
       if (pop.mortsExt > 0) p.pression = +clamp(pop.mortsExt / morts, 0, 1).toFixed(3);
       if (pop.mortsPred > 0) p.predation = +clamp(pop.mortsPred / morts, 0, 1).toFixed(3);
       if (pop.satiete != null) p.satiete = +pop.satiete.toFixed(3);
       if (GEN && pop.Q) p.quant = ecrireQ(pop.Q);
-      if (SEX && pop.A) { const a = {}; for (const id of Object.keys(pop.A).sort()) if (pop.A[id] >= 1e-5) a[id] = +pop.A[id].toFixed(5); if (Object.keys(a).length) p.alleles = a; }
-      if (pop.flux != null) p.flux = +clamp(pop.flux, 0, 1).toFixed(4);
+      if (SEX && pop.A) { const a = {}, d = PAS === 1 ? 5 : 9; for (const id of Object.keys(pop.A).sort()) if (pop.A[id] >= 1e-5) a[id] = +pop.A[id].toFixed(d); if (Object.keys(a).length) p.alleles = a; }
+      if (pop.flux != null) p.flux = +clamp(pop.flux, 0, 1).toFixed(PAS === 1 ? 4 : 8);
       if (pop.hiv) { const h = {}; for (const k of Object.keys(pop.hiv).sort()) if (pop.hiv[k] >= 1e-4) h[k] = +Math.min(1, pop.hiv[k]).toFixed(4); if (Object.keys(h).length) p.hivernants = h; }   // (docs/38)
       if (REGLES.mefiance.actif && opt.mefiance !== false) {                 // ce que la population a appris des joueurs (docs/12)
         // (docs/50, dans un monde à la mémoire éveillée : une bête blessée qui survit apprend aussi, et chaque lignée à son caractère)
@@ -933,15 +988,15 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
     t.phenotypes.forEach((p, i) => {
       if (i > 0 && totP[i] < .5) return;
       const f = total ? totP[i] / total : 0;
-      const q = { id: p.id, frequence: +f.toFixed(4), traits: p.traits, cout_total: +E.couts[i].toFixed(3) };
-      if (t.populations.length > 1) { q.frequence_par_biome = {}; for (const pop of t.populations) { const N = E.pops[pop.biome].N, s = N.reduce((a, x) => a + x, 0); q.frequence_par_biome[pop.biome] = +(s ? N[i] / s : 0).toFixed(4); } }
+      const dF = PAS === 1 ? 4 : 8, q = { id: p.id, frequence: +f.toFixed(dF), traits: p.traits, cout_total: +E.couts[i].toFixed(3) };
+      if (t.populations.length > 1) { q.frequence_par_biome = {}; for (const pop of t.populations) { const N = E.pops[pop.biome].N, s = N.reduce((a, x) => a + x, 0); q.frequence_par_biome[pop.biome] = +(s ? N[i] / s : 0).toFixed(dF); } }
       const ec = ecartsDe(p.traits, cat); if (Object.keys(ec).length) q.ecarts = ec;
       q.selection = +(f - (p.frequence || 0)).toFixed(4);
       garde.push(q);
     });
     t.phenotypes = garde;
     const avant = Object.values(E.pops).reduce((a, p) => a + p.avant, 0), tend = avant > 0 ? (total - avant) / avant : 1;
-    t.statut = total < REGLES.menace ? 'menace' : tend > .05 ? 'croissance' : tend < -.05 ? 'declin' : 'stable';
+    t.statut = total < REGLES.menace ? 'menace' : tend > .05 * PAS ? 'croissance' : tend < -.05 * PAS ? 'declin' : 'stable';
     // (docs/50) le caractère de la lignée : ce qu'elle est avant d'avoir rien appris des joueurs, lu sur son corps et son tempérament
     if (ME) { const car = ME.caractere(t); if (car) t.caractere = car; else delete t.caractere; }
     sortie.push(t);
@@ -972,8 +1027,10 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   const duree = opt.duree_ms ?? 86400000, d0 = Date.parse(inst.cycle.date);
   return {
     orvane: CONTRAT, monde: (m => m === inst.monde ? clone(m) : m)((m => SDi ? SDi.monde(m) : m)((m => SP ? SP.monde(m) : m)((m => SY ? SY.monde(m) : m)(SN ? SN.monde(SC ? SC.monde(inst.monde) : inst.monde) : SC ? SC.monde(inst.monde) : inst.monde)))),
-    cycle: { n, date: new Date((Number.isFinite(d0) ? d0 : 0) + duree).toISOString(), pressions_recues: pressions.nombre ?? 0, ...(saison ? { saison } : {}) },
-    biomes: Object.values(biomes).map(b => phase == null ? b : { ...b, axes_saison: axesSaison(b, phase) }), catalogue: { version: inst.catalogue?.version || '0.1', traits, ...(GEN ? { quantitatifs: clone(QUANT) } : {}), organes: CORPS.catalogueOrganes(), ...(SF ? { flore: FLO.TRAITS } : {}), ...(SDi ? { flore_riche: DIV.catalogue() } : {}), ...(SAV ? { savoirs: SAV } : {}), ...(ME ? { memoire: MEM.catalogue() } : {}), ...(MC ? { monde: MC } : {}) },
+    cycle: { n, date: new Date((Number.isFinite(d0) ? d0 : 0) + duree).toISOString(), pressions_recues: pressions.nombre ?? 0, ...(saison ? { saison } : {}), ...(JOURC != null ? { jour: CALEN.jourIso(JOURC), lune: CALEN.lune(JOURC) } : {}) },
+    // (docs/52) dans un monde au calendrier, chaque lieu publie sa saison (sa phase, son nom, sa production du jour) et son soleil
+    biomes: Object.values(biomes).map(b => { if (phase == null) return b; if (!SL) return { ...b, axes_saison: axesSaison(b, phase) }; const s = SL.get(b.id);
+      return { ...b, axes_saison: axesS(b), ...(s ? { saison: { phase: s.phase, nom: s.nom, production: +s.production.toFixed(3) } } : {}), ...(b.lieu && Number.isFinite(b.lieu.lat) ? { soleil: CALEN.soleil(b.lieu.lat, b.lieu.lon || 0, JOURC) } : {}) }; }), catalogue: { version: inst.catalogue?.version || '0.1', traits, ...(GEN ? { quantitatifs: clone(QUANT) } : {}), organes: CORPS.catalogueOrganes(), ...(SF ? { flore: FLO.TRAITS } : {}), ...(SDi ? { flore_riche: DIV.catalogue() } : {}), ...(SAV ? { savoirs: SAV } : {}), ...(ME ? { memoire: MEM.catalogue() } : {}), ...(MC ? { monde: MC } : {}) },
     taxons: sortie, evenements: ev
   };
 }

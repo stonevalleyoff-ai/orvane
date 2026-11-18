@@ -24,6 +24,7 @@ moteur/phenologie.js  les saisons des plantes : le feuillage caduc ou persistant
 moteur/diversite.js   la flore riche : quarante-sept formes de plantes, douze caractères hérités, la radiation, la concurrence pour la place, la colonisation, les extinctions (docs/48)
 moteur/succession.js  les plantes sous le feu : les catastrophes et le sec leur prennent des pieds, l'herbe puis les buissons reprennent la place des arbres, le couvert suit les arbres (docs/47)
 moteur/meteo.js       la météo : le temps du cycle dans chaque lieu, parcelle par parcelle (la pluie, la neige, le gel, les orages, les canicules) (docs/45)
+moteur/calendrier.js  le calendrier d'un monde réel : un cycle est un jour, la saison de chaque lieu tirée de son climat, le soleil, la lune, le pas de temps (docs/52)
 moteur/grammaire.js   la grammaire des effets et des conduites : une lueur qui attire, une décharge qui foudroie, un musc qui repousse (docs/32)
 moteur/castes.js      les castes : des colonies, une reine, des ouvrières, des soldats (docs/33)
 moteur/formes.js      les formes nouvelles : le corps segmenté, rayonné, à tentacules (docs/33)
@@ -84,6 +85,7 @@ bancs/herbier.js      le banc de l'herbier : chaque forme de plante dessinée, s
 bancs/diversite.js    le banc de la flore riche : de 54 à 257 lignées de plantes ; qui mange quoi ; le feu qui trie les caractères ; la place qui se dispute
 bancs/succession.js   le banc de la succession : une forêt brûlée, l'herbe, les buissons, puis les arbres ; le couvert qui tombe et revient
 bancs/meteo.js        le banc de la météo : des fronts qui passent, une sécheresse qui s'installe, la vie qui suit le temps
+bancs/terre.js        le banc de la Terre : le soleil, la lune, les saisons des deux hémisphères, un pas de 1 au bit près, un cerf qui vit quinze ans, un monde réel au jour
 bancs/grammaire.js    le banc de la grammaire : qui peut dire quoi, où ça porte, des phrases variées, la sélection
 bancs/formes.js       le banc des corps et des vies nouvelles : la colonie qui gagne, le mille-pattes, l'étoile, la pieuvre, la naïade
 bancs/esprit.js       le banc de l'esprit : qui apprend, une tradition, la perte, chasser ensemble, la curiosité

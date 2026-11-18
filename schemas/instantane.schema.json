@@ -383,6 +383,32 @@
           "type": "object",
           "description": "(docs/31) Le climat : depuis quand, l'écart de température et d'humidité de tout le monde depuis l'éveil, la marche au hasard, les ponts de terre émergés (ponts), le nombre d'îles nées (iles)."
         },
+        "temps": {
+          "type": "object",
+          "description": "(docs/52) Le pas de temps d'un monde au jour : un cycle vaut « jours » jours ; le moteur met ses constantes à l'échelle (pas = jours / reference, 120 par défaut). Les durées d'un plan restent en cycles.",
+          "properties": {
+            "jours": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "reference": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        },
+        "calendrier": {
+          "type": "object",
+          "description": "(docs/52) Un monde au calendrier : chaque cycle a sa date, chaque lieu sa saison (celle de son climat ou de sa latitude), son soleil ; la lune passe.",
+          "properties": {
+            "hemisphere": {
+              "enum": [
+                "nord",
+                "sud"
+              ]
+            }
+          }
+        },
         "meteo": {
           "type": "object",
           "description": "(docs/45) La météo : depuis quand chaque lieu a son temps du cycle.",
@@ -468,6 +494,25 @@
         "pressions_recues": {
           "type": "integer",
           "description": "Nombre d'événements de pression intégrés dans ce cycle."
+        },
+        "jour": {
+          "type": "string",
+          "description": "(docs/52) Dans un monde au calendrier : le jour que ce cycle a vécu (AAAA-MM-JJ, UTC)."
+        },
+        "lune": {
+          "type": "object",
+          "description": "(docs/52) La lune ce jour : sa phase (0 nouvelle, 0,5 pleine), la part éclairée, son nom.",
+          "properties": {
+            "phase": {
+              "$ref": "#/$defs/unite"
+            },
+            "eclairee": {
+              "$ref": "#/$defs/unite"
+            },
+            "nom": {
+              "type": "string"
+            }
+          }
         },
         "saison": {
           "type": "object",
@@ -603,6 +648,54 @@
               }
             ],
             "description": "Amplitudes saisonnières de ce biome (false : aucune, ex. une grotte ou un volcan). Par défaut : température ±0,15, lumière ±0,1, humidité ±0,08, production ±25 %."
+          },
+          "lieu": {
+            "$ref": "#/$defs/lieu_reel"
+          },
+          "normales": {
+            "type": "object",
+            "description": "(docs/52) Les normales mensuelles d'un lieu réel (1991–2020) : 12 températures (°C ; la surface de la mer pour un lieu marin), 12 pluies (mm), 12 évapotranspirations (mm) ; sa saison en vient, jour après jour.",
+            "properties": {
+              "t": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 12,
+                "maxItems": 12
+              },
+              "p": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 12,
+                "maxItems": 12
+              },
+              "etp": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 12,
+                "maxItems": 12
+              },
+              "rad": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              },
+              "npp": {
+                "type": "number"
+              }
+            }
+          },
+          "saison": {
+            "$ref": "#/$defs/saison_lieu"
+          },
+          "soleil": {
+            "$ref": "#/$defs/soleil"
           },
           "axes_saison": {
             "type": "object",
@@ -1352,6 +1445,55 @@
             "type": "string",
             "description": "Nom donné par le moteur (ou gardé si le jeu en a proposé un)."
           },
+          "reel": {
+            "type": "object",
+            "description": "(docs/52) Dans un monde réel : l'espèce (ou le groupe) de la Terre que porte cette lignée.",
+            "properties": {
+              "nom_scientifique": {
+                "type": "string"
+              },
+              "gbif": {
+                "type": "integer"
+              },
+              "classe": {
+                "type": "string"
+              },
+              "ordre": {
+                "type": "string"
+              },
+              "famille": {
+                "type": "string"
+              },
+              "wikidata": {
+                "type": "string"
+              },
+              "estime": {
+                "type": "boolean"
+              }
+            }
+          },
+          "guilde": {
+            "type": "boolean",
+            "description": "(docs/52) Une guilde : plusieurs espèces réelles semblables, simulées ensemble (especes dit lesquelles)."
+          },
+          "especes": {
+            "type": "array",
+            "description": "(docs/52) Les espèces réelles d'une guilde, et leur part : ce qu'un jeu montre d'elle.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "nom_scientifique": {
+                  "type": "string"
+                },
+                "nom": {
+                  "type": "string"
+                },
+                "part": {
+                  "$ref": "#/$defs/unite"
+                }
+              }
+            }
+          },
           "nom_commun": {
             "type": "string",
             "description": "Le nom commun que lui a donné le premier joueur qui l'a décrite (docs/37). Le nom du moteur (nom) reste ; un jeu montre celui qu'il préfère."
@@ -1493,6 +1635,30 @@
               "maturite": {
                 "type": "number",
                 "description": "Âge de reproduction, en cycles."
+              },
+              "natalite": {
+                "type": "number",
+                "minimum": 0,
+                "description": "(docs/52) Dans un monde réel : les petits qui survivent à leur première année, par tête et par an. Avec elle, la croissance ne se déduit plus de la portée."
+              },
+              "meute": {
+                "type": "number",
+                "minimum": 1,
+                "description": "(docs/52) Un chasseur en meute : la taille du groupe qui chasse (le loup, ~6). La meute abat ce qu'une bête seule n'abattrait pas."
+              },
+              "naissances": {
+                "type": "object",
+                "description": "(docs/52) La saison de ses naissances, dans un monde au calendrier : le centre (la phase de l'année, 0 : le cœur de l'hiver) et la largeur de la fenêtre.",
+                "properties": {
+                  "centre": {
+                    "$ref": "#/$defs/unite"
+                  },
+                  "largeur": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                }
               },
               "portee": {
                 "type": "number",
@@ -2365,6 +2531,27 @@
         }
       }
     },
+    "attributions": {
+      "type": "array",
+      "description": "(docs/52) D'où viennent les données d'un monde réel, et sous quelle licence : un jeu qui montre ce monde les crédite.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "licence": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "usage": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "parcelles": {
       "type": "array",
       "description": "Les parcelles du monde (docs/15), s'il en a : leur biome (type), leur capacité, leurs voisines. Les populations des taxons sont données par biome, avec leur répartition par parcelle.",
@@ -2395,7 +2582,16 @@
               "type": "string"
             }
           },
-          "meteo": { "type": "object", "description": "(docs/45) Le temps qu'il fait dans cette parcelle ce cycle : les mêmes champs que biomes[].meteo (temps, t, e, vent, neige, secheresse, eaux, production)." }
+          "meteo": { "type": "object", "description": "(docs/45) Le temps qu'il fait dans cette parcelle ce cycle : les mêmes champs que biomes[].meteo (temps, t, e, vent, neige, secheresse, eaux, production)." },
+          "lieu": {
+            "$ref": "#/$defs/lieu_reel"
+          },
+          "saison": {
+            "$ref": "#/$defs/saison_lieu"
+          },
+          "soleil": {
+            "$ref": "#/$defs/soleil"
+          }
         }
       }
     }
@@ -2405,6 +2601,97 @@
       "type": "number",
       "minimum": 0,
       "maximum": 1
+    },
+    "lieu_reel": {
+      "type": "object",
+      "description": "(docs/52) Où est ce lieu sur la Terre, dans un monde réel (outils/terre/) : sa position, son pays, son fuseau horaire (l'heure locale d'un joueur qui le joue), son altitude, sa surface.",
+      "properties": {
+        "lat": {
+          "type": "number"
+        },
+        "lon": {
+          "type": "number"
+        },
+        "h3": {
+          "type": "string",
+          "description": "La cellule H3 dont il est une part."
+        },
+        "pays": {
+          "type": "string"
+        },
+        "region": {
+          "type": "string"
+        },
+        "fuseau": {
+          "type": "string",
+          "description": "Le fuseau horaire IANA (Europe/Paris)."
+        },
+        "altitude_m": {
+          "type": "number"
+        },
+        "relief_m": {
+          "type": "number"
+        },
+        "surface_km2": {
+          "type": "number"
+        },
+        "couvert_arbre": {
+          "type": "number"
+        },
+        "profondeur_m": {
+          "type": "number"
+        }
+      }
+    },
+    "saison_lieu": {
+      "type": "object",
+      "description": "(docs/52) La saison d'un lieu ce jour : la phase de SON année (0 : le cœur de son hiver), son nom, sa production du jour (1 en moyenne sur l'année).",
+      "required": [
+        "phase",
+        "nom"
+      ],
+      "properties": {
+        "phase": {
+          "$ref": "#/$defs/unite"
+        },
+        "nom": {
+          "enum": [
+            "hiver",
+            "printemps",
+            "été",
+            "automne"
+          ]
+        },
+        "production": {
+          "type": "number"
+        }
+      }
+    },
+    "soleil": {
+      "type": "object",
+      "description": "(docs/52) Le soleil d'un lieu ce jour : la durée du jour (heures), le midi, le lever et le coucher en heure UTC (« HH:MM ») ; nuit_polaire ou soleil_de_minuit quand il ne se lève ou ne se couche pas.",
+      "properties": {
+        "jour_h": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 24
+        },
+        "midi_utc": {
+          "type": "string"
+        },
+        "lever_utc": {
+          "type": "string"
+        },
+        "coucher_utc": {
+          "type": "string"
+        },
+        "nuit_polaire": {
+          "type": "boolean"
+        },
+        "soleil_de_minuit": {
+          "type": "boolean"
+        }
+      }
     }
   }
 }

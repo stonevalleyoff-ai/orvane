@@ -49,7 +49,10 @@ function un(S, ms) {
   const lots = S.notes.length ? [{ monde: S.etat.monde.id, source: { jeu: 'solo', compte: 'joueur' }, familles: ['animale', 'synthetique', 'vegetale'], evenements: S.notes }] : [];
   const vue = Parcelles.regrouper(S.etat), r = Tampon.agreger(lots, vue, S.profil, S.tampon);
   S.tampon = r.etat; S.notes = [];
-  S.etat = Orvane.cycle(S.etat, Parcelles.repartir(r.pressions, S.etat, Parcelles.localiser(lots, S.etat)), { duree_ms: ms });
+  // (docs/52) un monde au calendrier vit ses jours : chaque cycle avance sa date d'un jour (de monde.temps.jours), quelle que soit la
+  // période réelle d'un cycle solo ; l'accéléré ne change que le nombre de jours qui passent par minute
+  const cal = S.etat.monde?.calendrier && S.etat.monde?.temps?.jours > 0 ? S.etat.monde.temps.jours * 864e5 : null;
+  S.etat = Orvane.cycle(S.etat, Parcelles.repartir(r.pressions, S.etat, Parcelles.localiser(lots, S.etat)), { duree_ms: cal ?? ms });
   return S.etat.evenements || [];
 }
 function cycles(S, n) { const ev = []; for (let k = 0; k < Math.max(0, n | 0); k++) ev.push(...un(S, S.periode)); return ev; }

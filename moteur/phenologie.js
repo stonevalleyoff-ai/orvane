@@ -49,20 +49,22 @@ function eveiller(inst) {
 // un cycle : ce que la flore appelle. ctx : { monde, n, phase, biomes, saisons : les amplitudes par défaut du moteur }
 function preparer(ctx) {
   const { monde, n, phase, biomes } = ctx, A = monde.annee || 0; if (!monde.phenologie || phase == null || !A) return null;
-  const k = REGLES.rampe > 0 ? clamp((n - monde.phenologie.depuis - 1) / (A * REGLES.rampe)) : 1, c = -Math.cos(2 * Math.PI * phase);
-  const F = {}, force = bid => (F[bid] ??= biomes[bid] ? forceDe(biomes[bid], ctx.saisons || { temperature: REGLES.saison_pleine }) : 0);
-  const CAL = Object.fromEntries(Object.keys(REGLES.parts).map(p => [p, calendrier(p, phase)])), parts = {};
+  const k = REGLES.rampe > 0 ? clamp((n - monde.phenologie.depuis - 1) / (A * REGLES.rampe)) : 1, c0 = -Math.cos(2 * Math.PI * phase);
+  // (docs/52) dans un monde au calendrier, chaque lieu a sa phase (celle de son année) et la force de ses saisons (celle de son climat)
+  const SL = ctx.saisons_lieux || null, phB = SL ? bid => SL.get(bid)?.phase ?? phase : () => phase, cDe = SL ? bid => -Math.cos(2 * Math.PI * phB(bid)) : () => c0;
+  const F = {}, force = bid => (F[bid] ??= SL?.get(bid)?.force ?? (biomes[bid] ? forceDe(biomes[bid], ctx.saisons || { temperature: REGLES.saison_pleine }) : 0));
+  const CAL0 = Object.fromEntries(Object.keys(REGLES.parts).map(p => [p, calendrier(p, phase)])), CALs = {}, calDe = SL ? bid => (CALs[bid] ??= Object.fromEntries(Object.keys(REGLES.parts).map(p => [p, calendrier(p, phB(bid))]))) : () => CAL0, parts = {};
   const meteo = bid => { const m = biomes[bid]?.meteo; return m && typeof m === 'object' ? m : null; };
   return {
     // ce que chaque part donne dans ce lieu ce cycle ({ nectar, fruits, graines } ; 1 : comme toujours) ; null si rien ne change
-    parts: bid => { if (bid in parts) return parts[bid]; const s = force(bid) * k; return (parts[bid] = s > 0 ? Object.fromEntries(Object.entries(CAL).map(([p, v]) => [p, 1 + s * (v - 1)])) : null); },
+    parts: bid => { if (bid in parts) return parts[bid]; const s = force(bid) * k; return (parts[bid] = s > 0 ? Object.fromEntries(Object.entries(calDe(bid)).map(([p, v]) => [p, 1 + s * (v - 1)])) : null); },
     // la pousse d'une plante dans ce lieu ce cycle : son calendrier, et le temps qu'il fait
-    pousse: (bid, plan) => { const a = REGLES.pousse[LIGNEUX.has(port(plan)) ? feuillageDe(plan) : port(plan)] ?? .3; return Math.max(0, 1 + k * force(bid) * a * c) * (1 + k * ((meteo(bid)?.production ?? 1) - 1)); },
+    pousse: (bid, plan) => { const a = REGLES.pousse[LIGNEUX.has(port(plan)) ? feuillageDe(plan) : port(plan)] ?? .3; return Math.max(0, 1 + k * force(bid) * a * cDe(bid)) * (1 + k * ((meteo(bid)?.production ?? 1) - 1)); },
     // ce que la dent prend aux plantes de ce lieu ce cycle, rapporté à ce qu'elle prendrait sans saisons
-    dent: bid => Math.max(0, 1 + k * force(bid) * REGLES.dent * c),
+    dent: bid => Math.max(0, 1 + k * force(bid) * REGLES.dent * cDe(bid)),
     // ce qu'un jeu montre : le stade, et la part du feuillage qui est là (1 : tout)
     stade: (bid, plan) => {
-      const s = force(bid), f = feuillageDe(plan), forme = port(plan), nectar = plan.rendement ? plan.rendement.nectar > 0 : FLEURS.has(forme), fruits = plan.rendement ? plan.rendement.fruits > 0 : FRUITS.has(forme), lig = LIGNEUX.has(forme), caduc = lig && f === 'caduc', hiver = clamp(-c), W = p => fenetre(phase, REGLES.parts[p]);
+      const c = cDe(bid), phase = phB(bid), CAL = calDe(bid), s = force(bid), f = feuillageDe(plan), forme = port(plan), nectar = plan.rendement ? plan.rendement.nectar > 0 : FLEURS.has(forme), fruits = plan.rendement ? plan.rendement.fruits > 0 : FRUITS.has(forme), lig = LIGNEUX.has(forme), caduc = lig && f === 'caduc', hiver = clamp(-c), W = p => fenetre(phase, REGLES.parts[p]);
       const feuillage = +(caduc ? 1 - s * (1 - clamp((c + .7) / 1.2)) : forme === 'herbe' || forme === 'roseau' ? 1 - .6 * s * hiver : 1).toFixed(2);
       let st = 'feuilles';
       if ((meteo(bid)?.neige || 0) >= REGLES.neige && (plan.hauteur_m ?? 1) < .5) st = 'sous_la_neige';
