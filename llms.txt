@@ -10,7 +10,7 @@ Points essentiels :
 - Fonctions, appelées en `POST /rest/v1/rpc/<fonction>` : `orvane_inscrire_jeu`, `orvane_regler_jeu`, `orvane_deposer`, `orvane_jeu`. Elles répondent toujours `{"ok": true|false, …}`, avec HTTP 200 dans les deux cas.
 - La clé d'administration (`orvadm_…`) ne va jamais dans un jeu publié.
 - Une créature tirée d'une lignée est un membre de sa population : ce qui lui arrive se renvoie. Une créature propre au jeu (humain, monstre, boss) ne se renvoie pas. Un jeu ne joue que la famille `animale` s'il ne demande rien (les autres : `synthetique`, les machines ; `vegetale`, les plantes) : `Tampon.filtrer(inst, { familles })` à la lecture, `"familles"` dans ses lots.
-- Licence : PolyForm Shield 1.0.0 (https://polyformproject.org/licenses/shield/1.0.0). Brancher un jeu, même commercial, et copier le tampon, les schémas ou un traducteur dans un jeu sont permis, avec la ligne « Required Notice: Copyright StoneValley (https://github.com/stonevalleyoff-ai/orvane) ». Fournir un produit concurrent à partir du code d'Orvane ne l'est pas.
+- Licence : licence de branchement Orvane (LICENSE). Un jeu inscrit, même commercial, peut se brancher et copier les pièces de branchement (schémas, types, tampon, kits, traducteur d'exemple), à condition de renvoyer les pressions de ses joueurs au monde qu'il lit. Le reste du code ne se réutilise pas sans l'accord écrit de StoneValley.
 
 ## Brancher un jeu
 

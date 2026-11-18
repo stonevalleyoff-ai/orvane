@@ -30,6 +30,7 @@
     <input type="text" id="iNom" name="nom" minlength="2" maxlength="60" required autocomplete="off" placeholder="Ex. : Mon monde vivant">
     <label for="iContact"><b>Contact</b> · facultatif : un courriel ou un lien, pour qu'Orvane puisse vous écrire</label>
     <input type="text" id="iContact" name="contact" maxlength="200" autocomplete="email" placeholder="moi@exemple.fr">
+    <label class="accord" for="iLicence"><input type="checkbox" id="iLicence" name="licence" required><span>J'ai lu la <a href="../LICENSE">licence de branchement</a> et je l'accepte : mon jeu renverra au monde ce que ses joueurs y font.</span></label>
     <div class="actions"><button type="submit" id="bInscrire">Créer les clés du jeu <span aria-hidden="true">→</span></button><span class="etat" id="eInscrire" role="status" aria-live="polite"></span></div>
   </form>
 </section>
@@ -88,7 +89,7 @@
 </section>
 
 <div class="help-strip"><span aria-hidden="true">↳</span><p><b>Besoin d’un exemple concret ?</b><br>Explorez le traducteur de Stone Valley et le mode d’emploi.</p><a href="https://github.com/stonevalleyoff-ai/orvane/blob/main/docs/LISEZ-MOI.md" aria-label="Voir le mode d’emploi du traducteur"><span aria-hidden="true">↗</span></a></div></div></div>
-<section class="connect-bottom wrap"><p>Le monde continue d’évoluer, avec ou sans votre jeu.</p><a class="inline-link" href="../monde/?monde=orvane">Le découvrir dans l’Observatoire <span aria-hidden="true">↗</span></a></section></main><footer class="site-footer"><div class="wrap footer-top"><a class="brand" href="../"><svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M20 35V19M20 26C8 27 4 18 5 7c11 0 17 6 15 19ZM20 21C19 11 26 5 35 5c1 10-4 17-15 16Z" stroke="currentColor" stroke-width="1.5"/><path d="m11 14 9 12M28 12l-8 9" stroke="currentColor" stroke-width="1.3"/></svg><span>orvane<span class="brand-caption">MOTEUR DU VIVANT</span></span></a><p>Un monde partagé.<br>Des histoires qui évoluent.</p><nav aria-label="Ressources"><a href="https://github.com/stonevalleyoff-ai/orvane">GitHub <span aria-hidden="true">↗</span></a><a href="https://github.com/stonevalleyoff-ai/orvane/blob/main/BRANCHER-UN-JEU.md">Guide d’intégration <span aria-hidden="true">↗</span></a><a href="../llms.txt">Orvane pour les IA <span aria-hidden="true">↗</span></a></nav></div><div class="wrap footer-bottom"><span>© StoneValley · Orvane</span><span>Licence <a href="../LICENSE">PolyForm Shield 1.0.0</a></span><span>Illustrations d’univers · non issues de la simulation</span></div></footer><script>
+<section class="connect-bottom wrap"><p>Le monde continue d’évoluer, avec ou sans votre jeu.</p><a class="inline-link" href="../monde/?monde=orvane">Le découvrir dans l’Observatoire <span aria-hidden="true">↗</span></a></section></main><footer class="site-footer"><div class="wrap footer-top"><a class="brand" href="../"><svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M20 35V19M20 26C8 27 4 18 5 7c11 0 17 6 15 19ZM20 21C19 11 26 5 35 5c1 10-4 17-15 16Z" stroke="currentColor" stroke-width="1.5"/><path d="m11 14 9 12M28 12l-8 9" stroke="currentColor" stroke-width="1.3"/></svg><span>orvane<span class="brand-caption">MOTEUR DU VIVANT</span></span></a><p>Un monde partagé.<br>Des histoires qui évoluent.</p><nav aria-label="Ressources"><a href="https://github.com/stonevalleyoff-ai/orvane">GitHub <span aria-hidden="true">↗</span></a><a href="https://github.com/stonevalleyoff-ai/orvane/blob/main/BRANCHER-UN-JEU.md">Guide d’intégration <span aria-hidden="true">↗</span></a><a href="../llms.txt">Orvane pour les IA <span aria-hidden="true">↗</span></a></nav></div><div class="wrap footer-bottom"><span>© StoneValley · Orvane</span><span>Licence <a href="../LICENSE">de branchement Orvane</a></span><span>Illustrations d’univers · non issues de la simulation</span></div></footer><script>
 (() => {
   const SUPA = 'https://rospodujiyltmxitykwc.supabase.co', PUB = 'sb_publishable_F98uYIaPrLTjhj3n7QiBOg_SOtFynn8';
   const MONDE = 'https://stonevalleyoff-ai.github.io/orvane/mondes/orvane/';
@@ -124,6 +125,7 @@ for (const t of inst.taxons) for (const p of t.populations) console.log(t.nom, p
     ev.preventDefault();
     const nom = $('iNom').value.trim(), contact = $('iContact').value.trim(), e = $('eInscrire');
     if (nom.length < 2 || nom.length > 60) { dire(e, 'Le nom du jeu fait de 2 à 60 caractères.', false); $('iNom').focus(); return; }
+    if (!$('iLicence').checked) { dire(e, 'Pour inscrire un jeu, acceptez la licence de branchement.', false); $('iLicence').focus(); return; }
     $('bInscrire').disabled = true; dire(e, 'Inscription…');
     const r = await rpc('orvane_inscrire_jeu', { p_nom: nom, p_contact: contact || null });
     if (!r.ok) { $('bInscrire').disabled = false; dire(e, r.erreur || 'L\'inscription a échoué.', false); return; }
@@ -132,7 +134,7 @@ for (const t of inst.taxons) for (const p of t.populations) console.log(t.nom, p
     $('kNomJeu').textContent = nom; $('kJeu').textContent = r.jeu; $('kCle').textContent = r.cle; $('kAdmin').textContent = r.cle_admin;
     $('iAdmin').value = r.cle_admin; $('iCle').value = r.cle;
     exemples(cles);
-    $('cCles').hidden = false; $('fInscrire').querySelectorAll('input').forEach(i => i.disabled = true);
+    $('cCles').hidden = false; $('fInscrire').querySelectorAll('input').forEach(i => i.disabled = true);   // (la case de la licence aussi : l'accord est donné)
     $('cCles').scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 

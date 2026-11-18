@@ -30,7 +30,7 @@ N'importe quel jeu peut s'y brancher. Il lit le monde et en fait ses créatures,
 
 ## Licence
 
-Orvane est distribué sous la licence [PolyForm Shield 1.0.0](https://polyformproject.org/licenses/shield/1.0.0) (voir [LICENSE](LICENSE)). N'importe qui peut brancher son jeu, même commercial ou au code fermé, et copier dans son jeu le tampon, les schémas ou un traducteur. Seule limite : ne pas se servir du code d'Orvane pour fournir un produit qui lui fait concurrence, comme un autre moteur d'écosystème, un autre monde partagé ou une copie renommée. Copyright StoneValley.
+Orvane est sous la **licence de branchement Orvane** ([LICENSE](LICENSE)). Le code est publié pour être lu et pour brancher un jeu, pas pour être réutilisé. N'importe qui peut brancher son jeu, même commercial ou au code fermé, s'en servir des lignées du monde et copier dans son jeu les pièces de branchement (les schémas, les types, le tampon, les kits, le traducteur d'exemple). En échange, un jeu branché **renvoie les pressions de ses joueurs** au monde qu'il lit. Le reste (le moteur, la genèse, l'hébergement, l'observatoire, les mondes) ne se réutilise pas sans l'accord écrit de StoneValley. Ce qui a été publié avant le 18 novembre 2026 l'a été sous PolyForm Shield 1.0.0. Copyright StoneValley.
 
 ## In English
 
@@ -39,4 +39,4 @@ Orvane is an ecosystem and evolution engine running **one shared living world**:
 2. read the world from `https://stonevalleyoff-ai.github.io/orvane/mondes/orvane/instantane.json` and turn its lineages into creatures;
 3. report what players do (encounters, kills, captures) through the `orvane_deposer` RPC.
 
-Over-hunted species become rarer, warier or smaller, in every connected game. The step-by-step guide, with endpoints and examples, is [CONNECT-A-GAME.md](CONNECT-A-GAME.md), and [docs/glossary.md](docs/glossary.md) translates every field name; the rest of the documentation is in French. A game can read only the biomes it plays, piece by piece (`tampon/morceaux.js`). Licence: [PolyForm Shield 1.0.0](https://polyformproject.org/licenses/shield/1.0.0). Use it freely in any game, commercial or not; just don't use its code to build a competing product.
+Over-hunted species become rarer, warier or smaller, in every connected game. The step-by-step guide, with endpoints and examples, is [CONNECT-A-GAME.md](CONNECT-A-GAME.md), and [docs/glossary.md](docs/glossary.md) translates every field name; the rest of the documentation is in French. A game can read only the biomes it plays, piece by piece (`tampon/morceaux.js`). Licence: the Orvane Connection Licence ([LICENSE](LICENSE), French text binding, English translation included). Any game, commercial or closed-source, may connect to the world and ship the connection pieces (schemas, types, buffer, kits, example translator), provided it sends its players' pressures back to the world it reads. The rest of the code is not reusable without StoneValley's written consent.

@@ -6,6 +6,6 @@
   "unity": "2021.3",
   "dependencies": { "com.unity.nuget.newtonsoft-json": "3.2.1" },
   "keywords": ["orvane", "ecosysteme", "ecosystem", "faune"],
-  "license": "PolyForm-Shield-1.0.0",
+  "license": "SEE LICENSE IN LICENSE",
   "author": { "name": "StoneValley", "url": "https://github.com/stonevalleyoff-ai/orvane" }
 }

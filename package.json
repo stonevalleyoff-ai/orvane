@@ -35,7 +35,7 @@
     "types": "node outils/types.js"
   },
   "engines": { "node": ">=18" },
-  "license": "PolyForm-Shield-1.0.0",
+  "license": "SEE LICENSE IN LICENSE",
   "author": "StoneValley",
   "homepage": "https://stonevalleyoff-ai.github.io/orvane/",
   "repository": { "type": "git", "url": "git+https://github.com/stonevalleyoff-ai/orvane.git" },

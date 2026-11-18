@@ -10,6 +10,8 @@ Orvane fait vivre un seul monde, le monde d'Orvane, et tous les jeux s'y branche
 4. **Régler l'exposition** (facultatif) : dire à Orvane ce que le jeu sait montrer, avec la clé d'administration.
 5. **Renvoyer des pressions** : compter ce que font les joueurs et déposer des lots avec `orvane_deposer` et la clé du jeu. `node outils/verifier.js mon-lot.json` dit, avant le premier dépôt, si le lot sera accepté.
 
+C'est la contrepartie du branchement : la [licence](LICENSE) permet à tout jeu de se brancher, même commercial, à condition de renvoyer au monde ce que ses joueurs y font (son article 4).
+
 ## Les adresses
 
 | quoi | adresse |
@@ -213,7 +215,11 @@ La nuit suivante, le cycle lit les lots de tous les jeux et les rapporte à l'ex
 - Orvane ne reçoit que des comptes (« 14 tués, 31 croisés »), jamais des conclusions, et aucune donnée personnelle : `p_compte` est opaque.
 - Le monde appartient à tous les jeux : un jeu n'y pèse qu'en proportion de ses joueurs, et jamais plus de la moitié de la pression sur une espèce.
 - **Les versions.** Le contrat est versionné (`"orvane": "1.0"` dans chaque instantané). Tant que le premier chiffre ne change pas, rien ne casse : il suffit que le jeu **ignore ce qu'il ne connaît pas** (un champ, une valeur, un biome). Un changement qui casserait un jeu est annoncé à l'avance dans [CHANGELOG.md](CHANGELOG.md) (docs/43). En JavaScript, le moteur et le tampon s'installent à une version précise : `npm install github:stonevalleyoff-ai/orvane#v1.0.0`.
-- **La licence.** Orvane est sous [PolyForm Shield 1.0.0](https://polyformproject.org/licenses/shield/1.0.0) (`LICENSE`). Brancher un jeu, même commercial ou au code fermé, est permis, de même que copier dans le jeu `tampon/tampon.js`, les schémas ou un traducteur et les adapter. Joignez alors l'adresse de la licence et la ligne `Required Notice: Copyright StoneValley (https://github.com/stonevalleyoff-ai/orvane)`, par exemple en commentaire en tête du fichier copié. Ce qui n'est pas permis : se servir du code d'Orvane pour fournir un produit qui lui fait concurrence (un autre moteur d'écosystème, un autre monde partagé où brancher des jeux, une copie renommée).
+- **La licence.** Orvane est sous la licence de branchement Orvane ([LICENSE](LICENSE)).
+  - **Permis**, à un jeu inscrit : lire le monde et en faire ses créatures, même dans un jeu commercial ou au code fermé ; montrer ses lignées, leurs noms, leurs silhouettes ; copier dans le jeu les pièces de branchement (`schemas/`, `types/`, `tampon/`, `kits/`, `traducteurs/exemple/`, `index.js`, `outils/verifier.js`, `outils/banc-traducteur.js`, `monde/silhouette.js`, `monde/herbier.js`), les adapter et les distribuer avec lui ; utiliser le paquet `orvane` dans le jeu, monde solo compris, sans modifier ni extraire le moteur.
+  - **Exigé** : renvoyer les pressions de ses joueurs au monde qu'il lit (les rencontres, et chaque action que le jeu permet sur les bêtes), au moins une fois par cycle où des joueurs ont joué, avec des comptes vrais. Le monde `essai` ne suffit plus dès que le jeu est ouvert à des joueurs. Garder en tête de chaque fichier copié la ligne `Copyright StoneValley — Licence de branchement Orvane (https://github.com/stonevalleyoff-ai/orvane/blob/main/LICENSE)`.
+  - **Interdit** sans l'accord écrit de StoneValley : réutiliser le reste du code (le moteur, la genèse, l'hébergement, l'observatoire, les mondes), faire tourner le moteur hors d'un jeu branché, fournir un produit concurrent.
+  - Un jeu qui ne renvoie pas ses pressions est prévenu ; trente jours plus tard, sa licence prend fin et sa clé peut être suspendue.
 
 ## Liste de vérification
 
@@ -241,4 +247,4 @@ Orvane runs one shared ecosystem world that any game can plug into. **The full g
 
 Every RPC is `POST https://rospodujiyltmxitykwc.supabase.co/rest/v1/rpc/<function>`, with headers `apikey: sb_publishable_F98uYIaPrLTjhj3n7QiBOg_SOtFynn8` and `Content-Type: application/json`. The JSON body holds the `p_…` parameters. Every answer is `{"ok": true, …}` or `{"ok": false, "erreur": "…"}`, with HTTP 200 in both cases.
 
-Licence: [PolyForm Shield 1.0.0](https://polyformproject.org/licenses/shield/1.0.0). Plugging in any game, commercial or closed-source, is allowed, and so is copying `tampon/tampon.js`, the schemas or a translator into it. Keep the licence URL and the line `Required Notice: Copyright StoneValley (https://github.com/stonevalleyoff-ai/orvane)` with the copied files. Using Orvane's code to provide a competing product is not allowed.
+Licence: the Orvane Connection Licence (`LICENSE`). Any registered game, commercial or closed-source, may connect and ship the connection pieces, provided it sends its players' pressures back to the world it reads. The rest of the code is not reusable without StoneValley's written consent.

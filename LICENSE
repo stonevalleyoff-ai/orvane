@@ -1,34 +1,224 @@
-Orvane
-Copyright StoneValley
+Licence de branchement Orvane — version 1.0, du 18 novembre 2026
+Copyright © StoneValley. Tous droits réservés, sauf ce que cette licence permet.
 
-Ce dépôt (le moteur, le tampon, les traducteurs, les schémas, les mondes et la documentation) est
-distribué sous la licence PolyForm Shield 1.0.0. Seul son texte fait foi :
-
-    https://polyformproject.org/licenses/shield/1.0.0
-
-Required Notice: Copyright StoneValley (https://github.com/stonevalleyoff-ai/orvane)
+Orvane est publié pour qu'on puisse le lire et y brancher un jeu, pas pour être réutilisé. En échange du
+monde qu'il reçoit, chaque jeu branché renvoie ce que ses joueurs y font.
 
 
-En clair : ce résumé aide à lire la licence et n'a pas de valeur juridique ; seul le texte ci-dessus en a.
+1. Les mots de cette licence
 
-Ce qui est permis, à tous, sans rien demander :
-- brancher n'importe quel jeu sur le monde d'Orvane, y compris un jeu commercial ou au code fermé ;
-- copier dans son jeu le tampon, les schémas ou un traducteur, et les adapter ;
-- lire le code, le modifier pour son propre usage, l'étudier, s'en inspirer ;
-- redistribuer le code, modifié ou non, à condition de joindre cette licence (ou son adresse) et la
-  ligne « Required Notice » ci-dessus.
+« Orvane » : le logiciel de ce dépôt (le moteur, le tampon, les outils, l'hébergement, l'observatoire,
+les bancs, la documentation) et tout ce qu'il publie (le site, les mondes, leurs instantanés, leurs
+morceaux, leurs planches, leur herbier).
 
-Ce qui ne l'est pas :
-- se servir du code d'Orvane pour fournir un produit qui lui fait concurrence : un autre moteur
-  d'écosystème et d'évolution, un autre monde partagé où brancher des jeux, une copie d'Orvane sous
-  un autre nom. Peu importe que ce produit soit gratuit, ou qu'il soit écrit dans un autre langage.
-Un jeu qui se branche sur Orvane ne lui fait pas concurrence : il s'en sert.
+« le Monde » : un monde qu'Orvane héberge et publie, d'abord le monde d'Orvane, tel qu'il est publié à
+l'adresse https://stonevalleyoff-ai.github.io/orvane/.
 
-Le logiciel est fourni tel quel, sans garantie d'aucune sorte.
+« un Jeu branché » : un jeu, une application ou un service interactif, inscrit sur Orvane (il a sa clé
+de jeu), qui tire ses créatures du Monde et qui respecte l'article 4.
+
+« les Pièces de branchement » : les dossiers schemas/, types/, tampon/, kits/ et traducteurs/exemple/ ;
+les fichiers index.js, outils/verifier.js, outils/banc-traducteur.js, outils/types.js,
+monde/silhouette.js et monde/herbier.js ; et la documentation qui explique comment brancher un jeu
+(BRANCHER-UN-JEU.md, CONNECT-A-GAME.md, docs/).
+
+« les Contenus du Monde » : ce que le Monde publie : ses lignées, leurs noms, leurs valeurs, leurs
+silhouettes, ses planches, son herbier, sa chronique, son muséum.
+
+« les Pressions » : les lots que décrivent schemas/pression.schema.json, docs/4 et docs/50.
 
 
-In plain English (not legal text; only the licence above is binding): anyone may use Orvane freely,
-including in commercial or closed-source games, and may copy and adapt the buffer, schemas and
-translators into their game, provided this licence (or its URL) and the Required Notice line come
-along. What is not allowed is using Orvane's code to provide a competing product, such as another
-ecosystem engine, another shared world for games, or a renamed copy of Orvane.
+2. Le principe
+
+Orvane appartient à StoneValley. Tout ce que cette licence ne permet pas expressément est interdit sans
+l'accord écrit de StoneValley.
+
+
+3. Ce que la licence permet
+
+Gratuitement, dans le monde entier, de façon non exclusive, tant qu'elle n'a pas pris fin (article 7) :
+
+3.1 À tous : consulter le site, l'observatoire et la documentation ; lire le code pour comprendre
+Orvane et vérifier ce qu'il fait.
+
+3.2 À l'éditeur d'un Jeu branché, et seulement pour ce jeu :
+  a) lire le Monde et en faire les créatures du jeu, y compris dans un jeu commercial ou au code fermé ;
+  b) utiliser dans le jeu les Contenus du Monde, pour montrer aux joueurs les lignées et ce qui leur
+     arrive ;
+  c) copier les Pièces de branchement dans le jeu, les adapter et les distribuer avec lui, sous forme
+     source ou compilée ;
+  d) utiliser dans le jeu le paquet orvane (index.js et ce qu'il charge, le moteur compris), y compris
+     pour y faire vivre une copie du Monde (le monde solo, moteur/solo.js), à condition de ne pas
+     modifier le moteur, de ne pas l'extraire du jeu et de ne pas le proposer séparément ;
+  e) développer et essayer le jeu en déposant ses lots dans le monde d'essai (« essai »).
+
+
+4. La contrepartie : renvoyer les Pressions
+
+Le Monde est commun : chaque jeu qui s'en sert lui rend ce que ses joueurs y font. Un Jeu branché :
+  a) dépose, avec sa propre clé de jeu et dans le Monde qu'il lit, les Pressions de ses joueurs : les
+     rencontres avec les bêtes tirées du Monde, et chaque action du contrat que le jeu permet sur
+     elles (prélèvement, capture, libération, nourrissage, déplacement, et les autres), selon
+     schemas/pression.schema.json et docs/4 ;
+  b) les dépose régulièrement : au moins une fois pour chaque cycle du Monde où des joueurs ont joué ;
+     une partie jouée hors ligne est déposée quand le jeu retrouve le réseau ;
+  c) dépose des comptes vrais : il n'invente rien, ne gonfle rien, n'omet rien exprès, ne dépose pas
+     pour un autre jeu, et ne compte pas les créatures qui lui sont propres (personnages, monstres,
+     boss qui ne viennent pas du Monde) ;
+  d) ne contourne pas le tampon ni ses plafonds, par exemple avec plusieurs clés pour un même jeu ou des
+     comptes inventés.
+
+Les lots déposés dans « essai » ne remplissent plus cette obligation dès que le jeu est ouvert à des
+joueurs (sortie, accès anticipé, bêta ouverte). Un jeu où les joueurs n'agissent pas sur les bêtes, et
+qui ne fait que montrer le Monde, ne peut s'en servir qu'avec l'accord écrit de StoneValley.
+
+
+5. Ce qui est interdit
+
+Sauf accord écrit de StoneValley :
+  a) copier, réutiliser, modifier, traduire, adapter, redistribuer, vendre, louer ou sous-licencier
+     Orvane, ou une partie d'Orvane, en dehors de l'article 3 : notamment le moteur, la genèse, la
+     fusion, l'hébergement, l'observatoire, les bancs et les mondes ;
+  b) faire tourner le moteur hors d'un Jeu branché, ou y faire vivre un autre monde qu'une copie du
+     Monde ;
+  c) se servir d'Orvane, de son code ou des Contenus du Monde pour créer ou fournir un produit qui lui
+     fait concurrence : un autre moteur d'écosystème ou d'évolution, un autre monde partagé où brancher
+     des jeux, une copie d'Orvane sous un autre nom ;
+  d) retirer ou altérer les mentions de StoneValley et de cette licence.
+
+
+6. Les mentions
+
+Chaque Pièce de branchement copiée dans un jeu garde, ou reçoit, en tête de fichier ou à côté de lui :
+« Copyright StoneValley — Licence de branchement Orvane
+(https://github.com/stonevalleyoff-ai/orvane/blob/main/LICENSE) ».
+
+
+7. La fin de la licence
+
+Si un Jeu branché ne respecte pas cette licence, notamment l'article 4, StoneValley peut le lui
+signaler, au contact donné à l'inscription, ou publiquement s'il n'en a pas donné. S'il ne s'y conforme
+pas dans les 30 jours, la licence prend fin pour ce jeu : il cesse de lire le Monde et de distribuer les
+Pièces de branchement et le paquet, et StoneValley peut suspendre sa clé. Un manquement délibéré à
+l'article 5 met fin à la licence sans délai.
+
+
+8. Les versions d'avant
+
+Ce qui a été publié avant le 18 novembre 2026 l'a été sous la licence PolyForm Shield 1.0.0 ; les copies
+obtenues avant cette date restent sous cette licence. Tout ce qui est publié depuis l'est sous celle-ci.
+StoneValley peut publier une version nouvelle de cette licence : elle vaut pour ce qui est publié
+ensuite.
+
+
+9. Ce que la loi garantit
+
+Rien dans cette licence ne retire ce que la loi garantit à l'utilisateur légitime d'un logiciel, en
+France l'article L122-6-1 du Code de la propriété intellectuelle (observer, étudier et tester son
+fonctionnement ; l'interopérabilité, dans les conditions de la loi).
+
+
+10. Sans garantie
+
+Orvane et le Monde sont fournis tels quels, sans garantie, dans la mesure permise par la loi. StoneValley
+ne répond pas des dommages nés de leur usage, dans les limites permises par la loi. Le Monde peut
+changer, s'interrompre ou s'arrêter.
+
+
+11. Le droit applicable
+
+Cette licence relève du droit français. Le texte français fait foi ; la traduction anglaise ci-dessous
+aide à le lire et n'a pas de valeur juridique.
+
+
+12. Un autre usage
+
+Pour tout usage que cette licence ne permet pas, demandez l'accord de StoneValley :
+https://github.com/stonevalleyoff-ai/orvane/issues
+
+Les éléments de tiers gardent leur licence : les polices de jeux/lisiere/polices/ sont sous la SIL Open
+Font License 1.1.
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+Orvane Connection Licence — version 1.0, 18 November 2026 (English translation, not legally binding;
+only the French text above is)
+Copyright © StoneValley. All rights reserved, except what this licence allows.
+
+Orvane is published so that people can read it and connect a game to it, not to be reused. In return for
+the world it receives, each connected game sends back what its players do in it.
+
+1. Terms. "Orvane": the software in this repository and everything it publishes (site, worlds,
+snapshots, pieces, plates, herbarium). "The World": a world Orvane hosts and publishes, first of all the
+world of Orvane at https://stonevalleyoff-ai.github.io/orvane/. "A Connected Game": a game, app or
+interactive service registered on Orvane (it has a game key), that draws its creatures from the World
+and complies with section 4. "The Connection Pieces": schemas/, types/, tampon/, kits/,
+traducteurs/exemple/, index.js, outils/verifier.js, outils/banc-traducteur.js, outils/types.js,
+monde/silhouette.js, monde/herbier.js, and the documentation on connecting a game. "World Content":
+what the World publishes (lineages, names, values, silhouettes, plates, herbarium, chronicle, museum).
+"Pressures": the batches described in schemas/pression.schema.json, docs/4 and docs/50.
+
+2. Principle. Orvane belongs to StoneValley. Anything this licence does not expressly allow requires
+StoneValley's written consent.
+
+3. What is allowed, free of charge, worldwide, non-exclusively, until the licence ends (section 7).
+3.1 Anyone may browse the site, the observatory and the documentation, and read the code to understand
+Orvane and check what it does.
+3.2 The publisher of a Connected Game, for that game only, may: (a) read the World and turn it into the
+game's creatures, including in a commercial or closed-source game; (b) use World Content in the game to
+show players the lineages and what happens to them; (c) copy the Connection Pieces into the game, adapt
+them and ship them with it, as source or compiled; (d) use the orvane package (index.js and what it
+loads, engine included) in the game, including to run a copy of the World (the solo world,
+moteur/solo.js), provided the engine is not modified, not extracted from the game and not offered
+separately; (e) develop and test the game by depositing its batches in the test world ("essai").
+
+4. In return: send the Pressures back. The World is shared: every game that uses it gives back what its
+players do in it. A Connected Game: (a) deposits, with its own game key and into the World it reads, its
+players' Pressures: encounters with creatures drawn from the World, and every contract action the game
+allows on them (kill, capture, release, feeding, moving, and the others), per
+schemas/pression.schema.json and docs/4; (b) deposits them regularly: at least once for every World
+cycle in which players played; offline play is deposited when the game is back online; (c) deposits true
+counts: nothing invented, inflated, deliberately left out, deposited on behalf of another game, and none
+of the game's own creatures (characters, monsters, bosses that do not come from the World); (d) does not
+circumvent the buffer or its caps, for instance with several keys for one game or made-up accounts.
+Batches deposited in "essai" no longer meet this obligation once the game is open to players (release,
+early access, open beta). A game where players do not act on the creatures, and which only shows the
+World, needs StoneValley's written consent.
+
+5. What is not allowed, without StoneValley's written consent: (a) copying, reusing, modifying,
+translating, adapting, redistributing, selling, renting or sublicensing Orvane or any part of it outside
+section 3, in particular the engine, the genesis, the fusion, the hosting, the observatory, the benches
+and the worlds; (b) running the engine outside a Connected Game, or running any world in it other than a
+copy of the World; (c) using Orvane, its code or World Content to create or provide a competing product:
+another ecosystem or evolution engine, another shared world for games to connect to, a renamed copy of
+Orvane; (d) removing or altering StoneValley's and this licence's notices.
+
+6. Notices. Each Connection Piece copied into a game keeps, or is given, at its top or next to it:
+"Copyright StoneValley — Orvane Connection Licence
+(https://github.com/stonevalleyoff-ai/orvane/blob/main/LICENSE)".
+
+7. Termination. If a Connected Game does not comply, in particular with section 4, StoneValley may
+notify it, at the contact given at registration or publicly if none was given. If it does not comply
+within 30 days, the licence ends for that game: it stops reading the World and distributing the
+Connection Pieces and the package, and StoneValley may suspend its key. A deliberate breach of section 5
+ends the licence at once.
+
+8. Earlier versions. What was published before 18 November 2026 was published under PolyForm Shield
+1.0.0; copies obtained before that date remain under it. Everything published since is under this
+licence. StoneValley may publish a new version of this licence; it applies to what is published after it.
+
+9. Statutory rights. Nothing here removes what the law grants a lawful user of software (in France,
+article L122-6-1 of the Intellectual Property Code).
+
+10. No warranty. Orvane and the World are provided as is, without warranty, to the extent the law allows.
+StoneValley is not liable for damage arising from their use, within the limits the law allows. The World
+may change, pause or stop.
+
+11. Governing law. French law. The French text is the binding one.
+
+12. Other uses. For any use this licence does not allow, ask StoneValley:
+https://github.com/stonevalleyoff-ai/orvane/issues
+
+Third-party elements keep their own licence: the fonts in jeux/lisiere/polices/ are under the SIL Open
+Font License 1.1.
