@@ -549,7 +549,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   const axesS = SL ? b => SL.get(b.id)?.axes ?? axesSaison(b, phase) : b => axesSaison(b, phase), prodS = SL ? b => SL.get(b.id)?.production ?? productionSaison(b, phase) : b => productionSaison(b, phase);
   const phaseDe = SL ? b => SL.get(b.id)?.phase ?? phase : () => phase;
   // l'hiver et l'été d'un lieu (les routes de l'hiver) : dans un monde au calendrier, ceux de son climat
-  const axesA = SL ? (x, ph) => (x.normales ? CALEN.saisonLieu(x, CALEN.dateDeLaPhase(x, ph, JOURC))?.axes : null) ?? axesSaison(x, ph) : axesSaison;
+  const axesAc = new Map(), axesA = SL ? (x, ph) => { const k = x.id + '|' + ph; let v = axesAc.get(k); if (!v) axesAc.set(k, v = (x.normales ? CALEN.saisonLieu(x, CALEN.dateDeLaPhase(x, ph, JOURC))?.axes : null) ?? axesSaison(x, ph)); return v; } : axesSaison;
   const SMe = MET && inst.monde?.meteo ? MET.preparer({ monde: inst.monde, biomes, n, axes: axesS }) : null; if (SMe) ev.push(...SMe.evenements);
   const axesCycle = SMe ? b => SMe.axes(b, axesS(b)) : axesS, prodCycle = SMe ? b => prodS(b) * SMe.production(b) : prodS;
   const SR = PON && inst.monde?.ponte ? PON.preparer({ taxons: tousT, biomes }) : null;   // (docs/25) les pondeurs, les mangeurs d'œufs, les nids pillés
@@ -910,10 +910,18 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
       // (docs/52 : au pas d'un monde au jour, une moyenne sur le même temps, de la part d'immigrants par cycle de référence)
       if (PAS === 1) pop.flux = .85 * (pop.flux0 ?? 0) + .15 * Math.min(1, (pop.immig || 0) / Math.max(1, eff));
       else { const k = parPas(.15); pop.flux = (1 - k) * (pop.flux0 ?? 0) + k * Math.min(1, (pop.immig || 0) / Math.max(1, eff) / PAS); }
-      const autres = Object.entries(E.pops).filter(([k]) => k !== bid && effP.get(k) >= 1);
+      // (docs/52 : une lignée réelle vit dans des centaines de lieux ; au pas d'un monde au jour, le reste de l'espèce se compte une
+      //  fois pour toutes, moins le lieu lui-même — les mêmes moyennes, à l'arrondi près — au lieu d'une fois par lieu)
+      if (PAS !== 1) { const T = E.tot ??= (() => { const o = { W: 0, A: {}, Q: {} }; for (const [k, q] of Object.entries(E.pops)) { const w = effP.get(k); if (!(w >= 1)) continue; o.W += w;
+          for (const id in q.A || {}) o.A[id] = (o.A[id] || 0) + w * q.A[id]; for (const c in q.Q || {}) o.Q[c] = (o.Q[c] || 0) + w * q.Q[c].m; } return o; })();
+        const ici = eff >= 1 ? eff : 0, W = T.W - ici;
+        if (W >= 1 && (pop.A || pop.Q)) { const Ar = {}, Qr = {};
+          for (const id in T.A) Ar[id] = Math.max(0, (T.A[id] - ici * (pop.A?.[id] || 0)) / W); for (const c in T.Q) Qr[c] = { m: (T.Q[c] - ici * (pop.Q?.[c]?.m || 0)) / W };
+          pop.div = divergence(pop.A, pop.Q, Ar, Qr); } else pop.div = 0; }
+      else { const autres = Object.entries(E.pops).filter(([k]) => k !== bid && effP.get(k) >= 1);
       if (autres.length && (pop.A || pop.Q)) { const W = autres.reduce((a, [k]) => a + effP.get(k), 0), Ar = {}, Qr = {};
         for (const [k2, q] of autres) { const w = effP.get(k2) / W; for (const id in q.A || {}) Ar[id] = (Ar[id] || 0) + w * q.A[id]; for (const k in q.Q || {}) (Qr[k] ??= { m: 0 }).m += w * q.Q[k].m; }
-        pop.div = divergence(pop.A, pop.Q, Ar, Qr); } else pop.div = 0;
+        pop.div = divergence(pop.A, pop.Q, Ar, Qr); } else pop.div = 0; }
       const pret = n - pop.depuis >= s.cycles / PAS && eff >= s.effectif && !taxons.some(x => x.id === nid), isole = clamp(1 - Math.max(pop.flux, Object.values(pop.hiv || {}).reduce((a, x) => a + x, 0)) / s.flux, 0, 1);   // (des hivernants ne font pas une lignée : ils repartent, docs/38)
       const ecolo = pret && t.plan.niche && dist(t.plan.niche, b.axes) >= s.distance * (t.plan.tolerance || .35), geno = pret && pop.div >= s.divergence;
       if ((ecolo || geno) && isole > 0 && R() < s.chance * PAS * isole * ((ecolo ? 1 : 0) + (geno ? Math.min(4, pop.div / s.divergence) : 0))) {
