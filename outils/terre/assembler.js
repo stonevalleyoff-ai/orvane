@@ -232,7 +232,10 @@ inst = Meteo.eveiller(inst).inst; inst.monde.meteo = { depuis: 0 };
 //  - un carnivore : son métabolisme (ce qu'il lui faut), pour que sa satiété soit celle où ses naissances (natalité × satiété) égalent
 //    ses morts (la faim les multiplie, 1 + 3 (1 − satiété)²) et les siens mangés ;
 // chacun entre des bornes (la place de 0,001 à 50, le métabolisme de 0,02 à 1,5). Quatre passes, la concurrence se répondant.
-const CALER = +arg('--caler', 4), OMNI = new Set(['herbivore', 'omnivore', 'filtreur', 'detritivore']);
+// (--depuis <amorce> : reprendre les réglages calés d'une amorce d'avant — la place, le métabolisme — et ne pas refaire le calage d'un jour)
+const DEPUIS = arg('--depuis') ? JSON.parse(fs.readFileSync(path.resolve(arg('--depuis')), 'utf8')) : null;
+if (DEPUIS) { const P = new Map(DEPUIS.taxons.map(t => [t.id, t.plan])); for (const t of inst.taxons) { const q = P.get(t.id); if (!q) continue; for (const k of ['place', 'metabolisme']) if (q[k] != null) t.plan[k] = q[k]; } }
+const CALER = +arg('--caler', DEPUIS ? 0 : 4), OMNI = new Set(['herbivore', 'omnivore', 'filtreur', 'detritivore']);
 const seq = (r, m, p) => { if (r <= m + p) return 1; let lo = 0, hi = 1; for (let k = 0; k < 40; k++) { const s = (lo + hi) / 2; if (r * s - m * (1 + 3 * (1 - s) ** 2) - p > 0) hi = s; else lo = s; } return hi; };
 for (let pass = 0; pass < CALER; pass++) {
   const brut = [], J = Orvane.cycle(inst, {}, { duree_ms: 864e5, trace: x => brut.push(x) });
@@ -265,6 +268,7 @@ for (let it = 0; it < ANNEE; it++) {
     if (OMNI.has(t.plan.regime)) t.plan.place = +clamp((t.plan.place ?? 1) * Math.pow(lam, -k), .0005, 100).toPrecision(4);
     else if (t.plan.regime === 'carnivore') t.plan.metabolisme = +clamp((t.plan.metabolisme ?? 1) * Math.pow(lam, k), .005, 3).toPrecision(4); }
   ec.sort((x, y) => x - y); pires.sort((x, y) => Math.abs(Math.log(y[1])) - Math.abs(Math.log(x[1])));
+  if (arg('--sortie')) fs.writeFileSync(arg('--sortie'), JSON.stringify(inst));   // (chaque passe est gardée : un arrêt n'en perd qu'une)
   console.log(`calage sur l'année, passe ${it + 1} (${Math.round((Date.now() - t0) / 6e4)} min) : écart médian ×${Math.exp(ec[ec.length >> 1]).toFixed(2)}, 90 % sous ×${Math.exp(ec[Math.floor(ec.length * .9)]).toFixed(2)} ; les plus loin : ${pires.slice(0, 6).map(([id, l]) => `${id} ×${l.toFixed(2)}`).join(', ')}`);
 }
 const rodage = +arg('--rodage', 0);
