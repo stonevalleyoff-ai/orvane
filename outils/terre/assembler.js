@@ -29,7 +29,8 @@ const A = {
   survie_jeune: m => m >= 20 ? .6 : m >= 1 ? .45 : m >= .05 ? .3 : .2,   // la part des petits qui passent leur première année, selon la masse
   meutes: { 'Canis lupus': 6, 'Orcinus orca': 5, 'Lycaon pictus': 8, 'Panthera leo': 4 },
   tolerance: [.2, .7],
-  plancher: 4                 // une population de moins de bêtes n'est pas posée
+  plancher: 4,                // une population de moins de bêtes n'est pas posée
+  sang_chaud: new Set(['Mammalia', 'Aves']), sang_froid: .15   // ce que brûlent les autres, rapporté à un mammifère de leur masse
 };
 // --- les règles du moteur pour un monde réel (monde.regles) ---
 const REGLES = {
@@ -39,6 +40,8 @@ const REGLES = {
   maladie: { chance: 0 },    // les maladies seront des souches réelles (docs/52, plus tard), pas des épidémies tirées au hasard
   hybride: { actif: false },
   besoin: 6, conversion: .06, // un prédateur mange chaque jour ce que mange une vraie bête (un loup ~1 kg/jour), et peu de cette viande fait des petits
+  demi_satiete: 5,           // … et il est rassasié à moitié quand il a cinq fois ce besoin à sa portée (le besoin a grandi : trente fois, il crevait de faim)
+  petites_proies: true,      // un mangeur d'insectes prend les insectes, si petits soient-ils
   longevite_predateur: 0,
   hivernage: { actif: 1 },
   colonisation: .005         // une lignée fonde un lieu voisin où elle n'est pas de loin en loin : ~1,5 % par an et par voisin favorable
@@ -109,6 +112,7 @@ for (const e of vivant.especes || vivant.taxons || vivant) {
   plan.niche = niche; plan.tolerance = r4(clamp(1.3 * ec + .12, A.tolerance[0], A.tolerance[1]));
   if (e.reel?.nom_scientifique && A.meutes[e.reel.nom_scientifique] && !(plan.meute > 1)) plan.meute = A.meutes[e.reel.nom_scientifique];
   if (!Number.isFinite(plan.natalite)) plan.natalite = natalite(plan);
+  if (plan.metabolisme == null && !A.sang_chaud.has(e.reel?.classe ?? String(e.reel?.groupe || '').split(' ')[0])) plan.metabolisme = A.sang_froid;   // (un poisson, un reptile, un insecte brûlent peu)
   if (plan.diete && !plan.diete0) plan.diete0 = { ...plan.diete };
   plan.locomotion ??= ['marche']; plan.activite ??= 'diurne'; plan.sociabilite ??= .3; plan.temperament ??= .4; plan.vitesse_rel ??= 4; plan.perception ??= .5;
   const d = +e.densite_km2 || 1, populations = [];

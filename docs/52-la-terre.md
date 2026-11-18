@@ -49,10 +49,16 @@ Ce que le pas ne change pas, parce que cela vit au rythme du joueur et non à ce
 - la méfiance et la mémoire (docs/12, docs/50) ;
 - la météo (docs/45), qui était déjà le temps d'une journée.
 
-**Trois champs du plan, pour une espèce réelle :**
+**Quatre champs du plan, pour une espèce réelle :**
 - `natalite` : les petits qui passent leur première année, par tête et par an. Avec elle, la croissance ne se déduit plus de la portée et de la masse : elle est celle de l'espèce (le cerf 0,25 ; le loup 0,4). L'assemblage la calcule d'après la portée, la maturité, la longévité et la survie des jeunes ;
 - `meute` : un chasseur en meute (le loup, 6) abat ce que la meute peut abattre. Seul, un prédateur ne prend pas plus de 1,5 fois sa masse ; la meute de loups vit de cerfs de 150 kg ;
-- `naissances` : `{ centre, largeur }`, la fenêtre de l'année où naissent les petits, à la phase du lieu. Sans elle, c'est celle du monde (`regles.naissances` : vers la mi-mai, pour la force que le monde lui donne).
+- `naissances` : `{ centre, largeur }`, la fenêtre de l'année où naissent les petits, à la phase du lieu. Sans elle, c'est celle du monde (`regles.naissances` : vers la mi-mai, pour la force que le monde lui donne) ;
+- `metabolisme` : ce que la bête brûle, rapporté à un mammifère de sa masse. Il vaut 1 par défaut, et l'assemblage met 0,15 aux poissons, aux reptiles, aux amphibiens et aux invertébrés. La bête mange d'autant moins, et fait d'autant plus de petits de ce qu'elle mange.
+
+**Ce qu'un prédateur mange, dans un monde réel.**
+- **La ration** : un prédateur mange chaque jour ce que mange une vraie bête (`regles.besoin = 6` : un loup ~1 kg par jour, une buse ~50 g), et peu de cette viande fait des petits (`conversion = 0,06`).
+- **La satiété** : il est rassasié à moitié quand il a cinq fois ce besoin à sa portée (`demi_satiete = 5`). Avec les trente fois d'Orvane et une ration réelle, presque tous les prédateurs d'Europe crevaient de faim : la satiété médiane était de 0,01. Elle est de 0,4 désormais.
+- **Les petites proies** (`regles.petites_proies`) : un mangeur d'insectes prend les insectes, si petits soient-ils (la mésange les chenilles, la truite les larves). Dans l'eau, un chasseur qui nage avale des proies qui nagent jusqu'à cinq mille fois plus petites que lui (le thon le hareng, le phoque le cabillaud). Ailleurs, rien de plus petit qu'un cinquantième de sa masse, comme dans Orvane.
 
 **Ce qu'il a fallu pour qu'un jour compte.** Ce qui change en un jour est cent fois plus petit que ce qui change en une tranche de vie :
 - **l'arrondi** : un monde au jour écrit l'effectif exact (4 décimales), les allèles et les traits continus avec quatre chiffres de plus. Sans cela, trois cents loups restaient trois cents loups : chaque jour, l'arrondi effaçait ce qui avait changé ;
@@ -88,7 +94,7 @@ Une Terre qui laisserait l'évolution inventer serait un autre monde, copié à 
 | `parcelles[].lieu`, `parcelles[].saison`, `parcelles[].soleil` | la même chose dans la vue publiée, parcelle par parcelle |
 | `taxons[].reel` | l'espèce réelle : nom scientifique, identifiant GBIF, classe, ordre, famille |
 | `taxons[].guilde`, `taxons[].especes` | une guilde : les espèces réelles qu'elle rassemble, et leur part |
-| `plan.natalite`, `plan.meute`, `plan.naissances` | plus haut |
+| `plan.natalite`, `plan.meute`, `plan.naissances`, `plan.metabolisme` | plus haut |
 | `attributions` | d'où viennent les données, sous quelle licence : un jeu qui montre ce monde les crédite |
 
 Tout est ajouté, rien n'est retiré (`node outils/contrat.js` : le contrat tient). Un jeu qui ne connaît pas ces champs lit un monde réel comme un autre. Les biomes publiés sont les biomes universels (`foret`, `prairie`, `taiga`, `lac`…), et chaque lieu réel est une de leurs parcelles. Un jeu qui joue la Bourgogne lit la parcelle de sa forêt : `populations[].parcelles` donne l'effectif de chaque lignée, parcelle par parcelle.

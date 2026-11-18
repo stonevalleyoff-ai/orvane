@@ -1641,6 +1641,11 @@
                 "minimum": 0,
                 "description": "(docs/52) Dans un monde réel : les petits qui survivent à leur première année, par tête et par an. Avec elle, la croissance ne se déduit plus de la portée."
               },
+              "metabolisme": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "description": "(docs/52) Dans un monde réel : ce que la bête brûle, rapporté à un mammifère de sa masse (1 ; un poisson, un reptile, un insecte ~0,15). Elle mange d'autant moins, et fait d'autant plus de petits de ce qu'elle mange."
+              },
               "meute": {
                 "type": "number",
                 "minimum": 1,

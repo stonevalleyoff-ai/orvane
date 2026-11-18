@@ -150,7 +150,8 @@ const REGLES = {
   naissances: { force: 0, centre: .42, largeur: .4, fond: .1 },
   // (docs/52) un monde réel : la chance, par cycle de référence et par lieu voisin qui lui convient tout à fait, qu'une lignée fonde un lieu
   // où elle n'est pas ; null : partout où l'on essaime, on arrive (les mondes d'Orvane)
-  colonisation: null
+  colonisation: null,
+  petites_proies: false      // (docs/52) un monde réel : un mangeur d'insectes prend les insectes, si petits soient-ils (plus haut, appetence)
 };
 // (docs/52) le pas de temps : la part d'un cycle de référence (une « tranche de vie » d'environ 120 jours, celle sur laquelle le
 // moteur a été réglé) que fait un cycle de ce monde. 1 partout, sauf dans un monde au jour (monde.temps = { jours: 1 } : 1/120).
@@ -401,9 +402,15 @@ const BANDE = Math.sqrt(2 * Math.PI) * SIGMA_BANDE / 4;   // ≈ 0,22 : la large
 // (l'alerte collective) et l'heure (un diurne croise peu un nocturne)
 // (docs/52) un chasseur en meute (plan.meute : la taille du groupe qui chasse, le loup ~6) abat ce que la meute peut abattre : la masse
 // qui compte est celle du groupe, pour la plus grosse proie et la proie idéale ; la plus petite reste à la mesure d'une bête
+// (docs/52) dans un monde réel (REGLES.petites_proies), un mangeur d'insectes prend les insectes, si petits soient-ils : la truite les
+// larves, la mésange les chenilles, la baleine le krill ; sans cela, rien de plus petit qu'un cinquantième de sa masse
 function appetence(pred, proie) {
-  const rap = (proie.masse_kg || 1) / ((pred.masse_kg || 1) * (pred.meute > 1 ? pred.meute : 1)); if ((pred.meute > 1 ? (proie.masse_kg || 1) / (pred.masse_kg || 1) : rap) < .02 || rap > 1.5) return 0;
-  const lg = Math.log10(rap) - Math.log10(.3); let f = Math.exp(-(lg * lg) / .5);
+  const rap = (proie.masse_kg || 1) / ((pred.masse_kg || 1) * (pred.meute > 1 ? pred.meute : 1)), r1 = (proie.masse_kg || 1) / (pred.masse_kg || 1);
+  // (et dans l'eau, un chasseur qui nage avale des proies qui nagent, cent fois plus petites que lui : le thon le hareng, le phoque le cabillaud)
+  const menu = REGLES.petites_proies && r1 < .02 && (((pred.diete?.insectes || 0) > 0 && (proie.corps?.forme === 'hexapode' || (proie.masse_kg || 1) <= .02))
+    || ((pred.locomotion || []).includes('nage') && (proie.locomotion || []).includes('nage') && r1 >= 2e-4));
+  if (!menu && ((pred.meute > 1 ? (proie.masse_kg || 1) / (pred.masse_kg || 1) : rap) < .02 || rap > 1.5)) return 0;
+  const lg = Math.log10(rap) - Math.log10(.3); let f = menu ? .8 : Math.exp(-(lg * lg) / .5);
   const vp = (pred.vitesse_rel || 4) * (pred.taille_m || 1), vq = (proie.vitesse_rel || 4) * (proie.taille_m || 1);
   f *= clamp(Math.sqrt(vp / Math.max(.01, vq)), .6, 1.4);
   if ((proie.locomotion || []).includes('vol') && !(pred.locomotion || []).includes('vol')) f *= .3;
@@ -646,7 +653,9 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
       p.part = puiss.map(v => z ? v / z : 0); p.x = x; p.A = A;                       // la part de chaque proie dans ce que ce prédateur prélève
       p.eff = p.E.chasse.map((c, i) => c * (.7 + .6 * (p.E.plans[i].perception ?? .5)) * (p.regime === 'omnivore' ? REGLES.chasse_omnivore : 1) * (GR ? GR.chasse(p.t, biomes[bid], i) : 1) * (ES ? ES.chasse(p.t, bid, i) : 1));
       // (un omnivore ne cherche en viande qu'une part de ce qu'il mange : il ne dispute aux carnivores que cette part)
-      p.besoin = p.E.plans.map(pl => REGLES.besoin * Math.pow(pl.masse_kg || 1, .75) * (p.regime === 'omnivore' ? (REGLES.viande_omnivore ?? 1) * (DT ? DI.viande(pl) : 1) : 1));
+      // (docs/52 : un plan peut dire son métabolisme, ce qu'il brûle rapporté à un mammifère de sa masse : un poisson, un insecte mangent
+      //  bien moins ; sans lui, 1)
+      p.besoin = p.E.plans.map(pl => REGLES.besoin * Math.pow(pl.masse_kg || 1, .75) * (p.regime === 'omnivore' ? (REGLES.viande_omnivore ?? 1) * (DT ? DI.viande(pl) : 1) : 1) * (pl.metabolisme ?? 1));
       p.effMoy = p.pop.N.reduce((a, N, i) => a + N * p.eff[i], 0) / p.Nt; p.besoinMoy = p.pop.N.reduce((a, N, i) => a + N * p.besoin[i], 0) / p.Nt;
     }
     // les prédateurs se partagent les proies : chacun compte, en concurrents, ceux qui mangent les mêmes, au prorata de leur besoin
@@ -665,7 +674,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
     // broutent comme avant
     if (REGLES.cadavres > 0) { const D = T.filter(q => q.regime === 'detritivore');
       if (D.length) { let offre = 0; for (const q of T) if (q.regime !== 'detritivore' && q.regime !== 'vegetal') q.pop.N.forEach((N, i) => { offre += N * (q.E.plans[i].masse_kg || 1) * mortalite(q.E.plans[i]); });
-        offre *= REGLES.cadavres; const besoinDe = pl => REGLES.besoin * Math.pow(pl.masse_kg || 1, .75) * PAS;
+        offre *= REGLES.cadavres; const besoinDe = pl => REGLES.besoin * Math.pow(pl.masse_kg || 1, .75) * PAS * (pl.metabolisme ?? 1);
         const demande = D.reduce((a, q) => a + q.pop.N.reduce((x, N, i) => x + N * besoinDe(q.E.plans[i]), 0), 0);
         for (const q of D) { let sN = 0; q.pop.N.forEach((N, i) => { if (N <= 0) return; const be = besoinDe(q.E.plans[i]), a = demande > 0 ? offre * be / demande : 0, sa = a / (a + be); q.pop.ration[i] = N * be * sa; sN += sa * N; });
           q.pop.satiete = q.Nt ? sN / q.Nt : 0; } } }
@@ -722,7 +731,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
         const place = Math.max(0, 1 - sat * (SF ? SF.facteur(t, bid, i) : 1) * (SV ? SV.facteur(t, bid, i) : 1) * (SCa ? SCa.facteur(t, bid, i) : 1) * (ES ? ES.place(t, bid, i) : 1));   // (docs/26 : larve et adulte ne se disputent pas tout)   // (docs/17 : qui supporte les défenses des plantes y trouve plus)
         // ce qui nourrit les naissances : la place pour l'herbivore ; la viande mangée pour le carnivore, convertie en petits à
         // REGLES.conversion (l'énergie vient des plantes : un prédateur ne vit pas de prédateurs qui vivent de lui) ; les deux pour l'omnivore
-        const viande = REGLES.conversion * pop.ration[i] / (E.plans[i].masse_kg || 1);
+        const viande = REGLES.conversion * pop.ration[i] / (E.plans[i].masse_kg || 1) / (E.plans[i].metabolisme ?? 1);   // (docs/52 : qui brûle peu fait plus de petits de ce qu'il mange)
         if (reg === 'carnivore') { nais[i] = Math.min(Np * r * s, viande); m *= 1 + (REGLES.faim_carnivore ?? 3) * (1 - s) * (1 - s); faim = Math.max(faim, 1 - s); }   // un carnivore affamé meurt plus
         else if (reg === 'omnivore') nais[i] = Np * r * place * (1 - .3 * s) * (t.plan.regime === 'carnivore' ? REGLES.omnivore_vegetal ?? 1 : REGLES.omnivore_vegetal_base ?? 1) * (DT ? DI.vegetal(E.plans[i]) : 1) + Math.min(Np * r * .3 * s * (DT ? DI.viande(E.plans[i]) : 1), viande);
         else if (reg === 'detritivore' && REGLES.cadavres > 0) { nais[i] = Np * r * s; m *= 1 + (REGLES.faim_carnivore ?? 3) * (1 - s) * (1 - s); faim = Math.max(faim, 1 - s); }   // (les morts du lieu sont sa place : il naît d'autant plus qu'il est rassasié ; affamé, il meurt plus et s'en va)

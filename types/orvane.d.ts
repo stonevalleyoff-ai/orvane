@@ -690,6 +690,8 @@ export interface Instantane {
       maturite: number;
       /** (docs/52) Dans un monde réel : les petits qui survivent à leur première année, par tête et par an. Avec elle, la croissance ne se déduit plus de la portée. */
       natalite?: number;
+      /** (docs/52) Dans un monde réel : ce que la bête brûle, rapporté à un mammifère de sa masse (1 ; un poisson, un reptile, un insecte ~0,15). Elle mange d'autant moins, et fait d'autant plus de petits de ce qu'elle mange. */
+      metabolisme?: number;
       /** (docs/52) Un chasseur en meute : la taille du groupe qui chasse (le loup, ~6). La meute abat ce qu'une bête seule n'abattrait pas. */
       meute?: number;
       /** (docs/52) La saison de ses naissances, dans un monde au calendrier : le centre (la phase de l'année, 0 : le cœur de l'hiver) et la largeur de la fenêtre. */
