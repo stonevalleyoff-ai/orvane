@@ -86,6 +86,7 @@ bancs/diversite.js    le banc de la flore riche : de 54 à 257 lignées de plant
 bancs/succession.js   le banc de la succession : une forêt brûlée, l'herbe, les buissons, puis les arbres ; le couvert qui tombe et revient
 bancs/meteo.js        le banc de la météo : des fronts qui passent, une sécheresse qui s'installe, la vie qui suit le temps
 bancs/terre.js        le banc de la Terre : le soleil, la lune, les saisons des deux hémisphères, un pas de 1 au bit près, un cerf qui vit quinze ans, un monde réel au jour
+outils/etalon.js      l'étalon : l'Europe vit trois années sans joueurs, et le moteur est noté sur ce que la réalité connaît (docs/53) ; chaque dimanche (.github/workflows/etalon.yml), sur la branche etalon
 bancs/grammaire.js    le banc de la grammaire : qui peut dire quoi, où ça porte, des phrases variées, la sélection
 bancs/formes.js       le banc des corps et des vies nouvelles : la colonie qui gagne, le mille-pattes, l'étoile, la pieuvre, la naïade
 bancs/esprit.js       le banc de l'esprit : qui apprend, une tradition, la perte, chasser ensemble, la curiosité

@@ -1,0 +1,42 @@
+# Orvane — l'étalon (outils/etalon.js, docs/53) : chaque dimanche, l'Europe vit trois années sans joueurs, depuis son amorce, et le
+# moteur est noté sur ce que la réalité connaît (la stabilité, les saisons des naissances et des migrations, les prédateurs). Le
+# rapport va sur la branche etalon (etalon/<monde>/AAAA-MM-JJ.json), jamais sur main, et dans le résumé de l'action. Rien du monde
+# hébergé n'est touché : l'étalon ne fait que lire l'amorce.
+name: etalon
+on:
+  schedule:
+    - cron: '23 4 * * 0'
+  workflow_dispatch:
+    inputs:
+      ans:
+        description: "combien d'années (une année ~ 50 minutes)"
+        default: '3'
+permissions:
+  contents: write
+concurrency:
+  group: etalon
+  cancel-in-progress: false
+jobs:
+  etalon:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: l'Europe, trois années sans joueurs
+        env:
+          ANS: ${{ github.event.inputs.ans }}
+        run: |
+          ans=3; if printf '%s' "$ANS" | grep -Eq '^[1-6]$'; then ans="$ANS"; fi
+          jour=$(date -u +%F)
+          mkdir -p "$RUNNER_TEMP/etalon/europe"
+          node --max-old-space-size=12000 outils/etalon.js --monde europe --ans "$ans" --date "$jour" --sortie "$RUNNER_TEMP/etalon/europe/$jour.json" | tee "$RUNNER_TEMP/etalon.txt"
+          { echo '### L’étalon'; echo; sed 's/^/    /' "$RUNNER_TEMP/etalon.txt"; } >> "$GITHUB_STEP_SUMMARY"
+      - name: le rapport (la branche etalon)
+        run: |
+          git config user.name "orvane-etalon"; git config user.email "actions@users.noreply.github.com"
+          if git fetch -q --depth=1 origin etalon 2>/dev/null; then git checkout -q -B etalon FETCH_HEAD; else git checkout -q --orphan etalon && git rm -rq --cached . && git clean -fdq -e "$RUNNER_TEMP"; fi
+          mkdir -p etalon/europe && cp "$RUNNER_TEMP"/etalon/europe/*.json etalon/europe/
+          ls etalon/europe | grep -E '^[0-9]{4}-[0-9]{2}-[0-9]{2}\.json$' | sort -r | jq -R . | jq -s . > etalon/europe/index.json
+          git add etalon && git commit -qm "L'étalon du $(date -u +%F)" && git push -q origin HEAD:etalon
