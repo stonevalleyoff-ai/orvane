@@ -127,7 +127,13 @@ const parLieu = new Map();
 for (const e of plantesE) for (const b of lieuxDe(e)) { const k = Flore.portDe(e.plan); (parLieu.get(b.id) || parLieu.set(b.id, []).get(b.id)).push([e, k]); }
 const popsPlante = new Map();
 for (const b of biomes) { const ici = parLieu.get(b.id) || []; if (!ici.length) continue;
-  const comp = Flore.compositionDe(b), parts = new Map(comp);
+  let comp = Flore.compositionDe(b);
+  // (la flore d'Orvane ne donne de lichens qu'aux lieux les plus froids, de champignons qu'au sous-sol : dans un lieu réel, les lichens
+  //  prennent une part de l'herbe là où il fait froid, les champignons une petite part de tout là où il y a des arbres)
+  const ports = new Set(ici.map(([, k]) => k)), dans = f => comp.some(([g]) => g === f);
+  if (ports.has('lichen') && !dans('lichen') && b.axes.temperature < .45 && b.milieu !== 'marin' && b.milieu !== 'aquatique') { const h = comp.find(([g]) => g === 'herbe'); comp = h ? [...comp.map(([g, w]) => [g, g === 'herbe' ? w * .7 : w]), ['lichen', h[1] * .3]] : [...comp, ['lichen', .1]]; }
+  if (ports.has('champignon') && !dans('champignon') && b.milieu === 'terrestre' && b.axes.couvert >= .25) comp = [...comp.map(([g, w]) => [g, w * .97]), ['champignon', .03]];
+  const parts = new Map(comp);
   // un port que le lieu a et que personne n'y porte : sa place va aux autres ports, au prorata
   const presents = new Set(ici.map(([, k]) => k)), gardes = comp.filter(([f]) => presents.has(f)), Wg = somme(gardes.map(([, w]) => w));
   if (!gardes.length) continue;

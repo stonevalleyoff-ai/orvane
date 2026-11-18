@@ -49,6 +49,62 @@
    "url": "https://h3geo.org/",
    "licence": "Apache 2.0 (logiciel)",
    "usage": "les cellules et leurs voisines"
+  },
+  {
+   "nom": "GBIF — occurrences (Global Biodiversity Information Facility), API de recherche, facettes par espèce et par cellule H3",
+   "url": "https://www.gbif.org/",
+   "licence": "par jeu de données ; seules les observations sous CC0 1.0 ou CC BY 4.0 sont comptées (jamais CC BY-NC). Citer GBIF.org et les jeux de données ; une publication refera les comptes par un téléchargement GBIF, qui donne un DOI",
+   "usage": "la présence de chaque espèce par cellule H3 de résolution 2 (observations depuis 2000, sans problème géographique, ni fossiles ni bêtes captives), les parts des espèces de chaque guilde"
+  },
+  {
+   "nom": "GBIF Backbone Taxonomy",
+   "url": "https://www.gbif.org/dataset/d7dddbf4-2cf0-4f39-9b2a-bb099caae36c",
+   "licence": "CC BY 4.0",
+   "usage": "le nom accepté, la clé GBIF, la classe, l'ordre et la famille de chaque taxon"
+  },
+  {
+   "nom": "Wikidata",
+   "url": "https://www.wikidata.org/",
+   "licence": "CC0 1.0",
+   "usage": "l'élément de chaque taxon (par sa clé GBIF, P846), son nom français, la comestibilité des champignons (P789)"
+  },
+  {
+   "nom": "EltonTraits 1.0 (Wilman et al. 2014, Ecology 95:2027)",
+   "url": "https://doi.org/10.6084/m9.figshare.3559887.v1",
+   "licence": "CC0 1.0",
+   "usage": "le régime (en parts) et l'activité des mammifères et des oiseaux ; leur masse quand Amniote ne la donne pas ; les traits moyens des guildes de vertébrés"
+  },
+  {
+   "nom": "Amniote Life-History Database (Myhrvold et al. 2015, Ecology 96:3109)",
+   "url": "https://doi.org/10.6084/m9.figshare.3563457.v1",
+   "licence": "CC0 1.0",
+   "usage": "la masse, la longévité record, la maturité de la femelle, la taille et le nombre des portées ou des pontes des mammifères, des oiseaux et des reptiles"
+  },
+  {
+   "nom": "PanTHERIA 1.0 (Jones et al. 2009, Ecology 90:2648)",
+   "url": "https://doi.org/10.6084/m9.figshare.3531875.v1",
+   "licence": "CC0 1.0",
+   "usage": "la longueur tête-corps des mammifères ; leur masse, leur longévité, leur maturité, leurs portées quand Amniote ne les donne pas"
+  },
+  {
+   "nom": "AmphiBIO v1 (Oliveira et al. 2017, Scientific Data 4:170123)",
+   "url": "https://doi.org/10.6084/m9.figshare.4644424",
+   "licence": "CC BY 4.0",
+   "usage": "la masse, la taille, le régime, l'activité, la maturité et les pontes des amphibiens"
+  },
+  {
+   "nom": "AnAge, The Animal Ageing and Longevity Database (HAGR ; de Magalhães et Costa 2009)",
+   "url": "https://genomics.senescence.info/species/",
+   "licence": "CC BY 3.0 (usage commercial permis)",
+   "usage": "la longévité record et la maturité quand les autres bases ne les ont pas ; pour les poissons, en complément des valeurs saisies (pas de FishBase : licence non commerciale)"
+  },
+  {
+   "nom": "Effectifs européens des grands carnivores (LCIE ; Boitani et al. 2022 ; Conseil de l'UE, WK 15919/2025)",
+   "url": "https://data.consilium.europa.eu/doc/document/WK-15919-2025-INIT/en/pdf",
+   "licence": "chiffres cités (faits)",
+   "usage": "le contrôle des effectifs et le calage de l'occupation du loup, de l'ours, du lynx et du glouton (outils/terre/especes-controle.py)"
   }
- ]
+ ],
+ "especes": "especes.json",
+ "outil_especes": "outils/terre/especes-*.py (LISEZ-MOI.md, « Les espèces »)"
 }

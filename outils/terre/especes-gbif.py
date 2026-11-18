@@ -83,9 +83,11 @@ for i in range(0, len(cles), 250):
          'OPTIONAL { ?item rdfs:label ?fr FILTER(LANG(?fr) = "fr") } OPTIONAL { ?item rdfs:label ?en FILTER(LANG(?en) = "en") } '
          'OPTIONAL { ?item wdt:P789 ?e . ?e rdfs:label ?comest FILTER(LANG(?comest) = "fr") } }')
     if i: time.sleep(65)   # (le service SPARQL limite parfois à une requête par minute)
-    for k in range(5):
+    r = None
+    for k in range(3):
         try: r = lire('https://query.wikidata.org/sparql?' + urllib.parse.urlencode({'query': q, 'format': 'json'}), essais=1); break
         except Exception as e: print('  Wikidata attend :', str(e)[:80]); time.sleep(70)
+    if r is None: print(f'  Wikidata injoignable : {len(lot)} clés laissées pour une prochaine fois'); continue
     for b in r['results']['bindings']:
         g = b['g']['value']; x = wd.setdefault(g, {'qid': b['item']['value'].rsplit('/', 1)[-1]})
         if 'fr' in b: x['fr'] = b['fr']['value']

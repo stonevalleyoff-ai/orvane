@@ -107,7 +107,7 @@ A('isard', 'Isard', 'Rupicapra pyrenaica', 'caprin', ['montagne', 'sommets'], 6,
 A('bouquetin-alpes', 'Bouquetin des Alpes', 'Capra ibex', 'caprin', ['sommets', 'montagne'], 3, '#7d6e5c', soc=.6, tem=.35, vit=11, organes=[('cornes', .9, 2, 'tete', 'recourbees')])
 A('bouquetin-iberique', 'Bouquetin ibérique', 'Capra pyrenaica', 'caprin', ['montagne', 'maquis'], 3, '#8a7458', soc=.6, tem=.3, vit=11, organes=[('cornes', .8, 2, 'tete', 'recourbees')])
 A('mouflon', 'Mouflon', 'Ovis gmelini musimon', 'caprin', ['montagne', 'maquis', 'foret'], 5, '#7a4a2c', soc=.7, tem=.25, vit=15, organes=[('cornes', .7, 2, 'tete', 'recourbees')], sous_espece=True, note='la sous-espèce seule (le mouton domestique est exclu)')
-A('boeuf-musque', 'Bœuf musqué', 'Ovibos moschatus', 'bovide', ['toundra'], .1, '#3a2e26', soc=.8, tem=.6, vit=11, organes=[('cornes', .5, 2, 'tete', 'recourbees')], note='réintroduit (Dovrefjell)')
+A('boeuf-musque', 'Bœuf musqué', 'Ovibos moschatus', 'bovide', ['toundra', 'montagne'], .1, '#3a2e26', soc=.8, tem=.6, vit=11, organes=[('cornes', .5, 2, 'tete', 'recourbees')], note='réintroduit (Dovrefjell)')
 # --- les carnivores ---
 A('loup', 'Loup gris', 'Canis lupus', 'canide', ['foret', 'montagne', 'taiga', 'prairie', 'steppe'], .025, '#8a8278', soc=.8, tem=.55, vit=16)
 A('chacal-dore', 'Chacal doré', 'Canis aureus', 'canide', ['prairie', 'marais', 'maquis'], .5, '#a88a5a', soc=.5, tem=.4, vit=14)
@@ -120,7 +120,7 @@ A('lynx-pardelle', 'Lynx pardelle', 'Lynx pardinus', 'felide', ['maquis', 'foret
 A('chat-forestier', 'Chat forestier', 'Felis silvestris', 'felide', ['foret', 'maquis'], .3, '#8a7a64', soc=.05, tem=.5, vit=13, motif='rayures')
 A('genette', 'Genette commune', 'Genetta genetta', 'felide', ['maquis', 'foret'], .5, '#9a9080', soc=.05, tem=.4, vit=9, motif='taches', force_corps=dict(long=.8, haut=.3, queue=.9), note='introduite anciennement (Afrique)')
 A('blaireau', 'Blaireau européen', 'Meles meles', 'blaireau', ['foret', 'prairie'], 3, '#6e6a66', soc=.5, tem=.55, vit=7, motif='masque')
-A('loutre', "Loutre d'Europe", 'Lutra lutra', 'mustelide', ['riviere', 'lac', 'cote', 'marais'], .2, '#5a4232', soc=.15, tem=.45, vit=8, eau='mixte', loco=['marche', 'nage'], force_corps=dict(queue=.6))
+A('loutre', "Loutre d'Europe", 'Lutra lutra', 'mustelide', ['riviere', 'lac', 'cote', 'marais', 'foret'], .1, '#5a4232', soc=.15, tem=.45, vit=8, eau='mixte', loco=['marche', 'nage'], force_corps=dict(queue=.6))
 A('martre', 'Martre des pins', 'Martes martes', 'mustelide', ['foret', 'taiga'], .5, '#5a3e2a', soc=.05, tem=.5, vit=9)
 A('fouine', 'Fouine', 'Martes foina', 'mustelide', ['foret', 'prairie', 'montagne'], 1, '#6a5240', soc=.05, tem=.5, vit=9)
 A('hermine', 'Hermine', 'Mustela erminea', 'mustelide', ['prairie', 'foret', 'toundra', 'montagne'], 2, '#8a6440', soc=.05, tem=.6, vit=9, force_corps=dict(queue=.35))
@@ -136,7 +136,7 @@ A('lapin', 'Lapin de garenne', 'Oryctolagus cuniculus', 'leporide', ['prairie', 
 A('ecureuil-roux', 'Écureuil roux', 'Sciurus vulgaris', 'ecureuil', ['foret', 'taiga'], 50, '#b0562a', soc=.1, tem=.2, vit=5)
 A('ecureuil-gris', 'Écureuil gris', 'Sciurus carolinensis', 'ecureuil', ['foret'], 200, '#8a8a86', soc=.15, tem=.25, vit=5, note='introduit (Amérique)')
 A('marmotte', 'Marmotte des Alpes', 'Marmota marmota', 'marmotte', ['sommets', 'montagne'], 20, '#8a7050', soc=.75, tem=.15, vit=4)
-A('castor', "Castor d'Europe", 'Castor fiber', 'castor', ['riviere', 'lac', 'marais'], .5, '#6a4a30', soc=.6, tem=.3, vit=2, eau='douce')
+A('castor', "Castor d'Europe", 'Castor fiber', 'castor', ['riviere', 'lac', 'marais', 'foret', 'taiga'], .5, '#6a4a30', soc=.6, tem=.3, vit=2, eau='douce')
 A('herisson', "Hérisson d'Europe", 'Erinaceus europaeus', 'herisson', ['prairie', 'foret'], 10, '#7a6a58', soc=.05, tem=.3, vit=2)
 A('taupe', "Taupe d'Europe", 'Talpa europaea', 'taupe', ['prairie', 'foret'], 500, '#2e2a28', soc=.05, tem=.3, vit=1)
 A('loir', 'Loir gris', 'Glis glis', 'rongeur', ['foret'], 300, '#8a8680', soc=.3, tem=.3, vit=3, force_corps=dict(queue=.8))
@@ -190,15 +190,15 @@ A('bernache-canada', 'Bernache du Canada', 'Branta canadensis', 'anatide', ['lac
 A('cygne-tubercule', 'Cygne tuberculé', 'Cygnus olor', 'anatide', ['lac', 'riviere', 'cote'], 2, '#ecebe6', soc=.4, tem=.65, vit=20, eau='mixte', force_corps=dict(cou=.95))
 A('foulque', 'Foulque macroule', 'Fulica atra', 'anatide', ['lac', 'marais'], 30, '#26262a', soc=.7, tem=.4, vit=15, eau='douce', force_corps=dict(cou=.3, museau=.3))
 # --- les rapaces ---
-A('aigle-royal', 'Aigle royal', 'Aquila chrysaetos', 'rapace', ['montagne', 'sommets', 'taiga'], .01, '#5a4028', soc=.1, tem=.75, vit=30)
+A('aigle-royal', 'Aigle royal', 'Aquila chrysaetos', 'rapace', ['montagne', 'sommets', 'taiga'], .02, '#5a4028', soc=.1, tem=.75, vit=30)
 A('buse-variable', 'Buse variable', 'Buteo buteo', 'rapace', ['foret', 'prairie'], .5, '#7a5a3e', soc=.1, tem=.5, vit=18)
 A('autour', 'Autour des palombes', 'Accipiter gentilis', 'rapace', ['foret', 'taiga'], .1, '#6a6660', soc=.05, tem=.7, vit=20)
 A('epervier', "Épervier d'Europe", 'Accipiter nisus', 'rapace', ['foret', 'prairie'], .3, '#6a6a70', soc=.05, tem=.55, vit=18)
 A('faucon-crecerelle', 'Faucon crécerelle', 'Falco tinnunculus', 'rapace', ['prairie', 'steppe'], .5, '#a8643a', soc=.1, tem=.45, vit=18)
 A('faucon-pelerin', 'Faucon pèlerin', 'Falco peregrinus', 'rapace', ['montagne', 'cote', 'prairie'], .01, '#4a4e58', soc=.05, tem=.7, vit=30, note='piqué bien plus rapide')
 A('milan-royal', 'Milan royal', 'Milvus milvus', 'rapace', ['prairie', 'foret'], .1, '#a0522d', soc=.4, tem=.4, vit=18)
-A('pygargue', 'Pygargue à queue blanche', 'Haliaeetus albicilla', 'rapace', ['cote', 'lac', 'riviere'], .01, '#6a5440', soc=.15, tem=.6, vit=20)
-A('balbuzard', 'Balbuzard pêcheur', 'Pandion haliaetus', 'rapace', ['lac', 'riviere', 'cote'], .02, '#5a4632', soc=.1, tem=.5, vit=20)
+A('pygargue', 'Pygargue à queue blanche', 'Haliaeetus albicilla', 'rapace', ['cote', 'marais', 'foret', 'taiga'], .01, '#6a5440', soc=.15, tem=.6, vit=20)
+A('balbuzard', 'Balbuzard pêcheur', 'Pandion haliaetus', 'rapace', ['cote', 'marais', 'foret', 'taiga'], .02, '#5a4632', soc=.1, tem=.5, vit=20)
 A('vautour-fauve', 'Vautour fauve', 'Gyps fulvus', 'rapace', ['montagne', 'maquis'], .05, '#a08460', soc=.8, tem=.3, vit=20, regime='detritivore', diete=None, force_corps=dict(cou=.5))
 A('grand-duc', "Grand-duc d'Europe", 'Bubo bubo', 'strigide', ['montagne', 'foret'], .02, '#8a6440', soc=.05, tem=.7, vit=15)
 A('chouette-hulotte', 'Chouette hulotte', 'Strix aluco', 'strigide', ['foret'], 1, '#7a5a3e', soc=.05, tem=.5, vit=12, force_corps=dict(oreilles=0))
@@ -207,7 +207,7 @@ A('cheveche', "Chevêche d'Athéna", 'Athene noctua', 'strigide', ['prairie', 'm
 # --- les grands oiseaux d'eau ---
 A('cigogne-blanche', 'Cigogne blanche', 'Ciconia ciconia', 'echassier', ['prairie', 'marais'], .5, '#ecebe6', soc=.6, tem=.25, vit=15)
 A('grue-cendree', 'Grue cendrée', 'Grus grus', 'echassier', ['marais', 'prairie', 'taiga'], .5, '#8a8c90', soc=.85, tem=.3, vit=17)
-A('heron-cendre', 'Héron cendré', 'Ardea cinerea', 'echassier', ['riviere', 'lac', 'marais', 'cote'], .5, '#8a909a', soc=.3, tem=.35, vit=13)
+A('heron-cendre', 'Héron cendré', 'Ardea cinerea', 'echassier', ['marais', 'cote', 'prairie'], .5, '#8a909a', soc=.3, tem=.35, vit=13)
 A('flamant-rose', 'Flamant rose', 'Phoenicopterus roseus', 'echassier', ['marais', 'cote'], 50, '#eab4b0', soc=.95, tem=.1, vit=15, regime='filtreur', diete=None)
 A('grand-cormoran', 'Grand cormoran', 'Phalacrocorax carbo', 'cormoran', ['lac', 'riviere', 'cote'], 1, '#202226', soc=.75, tem=.3, vit=15, eau='mixte')
 # --- les oiseaux marins ---
@@ -233,10 +233,10 @@ A('grand-corbeau', 'Grand corbeau', 'Corvus corax', 'corvide', ['montagne', 'tai
 A('pie-bavarde', 'Pie bavarde', 'Pica pica', 'corvide', ['prairie'], 20, '#18181c', soc=.4, tem=.5, vit=12, force_corps=dict(queue=.85))
 A('geai', 'Geai des chênes', 'Garrulus glandarius', 'corvide', ['foret'], 10, '#a08070', soc=.2, tem=.45, vit=12)
 A('pic-epeiche', 'Pic épeiche', 'Dendrocopos major', 'pic', ['foret', 'taiga'], 10, '#2a2a2c', soc=.05, tem=.3, vit=12)
-A('coucou', 'Coucou gris', 'Cuculus canorus', 'pigeon', ['foret', 'prairie', 'marais'], 2, '#7a7e86', soc=.05, tem=.2, vit=15, note='parasite des couvées')
+A('coucou', 'Coucou gris', 'Cuculus canorus', 'pigeon', ['foret', 'prairie', 'marais'], 2, '#7a7e86', soc=.05, tem=.2, vit=15, portee=12, force=['portee'], note='parasite des couvées')
 
 # --- les reptiles ---
-A('vipere-peliade', 'Vipère péliade', 'Vipera berus', 'serpent', ['prairie', 'foret', 'marais', 'montagne', 'taiga'], 10, '#7a6a5a', soc=.05, tem=.6, vit=1, motif='bandes', repro='vivipare', masse=.1, taille=.6, regime='carnivore', diete={'viande': 1})
+A('vipere-peliade', 'Vipère péliade', 'Vipera berus', 'serpent', ['prairie', 'foret', 'marais', 'montagne', 'taiga'], 10, '#7a6a5a', soc=.05, tem=.6, vit=1, motif='bandes', repro='vivipare', masse=.1, taille=.6, maturite=4, regime='carnivore', diete={'viande': 1})
 A('vipere-aspic', 'Vipère aspic', 'Vipera aspis', 'serpent', ['maquis', 'montagne', 'prairie'], 10, '#8a6a4a', soc=.05, tem=.6, vit=1, motif='bandes', repro='vivipare', masse=.12, taille=.65, regime='carnivore', diete={'viande': 1})
 A('couleuvre-collier', 'Couleuvre à collier', 'Natrix natrix', 'serpent', ['marais', 'riviere', 'lac', 'prairie'], 10, '#5a6448', soc=.05, tem=.3, vit=2, loco=['reptation', 'nage'], eau='douce', masse=.3, taille=1, regime='carnivore', diete={'viande': 1})
 A('lezard-vert', 'Lézard vert occidental', 'Lacerta bilineata', 'lezard', ['maquis', 'prairie'], 50, '#4a8a3a', soc=.05, tem=.4, vit=3, masse=.03, taille=.35, regime='carnivore', diete={'insectes': .95, 'fruits': .05})
@@ -246,17 +246,17 @@ A('tortue-hermann', "Tortue d'Hermann", 'Testudo hermanni', 'tortue', ['maquis']
 A('cistude', "Cistude d'Europe", 'Emys orbicularis', 'tortue', ['marais', 'lac', 'riviere'], 20, '#2e3226', soc=.3, tem=.2, vit=.5, loco=['marche', 'nage'], eau='douce', masse=.5, taille=.15, regime='carnivore', diete={'insectes': .7, 'viande': .2, 'feuilles': .1}, motif='taches')
 A('tortue-caouanne', 'Tortue caouanne', 'Caretta caretta', 'tortue', ['large', 'cote'], .01, '#8a5a34', soc=.05, tem=.3, vit=4, loco=['nage', 'reptation'], eau='salee', masse=100, taille=.9, regime='carnivore', diete={'insectes': .8, 'viande': .2}, organes=[('carapace', .9, 1, 'dos', 'bombee'), ('nageoires', .5, 2, 'flancs', 'courtes')], note='« insectes » = invertébrés : méduses, crabes')
 # --- les amphibiens ---
-A('grenouille-rousse', 'Grenouille rousse', 'Rana temporaria', 'grenouille', ['foret', 'prairie', 'marais', 'montagne', 'taiga'], 500, '#8a6a46', soc=.4, tem=.05, vit=2, eau='douce')
-A('grenouille-rieuse', 'Grenouille rieuse', 'Pelophylax ridibundus', 'grenouille', ['lac', 'riviere', 'marais'], 500, '#5a7a3e', soc=.5, tem=.1, vit=2, eau='douce')
-A('crapaud-commun', 'Crapaud commun', 'Bufo bufo', 'grenouille', ['foret', 'prairie', 'marais'], 300, '#7a5e40', soc=.3, tem=.1, vit=.5, loco=['marche', 'saut', 'nage'], eau='douce', motif='taches')
-A('rainette', 'Rainette verte', 'Hyla arborea', 'grenouille', ['marais', 'foret', 'prairie'], 100, '#4a9a3a', soc=.4, tem=.05, vit=2, loco=['saut', 'grimpe', 'nage'], eau='douce')
-A('salamandre', 'Salamandre tachetée', 'Salamandra salamandra', 'urodele', ['foret', 'montagne'], 200, '#141414', soc=.1, tem=.1, vit=.2, loco=['marche'], repro='vivipare', motif='taches')
-A('triton-crete', 'Triton crêté', 'Triturus cristatus', 'urodele', ['marais', 'lac', 'prairie'], 100, '#3a3430', soc=.2, tem=.1, vit=.3, eau='douce', organes=[('crete', .5, 1, 'dos', 'dentelee')])
+A('grenouille-rousse', 'Grenouille rousse', 'Rana temporaria', 'grenouille', ['foret', 'prairie', 'marais', 'montagne', 'taiga'], 500, '#8a6a46', soc=.4, tem=.05, vit=2, eau='douce', masse=.03)
+A('grenouille-rieuse', 'Grenouille rieuse', 'Pelophylax ridibundus', 'grenouille', ['lac', 'riviere', 'marais'], 500, '#5a7a3e', soc=.5, tem=.1, vit=2, eau='douce', masse=.07)
+A('crapaud-commun', 'Crapaud commun', 'Bufo bufo', 'grenouille', ['foret', 'prairie', 'marais'], 300, '#7a5e40', soc=.3, tem=.1, vit=.5, loco=['marche', 'saut', 'nage'], eau='douce', motif='taches', masse=.06)
+A('rainette', 'Rainette verte', 'Hyla arborea', 'grenouille', ['marais', 'foret', 'prairie'], 100, '#4a9a3a', soc=.4, tem=.05, vit=2, loco=['saut', 'grimpe', 'nage'], eau='douce', masse=.007)
+A('salamandre', 'Salamandre tachetée', 'Salamandra salamandra', 'urodele', ['foret', 'montagne'], 200, '#141414', soc=.1, tem=.1, vit=.2, loco=['marche'], repro='vivipare', motif='taches', masse=.03)
+A('triton-crete', 'Triton crêté', 'Triturus cristatus', 'urodele', ['marais', 'lac', 'prairie'], 100, '#3a3430', soc=.2, tem=.1, vit=.3, eau='douce', organes=[('crete', .5, 1, 'dos', 'dentelee')], masse=.01)
 
 # --- les poissons (pas de FishBase : traits saisis, marqués estimés ; AnAge, CC-BY, quand il les a) ---
 P = dict(soc=.3, tem=.2)
 A('truite', 'Truite commune', 'Salmo trutta', 'poisson', ['riviere', 'lac'], 20000, '#8a7a5a', vit=4, eau='mixte', masse=1, taille=.4, longevite=8, maturite=3, portee=2000, regime='carnivore', diete={'insectes': .7, 'viande': .3}, motif='taches', **P)
-A('saumon-atlantique', 'Saumon atlantique', 'Salmo salar', 'poisson', ['riviere', 'mer-froide', 'large'], 500, '#8a8c90', vit=8, eau='mixte', masse=5, taille=.8, longevite=6, maturite=4, portee=7000, regime='carnivore', diete={'insectes': .3, 'viande': .7}, note='migrateur : rivière natale, mer')
+A('saumon-atlantique', 'Saumon atlantique', 'Salmo salar', 'poisson', ['riviere', 'mer-froide', 'large'], 5, '#8a8c90', vit=8, eau='mixte', masse=5, taille=.8, longevite=6, maturite=4, portee=7000, regime='carnivore', diete={'insectes': .3, 'viande': .7}, note='migrateur : rivière natale, mer')
 A('brochet', 'Brochet', 'Esox lucius', 'poisson', ['lac', 'riviere', 'marais'], 2000, '#5a6a3a', vit=7, eau='douce', masse=3, taille=.7, longevite=10, maturite=2.5, portee=30000, regime='carnivore', diete={'viande': 1}, motif='taches', soc=.05, tem=.6)
 A('carpe', 'Carpe commune', 'Cyprinus carpio', 'poisson', ['lac', 'riviere', 'marais'], 3000, '#8a7038', vit=3, eau='douce', masse=4, taille=.6, longevite=20, maturite=4, portee=300000, regime='omnivore', diete={'insectes': .5, 'feuilles': .3, 'graines': .2}, soc=.6, tem=.1, note='introduite anciennement (Asie)')
 A('anguille', "Anguille d'Europe", 'Anguilla anguilla', 'anguille', ['riviere', 'lac', 'cote', 'large'], 5000, '#4a4a30', vit=2, eau='mixte', masse=1, taille=.8, longevite=15, maturite=10, portee=1000000, regime='carnivore', diete={'insectes': .6, 'viande': .4}, soc=.1, tem=.3, note='se reproduit une fois, en mer des Sargasses')
@@ -266,15 +266,15 @@ A('silure', 'Silure glane', 'Silurus glanis', 'anguille', ['riviere', 'lac'], 20
 A('sandre', 'Sandre', 'Sander lucioperca', 'poisson', ['lac', 'riviere'], 2000, '#7a7e6a', vit=4, eau='douce', masse=2, taille=.5, longevite=12, maturite=3.5, portee=200000, regime='carnivore', diete={'viande': .9, 'insectes': .1}, motif='bandes', soc=.4, tem=.5)
 A('ombre', 'Ombre commun', 'Thymallus thymallus', 'poisson', ['riviere'], 5000, '#7a8088', vit=4, eau='douce', masse=.5, taille=.35, longevite=7, maturite=3, portee=5000, regime='carnivore', diete={'insectes': 1}, organes=[('nageoires', .7, 1, 'dos', 'voiles'), ('nageoires', .3, 2, 'flancs', 'courtes')], **P)
 A('esturgeon', 'Esturgeon européen', 'Acipenser sturio', 'poisson', ['riviere', 'cote', 'large'], .1, '#6a6a60', vit=2, eau='mixte', masse=60, taille=2, longevite=60, maturite=12, portee=500000, regime='carnivore', diete={'insectes': .9, 'viande': .1}, organes=[('plaques', .5, 5, 'dos', 'rondes'), ('nageoires', .3, 2, 'flancs', 'courtes')], note='au bord de l\'extinction (Gironde)', **P)
-A('hareng', 'Hareng atlantique', 'Clupea harengus', 'poisson', ['mer-froide', 'large', 'cote'], 100000, '#9aa4b0', vit=3, eau='salee', masse=.2, taille=.25, longevite=12, maturite=3, portee=40000, regime='filtreur', diete=None, soc=.95, tem=.05)
+A('hareng', 'Hareng atlantique', 'Clupea harengus', 'poisson', ['mer-froide', 'large', 'cote'], 25000, '#9aa4b0', vit=3, eau='salee', masse=.2, taille=.25, longevite=12, maturite=3, portee=40000, regime='filtreur', diete=None, soc=.95, tem=.05)
 A('sprat', 'Sprat', 'Sprattus sprattus', 'poisson', ['mer-froide', 'cote'], 200000, '#a0aab4', vit=2, eau='salee', masse=.015, taille=.12, longevite=5, maturite=1.5, portee=10000, regime='filtreur', diete=None, soc=.95, tem=.05)
 A('sardine', 'Sardine', 'Sardina pilchardus', 'poisson', ['large', 'cote'], 100000, '#8a9aac', vit=3, eau='salee', masse=.08, taille=.2, longevite=8, maturite=1.5, portee=50000, regime='filtreur', diete=None, soc=.95, tem=.05)
 A('anchois', 'Anchois européen', 'Engraulis encrasicolus', 'poisson', ['large', 'cote'], 100000, '#9aa8b0', vit=2, eau='salee', masse=.03, taille=.15, longevite=4, maturite=1, portee=20000, regime='filtreur', diete=None, soc=.95, tem=.05)
 A('capelan', 'Capelan', 'Mallotus villosus', 'poisson', ['mer-froide'], 100000, '#8aa0a0', vit=2, eau='salee', masse=.03, taille=.17, longevite=4, maturite=3, portee=10000, regime='filtreur', diete=None, soc=.95, tem=.05)
-A('cabillaud', 'Cabillaud', 'Gadus morhua', 'poisson', ['mer-froide', 'large'], 500, '#8a8462', vit=3, eau='salee', masse=8, taille=.9, longevite=20, maturite=4, portee=1000000, regime='carnivore', diete={'viande': .6, 'insectes': .4}, motif='taches', soc=.6, tem=.3, note='« insectes » = invertébrés : crevettes, vers')
+A('cabillaud', 'Cabillaud', 'Gadus morhua', 'poisson', ['mer-froide', 'large'], 250, '#8a8462', vit=3, eau='salee', masse=8, taille=.9, longevite=20, maturite=4, portee=1000000, regime='carnivore', diete={'viande': .6, 'insectes': .4}, motif='taches', soc=.6, tem=.3, note='« insectes » = invertébrés : crevettes, vers')
 A('eglefin', 'Églefin', 'Melanogrammus aeglefinus', 'poisson', ['mer-froide'], 1000, '#7a7a74', vit=3, eau='salee', masse=1.5, taille=.5, longevite=15, maturite=3, portee=300000, regime='carnivore', diete={'insectes': .8, 'viande': .2}, soc=.7, tem=.2)
 A('maquereau', 'Maquereau commun', 'Scomber scombrus', 'poisson', ['large', 'mer-froide', 'cote'], 20000, '#3a6a7a', vit=6, eau='salee', masse=.5, taille=.35, longevite=12, maturite=2, portee=300000, regime='carnivore', diete={'insectes': .6, 'viande': .4}, motif='bandes', soc=.9, tem=.2)
-A('thon-rouge', "Thon rouge de l'Atlantique", 'Thunnus thynnus', 'poisson', ['large'], 1, '#1e2e4a', vit=20, eau='salee', masse=200, taille=2.2, longevite=20, maturite=4, portee=5000000, regime='carnivore', diete={'viande': .9, 'insectes': .1}, soc=.7, tem=.4)
+A('thon-rouge', "Thon rouge de l'Atlantique", 'Thunnus thynnus', 'poisson', ['large'], 3, '#1e2e4a', vit=20, eau='salee', masse=200, taille=2.2, longevite=20, maturite=4, portee=5000000, regime='carnivore', diete={'viande': .9, 'insectes': .1}, soc=.7, tem=.4)
 A('bar', 'Bar commun', 'Dicentrarchus labrax', 'poisson', ['cote', 'large'], 200, '#9aa0a4', vit=5, eau='salee', masse=2, taille=.5, longevite=15, maturite=4, portee=300000, regime='carnivore', diete={'viande': .6, 'insectes': .4}, soc=.5, tem=.3)
 A('plie', "Plie d'Europe", 'Pleuronectes platessa', 'poisson', ['cote', 'mer-froide'], 2000, '#8a7a5a', vit=1.5, eau='salee', masse=.8, taille=.4, longevite=20, maturite=4, portee=100000, regime='carnivore', diete={'insectes': 1}, motif='taches', soc=.2, tem=.1, force_corps=dict(long=.5, haut=.7, queue=.3))
 A('aiguillat', 'Aiguillat commun', 'Squalus acanthias', 'poisson', ['mer-froide', 'large'], 50, '#6a6e72', vit=3, eau='salee', masse=4, taille=1, longevite=40, maturite=15, portee=3, repro='vivipare', regime='carnivore', diete={'viande': .7, 'insectes': .3}, soc=.7, tem=.4, organes=[('nageoires', .5, 2, 'dos', 'courtes'), ('nageoires', .45, 2, 'flancs', 'courtes')], note='petit requin ; portée tous les deux ans')
@@ -363,7 +363,7 @@ G('moustiques', 'Moustiques', 'mouche', ['marais', 'riviere', 'lac', 'prairie', 
 G('tiques', 'Tiques', 'araignee', ['foret', 'prairie', 'maquis'], 100000, '#5a3424', [
     ('Ixodes ricinus', 'Tique du mouton', .85), ('Dermacentor reticulatus', 'Dermacentor', .15)],
   masse=.00001, taille=.004, longevite=2.5, maturite=2, portee=2000, regime='carnivore', diete={'sang': 1}, soc=.1, tem=.8, vit=.001, act='continue', role='piqueurs, vecteurs (maladie de Lyme, encéphalite à tiques)')
-G('libellules', 'Libellules et demoiselles', 'libellule', ['lac', 'riviere', 'marais'], 20000, '#2a6a8a', [
+G('libellules', 'Libellules et demoiselles', 'libellule', ['marais', 'prairie', 'foret'], 20000, '#2a6a8a', [
     ('Anax imperator', 'Anax empereur', .1), ('Libellula depressa', 'Libellule déprimée', .15), ('Sympetrum striolatum', 'Sympétrum strié', .2),
     ('Calopteryx splendens', 'Caloptéryx éclatant', .2), ('Ischnura elegans', 'Agrion élégant', .25), ('Aeshna cyanea', 'Aeschne bleue', .1)],
   masse=.0004, taille=.05, longevite=1, maturite=1, portee=500, regime='carnivore', diete={'insectes': 1}, soc=.1, tem=.6, vit=10, act='diurne', role='chasseuses d\'insectes ; larves aquatiques')
@@ -439,8 +439,8 @@ V('frene', 'Frêne élevé', 'Fraxinus excelsior', 'arbre', ['foret', 'riviere']
 V('erable-sycomore', 'Érable sycomore', 'Acer pseudoplatanus', 'arbre', ['foret', 'montagne'], 30, .06, '#5a7a2a', feuillage='caduc', rendement={'feuilles': 1, 'graines': .4, 'nectar': .4}, vie=250, mat=25)
 V('chataignier', 'Châtaignier', 'Castanea sativa', 'arbre', ['foret', 'maquis'], 25, .08, '#5a6a2a', feuillage='caduc', rendement={'feuilles': 1, 'graines': 1, 'nectar': .5}, car=['mellifere'], vie=500, mat=25)
 V('tilleul', 'Tilleul à petites feuilles', 'Tilia cordata', 'arbre', ['foret'], 25, .05, '#6a8a32', feuillage='caduc', rendement={'feuilles': 1, 'graines': .2, 'nectar': .8}, car=['mellifere'], vie=500, mat=25)
-V('aulne', 'Aulne glutineux', 'Alnus glutinosa', 'arbre', ['riviere', 'marais', 'lac'], 20, .3, '#4a6a32', feuillage='caduc', rendement={'feuilles': 1, 'graines': .4, 'nectar': 0}, car=['vent', 'echasses'], vie=120, mat=15)
-V('saule-blanc', 'Saule blanc', 'Salix alba', 'arbre', ['riviere', 'marais', 'lac'], 20, .25, '#8a9a6a', feuillage='caduc', rendement={'feuilles': 1, 'graines': .1, 'nectar': .6}, car=['rapide'], vie=100, mat=10)
+V('aulne', 'Aulne glutineux', 'Alnus glutinosa', 'arbre', ['marais', 'foret', 'riviere'], 20, .3, '#4a6a32', feuillage='caduc', rendement={'feuilles': 1, 'graines': .4, 'nectar': 0}, car=['vent', 'echasses'], vie=120, mat=15)
+V('saule-blanc', 'Saule blanc', 'Salix alba', 'arbre', ['marais', 'foret', 'prairie'], 20, .25, '#8a9a6a', feuillage='caduc', rendement={'feuilles': 1, 'graines': .1, 'nectar': .6}, car=['rapide'], vie=100, mat=10)
 V('bouleau-verruqueux', 'Bouleau verruqueux', 'Betula pendula', 'pionnier', ['foret', 'taiga', 'marais'], 25, .12, '#7a9a4a', feuillage='caduc', rendement={'feuilles': 1, 'graines': .4, 'nectar': 0}, car=['vent', 'rapide'], vie=100, mat=10)
 V('bouleau-pubescent', 'Bouleau pubescent', 'Betula pubescens', 'pionnier', ['taiga', 'toundra', 'marais'], 15, .2, '#7a9a4a', feuillage='caduc', rendement={'feuilles': 1, 'graines': .4, 'nectar': 0}, car=['vent', 'rapide'], vie=100, mat=10)
 V('tremble', 'Peuplier tremble', 'Populus tremula', 'pionnier', ['foret', 'taiga'], 20, .08, '#7a9a3a', feuillage='caduc', rendement={'feuilles': 1, 'graines': .1, 'nectar': 0}, car=['vent', 'rapide'], vie=100, mat=10)
@@ -494,14 +494,14 @@ V('nenuphar', 'Nénuphar blanc', 'Nymphaea alba', 'nenuphar', ['lac', 'marais'],
 V('lentille-eau', "Petite lentille d'eau", 'Lemna minor', 'lentille', ['lac', 'marais'], .01, .2, '#6aaa3a', rendement={'feuilles': 1}, car=['rapide'], vie=.5, mat=.05)
 V('posidonie', 'Posidonie', 'Posidonia oceanica', 'herbier', ['cote'], .8, .4, '#3a6a4a', rendement={'feuilles': 1, 'graines': .1}, vie=50, mat=5, note='endémique de Méditerranée')
 V('zostere', 'Zostère marine', 'Zostera marina', 'herbier', ['cote'], .6, .3, '#3a6a3a', rendement={'feuilles': 1, 'graines': .2}, vie=10, mat=1)
-V('laminaires', 'Laminaires', 'Laminaria', 'varech', ['cote', 'mer-froide'], 3, .5, '#6a5a2a', groupe=[('Laminaria hyperborea', 'Laminaire rugueuse', .5), ('Laminaria digitata', 'Laminaire digitée', .3), ('Saccharina latissima', 'Laminaire sucrée', .2)],
+V('laminaires', 'Laminaires', 'Laminariaceae', 'varech', ['cote', 'mer-froide'], 3, .5, '#6a5a2a', groupe=[('Laminaria hyperborea', 'Laminaire rugueuse', .5), ('Laminaria digitata', 'Laminaire digitée', .3), ('Saccharina latissima', 'Laminaire sucrée', .2)],
   rendement={'feuilles': 1}, vie=15, mat=2)
 V('fucus', 'Fucus', 'Fucus', 'algue', ['cote', 'mer-froide'], .6, .4, '#7a6a2a', groupe=[('Fucus vesiculosus', 'Fucus vésiculeux', .5), ('Fucus serratus', 'Fucus denté', .3), ('Ascophyllum nodosum', 'Ascophylle', .2)],
   rendement={'feuilles': 1}, vie=5, mat=1)
 V('phytoplancton-marin', 'Phytoplancton marin', 'Bacillariophyceae', 'plancton', ['large', 'mer-froide', 'cote'], .01, 1, '#5a9a7a', groupe=[('Skeletonema costatum', 'Skeletonema (diatomée)', .25), ('Chaetoceros socialis', 'Chaetoceros (diatomée)', .2), ('Emiliania huxleyi', 'Emiliania (coccolithophore)', .2),
     ('Tripos fusus', 'Ceratium (dinoflagellé)', .15), ('Phaeocystis globosa', 'Phaeocystis', .2)],
   rendement={'feuilles': 1}, car=['rapide'], vie=.02, mat=.005)
-V('phytoplancton-eau-douce', "Phytoplancton d'eau douce", 'Chlorophyta', 'plancton', ['lac', 'marais', 'riviere'], .01, 1, '#6aaa5a', groupe=[('Asterionella formosa', 'Asterionella (diatomée)', .3), ('Microcystis aeruginosa', 'Microcystis (cyanobactérie)', .25), ('Scenedesmus quadricauda', 'Scenedesmus (algue verte)', .25),
+V('phytoplancton-eau-douce', "Phytoplancton d'eau douce", 'Chlorophyceae', 'plancton', ['lac', 'marais', 'riviere'], .01, 1, '#6aaa5a', groupe=[('Asterionella formosa', 'Asterionella (diatomée)', .3), ('Microcystis aeruginosa', 'Microcystis (cyanobactérie)', .25), ('Scenedesmus quadricauda', 'Scenedesmus (algue verte)', .25),
     ('Aulacoseira granulata', 'Aulacoseira (diatomée)', .2)],
   rendement={'feuilles': 1}, car=['rapide'], vie=.02, mat=.005)
 # les lichens
@@ -518,6 +518,16 @@ V('cepe', 'Cèpe de Bordeaux', 'Boletus edulis', 'champignon', ['foret', 'taiga'
 V('girolle', 'Girolle', 'Cantharellus cibarius', 'champignon', ['foret', 'taiga'], .08, .2, '#e0a030', rendement={'feuilles': 1}, vie=.1, mat=.05, champignon='mycorhizien')
 V('amanite-tue-mouches', 'Amanite tue-mouches', 'Amanita muscaria', 'champignon', ['foret', 'taiga'], .2, .15, '#d0281e', rendement={'feuilles': 1}, vie=.05, mat=.03, champignon='mycorhizien', defense={'toxique': 1})
 V('chalarose', 'Chalarose du frêne', 'Hymenoscyphus fraxineus', 'moisissure', ['foret', 'riviere'], .005, .05, '#e8e0d0', rendement={'feuilles': .1}, vie=.1, mat=.05, champignon='pathogène du frêne', note='invasif (Asie) depuis les années 1990')
+
+# L'OCCUPATION : la part de ses habitats que l'espèce occupe vraiment dans ses cellules de présence (une cellule H3 de résolution 2
+# fait ~80 000 km² : une espèce n'en tient pas toute la forêt). La densité posée (densite_km2) est la densité d'un habitat favorable
+# × cette part. Par défaut, la médiane de celles que donnent les espèces dont on connaît l'effectif européen (especes-controle.py) ;
+# pour elles, la leur, calée sur ce chiffre (le monde tel que l'assembleur le pose, hors Russie, Biélorussie et Ukraine).
+OCCUPATION_DEFAUT = .4
+OCCUPATION = {'chevreuil': .38, 'sanglier': .53, 'cerf-elaphe': .19, 'loup': .25, 'ours-brun': .45, 'lynx-boreal': .41, 'glouton': .5}
+# des aires très morcelées (des réserves, des parcs, des massifs) : une part estimée, pour approcher les effectifs connus en gros
+# (bison d'Europe : ~7 000 en liberté ; bouquetin des Alpes : ~55 000 ; daim : de l'ordre du million — ordres de grandeur, non vérifiés)
+OCCUPATION_ESTIMEE = {'bison-europe': .015, 'bouquetin-alpes': .12, 'daim': .06}
 
 # Les habitats des fichiers d'une carte qui n'auraient pas les noms de moteur/biomes-universels.json : { 'cultures': 'prairie', … }
 HABITATS_CARTE = {}
