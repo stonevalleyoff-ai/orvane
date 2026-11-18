@@ -40,7 +40,8 @@ const REGLES = {
   hybride: { actif: false },
   besoin: 6, conversion: .06, // un prédateur mange chaque jour ce que mange une vraie bête (un loup ~1 kg/jour), et peu de cette viande fait des petits
   longevite_predateur: 0,
-  hivernage: { actif: 1 }
+  hivernage: { actif: 1 },
+  colonisation: .005         // une lignée fonde un lieu voisin où elle n'est pas de loin en loin : ~1,5 % par an et par voisin favorable
 };
 
 const U = Object.fromEntries(require('../../moteur/biomes-universels.json').map(b => [b.id, b]));

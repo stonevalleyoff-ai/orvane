@@ -354,3 +354,31 @@ Le monde assemblé tourne : 3 jours sur le moteur, 262 lignées. Toutes les silh
 - **Les densités et les vitesses sont des ordres de grandeur**, à remplacer espèce par espèce par des mesures.
 - **La présence par cellule est grossière.** Une cellule compte dès 3 observations, et un loup de passage suffit. Le biais des observateurs est fort : les oiseaux font 58 % des observations de GBIF.
 - **Les licences.** Aucune donnée non commerciale (FishBase, iNaturalist sous CC-BY-NC, UICN, Map of Life, BIEN) n'est utilisée. Pour une publication, il faudra refaire les comptes GBIF par un téléchargement, qui donne un DOI à citer. Les sources sont dans `mondes/europe/sources.json`.
+
+## L'assemblage
+
+`assembler.js` (Node, sans dépendance) fait de la carte et des espèces l'amorce du monde : `mondes/europe/amorce.json`.
+
+```
+node outils/terre/assembler.js --monde europe --date 2026-11-18            # écrit mondes/europe/amorce.json (~4 Mo), en quelques secondes
+node outils/terre/assembler.js --dossier <un dossier> --sortie <fichier>   # une carte et des espèces ailleurs, pour un essai
+```
+
+Ce qu'il fait (docs/52) :
+- **les lieux** deviennent des parcelles des biomes universels :
+  - leurs axes viennent du climat, par les passages de `moteur/calendrier.js` ;
+  - leur capacité vient de la production primaire et de la surface : 5 kg de bêtes par km² et par g/m²/an. Sur les terres, c'est le modèle de Miami ; sur l'eau, une valeur par type ;
+  - leurs normales font leur saison, jour après jour ;
+- **les animaux** :
+  - leur niche est la moyenne des lieux où ils vivent, pesée par la surface, et leur tolérance l'écart de ces lieux à la moyenne ;
+  - leur natalité, s'ils n'en ont pas, vient de la portée, de la maturité, de la longévité et de la survie des jeunes (selon la masse) ; un chasseur en meute la partage ;
+  - leurs effectifs viennent de la densité × la surface × la convenance ;
+- **les plantes** : la place de chaque port (herbe, buisson, arbre…) dans un lieu se partage entre les plantes de ce port qui y vivent. Les lichens prennent une part de l'herbe des lieux froids, les champignons une petite part des lieux boisés ;
+- **le monde** :
+  - au jour, au calendrier ;
+  - avec la météo, les saisons des plantes et les régimes en spectre déjà éveillés ;
+  - sans séparation de lignées, sans traits nouveaux, sans hybrides, sans épidémies tirées au hasard ;
+  - avec la colonisation lente des mondes réels ;
+  - les naissances à leur saison ; un prédateur mange ce qu'il mange vraiment.
+
+`--rodage N` fait tourner N jours avant d'écrire l'amorce. Par défaut, il n'y en a pas : les effectifs viennent des données.

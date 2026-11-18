@@ -147,7 +147,10 @@ const REGLES = {
   // (docs/52) dans un monde au calendrier, les naissances ont leur saison : une fenêtre de l'année (la phase du lieu, 0 : le cœur
   // de l'hiver) où naît l'essentiel des petits, de moyenne 1 sur l'année ; force 0 : toute l'année pareil (un plan peut dire la sienne,
   // plan.naissances = { centre, largeur })
-  naissances: { force: 0, centre: .42, largeur: .4, fond: .1 }
+  naissances: { force: 0, centre: .42, largeur: .4, fond: .1 },
+  // (docs/52) un monde réel : la chance, par cycle de référence et par lieu voisin qui lui convient tout à fait, qu'une lignée fonde un lieu
+  // où elle n'est pas ; null : partout où l'on essaime, on arrive (les mondes d'Orvane)
+  colonisation: null
 };
 // (docs/52) le pas de temps : la part d'un cycle de référence (une « tranche de vie » d'environ 120 jours, celle sur laquelle le
 // moteur a été réglé) que fait un cycle de ce monde. 1 partout, sauf dans un monde au jour (monde.temps = { jours: 1 } : 1/120).
@@ -448,6 +451,8 @@ const eauDouce = plan => plan.eau !== 'salee', eauSalee = plan => plan.eau === '
 // hasard : le moteur s'en sert pour faire partir les bêtes (REGLES.hivernage.actif), collectif.js pour le dire aux jeux. (Une mer ne
 // se traverse qu'en volant, nageant, dérivant.)
 const lieuType = id => String(id ?? '').split('~')[0];
+// (docs/52) deux lieux d'un même milieu, pour qui essaime : la terre et la terre, l'eau et l'eau ; les rives (amphibie) touchent les deux
+const memeMilieu = b => v => v.milieu === b.milieu || v.milieu === 'amphibie' || b.milieu === 'amphibie';
 // trop de variantes : le plan de base et les plus fréquentes restent ; chacune des autres rejoint la gardée la plus proche (le moins
 // de traits en plus ou en moins ; à égalité, la première gardée), avec sa fréquence, partout où elle vit
 function plafonner(t, max) {
@@ -470,7 +475,7 @@ function routeHiver(P, b, lieu, s = 0, routes = 0, H = REGLES.hivernage, axesA =
   const hiver = x => ({ ...x, axes: axesA(x, 0) }), ici = convenance(P, hiver(b));
   if (ici >= H.rude * convenance(P, { ...b, axes: axesA(b, .5) })) return null;   // un hiver doux chez soi : on reste (le bœuf musqué ne quitte pas la toundra)
   let best = null;
-  for (const vid of [...new Set(b.voisins || [])].sort()) { const v = lieu(vid); if (!v || (!b.lieu && lieuType(vid) === lieuType(b.id))) continue;   // (par parcelles : une parcelle d'un autre lieu)
+  for (const vid of [...new Set(b.voisins || [])].sort()) { const v = lieu(vid); if (!v || (!b.lieu && lieuType(vid) === lieuType(b.id)) || (b.lieu && !memeMilieu(b)(v))) continue;   // (par parcelles : une parcelle d'un autre lieu)
     if (b.traversees?.includes(vid) && !(CLI && CLI.traverse(P))) continue;
     const la = convenance(P, hiver(v)); if (la < H.min || la < ici * (1 + H.marge)) continue;
     if (!best || la > best.la) best = { v, la }; }
@@ -782,10 +787,20 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
       if (opt.trace) opt.trace({ taxon: t.id, biome: bid, N: tot, sat, conv, satiete: pop.satiete, nais: nais.reduce((a, x) => a + x, 0), mortsNat, mortsPred: pop.mortsPred, mortsExt, mortsMal, saison: saison?.nom });
       // essaimer vers les voisins où l'on peut vivre, chacun à proportion de ce qu'il convient : un flux continu, pas une
       // vague vers un voisin tiré au sort (qui faisait d'une petite population voisine une suite d'explosions et d'effondrements)
-      const essaimer = (part, filtre) => { const cibles = (b.voisins || []).filter(v => biomes[v] && (!filtre || filtre(biomes[v])) && (!b.traversees?.includes(v) || CLI.traverse(t.plan))).map(v => [v, convenance(t.plan, biomes[v])]).filter(([, c]) => c > 0), W = cibles.reduce((a, [, c]) => a + c, 0);
+      // (docs/52 : dans un monde réel, on essaime dans son milieu — la terre vers la terre, l'eau vers l'eau, les rives vers les deux :
+      //  un cerf sait nager, il ne vit pas pour autant dans le lac)
+      const essaimer = (part, filtre0) => { const filtre = filtre0 || (b.lieu ? memeMilieu(b) : null), cibles = (b.voisins || []).filter(v => biomes[v] && (!filtre || filtre(biomes[v])) && (!b.traversees?.includes(v) || CLI.traverse(t.plan))).map(v => [v, convenance(t.plan, biomes[v])]).filter(([, c]) => c > 0), W = cibles.reduce((a, [, c]) => a + c, 0);
         if (!(W > 0) || !(part > 0)) return;
-        for (const [vers, c] of cibles) { const f = part * c / W; migrations.push({ taxon: t.id, vers, N: suiv.map(x => x * f), Q: pop.Q && copieQ(pop.Q), A: pop.A && { ...pop.A }, ...(ME ? { M: pop.M || null } : {}) }); }   // (docs/50) ils emportent ce qu'ils ont appris des joueurs
-        for (let i = 0; i < K; i++) suiv[i] *= 1 - part; };
+        if (REGLES.colonisation == null) { for (const [vers, c] of cibles) { const f = part * c / W; migrations.push({ taxon: t.id, vers, N: suiv.map(x => x * f), Q: pop.Q && copieQ(pop.Q), A: pop.A && { ...pop.A }, ...(ME ? { M: pop.M || null } : {}) }); }   // (docs/50) ils emportent ce qu'ils ont appris des joueurs
+          for (let i = 0; i < K; i++) suiv[i] *= 1 - part; return; }
+        // (docs/52) un monde réel : on essaime chez les siens ; un lieu où la lignée n'est pas, un petit groupe ne le fonde que de loin en
+        // loin (REGLES.colonisation par cycle de référence, × ce que le lieu lui convient) — une espèce réelle garde son aire, et l'étend
+        // lentement, comme le chacal doré gagne l'Europe ; sans cela, en quelques jours, chacune aurait gagné tous les lieux qui lui vont
+        const Ns = suiv.reduce((x, y) => x + y, 0); let parti = 0;
+        for (const [vers, c] of cibles) { let f = part * c / W;
+          if (!E.pops[vers]) { if (!(Ns >= 40) || hasard(`${t.id}|${bid}|${vers}|${part}`, inst.monde.graine, n) >= parPas(REGLES.colonisation) * c) continue; f = 4 / Ns; }
+          migrations.push({ taxon: t.id, vers, N: suiv.map(x => x * f), Q: pop.Q && copieQ(pop.Q), A: pop.A && { ...pop.A }, ...(ME ? { M: pop.M || null } : {}) }); parti += f; }
+        for (let i = 0; i < K; i++) suiv[i] *= 1 - parti; };
       // la faim pousse un prédateur vers ses voisins
       if (faim > 1 - REGLES.faim_migration) essaimer(.05 * (faim - (1 - REGLES.faim_migration)) / REGLES.faim_migration * PAS);
       // (docs/31) par-delà la mer : qui vole, nage ou dérive gagne peu à peu les terres qu'on ne rejoint qu'en la traversant
@@ -808,7 +823,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
       // (docs/15) dans un monde à parcelles : une petite part s'en va toujours vers les parcelles voisines du même biome (c'est
       // ainsi qu'une espèce gagne de proche en proche), et une parcelle qui a perdu sa place chasse ses bêtes vers ses voisines
       // (docs/52 : dans un monde réel, des lieux qui ont lieu.lat, on gagne aussi les lieux voisins d'un autre type où l'on peut vivre)
-      if (REGLES.dispersion > 0 && b.type) essaimer(parPas(REGLES.dispersion), b.lieu ? null : v => v.type === b.type);
+      if (REGLES.dispersion > 0 && b.type) essaimer(parPas(REGLES.dispersion), b.lieu ? memeMilieu(b) : v => v.type === b.type);
       if (REGLES.fuite > 0 && sat > 1) essaimer(parPas(Math.min(.5, REGLES.fuite * (1 - 1 / sat))));
       if (syn) essaimer(SY.exploration);                                                         // les machines explorent (docs/16)
       // (docs/38) l'hivernage : à la fin de l'automne, une part s'en va, cycle après cycle, vers le voisin le plus doux en hiver ;
@@ -949,7 +964,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
       let eff = pop.N.reduce((a, x) => a + x, 0);
       if (eff < 2) { if (pop.avant >= 20 && !pop.saisonnier) ev.push({ type: 'extinction', taxon: t.id, biome: bid, detail: 'la population disparaît' }); continue; }   // (un groupe de migrants qui n'a pas pris ne fait pas un événement)
       const tend = pop.avant > 0 ? (eff - pop.avant) / pop.avant : 1;
-      if (pop.avant < 2 && !pop.saisonnier) ev.push({ type: 'migration', taxon: t.id, biome: bid, detail: 'une population s\'installe' });   // (les arrivées trop maigres pour durer ne comptent pas)
+      if (pop.avant < 2 && !pop.saisonnier && (PAS === 1 || eff >= 20)) ev.push({ type: 'migration', taxon: t.id, biome: bid, detail: 'une population s\'installe' });   // (docs/52 : au jour, le petit groupe qui fonde ne fait pas un événement)   // (les arrivées trop maigres pour durer ne comptent pas)
       // (docs/52 : au pas d'un monde au jour, un cycle ne fait ni effondrement ni explosion : ils se lisent sur des mois, pas encore ici)
       if (PAS === 1 && pop.avant >= 20 && !pop.saisonnier && tend <= REGLES.effondrement) ev.push({ type: 'effondrement', taxon: t.id, biome: bid, detail: `${Math.round(tend * 100)} % sur le cycle` });
       if (PAS === 1 && pop.avant >= 20 && !pop.saisonnier && tend >= REGLES.explosion) ev.push({ type: 'explosion', taxon: t.id, biome: bid, detail: `+${Math.round(tend * 100)} % sur le cycle` });

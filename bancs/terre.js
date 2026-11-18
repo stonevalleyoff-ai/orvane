@@ -82,4 +82,15 @@ console.log('3. Un monde réel au jour');
   verif(I.biomes.find(b => b.id === 'taiga~laponie').soleil?.jour_h < 4, `le même jour, la Laponie a ${I.biomes.find(b => b.id === 'taiga~laponie').soleil?.jour_h} h de jour`);
   verif(!schema.length, `ce que publie un monde au jour respecte le contrat${schema.length ? ' : ' + schema.slice(0, 3).join(' ; ') : ''}`);
 }
+{ // une espèce réelle garde son aire : avec la colonisation des mondes réels, la forêt voisine n'est pas envahie en deux ans ; et l'on
+  // essaime dans son milieu : un cerf sait nager, il ne s'installe pas dans le lac voisin
+  const F = lieu('foret~bourgogne', 'foret', 47.3, 4.9, 300, .55, tB, pB, 40000), V = lieu('foret~vide', 'foret', 47.8, 6.5, 400, .6, tB, pB, 20000);
+  const Lac = { ...lieu('lac~bourgogne', 'lac', 47.3, 4.9, 250, .1, tB, pB, 2000), milieu: 'aquatique' }; Lac.axes = { ...Lac.axes, humidite: 1 };
+  F.voisins = ['foret~vide', 'lac~bourgogne']; V.voisins = ['foret~bourgogne']; Lac.voisins = ['foret~bourgogne'];
+  const cerf = { regime: 'herbivore', masse_kg: 150, taille_m: 2, longevite: ans(15), maturite: ans(2), portee: 1, natalite: .25, locomotion: ['marche', 'course', 'nage'], niche: { ...F.axes }, tolerance: .6 };
+  let I = monde([F, V, Lac], [espece('cerf', cerf, { 'foret~bourgogne': 120000 })], { colonisation: .005 });
+  for (let k = 0; k < 730; k++) I = Orvane.cycle(I, {}, { duree_ms: 864e5 });
+  verif(eff(I, 'cerf', 'foret~vide') < 100, `avec la colonisation d'un monde réel, la forêt voisine n'est pas envahie : ${Math.round(eff(I, 'cerf', 'foret~vide'))} cerfs au bout de deux ans (2 358 sans elle)`);
+  verif(eff(I, 'cerf', 'lac~bourgogne') === 0, 'un cerf sait nager, mais ne s\'installe pas dans le lac voisin');
+}
 console.log(ok ? '\nla Terre tient' : '\nla Terre ne tient pas'); process.exit(ok ? 0 : 1);

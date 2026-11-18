@@ -57,7 +57,8 @@ Ce que le pas ne change pas, parce que cela vit au rythme du joueur et non à ce
 **Ce qu'il a fallu pour qu'un jour compte.** Ce qui change en un jour est cent fois plus petit que ce qui change en une tranche de vie :
 - **l'arrondi** : un monde au jour écrit l'effectif exact (4 décimales), les allèles et les traits continus avec quatre chiffres de plus. Sans cela, trois cents loups restaient trois cents loups : chaque jour, l'arrondi effaçait ce qui avait changé ;
 - **la fondation** : ce qui part chaque jour vers un lieu où la lignée n'est pas est une fraction de bête. Elle y fonde un groupe de quatre, une fois sur autant que la fraction le dit : le même nombre en moyenne, par un tirage qui ne prend rien au hasard du cycle ;
-- **la dispersion** : dans un monde réel, une lignée gagne aussi les lieux voisins d'un autre type où elle peut vivre (de la forêt à la prairie), pas seulement les parcelles de son biome ;
+- **la dispersion** : dans un monde réel, une lignée essaime aussi vers les lieux voisins d'un autre type (de la forêt à la prairie), pas seulement vers les parcelles de son biome. Elle reste dans son milieu : la terre vers la terre, l'eau vers l'eau, les rives vers les deux. Un cerf sait nager, il ne s'installe pas pour autant dans le lac ;
+- **l'aire d'une espèce** : un monde réel dit `regles.colonisation` (0,005 par cycle de référence, soit environ 1,5 % par an). C'est la chance qu'une lignée fonde, par un petit groupe, un lieu voisin où elle n'est pas, à proportion de ce que ce lieu lui convient. Ailleurs, elle n'essaime que chez les siens. Une espèce garde donc son aire réelle et l'étend lentement, comme le chacal doré gagne l'Europe. Sans cette règle, une population de cent millions de mulots envoyait chaque jour des milliers de bêtes dans chaque lieu voisin : en cinq jours, l'Europe passait de 29 000 à 46 000 populations, et chaque espèce gagnait tous les lieux qui lui allaient ;
 - **les événements** : un jour ne fait ni effondrement ni explosion. Ils se liront sur des mois, et ce n'est pas encore fait. Les extinctions et les installations restent.
 
 ## Une Terre, sans l'évolution qui invente
@@ -112,6 +113,21 @@ Tout est ajouté, rien n'est retiré (`node outils/contrat.js` : le contrat tien
 - les aires et les statuts de l'UICN ;
 - les observations GBIF sous licence non commerciale.
 
+## L'Europe
+
+Le premier monde réel (`mondes/europe/`) :
+- **la carte** : 860 lieux dans 271 cellules H3 de résolution 2 (300 km de large), de l'Islande à l'Oural, avec les mers qui la bordent. Sur 9,8 millions de km² de terres et 10,5 millions de km² de mer :
+  - prairie 137, forêt 85, taïga 46, montagne 44, maquis 25, toundra 14, steppe 9, banquise 8, sommets 3 ;
+  - côte 89, rivière 54, lac 46, marais 23 ;
+  - haute mer 93, mer froide 95, abysses 89.
+
+  Les îles le sont pour les bêtes de terre (la Grande-Bretagne, l'Irlande, l'Islande, la Corse, la Sicile, la Crète, Chypre, le Svalbard). Les normales 1991–2020 collent aux stations de Dijon, Rovaniemi et Séville à 1,6 °C près ;
+- **le vivant** : 168 espèces jouées une à une (69 mammifères, 61 oiseaux, 9 reptiles, 6 amphibiens, 23 poissons), 32 guildes qui montrent 208 espèces réelles (les insectes, les tiques, le plancton, les petits passereaux…), 68 plantes. Cela fait 29 000 populations ;
+- **les effectifs posés**, hors Russie, Biélorussie et Ukraine : chevreuil 15 millions, sanglier 7 millions, cerf 2,6 millions, loup 19 700, ours brun 18 000, lynx boréal 8 400, glouton 1 100. Ce sont les ordres de grandeur connus. La densité de chaque espèce est une densité dans un habitat favorable × la part qu'elle en occupe à l'échelle d'une cellule (`densite_favorable_km2`, `occupation`), calée sur ces sept espèces ;
+- **le coût** : environ 8 secondes par cycle sur un ordinateur, et une trentaine de secondes pour deux nuits complètes hébergées (le tampon, la publication, les morceaux). L'état pèse 19 Mo, l'instantané 3 Mo. L'essentiel du temps passe dans la concurrence entre brouteurs (`moteur/flore.js`).
+
+Le monde ne tourne pas encore la nuit (`profil.monde.nocturne = false`) : il tournera quand on l'aura décidé. Ce qui est approché est dit dans `outils/terre/LISEZ-MOI.md`.
+
 ## Ce que le banc vérifie
 
 `bancs/terre.js`, en quelques secondes :
@@ -125,6 +141,7 @@ Tout est ajouté, rien n'est retiré (`node outils/contrat.js` : le contrat tien
 | un pas de 1 | au bit près comme sans temps (trois cycles de la genèse 7) |
 | un cerf de 15 ans, sans naissances | 93,6 % au bout d'un an |
 | un monde réel, deux ans | les faons au printemps ; trois cents loups qui ne restent pas figés ; la meute vit de cerfs ; la forêt voisine gagnée ; l'hiver en Bourgogne quand c'est l'été en Patagonie ; le contrat respecté |
+| avec la colonisation d'un monde réel | la forêt voisine n'est pas envahie en deux ans ; un cerf qui nage ne s'installe pas dans le lac |
 
 ```
 node bancs/terre.js
@@ -137,3 +154,4 @@ node bancs/terre.js
 - **Les routes lointaines** : un oiseau migrateur traverse un continent. Les routes de l'hiver ne regardent encore que les lieux voisins.
 - **Les événements sur des mois** : un effondrement, une explosion, lus sur une saison.
 - **Les morceaux par région** : qu'un jeu en Provence ne lise que la Provence.
+- **Une maille plus fine** : la résolution 3 (40 km), quand la concurrence entre brouteurs coûtera moins.
