@@ -151,6 +151,33 @@ Le premier monde réel (`mondes/europe/`) :
 - **les effectifs posés**, hors Russie, Biélorussie et Ukraine : chevreuil 15 millions, sanglier 7 millions, cerf 2,6 millions, loup 19 700, ours brun 18 000, lynx boréal 8 400, glouton 1 100. Ce sont les ordres de grandeur connus. La densité de chaque espèce est une densité dans un habitat favorable × la part qu'elle en occupe à l'échelle d'une cellule (`densite_favorable_km2`, `occupation`), calée sur ces sept espèces ;
 - **le coût** : environ 8 secondes par cycle sur un ordinateur, et une trentaine de secondes pour deux nuits complètes hébergées (le tampon, la publication, les morceaux). L'état pèse 19 Mo, l'instantané 3 Mo. L'essentiel du temps passe dans la concurrence entre brouteurs (`moteur/flore.js`).
 
+**Une première année** (l'amorce calée, du 18 novembre 2026 au 12 novembre 2027, sans joueurs) :
+
+| espèce | au départ | un an plus tard | |
+| --- | --- | --- | --- |
+| chevreuil | 23,1 M | 25,7 M | +11 % |
+| cerf élaphe | 3,24 M | 3,38 M | +4 % |
+| sanglier | 10,7 M | 15,7 M | +46 % |
+| loup | 31 053 | 31 045 | 0 % |
+| ours brun | 32 900 | 34 200 | +4 % |
+| lynx boréal | 11 900 | 10 500 | −12 % |
+| renard roux | 4,25 M | 4,91 M | +15 % |
+| lièvre d'Europe | 24,0 M | 47,0 M | +96 % |
+| lapin | 33,0 M | 69,7 M | +111 % |
+| mulot sylvestre | 2,11 G | 2,12 G | 0 % |
+| merle noir | 175 M | 164 M | −7 % |
+| cigogne blanche | 578 000 | 513 000 | −11 % |
+| hareng | 49,2 G | 46,5 G | −6 % |
+| cabillaud | 450 M | 447 M | −1 % |
+| truite | 715 M | 464 M | −35 % |
+
+Ces chiffres couvrent toute l'Europe, Russie d'Europe comprise ; les espèces gardent leur nombre de lieux (29 000 à 30 000 populations). Sur l'année, aucune lignée ne s'éteint. L'hiver use, les naissances viennent de la mi-mai à août, et le pic de l'été redescend à l'automne. Trois écarts restent à reprendre :
+- **le lapin et le lièvre doublent**. Le calage d'un jour ne voit pas leur pic d'été, qui ne se défait qu'à moitié l'hiver suivant. Les maladies qui les tiennent dans la réalité (la myxomatose, la RHDV2) ne sont pas encore là ;
+- **le sanglier gagne près de moitié** ;
+- **la truite perd un tiers**.
+
+Le prochain pas est un calage sur une année entière : faire tourner un an, ajuster la place et le métabolisme d'après la croissance de l'année, recommencer.
+
 Le monde ne tourne pas encore la nuit (`profil.monde.nocturne = false`) : il tournera quand on l'aura décidé. Ce qui est approché est dit dans `outils/terre/LISEZ-MOI.md`.
 
 ## Ce que le banc vérifie
@@ -180,3 +207,4 @@ node bancs/terre.js
 - **Les événements sur des mois** : un effondrement, une explosion, lus sur une saison.
 - **Les morceaux par région** : qu'un jeu en Provence ne lise que la Provence.
 - **Une maille plus fine** : la résolution 3 (40 km), quand la concurrence entre brouteurs coûtera moins.
+- **Le calage sur une année** : le lapin, le lièvre, le sanglier, la truite (plus haut, « L'Europe »).
