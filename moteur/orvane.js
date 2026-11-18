@@ -807,7 +807,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
         // lentement, comme le chacal doré gagne l'Europe ; sans cela, en quelques jours, chacune aurait gagné tous les lieux qui lui vont
         const Ns = suiv.reduce((x, y) => x + y, 0); let parti = 0;
         for (const [vers, c] of cibles) { let f = part * c / W;
-          if (!E.pops[vers]) { if (!(Ns >= 40) || hasard(`${t.id}|${bid}|${vers}|${part}`, inst.monde.graine, n) >= parPas(REGLES.colonisation) * c) continue; f = 4 / Ns; }
+          if (!E.pops[vers]) { if (!(Ns >= 40) || hasard(`${t.id}|${bid}|${vers}|${part}`, inst.monde.graine, n) >= parPas(Math.min(.9, REGLES.colonisation * (t.plan.dispersion ?? 1))) * c) continue; f = 4 / Ns; }   // (docs/52 : plan.dispersion, ce qu'une espèce porte loin — le loup bien plus que le chevreuil)
           migrations.push({ taxon: t.id, vers, N: suiv.map(x => x * f), Q: pop.Q && copieQ(pop.Q), A: pop.A && { ...pop.A }, ...(ME ? { M: pop.M || null } : {}) }); parti += f; }
         for (let i = 0; i < K; i++) suiv[i] *= 1 - parti; };
       // la faim pousse un prédateur vers ses voisins

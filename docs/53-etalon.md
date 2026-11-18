@@ -25,9 +25,38 @@ node outils/etalon.js --ans 1 --jours 30      # un essai court (les saisons ne d
 
 Le point de départ est toujours l'amorce : deux lancements donnent le même rapport. Une année d'Europe prend environ 50 minutes sur un ordinateur.
 
+## Une expérience : le retour du loup
+
+`node outils/etalon.js --experience loup` prend un morceau de l'Europe (la France, l'Italie, la Suisse, Monaco : 96 lieux) en 1992. La France et la Suisse n'ont plus un loup, l'Italie en a environ 30 % d'aujourd'hui (≈ 350, ils étaient environ 400 vers 1990). Avec le loup, on garde ses grandes proies : les ongulés, les lièvres, le lapin, la marmotte, le castor. On laisse les autres carnivores et les plantes, pour aller vite : 31 ans en quatre minutes. On compare ensuite à ce qu'a vu l'Office français de la biodiversité :
+- le premier loup dans le Mercantour en 1992 ;
+- une centaine vers 2008 ;
+- environ 1 100 en 2023.
+
+**Ce que l'expérience a trouvé.** Avec une même chance de fonder un lieu voisin pour toutes les espèces (`regles.colonisation`, ~1,5 % par an), l'Italie a suivi la réalité : de 353 loups à 3 576 en 2023, quand on en compte environ 3 300. La France, en revanche :
+- le loup y arrive en 1994 ;
+- il reste trente ans dans un seul lieu, et compte 162 bêtes en 2023.
+
+En vrai, il a gagné les Alpes, la Provence, le Jura, les Vosges, les Pyrénées. Le moteur ne savait pas qu'un jeune loup part à des centaines de kilomètres, un chevreuil à quelques dizaines.
+
+**La dispersion** (`plan.dispersion`, docs/52), depuis :
+- la plus longue dispersion d'un mammifère suit sa masse (Sutherland et al. 2000, *Conservation Ecology* 4) : 40,7 × M^0,81 km pour un carnivore, 3,31 × M^0,65 km pour un herbivore ou un omnivore. Un oiseau qui vole porte à 300 km ;
+- le front d'une espèce qui gagne du terrain avance chaque année de cette distance / 25 ;
+- la chance de fonder un lieu voisin, par an, est cette avance rapportée à la distance entre deux lieux (la maille : ~270 km).
+
+Cela donne au loup 5,9 fois la règle du monde, au lynx 4,6, au cerf 0,85, au chevreuil 0,23, au lapin 0,05.
+
+| | 1996 | 2005 | 2008 | 2014 | 2020 | 2023 |
+| --- | --- | --- | --- | --- | --- | --- |
+| loups de France, simulés | 18 | 82 | 127 | 294 | 639 | 916 |
+| loups de France, réels (OFB) | ~20 | ~60 | ~150 | ~300 | ~580 | ~1 100 |
+
+Les trois tests du loup passent : il arrive en 1994, la centaine est atteinte en 2007, il y en a 916 en 2023.
+
+**Ce que vaut ce résultat.** La seule constante libre, le « / 25 », a été posée d'avance d'après la vitesse connue du front du loup en France (20 à 30 km par an). Elle a marché du premier coup, sans qu'on la retouche. Le loup a donc servi à la régler, et ne la prouve pas. Il faut une autre expansion pour la vérifier.
+
 ## Chaque dimanche
 
-`.github/workflows/etalon.yml` fait vivre l'Europe trois années chaque dimanche. Le rapport va dans le résumé de l'action et sur la branche `etalon` (`etalon/europe/AAAA-MM-JJ.json`, et `index.json` qui les liste), jamais sur `main`. Le monde hébergé n'en voit rien.
+`.github/workflows/etalon.yml` fait vivre l'Europe trois années chaque dimanche, puis refait le retour du loup. Le rapport va dans le résumé de l'action et sur la branche `etalon` (`etalon/europe/AAAA-MM-JJ.json`, et `index.json` qui les liste), jamais sur `main`. Le monde hébergé n'en voit rien.
 
 Une modification du moteur peut aussi passer l'étalon à la main avant d'arriver dans Orvane. Il suffit de lancer l'action (« Run workflow », avec le nombre d'années) sur sa branche.
 
@@ -45,11 +74,9 @@ S'y ajoutent les petites proies et le métabolisme. Tant que ces écarts existen
 - Orvane adopte les valeurs réelles, par une genèse nouvelle (son monde vivant ne change pas d'un coup) ;
 - chaque écart reste dit, comme un choix de fiction.
 
-**Des expériences.** La réalité connaît l'issue de certaines histoires :
-- le retour du loup en France depuis l'Italie : le premier en 1992, environ 1 100 en 2023 ;
+**D'autres expériences.** La réalité connaît l'issue d'autres histoires :
 - une chasse soutenue du chevreuil ;
-- la morue, qui mûrit plus tôt sous la pêche : une évolution documentée, que la génétique continue du moteur devrait reproduire.
-
-Chacune serait un test de plus, sur un morceau de l'Europe pour aller vite.
+- la morue, qui mûrit plus tôt sous la pêche : une évolution documentée, que la génétique continue du moteur devrait reproduire ;
+- l'expansion du chacal doré, des Balkans jusqu'en France (2017). Elle vérifierait la dispersion que le loup a servi à régler (plus haut).
 
 **Un découpage dans le temps.** Caler sur les effectifs d'une année (2010), puis voir si le moteur retrouve les tendances qui suivent (le loup et le sanglier en hausse).

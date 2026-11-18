@@ -692,6 +692,8 @@ export interface Instantane {
       natalite?: number;
       /** (docs/52) Dans un monde réel : la part de la capacité d'un lieu que trouve l'espèce, rapportée à ce que sa bande de masse lui donnerait (1). Calée à l'assemblage, pour que ses effectifs comptés soient son équilibre. */
       place?: number;
+      /** (docs/52, docs/53) Dans un monde réel : ce que l'espèce porte loin ses jeunes, rapporté à la règle du monde (1). Elle fonde d'autant plus vite un lieu voisin où elle n'est pas : le loup bien plus que le chevreuil. */
+      dispersion?: number;
       /** (docs/52) Dans un monde réel : ce que la bête brûle, rapporté à un mammifère de sa masse (1 ; un poisson, un reptile, un insecte ~0,15). Elle mange d'autant moins, et fait d'autant plus de petits de ce qu'elle mange. */
       metabolisme?: number;
       /** (docs/52) Un chasseur en meute : la taille du groupe qui chasse (le loup, ~6). La meute abat ce qu'une bête seule n'abattrait pas. */

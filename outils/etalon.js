@@ -65,8 +65,37 @@ function damuth(I) {
   return { pente: r(somme(P.map(p => (p[0] - mx) * (p[1] - my))) / somme(P.map(p => (p[0] - mx) ** 2)), 3), especes: n };
 }
 
+const f = arg('--amorce') ? path.resolve(arg('--amorce')) : racine(`mondes/${MONDE}/amorce.json`);   // (--amorce : une autre amorce, pour un essai) if (!fs.existsSync(f)) { console.error(`pas d'amorce : ${f}`); process.exit(1); }
+// --- une expérience : le retour du loup en France (--experience loup) ---
+// Un morceau de l'Europe (la France, l'Italie, la Suisse, Monaco), en 1992 : plus un loup en France ni en Suisse, l'Italie à ~30 % de ses loups
+// d'aujourd'hui (ils étaient ~400 vers 1990, ~3 300 en 2021). Avec le loup, ses grandes proies (les ongulés, les lièvres, le lapin, la
+// marmotte, le castor) ; ni les autres carnivores ni les plantes, pour aller vite (une année en une trentaine de secondes). Ce que la réalité
+// a vu (l'Office français de la biodiversité) : le premier loup dans le Mercantour en 1992, une centaine vers 2008, ~1 100 en 2023.
+if (arg('--experience') === 'loup') {
+  const A = JSON.parse(fs.readFileSync(f, 'utf8')), PAYS = new Set(['FR', 'IT', 'CH', 'MC']), GARDE = new Set(['loup', 'cerf-elaphe', 'chevreuil', 'daim', 'sanglier', 'chamois', 'isard', 'bouquetin-alpes', 'mouflon', 'lievre-europe', 'lievre-variable', 'lapin', 'marmotte', 'castor']);
+  const B = A.biomes.filter(b => PAYS.has(b.lieu?.pays)), ids = new Set(B.map(b => b.id)), pays = new Map(B.map(b => [b.id, b.lieu.pays]));
+  for (const b of B) b.voisins = b.voisins.filter(v => ids.has(v));
+  const T = A.taxons.filter(t => GARDE.has(t.id)).map(t => ({ ...t, populations: t.populations.filter(p => ids.has(p.biome)) })).filter(t => t.populations.length);
+  const loup = T.find(t => t.id === 'loup'); loup.populations = loup.populations.filter(p => pays.get(p.biome) === 'IT').map(p => ({ ...p, effectif: +(p.effectif * .3).toFixed(4) }));
+  let E = { ...A, monde: { ...A.monde, flore: undefined, phenologie: undefined, parcelles: { ...A.monde.parcelles, types: A.monde.parcelles.types.filter(ty => B.some(b => b.type === ty.id)) } }, biomes: B, taxons: T, cycle: { ...A.cycle, date: '1992-01-01T03:17:00.000Z' } };
+  const ANSX = +arg('--ans', 31), REEL = { 1992: 2, 2000: 35, 2005: 60, 2010: 190, 2015: 300, 2018: 430, 2020: 580, 2023: 1100 }, serie = [], t1 = Date.now();
+  const enFrance = I => { const w = I.taxons.find(t => t.id === 'loup'); return w ? somme(w.populations.filter(p => pays.get(p.biome) === 'FR').map(p => p.effectif)) : 0; };
+  const lieuxFR = I => (I.taxons.find(t => t.id === 'loup')?.populations || []).filter(p => pays.get(p.biome) === 'FR').length;
+  serie.push({ an: 1992, france: 0, lieux: 0, italie: Math.round(somme(loup.populations.map(p => p.effectif))) });
+  for (let y = 0; y < ANSX; y++) { for (let k = 0; k < 365; k++) E = Orvane.cycle(E, {}, { duree_ms: 864e5 });
+    const w = E.taxons.find(t => t.id === 'loup'); serie.push({ an: 1993 + y, france: Math.round(enFrance(E)), lieux: lieuxFR(E), italie: Math.round(somme((w?.populations || []).filter(p => pays.get(p.biome) === 'IT').map(p => p.effectif))) });
+    process.stderr.write(`le loup : ${1993 + y}, ${serie[serie.length - 1].france} en France (${serie[serie.length - 1].lieux} lieux), ${serie[serie.length - 1].italie} en Italie (${((Date.now() - t1) / (y + 1) / 1000).toFixed(0)} s par an)\n`); }
+  const premier = serie.find(x => x.france >= 2)?.an ?? null, cent = serie.find(x => x.france >= 100)?.an ?? null, fin = serie[serie.length - 1];
+  const tests = [
+    { id: 'loup-arrivee', nom: 'Le loup arrive en France', valeur: premier, cible: 'au plus tard en 1995 (le premier en 1992)', etat: premier != null && premier <= 1995 ? 'ok' : premier != null && premier <= 2000 ? 'limite' : 'echec' },
+    { id: 'loup-cent', nom: 'Cent loups en France', valeur: cent, cible: 'vers 2008 (± 6 ans)', etat: cent != null && Math.abs(cent - 2008) <= 6 ? 'ok' : cent != null && Math.abs(cent - 2008) <= 12 ? 'limite' : 'echec' },
+    { id: 'loup-2023', nom: `Les loups de France en ${fin.an}`, valeur: fin.france, cible: `~${REEL[2023]} (à moins d'un facteur 3)`, etat: fin.france > 0 && Math.abs(Math.log10(fin.france / REEL[2023])) <= Math.log10(3) ? 'ok' : fin.france > 0 && Math.abs(Math.log10(fin.france / REEL[2023])) <= Math.log10(9) ? 'limite' : 'echec' }];
+  const rapport = { etalon: 1, experience: 'loup', monde: MONDE, date: arg('--date', new Date().toISOString().slice(0, 10)), ans: ANSX, lieux: B.length, reel: REEL, serie, tests };
+  const S = { ok: '✓', limite: '≈', echec: '✗' }; console.log(`Le retour du loup (France, Italie, Suisse ; ${ANSX} ans) :`); for (const t of tests) console.log(`  ${S[t.etat]} ${t.nom} : ${t.valeur ?? 'jamais'} — cible ${t.cible}`);
+  const so = arg('--sortie'); if (so) { fs.mkdirSync(path.dirname(path.resolve(so)), { recursive: true }); fs.writeFileSync(so, JSON.stringify(rapport, null, 1)); console.log('→', so); }
+  process.exit(0);
+}
 // --- la vie de l'Europe, sans joueurs ---
-const f = racine(`mondes/${MONDE}/amorce.json`); if (!fs.existsSync(f)) { console.error(`pas d'amorce : ${f}`); process.exit(1); }
 let I = JSON.parse(fs.readFileSync(f, 'utf8'));
 const animaux = I.taxons.filter(t => t.plan.regime !== 'vegetal'), ids = animaux.map(t => t.id), JOURS = +arg('--jours', 365 * ANS), parAn = new Array(ANS).fill(0);   // (--jours : un essai plus court)
 const moyennes = Array.from({ length: ANS }, () => new Map(ids.map(id => [id, 0]))), nais = {}, cigogne = { depart: [], retour: [] }, extinctions = [];

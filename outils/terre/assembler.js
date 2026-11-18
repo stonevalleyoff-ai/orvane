@@ -32,6 +32,8 @@ const A = {
   plancher: 4,                // une population de moins de bêtes n'est pas posée
   sang_chaud: new Set(['Mammalia', 'Aves']), sang_froid: .15,   // ce que brûlent les autres, rapporté à un mammifère de leur masse
   natalite_pontes: [0, 1.2],
+  front: 25,                  // le front d'une espèce qui s'étend avance chaque année de sa plus longue dispersion / 25 (calé sur le loup)
+  dispersion_oiseau: 300,     // la plus longue dispersion d'un oiseau qui vole (km)
   vie_sauvage: 3,              // la vie sauvage d'un oiseau ou d'un mammifère, en années : 3 × masse^0,3 (un cerf ~14 ans, un lapin 3,6, un mulot 1)
   equilibre: [.1, 10]          // la capacité d'un lieu : celle où ses brouteurs comptés sont à l'équilibre, entre 0,1 et 10 fois ce que donne sa production (plus bas)
 };
@@ -104,6 +106,11 @@ const natalite = pl => { const L = Math.max(1, pl.longevite) / 365.25, mat = Mat
   const n = .5 * Math.max(0, pl.portee || 1) * Math.exp(-mat / L) * A.survie_jeune(m) / (pl.meute > 1 ? pl.meute / 2 : 1);
   return r4(Math.max(n, 1.15 / L)); };   // (au moins de quoi remplacer ses morts : une espèce qui vit encore n'est pas en train de s'éteindre)
 const GARDE = new Set(['id', 'nom', 'reel', 'guilde', 'especes', 'plan', 'phenotypes']);
+const classe0 = e => e.reel?.classe ?? String(e.reel?.groupe || '').split(' ')[0];
+// la distance entre deux lieux voisins (km, la médiane, d'après leurs centres) : la maille de la carte
+const ESPACE = (() => { const D = [], rad = Math.PI / 180; for (const b of biomes) for (const v of b.voisins) { const w = parId.get(v); if (!w || w.lieu?.h3 === b.lieu?.h3) continue;
+  const x = (w.lieu.lon - b.lieu.lon) * Math.cos((w.lieu.lat + b.lieu.lat) / 2 * rad), y = w.lieu.lat - b.lieu.lat; D.push(111.2 * Math.hypot(x, y)); }
+  D.sort((x, y) => x - y); return D.length ? D[D.length >> 1] : 300; })();
 const taxons = [], absents = [];
 for (const e of vivant.especes || vivant.taxons || vivant) {
   if (!e?.plan) continue; const vegetal = e.plan.regime === 'vegetal'; if (vegetal) continue;
@@ -128,6 +135,13 @@ for (const e of vivant.especes || vivant.taxons || vivant) {
   //  (seulement celles qui vivent au moins deux ans, et jamais moins qu'elles n'avaient : un insecte d'une saison a déjà la sienne)
   if ((plan.portee || 0) > 50 && plan.longevite >= 730) plan.natalite = r4(Math.max(plan.natalite, clamp(Math.min(5 / (plan.longevite / 365.25), 2 / (Math.max(30, plan.maturite) / 365.25)), A.natalite_pontes[0], A.natalite_pontes[1])));
   if (plan.metabolisme == null && !A.sang_chaud.has(e.reel?.classe ?? String(e.reel?.groupe || '').split(' ')[0])) plan.metabolisme = A.sang_froid;   // (un poisson, un reptile, un insecte brûlent peu)
+  // (la dispersion : ce que l'espèce porte loin ses jeunes. La plus longue dispersion d'un mammifère suit sa masse (Sutherland et al. 2000,
+  //  Conservation Ecology 4 : 40,7 × M^0,81 km pour un carnivore, 3,31 × M^0,65 pour un herbivore ou un omnivore) ; un oiseau qui vole, 300 km ;
+  //  le front d'une espèce qui gagne du terrain avance d'environ cette distance / A.front chaque année (calé sur le retour du loup en
+  //  France, docs/53) ; la chance de fonder un lieu voisin, par an, est l'avance du front rapportée à la distance entre deux lieux)
+  if (!Number.isFinite(plan.dispersion)) { const viande = (plan.diete?.viande || 0) >= .5 || plan.regime === 'carnivore', vole = (plan.locomotion || []).includes('vol');
+    const dmax = classe0(e) === 'Aves' && vole ? A.dispersion_oiseau : classe0(e) === 'Mammalia' ? (viande ? 40.7 * Math.pow(mkg, .81) : 3.31 * Math.pow(mkg, .65)) : null;
+    if (dmax != null) { const parAn = clamp(dmax / A.front / ESPACE, 0, .9), base = 1 - Math.pow(1 - REGLES.colonisation, 365.25 / 120); plan.dispersion = +clamp(parAn / base, .02, 60).toPrecision(3); } }
   if (plan.diete && !plan.diete0) plan.diete0 = { ...plan.diete };
   if (plan.corps) plan.corps = Object.fromEntries(Object.entries(plan.corps).filter(([k]) => CORPS_OK.has(k)));   // (la silhouette ne garde que ce que le contrat connaît)
   plan.locomotion ??= ['marche']; plan.activite ??= 'diurne'; plan.sociabilite ??= .3; plan.temperament ??= .4; plan.vitesse_rel ??= 4; plan.perception ??= .5;

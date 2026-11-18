@@ -1646,6 +1646,11 @@
                 "exclusiveMinimum": 0,
                 "description": "(docs/52) Dans un monde réel : la part de la capacité d'un lieu que trouve l'espèce, rapportée à ce que sa bande de masse lui donnerait (1). Calée à l'assemblage, pour que ses effectifs comptés soient son équilibre."
               },
+              "dispersion": {
+                "type": "number",
+                "minimum": 0,
+                "description": "(docs/52, docs/53) Dans un monde réel : ce que l'espèce porte loin ses jeunes, rapporté à la règle du monde (1). Elle fonde d'autant plus vite un lieu voisin où elle n'est pas : le loup bien plus que le chevreuil."
+              },
               "metabolisme": {
                 "type": "number",
                 "exclusiveMinimum": 0,
