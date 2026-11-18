@@ -664,7 +664,11 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
     const preds = T.filter(q => q.regime === 'carnivore' || q.regime === 'omnivore');
     for (const p of preds) {
       let A = 0; const x = new Array(T.length).fill(0);   // (docs/30 : un spectre choisit entre insectes, viande et sang)
-      T.forEach((q, k) => { if (q === p) return; const f = DT ? DI.appetence(p.t.plan, q.t.plan, appetence(p.t.plan, q.t.plan)) : appetence(p.t.plan, q.t.plan); if (!f) return; x[k] = q.Bv * f * (ES ? ES.acces(p.t, bid) : 1) * (GR ? GR.acces(p.t, biomes[bid]) : 1); A += x[k]; });
+      T.forEach((q, k) => { if (q === p) return; let f = DT ? DI.appetence(p.t.plan, q.t.plan, appetence(p.t.plan, q.t.plan)) : appetence(p.t.plan, q.t.plan);
+        // (docs/53 : dans un monde réel, un buveur de sang de naissance — la tique, le moustique — boit aux bêtes vingt fois plus grandes que lui ;
+        //  le moteur ne le laissait qu'à une lignée venue au sang par l'évolution, et la tique n'avait aucun hôte)
+        if (REGLES.petites_proies && DT && !f && (p.t.plan.diete?.sang || 0) > 0 && (q.t.plan.masse_kg || 1) >= DI.REGLES.sang.rapport * (p.t.plan.masse_kg || 1) && q.t.plan.regime !== 'vegetal') f = DI.REGLES.sang.appetence * p.t.plan.diete.sang / Math.max(.05, DI.chair(p.t.plan.diete));
+        if (!f) return; x[k] = q.Bv * f * (ES ? ES.acces(p.t, bid) : 1) * (GR ? GR.acces(p.t, biomes[bid]) : 1); A += x[k]; });
       const puiss = x.map(v => v > 0 ? Math.pow(v, REGLES.report_proies) : 0), z = puiss.reduce((a, v) => a + v, 0);
       p.part = puiss.map(v => z ? v / z : 0); p.x = x; p.A = A;                       // la part de chaque proie dans ce que ce prédateur prélève
       p.eff = p.E.chasse.map((c, i) => c * (.7 + .6 * (p.E.plans[i].perception ?? .5)) * (p.regime === 'omnivore' ? REGLES.chasse_omnivore : 1) * (GR ? GR.chasse(p.t, biomes[bid], i) : 1) * (ES ? ES.chasse(p.t, bid, i) : 1));

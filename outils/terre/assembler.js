@@ -27,6 +27,7 @@ const A = {
   capacite: 5,
   production_eau: { lac: 400, riviere: 350, marais: 1200, cote: 600, large: 180, 'mer-froide': 260, abysses: 15, banquise: 20 },   // (g/m²/an, quand le climat ne la dit pas)
   survie_jeune: m => m >= 20 ? .6 : m >= 1 ? .45 : m >= .05 ? .3 : .2,   // la part des petits qui passent leur première année, selon la masse
+  survie_jeune_froid: .05,   // … et chez une bête à sang froid (un amphibien, un reptile) : la plupart des têtards, des petits ne passent pas l'année (docs/53 : à la survie d'un mammifère, la salamandre doublait chaque année)
   meutes: { 'Canis lupus': 6, 'Orcinus orca': 5, 'Lycaon pictus': 8, 'Panthera leo': 4 },
   tolerance: [.2, .7],
   plancher: 4,                // une population de moins de bêtes n'est pas posée
@@ -106,8 +107,8 @@ function lieuxDe(e) {
   return biomes.filter(b => (!H.size || H.has(b.type)) && (enCellule ? enCellule.has(h3court(b.lieu.h3 || b.id.split('~')[1])) : pays ? (Array.isArray(pays) ? pays.includes(b.lieu.pays) : pays[b.lieu.pays] != null) : true));
 }
 const ans = x => Math.round(x * 365.25);
-const natalite = pl => { const L = Math.max(1, pl.longevite) / 365.25, mat = Math.max(1, pl.maturite) / 365.25, m = pl.masse_kg || 1;
-  const n = .5 * Math.max(0, pl.portee || 1) * Math.exp(-mat / L) * A.survie_jeune(m) / (pl.meute > 1 ? pl.meute / 2 : 1);
+const natalite = (pl, chaud = true) => { const L = Math.max(1, pl.longevite) / 365.25, mat = Math.max(1, pl.maturite) / 365.25, m = pl.masse_kg || 1;
+  const n = .5 * Math.max(0, pl.portee || 1) * Math.exp(-mat / L) * (chaud ? A.survie_jeune(m) : A.survie_jeune_froid) / (pl.meute > 1 ? pl.meute / 2 : 1);
   return r4(Math.max(n, 1.15 / L)); };   // (au moins de quoi remplacer ses morts : une espèce qui vit encore n'est pas en train de s'éteindre)
 const GARDE = new Set(['id', 'nom', 'reel', 'guilde', 'especes', 'plan', 'phenotypes']);
 const classe0 = e => e.reel?.classe ?? String(e.reel?.groupe || '').split(' ')[0];
@@ -134,7 +135,7 @@ for (const e of vivant.especes || vivant.taxons || vivant) {
   //  par jour : sans ces bornes, au premier printemps, les lapins se multipliaient par trois en un mois)
   const chaud = A.sang_chaud.has(e.reel?.classe ?? String(e.reel?.groupe || '').split(' ')[0]), mkg = plan.masse_kg || 1;
   if (chaud) plan.longevite = Math.round(Math.min(plan.longevite, A.vie_sauvage * Math.pow(mkg, .3) * 365.25));
-  if (!Number.isFinite(plan.natalite)) plan.natalite = natalite(plan);
+  if (!Number.isFinite(plan.natalite)) plan.natalite = natalite(plan, chaud);
   if (chaud) plan.natalite = r4(Math.min(plan.natalite, 2 * 365.25 * .025 * Math.pow(mkg * 1000, -.26) + 365.25 / plan.longevite));
   // (une espèce qui pond par milliers — le hareng, la truite, le cabillaud — se renouvelle vite, et nourrit tout le monde : ses jeunes
   //  qui passent leur première année font ~5 / sa longévité en années, au plus 2 / sa maturité — une tortue qui mûrit à 25 ans se renouvelle
