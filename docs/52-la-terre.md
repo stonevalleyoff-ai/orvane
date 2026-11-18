@@ -142,6 +142,10 @@ Puis elle recommence. Les grands carnivores (le loup, l'ours, les lynx, le glout
 
 Son activité va de 0,1 au cœur de l'hiver à 1, dès que le lieu produit autant qu'en moyenne. Sans cela, les insectes proies mouraient chaque hiver sans naître, et leurs chasseurs avec eux : les coccinelles, les araignées et les libellules perdaient 90 % chaque année, quoi que fasse le calage.
 
+**La concurrence entre chasseurs** (`regles.concurrence_masse = 0,7`). Deux chasseurs de tailles très différentes ne se disputent pas les mêmes proies au même endroit : l'araignée et la mésange, l'hermine et le loup. Leur concurrence décroît avec leur écart de masse, comme celle des brouteurs, d'un écart-type de 0,7 décade.
+
+Sans cela, une araignée pesait d'autant moins devant les mésanges que ses besoins étaient petits, et n'avait jamais sa part, quel que soit son métabolisme. Avec cette règle, en novembre, la satiété des carabes passe de 0,08 à 0,68, celle des libellules de 0,09 à 0,82, celle du renard de 0,55 à 0,85.
+
 **Les migrateurs** (`regles.hivernage.photoperiode`). Ils partent quand les jours raccourcissent sous 13 h 30 après l'été, à la latitude de leur lieu (fin août à 50° N), et reviennent quand ils repassent au-dessus de 11 h 30 (début mars). C'est un seuil pour tous, tiré de ce que font la plupart des migrateurs d'Europe, pas réglé sur une espèce. Avant, ils partaient avec le froid, fin octobre.
 
 Un oiseau qui vole a aussi la niche de l'été, quand il niche : à la moyenne de l'année, son hiver lui paraissait aussi doux que l'été, et il ne partait jamais.

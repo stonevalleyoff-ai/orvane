@@ -47,6 +47,7 @@ const REGLES = {
   besoin: 6, conversion: .06, // un prédateur mange chaque jour ce que mange une vraie bête (un loup ~1 kg/jour), et peu de cette viande fait des petits
   demi_satiete: 5,           // … et il est rassasié à moitié quand il a cinq fois ce besoin à sa portée (le besoin a grandi : trente fois, il crevait de faim)
   petites_proies: true,      // un mangeur d'insectes prend les insectes, si petits soient-ils
+  concurrence_masse: .7,       // deux chasseurs se gênent d'autant moins que leurs masses diffèrent (0,7 décade : l'araignée et la mésange presque pas)
   diapause: { plancher: .1 },  // une bête à sang froid passe l'hiver en diapause : elle meurt, mange, se montre dix fois moins (docs/53)
   longevite_predateur: 0,
   // les migrateurs partent quand les jours passent sous 13 h 30 après l'été (fin août à 50° N), et reviennent quand ils repassent au-dessus de

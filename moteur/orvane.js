@@ -151,7 +151,8 @@ const REGLES = {
   // (docs/52) un monde réel : la chance, par cycle de référence et par lieu voisin qui lui convient tout à fait, qu'une lignée fonde un lieu
   // où elle n'est pas ; null : partout où l'on essaime, on arrive (les mondes d'Orvane)
   colonisation: null,
-  diapause: null,            // (docs/53) un monde réel : { plancher } — le repos d'hiver des bêtes à sang froid (plus bas, DIA)
+  diapause: null,
+  concurrence_masse: 0,      // (docs/53) un monde réel : l'écart-type (en décades de masse) de la concurrence entre deux chasseurs ; 0 : tous se gênent            // (docs/53) un monde réel : { plancher } — le repos d'hiver des bêtes à sang froid (plus bas, DIA)
   petites_proies: false      // (docs/52) un monde réel : un mangeur d'insectes prend les insectes, si petits soient-ils (plus haut, appetence)
 };
 // (docs/52) le pas de temps : la part d'un cycle de référence (une « tranche de vie » d'environ 120 jours, celle sur laquelle le
@@ -573,6 +574,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   // en diapause — un œuf, une nymphe, une bête engourdie. Quand son lieu ne produit presque plus rien, il meurt moins, ne meurt pas de faim, mange
   // moins, et se cache. Son activité : de plancher (au cœur de l'hiver) à 1 (dès que le lieu produit autant qu'en moyenne). Un monde qui le dit
   // (REGLES.diapause) ; sans cela, les insectes mouraient chaque hiver de faim, sans naître, et leurs chasseurs avec eux
+  const CMP = REGLES.concurrence_masse > 0 ? (m1, m2) => { const d = Math.log10((m1 || 1) / (m2 || 1)); return Math.exp(-(d * d) / (2 * REGLES.concurrence_masse ** 2)); } : null;
   const DIA = REGLES.diapause && SL ? (pl, b) => (pl.metabolisme ?? 1) < 1 && b ? clamp((prodS(b) - .3) / .7, REGLES.diapause.plancher ?? .1, 1) : 1 : null;
   // l'hiver et l'été d'un lieu (les routes de l'hiver) : dans un monde au calendrier, ceux de son climat
   const axesAc = new Map(), axesA = SL ? (x, ph) => { const k = x.id + '|' + ph; let v = axesAc.get(k); if (!v) axesAc.set(k, v = (x.normales ? CALEN.saisonLieu(x, CALEN.dateDeLaPhase(x, ph, JOURC))?.axes : null) ?? axesSaison(x, ph)); return v; } : axesSaison;
@@ -673,10 +675,14 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
       p.effMoy = p.pop.N.reduce((a, N, i) => a + N * p.eff[i], 0) / p.Nt; p.besoinMoy = p.pop.N.reduce((a, N, i) => a + N * p.besoin[i], 0) / p.Nt;
     }
     // les prédateurs se partagent les proies : chacun compte, en concurrents, ceux qui mangent les mêmes, au prorata de leur besoin
+    // (docs/53 : dans un monde qui le dit, REGLES.concurrence_masse, deux chasseurs de tailles très différentes ne se disputent pas les mêmes
+    //  proies au même endroit — l'araignée et la mésange, l'hermine et le loup : leur concurrence décroît avec leur écart de masse, comme
+    //  celle des brouteurs, d'un écart-type de concurrence_masse décades. Sans cela, une araignée pesait d'autant moins devant les mésanges
+    //  que ses besoins étaient petits, et n'avait jamais sa part)
     // (docs/30 : boire le sang d'une bête ne dispute pas sa chair aux chasseurs)
     for (const p of preds) {
       let C = 0;
-      if (p.A > 0) for (const q of preds) { if (q === p || q.A <= 0) continue; let commun = 0; p.part.forEach((v, k) => { if (v && q.x[k] && (!DT || DI.mortel(p.t.plan, T[k].t.plan) === DI.mortel(q.t.plan, T[k].t.plan))) commun += v; }); C += q.Nt * (p.besoinMoy > 0 ? q.besoinMoy / p.besoinMoy : 0) * q.effMoy * commun; }
+      if (p.A > 0) for (const q of preds) { if (q === p || q.A <= 0) continue; let commun = 0; p.part.forEach((v, k) => { if (v && q.x[k] && (!DT || DI.mortel(p.t.plan, T[k].t.plan) === DI.mortel(q.t.plan, T[k].t.plan))) commun += v; }); C += q.Nt * (p.besoinMoy > 0 ? q.besoinMoy / p.besoinMoy : 0) * q.effMoy * commun * (CMP ? CMP(p.t.plan.masse_kg, q.t.plan.masse_kg) : 1); }
       let R = 0, sN = 0;   // (une bête qui ne chasse pas, ou ne mange pas de viande : rien, jamais 0/0)
       p.pop.N.forEach((N, i) => { if (N <= 0) return; const den = p.Nt * p.effMoy + C, a = den > 0 ? p.A * p.eff[i] / den : 0, s = a > 0 ? a / (a + REGLES.demi_satiete * p.besoin[i]) : 0; const r = N * p.besoin[i] * s * PAS; R += r; sN += s * N; p.pop.ration[i] = r; });
       p.pop.satiete = sN / p.Nt;
