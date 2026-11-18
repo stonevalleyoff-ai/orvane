@@ -41,7 +41,10 @@ const CIBLES = {
 const note = (ecart, tol) => ecart <= tol ? 'ok' : ecart <= 2 * tol ? 'limite' : 'echec';
 
 // --- les mesures d'un état ---
-// les carnivores (mammifères carnivores d'au moins 0,5 kg) : leur nombre par 10 000 kg des proies que le moteur leur laisse, là où ils vivent
+// les carnivores (mammifères carnivores d'au moins 0,5 kg) : leur nombre par 10 000 kg des proies que le moteur leur laisse (les vertébrés :
+// les mammifères, les oiseaux, les poissons, les reptiles, les amphibiens), là où ils vivent. Le loup, l'ours, les lynx sont à part : en Europe,
+// ce sont les hommes qui les tiennent sous ce que leurs proies nourriraient ; dans un monde sans joueurs, ils doivent remonter vers la loi
+const VERTEBRES = new Set(['Mammalia', 'Aves', 'Actinopterygii', 'Elasmobranchii', 'Squamata', 'Testudines', 'Amphibia']), TENUS = new Set(['loup', 'lynx-boreal', 'lynx-pardelle', 'ours-brun', 'glouton']);
 function carnivores(I) {
   const T = I.taxons.filter(t => !t.eteint && t.populations.length), parLieu = new Map();
   for (const t of T) for (const p of t.populations) (parLieu.get(p.biome) || parLieu.set(p.biome, []).get(p.biome)).push([t, p.effectif]);
@@ -49,11 +52,11 @@ function carnivores(I) {
   for (const c of T) { if (classe(c) !== 'Mammalia' || c.plan.regime !== 'carnivore' || (c.plan.masse_kg || 0) < .5 || c.guilde) continue;
     let N = 0, B = 0;
     for (const p of c.populations) { const ici = parLieu.get(p.biome) || []; let b = 0;
-      for (const [q, n] of ici) if (q !== c && ['Mammalia', 'Aves'].includes(classe(q)) && q.plan.regime !== 'vegetal' && Orvane.appetence(c.plan, q.plan) > 0) b += n * (q.plan.masse_kg || 1);
+      for (const [q, n] of ici) if (q !== c && VERTEBRES.has(classe(q)) && q.plan.regime !== 'vegetal' && Orvane.appetence(c.plan, q.plan) > 0) b += n * (q.plan.masse_kg || 1);
       if (b > 0) { N += p.effectif; B += b; } }
     if (!(B > 0) || !(N > 0)) continue;
     const obs = N / (B / 1e4), att = CIBLES.carnivores.a * Math.pow(c.plan.masse_kg, CIBLES.carnivores.b);
-    out.push({ id: c.id, nom: c.nom, masse_kg: c.plan.masse_kg, effectif: Math.round(N), proies_t: Math.round(B / 1e3), par_10t: r(obs, 3), attendu: r(att, 3), ecart_log10: r(Math.log10(obs / att), 3) }); }
+    out.push({ id: c.id, nom: c.nom, masse_kg: c.plan.masse_kg, effectif: Math.round(N), proies_t: Math.round(B / 1e3), par_10t: r(obs, 3), attendu: r(att, 3), ecart_log10: r(Math.log10(obs / att), 3), ...(TENUS.has(c.id) ? { tenu_par_les_hommes: true } : {}) }); }
   return out.sort((x, y) => x.ecart_log10 - y.ecart_log10);
 }
 // la pente densité ~ masse des mammifères (sur la surface des lieux où chacun vit)
@@ -138,10 +141,12 @@ const tests = [];
     tests.push({ id: `cigogne-${sens}`, nom: `Les cigognes : ${sens === 'depart' ? 'le départ' : 'le retour'}`, valeur: j, valeur_dite: dateDe(j), cible: `du ${dateDe(C.de)} au ${dateDe(C.a)}`, etat: note(ecart, 15), detail: { jours: L.slice(0, ANS) }, source: C.source }); }
 }
 { // 3. les prédateurs
-  const C = CIBLES.carnivores, car1 = carnivores(I), med = L => { const v = L.map(x => Math.abs(x.ecart_log10)).sort((x, y) => x - y); return v.length ? v[v.length >> 1] : null; };
+  const C = CIBLES.carnivores, car1 = carnivores(I), med = L => { const v = L.filter(x => !x.tenu_par_les_hommes).map(x => Math.abs(x.ecart_log10)).sort((x, y) => x - y); return v.length ? v[v.length >> 1] : null; };
   const m1 = med(car1), m0 = med(car0);
+  // (les grands carnivores, que les hommes tiennent : sans joueurs, leur écart à la loi doit se réduire — on dit de combien)
+  const grands = car1.filter(x => x.tenu_par_les_hommes).map(x => { const d = car0.find(y => y.id === x.id); return { id: x.id, depart: d ? r(Math.pow(10, d.ecart_log10), 3) : null, fin: r(Math.pow(10, x.ecart_log10), 3) }; });
   tests.push({ id: 'carnivores', nom: 'Les prédateurs : combien de carnivores vivent de dix tonnes de proies', valeur: m1 == null ? null : r(Math.pow(10, m1), 2), valeur_dite: m1 == null ? '-' : `écart médian ×${Math.pow(10, m1).toFixed(1)} (au départ ×${Math.pow(10, m0).toFixed(1)})`,
-    cible: `à moins d'un facteur ${Math.pow(10, C.tolerance).toFixed(0)} de la loi`, etat: m1 == null ? 'echec' : note(m1, C.tolerance), detail: { fin: car1, depart: car0 }, source: C.source });
+    cible: `à moins d'un facteur ${Math.pow(10, C.tolerance).toFixed(0)} de la loi (hors loup, ours, lynx, glouton)`, etat: m1 == null ? 'echec' : note(m1, C.tolerance), detail: { grands_carnivores: grands, fin: car1, depart: car0 }, source: C.source + ". Les grands carnivores d'Europe sont tenus sous la loi par les hommes : ils sont dits à part (grands_carnivores), et doivent remonter vers elle dans un monde sans joueurs" });
 }
 { // le garde-fou
   const C = CIBLES.damuth, d1 = damuth(I);

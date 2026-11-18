@@ -13,7 +13,7 @@ Cette dernière condition est toute la difficulté. L'assemblage cale la place d
 | **la stabilité** | la moyenne de la dernière année de chaque espèce, rapportée à celle de la première (deux moyennes sur toutes les saisons), et les extinctions | 90 % des espèces à moins d'un facteur 2, aucune extinction | un monde sans joueurs, au même climat, garde ses espèces |
 | **les naissances** du chevreuil, du cerf | le jour médian des naissances de l'année | du 10 mai au 24 juin (chevreuil), du 20 mai au 4 juillet (cerf) | Andersen et al. 1998 ; Clutton-Brock et al. 1982 |
 | **les cigognes** | le jour où la migration d'automne commence, celui où elles reviennent | du 3 août au 12 septembre ; du 14 février au 10 avril | les dates connues de la cigogne blanche |
-| **les prédateurs** | pour chaque mammifère carnivore d'au moins 500 g : son nombre par 10 000 kg de proies (les oiseaux et les mammifères que le moteur lui laisse manger, là où il vit), rapporté à la loi | l'écart médian à moins d'un facteur 3 | Carbone et Gittleman 2002 (Science 295) : 89,1 × masse^−1,05 carnivores par 10 000 kg de proies, mesuré sur 25 espèces |
+| **les prédateurs** | pour chaque mammifère carnivore d'au moins 500 g : son nombre par 10 000 kg de proies (les vertébrés que le moteur lui laisse manger, poissons compris, là où il vit), rapporté à la loi. Le loup, l'ours, les lynx et le glouton sont dits à part : en Europe, ce sont les hommes qui les tiennent bas, et sans joueurs ils doivent remonter vers la loi | l'écart médian à moins d'un facteur 3 | Carbone et Gittleman 2002 (Science 295) : 89,1 × masse^−1,05 carnivores par 10 000 kg de proies, mesuré sur 25 espèces |
 | *garde-fou* : **la loi de Damuth** | la pente entre la densité et la masse des mammifères | −0,75 ± 0,15 | Damuth 1981. L'assemblage l'a posée : le moteur ne doit pas la défaire |
 
 Chaque test passe (✓), est limite (≈, à moins de deux fois la tolérance) ou échoue (✗). **Un échec est un renseignement, pas une panne** : il dit ce que le moteur ne sait pas encore faire, et où chercher.
@@ -24,6 +24,26 @@ node outils/etalon.js --ans 1 --jours 30      # un essai court (les saisons ne d
 ```
 
 Le point de départ est toujours l'amorce : deux lancements donnent le même rapport. Une année d'Europe prend environ 50 minutes sur un ordinateur.
+
+## Le premier rapport
+
+Deux années d'Europe, du 17 novembre 2026 au 16 novembre 2028, avant la dispersion de chaque espèce (plus bas) :
+
+| | test | ce qu'il a donné |
+| --- | --- | --- |
+| ≈ | la stabilité | 89 % des espèces à moins d'un facteur 2, aucune extinction. Les plus loin sont les insectes chasseurs (les coccinelles ×0,02, les araignées ×0,02, les libellules ×0,04), qui s'effondrent ; quelques pollinisateurs montent (les syrphes ×5, les papillons ×3,6) ; les rapaces baissent (l'épervier ×0,17, la buse ×0,31, le milan royal ×0,32) |
+| ✓ | les naissances du chevreuil | le 24 juin (la cible : du 10 mai au 24 juin) ; l'essentiel en mai, juin et juillet |
+| ✓ | les naissances du cerf | le 24 juin (la cible : du 20 mai au 4 juillet) |
+| ✗ | le départ des cigognes | le 28 octobre, au lieu d'août. Le moteur fait partir les hivernants à la fin de l'automne thermique ; une cigogne part avant le froid, quand les jours raccourcissent et que la nourriture baisse |
+| ✓ | le retour des cigognes | le 2 mars |
+| ≈ | les prédateurs | ×5,8 en fin de course (×2,5 au départ). La mesure comptait alors les seuls oiseaux et mammifères pour proies : les phoques et les dauphins, qui vivent de poissons, sortaient des dizaines de fois au-dessus de la loi. Avec les poissons, au départ : ×1,9 |
+| ✓ | garde-fou : Damuth | −0,645 (au départ −0,697) |
+
+Ce que l'étalon dit de faire, dans l'ordre :
+1. **les insectes chasseurs** : ils meurent de faim ;
+2. **les rapaces** : le calage d'un seul jour, en novembre, ne voit pas l'année de leurs proies ;
+3. **le départ des migrateurs** : une fenêtre par espèce, liée à la durée du jour ;
+4. **un calage sur une année entière** (docs/52).
 
 ## Une expérience : le retour du loup
 
