@@ -130,6 +130,11 @@ const tests = [];
   tests.push({ id: 'stabilite', nom: 'La stabilité', valeur: r(dans, 3), cible: `≥ ${C.part} des espèces à moins d'un facteur ${C.facteur} de leur année d'avant${ANS === 1 ? ' (sur une année : la première contre elle-même, le test ne dit rien ; il faut --ans 2 au moins)' : ''}`,
     etat: ANS === 1 ? 'limite' : dans >= C.part && !extinctions.length ? 'ok' : dans >= C.part - .1 ? 'limite' : 'echec',
     detail: { especes: L.length, extinctions, plus_loin: L.slice(0, 12) }, source: C.source });
+  // (docs/53) la stabilité tolère une espèce sur dix loin d'elle-même : celles-là, on les nomme. Aucune ne doit fondre de moitié ou doubler
+  // d'une année sur l'autre, dans un monde sans joueurs, au même climat
+  const hors = L.filter(x => x.rapport < 1 / C.facteur || x.rapport > C.facteur);
+  tests.push({ id: 'hors', nom: 'Aucune espèce ne fond ni ne s\'emballe', valeur: hors.length, valeur_dite: hors.length ? `${hors.length} : ${hors.slice(0, 8).map(x => `${x.id} ×${x.rapport}`).join(', ')}` : 'aucune',
+    cible: `aucune espèce sous ×${(1 / C.facteur).toFixed(1)} ni au-dessus de ×${C.facteur} de son année d'avant`, etat: ANS === 1 ? 'limite' : hors.length === 0 ? 'ok' : hors.length <= 5 ? 'limite' : 'echec', detail: { hors }, source: C.source });
 }
 { // 2. les saisons
   for (const [id, C] of Object.entries(CIBLES.naissances)) { const v = nais[id]; if (!v || !somme(v)) continue;
@@ -149,6 +154,14 @@ const tests = [];
   const grands = car1.filter(x => x.tenu_par_les_hommes).map(x => { const d = car0.find(y => y.id === x.id); return { id: x.id, depart: d ? r(Math.pow(10, d.ecart_log10), 3) : null, fin: r(Math.pow(10, x.ecart_log10), 3) }; });
   tests.push({ id: 'carnivores', nom: 'Les prédateurs : combien de carnivores vivent de dix tonnes de proies', valeur: m1 == null ? null : r(Math.pow(10, m1), 2), valeur_dite: m1 == null ? '-' : `écart médian ×${Math.pow(10, m1).toFixed(1)} (au départ ×${Math.pow(10, m0).toFixed(1)})`,
     cible: `à moins d'un facteur ${Math.pow(10, C.tolerance).toFixed(0)} de la loi (hors loup, ours, lynx, glouton)`, etat: m1 == null ? 'echec' : note(m1, C.tolerance), detail: { grands_carnivores: grands, fin: car1, depart: car0 }, source: C.source + ". Les grands carnivores d'Europe sont tenus sous la loi par les hommes : ils sont dits à part (grands_carnivores), et doivent remonter vers elle dans un monde sans joueurs" });
+}
+{ // (docs/53) les grands carnivores : en Europe, les hommes les tiennent sous ce que leurs proies nourriraient ; dans un monde sans joueurs,
+  // ils doivent s'en rapprocher, leur écart à la loi se réduire
+  const c = tests.find(t => t.id === 'carnivores'), G = c?.detail?.grands_carnivores?.filter(x => x.depart != null) || [];
+  const remontent = G.filter(x => x.fin > x.depart).length;
+  tests.push({ id: 'grands-carnivores', nom: 'Les grands carnivores remontent vers ce que leurs proies nourrissent', valeur: G.length ? r(remontent / G.length, 2) : null,
+    valeur_dite: G.map(x => `${x.id} ×${x.depart} → ×${x.fin}`).join(', ') || '-', cible: 'chacun plus près de la loi à la fin qu\'au départ (sans joueurs, rien ne les tient bas)',
+    etat: !G.length ? 'limite' : remontent === G.length ? 'ok' : remontent >= G.length / 2 ? 'limite' : 'echec', detail: { grands: G }, source: CIBLES.carnivores.source });
 }
 { // le garde-fou
   const C = CIBLES.damuth, d1 = damuth(I);
