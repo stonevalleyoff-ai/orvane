@@ -93,4 +93,18 @@ console.log('3. Un monde réel au jour');
   verif(eff(I, 'cerf', 'foret~vide') < 100, `avec la colonisation d'un monde réel, la forêt voisine n'est pas envahie : ${Math.round(eff(I, 'cerf', 'foret~vide'))} cerfs au bout de deux ans (2 358 sans elle)`);
   verif(eff(I, 'cerf', 'lac~bourgogne') === 0, 'un cerf sait nager, mais ne s\'installe pas dans le lac voisin');
 }
+{ // (docs/53) les migrateurs partent quand les jours raccourcissent, non quand il gèle : un oiseau de Laponie s'en va en septembre, revient en mars
+  const L = lieu('taiga~laponie', 'taiga', 67.5, 26.5, 250, .45, tL, pL, 60000), F = lieu('foret~bourgogne', 'foret', 47.3, 4.9, 300, .55, tB, pB, 40000);
+  L.voisins = ['foret~bourgogne']; F.voisins = ['taiga~laponie'];
+  // (sa niche : celle de l'été où il niche, comme l'assemblage la donne aux oiseaux qui volent)
+  const ete = C.saisonLieu(L, C.dateDeLaPhase(L, .5, Date.parse('2026-06-01'))).axes;
+  const oiseau = { regime: 'herbivore', masse_kg: 3, taille_m: .9, longevite: ans(8), maturite: ans(2), portee: 3, natalite: .6, locomotion: ['vol', 'marche'], sociabilite: .8, niche: { ...ete }, tolerance: .35, corps: { forme: 'oiseau', pattes: 2 } };
+  const dates = { depart: [], retour: [] }, mois = j => new Date(j + 'T12:00:00Z').getUTCMonth() + 1;
+  for (const [cle, photoperiode] of [['avec', { depart: 13.5, retour: 11.5, largeur: 30 }], ['sans', null]]) {
+    let I = monde([L, F], [espece('migrateur', oiseau, { 'taiga~laponie': 50000 })], { hivernage: { actif: 1, ...(photoperiode ? { photoperiode } : {}) } }); const d = { depart: null, retour: null };
+    for (let k = 0; k < 500; k++) { I = Orvane.cycle(I, {}, { duree_ms: 864e5 });
+      for (const e of I.evenements) if (e.type === 'migration' && e.taxon === 'migrateur') { if (/automne/.test(e.detail) && !d.depart) d.depart = I.cycle.jour; if (/printemps/.test(e.detail) && !d.retour) d.retour = I.cycle.jour; } }
+    dates[cle] = d; }
+  verif(dates.avec.depart && mois(dates.avec.depart) === 9 && dates.avec.retour && mois(dates.avec.retour) === 3, `les jours raccourcissent : le migrateur de Laponie part le ${dates.avec.depart}, revient le ${dates.avec.retour} (au froid seul, il partait le ${dates.sans.depart})`);
+}
 console.log(ok ? '\nla Terre tient' : '\nla Terre ne tient pas'); process.exit(ok ? 0 : 1);

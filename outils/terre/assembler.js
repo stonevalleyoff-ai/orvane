@@ -48,7 +48,9 @@ const REGLES = {
   demi_satiete: 5,           // … et il est rassasié à moitié quand il a cinq fois ce besoin à sa portée (le besoin a grandi : trente fois, il crevait de faim)
   petites_proies: true,      // un mangeur d'insectes prend les insectes, si petits soient-ils
   longevite_predateur: 0,
-  hivernage: { actif: 1 },
+  // les migrateurs partent quand les jours passent sous 13 h 30 après l'été (fin août à 50° N), et reviennent quand ils repassent au-dessus de
+  // 11 h 30 (début mars) : un seuil pour tous, tiré de ce que font la plupart des migrateurs d'Europe — pas réglé sur une espèce (docs/53)
+  hivernage: { actif: 1, photoperiode: { depart: 13.5, retour: 11.5, largeur: 30 } },
   colonisation: .005         // une lignée fonde un lieu voisin où elle n'est pas de loin en loin : ~1,5 % par an et par voisin favorable
 };
 
@@ -118,8 +120,11 @@ for (const e of vivant.especes || vivant.taxons || vivant) {
   const plan = { ...e.plan };
   // la niche : la moyenne des lieux où elle vit (pesée par leur surface) ; la tolérance : leur écart à cette moyenne
   const W = L.map(b => Math.max(1, b.lieu.surface_km2 || 1)), SW = somme(W), niche = {};
-  for (const k of ['temperature', 'humidite', 'altitude', 'lumiere', 'couvert']) niche[k] = r4(somme(L.map((b, i) => b.axes[k] * W[i])) / SW);
-  const ec = Math.sqrt(somme(L.map((b, i) => dist(b.axes, niche) ** 2 * W[i])) / SW);
+  // (un oiseau qui vole a la niche de l'été, quand il niche : c'est l'hiver de son lieu qui le chasse vers le sud, docs/53 ; la moyenne de
+  //  l'année lui faisait un hiver aussi doux que l'été, et il ne partait jamais)
+  const ete = classe0(e) === 'Aves' && (e.plan.locomotion || []).includes('vol'), axDe = b => ete && b.normales ? (C.saisonLieu(b, C.dateDeLaPhase(b, .5, Date.UTC(2026, 5, 1)))?.axes ?? b.axes) : b.axes, AX = L.map(axDe);
+  for (const k of ['temperature', 'humidite', 'altitude', 'lumiere', 'couvert']) niche[k] = r4(somme(L.map((b, i) => AX[i][k] * W[i])) / SW);
+  const ec = Math.sqrt(somme(L.map((b, i) => dist(AX[i], niche) ** 2 * W[i])) / SW);
   plan.niche = niche; plan.tolerance = r4(clamp(1.3 * ec + .12, A.tolerance[0], A.tolerance[1]));
   if (e.reel?.nom_scientifique && A.meutes[e.reel.nom_scientifique] && !(plan.meute > 1)) plan.meute = A.meutes[e.reel.nom_scientifique];
   // (un oiseau, un mammifère : sa longévité de moteur est une vie sauvage, au plus 3 × masse^0,3 années — la moitié du record fait vivre
@@ -243,6 +248,24 @@ for (let pass = 0; pass < CALER; pass++) {
     else if (t.plan.regime === 'carnivore') { const s = clamp(o.s / o.N, .005, .995), cible = clamp(seq(r * conv, m, p), .02, .98), odds = x => x / (1 - x);
       t.plan.metabolisme = +clamp((t.plan.metabolisme ?? 1) * odds(s) / odds(cible), .02, 1.5).toPrecision(4); nC++; ecart.push(Math.abs(Math.log(odds(s) / odds(cible)))); } }
   ecart.sort((x, y) => x - y); console.log(`calage, passe ${pass + 1} : ${nB} brouteurs, ${nC} carnivores ; écart médian à l'équilibre ${ecart.length ? Math.exp(ecart[ecart.length >> 1]).toFixed(2) : '-'} ×`);
+}
+// le calage sur une année entière (--caler-annee N, docs/53) : le calage d'un jour ne voit que novembre ; l'étalon a montré qu'au bout de deux
+// ans, les insectes chasseurs s'effondraient, les rapaces perdaient les deux tiers, les lapins et les lièvres doublaient. Chaque passe fait
+// vivre une année entière, puis compare chaque espèce à elle-même un an plus tôt (λ, à la même saison) : un brouteur qui a crû a trop de
+// place, un carnivore qui a crû a trop à manger pour ce qu'il brûle ; on corrige d'une part de l'écart (λ^0,8), et l'on recommence.
+// Les grands carnivores (le loup, l'ours, les lynx, le glouton) n'y sont pas : en Europe, les hommes les tiennent bas, et sans joueurs ils
+// remontent, comme ils remontent en vrai ; les caler les figerait (et le retour du loup ne se ferait plus). Une passe : ~50 minutes.
+const ANNEE = +arg('--caler-annee', 0), TENUS = new Set(['loup', 'lynx-boreal', 'lynx-pardelle', 'ours-brun', 'glouton']);
+for (let it = 0; it < ANNEE; it++) {
+  const tot = I => new Map(I.taxons.map(t => [t.id, somme(t.populations.map(p => p.effectif))])), N0 = tot(inst), t0 = Date.now(); let J = inst;
+  for (let k = 0; k < 365; k++) { J = Orvane.cycle(J, {}, { duree_ms: 864e5 }); if ((k + 1) % 61 === 0) process.stderr.write(`calage sur l'année, passe ${it + 1} : ${J.cycle.jour}\n`); }
+  const N1 = tot(J), ec = [], pires = [];
+  for (const t of inst.taxons) { if (t.plan.regime === 'vegetal' || TENUS.has(t.id)) continue; const a0 = N0.get(t.id); if (!(a0 > 0)) continue;
+    const lam = clamp((N1.get(t.id) || 0) / a0, .1, 10), k = .8; ec.push(Math.abs(Math.log(lam))); pires.push([t.id, lam]);
+    if (OMNI.has(t.plan.regime)) t.plan.place = +clamp((t.plan.place ?? 1) * Math.pow(lam, -k), .0005, 100).toPrecision(4);
+    else if (t.plan.regime === 'carnivore') t.plan.metabolisme = +clamp((t.plan.metabolisme ?? 1) * Math.pow(lam, k), .005, 3).toPrecision(4); }
+  ec.sort((x, y) => x - y); pires.sort((x, y) => Math.abs(Math.log(y[1])) - Math.abs(Math.log(x[1])));
+  console.log(`calage sur l'année, passe ${it + 1} (${Math.round((Date.now() - t0) / 6e4)} min) : écart médian ×${Math.exp(ec[ec.length >> 1]).toFixed(2)}, 90 % sous ×${Math.exp(ec[Math.floor(ec.length * .9)]).toFixed(2)} ; les plus loin : ${pires.slice(0, 6).map(([id, l]) => `${id} ×${l.toFixed(2)}`).join(', ')}`);
 }
 const rodage = +arg('--rodage', 0);
 for (let k = 0; k < rodage; k++) { inst = Orvane.cycle(inst, {}, { duree_ms: 864e5 }); if ((k + 1) % 30 === 0) console.log(`rodage : ${inst.cycle.jour}`); }

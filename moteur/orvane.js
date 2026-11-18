@@ -490,6 +490,14 @@ function routeHiver(P, b, lieu, s = 0, routes = 0, H = REGLES.hivernage, axesA =
   return { vers: best.v, ici, la: best.la, part: clamp((best.la - ici) / best.la * (.5 + .5 * s) + .3 * routes, H.part_min, H.part_max) };
 }
 // une fenêtre de l'année, en cycles : null hors d'elle ; sinon { long, rang, reste } (reste : les cycles qu'il y reste, celui-ci compris)
+// (docs/53) le jour de l'année (0 : le 1er janvier) où, à une latitude, les jours passent sous P.depart heures après l'été, et celui où ils
+// repassent au-dessus de P.retour heures après l'hiver ; gardés une fois pour toutes (au demi-degré)
+const PHOTO = new Map();
+function photoperiode(lat, P) { const cle = `${Math.round(lat * 2) / 2}|${P.depart}|${P.retour}`; if (PHOTO.has(cle)) return PHOTO.get(cle);
+  const L = d => CALEN.dureeJour(Math.round(lat * 2) / 2, Date.UTC(2027, 0, 1 + d, 12)); let dep = null, ret = null;
+  for (let d = 172; d < 365 && dep == null; d++) if (L(d) < P.depart) dep = d;
+  for (let d = 0; d < 172 && ret == null; d++) if (L(d) >= P.retour) ret = d;
+  const v = dep != null && ret != null && ret < dep ? { dep, ret } : null; PHOTO.set(cle, v); return v; }
 function fenetreDe(k, A, [a, b]) {
   const d0 = Math.ceil(a * A - 1e-9), d1 = Math.ceil(b * A - 1e-9), long = ((d1 - d0) % A + A) % A, rang = ((k - d0) % A + A) % A;
   return rang < long ? { long, rang, reste: long - rang } : null;
@@ -690,7 +698,12 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
     H.loin = H.depart || H.retour || fenetreDe(H.k, H.A, F.partie); return H; };   // (hors de ces trois fenêtres, un hivernant attardé rentre)
   if (HIV) fenetres(HIV);
   // (docs/52) dans un monde au calendrier, chaque lieu a ses fenêtres : celles de SON année
-  const HIVc = new Map(), HIVde = HIV && SL ? b => { let H = HIVc.get(b.id); if (!H) { const ph = SL.get(b.id)?.phase; H = ph == null ? HIV : fenetres({ A: HIV.A, k: Math.floor(ph * HIV.A) % HIV.A }); HIVc.set(b.id, H); } return H; } : () => HIV;
+  // (docs/53) et dans un monde qui le dit (REGLES.hivernage.photoperiode), les migrateurs partent quand les jours raccourcissent sous un
+  // seuil, et reviennent quand ils rallongent au-dessus d'un autre, à la latitude du lieu : une cigogne part en août, avant le froid
+  const HIVc = new Map(), PP = REGLES.hivernage?.photoperiode, HIVde = HIV && SL ? b => { let H = HIVc.get(b.id); if (!H) { const ph = SL.get(b.id)?.phase, pp = PP && Number.isFinite(b.lieu?.lat) ? photoperiode(b.lieu.lat, PP) : null;
+    if (pp) { const A = 365, k = Math.min(A - 1, CALEN.jourAn(JOURC) - 1), L = PP.largeur || 30; H = { A, k, depart: fenetreDe(k, A, [pp.dep / A, (pp.dep + L) / A]), retour: fenetreDe(k, A, [pp.ret / A, (pp.ret + L) / A]) };
+      H.loin = H.depart || H.retour || fenetreDe(k, A, [(pp.dep + L) / A, pp.ret / A]); }
+    else H = ph == null ? HIV : fenetres({ A: HIV.A, k: Math.floor(ph * HIV.A) % HIV.A }); HIVc.set(b.id, H); } return H; } : () => HIV;
   // (docs/52) les naissances ont leur saison, dans un monde au calendrier : la fenêtre de la lignée, à la phase du lieu
   const NSR = REGLES.naissances, NS = SL && NSR?.force > 0 ? (t, b) => { const s = SL.get(b.id); if (!s) return 1; const W = t.plan.naissances || {}, c = W.centre ?? NSR.centre, L = W.largeur ?? NSR.largeur;
     let d = Math.abs(s.phase - c); d = Math.min(d, 1 - d); const w = NSR.fond + (1 - NSR.fond) * (d < L / 2 ? Math.cos(Math.PI * d / L) ** 2 : 0) / (L / 2);

@@ -3,7 +3,7 @@
 // tourne sur le même moteur, avec de vraies espèces et un vrai climat : là, la réalité sait la réponse. L'étalon fait vivre l'Europe
 // plusieurs années, sans joueurs, et note le moteur sur ce que la réalité connaît ET que l'assemblage n'a pas calé :
 //  1. la stabilité : chaque espèce garde son ordre de grandeur d'une année sur l'autre (la moyenne de sa dernière année, rapportée à
-//     celle de sa première : les deux sont des moyennes sur toutes les saisons), et aucune ne s'éteint ;
+//     celle d'avant : deux moyennes sur toutes les saisons ; la première année est celle du calage, docs/53), et aucune ne s'éteint ;
 //  2. les saisons : le jour de l'année où naissent la plupart des faons (le chevreuil, le cerf) ; le jour où les cigognes partent
 //     hiverner et celui où elles reviennent ;
 //  3. les prédateurs : combien de carnivores vivent de dix tonnes de proies. Carbone et Gittleman (2002, Science 295) le mesurent sur
@@ -122,10 +122,12 @@ for (let y = 0; y < ANS; y++) for (const [id, v] of moyennes[y]) moyennes[y].set
 const tests = [];
 { // 1. la stabilité
   const C = CIBLES.stabilite, L = [];
-  for (const t of animaux) { const m0 = moyennes[0].get(t.id), m1 = moyennes[ANS - 1].get(t.id); if (!(m0 > 0)) continue; L.push({ id: t.id, nom: t.nom, rapport: r(m1 / m0, 3) }); }
+  // (la dernière année contre l'avant-dernière : l'assemblage cale l'Europe sur sa première année, docs/53 ; ce qui suit, il ne l'a pas vu)
+  const y0 = ANS >= 2 ? ANS - 2 : 0;
+  for (const t of animaux) { const m0 = moyennes[y0].get(t.id), m1 = moyennes[ANS - 1].get(t.id); if (!(m0 > 0)) continue; L.push({ id: t.id, nom: t.nom, rapport: r(m1 / m0, 3) }); }
   const dans = L.filter(x => x.rapport >= 1 / C.facteur && x.rapport <= C.facteur).length / (L.length || 1);
   L.sort((x, y) => Math.abs(Math.log(y.rapport)) - Math.abs(Math.log(x.rapport)));
-  tests.push({ id: 'stabilite', nom: 'La stabilité', valeur: r(dans, 3), cible: `≥ ${C.part} des espèces à moins d'un facteur ${C.facteur} de leur première année${ANS === 1 ? ' (sur une année : la première contre elle-même, le test ne dit rien ; il faut --ans 2 au moins)' : ''}`,
+  tests.push({ id: 'stabilite', nom: 'La stabilité', valeur: r(dans, 3), cible: `≥ ${C.part} des espèces à moins d'un facteur ${C.facteur} de leur année d'avant${ANS === 1 ? ' (sur une année : la première contre elle-même, le test ne dit rien ; il faut --ans 2 au moins)' : ''}`,
     etat: ANS === 1 ? 'limite' : dans >= C.part && !extinctions.length ? 'ok' : dans >= C.part - .1 ? 'limite' : 'echec',
     detail: { especes: L.length, extinctions, plus_loin: L.slice(0, 12) }, source: C.source });
 }
