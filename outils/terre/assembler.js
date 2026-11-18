@@ -31,7 +31,8 @@ const A = {
   tolerance: [.2, .7],
   plancher: 4,                // une population de moins de bêtes n'est pas posée
   sang_chaud: new Set(['Mammalia', 'Aves']), sang_froid: .15,   // ce que brûlent les autres, rapporté à un mammifère de leur masse
-  natalite_pontes: [0, 1.2]
+  natalite_pontes: [0, 1.2],
+  vie_sauvage: 3               // la vie sauvage d'un oiseau ou d'un mammifère, en années : 3 × masse^0,3 (un cerf ~14 ans, un lapin 3,6, un mulot 1)
 };
 // --- les règles du moteur pour un monde réel (monde.regles) ---
 const REGLES = {
@@ -112,7 +113,13 @@ for (const e of vivant.especes || vivant.taxons || vivant) {
   const ec = Math.sqrt(somme(L.map((b, i) => dist(b.axes, niche) ** 2 * W[i])) / SW);
   plan.niche = niche; plan.tolerance = r4(clamp(1.3 * ec + .12, A.tolerance[0], A.tolerance[1]));
   if (e.reel?.nom_scientifique && A.meutes[e.reel.nom_scientifique] && !(plan.meute > 1)) plan.meute = A.meutes[e.reel.nom_scientifique];
+  // (un oiseau, un mammifère : sa longévité de moteur est une vie sauvage, au plus 3 × masse^0,3 années — la moitié du record fait vivre
+  //  un lapin neuf ans, quand il en vit un ou deux ; sa croissance la plus forte, au plus deux fois la loi de Fenchel, r = 0,025 × g^−0,26
+  //  par jour : sans ces bornes, au premier printemps, les lapins se multipliaient par trois en un mois)
+  const chaud = A.sang_chaud.has(e.reel?.classe ?? String(e.reel?.groupe || '').split(' ')[0]), mkg = plan.masse_kg || 1;
+  if (chaud) plan.longevite = Math.round(Math.min(plan.longevite, A.vie_sauvage * Math.pow(mkg, .3) * 365.25));
   if (!Number.isFinite(plan.natalite)) plan.natalite = natalite(plan);
+  if (chaud) plan.natalite = r4(Math.min(plan.natalite, 2 * 365.25 * .025 * Math.pow(mkg * 1000, -.26) + 365.25 / plan.longevite));
   // (une espèce qui pond par milliers — le hareng, la truite, le cabillaud — se renouvelle vite, et nourrit tout le monde : ses jeunes
   //  qui passent leur première année font ~5 / sa longévité en années, au plus 2 / sa maturité — une tortue qui mûrit à 25 ans se renouvelle
   //  lentement — et au plus 1,2 par tête et par an)
