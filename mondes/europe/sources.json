@@ -1,0 +1,54 @@
+{
+ "lieux": "lieux.json",
+ "outil": "outils/terre/ (LISEZ-MOI.md)",
+ "sources": [
+  {
+   "nom": "Natural Earth 1:10m (v5.1.1) : terres, lacs, fleuves, mers nommées, pays, régions (admin-1)",
+   "url": "https://www.naturalearthdata.com/",
+   "licence": "domaine public",
+   "usage": "le trait de côte (terre/mer), les lacs, les grands fleuves (rang ≤ 6), le pays et la région de chaque lieu, le nom des mers"
+  },
+  {
+   "nom": "ETOPO 2022, 60 secondes d’arc, élévation de surface (NOAA NCEI)",
+   "url": "https://www.ncei.noaa.gov/products/etopo-global-relief-model",
+   "licence": "domaine public (œuvre du gouvernement des États-Unis)",
+   "usage": "l'altitude, le relief (écart-type), la profondeur de la mer, les montagnes et les sommets, les abysses (> 1 000 m)"
+  },
+  {
+   "nom": "ESA WorldCover 10 m 2021 v200",
+   "url": "https://esa-worldcover.org/",
+   "licence": "CC BY 4.0 (© ESA WorldCover project 2021 / Contains modified Copernicus Sentinel data (2021) processed by ESA WorldCover consortium)",
+   "usage": "la couverture du sol d'aujourd'hui (arbres, arbustes, prairies, cultures, bâti, sol nu, neige, eau, zones humides, mousses) : le type de chaque lieu terrestre, les lacs, les marais, la part couverte d'arbres"
+  },
+  {
+   "nom": "CRU TS 4.09 (Climatic Research Unit, University of East Anglia), 0,5°, mensuel",
+   "url": "https://crudata.uea.ac.uk/cru/data/hrg/cru_ts_4.09/",
+   "licence": "Open Government Licence v3 (Harris et al. 2020, Scientific Data 7:109)",
+   "usage": "les normales mensuelles 1991–2020 des terres : température (corrigée de l'altitude), précipitations, évapotranspiration potentielle (Penman-Monteith), nébulosité (pour le rayonnement)"
+  },
+  {
+   "nom": "NOAA OISST v2.1, moyenne mensuelle 1991–2020, 0,25° (NOAA PSL)",
+   "url": "https://psl.noaa.gov/data/gridded/data.noaa.oisst.v2.highres.html",
+   "licence": "domaine public (NOAA ; citation demandée)",
+   "usage": "la température de surface de la mer, mois par mois (lieux marins) ; large ou mer froide"
+  },
+  {
+   "nom": "GPCP v2.3, moyenne mensuelle 1991–2020, 2,5° (NOAA PSL)",
+   "url": "https://psl.noaa.gov/data/gridded/data.gpcp.html",
+   "licence": "domaine public (NOAA ; citation demandée)",
+   "usage": "les précipitations sur la mer"
+  },
+  {
+   "nom": "Base de données des fuseaux horaires (tz, IANA), zone.tab",
+   "url": "https://www.iana.org/time-zones",
+   "licence": "domaine public",
+   "usage": "le fuseau de chaque lieu : parmi les fuseaux de son pays, celui dont le point de référence est le plus proche"
+  },
+  {
+   "nom": "H3 (Uber), bibliothèque de grille hexagonale",
+   "url": "https://h3geo.org/",
+   "licence": "Apache 2.0 (logiciel)",
+   "usage": "les cellules et leurs voisines"
+  }
+ ]
+}
