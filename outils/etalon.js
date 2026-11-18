@@ -156,12 +156,15 @@ const tests = [];
     cible: `à moins d'un facteur ${Math.pow(10, C.tolerance).toFixed(0)} de la loi (hors loup, ours, lynx, glouton)`, etat: m1 == null ? 'echec' : note(m1, C.tolerance), detail: { grands_carnivores: grands, fin: car1, depart: car0 }, source: C.source + ". Les grands carnivores d'Europe sont tenus sous la loi par les hommes : ils sont dits à part (grands_carnivores), et doivent remonter vers elle dans un monde sans joueurs" });
 }
 { // (docs/53) les grands carnivores : en Europe, les hommes les tiennent sous ce que leurs proies nourriraient ; dans un monde sans joueurs,
-  // ils doivent s'en rapprocher, leur écart à la loi se réduire
-  const c = tests.find(t => t.id === 'carnivores'), G = c?.detail?.grands_carnivores?.filter(x => x.depart != null) || [];
-  const remontent = G.filter(x => x.fin > x.depart).length;
-  tests.push({ id: 'grands-carnivores', nom: 'Les grands carnivores remontent vers ce que leurs proies nourrissent', valeur: G.length ? r(remontent / G.length, 2) : null,
-    valeur_dite: G.map(x => `${x.id} ×${x.depart} → ×${x.fin}`).join(', ') || '-', cible: 'chacun plus près de la loi à la fin qu\'au départ (sans joueurs, rien ne les tient bas)',
-    etat: !G.length ? 'limite' : remontent === G.length ? 'ok' : remontent >= G.length / 2 ? 'limite' : 'echec', detail: { grands: G }, source: CIBLES.carnivores.source });
+  // rien ne les tient bas : chacun doit croître, d'au moins 2 % par an (le loup remonte en vrai de 5 à 10 % par an, là où on le laisse).
+  // (Leur écart à la loi des prédateurs le dirait aussi, mais il bouge avec leurs proies : on le donne, sans le noter)
+  const c = tests.find(t => t.id === 'carnivores'), G = [];
+  for (const id of ['loup', 'lynx-boreal', 'lynx-pardelle', 'ours-brun', 'glouton']) { const m0 = moyennes[0].get(id), m1 = moyennes[ANS - 1].get(id); if (!(m0 > 0)) continue;
+    const parAn = Math.pow(m1 / m0, 1 / Math.max(1, ANS - 1)); G.push({ id, par_an: r(parAn, 3), loi: c?.detail?.grands_carnivores?.find(x => x.id === id) || null }); }
+  const croissent = G.filter(x => x.par_an >= 1.02).length;
+  tests.push({ id: 'grands-carnivores', nom: 'Les grands carnivores remontent (sans joueurs, rien ne les tient bas)', valeur: G.length ? r(croissent / G.length, 2) : null,
+    valeur_dite: G.map(x => `${x.id} ${x.par_an >= 1 ? '+' : ''}${((x.par_an - 1) * 100).toFixed(1)} %/an`).join(', ') || '-', cible: 'chacun croît d\'au moins 2 % par an',
+    etat: ANS === 1 || !G.length ? 'limite' : croissent === G.length ? 'ok' : croissent >= G.length / 2 ? 'limite' : 'echec', detail: { grands: G }, source: 'le loup remonte de 5 à 10 % par an en Europe, là où on le laisse (LCIE)' });
 }
 { // le garde-fou
   const C = CIBLES.damuth, d1 = damuth(I);
