@@ -45,6 +45,41 @@ Ce que l'étalon dit de faire, dans l'ordre :
 3. **le départ des migrateurs** : une fenêtre par espèce, liée à la durée du jour ;
 4. **un calage sur une année entière** (docs/52).
 
+## Le deuxième rapport, après les corrections
+
+Ce que l'étalon a demandé a été fait (docs/52) :
+- le calage sur une année entière : une passe sur un jour, puis cinq passes sur une année ;
+- le repos d'hiver des bêtes à sang froid ;
+- la concurrence entre chasseurs selon leur masse ;
+- les migrateurs qui partent quand les jours raccourcissent, et la niche d'été des oiseaux ;
+- la survie des jeunes d'un amphibien ;
+- les buveurs de sang ;
+- la dispersion de chaque espèce.
+
+Deux années, du 17 novembre 2026 au 16 novembre 2028, sur l'amorce calée :
+
+| test | premier rapport | deuxième rapport |
+| --- | --- | --- |
+| la stabilité | ≈ 89 % | ✓ 97 % des espèces à moins d'un facteur 2 de leur année d'avant, aucune extinction |
+| les naissances du chevreuil | ✓ 24 juin | ✓ 24 juin |
+| les naissances du cerf | ✓ 24 juin | ✓ 24 juin |
+| le départ des cigognes | ✗ 28 octobre | ✓ 25 août |
+| le retour des cigognes | ✓ 2 mars | ✓ 8 mars |
+| les prédateurs | ≈ ×5,8 | ✓ ×1,7 (au départ ×2,0) |
+| *garde-fou* : Damuth | ✓ −0,645 | ✓ −0,699 |
+
+**Ce qui compte dans ce 7 sur 7, et ce qui ne compte pas.**
+- **La stabilité est en partie calée.** Le calage a vu la première année. Le test compare la deuxième à la première, et la deuxième, le calage ne l'a pas vue.
+- **Le départ des cigognes vient d'un seuil commun à tous les migrateurs**, pas réglé sur elles. Le test reste donc un vrai test.
+- **Ce que l'étalon ne note pas encore :**
+  - quelques espèces fondent toujours, sous le facteur 2 qui fait échouer :
+    - les coccinelles (×0,10 par an) et les araignées (×0,21) ;
+    - les méduses (×0,32) ;
+    - les rapaces : l'épervier ×0,34, le milan royal ×0,48, la buse ×0,50, l'autour ×0,55.
+
+    Le calage les a menées à ses bornes, sans les rattraper : ce n'est plus un réglage, c'est un mécanisme qui manque. Pour les rapaces, il faut sans doute regarder leurs proies d'hiver ;
+  - les grands carnivores s'éloignent de la loi au lieu de s'en approcher : le loup ×0,042 → ×0,032, le lynx boréal ×0,16 → ×0,12, le lynx pardelle ×0,83 → ×0,32. Sans joueurs, leurs proies croissent plus vite qu'eux. Un test devrait le dire.
+
 ## Une expérience : le retour du loup
 
 `node outils/etalon.js --experience loup` prend un morceau de l'Europe (la France, l'Italie, la Suisse, Monaco : 96 lieux) en 1992. La France et la Suisse n'ont plus un loup, l'Italie en a environ 30 % d'aujourd'hui (≈ 350, ils étaient environ 400 vers 1990). Avec le loup, on garde ses grandes proies : les ongulés, les lièvres, le lapin, la marmotte, le castor. On laisse les autres carnivores et les plantes, pour aller vite : 31 ans en quatre minutes. On compare ensuite à ce qu'a vu l'Office français de la biodiversité :
@@ -71,6 +106,8 @@ Cela donne au loup 5,9 fois la règle du monde, au lynx 4,6, au cerf 0,85, au ch
 | loups de France, réels (OFB) | ~20 | ~60 | ~150 | ~300 | ~580 | ~1 100 |
 
 Les trois tests du loup passent : il arrive en 1994, la centaine est atteinte en 2007, il y en a 916 en 2023.
+
+**Avec les règles du deuxième rapport**, le loup de France passe par 114 bêtes en 2008, 416 en 2018 et 682 en 2023 (~150, ~430, ~1 100 en vrai) : les trois tests passent toujours. L'Italie plafonne désormais vers 2 000 loups en 2023, quand on en compte environ 3 300.
 
 **Ce que vaut ce résultat.** La seule constante libre, le « / 25 », a été posée d'avance d'après la vitesse connue du front du loup en France (20 à 30 km par an). Elle a marché du premier coup, sans qu'on la retouche. Le loup a donc servi à la régler, et ne la prouve pas. Il faut une autre expansion pour la vérifier.
 
