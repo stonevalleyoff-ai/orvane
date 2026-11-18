@@ -128,6 +128,16 @@ Quatre passes, la concurrence se répondant (`--caler 4`). Sur l'Europe, l'écar
 
 Sans ce calage, les lapins partaient bien sous la place que leur donnait la production, et au premier printemps ils triplaient en un mois. Les truites et les cabillauds, affamés, fondaient de 5 % par mois, et le hareng, mangé plus vite qu'il ne naissait, aussi.
 
+**Le calage sur une année entière** (`--caler-annee 3`). Le calage d'un jour ne voit que novembre. L'étalon (docs/53) a montré qu'au bout de deux ans, les insectes chasseurs s'effondraient, les rapaces perdaient les deux tiers, et les lapins et les lièvres doublaient. Chaque passe fait vivre une année entière, puis compare chaque espèce à elle-même un an plus tôt, à la même saison (λ). Elle corrige d'une part de l'écart (λ^0,8) :
+- un brouteur qui a crû a trop de place ;
+- un carnivore qui a crû a trop à manger pour ce qu'il brûle.
+
+Puis elle recommence. Les grands carnivores (le loup, l'ours, les lynx, le glouton) n'y sont pas : les hommes les tiennent bas en Europe, et sans joueurs ils remontent, comme ils remontent en vrai. Une passe prend environ 50 minutes.
+
+**Les migrateurs** (`regles.hivernage.photoperiode`). Ils partent quand les jours raccourcissent sous 13 h 30 après l'été, à la latitude de leur lieu (fin août à 50° N), et reviennent quand ils repassent au-dessus de 11 h 30 (début mars). C'est un seuil pour tous, tiré de ce que font la plupart des migrateurs d'Europe, pas réglé sur une espèce. Avant, ils partaient avec le froid, fin octobre.
+
+Un oiseau qui vole a aussi la niche de l'été, quand il niche : à la moyenne de l'année, son hiver lui paraissait aussi doux que l'été, et il ne partait jamais.
+
 **Une vie sauvage, une croissance à sa mesure.** Pour un oiseau ou un mammifère, l'assemblage borne deux valeurs :
 - la longévité du moteur, à une vie sauvage : au plus 3 × masse^0,3 années (un cerf ~14 ans, un chevreuil 7,5, un lapin 3,6, un mulot 1). La moitié du record faisait vivre un lapin neuf ans ;
 - la croissance la plus forte, à deux fois la loi de Fenchel (0,025 × g^−0,26 par jour).
