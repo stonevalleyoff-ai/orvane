@@ -134,6 +134,14 @@ Sans ce calage, les lapins partaient bien sous la place que leur donnait la prod
 
 Puis elle recommence. Les grands carnivores (le loup, l'ours, les lynx, le glouton) n'y sont pas : les hommes les tiennent bas en Europe, et sans joueurs ils remontent, comme ils remontent en vrai. Une passe prend environ 50 minutes.
 
+**Le repos d'hiver** (`regles.diapause`). Un animal à sang froid (`plan.metabolisme` < 1 : un insecte, un poisson, un reptile, un amphibien) passe la mauvaise saison en diapause : un œuf, une nymphe, une bête engourdie. Quand son lieu ne produit presque plus rien, il fait tout dix fois moins au cœur de l'hiver :
+- il meurt moins ;
+- il ne meurt pas de faim ;
+- il mange moins ;
+- il se cache mieux.
+
+Son activité va de 0,1 au cœur de l'hiver à 1, dès que le lieu produit autant qu'en moyenne. Sans cela, les insectes proies mouraient chaque hiver sans naître, et leurs chasseurs avec eux : les coccinelles, les araignées et les libellules perdaient 90 % chaque année, quoi que fasse le calage.
+
 **Les migrateurs** (`regles.hivernage.photoperiode`). Ils partent quand les jours raccourcissent sous 13 h 30 après l'été, à la latitude de leur lieu (fin août à 50° N), et reviennent quand ils repassent au-dessus de 11 h 30 (début mars). C'est un seuil pour tous, tiré de ce que font la plupart des migrateurs d'Europe, pas réglé sur une espèce. Avant, ils partaient avec le froid, fin octobre.
 
 Un oiseau qui vole a aussi la niche de l'été, quand il niche : à la moyenne de l'année, son hiver lui paraissait aussi doux que l'été, et il ne partait jamais.

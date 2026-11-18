@@ -151,6 +151,7 @@ const REGLES = {
   // (docs/52) un monde réel : la chance, par cycle de référence et par lieu voisin qui lui convient tout à fait, qu'une lignée fonde un lieu
   // où elle n'est pas ; null : partout où l'on essaime, on arrive (les mondes d'Orvane)
   colonisation: null,
+  diapause: null,            // (docs/53) un monde réel : { plancher } — le repos d'hiver des bêtes à sang froid (plus bas, DIA)
   petites_proies: false      // (docs/52) un monde réel : un mangeur d'insectes prend les insectes, si petits soient-ils (plus haut, appetence)
 };
 // (docs/52) le pas de temps : la part d'un cycle de référence (une « tranche de vie » d'environ 120 jours, celle sur laquelle le
@@ -568,6 +569,11 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
     if (!s.axes) { s.axes = axesSaison(b, s.phase); s.production = productionSaison(b, s.phase); } SL.set(b.id, s); }
   const axesS = SL ? b => SL.get(b.id)?.axes ?? axesSaison(b, phase) : b => axesSaison(b, phase), prodS = SL ? b => SL.get(b.id)?.production ?? productionSaison(b, phase) : b => productionSaison(b, phase);
   const phaseDe = SL ? b => SL.get(b.id)?.phase ?? phase : () => phase;
+  // (docs/53) le repos d'hiver : un animal à sang froid (plan.metabolisme < 1 : un insecte, un poisson, un reptile) passe la mauvaise saison
+  // en diapause — un œuf, une nymphe, une bête engourdie. Quand son lieu ne produit presque plus rien, il meurt moins, ne meurt pas de faim, mange
+  // moins, et se cache. Son activité : de plancher (au cœur de l'hiver) à 1 (dès que le lieu produit autant qu'en moyenne). Un monde qui le dit
+  // (REGLES.diapause) ; sans cela, les insectes mouraient chaque hiver de faim, sans naître, et leurs chasseurs avec eux
+  const DIA = REGLES.diapause && SL ? (pl, b) => (pl.metabolisme ?? 1) < 1 && b ? clamp((prodS(b) - .3) / .7, REGLES.diapause.plancher ?? .1, 1) : 1 : null;
   // l'hiver et l'été d'un lieu (les routes de l'hiver) : dans un monde au calendrier, ceux de son climat
   const axesAc = new Map(), axesA = SL ? (x, ph) => { const k = x.id + '|' + ph; let v = axesAc.get(k); if (!v) axesAc.set(k, v = (x.normales ? CALEN.saisonLieu(x, CALEN.dateDeLaPhase(x, ph, JOURC))?.axes : null) ?? axesSaison(x, ph)); return v; } : axesSaison;
   const SMe = MET && inst.monde?.meteo ? MET.preparer({ monde: inst.monde, biomes, n, axes: axesS }) : null; if (SMe) ev.push(...SMe.evenements);
@@ -651,7 +657,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
     const T = [];   // un taxon présent : ses phénotypes, leur poids de proie (N × masse × vulnérabilité), son appétit
     for (const t of taxons) { if (t.eteint || t.plan.regime === 'synthetique') continue; const E = etat.get(t.id), pop = E.pops[bid]; if (!pop) continue;   // (une machine ne se mange pas)
       const Nt = pop.N.reduce((a, x) => a + x, 0); if (Nt <= 0) continue;
-      const poids = pop.N.map((N, i) => N * (E.plans[i].masse_kg || 1) * E.vuln[i] * (pop.fp ?? 1) * (GR ? GR.vuln(t, biomes[bid], i) : 1) * (SCa ? SCa.vuln(t, i) : 1) * (ES ? ES.vuln(t, bid, i) : 1));
+      const poids = pop.N.map((N, i) => N * (E.plans[i].masse_kg || 1) * E.vuln[i] * (pop.fp ?? 1) * (GR ? GR.vuln(t, biomes[bid], i) : 1) * (SCa ? SCa.vuln(t, i) : 1) * (ES ? ES.vuln(t, bid, i) : 1) * (DIA ? .3 + .7 * DIA(E.plans[i], biomes[bid]) : 1));
       T.push({ t, E, pop, Nt, poids, Bv: poids.reduce((a, x) => a + x, 0), regime: t.plan.regime }); }
     const preds = T.filter(q => q.regime === 'carnivore' || q.regime === 'omnivore');
     for (const p of preds) {
@@ -663,7 +669,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
       // (un omnivore ne cherche en viande qu'une part de ce qu'il mange : il ne dispute aux carnivores que cette part)
       // (docs/52 : un plan peut dire son métabolisme, ce qu'il brûle rapporté à un mammifère de sa masse : un poisson, un insecte mangent
       //  bien moins ; sans lui, 1)
-      p.besoin = p.E.plans.map(pl => REGLES.besoin * Math.pow(pl.masse_kg || 1, .75) * (p.regime === 'omnivore' ? (REGLES.viande_omnivore ?? 1) * (DT ? DI.viande(pl) : 1) : 1) * (pl.metabolisme ?? 1));
+      p.besoin = p.E.plans.map(pl => REGLES.besoin * Math.pow(pl.masse_kg || 1, .75) * (p.regime === 'omnivore' ? (REGLES.viande_omnivore ?? 1) * (DT ? DI.viande(pl) : 1) : 1) * (pl.metabolisme ?? 1) * (DIA ? DIA(pl, biomes[bid]) : 1));
       p.effMoy = p.pop.N.reduce((a, N, i) => a + N * p.eff[i], 0) / p.Nt; p.besoinMoy = p.pop.N.reduce((a, N, i) => a + N * p.besoin[i], 0) / p.Nt;
     }
     // les prédateurs se partagent les proies : chacun compte, en concurrents, ceux qui mangent les mêmes, au prorata de leur besoin
@@ -740,12 +746,13 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
         if (syn) { const d = SY.vie(t, bid, pop, E.plans[i], Np, sinistres[bid], conv); nais[i] = d.nais; morts[i] = d.morts; mortsNat += d.morts; continue; }
         // (un phénotype dont la tolérance diffère de celle de la lignée — la graisse brune, docs/32 — a sa propre convenance ; les autres gardent celle de la lignée)
         const convI = E.plans[i].tolerance != null && E.plans[i].tolerance !== t.plan.tolerance ? convenance(E.plans[i], bS) : conv;
-        const r = croissance(E.plans[i]) * (1 - E.couts[i]) * convI * (pop.ff ?? 1); let m = mortalite(E.plans[i]) + (convI < .3 ? .08 * PAS : 0);
+        const r = croissance(E.plans[i]) * (1 - E.couts[i]) * convI * (pop.ff ?? 1), act = DIA ? DIA(E.plans[i], b) : 1; let m = mortalite(E.plans[i]) + (convI < .3 ? .08 * PAS : 0);
+        if (DIA) m *= act;   // (docs/53 : le repos d'hiver)
         const place = Math.max(0, 1 - sat * (SF ? SF.facteur(t, bid, i) : 1) * (SV ? SV.facteur(t, bid, i) : 1) * (SCa ? SCa.facteur(t, bid, i) : 1) * (ES ? ES.place(t, bid, i) : 1));   // (docs/26 : larve et adulte ne se disputent pas tout)   // (docs/17 : qui supporte les défenses des plantes y trouve plus)
         // ce qui nourrit les naissances : la place pour l'herbivore ; la viande mangée pour le carnivore, convertie en petits à
         // REGLES.conversion (l'énergie vient des plantes : un prédateur ne vit pas de prédateurs qui vivent de lui) ; les deux pour l'omnivore
         const viande = REGLES.conversion * pop.ration[i] / (E.plans[i].masse_kg || 1) / (E.plans[i].metabolisme ?? 1);   // (docs/52 : qui brûle peu fait plus de petits de ce qu'il mange)
-        if (reg === 'carnivore') { nais[i] = Math.min(Np * r * s, viande); m *= 1 + (REGLES.faim_carnivore ?? 3) * (1 - s) * (1 - s); faim = Math.max(faim, 1 - s); }   // un carnivore affamé meurt plus
+        if (reg === 'carnivore') { nais[i] = Math.min(Np * r * s, viande); m *= DIA ? 1 + (REGLES.faim_carnivore ?? 3) * (1 - s) * (1 - s) * act : 1 + (REGLES.faim_carnivore ?? 3) * (1 - s) * (1 - s); faim = Math.max(faim, (1 - s) * act); }   // un carnivore affamé meurt plus
         else if (reg === 'omnivore') nais[i] = Np * r * place * (1 - .3 * s) * (t.plan.regime === 'carnivore' ? REGLES.omnivore_vegetal ?? 1 : REGLES.omnivore_vegetal_base ?? 1) * (DT ? DI.vegetal(E.plans[i]) : 1) + Math.min(Np * r * .3 * s * (DT ? DI.viande(E.plans[i]) : 1), viande);
         else if (reg === 'detritivore' && REGLES.cadavres > 0) { nais[i] = Np * r * s; m *= 1 + (REGLES.faim_carnivore ?? 3) * (1 - s) * (1 - s); faim = Math.max(faim, 1 - s); }   // (les morts du lieu sont sa place : il naît d'autant plus qu'il est rassasié ; affamé, il meurt plus et s'en va)
         else nais[i] = Np * r * place * (reg === 'detritivore' ? REGLES.detritivore_vegetal ?? 1 : 1);
