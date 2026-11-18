@@ -30,7 +30,8 @@ const A = {
   meutes: { 'Canis lupus': 6, 'Orcinus orca': 5, 'Lycaon pictus': 8, 'Panthera leo': 4 },
   tolerance: [.2, .7],
   plancher: 4,                // une population de moins de bêtes n'est pas posée
-  sang_chaud: new Set(['Mammalia', 'Aves']), sang_froid: .15   // ce que brûlent les autres, rapporté à un mammifère de leur masse
+  sang_chaud: new Set(['Mammalia', 'Aves']), sang_froid: .15,   // ce que brûlent les autres, rapporté à un mammifère de leur masse
+  natalite_pontes: [0, 1.2]
 };
 // --- les règles du moteur pour un monde réel (monde.regles) ---
 const REGLES = {
@@ -112,6 +113,11 @@ for (const e of vivant.especes || vivant.taxons || vivant) {
   plan.niche = niche; plan.tolerance = r4(clamp(1.3 * ec + .12, A.tolerance[0], A.tolerance[1]));
   if (e.reel?.nom_scientifique && A.meutes[e.reel.nom_scientifique] && !(plan.meute > 1)) plan.meute = A.meutes[e.reel.nom_scientifique];
   if (!Number.isFinite(plan.natalite)) plan.natalite = natalite(plan);
+  // (une espèce qui pond par milliers — le hareng, la truite, le cabillaud — se renouvelle vite, et nourrit tout le monde : ses jeunes
+  //  qui passent leur première année font ~5 / sa longévité en années, au plus 2 / sa maturité — une tortue qui mûrit à 25 ans se renouvelle
+  //  lentement — et au plus 1,2 par tête et par an)
+  //  (seulement celles qui vivent au moins deux ans, et jamais moins qu'elles n'avaient : un insecte d'une saison a déjà la sienne)
+  if ((plan.portee || 0) > 50 && plan.longevite >= 730) plan.natalite = r4(Math.max(plan.natalite, clamp(Math.min(5 / (plan.longevite / 365.25), 2 / (Math.max(30, plan.maturite) / 365.25)), A.natalite_pontes[0], A.natalite_pontes[1])));
   if (plan.metabolisme == null && !A.sang_chaud.has(e.reel?.classe ?? String(e.reel?.groupe || '').split(' ')[0])) plan.metabolisme = A.sang_froid;   // (un poisson, un reptile, un insecte brûlent peu)
   if (plan.diete && !plan.diete0) plan.diete0 = { ...plan.diete };
   plan.locomotion ??= ['marche']; plan.activite ??= 'diurne'; plan.sociabilite ??= .3; plan.temperament ??= .4; plan.vitesse_rel ??= 4; plan.perception ??= .5;
