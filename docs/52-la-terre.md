@@ -119,7 +119,13 @@ Tout est ajouté, rien n'est retiré (`node outils/contrat.js` : le contrat tien
 - **la capacité d'un lieu** : la médiane de ce qu'il faudrait à chacun de ses brouteurs pour être à l'équilibre. C'est la charge de sa bande de masse, rapportée à la saturation où ses naissances égalent ses morts. La médiane est pesée par la racine des biomasses, et la capacité reste entre 0,1 et 10 fois ce que donne la production primaire ;
 - **la place de chaque espèce** (`plan.place`), parce qu'une seule capacité par lieu ne peut convenir à tous.
 
-Sans ce calage, les lapins partaient bien sous la place que leur donnait la production : au premier printemps, ils triplaient en un mois. Avec lui, la croissance que promet le premier jour est en médiane de −0,03 par an (chevreuil −0,05, cerf −0,03, sanglier −0,01, lapin 0).
+Puis **le calage par le moteur** : l'assemblage fait tourner un jour du vrai moteur, sans rien en garder. Il y mesure les naissances, les morts et ce que mangent les prédateurs, et il ajuste deux réglages :
+- **pour un brouteur, sa place** : sa saturation de l'année doit être celle où ses naissances égalent ses morts naturelles **et** les siens mangés ;
+- **pour un carnivore, son métabolisme** (ce qu'il lui faut) : sa satiété doit être celle où ses naissances, qui suivent la satiété, égalent ses morts (que la faim multiplie) et les siens mangés.
+
+Quatre passes, la concurrence se répondant (`--caler 4`). Sur l'Europe, l'écart médian à l'équilibre tombe de ×3,3 à ×1,00 pour 114 brouteurs et 86 carnivores.
+
+Sans ce calage, les lapins partaient bien sous la place que leur donnait la production, et au premier printemps ils triplaient en un mois. Les truites et les cabillauds, affamés, fondaient de 5 % par mois, et le hareng, mangé plus vite qu'il ne naissait, aussi.
 
 **Une vie sauvage, une croissance à sa mesure.** Pour un oiseau ou un mammifère, l'assemblage borne deux valeurs :
 - la longévité du moteur, à une vie sauvage : au plus 3 × masse^0,3 années (un cerf ~14 ans, un chevreuil 7,5, un lapin 3,6, un mulot 1). La moitié du record faisait vivre un lapin neuf ans ;

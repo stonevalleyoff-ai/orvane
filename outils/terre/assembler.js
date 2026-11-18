@@ -200,6 +200,30 @@ let inst = { orvane: Orvane.CONTRAT,
   biomes, catalogue: { version: '0.1', traits: {} }, taxons, evenements: [],
   ...(sources.length ? { attributions: sources.map(s => ({ source: s.nom || s.source, licence: s.licence, url: s.url, usage: s.usage || s.ce_quon_en_tire })) } : {}) };
 inst = Meteo.eveiller(inst).inst; inst.monde.meteo = { depuis: 0 };
+// le calage par le moteur : l'équilibre observé, cette fois avec ce que le premier jour mesure vraiment — les naissances, les morts, et ce
+// que les prédateurs mangent. Chaque passe fait tourner un jour (sans rien garder) et ajuste :
+//  - un brouteur : sa place, pour que sa saturation de l'année (celle du jour, rapportée à la production moyenne) soit celle où ses
+//    naissances égalent ses morts naturelles ET les bêtes mangées : 1 − (mort + mangés) / (natalité × convenance) ;
+//  - un carnivore : son métabolisme (ce qu'il lui faut), pour que sa satiété soit celle où ses naissances (natalité × satiété) égalent
+//    ses morts (la faim les multiplie, 1 + 3 (1 − satiété)²) et les siens mangés ;
+// chacun entre des bornes (la place de 0,001 à 50, le métabolisme de 0,02 à 1,5). Quatre passes, la concurrence se répondant.
+const CALER = +arg('--caler', 4), OMNI = new Set(['herbivore', 'omnivore', 'filtreur', 'detritivore']);
+const seq = (r, m, p) => { if (r <= m + p) return 1; let lo = 0, hi = 1; for (let k = 0; k < 40; k++) { const s = (lo + hi) / 2; if (r * s - m * (1 + 3 * (1 - s) ** 2) - p > 0) hi = s; else lo = s; } return hi; };
+for (let pass = 0; pass < CALER; pass++) {
+  const brut = [], J = Orvane.cycle(inst, {}, { duree_ms: 864e5, trace: x => brut.push(x) });
+  // (la production de chaque lieu ce jour : la saturation de l'année est celle du jour × la production du jour)
+  const PRO = new Map(J.biomes.map(b => [b.id, b.saison?.production ?? 1])), X = new Map();
+  for (const x of brut) { const o = X.get(x.taxon) || X.set(x.taxon, { N: 0, conv: 0, pred: 0, s: 0, prodsat: 0 }).get(x.taxon);
+    o.N += x.N; o.conv += x.conv * x.N; o.pred += x.mortsPred; o.s += (x.satiete ?? 0) * x.N; o.prodsat += x.sat * x.N * (PRO.get(x.biome) ?? 1); }
+  let nB = 0, nC = 0, ecart = [];
+  for (const t of inst.taxons) { const o = X.get(t.id); if (!o || !(o.N > 0) || t.plan.regime === 'vegetal') continue;
+    const r = t.plan.natalite, m = 365.25 / Math.max(2, t.plan.longevite), conv = o.conv / o.N, p = o.pred / o.N * 365.25;
+    if (OMNI.has(t.plan.regime)) { const sa = o.prodsat / o.N, cible = clamp(1 - (m + p) / Math.max(1e-9, r * conv), .2, .97);
+      if (sa > 1e-6) { t.plan.place = +clamp((t.plan.place ?? 1) * sa / cible, .001, 50).toPrecision(4); nB++; ecart.push(Math.abs(Math.log(sa / cible))); } }
+    else if (t.plan.regime === 'carnivore') { const s = clamp(o.s / o.N, .005, .995), cible = clamp(seq(r * conv, m, p), .02, .98), odds = x => x / (1 - x);
+      t.plan.metabolisme = +clamp((t.plan.metabolisme ?? 1) * odds(s) / odds(cible), .02, 1.5).toPrecision(4); nC++; ecart.push(Math.abs(Math.log(odds(s) / odds(cible)))); } }
+  ecart.sort((x, y) => x - y); console.log(`calage, passe ${pass + 1} : ${nB} brouteurs, ${nC} carnivores ; écart médian à l'équilibre ${ecart.length ? Math.exp(ecart[ecart.length >> 1]).toFixed(2) : '-'} ×`);
+}
 const rodage = +arg('--rodage', 0);
 for (let k = 0; k < rodage; k++) { inst = Orvane.cycle(inst, {}, { duree_ms: 864e5 }); if ((k + 1) % 30 === 0) console.log(`rodage : ${inst.cycle.jour}`); }
 if (rodage) { inst.cycle.n = 0; inst.evenements = []; for (const t of inst.taxons) { t.apparu = 0; for (const p of t.populations) p.depuis = 0; } }
