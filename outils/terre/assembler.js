@@ -36,6 +36,7 @@ const A = {
   front: 25,                  // le front d'une espèce qui s'étend avance chaque année de sa plus longue dispersion / 25 (calé sur le loup)
   dispersion_oiseau: 300,     // la plus longue dispersion d'un oiseau qui vole (km)
   efficacite: [.02, 50],      // l'adresse d'un chasseur, que le calage règle (plus bas) : de 1/50 à 50 fois celle du moteur
+  vie_sauvage_oiseau: 6,        // … et celle d'un oiseau, deux fois plus (Lindstedt et Calder 1976, Q. Rev. Biol. 51) : un aigle royal ~9 ans, une mésange ~2
   vie_sauvage: 3,              // la vie sauvage d'un oiseau ou d'un mammifère, en années : 3 × masse^0,3 (un cerf ~14 ans, un lapin 3,6, un mulot 1)
   equilibre: [.1, 10]          // la capacité d'un lieu : celle où ses brouteurs comptés sont à l'équilibre, entre 0,1 et 10 fois ce que donne sa production (plus bas)
 };
@@ -144,7 +145,11 @@ for (const e of vivant.especes || vivant.taxons || vivant) {
   //  un lapin neuf ans, quand il en vit un ou deux ; sa croissance la plus forte, au plus deux fois la loi de Fenchel, r = 0,025 × g^−0,26
   //  par jour : sans ces bornes, au premier printemps, les lapins se multipliaient par trois en un mois)
   const chaud = A.sang_chaud.has(e.reel?.classe ?? String(e.reel?.groupe || '').split(' ')[0]), mkg = plan.masse_kg || 1;
-  if (chaud) plan.longevite = Math.round(Math.min(plan.longevite, A.vie_sauvage * Math.pow(mkg, .3) * 365.25));
+  // (docs/53) un oiseau vit environ deux fois plus qu'un mammifère de sa masse (Lindstedt et Calder 1976) : 6 × masse^0,3 années. Et toute
+  // vie dure au moins deux fois l'âge de la maturité : à 3 × masse^0,3, l'aigle royal mourait à 4,7 ans, mûr à 4, et le calage poussait
+  // son adresse à la borne pour qu'il tienne — il écrasait alors le glouton
+  const oiseau = (e.reel?.classe ?? String(e.reel?.groupe || '').split(' ')[0]) === 'Aves';
+  if (chaud) plan.longevite = Math.round(Math.min(plan.longevite, Math.max((oiseau ? A.vie_sauvage_oiseau : A.vie_sauvage) * Math.pow(mkg, .3) * 365.25, 2 * (plan.maturite || 0))));
   if (!Number.isFinite(plan.natalite)) plan.natalite = natalite(plan, chaud);
   if (chaud) plan.natalite = r4(Math.min(plan.natalite, 2 * 365.25 * .025 * Math.pow(mkg * 1000, -.26) + 365.25 / plan.longevite));
   // (une espèce qui pond par milliers — le hareng, la truite, le cabillaud — se renouvelle vite, et nourrit tout le monde : ses jeunes
