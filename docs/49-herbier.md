@@ -35,7 +35,7 @@ Une forme que l'herbier ne connaît pas se dessine comme son port. Chaque plante
 
 Un monde sans météo, sans saisons des plantes ni flore riche a son herbier quand même : ses huit formes, en feuilles. Un monde sans flore n'en a pas.
 
-**Ce que ça pèse.** Un dessin fait de 0,5 à 8 Ko. Sur le monde de banc à la flore riche (24 biomes, 261 lignées), 724 Ko en tout, 30 Ko par biome en moyenne ; les planches des bêtes en font 2,8 Mo.
+**Ce que ça pèse.** Un dessin fait de 0,5 à 8 Ko. Sur le monde de banc à la flore riche (24 biomes, 261 lignées), 724 Ko en tout, 30 Ko par biome en moyenne ; les planches des bêtes, 3,3 Mo, dont 0,75 Mo de parties (docs/21).
 
 ## L'observatoire
 
