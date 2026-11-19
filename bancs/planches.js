@@ -4,8 +4,8 @@
 //     pas le dessin : sans leurs parties, les planches sont celles de cette version, au caractère près (le SVG, les yeux, sol, la
 //     variante, l'ordre des lignées). Ce n'est pas un invariant : un changement qui retouche le dessin exprès la ferait échouer ;
 //  2. elles disent ce que dessine le SVG, sur chaque lignée de trois mondes réels : chaque patte est la chaîne de ses <line> (ses
-//     points, ses épaisseurs, au dixième près), posée au sol, puis son pied ; chaque partie montre ses éléments ; aucun nombre
-//     manquant ; autant de pattes que la règle du dessin (le plan, borné par la forme) ;
+//     points, ses épaisseurs, au dixième près), puis son pied, posé sur la ligne du sol (contact) ; chaque partie montre ses
+//     éléments ; aucun nombre manquant ; autant de pattes que la règle du dessin (le plan, borné par la forme) ;
 //  3. la lecture de Lisière (jeux/lisiere/scripts/squelette.gd, refaite ici en JavaScript) trouve dans le SVG les mêmes pattes, les
 //     mêmes pieds, le même corps : un jeu qui lit les parties ne devine plus rien, et voit la même bête ;
 //  4. chaque forme a les siennes (quadrupède, bipède, oiseau, insecte, serpent, poisson, pieuvre, méduse, étoile, mille-pattes,
@@ -103,7 +103,12 @@ function controler(s, plan, cat = null) {
   if (['quadrupede', 'bipede-tendu', 'oiseau', 'insecte', 'poisson', 'pieuvre'].includes(P.dessin) && els[P.corps.svg[0]].nom !== 'clipPath') E.push('le corps : pas sa découpe');
   if (JSON.stringify(P.yeux) !== JSON.stringify(s.yeux)) E.push('les yeux ne sont pas ceux de la planche');
   if (P.tete && !s.yeux.every(([x, y]) => els.slice(P.tete.svg[0], P.tete.svg[1] + 1).some(e => e.nom === 'ellipse' && dist(pt(+e.attr.cx, +e.attr.cy), [x, y]) <= .3))) E.push('un œil hors de la tête');
-  if (!!P.contact !== !!s.sol || (P.contact && (P.contact[0] !== 85 || P.contact[1] !== 86))) E.push('le contact au sol');
+  // au sol : bas, le milieu du bas du dessin (son ombre) ; contact, la ligne des pieds (y = 0 du groupe), chaque pied dessus, ou
+  // le bas du dessin pour une bête sans pattes
+  if (!!P.contact !== !!s.sol || !!P.bas !== !!s.sol) E.push('le contact au sol, le bas du dessin');
+  else if (s.sol) { if (P.contact[0] !== 85 || P.contact[1] !== (P.pattes.length ? ty : 86) || P.bas[0] !== 85 || P.bas[1] !== 86) E.push('le contact au sol, le bas du dessin');
+    if (P.pattes.some(p => !pres(p.points[p.points.length - 1][1], P.contact[1]))) E.push('un pied hors de la ligne du sol');
+    if (P.contact[1] > P.bas[1] + .05) E.push('la ligne du sol sous le dessin'); }
   // autant de pattes que la règle du dessin (un bipède à la queue tendue est dessiné sans les siennes : à part)
   if (plan && P.dessin !== 'bipede-tendu') { const r = regle(P.dessin, plan, cat);
     if (P.pattes.length !== r.pattes) E.push(`${P.pattes.length} pattes pour ${r.pattes}`);
@@ -157,6 +162,8 @@ console.log('2. Les parties disent ce que dessine le SVG');
   const bornes = tous.filter(x => x.plan && x.s.parties.dessin !== 'bipede-tendu').filter(x => { const r = regle(x.s.parties.dessin, x.plan, x.cat); return r.plan !== r.dessinees; });
   console.log(`  (les pattes : ${fx(tous.length - sansJambes.length - bornes.length)} dessins en ont autant que leur plan ; ${bornes.length} autrement, la forme bornant le plan${bornes.length ? ' : ' + [...new Set(bornes.map(x => x.id))].slice(0, 5).join(', ') : ''})`);
   if (sansJambes.length) console.log(`  (${sansJambes.length} dessins de bipèdes à la queue tendue, ${[...new Set(sansJambes.map(x => x.id))].join(', ')}, n'ont pas de pattes au sol : le dessin ne fait que leurs bras, monde/silhouette.js, quadrupede. Leurs parties le disent, pattes [] et deux bras ; dessiner leurs jambes changerait le SVG)`);
+  const debout = tous.filter(x => x.s.sol && x.s.parties.pattes.length), hautes = debout.filter(x => x.s.parties.contact[1] < 85.95);
+  verif(debout.length && debout.every(x => x.s.parties.pattes.every(p => Math.abs(p.points[p.points.length - 1][1] - x.s.parties.contact[1]) <= .05 + 1e-9)), `au sol, les pieds de chaque bête sont sur sa ligne de contact (${fx(debout.length)} dessins à pattes) ; elle est au bas du dessin, sauf quand une queue lourde ou une trompe descend plus bas : ${fx(hautes.length)} dessins, jusqu'à ${fx(Math.max(...hautes.map(x => 86 - x.s.parties.contact[1])), 1)} unités plus haut`);
   const P0 = tous.find(x => x.s.parties.dessin === 'quadrupede').s.parties;
   verif(P0.corps && P0.tete && P0.tete.museau && P0.tete.pivot && P0.cou && P0.queue && P0.pattes.length === 4 && P0.pattes.filter(p => p.cote === 'loin').length === 2,
     `un quadrupède : son corps, sa tête (son museau, son pivot), son cou, sa queue, quatre pattes dont deux du côté lointain (${tous.find(x => x.s.parties === P0).id})`);

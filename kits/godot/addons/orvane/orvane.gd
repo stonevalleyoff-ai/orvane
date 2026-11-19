@@ -169,8 +169,9 @@ func a_une_planche(lignee: String, biome: String = "") -> bool:
 	return not _silhouette(lignee, biome).is_empty()
 
 
-# l'image d'une lignée, à cette largeur en pixels (null : pas de planche, ou un dessin illisible). Le pied de la bête est à 86/90
-# de la hauteur de l'image quand elle tient debout (sol), au milieu sinon.
+# l'image d'une lignée, à cette largeur en pixels (null : pas de planche, ou un dessin illisible). Le bas du dessin est à 86/90
+# de la hauteur de l'image quand elle tient debout (sol), le milieu du dessin au milieu sinon ; ses pieds sont sur la ligne de
+# parties(…).contact, qu'une queue lourde peut dépasser vers le bas.
 func texture(lignee: String, largeur: float = 170.0, biome: String = "") -> ImageTexture:
 	var cle := "%s|%s|%d" % [lignee, biome, int(largeur)]
 	if _textures.has(cle):
@@ -196,7 +197,7 @@ func yeux(lignee: String, biome: String = "") -> Array:
 
 
 # les parties du corps d'une lignée, pour l'animer (docs/21) : { dessin, corps, tete, cou, queue, pattes, bras, organes, yeux,
-# contact, boite, groupe }, dans l'image de cette largeur (170 : le cadre de la planche, comme yeux). Chaque point est un
+# contact, bas, boite, groupe }, dans l'image de cette largeur (170 : le cadre de la planche, comme yeux). Chaque point est un
 # Vector2 ; une chaîne, un PackedVector2Array (points : d'un bout à l'autre, une patte de la hanche au pied ; courbe : début,
 # contrôle, bout) ; une boîte, un Rect2 ; une épaisseur, un rayon, à la même échelle ; les yeux et les anneaux, des Vector3 (x, y,
 # rayon) ; groupe, le Transform2D qui pose le groupe du SVG dans l'image ; svg, les éléments de la partie dans ce groupe.
@@ -229,7 +230,7 @@ func _partie(v, s: float, cle: String) -> Variant:
 			for x in v:
 				w.append(float(x) * s)
 			return w
-		"centre", "museau", "pivot", "attache", "contact":
+		"centre", "museau", "pivot", "attache", "contact", "bas":
 			return _point(v, s)
 		"boite":
 			if v.size() >= 4:

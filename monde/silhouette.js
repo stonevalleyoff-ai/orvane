@@ -516,7 +516,9 @@ function parties(T, yeux) {
   const F = { points: v => v.map(pt), courbe: v => v.map(pt), epaisseurs: v => v.map(lg), epaisseur: lg, rayon: lg, centre: pt, museau: pt, pivot: pt, attache: pt,
     boite: ([a, b]) => [...pt(a), ...pt(b)], anneaux: v => v.map(([x, y, r]) => [...pt([x, y]), lg(r)]), e: ([a, b]) => [debut[a], debut[b + 1] - 1] };
   const part = o => Object.fromEntries(Object.entries(o).map(([c, v]) => [c === 'e' ? 'svg' : c, F[c] ? F[c](v) : v]));
-  const B = T.B, out = { dessin: Q.dessin, groupe: [tx, ty, k], boite: F.boite([[B.x0, B.y0], [B.x1, B.y1]]), ...(C.sol ? { contact: [85, 86] } : {}) };
+  // (au sol, bas : le milieu du bas du dessin, où est son ombre ; contact : là où elle touche le sol, la ligne de ses pieds (y = 0
+  // du groupe) quand elle a des pattes, qu'une queue lourde ou une trompe peut dépasser vers le bas ; sans pattes, le bas du dessin)
+  const B = T.B, out = { dessin: Q.dessin, groupe: [tx, ty, k], boite: F.boite([[B.x0, B.y0], [B.x1, B.y1]]), ...(C.sol ? { contact: [85, Q.pattes.length ? ty : 86], bas: [85, 86] } : {}) };
   for (const c of ['corps', 'thorax', 'tete', 'cou', 'queue']) if (Q[c]) out[c] = part(Q[c]);
   out.pattes = Q.pattes.map(part);
   for (const c of ['bras', 'organes']) if (Q[c].length) out[c] = Q[c].map(part);

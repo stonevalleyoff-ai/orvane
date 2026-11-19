@@ -5,8 +5,9 @@ extends RefCounted
 # Les pattes du côté lointain sont dessinées avant le corps, celles du côté proche après. On les retire du dessin : il reste le
 # corps (bas : ce qui est sous les pattes proches ; dessus : ce qui est entre elles ; tête : ce qui vient après, le cou et la
 # tête, qu'on peut faire bouger). Chaque patte garde ses points, ses épaisseurs, son côté et son pied, et ses morceaux vont dans
-# une seule image (un atlas), dessinés droits : la bête les tourne à chaque image. Tout est en pixels montrés, autour du point
-# où la bête touche le sol (le cadre 85, 86), et mis en cache par lignée et par taille.
+# une seule image (un atlas), dessinés droits : la bête les tourne à chaque image. Tout est en pixels montrés, autour du milieu du
+# bas du dessin, là où est son ombre (le cadre 85, 86 : le jeu y pose la bête ; ses pieds y sont, sauf quand une queue lourde ou
+# une trompe descend plus bas), et mis en cache par lignée et par taille.
 # Quand la planche a ses parties (docs/21), on y lit ce qu'est chaque élément du dessin : quelles <line> font chaque patte, quels
 # morceaux son pied, où est le corps (donc le côté de chaque patte) ; on ne devine plus rien. Une vieille planche, sans parties,
 # est lue comme avant, en cherchant les pattes dans le SVG. Les deux lectures donnent le même squelette : outils/squelettes.gd le
