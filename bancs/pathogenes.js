@@ -1,6 +1,7 @@
 // Orvane — LE BANC DES SOUCHES ET DES SYMBIOSES (bancs/pathogenes.js, docs/18)
 //  1. le jour un : un monde sans souches tourne exactement comme le moteur sans moteur/pathogenes.js ;
-//  2. un monde à souches tient : des souches naissent, circulent, s'éteignent ; autant de lignées, autant de bêtes ;
+//  2. un monde à souches tient : des souches naissent, circulent, s'éteignent ; autant de lignées, autant de bêtes ; chaque
+//     événement de souche dit laquelle et ce qui lui arrive (souche, nature), et son texte la même chose ;
 //  3. une souche passe d'une parcelle à l'autre, de proche en proche ;
 //  4. elle prend chez les lignées proches, pas chez les lointaines ; jamais chez les machines ni les plantes ;
 //  5. l'immunité : une seconde vague dans une population guérie est plus petite ;
@@ -12,6 +13,7 @@
 const fs = require('fs'), path = require('path'), crypto = require('crypto'), vm = require('vm'), { execFileSync } = require('child_process');
 const racine = p => path.join(__dirname, '..', p);
 const Orvane = require(racine('moteur/orvane.js')), Pa = require(racine('moteur/pathogenes.js')), Flore = require(racine('moteur/flore.js')), Parcelles = require(racine('moteur/parcelles.js')), Syn = require(racine('moteur/synthetique.js'));
+const Chronique = require(racine('moteur/chronique.js'));
 const court = process.argv.includes('--court'), CYCLES = court ? 60 : 120;
 const lireJ = f => JSON.parse(fs.readFileSync(racine(f), 'utf8'));
 let ok = true; const verif = (c, m) => { ok = ok && !!c; console.log((c ? '  ✓ ' : '  ✗ ') + m); };
@@ -39,12 +41,25 @@ console.log('1. Le jour un');
 }
 
 console.log('2. Un monde à souches');
-let W = Pa.eveiller(I0).inst, T = clone(I0); const nes = [], eteintes = [];
-for (let k = 0; k < CYCLES; k++) { W = Orvane.cycle(W, {}); T = Orvane.cycle(T, {});
-  for (const e of W.evenements) { if (/souche nouvelle/.test(e.detail || '')) nes.push(e); if (/la souche .* s'éteint/.test(e.detail || '')) eteintes.push(e); } }
+let W = Pa.eveiller(I0).inst, T = clone(I0); const nes = [], eteintes = [], natures = {}, fautes = [];
+// (docs/18) un événement de souche dit laquelle (souche) et ce qui lui arrive (nature) ; son texte seul (un instantané d'avant ces
+// champs, lu par la chronique) dit la même chose ; une épidémie d'avant les souches ne dit ni l'un ni l'autre
+const lire = (e, av, ap) => { const S = ap.monde.pathogenes.souches, x = Chronique.natureDe((({ souche, nature, ...r }) => r)(e), av, ap);
+  if (!e.souche) { if (e.nature || x) fautes.push(`sans souche : ${e.detail}`); return; }
+  natures[e.nature] = (natures[e.nature] || 0) + 1;
+  const bon = e.nature === 'extinction' ? e.type === 'remission' && !S[e.souche] && av.monde.pathogenes.souches[e.souche]
+    : e.type === 'epidemie' && S[e.souche] && (e.nature !== 'saut_hote' || S[e.souche].hotes.includes(e.taxon)) && (e.nature !== 'naissance' || (S[e.souche].apparu === ap.cycle.n && S[e.souche].origine === e.taxon));
+  // (le texte ne dit que le nom de la souche : deux souches vivantes du même nom se confondent, c'est la limite du repli)
+  const nom = id => (S[id] || av.monde.pathogenes.souches[id])?.nom, memeSouche = x && (x.souche === e.souche || (x.souche && nom(x.souche) === nom(e.souche)));
+  if (!bon || !Pa.NATURES.includes(e.nature) || x?.nature !== e.nature || !memeSouche) fautes.push(`${e.nature} ${e.souche} : ${e.detail}`); };
+for (let k = 0; k < CYCLES; k++) { const av = W; W = Orvane.cycle(W, {}); T = Orvane.cycle(T, {});
+  for (const e of W.evenements) { if (/souche nouvelle/.test(e.detail || '')) nes.push(e); if (/la souche .* s'éteint/.test(e.detail || '')) eteintes.push(e);
+    if (e.type === 'epidemie' || e.type === 'remission') lire(e, av, W); } }
 { const Sx = Object.values(W.monde.pathogenes.souches), hotes = Sx.map(s => s.hotes.length).sort((a, b) => a - b);
   verif(nes.length >= 3 && Sx.length >= 2, `en ${CYCLES} cycles, ${nes.length} souches naissent dans des populations entassées, ${eteintes.length} s'éteignent ; ${Sx.length} circulent à la fin, sur ${hotes.join(', ')} lignées chacune (« ${nes[0]?.detail} »)`);
   verif(Math.abs(vivants(W).length / vivants(T).length - 1) < .06 && Math.abs(tot(W) / tot(T) - 1) < .1, `le monde tient : ${vivants(W).length} lignées et ${fx(tot(W) / 1e6, 1)} millions de bêtes, contre ${vivants(T).length} et ${fx(tot(T) / 1e6, 1)} millions avec les épidémies d'avant`);
+  verif(!fautes.length && (natures.naissance || 0) === nes.length && (natures.extinction || 0) === eteintes.length && natures.saut_hote > 0,
+    `chaque événement de souche dit laquelle et ce qui lui arrive : ${Object.entries(natures).map(([k, v]) => `${v} ${k}`).join(', ')} ; son texte seul, la même chose` + (fautes.length ? ` ; ${fautes.length} fautes : ${fautes.slice(0, 2).join(' ; ')}` : ''));
 }
 
 console.log("3. D'une parcelle à l'autre");

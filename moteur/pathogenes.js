@@ -4,7 +4,9 @@
 // entassée, circule dans sa population, passe aux populations voisines de la même lignée (d'une parcelle à l'autre), et saute
 // aux lignées apparentées et de taille voisine qui partagent son lieu ; jamais d'une lignée à une autre sans ancêtre commun,
 // ni aux machines, ni aux plantes. Un hôte guéri est immunisé, et son immunité s'use. Par population, pour chaque souche : la
-// part des bêtes infectées et celle des immunisées (populations[].infection).
+// part des bêtes infectées et celle des immunisées (populations[].infection). Ce qui arrive à une souche est un événement
+// epidemie ou remission qui dit laquelle (souche) et quoi (nature : naissance, saut_hote, extinction ; mutation et vecteur
+// viennent de moteur/derives.js).
 // Le moteur (moteur/orvane.js) appelle ce fichier à quelques points de son cycle, dans un monde qui a ses souches
 // (monde.pathogenes) ; sans elles, rien ne change. Déterministe. Node (require) ou navigateur (globalThis.OrvanePathogenes).
 'use strict';
@@ -86,7 +88,7 @@ function preparer(ctx) {
             sens = Math.max(0, sens - nouveaux);
             if (i1 * h.N >= .05 || r1 >= .01) out[s] = { i: i1 * h.N < REGLES.locale ? 0 : +i1.toPrecision(4), r: +r1.toPrecision(4) };
             if (i1 >= .01 && i1 * h.N >= 20 && !(so.hotes || []).includes(h.t.id)) { (so.hotes ??= []).push(h.t.id);   // (un hôte : une épidémie qui prend, pas quelques bêtes touchées)
-              if (so.hotes.length > 1) ev.push({ type: 'epidemie', taxon: h.t.id, biome: bid, detail: `la souche ${so.nom} passe à ${h.t.nom || h.t.id} (virulence ${Math.round(so.virulence * 100)} % par cycle)` }); }
+              if (so.hotes.length > 1) ev.push({ type: 'epidemie', taxon: h.t.id, biome: bid, souche: s, nature: 'saut_hote', detail: `la souche ${so.nom} passe à ${h.t.nom || h.t.id} (virulence ${Math.round(so.virulence * 100)} % par cycle)` }); }
           }
           if (DV) DV.muter(h, out, bid);   // (docs/29) une souche qui infecte beaucoup de bêtes mute parfois
           // une souche naît dans une population nombreuse et entassée
@@ -95,7 +97,7 @@ function preparer(ctx) {
             const id = 'souche-' + (P.prochain++), v = +(.04 + .3 * R()).toFixed(3), nom = (SYL[Math.floor(R() * SYL.length)] + SYL[Math.floor(R() * SYL.length)]).replace(/^./, c => c.toUpperCase()) + 'ose';
             S[id] = { nom, virulence: v, transmission: transmission(v), origine: h.t.id, apparu: n, hotes: [h.t.id] };
             out[id] = { i: REGLES.depart, r: 0 };
-            ev.push({ type: 'epidemie', taxon: h.t.id, biome: bid, detail: `une souche nouvelle, ${nom}, apparaît chez ${h.t.nom || h.t.id} : virulence ${Math.round(v * 100)} % par cycle, contagion ${S[id].transmission}` });
+            ev.push({ type: 'epidemie', taxon: h.t.id, biome: bid, souche: id, nature: 'naissance', detail: `une souche nouvelle, ${nom}, apparaît chez ${h.t.nom || h.t.id} : virulence ${Math.round(v * 100)} % par cycle, contagion ${S[id].transmission}` });
           }
           nouv.set(h.pop, out);
         }
@@ -105,7 +107,7 @@ function preparer(ctx) {
       // les souches qui n'ont plus d'hôte s'éteignent ; celles qui vivent disent combien elles infectent
       const tot = {}; for (const L of Object.values(lieux)) for (const h of L) for (const [s, x] of Object.entries(h.pop.inf1 || {})) tot[s] = (tot[s] || 0) + x.i * h.N;
       for (const [s, so] of Object.entries(S)) { so.infectes = Math.round(tot[s] || 0);
-        if (!(tot[s] >= REGLES.seuil) && so.apparu < n) { ev.push({ type: 'remission', taxon: so.origine, detail: `la souche ${so.nom} s'éteint, après ${n - so.apparu} cycles et ${(so.hotes || []).length} lignée${(so.hotes || []).length > 1 ? 's' : ''} touchée${(so.hotes || []).length > 1 ? 's' : ''}` }); delete S[s]; } }
+        if (!(tot[s] >= REGLES.seuil) && so.apparu < n) { ev.push({ type: 'remission', taxon: so.origine, souche: s, nature: 'extinction', detail: `la souche ${so.nom} s'éteint, après ${n - so.apparu} cycles et ${(so.hotes || []).length} lignée${(so.hotes || []).length > 1 ? 's' : ''} touchée${(so.hotes || []).length > 1 ? 's' : ''}` }); delete S[s]; } }
       for (const L of Object.values(lieux)) for (const h of L) if (h.pop.inf1) for (const s of Object.keys(h.pop.inf1)) if (!S[s]) delete h.pop.inf1[s];
     },
     publier: (t, bid, pop, p) => { const I = pop.inf1 ?? pop.inf0; if (I && Object.keys(I).length) p.infection = I; },
@@ -114,6 +116,9 @@ function preparer(ctx) {
   return F;
 }
 
-const API = { REGLES, eveiller, preparer, transmission, estHote };
+// ce qui peut arriver à une souche : la nature de ses événements (evenements[].nature, docs/18 ; mutation et vecteur : moteur/derives.js)
+const NATURES = ['naissance', 'saut_hote', 'mutation', 'vecteur', 'extinction'];
+
+const API = { REGLES, NATURES, eveiller, preparer, transmission, estHote };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else racine.OrvanePathogenes = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

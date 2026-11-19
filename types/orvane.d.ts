@@ -908,6 +908,10 @@ export interface Instantane {
     type: "apparition" | "extinction" | "separation" | "migration" | "effondrement" | "explosion" | "nouveau_trait" | "epidemie" | "remission" | "catastrophe" | "hybridation" | "mefiance" | "eveil" | "conception" | "transfert" | "transformation" | "invention" | "nature" | "climat" | "meteo" | "savoir" | "memoire";
     taxon: string;
     biome?: string;
+    /** (docs/18) Un événement de souche (epidemie, remission) : l'identifiant de la souche (une clé de monde.pathogenes.souches). Pour une mutation, celle du mutant ; sa mère est son parent. Une souche éteinte n'est plus dans monde.pathogenes.souches. */
+    souche?: string;
+    /** (docs/18, 29) Ce qui arrive à la souche : naissance (elle naît chez taxon, dans biome), saut_hote (elle prend chez une lignée de plus, taxon), mutation (un mutant naît chez taxon), vecteur (un mutant porté par un insecte, monde.pathogenes.souches[souche].vecteur), extinction (elle s'éteint dans le monde ; taxon : sa lignée d'origine). D'autres pourront venir : un jeu ignore celles qu'il ne connaît pas. */
+    nature?: "naissance" | "saut_hote" | "mutation" | "vecteur" | "extinction";
     detail?: string;
   }[];
   /** Le cycle d'avant, allégé (effectifs par biome, fréquences des phénotypes), joint à l'instantané publié : tous les traducteurs interpolent entre les deux de la même façon. */

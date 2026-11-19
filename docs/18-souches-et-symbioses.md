@@ -38,9 +38,30 @@ C'est une symbiose : les butineurs vivent des fleurs, et les fleurs repoussent g
 En plus, dans l'instantané (`schemas/instantane.schema.json`) :
 - `monde.pathogenes` : les souches, avec leur nom, leur virulence, leur contagion, leur origine, leurs hôtes et le nombre de bêtes qu'elles infectent ;
 - `populations[].infection` ; chez les plantes à fleurs, `populations[].pollinisation` ;
-- des événements : `epidemie` (une souche naît, une souche passe à une autre lignée), `remission` (une souche s'éteint), `eveil` (le monde reçoit ses souches).
+- des événements : `epidemie` (une souche naît, une souche passe à une autre lignée, une souche mute), `remission` (une souche s'éteint), qui disent laquelle (`souche`) et ce qui lui arrive (`nature`) ; `eveil` (le monde reçoit ses souches).
 
 Un jeu peut montrer une bête malade d'après la part infectée de sa population, et la souche d'après son nom et sa virulence. Last Embers pourrait faire monter ses hordes là où une souche circule.
+
+## Ce qui arrive à une souche : les événements
+
+Chaque événement d'une souche dit laquelle (`souche`, sa clé dans `monde.pathogenes.souches`) et ce qui lui arrive (`nature`). Son type reste `epidemie` ou `remission` : un jeu qui ne lit que le type ne voit rien changer (docs/43). Avant, seul le texte (`detail`) disait la différence entre une souche qui naît, qui saute d'une lignée à l'autre ou qui mute.
+
+| `nature` | type | quand | `taxon`, `biome` | `souche` |
+| --- | --- | --- | --- | --- |
+| `naissance` | `epidemie` | une souche naît dans une population entassée | la lignée et le lieu où elle naît | la souche nouvelle |
+| `saut_hote` | `epidemie` | elle prend chez une lignée de plus (1 % de la population et 20 bêtes infectées) | la lignée gagnée, et le lieu | la souche |
+| `mutation` | `epidemie` | un mutant naît (les dérives, docs/29) | la lignée et le lieu où il naît | le mutant ; sa mère est son `parent` |
+| `vecteur` | `epidemie` | un mutant naît, porté par un insecte (docs/29) | la lignée et le lieu où il naît | le mutant ; l'insecte est son `vecteur` |
+| `extinction` | `remission` | il ne reste plus une bête infectée dans le monde | sa lignée d'origine ; pas de lieu | la souche, qui n'est plus dans `monde.pathogenes.souches` |
+
+```json
+{ "type": "epidemie", "taxon": "grane", "biome": "foret", "souche": "souche-13", "nature": "vecteur",
+  "detail": "la souche Vergoose mute chez Grane broutard de forêt : Vergoose α, virulence 13 % par cycle (sa mère : 13 %), portée par Kivine broutard de forêt · parcelle Forêt 2" }
+```
+
+- Une épidémie d'avant les souches (dans un monde qui ne les a pas, ou une population qui en garde une d'avant leur éveil) reste un `epidemie` ou un `remission` sans `souche` ni `nature`.
+- D'autres natures pourront venir : un jeu ignore celles qu'il ne connaît pas.
+- La chronique (docs/37) les lit. Pour un instantané d'avant ces champs, la chronique relit le texte, et retrouve la souche par son nom.
 
 ## La commande : le profil du monde
 
@@ -73,7 +94,9 @@ Au cycle de nuit suivant, le monde reçoit ses souches, une fois pour toutes. Il
   Trop douce, elle se transmet mal ; trop virulente, elle tue ses hôtes avant qu'ils ne la transmettent.
 - **La pollinisation.** Les cinq lignées de butineurs de la prairie tenues à 5 % de leur nombre pendant 30 cycles : les plantes à fleurs de la prairie y pèsent 97,6 % de ce qu'elles pèsent avec eux.
 
-Le banc vérifie aussi le contrat et le cycle de nuit (le monde reçoit ses souches une fois).
+Le banc vérifie aussi :
+- **les événements** : en 120 cycles, chaque naissance, chaque saut d'hôte et chaque extinction dit sa souche et sa nature, cohérentes avec le monde (une souche née ce cycle chez cette lignée, une lignée qui est bien son hôte, une souche qui n'est plus) ; leur texte seul, relu par la chronique, dit la même chose. Les mutations sont vérifiées dans `bancs/derives.js` ;
+- le contrat et le cycle de nuit (le monde reçoit ses souches une fois).
 
 ```
 node bancs/pathogenes.js            # environ 5 minutes

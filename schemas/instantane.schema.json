@@ -2330,6 +2330,20 @@
           "biome": {
             "type": "string"
           },
+          "souche": {
+            "type": "string",
+            "description": "(docs/18) Un événement de souche (epidemie, remission) : l'identifiant de la souche (une clé de monde.pathogenes.souches). Pour une mutation, celle du mutant ; sa mère est son parent. Une souche éteinte n'est plus dans monde.pathogenes.souches."
+          },
+          "nature": {
+            "enum": [
+              "naissance",
+              "saut_hote",
+              "mutation",
+              "vecteur",
+              "extinction"
+            ],
+            "description": "(docs/18, 29) Ce qui arrive à la souche : naissance (elle naît chez taxon, dans biome), saut_hote (elle prend chez une lignée de plus, taxon), mutation (un mutant naît chez taxon), vecteur (un mutant porté par un insecte, monde.pathogenes.souches[souche].vecteur), extinction (elle s'éteint dans le monde ; taxon : sa lignée d'origine). D'autres pourront venir : un jeu ignore celles qu'il ne connaît pas."
+          },
           "detail": {
             "type": "string"
           }

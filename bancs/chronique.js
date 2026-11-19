@@ -4,7 +4,9 @@
 //     ordinaires, les allers-retours des zones hybrides), et combien cela pèse ;
 //  3. le muséum : un spécimen par lignée, toujours la même bête ; une lignée éteinte y reste, avec sa cause, quand le moteur l'a oubliée ;
 //  4. les noms : le premier nom valable l'emporte ; ni nom réservé d'avance, ni doublon, ni nom refusé par la modération ;
-//  5. le cycle de nuit : chronique/ par année, museum.json une ligne par spécimen, le nom commun dans l'instantané et ses morceaux.
+//  5. le cycle de nuit : chronique/ par année, museum.json une ligne par spécimen, le nom commun dans l'instantané et ses morceaux ;
+//  6. les souches (docs/18) : ce que les événements disent de chacune (souche, nature), et le texte d'un instantané d'avant ces champs,
+//     la même chose ; une souche nouvelle, une mutante, une que porte un insecte, une lignée qu'elle gagne, son extinction.
 //   node bancs/chronique.js
 'use strict';
 const fs = require('fs'), path = require('path'), os = require('os'), { execFileSync } = require('child_process');
@@ -102,6 +104,37 @@ console.log('5. Le cycle de nuit');
   verif(an && fichierAn.entrees.length === an.entrees && idx.derniers.length >= idx1.derniers.length && musT.split('\n').length >= Object.keys(mu.specimens).length,
     `chronique/index.json (${idx.annees.length} année(s), ${idx.derniers.length} dernières entrées), chronique/${an?.an}.json (${an?.entrees} entrées) ; museum.json : une ligne par spécimen (${Object.keys(mu.specimens).length})`);
   fs.rmSync(d, { recursive: true, force: true }); }
+
+console.log('6. Les souches');
+{ // le monde d'Orvane au cycle 44 (deux souches), et le cycle d'après : une souche naît, deux mutantes de Vuphiose (l'une portée par un
+  // insecte), Vuphiose gagne une lignée, Kéraose s'éteint ; et deux épidémies d'avant les souches, que la chronique laisse
+  const A = lireJ('mondes/orvane/instantane.json'), B = JSON.parse(JSON.stringify(A)), S = B.monde.pathogenes.souches, [k1, k2] = Object.keys(S).sort();
+  const nom = id => A.taxons.find(t => t.id === id)?.nom || id, bio = id => A.taxons.find(t => t.id === id).populations[0].biome;
+  const L = A.taxons.filter(t => !t.eteint && t.plan.regime !== 'vegetal' && t.populations.length && !Object.values(A.monde.pathogenes.souches).some(s => s.hotes.includes(t.id))), [n1, n2, ins] = L, v2 = S[k2], o2 = v2.origine;
+  B.cycle = { ...A.cycle, n: A.cycle.n + 1 };
+  S['souche-7'] = { nom: 'Ravénose', virulence: .2, transmission: .971, origine: n1.id, apparu: B.cycle.n, hotes: [n1.id], infectes: 12 };
+  S['souche-8'] = { nom: `${v2.nom} α`, virulence: .18, transmission: .936, origine: o2, apparu: B.cycle.n, hotes: [o2], parent: k2, infectes: 40 };
+  S['souche-9'] = { nom: `${v2.nom} β`, virulence: .1, transmission: .774, origine: o2, apparu: B.cycle.n, hotes: [o2], parent: k2, vecteur: ins.id, infectes: 30 };
+  v2.hotes = [...v2.hotes, n2.id]; const morte = S[k1]; delete S[k1];
+  B.evenements = [
+    { type: 'epidemie', taxon: n1.id, biome: bio(n1.id), souche: 'souche-7', nature: 'naissance', detail: `une souche nouvelle, Ravénose, apparaît chez ${nom(n1.id)} : virulence 20 % par cycle, contagion 0.971 · parcelle 2` },
+    { type: 'epidemie', taxon: o2, biome: bio(o2), souche: 'souche-8', nature: 'mutation', detail: `la souche ${v2.nom} mute chez ${nom(o2)} : ${v2.nom} α, virulence 18 % par cycle (sa mère : ${Math.round(v2.virulence * 100)} %)` },
+    { type: 'epidemie', taxon: o2, biome: bio(o2), souche: 'souche-9', nature: 'vecteur', detail: `la souche ${v2.nom} mute chez ${nom(o2)} : ${v2.nom} β, virulence 10 % par cycle (sa mère : ${Math.round(v2.virulence * 100)} %), portée par ${nom(ins.id)}` },
+    { type: 'epidemie', taxon: n2.id, biome: bio(n2.id), souche: k2, nature: 'saut_hote', detail: `la souche ${v2.nom} passe à ${nom(n2.id)} (virulence ${Math.round(v2.virulence * 100)} % par cycle)` },
+    { type: 'remission', taxon: morte.origine, souche: k1, nature: 'extinction', detail: `la souche ${morte.nom} s'éteint, après ${B.cycle.n - morte.apparu} cycles et ${morte.hotes.length} lignée touchée` },
+    { type: 'remission', taxon: n2.id, biome: bio(n2.id), detail: 'l\'épidémie s\'éteint' }, { type: 'epidemie', taxon: n1.id, biome: bio(n1.id), detail: 'virulence 12 % par cycle, 6 cycles' }];
+  const e0 = C.noter(C.vide(A), A, { ...A, evenements: [] }, { premier: true }).etat, r = C.noter(e0, A, B), E = r.entrees.filter(e => e.souche);
+  const sorte = E.map(e => `${e.type}/${e.nature}`).join(', '), de = n => E.find(e => e.nature === n);
+  verif(sorte === 'souche/naissance, souche/mutation, souche/vecteur, epidemie/saut_hote, remission/extinction' && r.entrees.length === E.length && E.every(e => e.taxon && e.titre && e.texte && e.importance >= 1)
+    && /mutante de/.test(de('mutation').texte) && /que porte/.test(de('vecteur').texte) && /gagne/.test(de('saut_hote').texte) && /s'éteint, après/.test(de('extinction').texte) && de('naissance').biome === bio(n1.id).split('~')[0],
+    `cinq entrées, chacune avec sa souche et sa nature (${sorte}) ; les deux épidémies d'avant les souches sont laissées`);
+  for (const e of E) console.log(`     ${e.titre} (${e.importance}) — ${e.texte}`);
+  const vieux = JSON.parse(JSON.stringify(B)); vieux.evenements.forEach(e => { delete e.souche; delete e.nature; }); const rv = C.noter(e0, A, vieux);
+  verif(JSON.stringify(rv.entrees) === JSON.stringify(r.entrees), 'un instantané d\'avant ces champs : relue sur le texte des événements, la chronique dit exactement la même chose');
+  const p = C.noter(C.vide(A), A, B, { premier: true }), deux = C.noter(r.etat, B, { ...B, cycle: { ...B.cycle, n: B.cycle.n + 1 }, evenements: B.evenements.slice(0, 3) });
+  verif(!p.entrees.some(e => e.souche) && !deux.entrees.length && r.etat.souches.includes('souche-7') && !r.etat.souches.includes(k1) && !('hotes' in r.etat),
+    'le jour où elle s\'éveille, elle prend acte des souches sans les raconter ; une souche déjà née ne renaît pas ; une souche éteinte sort de ce qu\'elle garde');
+}
 
 console.log(`\n${ok ? 'tout est vérifié' : 'ÉCHEC'} (${((Date.now() - t0) / 1000).toFixed(0)} s)`);
 process.exit(ok ? 0 : 1);

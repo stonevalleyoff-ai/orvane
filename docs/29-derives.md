@@ -52,7 +52,7 @@ Dans le banc, une souche portée par le Soméne, un petit hexapode, a pris en 15
 
 - **Un régime qui change** : l'événement `separation` le dit (« devenue carnivore »). Un jeu montre la lignée fille avec son nouveau régime.
 - **Une plante qui se sépare** : une lignée de plantes nouvelle, avec son `parent`, et l'événement `separation`.
-- **Une souche qui mute** : l'événement `epidemie` (« la souche Banc mute chez … : Banc β, portée par … »). Dans `monde.pathogenes.souches`, un mutant dit son `parent`, et une souche portée par un insecte son `vecteur`. Un jeu peut montrer des insectes qui piquent, des malades loin de toute parenté.
+- **Une souche qui mute** : l'événement `epidemie` (« la souche Banc mute chez … : Banc β, portée par … »), qui dit le mutant (`souche`) et sa nature : `mutation`, ou `vecteur` s'il est porté par un insecte (docs/18). Dans `monde.pathogenes.souches`, un mutant dit son `parent`, et une souche portée par un insecte son `vecteur`. Un jeu peut montrer des insectes qui piquent, des malades loin de toute parenté.
 
 ## La commande : le profil du monde
 
