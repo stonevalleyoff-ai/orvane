@@ -83,6 +83,15 @@ func _on_fin_de_partie() -> void:   # (ou un moment naturel : un retour au menu,
 - Les aides : `vivantes()`, `dans(biome)`, `effectif(lignee, biome)`, `majeur()`, `identite()`.
 - **Seulement les lieux qu'on joue** (le monde par morceaux, docs/21) : `var inst = await Orvane.lire_lieux(["foret"])` lit l'index du monde et ces biomes, et rend l'instantané réduit à ces biomes, au même contrat : quelques centaines de Ko au lieu de plusieurs Mo. `Orvane.assembler(index, morceaux)` fait de même avec des morceaux gardés dans le jeu (pour jouer hors ligne).
 - **Dessiner les bêtes sans moteur de dessin** : `await Orvane.lire_silhouettes("foret")` lit la planche du lieu (chaque bête dessinée de profil, et ses yeux) ; `Orvane.texture("dunvi", 96.0)` rend l'image d'une lignée à 96 pixels de large (`Image.load_svg_from_string`), `Orvane.yeux("dunvi")` où sont ses yeux dans le cadre de 170 × 90. Une planche gardée dans le jeu : `Orvane.ajouter_planche(biome, silhouettes)`.
+- **Les animer** : `Orvane.parties("dunvi", "foret", 96.0)` rend les parties du corps de la lignée (docs/21), dans l'image de 96 pixels : son `corps`, sa `tete` (son `centre`, son `museau`, son `pivot`), son `cou`, sa `queue`, ses `pattes` (chacune de la hanche au pied : ses `points` en `PackedVector2Array`, ses `epaisseurs`, son `cote`, `loin` ou `pres`, son `pied`), ses `bras`, ses `organes` (leur `attache`), ses `yeux`, son `contact` au sol et sa `boite` (un `Rect2`). Sans largeur, dans le cadre de 170 × 90. Chaque partie dit aussi ses éléments dans le SVG (`svg`), pour qui découpe le dessin, comme Lisière (`jeux/lisiere/scripts/squelette.gd`). Une planche d'avant les parties : `{}`.
+
+```gdscript
+var p := Orvane.parties("dunvi", "foret", 96.0)
+for patte in p.get("pattes", []):
+	var hanche: Vector2 = patte.points[0]
+	var pied: Vector2 = patte.points[-1]          # posé au sol
+	print(patte.cote, " ", patte.pied, " : ", hanche, " → ", pied)
+```
 - **Dessiner les plantes, lire le temps qu'il fait** (l'herbier, docs/49) : `await Orvane.lire_herbier("foret")` lit les plantes du lieu, dessinées dans leur stade du cycle ; `Orvane.plantes("foret")` les rend, les plus lourdes d'abord (leur forme, leur port, leur hauteur, leur part) ; `Orvane.texture_plante(id, 96.0, "foret")` rend l'image d'une plante à 96 pixels de large, le pied à 144/150 de sa hauteur ; `Orvane.meteo("foret")` rend le temps du lieu (`temps`, `vent`, `neige`, `secheresse`…), `Orvane.temps("foret")` son nom. Hors ligne : `Orvane.ajouter_herbier(biome, herbier)`.
 - `Orvane.lire_json(url)` lit n'importe quel document du monde ; `Orvane.oublier()` efface ce qui a été compté et pas encore clos (une partie d'essai, un jeu qui n'envoie rien).
 
