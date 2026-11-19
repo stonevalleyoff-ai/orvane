@@ -671,6 +671,11 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   //    sa satiété décide de ses naissances et de sa faim ; la vulnérabilité de chaque phénotype de proie décide qui est mangé.
   //    L'appétence se calcule entre taxons (plan de base) ; les phénotypes se partagent ensuite au prorata de ce qu'ils pèsent.
   // (vitesse) l'appétence d'un chasseur pour une proie ne dépend que de leurs deux plans : une fois par cycle, non une fois par lieu
+  // (et ce que pèse un chasseur devant un autre, par leurs masses : la concurrence (CMP), la domination (DOM) — une fois par paire et par cycle)
+  const PAc = new WeakMap(), PAIRE = (pp, qp, i) => { let m = PAc.get(pp); if (!m) PAc.set(pp, m = new Map()); let v = m.get(qp);
+    if (!v) { v = [CMP ? CMP(pp.masse_kg, qp.masse_kg) : 1, DOM ? DOM(pp, qp) : 1]; m.set(qp, v); } return v[i]; };
+  // (vitesse) ce qu'un lieu voisin convient à une lignée qui essaime : une fois par cycle, non une fois par population et par jour
+  const CVc = new WeakMap(), CONV = (pl, v) => { let m = CVc.get(pl); if (!m) CVc.set(pl, m = new Map()); let c = m.get(v); if (c === undefined) { c = convenance(pl, biomes[v]); m.set(v, c); } return c; };
   const APc = new WeakMap(), APP = (pp, qp) => { let m = APc.get(pp); if (!m) APc.set(pp, m = new Map()); let f = m.get(qp);
     if (f === undefined) { f = DT ? DI.appetence(pp, qp, appetence(pp, qp)) : appetence(pp, qp); m.set(qp, f); } return f; };
   for (const bid of Object.keys(biomes)) {
@@ -705,11 +710,12 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
     // (les proies de chacun, et si sa prise les tue, une fois par lieu : la même somme, dans le même ordre, sans tout reparcourir)
     // (et un masque de bits de ce que chacun mange : deux chasseurs sans une proie commune ne parcourent rien — leur part commune est 0)
     const NW = (T.length + 31) >> 5;
-    for (const p of preds) { p.pk = []; p.mor = DT ? new Array(T.length) : null; p.bits = new Uint32Array(NW); for (let k = 0; k < T.length; k++) { if (p.part[k]) p.pk.push(k); if (p.x[k]) { p.bits[k >> 5] |= 1 << (k & 31); if (DT) p.mor[k] = DI.mortel(p.t.plan, T[k].t.plan); } } }
-    const touche = (a, b) => { for (let w = 0; w < NW; w++) if (a[w] & b[w]) return true; return false; };
+    for (const p of preds) { p.mor = DT ? new Array(T.length) : null; p.bits = new Uint32Array(NW); p.pbits = new Uint32Array(NW); for (let k = 0; k < T.length; k++) { if (p.part[k]) p.pbits[k >> 5] |= 1 << (k & 31); if (p.x[k]) { p.bits[k >> 5] |= 1 << (k & 31); if (DT) p.mor[k] = DI.mortel(p.t.plan, T[k].t.plan); } } }
+    // la part commune : les proies de p (sa part) que q mange aussi, dans l'ordre croissant, bit après bit
+    const commune = (p, q) => { let c = 0; for (let w = 0; w < NW; w++) { let m = p.pbits[w] & q.bits[w]; while (m) { const b = m & -m, k = (w << 5) + 31 - Math.clz32(b); m ^= b; if (!DT || p.mor[k] === q.mor[k]) c += p.part[k]; } } return c; };
     for (const p of preds) {
       let C = 0;
-      if (p.A > 0) for (const q of preds) { if (q === p || q.A <= 0) continue; let commun = 0; if (touche(p.bits, q.bits)) for (const k of p.pk) { if (q.x[k] && (!DT || p.mor[k] === q.mor[k])) commun += p.part[k]; } C += q.Nt * (p.besoinMoy > 0 ? q.besoinMoy / p.besoinMoy : 0) * q.effMoy * commun * (CMP ? CMP(p.t.plan.masse_kg, q.t.plan.masse_kg) : 1) * (DOM ? DOM(p.t.plan, q.t.plan) : 1); }
+      if (p.A > 0) for (const q of preds) { if (q === p || q.A <= 0) continue; const commun = commune(p, q); C += q.Nt * (p.besoinMoy > 0 ? q.besoinMoy / p.besoinMoy : 0) * q.effMoy * commun * PAIRE(p.t.plan, q.t.plan, 0) * PAIRE(p.t.plan, q.t.plan, 1); }
       let R = 0, sN = 0;   // (une bête qui ne chasse pas, ou ne mange pas de viande : rien, jamais 0/0)
       p.pop.N.forEach((N, i) => { if (N <= 0) return; const den = p.Nt * p.effMoy + C, a = den > 0 ? p.A * p.eff[i] / den : 0, s = a > 0 ? a / (a + REGLES.demi_satiete * p.besoin[i]) : 0; const r = N * p.besoin[i] * s * PAS; R += r; sN += s * N; p.pop.ration[i] = r; });
       p.pop.satiete = sN / p.Nt;
@@ -851,17 +857,19 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
       // vague vers un voisin tiré au sort (qui faisait d'une petite population voisine une suite d'explosions et d'effondrements)
       // (docs/52 : dans un monde réel, on essaime dans son milieu — la terre vers la terre, l'eau vers l'eau, les rives vers les deux :
       //  un cerf sait nager, il ne vit pas pour autant dans le lac)
-      const essaimer = (part, filtre0) => { const filtre = filtre0 || (b.lieu ? memeMilieu(b) : null), cibles = (b.voisins || []).filter(v => biomes[v] && (!filtre || filtre(biomes[v])) && (!b.traversees?.includes(v) || CLI.traverse(t.plan))).map(v => [v, convenance(t.plan, biomes[v])]).filter(([, c]) => c > 0), W = cibles.reduce((a, [, c]) => a + c, 0);
+      const essaimer = (part, filtre0) => { const filtre = filtre0 || (b.lieu ? memeMilieu(b) : null), cibles = (b.voisins || []).filter(v => biomes[v] && (!filtre || filtre(biomes[v])) && (!b.traversees?.includes(v) || CLI.traverse(t.plan))).map(v => [v, CONV(t.plan, v)]).filter(([, c]) => c > 0), W = cibles.reduce((a, [, c]) => a + c, 0);
         if (!(W > 0) || !(part > 0)) return;
-        if (REGLES.colonisation == null) { for (const [vers, c] of cibles) { const f = part * c / W; migrations.push({ taxon: t.id, vers, N: suiv.map(x => x * f), Q: pop.Q && copieQ(pop.Q), A: pop.A && { ...pop.A }, ...(ME ? { M: pop.M || null } : {}) }); }   // (docs/50) ils emportent ce qu'ils ont appris des joueurs
+        if (REGLES.colonisation == null) { for (const [vers, c] of cibles) { const f = part * c / W; migrations.push({ taxon: t.id, vers, N: suiv.map(x => x * f), Q: pop.Q, A: pop.A && { ...pop.A }, ...(ME ? { M: pop.M || null } : {}) }); }   // (docs/50) ils emportent ce qu'ils ont appris des joueurs
           for (let i = 0; i < K; i++) suiv[i] *= 1 - part; return; }
-        // (docs/52) un monde réel : on essaime chez les siens ; un lieu où la lignée n'est pas, un petit groupe ne le fonde que de loin en
+        // (vitesse) un essaim garde les gènes de sa population, sans les copier : rien ne les change avant les arrivées, qui les mêlent dans un
+      // objet neuf ou les copient. (Ses allèles, si : un trait nouveau peut y entrer avant — ils sont copiés)
+      // (docs/52) un monde réel : on essaime chez les siens ; un lieu où la lignée n'est pas, un petit groupe ne le fonde que de loin en
         // loin (REGLES.colonisation par cycle de référence, × ce que le lieu lui convient) — une espèce réelle garde son aire, et l'étend
         // lentement, comme le chacal doré gagne l'Europe ; sans cela, en quelques jours, chacune aurait gagné tous les lieux qui lui vont
         const Ns = suiv.reduce((x, y) => x + y, 0); let parti = 0;
         for (const [vers, c] of cibles) { let f = part * c / W;
           if (!E.pops[vers]) { if (!(Ns >= 40) || hasard(`${t.id}|${bid}|${vers}|${part}`, inst.monde.graine, n) >= parPas(Math.min(.9, REGLES.colonisation * (t.plan.dispersion ?? 1))) * c) continue; f = 4 / Ns; }   // (docs/52 : plan.dispersion, ce qu'une espèce porte loin — le loup bien plus que le chevreuil)
-          migrations.push({ taxon: t.id, vers, N: suiv.map(x => x * f), Q: pop.Q && copieQ(pop.Q), A: pop.A && { ...pop.A }, ...(ME ? { M: pop.M || null } : {}) }); parti += f; }
+          migrations.push({ taxon: t.id, vers, N: suiv.map(x => x * f), Q: pop.Q, A: pop.A && { ...pop.A }, ...(ME ? { M: pop.M || null } : {}) }); parti += f; }
         for (let i = 0; i < K; i++) suiv[i] *= 1 - parti; };
       // la faim pousse un prédateur vers ses voisins
       if (faim > 1 - REGLES.faim_migration) essaimer(.05 * (faim - (1 - REGLES.faim_migration)) / REGLES.faim_migration * PAS);
@@ -951,15 +959,16 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   for (const mg of migrations) {
     const E = etat.get(mg.taxon), t = Tmap.get(mg.taxon);   // (vitesse : les lignées par leur nom, et non une recherche par arrivée)
     if (!E.pops[mg.vers]) { E.pops[mg.vers] = { N: new Array(t.phenotypes.length).fill(0), depuis: n, avant: 0, maladie: null, flux0: 1, immig: 0 }; if (PAS !== 1) (fondees ??= []).push([mg.taxon, mg.vers]); }
-    const D = E.pops[mg.vers]; if (ME && D.n0 == null) D.n0 = D.N.reduce((a, x) => a + x, 0);   // (docs/50) ceux qui étaient là avant toute arrivée
-    D.immig = (D.immig || 0) + mg.N.reduce((a, x) => a + x, 0);   // le flux de gènes reçu
-    if (D.hiv || mg.hiv) { const na = D.N.reduce((a, x) => a + x, 0), nb = mg.N.reduce((a, x) => a + x, 0), tot = na + nb;   // (docs/38) la part d'hivernants
+    const D = E.pops[mg.vers], na0 = D.N.reduce((a, x) => a + x, 0), nb0 = mg.N.reduce((a, x) => a + x, 0);   // (vitesse : les deux effectifs, une fois)
+    if (ME && D.n0 == null) D.n0 = na0;   // (docs/50) ceux qui étaient là avant toute arrivée
+    D.immig = (D.immig || 0) + nb0;   // le flux de gènes reçu
+    if (D.hiv || mg.hiv) { const na = na0, nb = nb0, tot = na + nb;   // (docs/38) la part d'hivernants
       if (tot > 0) { const H = {}; for (const k in D.hiv || {}) H[k] = D.hiv[k] * na / tot; if (mg.hiv) H[mg.hiv] = (H[mg.hiv] || 0) + nb / tot; D.hiv = H; } }
     if (mg.saison) D.saisonnier = true;
-    if (GEN && mg.Q) { const na = D.N.reduce((a, x) => a + x, 0), nb = mg.N.reduce((a, x) => a + x, 0); D.Q = D.Q && na > 0 ? melangerQ(D.Q, na, mg.Q, nb) : copieQ(mg.Q); }   // les migrants apportent leurs gènes
-    if (SEX && mg.A) { const na = D.N.reduce((a, x) => a + x, 0), nb = mg.N.reduce((a, x) => a + x, 0), n = na + nb;
-      if (!D.A || na <= 0) D.A = { ...mg.A }; else if (n > 0) { const o = {}; for (const id of new Set([...Object.keys(D.A), ...Object.keys(mg.A)])) o[id] = ((D.A[id] || 0) * na + (mg.A[id] || 0) * nb) / n; D.A = o; } }
-    if (ME && 'M' in mg) ME.recevoir(D, mg.M, mg.N.reduce((a, x) => a + x, 0));   // (docs/50) ce que les migrants apportent de mémoire : additionné, puis mêlé une fois (plus bas)
+    if (GEN && mg.Q) { const na = na0, nb = nb0; D.Q = D.Q && na > 0 ? melangerQ(D.Q, na, mg.Q, nb) : copieQ(mg.Q); }   // les migrants apportent leurs gènes
+    if (SEX && mg.A) { const na = na0, nb = nb0, n = na + nb;
+      if (!D.A || na <= 0) D.A = { ...mg.A }; else if (n > 0) { const o = {}; for (const id in D.A) o[id] = ((D.A[id] || 0) * na + (mg.A[id] || 0) * nb) / n; for (const id in mg.A) if (!Object.prototype.hasOwnProperty.call(o, id)) o[id] = ((D.A[id] || 0) * na + (mg.A[id] || 0) * nb) / n; D.A = o; } }
+    if (ME && 'M' in mg) ME.recevoir(D, mg.M, nb0);   // (docs/50) ce que les migrants apportent de mémoire : additionné, puis mêlé une fois (plus bas)
     mg.N.forEach((x, i) => { D.N[i] += x; });
   }
   // (docs/52) au pas d'un monde au jour, ceux qui partent chaque cycle vers un lieu où la lignée n'est pas sont une fraction de bête :

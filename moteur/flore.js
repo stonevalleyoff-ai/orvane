@@ -103,8 +103,9 @@ let VC = new WeakMap();
 function devant(h, traits, R) {
   const A = new Map(), P = new Map(), PV = new Map(), G = [0, 1, 2, 3].map(k => gout(R, k));
   const at = pl => { const c = cleDe(pl); let a = A.get(c); if (a === undefined) { a = atteinte(h, traits, pl); A.set(c, a); } return a; };   // (pl : le plan de la plante)
-  return { R, at, g: k => G[k], parts: (pl, k) => { const c = cleDe(pl) + '|' + k; let v = P.get(c); if (!v) { v = parts(h, R, at(pl), pl, k); P.set(c, v); } return v; },
-    pv: (pl, k) => { const c = cleDe(pl) + '|' + k; let v = PV.get(c); if (!v) { v = partsV(h, R, at(pl), pl, k); PV.set(c, v); } return v; } };   // (docs/46) part par part, pour le calendrier
+  // (vitesse) une case par phénotype de plante, sous la clé de la plante : sans fabriquer une clé de texte à chaque appel
+  return { R, at, g: k => G[k], parts: (pl, k) => { const c = cleDe(pl); let a = P.get(c); if (!a) P.set(c, a = [, , , ,]); let v = a[k]; if (!v) { v = parts(h, R, at(pl), pl, k); a[k] = v; } return v; },
+    pv: (pl, k) => { const c = cleDe(pl); let a = PV.get(c); if (!a) PV.set(c, a = [, , , ,]); let v = a[k]; if (!v) { v = partsV(h, R, at(pl), pl, k); a[k] = v; } return v; } };   // (docs/46) part par part, pour le calendrier
 }
 function devantDe(h, traits) {
   const c = h && typeof h === 'object' ? VC.get(h) : null; if (c && c.traits === traits) return c.V;
@@ -157,11 +158,12 @@ function parts(h, R, A, pl, k) { const d = h.diete, Y = rendDe(pl); let x = 0, l
 function partsV(h, R, A, pl, k) { const d = h.diete, Y = rendDe(pl), o = [];
   for (const part of DIE.VEG) { const w = d[part], y = Y[part]; if (!w || !y) continue; o.push([part, w * y * A * goutPart(R, k, part)]); } return o; }
 const enSaison = (pv, ph) => { let x = 0, l = 0; for (const [part, v] of pv) { const u = v * (ph[part] ?? 1); x += u; l += u * DIE.PERTE[part]; } return [x, l]; };
+const enSaison0 = (pv, ph) => { let x = 0; for (let i = 0; i < pv.length; i++) x += pv[i][1] * (ph[pv[i][0]] ?? 1); return x; };   // (ce qu'elle donne, seulement : la même somme)
 function offreD(plantes, h, traits, ref, ph) {
   const V = devantDe(h, traits); let S = 0;
   for (const { t, p } of plantes) { const A = V.at(t.plan); if (!(A > 0)) continue;
     const e = etatDe(p, ref), B = (e.effectif ?? p.effectif) * t.plan.masse_kg, f = e.frequences || p.frequences;
-    for (let k = 0; k < 4; k++) if (f[k]) S += B * f[k] * (ph ? enSaison(V.pv(t.plan, k), ph) : V.parts(t.plan, k))[0]; }
+    for (let k = 0; k < 4; k++) if (f[k]) S += B * f[k] * (ph ? enSaison0(V.pv(t.plan, k), ph) : V.parts(t.plan, k)[0]); }
   return S;
 }
 // les plantes de chaque lieu
@@ -258,8 +260,10 @@ function preparer(ctx) {
       // (docs/30) l'ancienne mesure aussi, le temps de raccorder la référence de chaque population à l'éveil des régimes
       const uo = D && broute(t) && pl && araccorder.has(bid) ? pl.flatMap(({ t: q, p }) => { const A = atteinte(E.plans[0], t.phenotypes[0]?.traits, q.plan), R = resistances(E.plans[0], t.phenotypes[0]?.traits); return [0, 1, 2, 3].map(k => p.effectif * q.plan.masse_kg * (p.frequences[k] || 0) * A * gout(R, k)); }) : null;
       (mangeurs[bid] ??= []).push({ t, P, Bio, m: t.plan.masse_kg || 1, u, n2: u ? norme(u) : 0, uo, n2o: uo ? Math.sqrt(somme(uo.map(x => x * x))) : 0 }); } }
+  // (les cases non nulles d'un vecteur, dans l'ordre : un produit n'additionne que là où les deux mangent — ajouter 0 ne change rien)
+  const NZc = new WeakMap(), NZ = u => { let a = NZc.get(u); if (!a) { a = []; for (let i = 0; i < u.length; i++) if (u[i] !== 0) a.push(i); NZc.set(u, a); } return a; };
   const DOT = new WeakMap(), dot = (u, v) => { let m = DOT.get(u); if (!m) DOT.set(u, m = new Map()); let r = m.get(v); if (r !== undefined) return r;
-    r = 0; for (let i = 0; i < u.length; i++) r += u[i] * v[i]; m.set(v, r); let n = DOT.get(v); if (!n) DOT.set(v, n = new Map()); n.set(u, r); return r; };   // (un produit par paire et par cycle : x·y = y·x au bit près)
+    r = 0; const a = NZ(u), c = NZ(v); for (let x = 0, y = 0; x < a.length && y < c.length;) { const i = a[x], j = c[y]; if (i === j) { r += u[i] * v[i]; x++; y++; } else if (i < j) x++; else y++; } m.set(v, r); let n = DOT.get(v); if (!n) DOT.set(v, n = new Map()); n.set(u, r); return r; };   // (un produit par paire et par cycle : x·y = y·x au bit près)
   const recouvrementDe = (t, bid, ancien) => { const k = t.id + '|' + bid + (ancien ? '|a' : ''); if (conc.has(k)) return conc.get(k);
     const M = mangeurs[bid] || [], h = M.find(x => x.t === t), U = x => ancien && x.uo ? x.uo : x.u, Z = x => ancien && x.uo ? x.n2o : x.n2; let r = null;
     if (h && U(h) && Z(h) > 0) { let num = 0, den = 0;
