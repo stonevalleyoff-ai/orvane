@@ -394,7 +394,7 @@ function rediger(t, I, opt, C) {
   } else {
     const L = [], dec = C.decrire(c, p), nomA = NOMS_ALLURE[al] || [c.forme, c.forme];
     const pattesFr = al === 'radiaire' || al === 'tentaculaire' ? `${fr(c.pattes)} bras` : al === 'segmente' ? `${fr(c.pattes)} pattes, une paire par anneau (${fr(Math.round(c.pattes / 2))} anneaux)` : c.pattes ? `${nombreFr(c.pattes, 1)} pattes` : 'sans pattes';
-    L.push(`**${Maj(nomA[0])}**, ${pattesFr} ${par(ci('forme', brut.forme ?? c.forme) + (brut.forme && brut.forme !== c.forme ? ' → ' + val(c.forme) : ''), champ('pattes'), al === 'poisson' && 'lu comme un poisson par `OrvaneCorps.allure` : il ne fait que nager')}.`
+    L.push(`**${Maj(nomA[0])}**, ${pattesFr} ${par(ci('forme', brut.forme ?? c.forme) + (brut.forme && brut.forme !== c.forme ? ', une forme que ce monde ne déclare pas : lue comme ' + (brut.repli === c.forme ? 'son repli, ' + ci('repli', brut.repli) : 'un ' + val(c.forme) + ', comme le fait moteur/corps.js') : ''), champ('pattes'), al === 'poisson' && 'lu comme un poisson par `OrvaneCorps.allure` : il ne fait que nager')}.`
       + (al === 'quadrupede' || al === 'bipede' ? ` En un mot : « ${dec} » ${par('`OrvaneCorps.decrire`')}.` : ''));
     const ordinaire = car && car[1].includes('ordinaire'), leger = car && /fine|légère/.test(car[1]);
     if (kc != null) L.push(`${longueur(L_)} de long ${par(ci('taille_m', L_))} pour ${masse(m)}${leger ? ' seulement' : ''} ${par(ci('masse_kg', m))} : une bête ${ordinaire ? car[1] : '**' + car[1] + '**'} ${interp(`d'après la masse pour la longueur : ${fr(kc, kc < 10 ? 2 : 0)}${ESP}kg/m³, quand ${nomA[0] === 'oiseau' ? 'un oiseau' : 'un ' + nomA[0]} de proportions ordinaires est entre ${fr(CR[0])} et ${fr(CR[1])}`)}${repere(fam, al, c, p, car) ? ', ' + repere(fam, al, c, p, car) + ' ' + interp('un repère terrestre, pour l\'œil') : ''}.`);
@@ -680,6 +680,9 @@ function rediger(t, I, opt, C) {
     const SANS = { oreilles: ['oreilles', 'ears', ['oiseau', 'hexapode', 'serpent', 'poisson', 'segmente', 'radiaire', 'tentaculaire']], queue: ['queue de mammifère', 'mammal tail', ['hexapode', 'segmente', 'radiaire', 'tentaculaire']],
       cou: ['cou de mammifère', 'mammal neck', ['hexapode', 'segmente', 'poisson', 'radiaire', 'tentaculaire']], museau: ['museau', 'snout', ['hexapode', 'segmente']] };
     for (const [k2, [frx, enx, A]] of Object.entries(SANS)) if (A.includes(al)) interdit('sans-objet', `${pasDe(frx)} ${par(champ(k2))} ${interp('sans objet pour ce corps')}`, enx);
+    // une partie à 0 qui ne compte ni dans le dessin ni dans les « sans objet » (le cou d'un serpent, la queue d'un poisson) : interdite quand même
+    const ZERO_AUTRE = { cou: ['cou marqué', 'distinct neck'], queue: ['grande nageoire de queue', 'large tail fin'], museau: ['museau', 'snout'], oreilles: ['oreilles', 'ears'] };
+    for (const k2 of ['oreilles', 'queue', 'cou', 'museau']) if (c[k2] === 0 && !utiles.includes(k2) && !SANS[k2][2].includes(al) && !(k2 === 'museau' && al === 'oiseau')) interdit('zero', `${pasDe(ZERO_AUTRE[k2][0])} ${par(champ(k2))}`, ZERO_AUTRE[k2][1]);
     if (!c.pattes) interdit('zero', `pas de pattes ${par(champ('pattes'))}`, 'legs, feet, limbs');
     const ordre = ['cornes', 'crete', 'ailes', 'carapace', 'antennes', 'collerette', 'trompe', 'plaques', 'epines', 'pinces', 'mains', 'massue', 'aiguillon', 'panache', 'nageoires', 'defenses'];
     const types = [...ordre.filter(x => CO[x]), ...Object.keys(CO).filter(x => !ordre.includes(x)).sort()];
