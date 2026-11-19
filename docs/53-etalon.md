@@ -146,6 +146,30 @@ Ce que l'étalon dit de faire maintenant :
 2. **les charognards** : le glouton, les vautours, les corvidés vivent en partie des morts ;
 3. **le reste des insectes chasseurs** : seule, l'araignée n'a que 32 % de sa satiété. Elle doit trouver son équilibre plus bas que ses effectifs comptés, et le trouve lentement (la moitié par an).
 
+## Le quatrième rapport : les charognards, trois histoires, deux garde-fous
+
+Ce qui a été fait (docs/52) :
+- **les charognards** : la part de charogne de chaque bête (`plan.charogne`, d'EltonTraits) et la moitié des morts de vertébrés de chaque lieu comme une proie de plus, qu'on ne tue pas (`regles.charognes`) ;
+- **trois histoires** : l'étalon tourne sur trois graines, chacune sur son cœur (`--graines 3`) ;
+- **deux garde-fous** : le rendement des chasseurs (le second principe) et la diversité des lieux (Shannon).
+
+Deux années sur trois graines (1, 7920, 15839) : **9 ✓, 1 ≈, 1 ✗**, et les trois histoires s'accordent sur chaque test.
+
+| | test | ce qu'il a donné (les trois graines) |
+| --- | --- | --- |
+| ✓ | la stabilité | 98 %, 98,5 %, 98 % |
+| ≈ | aucune espèce ne fond ni ne s'emballe | 4, 3, 4 : les papillons ×2,2 ; les coccinelles, les araignées ×0,47 ; les carabes ×0,50 |
+| ✓ | les naissances, les cigognes | le 24 juin, le 24 juin ; le 25 août, le 8 mars (les mêmes jours pour les trois) |
+| ✓ | les prédateurs | ×1,6, ×1,8, ×1,7 de la loi |
+| ✗ | les grands carnivores remontent | le loup +7,5 à +7,8 % par an, l'ours +5,4 à +5,7 % ; le lynx boréal −1,2 à −1,8 %, le lynx pardelle −1,0 à −1,7 %, le glouton −5,8 % |
+| ✓ | *garde-fou* : le rendement des chasseurs | à sang chaud 1,9 %, à sang froid 10,4 % de ce qu'ils mangent devient des petits (Humphreys 1979 : 1 à 3 %, 10 à 40 %) : le moteur ne crée pas de chair de rien |
+| ✓ | *garde-fou* : la diversité | Shannon ×0,96 |
+| ✓ | *garde-fou* : Damuth | −0,697 à −0,699 |
+
+Le retour du loup, sur trois graines : il arrive en France en 1994, 1994, 1993 ; cent loups en 2008, 2008, 2006 ; 459, 439 et 572 loups en 2023. Les trois tests passent pour chacune.
+
+**Le glouton ne remonte toujours pas.** EltonTraits lui donne 20 % de fruits : il est omnivore, et ses naissances suivent sa place, non sa satiété de chasseur ni ce qu'il trouve de morts. Carnivore, à l'adresse du moteur, il ferait pire (sa satiété, 0,35 pour une cible de 0,77). Le vautour fauve, lui, était un détritivore qui broutait sa part du lieu : il est désormais carnivore et charognard, et un mangeur de charogne partage sa quête entre les morts et les vivants (docs/52). L'étalon qui le mesure est en cours.
+
 ## Une expérience : le retour du loup
 
 `node outils/etalon.js --experience loup` prend un morceau de l'Europe (la France, l'Italie, la Suisse, Monaco : 96 lieux) en 1992. La France et la Suisse n'ont plus un loup, l'Italie en a environ 30 % d'aujourd'hui (≈ 350, ils étaient environ 400 vers 1990). Avec le loup, on garde ses grandes proies : les ongulés, les lièvres, le lapin, la marmotte, le castor. On laisse les autres carnivores et les plantes, pour aller vite : 31 ans en quatre minutes. On compare ensuite à ce qu'a vu l'Office français de la biodiversité :
