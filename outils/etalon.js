@@ -26,6 +26,33 @@ const doy = j => { const d = new Date(j + 'T12:00:00Z'); return Math.round((d - 
 const dateDe = n => new Date(Date.UTC(2027, 0, 1) + (n - 1) * 864e5).toISOString().slice(5, 10).split('-').reverse().join('/');
 const classe = t => t.reel?.classe ?? String(t.reel?.groupe || '').split(' ')[0];
 
+// --- plusieurs histoires (--graines K) : le hasard du moteur (les catastrophes, la fondation d'un lieu, les mutations) vient de la graine du
+// monde ; une autre graine, une autre histoire aussi plausible. Chaque graine tourne dans son processus, sur son cœur (le moteur est au bit
+// près pour une graine donnée) ; un test passe s'il passe pour toutes, il est limite si elles ne s'accordent pas. Le rapport garde chacune
+const GRAINES = Math.max(1, +arg('--graines', 1));
+if (GRAINES > 1) {
+  const { spawn } = require('child_process'), os = require('os'), f0 = arg('--amorce', path.join(__dirname, '..', 'mondes', MONDE, 'amorce.json'));
+  const g0 = +arg('--graine', JSON.parse(fs.readFileSync(f0, 'utf8')).monde.graine >>> 0), seeds = Array.from({ length: GRAINES }, (_, i) => (g0 + i * 7919) >>> 0);
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'etalon-')), sans = []; for (let i = 0; i < a.length; i++) { if (['--graines', '--graine', '--sortie'].includes(a[i])) { i++; continue; } sans.push(a[i]); }
+  const par = Math.max(1, Math.min(GRAINES, os.cpus().length - 1, +arg('--paralleles', 3))), fins = [];
+  const lancer = (g, i) => new Promise(ok => { const out = path.join(tmp, `g${i}.json`), c = spawn(process.execPath, [...process.execArgv, __filename, ...sans, '--graine', String(g), '--sortie', out], { stdio: ['ignore', 'ignore', 'pipe'] });
+    c.stderr.on('data', d => process.stderr.write(String(d).split('\n').filter(Boolean).map(l => `[graine ${g}] ${l}`).join('\n') + '\n')); c.on('close', () => ok(fs.existsSync(out) ? JSON.parse(fs.readFileSync(out, 'utf8')) : null)); });
+  (async () => { const R = new Array(GRAINES); let next = 0;
+    await Promise.all(Array.from({ length: par }, async () => { while (next < GRAINES) { const i = next++; R[i] = await lancer(seeds[i], i); } }));
+    const bons = R.filter(Boolean); if (!bons.length) { console.error('aucune graine n\'a fini'); process.exit(1); }
+    const etat = L => L.every(e => e === 'ok') ? 'ok' : L.every(e => e === 'echec') ? 'echec' : 'limite';
+    const tests = bons[0].tests.map(t0 => { const L = bons.map(b => b.tests.find(t => t.id === t0.id)).filter(Boolean);
+      return { ...t0, valeur: L.map(t => t.valeur), valeur_dite: L.map(t => t.valeur_dite ?? t.valeur).join(' | '), etat: etat(L.map(t => t.etat)), detail: undefined }; });
+    const comptes = { ok: 0, limite: 0, echec: 0 }; for (const t of tests) comptes[t.etat]++;
+    const rapport = { ...bons[0], graines: seeds.map((g, i) => ({ graine: g, ...(R[i] ? { comptes: R[i].comptes, tests: R[i].tests, ...(R[i].serie ? { serie: R[i].serie } : {}) } : { echec: 'n\'a pas fini' }) })), comptes, tests, serie: undefined };
+    const S = { ok: '✓', limite: '≈', echec: '✗' };
+    console.log(`L'étalon${bons[0].experience ? ` (${bons[0].experience})` : ''} sur ${GRAINES} graines (${seeds.join(', ')}) : ${comptes.ok} ✓, ${comptes.limite} ≈, ${comptes.echec} ✗`);
+    for (const t of tests) console.log(`  ${S[t.etat]} ${t.nom} : ${t.valeur_dite} — cible ${t.cible}`);
+    const so = arg('--sortie'); if (so) { fs.mkdirSync(path.dirname(path.resolve(so)), { recursive: true }); fs.writeFileSync(so, JSON.stringify(rapport, null, 1)); console.log('→', so); }
+    fs.rmSync(tmp, { recursive: true, force: true }); })();
+  return;
+}
+
 // --- les cibles (la réalité) ---
 const CIBLES = {
   stabilite: { part: .9, facteur: 2, source: "un monde sans joueurs, au même climat, garde ses espèces : chacune à moins d'un facteur 2 de sa première année" },
@@ -75,7 +102,8 @@ const f = arg('--amorce') ? path.resolve(arg('--amorce')) : racine(`mondes/${MON
 // marmotte, le castor) ; ni les autres carnivores ni les plantes, pour aller vite (une année en une trentaine de secondes). Ce que la réalité
 // a vu (l'Office français de la biodiversité) : le premier loup dans le Mercantour en 1992, une centaine vers 2008, ~1 100 en 2023.
 if (arg('--experience') === 'loup') {
-  const A = JSON.parse(fs.readFileSync(f, 'utf8')), PAYS = new Set(['FR', 'IT', 'CH', 'MC']), GARDE = new Set(['loup', 'cerf-elaphe', 'chevreuil', 'daim', 'sanglier', 'chamois', 'isard', 'bouquetin-alpes', 'mouflon', 'lievre-europe', 'lievre-variable', 'lapin', 'marmotte', 'castor']);
+  const A = JSON.parse(fs.readFileSync(f, 'utf8')); if (arg('--graine') != null) A.monde.graine = +arg('--graine') >>> 0;   // (une autre histoire : --graines)
+  const PAYS = new Set(['FR', 'IT', 'CH', 'MC']), GARDE = new Set(['loup', 'cerf-elaphe', 'chevreuil', 'daim', 'sanglier', 'chamois', 'isard', 'bouquetin-alpes', 'mouflon', 'lievre-europe', 'lievre-variable', 'lapin', 'marmotte', 'castor']);
   const B = A.biomes.filter(b => PAYS.has(b.lieu?.pays)), ids = new Set(B.map(b => b.id)), pays = new Map(B.map(b => [b.id, b.lieu.pays]));
   for (const b of B) b.voisins = b.voisins.filter(v => ids.has(v));
   const T = A.taxons.filter(t => GARDE.has(t.id)).map(t => ({ ...t, populations: t.populations.filter(p => ids.has(p.biome)) })).filter(t => t.populations.length);
@@ -108,7 +136,7 @@ if (arg('--experience') === 'loup') {
   process.exit(0);
 }
 // --- la vie de l'Europe, sans joueurs ---
-let I = JSON.parse(fs.readFileSync(f, 'utf8'));
+let I = JSON.parse(fs.readFileSync(f, 'utf8')); if (arg('--graine') != null) I.monde.graine = +arg('--graine') >>> 0;   // (une autre histoire : --graines)
 const animaux = I.taxons.filter(t => t.plan.regime !== 'vegetal'), ids = animaux.map(t => t.id), JOURS = +arg('--jours', 365 * ANS), parAn = new Array(ANS).fill(0);   // (--jours : un essai plus court)
 const moyennes = Array.from({ length: ANS }, () => new Map(ids.map(id => [id, 0]))), nais = {}, cigogne = { depart: [], retour: [] }, extinctions = [];
 for (const id of Object.keys(CIBLES.naissances)) nais[id] = new Array(367).fill(0);

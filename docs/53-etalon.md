@@ -23,7 +23,12 @@ Chaque test passe (✓), est limite (≈, à moins de deux fois la tolérance) o
 ```
 node outils/etalon.js [--monde europe] [--ans 3] [--sortie etalon/europe/AAAA-MM-JJ.json]
 node outils/etalon.js --ans 1 --jours 30      # un essai court (les saisons ne diront rien)
+node outils/etalon.js --ans 2 --graines 3     # trois histoires, chacune sur son cœur
 ```
+
+**Plusieurs histoires** (`--graines K`). Le hasard du moteur (les catastrophes, la fondation d'un lieu, les mutations) vient de la graine du monde : une autre graine donne une autre histoire, aussi plausible. Avec une seule, un test peut passer par chance. Chaque graine tourne dans son processus, sur son cœur, en même temps que les autres : trois graines prennent le temps d'une. Un test passe s'il passe pour toutes, il est limite si elles ne s'accordent pas, et le rapport garde chacune. Pour une graine donnée, le moteur reste au bit près : deux lancements donnent le même rapport.
+
+(Faire tourner un même monde sur plusieurs cœurs gagnerait peu. Les lieux échangent des bêtes chaque jour, et l'état est fait d'objets : il faudrait envoyer tout l'état aux autres cœurs et le reprendre chaque jour, pour la moitié du calcul. Les cœurs servent mieux à plusieurs histoires.)
 
 Le point de départ est toujours l'amorce : deux lancements donnent le même rapport. Une année d'Europe prend environ 25 minutes sur un ordinateur (un jour : 4 s).
 
@@ -182,7 +187,7 @@ Les trois tests passent : il arrive en 1994, la centaine est atteinte en 2008, i
 
 ## Chaque dimanche
 
-`.github/workflows/etalon.yml` fait vivre l'Europe trois années chaque dimanche, puis refait le retour du loup. Le rapport va dans le résumé de l'action et sur la branche `etalon` (`etalon/europe/AAAA-MM-JJ.json`, et `index.json` qui les liste), jamais sur `main`. Le monde hébergé n'en voit rien.
+`.github/workflows/etalon.yml` fait vivre l'Europe trois années chaque dimanche, sur trois graines, puis refait le retour du loup, sur trois graines aussi. Le rapport va dans le résumé de l'action et sur la branche `etalon` (`etalon/europe/AAAA-MM-JJ.json`, et `index.json` qui les liste), jamais sur `main`. Le monde hébergé n'en voit rien.
 
 Une modification du moteur peut aussi passer l'étalon à la main avant d'arriver dans Orvane. Il suffit de lancer l'action (« Run workflow », avec le nombre d'années) sur sa branche.
 
