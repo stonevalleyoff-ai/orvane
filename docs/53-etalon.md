@@ -170,6 +170,12 @@ Le retour du loup, sur trois graines : il arrive en France en 1994, 1994, 1993 ;
 
 **Le glouton ne remonte toujours pas.** EltonTraits lui donne 20 % de fruits : il est omnivore, et ses naissances suivent sa place, non sa satiété de chasseur ni ce qu'il trouve de morts. Carnivore, à l'adresse du moteur, il ferait pire (sa satiété, 0,35 pour une cible de 0,77). Le vautour fauve, lui, était un détritivore qui broutait sa part du lieu : il est désormais carnivore et charognard, et un mangeur de charogne partage sa quête entre les morts et les vivants (docs/52). Recalé, l'étalon ne change pas (9 ✓, 1 ≈, 1 ✗ sur les trois graines) ; le loup de France passe par 524, 615 et 618 bêtes en 2023 selon la graine.
 
+## Le cinquième rapport : les omnivores naissent de ce qu'ils mangent
+
+Un omnivore naît désormais de ce qu'il mange, dans la part où il le mange (docs/52). Recalé, deux années sur trois graines : **9 ✓, 1 ≈, 1 ✗**, comme avant. Le loup +7,5 à +7,7 % par an, l'ours +4,8 à +5,1 % ; le lynx boréal −1,3 à −2,5 %, le lynx pardelle −3,8 à −4,4 % (le renard, omnivore à 90 % de chair, vit mieux de ses proies, et lui en laisse moins), le glouton −5,4 à −5,6 %. Le rendement des chasseurs (1,9 %, 10,4 %) et la diversité (×0,96) ne bougent pas.
+
+**Pourquoi le glouton ne remonte pas.** Seul, il trouverait 136 fois son besoin, surtout des morts (45 %) et des lièvres variables (41 %) ; sa satiété n'est que de 0,14. Ses concurrents l'écrasent : l'aigle royal (54 % du poids qui pèse sur lui) et le pygargue (27 %). Le calage a poussé leur adresse de chasse à la borne, 50 fois celle du moteur, pour qu'ils tiennent. Le glouton, qu'on ne cale pas (et qui chasse en omnivore), ne fait pas le poids. **Une adresse à la borne est un mécanisme qui manque** chez ces rapaces, et elle fausse la concurrence pour les espèces qu'on ne cale pas. C'est ce qu'il faut regarder ensuite : pourquoi l'aigle royal et le pygargue ne tiennent pas d'eux-mêmes.
+
 ## Une expérience : le retour du loup
 
 `node outils/etalon.js --experience loup` prend un morceau de l'Europe (la France, l'Italie, la Suisse, Monaco : 96 lieux) en 1992. La France et la Suisse n'ont plus un loup, l'Italie en a environ 30 % d'aujourd'hui (≈ 350, ils étaient environ 400 vers 1990). Avec le loup, on garde ses grandes proies : les ongulés, les lièvres, le lapin, la marmotte, le castor. On laisse les autres carnivores et les plantes, pour aller vite : 31 ans en quatre minutes. On compare ensuite à ce qu'a vu l'Office français de la biodiversité :
