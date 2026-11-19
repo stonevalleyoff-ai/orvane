@@ -636,7 +636,9 @@ function rediger(t, I, opt, C) {
           (d.length ? ch : gd).push([o, d]); } }
         for (const [kk, o] of A) if (!B.has(kk)) pr.push(o);
         parente.nouveaux = nv.map(o => o.type); parente.perdus = pr.map(o => o.type); parente.changes = ch.map(([o]) => o.type); parente.gardes = gd.map(([o]) => o.type);
-        if (nv.length) L.push(`${nv.map(o => `Les **${(CO[o.type]?.mot || [o.type, o.type])[1]} sont nouvelles**`.replace(/nouvelles\*\*/, CO[o.type]?.fem ?? 1 ? 'nouvelles**' : 'nouveaux**') + ` : ${nombreFr(o.nombre, CO[o.type]?.fem ?? 1)} ${nomO(o)} ${formeFr(o.forme, CO[o.type]?.fem ?? 1, o.nombre > 1)} ${par('`' + o.type + '`', ci('taille', o.taille))}`).join(' ; ')}.`);
+        const neuf = o => { const fe = CO[o.type]?.fem ?? 1, mt = CO[o.type]?.mot || [o.type, o.type + 's'];
+          return o.nombre > 1 ? `Les **${mt[1]} sont ${fe ? 'nouvelles' : 'nouveaux'}**` : `${voyelle(mt[0]) ? 'L\'' : fe ? 'La ' : 'Le '}**${mt[0]} est ${fe ? 'nouvelle' : 'nouveau'}**`; };
+        if (nv.length) L.push(`${nv.map(o => neuf(o) + ` : ${nombreFr(o.nombre, CO[o.type]?.fem ?? 1)} ${nomO(o)} ${formeFr(o.forme, CO[o.type]?.fem ?? 1, o.nombre > 1)} ${par('`' + o.type + '`', ci('taille', o.taille))}`).join(' ; ')}.`);
         if (pr.length) L.push(`${pr.map(o => `${Maj(pasDe((CO[o.type]?.mot || [o.type, o.type])[o.nombre > 1 ? 1 : 0]).replace(/^Pas/, 'Plus'))} : ${(CO[o.type]?.fem ?? 1) ? 'perdue' : 'perdu'}${o.nombre > 1 ? 's' : ''} depuis sa mère ${par('`' + o.type + '` : ' + fr(o.taille, 2) + ' → absent')}`).join(' ; ')}.`);
         const mv = [], gardeP = [];
         for (const k2 of NUM7.filter(x => utiles.includes(x))) { const a = cp[k2], b = c[k2], d = b - a;
@@ -645,13 +647,14 @@ function rediger(t, I, opt, C) {
               tete: d > 0 ? 'tête ' + ad + 'plus grosse' : 'tête ' + ad + 'plus petite', museau: d > 0 ? 'museau ' + ad + 'plus long' : 'museau ' + ad + 'plus court', oreilles: d > 0 ? 'oreilles ' + ad + 'plus grandes' : 'oreilles ' + ad + 'plus petites',
               queue: d > 0 ? 'queue ' + ad + 'allongée' : 'queue ' + ad + 'raccourcie' }[k2];
             mv.push([Math.abs(d), `${mot} (\`${k2}\` : ${fr(a, 2)} → ${fr(b, 2)})`]); }
-          else if (b <= .2 || b >= .7) gardeP.push(b === 0 && a === 0 && ZERO[k2] ? `toujours sans ${k2} (\`${k2}: 0\`)` : `même ${MOT[k2]} ${palier(b, PALIERS[k2])[1].split(',')[0]} (\`${k2}\` : ${fr(a, 2)} → ${fr(b, 2)})`); }
+          else if (b <= .2 || b >= .7) gardeP.push(b === 0 && a === 0 && ZERO[k2] ? `toujours sans ${k2} (\`${k2}: 0\`)` : `${k2 === 'haut' || k2 === 'oreilles' ? 'mêmes' : 'même'} ${MOT[k2]} ${palier(b, PALIERS[k2])[1].split(',')[0]} (\`${k2}\` : ${fr(a, 2)} → ${fr(b, 2)})`); }
         mv.sort((x, y) => y[0] - x[0]);
         parente.proportions = mv.map(x => x[1]);
         if (mv.length) L.push(`${Maj(mv.map(x => x[1]).join(', '))}.`);
         if (c.forme !== cp.forme || c.pattes !== cp.pattes) L.push(`Le plan a changé : ${val(cp.forme)} à ${cp.pattes} pattes → ${val(c.forme)} à ${c.pattes} pattes ${par(ci('forme', c.forme), ci('pattes', c.pattes))}.`);
         const rm = Number.isFinite(parent.plan.masse_kg) && Number.isFinite(m) ? m / parent.plan.masse_kg : 1, rl = Number.isFinite(parent.plan.taille_m) && Number.isFinite(L_) ? L_ / parent.plan.taille_m : 1;
-        if (rl >= 1.1 || rl <= .9 || rm >= 1.25 || rm <= .8) L.push(`${rl >= 1.1 || rm >= 1.25 ? 'Plus grande' : 'Plus petite'}${(rl >= 1.1) !== (rm >= 1.25) && (rl <= .9) !== (rm <= .8) ? '' : ''} : ${longueur(parent.plan.taille_m)} → ${longueur(L_)}, ${masse(parent.plan.masse_kg)} → ${masse(m)} ${par('`taille_m`', '`masse_kg`')}.`);
+        const tailleDit = [rl >= 1.1 ? 'plus longue' : rl <= .9 ? 'plus courte' : '', rm >= 1.25 ? 'plus lourde' : rm <= .8 ? 'plus légère' : ''].filter(Boolean);
+        if (tailleDit.length) L.push(`${Maj(liste(tailleDit))} : ${longueur(parent.plan.taille_m)} → ${longueur(L_)}, ${masse(parent.plan.masse_kg)} → ${masse(m)} ${par('`taille_m`', '`masse_kg`')}.`);
         const dRobe = Math.hypot(...c.couleurs.robe.map((v, i) => v - cp.couleurs.robe[i])) / 441, pr0 = nomCouleur(cp.couleurs.robe);
         const garde = [...gardeP, ...gd.map(([o]) => `même${o.nombre > 1 ? 's' : ''} ${nomO(o)}${formeFr(o.forme, CO[o.type]?.fem ?? 1, o.nombre > 1) ? ' ' + formeFr(o.forme, CO[o.type]?.fem ?? 1, o.nombre > 1) : ''}`), ...ch.map(([o, d]) => `même${o.nombre > 1 ? 's' : ''} ${nomO(o)}, ${d.join(', ')}`)];
         if (dRobe < .08) garde.push(`${pr0.fr === pal.robe.fr ? 'même robe ' + pal.robe.fr : 'presque la même robe, ' + pr0.fr + ' devenu ' + pal.robe.fr} (\`${hex(cp.couleurs.robe)}\` → \`${pal.robe.hex}\`)`);
