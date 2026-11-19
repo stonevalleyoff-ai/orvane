@@ -61,6 +61,12 @@ Le guide pas à pas, avec les adresses, les appels et les erreurs : [BRANCHER-UN
 
 ## Mettre en place
 
+- **Supabase** : coller `hebergement/supabase.sql`, puis le script d'installation (qu'on ne publie pas : il pose l'empreinte du secret de lecture, et peut inscrire les premiers jeux). Le profil du monde dit où lire : `monde.pressions` (l'adresse du projet, sa clé **publique**, les deux fonctions de lecture).
+- **Secret du dépôt** (Settings › Secrets and variables › Actions) : `ORVANE_LECTURE_SECRET`, le secret de lecture. Il n'ouvre que la lecture des lots et des jeux.
+- **L'action** : `.github/workflows/cycle.yml`, qui fait tourner chaque dossier de `mondes/` dont le profil ne dit pas `monde.nocturne = false`, à son rythme (`monde.cycle` et `monde.heure`, au plus `monde.rattrapage` cycles d'un coup : docs/19). « Run workflow » fait tourner chaque monde du nombre de cycles demandé (1 par défaut), sans regarder l'heure. Un dossier qui commence par un point ne passe pas par « Add files › Upload files » : créer le fichier par « Add file › Create new file », en tapant le chemin `.github/workflows/cycle.yml`.
+- **Pages** : Settings › Pages, « Deploy from a branch », branche **`publication`**, dossier `/`.
+- **Le déclencheur** (conseillé) : GitHub ne garantit pas l'heure des actions programmées. `hebergement/declencheur.sql`, collé dans le Supabase d'Orvane, lance l'action chaque heure à la 5ᵉ minute (`pg_cron`, `pg_net`) ; le monde d'Orvane fait ainsi son cycle à 03:05 UTC. Il lui faut un jeton GitHub qui ne permet que de lancer les actions du dépôt, rangé dans le coffre du projet (les étapes sont en tête du fichier).
+
 ### Appliquer une version nouvelle de supabase.sql
 
 Le fichier se recolle tel quel dans l'éditeur SQL du projet : il ne fait qu'ajouter, et ce qui existe reste (les jeux, les lots, les noms, les clés). Celui du 19 novembre (#32, les dépôts sûrs) ajoute :
@@ -78,14 +84,6 @@ select id, depot_exige, depot_empreinte is not null as a_une_cle from public.orv
 ### Exiger la clé de dépôt d'un jeu
 
 C'est l'auteur du jeu qui le fait, avec sa clé d'administration (`BRANCHER-UN-JEU.md`, chapitre 6) : `orvane_cle_depot` (la clé, montrée une fois, va dans les secrets de son serveur), puis, une fois que son serveur dépose, `orvane_exiger_cle_depot` avec `p_exiger: true`. Orvane ne voit jamais la clé. Un jeu qui s'est fermé la porte (sa clé de dépôt perdue) en demande une autre ; un jeu qui a tout perdu, clé d'administration comprise, se rouvre à la main, dans l'éditeur SQL : `update public.orvane_jeux set depot_exige = false where id = '…';`.
-
-### Le reste
-
-- **Supabase** : coller `hebergement/supabase.sql`, puis le script d'installation (qu'on ne publie pas : il pose l'empreinte du secret de lecture, et peut inscrire les premiers jeux). Le profil du monde dit où lire : `monde.pressions` (l'adresse du projet, sa clé **publique**, les deux fonctions de lecture).
-- **Secret du dépôt** (Settings › Secrets and variables › Actions) : `ORVANE_LECTURE_SECRET`, le secret de lecture. Il n'ouvre que la lecture des lots et des jeux.
-- **L'action** : `.github/workflows/cycle.yml`, qui fait tourner chaque dossier de `mondes/` dont le profil ne dit pas `monde.nocturne = false`, à son rythme (`monde.cycle` et `monde.heure`, au plus `monde.rattrapage` cycles d'un coup : docs/19). « Run workflow » fait tourner chaque monde du nombre de cycles demandé (1 par défaut), sans regarder l'heure. Un dossier qui commence par un point ne passe pas par « Add files › Upload files » : créer le fichier par « Add file › Create new file », en tapant le chemin `.github/workflows/cycle.yml`.
-- **Pages** : Settings › Pages, « Deploy from a branch », branche **`publication`**, dossier `/`.
-- **Le déclencheur** (conseillé) : GitHub ne garantit pas l'heure des actions programmées. `hebergement/declencheur.sql`, collé dans le Supabase d'Orvane, lance l'action chaque heure à la 5ᵉ minute (`pg_cron`, `pg_net`) ; le monde d'Orvane fait ainsi son cycle à 03:05 UTC. Il lui faut un jeton GitHub qui ne permet que de lancer les actions du dépôt, rangé dans le coffre du projet (les étapes sont en tête du fichier).
 
 ### La branche de publication
 

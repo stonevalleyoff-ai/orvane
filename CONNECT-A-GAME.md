@@ -8,7 +8,7 @@ Orvane runs a single world, the world of Orvane, and every game plugs into it. A
 2. **Read the world**: `instantane.json` once a day from GitHub Pages, or only the biomes you play, piece by piece. No key is needed.
 3. **Translate**: map the game's terrains to Orvane's biomes, and turn each lineage into a creature. In **Unity** or **Godot**, a kit reads the world, counts and sends the batches for you ([kits/LISEZ-MOI.md](kits/LISEZ-MOI.md)).
 4. **Set your exposure** (optional): tell Orvane what the game can show, with the admin key.
-5. **Report pressures**: count what players do and send batches with `orvane_deposer` and the game key. `node outils/verifier.js my-batch.json` tells, before the first deposit, whether the batch will be accepted; `types/orvane.d.ts` gives every field to a TypeScript translator (docs/39).
+5. **Report pressures**: count what players do and send batches with `orvane_deposer` and the game key. `node outils/verifier.js my-batch.json` tells, before the first deposit, whether the batch will be accepted; `types/orvane.d.ts` gives every field to a TypeScript translator (docs/39). A game that has a server can deposit from it, with a deposit key that only the server knows (section 6).
 
 ## Addresses
 
@@ -20,7 +20,7 @@ Orvane runs a single world, the world of Orvane, and every game plugs into it. A
 | the project's public key (`apikey` header) | `sb_publishable_F98uYIaPrLTjhj3n7QiBOg_SOtFynn8` |
 | the observatory (watch the world live) | `https://stonevalleyoff-ai.github.io/orvane/` |
 
-The project's public key may appear in a game's code. It only opens the five functions below, and no table can be read directly.
+The project's public key may appear in a game's code. It only opens the functions below, and no table can be read directly.
 
 Every function is called the same way: `POST https://rospodujiyltmxitykwc.supabase.co/rest/v1/rpc/<function>`, with the headers `apikey: <project public key>` and `Content-Type: application/json`, and a JSON body of `p_…` parameters. The answer is always a JSON object with `ok`: `{"ok": true, …}` or `{"ok": false, "erreur": "…"}`. The HTTP status is 200 in both cases: **read `ok`**.
 
@@ -28,7 +28,9 @@ Every function is called the same way: `POST https://rospodujiyltmxitykwc.supaba
 | --- | --- | --- |
 | `orvane_inscrire_jeu` | `p_nom` (2 to 60 characters), `p_contact` (optional, up to 200) | register a game, receive its keys |
 | `orvane_regler_jeu` | `p_cle_admin`, `p_exposition` (object, up to 32 KB; `null` leaves it unchanged), `p_nom` (optional) | set what the game shows, rename the game |
-| `orvane_deposer` | `p_cle`, `p_compte`, `p_lot` | send a batch of pressures |
+| `orvane_deposer` | `p_cle`, `p_compte`, `p_lot`, `p_cle_depot` (optional) | send a batch of pressures; a batch resent with the same `id` answers `{"ok": true, "deja": true}` |
+| `orvane_cle_depot` | `p_cle_admin` | create or renew the game's deposit key, for its server only (section 6) |
+| `orvane_exiger_cle_depot` | `p_cle_admin`, `p_exiger` (`true` or `false`) | accept only deposits that carry the deposit key |
 | `orvane_nommer` | `p_cle`, `p_compte`, `p_monde`, `p_taxon`, `p_nom` (2 to 40 letters), `p_auteur` (optional) | a player proposes a lineage's common name; the first valid one wins at the next cycle (docs/37) |
 | `orvane_jeu` | `p_cle` | check a key: what Orvane knows about the game |
 
@@ -51,6 +53,7 @@ curl -X POST https://rospodujiyltmxitykwc.supabase.co/rest/v1/rpc/orvane_inscrir
 | `jeu` | the game's id in Orvane (`jeux.json`, the batches) | in the code |
 | `cle` | the game key: it signs the batches | in the game's code; it is public |
 | `cle_admin` | the admin key: it configures the game | **never in the game**; in a password manager |
+| `cle_depot` (later, if the game has a server: `orvane_cle_depot`) | the deposit key: once required, only it can deposit | **never in the client**; in the server's secrets (section 6) |
 
 Orvane only keeps a hash of the admin key. If you lose it, it cannot be recovered, and you must register the game again. At most thirty registrations per hour, all games combined.
 
@@ -168,7 +171,7 @@ Never call `orvane_regler_jeu` from the published game: the admin key has nothin
 The game counts what its players do, without drawing conclusions, and sends these counts in batches:
 
 ```json
-{ "orvane": "1.0", "monde": "orvane", "instantane": 41,
+{ "orvane": "1.0", "monde": "orvane", "instantane": 41, "id": "5f0c9e1a7b2d4c3e8f6a1b2c3d4e5f60",
   "source": { "jeu": "my-game", "compte": "h:9c1e44", "zone": "map:3" },
   "periode": { "debut": "2026-10-29T18:02:11Z", "fin": "2026-10-29T19:40:03Z" },
   "evenements": [
@@ -177,6 +180,7 @@ The game counts what its players do, without drawing conclusions, and sends thes
 ```
 
 - `instantane` is the `cycle.n` the game was using. `taxon` is the lineage's `id`, `biome` an Orvane biome, already translated.
+- `id` (optional, recommended): the batch's id, drawn at random when the game closes the batch (a UUID, 32 hex digits), and kept with it. If the answer to a deposit is lost, the game sends the same batch again with the same `id`: Orvane counts it only once, answers `{"ok": true, "deja": true}` (`deja`: already) and takes nothing from the quotas. 1 to 64 letters, digits or `. _ : -` (not first); it belongs to each game. The kits do it.
 - `action` is one of:
   - `rencontre` (encounter): the animal was seen, once per animal ;
   - `prelevement` (kill): the animal died because of the player ;
@@ -201,10 +205,81 @@ if (answer.ok) forgetBatch(); else keepForLater(answer.erreur);
 ```
 
 - `p_compte` is an opaque player id, for example a hash of their account id. Orvane only keeps a pseudonym of it, and only uses it for the per-player caps.
-- Keep the batch in memory and in local storage until `ok: true`, then send it at a natural moment: a save, a logout, a change of area.
+- Keep the batch in memory and in local storage until `ok: true`, with its `id`, then send it at a natural moment: a save, a logout, a change of area. Without an answer, send it again as it is: `deja: true` says it was already in.
 - Limits: 500 events and 64 KB per batch; every event must follow the schema (a known action, `n` between 0 and 10,000); 48 batches per player per day; 500 batches per day for a new game (raised on request: Stone Valley has 20,000).
 
-At the next cycle, the world reads the batches of every game and relates each to that game's exposure. It caps them: one player weighs no more than another, and a single game makes at most half of the pressure on a species. Then it smooths them and moves the world forward. The effect shows in the next instantané. Details: [docs/4](docs/4-renvoyer-des-pressions.md) and `schemas/pression.schema.json`.
+At the next cycle, the world reads the batches of every game and relates each to that game's exposure. It caps them: one player weighs no more than another; a single game does not make alone the pressure on a species that other games also show; and, even alone, a game removes no more than 5% of a population in one cycle, nor gives back more (in a world with plots, no more than 5% of each plot; a game can lower this cap in its exposure, never raise it: `part_max_population_jeu`, [docs/5](docs/5-profil-et-essais.md), in French). Then it smooths them and moves the world forward. The effect shows in the next instantané. Details: [docs/4](docs/4-renvoyer-des-pressions.md) and `schemas/pression.schema.json`.
+
+## 6. Deposit from a server
+
+The game key is public: it sits in the client, and whoever reads it can deposit in the game's name, with a new player id for every batch. A game that has a server (a Supabase function, a Node server) can protect itself: it deposits from that server, with a **deposit key** the client never sees, then asks Orvane to **require** it. Batches without it are then refused. Nothing changes for a game that does not do this.
+
+**1. Create the deposit key**, with the admin key (once; asking again renews it, and the old one stops working at once):
+
+```sh
+curl -X POST https://rospodujiyltmxitykwc.supabase.co/rest/v1/rpc/orvane_cle_depot \
+  -H "apikey: sb_publishable_F98uYIaPrLTjhj3n7QiBOg_SOtFynn8" -H "Content-Type: application/json" \
+  -d '{"p_cle_admin": "orvadm_…"}'
+```
+
+```json
+{ "ok": true, "jeu": "my-game", "cle_depot": "orvdep_4b1f…", "exigee": false, "note": "…" }
+```
+
+It is shown only once: Orvane keeps only its hash. Store it in the server's secrets (for a Supabase function: `supabase secrets set ORVANE_CLE_DEPOT=orvdep_…`), never in the client, nor in a code repository.
+
+**2. Deposit from the server**, with `kits/serveur/depot.mjs`: a small client with no dependency that only uses `fetch` (Node 18 or later, Deno). It gives the batch an `id` if it has none (and writes it into the batch), and resends it on its own when the network or Orvane fails (four tries, half a second then doubling): thanks to the `id`, a resend is never counted twice.
+
+A Supabase function (Deno), to which the game's client sends its batch:
+
+```ts
+// supabase/functions/orvane-depot/index.ts — depot.mjs (and depot.d.ts) copied next to it, from kits/serveur/
+import { deposer } from './depot.mjs';
+
+// an opaque player id: a hash, never their id in clear
+const opaque = async (id: string) => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode('my-game:' + id))),
+  (o) => o.toString(16).padStart(2, '0')).join('').slice(0, 32);
+
+Deno.serve(async (req) => {
+  const player = await playerOfTheSession(req);   // yours: the player your game's session authenticates, not an id the client wrote
+  if (!player) return new Response('no', { status: 401 });
+  const batch = await req.json();                 // the batch the client closed, with its id
+  const r = await deposer({ cle: Deno.env.get('ORVANE_CLE_JEU')!, cleDepot: Deno.env.get('ORVANE_CLE_DEPOT')! }, await opaque(player.id), batch);
+  // r: { ok: true, id } · { ok: true, deja: true, id } · { ok: false, erreur, id, plusTard }
+  return Response.json(r, { status: r.ok ? 200 : r.plusTard ? 503 : 400 });
+});
+```
+
+A Node server:
+
+```js
+import { deposer } from 'orvane/serveur';          // npm install github:stonevalleyoff-ai/orvane#<version>; in CommonJS: require('orvane/serveur')
+const options = { cle: process.env.ORVANE_CLE_JEU, cleDepot: process.env.ORVANE_CLE_DEPOT };
+const r = await deposer(options, opaquePlayerId, batch);
+if (r.ok) forget(batch.id);                       // accepted, or already in (r.deja)
+else if (r.plusTard) keepForLater(batch);         // the network, a daily quota: the same batch, with the same id, later
+else report(r.erreur);                            // a key, a batch outside the contract: resending it will not help
+```
+
+Copying `depot.mjs` next to the function is safer than importing it from an address: the code that holds the deposit key does not change behind your back. To import it anyway, pin a published version, the first one that carries it or a later one (`CHANGELOG.md`), never a branch: `https://cdn.jsdelivr.net/gh/stonevalleyoff-ai/orvane@<version>/kits/serveur/depot.mjs`.
+
+**3. Require it**, once the server deposits:
+
+```sh
+curl -X POST https://rospodujiyltmxitykwc.supabase.co/rest/v1/rpc/orvane_exiger_cle_depot \
+  -H "apikey: sb_publishable_F98uYIaPrLTjhj3n7QiBOg_SOtFynn8" -H "Content-Type: application/json" \
+  -d '{"p_cle_admin": "orvadm_…", "p_exiger": true}'
+```
+
+`orvane_jeu` then says so (`cle_depot_exigee: true`). `p_exiger: false` goes back. A wrong deposit key is refused even when it is not required.
+
+**The game's client** counts and closes its batches as before, then sends them to its server instead of depositing them: with the Godot kit, `Orvane.prochain_lot()` returns the next pending batch (with its `id`) and `Orvane.oublier_lot(id)` removes it once the server has answered `ok`; with the Unity kit, `compteur.Prochain()` and `compteur.Depose()`. The server trusts only what it knows: the session's player, not a player id written in the batch.
+
+**Renewing the key** (a leak, someone leaving): `orvane_cle_depot` gives a new key, and the old one stops working. Until the new one is in the server's secrets, its deposits are refused: it keeps them and resends them, with their `id`. To refuse none, stop requiring it during the change, then require it again.
+
+## 7. Try your batches on a copy of the world
+
+The `essai` world keeps batches for fourteen days but no world reads them: it tells whether a deposit goes through, not what it does to the world. To see that, replay your batches on a copy of today's world, on your machine, without network: [docs/5](docs/5-profil-et-essais.md), "Rejouer ses lots" (in French; the commands are copy-paste).
 
 ## Answers and errors
 
@@ -224,10 +299,15 @@ The `erreur` strings are in French:
 | `trop de dépôts aujourd'hui pour ce joueur` | 48 batches in the last 24 hours | group them, keep the batch for tomorrow |
 | `quota du jeu atteint pour aujourd'hui` | the game's quota in 24 hours (500 for a new game) | keep the batches for tomorrow; a game that needs more writes to the project |
 | `événement mal formé (schemas/pression.schema.json)` | an event that is not an object, an unknown action, `n` missing, negative or above 10,000, a name that is not a string | follow the schema |
+| `id du lot : 1 à 64 lettres, chiffres, points, tirets, deux-points` | an `id` that is empty, too long, not a string, or has another sign | draw the `id` at random (a UUID, 32 hex digits) |
+| `id du lot déjà pris par un autre lot de ce jeu` | the same `id` on another batch, or for another player | a new `id` for each batch; the same one only to resend the same batch |
+| `ce jeu ne dépose que depuis son serveur : clé de dépôt manquante` | the game requires its deposit key, the deposit does not carry it | deposit from the server (section 6) |
+| `clé de dépôt invalide` | a wrong or replaced deposit key | the key from the last `orvane_cle_depot` |
+| `pas encore de clé de dépôt : la créer d'abord (orvane_cle_depot)` | `orvane_exiger_cle_depot` before having a key | `orvane_cle_depot` first |
 
 ## Rules
 
-- The admin key never goes into a published game, nor into a code repository. No Supabase service key is ever needed to connect a game.
+- The admin key never goes into a published game, nor into a code repository; neither does the deposit key, nor into the client. No Supabase service key is ever needed to connect a game.
 - Orvane only receives counts ("14 killed, 31 met"), never conclusions, and no personal data: `p_compte` is opaque.
 - The world belongs to every game: a game weighs on it in proportion to its players, and never makes more than half of the pressure on a species.
 - **Licence.** Orvane is under [PolyForm Shield 1.0.0](https://polyformproject.org/licenses/shield/1.0.0) (`LICENSE`).
@@ -244,6 +324,7 @@ The `erreur` strings are in French:
 - [ ] Lineages appear according to their head counts, and an extinct lineage leaves the game.
 - [ ] Each event is counted once, in the Orvane biome where it happened, and only for a creature that is a member of its lineage (not for a human, a monster or a boss of the game).
 - [ ] The game filters out the families it cannot play (`Tampon.filtrer`) and lists in its batches those it plays.
-- [ ] A sent batch answers `ok: true`; otherwise it is kept and sent again later.
+- [ ] A sent batch answers `ok: true`; otherwise it is kept and sent again later, with the same `id`.
+- [ ] A game that deposits from its server keeps its deposit key in the server's secrets, and requires it (`orvane_exiger_cle_depot`).
 - [ ] The next day, `pressions_recues` rises in the instantané's `cycle`.
 - [ ] The translator passes the generic test bench: `node outils/banc-traducteur.js my-translator.js` (docs/39; the model: `traducteurs/exemple/traducteur.js`).
