@@ -63,11 +63,17 @@ const CIBLES = {
   cigogne: { depart: { de: 215, a: 255, source: 'les cigognes blanches quittent l’Europe de début août à début septembre' },
     retour: { de: 45, a: 100, source: 'elles reviennent de mi-février à début avril' } },
   carnivores: { a: 89.1, b: -1.05, tolerance: Math.log10(3), source: 'Carbone & Gittleman 2002, Science 295 : 89,1 × M^−1,05 carnivores par 10 000 kg de proies' },
-  damuth: { pente: -.75, tolerance: .15, source: 'Damuth 1981 : la densité des mammifères ∝ masse^−0,75' }
+  damuth: { pente: -.75, tolerance: .15, source: 'Damuth 1981 : la densité des mammifères ∝ masse^−0,75' },
+  rendement: { de: .05, a: .2, source: "Lindeman 1942 ; Pauly & Christensen 1995 (Nature 374) : d'un étage de la chaîne au suivant passent de 5 à 20 % (~10 %) ; le reste part en chaleur. Plus serait créer de la chair de rien" },
+  diversite: { min: .9, source: "un monde sans joueurs, au même climat, ne s'appauvrit pas en silence : l'entropie de Shannon des parts de biomasse de chaque lieu garde au moins 90 % de ce qu'elle était" }
 };
 const note = (ecart, tol) => ecart <= tol ? 'ok' : ecart <= 2 * tol ? 'limite' : 'echec';
 
 // --- les mesures d'un état ---
+// la diversité de chaque lieu : l'entropie de Shannon des parts de biomasse de ses bêtes (−Σ p ln p), en moyenne sur les lieux
+function shannon(I) { const L = new Map(); for (const t of I.taxons) { if (t.plan.regime === 'vegetal') continue; const m = t.plan.masse_kg || 1;
+    for (const p of t.populations) if (p.effectif > 0) (L.get(p.biome) || L.set(p.biome, []).get(p.biome)).push(p.effectif * m); }
+  let H = 0; for (const B of L.values()) { const S = somme(B); for (const b of B) { const q = b / S; if (q > 0) H -= q * Math.log(q); } } return L.size ? H / L.size : 0; }
 // les carnivores (mammifères carnivores d'au moins 0,5 kg) : leur nombre par 10 000 kg des proies que le moteur leur laisse (les vertébrés :
 // les mammifères, les oiseaux, les poissons, les reptiles, les amphibiens), là où ils vivent. Le loup, l'ours, les lynx sont à part : en Europe,
 // ce sont les hommes qui les tiennent sous ce que leurs proies nourriraient ; dans un monde sans joueurs, ils doivent remonter vers la loi
@@ -140,10 +146,14 @@ let I = JSON.parse(fs.readFileSync(f, 'utf8')); if (arg('--graine') != null) I.m
 const animaux = I.taxons.filter(t => t.plan.regime !== 'vegetal'), ids = animaux.map(t => t.id), JOURS = +arg('--jours', 365 * ANS), parAn = new Array(ANS).fill(0);   // (--jours : un essai plus court)
 const moyennes = Array.from({ length: ANS }, () => new Map(ids.map(id => [id, 0]))), nais = {}, cigogne = { depart: [], retour: [] }, extinctions = [];
 for (const id of Object.keys(CIBLES.naissances)) nais[id] = new Array(367).fill(0);
-const car0 = carnivores(I), dam0 = damuth(I), t0 = Date.now();
+const car0 = carnivores(I), dam0 = damuth(I), sha0 = shannon(I), t0 = Date.now();
+// (garde-fou : le second principe) ce que les chasseurs font naître de chair (un omnivore pour sa part de chair), rapporté à ce qu'ils tuent
+const chairDe = t => t.plan.regime === 'carnivore' ? 1 : t.plan.regime === 'omnivore' ? (t.plan.diete?.viande || 0) + (t.plan.diete?.insectes || 0) + (t.plan.diete?.sang || 0) : 0;
+const CH = new Map(animaux.map(t => [t.id, { m: t.plan.masse_kg || 1, chair: chairDe(t) }])), REND = { prod: 0, tues: 0 };
 for (let k = 0; k < JOURS; k++) {
   const an = Math.min(ANS - 1, Math.floor(k / 365)), parJour = {}; parAn[an]++;
-  I = Orvane.cycle(I, {}, { duree_ms: 864e5, trace: x => { if (nais[x.taxon]) parJour[x.taxon] = (parJour[x.taxon] || 0) + x.nais; } });
+  I = Orvane.cycle(I, {}, { duree_ms: 864e5, trace: x => { if (nais[x.taxon]) parJour[x.taxon] = (parJour[x.taxon] || 0) + x.nais;
+    if (an === ANS - 1) { const c = CH.get(x.taxon); if (c) { REND.prod += (x.nais || 0) * c.m * c.chair; REND.tues += (x.mortsPred || 0) * c.m; } } } });   // (le rendement des chasseurs, la dernière année)
   const j = doy(I.cycle.jour);
   for (const [id, v] of Object.entries(parJour)) nais[id][j] += v;
   const M = moyennes[an]; for (const t of I.taxons) if (M.has(t.id)) M.set(t.id, M.get(t.id) + somme(t.populations.map(p => p.effectif)));
@@ -205,6 +215,10 @@ const tests = [];
 }
 { // le garde-fou
   const C = CIBLES.damuth, d1 = damuth(I);
+  { const rd = REND.tues > 0 ? REND.prod / REND.tues : null, C = CIBLES.rendement, e = rd == null ? 'echec' : rd >= C.de && rd <= C.a ? 'ok' : rd >= C.de / 2 && rd <= C.a * 2 ? 'limite' : 'echec';
+    tests.push({ id: 'rendement', nom: 'Garde-fou : le rendement des chasseurs', garde_fou: true, valeur: rd == null ? null : r(rd, 3), valeur_dite: rd == null ? 'rien de tué' : `${(rd * 100).toFixed(1)} % de ce qu'ils tuent devient leur chair`, cible: `de ${C.de * 100} à ${C.a * 100} %`, etat: e, source: C.source }); }
+  { const h1 = shannon(I), q = sha0 > 0 ? h1 / sha0 : 1, C = CIBLES.diversite;
+    tests.push({ id: 'diversite', nom: 'Garde-fou : la diversité des lieux', garde_fou: true, valeur: r(q, 3), valeur_dite: `Shannon ${r(h1, 3)} (au départ ${r(sha0, 3)}) : ×${q.toFixed(2)}`, cible: `au moins ×${C.min}`, etat: q >= C.min ? 'ok' : q >= 2 * C.min - 1 ? 'limite' : 'echec', source: C.source }); }
   tests.push({ id: 'damuth', nom: 'Garde-fou : la loi de Damuth', garde_fou: true, valeur: d1.pente, valeur_dite: `pente ${d1.pente} (au départ ${dam0.pente}, ${d1.especes} espèces)`, cible: `${C.pente} ± ${C.tolerance}`, etat: note(Math.abs(d1.pente - C.pente), C.tolerance), detail: { depart: dam0, fin: d1 }, source: C.source + " (l'assemblage l'a posée : le moteur ne doit pas la défaire)" });
 }
 const comptes = { ok: 0, limite: 0, echec: 0 }; for (const t of tests) comptes[t.etat]++;
