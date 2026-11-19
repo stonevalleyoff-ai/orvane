@@ -802,8 +802,11 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
         // ce qui nourrit les naissances : la place pour l'herbivore ; la viande mangée pour le carnivore, convertie en petits à
         // REGLES.conversion (l'énergie vient des plantes : un prédateur ne vit pas de prédateurs qui vivent de lui) ; les deux pour l'omnivore
         const viande = REGLES.conversion * pop.ration[i] / (E.plans[i].masse_kg || 1) / (E.plans[i].metabolisme ?? 1);   // (docs/52 : qui brûle peu fait plus de petits de ce qu'il mange)
+        // (docs/53 : dans un monde réel, regles.viande_part, un omnivore naît de ce qu'il mange dans la part où il le mange — le glouton, 80 % de chair,
+        //  de sa chasse et des morts ; ailleurs, un omnivore type : 30 %)
+        const cm = reg === 'omnivore' && REGLES.viande_part && DT ? DI.chair(E.plans[i].diete) : .3;
         if (reg === 'carnivore') { nais[i] = Math.min(Np * r * s, viande); m *= DIA ? 1 + (REGLES.faim_carnivore ?? 3) * (1 - s) * (1 - s) * act : 1 + (REGLES.faim_carnivore ?? 3) * (1 - s) * (1 - s); faim = Math.max(faim, (1 - s) * act); }   // un carnivore affamé meurt plus
-        else if (reg === 'omnivore') nais[i] = Np * r * place * (1 - .3 * s) * (t.plan.regime === 'carnivore' ? REGLES.omnivore_vegetal ?? 1 : REGLES.omnivore_vegetal_base ?? 1) * (DT ? DI.vegetal(E.plans[i]) : 1) + Math.min(Np * r * .3 * s * (DT ? DI.viande(E.plans[i]) : 1), viande);
+        else if (reg === 'omnivore') nais[i] = Np * r * place * (1 - cm * s) * (t.plan.regime === 'carnivore' ? REGLES.omnivore_vegetal ?? 1 : REGLES.omnivore_vegetal_base ?? 1) * (DT ? DI.vegetal(E.plans[i]) : 1) + Math.min(Np * r * cm * s * (DT && !REGLES.viande_part ? DI.viande(E.plans[i]) : 1), viande);
         else if (reg === 'detritivore' && REGLES.cadavres > 0) { nais[i] = Np * r * s; m *= 1 + (REGLES.faim_carnivore ?? 3) * (1 - s) * (1 - s); faim = Math.max(faim, 1 - s); }   // (les morts du lieu sont sa place : il naît d'autant plus qu'il est rassasié ; affamé, il meurt plus et s'en va)
         else nais[i] = Np * r * place * (reg === 'detritivore' ? REGLES.detritivore_vegetal ?? 1 : 1);
         morts[i] = Np * m; mortsNat += morts[i];

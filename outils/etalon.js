@@ -141,6 +141,43 @@ if (arg('--experience') === 'loup') {
   const so = arg('--sortie'); if (so) { fs.mkdirSync(path.dirname(path.resolve(so)), { recursive: true }); fs.writeFileSync(so, JSON.stringify(rapport, null, 1)); console.log('→', so); }
   process.exit(0);
 }
+// --- une expérience : la vague du chacal doré (--experience chacal) ---
+// Une validation que rien n'a réglée : la dispersion a été posée d'après le loup ; le chacal doit la confirmer. Vers 1980, il ne vit plus en
+// Europe que dans les Balkans (la Bulgarie, la Grèce, la Thrace, la côte dalmate) ; il gagne ensuite l'Europe centrale puis l'ouest. Ce que
+// la réalité a vu, les premières observations par pays (Arnold et al. 2012, Mammal Review 42 ; Trouwborst et al. 2015, Biodivers. Conserv. 24) :
+// l'Italie 1984, l'Autriche 1987, la Slovaquie 1989, l'Allemagne 1997, la Tchéquie 2006, la Suisse 2011, la Pologne et le Danemark 2015,
+// les Pays-Bas 2016, la France 2017. Une première observation est souvent un jeune de passage, loin devant le front : le moteur, qui compte
+// une lignée installée (au moins deux bêtes dans le pays), doit arriver un peu plus tard. Avec le chacal, ses proies et le renard, son
+// concurrent, mis à leur équilibre comme pour le loup ; ni les plantes ni les autres bêtes
+if (arg('--experience') === 'chacal') {
+  const A = JSON.parse(fs.readFileSync(f, 'utf8')); if (arg('--graine') != null) A.monde.graine = +arg('--graine') >>> 0;
+  const REELC = { IT: 1984, AT: 1987, SK: 1989, DE: 1997, CZ: 2006, CH: 2011, PL: 2015, DK: 2015, NL: 2016, FR: 2017 }, DEPART = new Set(['BG', 'GR', 'TR', 'HR']);
+  const PAYS = new Set([...DEPART, ...Object.keys(REELC), 'RO', 'RS', 'BA', 'ME', 'HU', 'BE']);
+  const GARDE = new Set(['chacal-dore', 'renard-roux', 'lievre-europe', 'lapin', 'campagnol-champs', 'campagnol-terrestre', 'campagnol-roussatre', 'mulot-sylvestre', 'mulot-collier', 'souris-grise', 'rat-noir', 'surmulot', 'faisan', 'perdrix-grise', 'perdrix-rouge', 'caille', 'hamster-commun', 'spermophile']);
+  const B = A.biomes.filter(b => PAYS.has(b.lieu?.pays)), ids = new Set(B.map(b => b.id)), pays = new Map(B.map(b => [b.id, b.lieu.pays]));
+  for (const b of B) b.voisins = b.voisins.filter(v => ids.has(v));
+  const T = A.taxons.filter(t => GARDE.has(t.id)).map(t => ({ ...t, populations: t.populations.filter(p => ids.has(p.biome)) })).filter(t => t.populations.length);
+  const ch = T.find(t => t.id === 'chacal-dore'); ch.populations = ch.populations.filter(p => DEPART.has(pays.get(p.biome)));
+  let E = { ...A, monde: { ...A.monde, flore: undefined, phenologie: undefined, parcelles: { ...A.monde.parcelles, types: A.monde.parcelles.types.filter(ty => B.some(b => b.type === ty.id)) } }, biomes: B, taxons: T, cycle: { ...A.cycle, date: '1980-01-01T03:17:00.000Z' } };
+  for (let pass = 0; pass < 4; pass++) { const brut = [], X = new Map(), J = Orvane.cycle(E, {}, { duree_ms: 864e5, trace: x => brut.push(x) }), PRO = new Map(J.biomes.map(b => [b.id, b.saison?.production ?? 1]));   // (les proies et le renard à leur équilibre)
+    for (const x of brut) { const o = X.get(x.taxon) || X.set(x.taxon, { N: 0, conv: 0, pred: 0, ps: 0 }).get(x.taxon); o.N += x.N; o.conv += x.conv * x.N; o.pred += x.mortsPred; o.ps += x.sat * x.N * (PRO.get(x.biome) ?? 1); }
+    for (const t of E.taxons) { const o = X.get(t.id); if (t.id === 'chacal-dore' || !o || !(o.N > 0) || !['herbivore', 'omnivore'].includes(t.plan.regime)) continue;
+      const m = 365.25 / Math.max(2, t.plan.longevite), p = o.pred / o.N * 365.25, cible = clamp(1 - (m + p) / Math.max(1e-9, t.plan.natalite * o.conv / o.N), .2, .97), sa = o.ps / o.N;
+      if (sa > 1e-6) t.plan = { ...t.plan, place: +clamp((t.plan.place ?? 1) * sa / cible, .0005, 100).toPrecision(4) }; } }
+  const ANSX = +arg('--ans', 44), arrivee = {}, serie = [], t1 = Date.now(), parPays = I => { const w = I.taxons.find(t => t.id === 'chacal-dore'), o = {}; for (const p of w?.populations || []) { const c = pays.get(p.biome); o[c] = (o[c] || 0) + p.effectif; } return o; };
+  for (let y = 0; y < ANSX; y++) { for (let k = 0; k < 365; k++) E = Orvane.cycle(E, {}, { duree_ms: 864e5 });
+    const o = parPays(E), an = 1981 + y; for (const c of Object.keys(REELC)) if (arrivee[c] == null && (o[c] || 0) >= 2) arrivee[c] = an;
+    serie.push({ an, ...Object.fromEntries(Object.entries(o).map(([c, n]) => [c, Math.round(n)])) });
+    process.stderr.write(`le chacal : ${an}, ${Object.keys(REELC).filter(c => arrivee[c]).map(c => c + ' ' + arrivee[c]).join(', ') || 'encore dans les Balkans'} (${((Date.now() - t1) / (y + 1) / 1000).toFixed(0)} s par an)\n`); }
+  const fin = 1980 + ANSX, ecarts = Object.entries(REELC).map(([c, r0]) => ({ pays: c, reel: r0, simule: arrivee[c] ?? null, ecart: (arrivee[c] ?? fin + 1) - r0 }));
+  const med = (() => { const v = ecarts.map(e => Math.abs(e.ecart)).sort((x, y) => x - y); return v[v.length >> 1]; })(), atteints = ecarts.filter(e => e.simule != null).length;
+  const tests = [{ id: 'chacal-vague', nom: 'La vague du chacal doré', valeur: med, valeur_dite: `écart médian ${med} ans ; ${atteints}/${ecarts.length} pays atteints en ${fin} — ${ecarts.map(e => `${e.pays} ${e.simule ?? '—'} (${e.reel})`).join(', ')}`,
+    cible: "à moins de 8 ans des premières observations (une première observation est souvent un jeune de passage)", etat: med <= 8 ? 'ok' : med <= 16 ? 'limite' : 'echec' }];
+  const rapport = { etalon: 1, experience: 'chacal', monde: MONDE, date: arg('--date', new Date().toISOString().slice(0, 10)), ans: ANSX, lieux: B.length, reel: REELC, ecarts, serie, tests };
+  const S = { ok: '✓', limite: '≈', echec: '✗' }; console.log(`La vague du chacal doré (${B.length} lieux ; ${ANSX} ans depuis 1980) :`); for (const t of tests) console.log(`  ${S[t.etat]} ${t.nom} : ${t.valeur_dite} — cible ${t.cible}`);
+  const so = arg('--sortie'); if (so) { fs.mkdirSync(path.dirname(path.resolve(so)), { recursive: true }); fs.writeFileSync(so, JSON.stringify(rapport, null, 1)); console.log('→', so); }
+  process.exit(0);
+}
 // --- la vie de l'Europe, sans joueurs ---
 let I = JSON.parse(fs.readFileSync(f, 'utf8')); if (arg('--graine') != null) I.monde.graine = +arg('--graine') >>> 0;   // (une autre histoire : --graines)
 const animaux = I.taxons.filter(t => t.plan.regime !== 'vegetal'), ids = animaux.map(t => t.id), JOURS = +arg('--jours', 365 * ANS), parAn = new Array(ANS).fill(0);   // (--jours : un essai plus court)

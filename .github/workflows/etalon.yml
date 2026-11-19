@@ -34,6 +34,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/etalon/europe"
           node --max-old-space-size=5000 outils/etalon.js --monde europe --ans "$ans" --graines 3 --date "$jour" --sortie "$RUNNER_TEMP/etalon/europe/$jour.json" | tee "$RUNNER_TEMP/etalon.txt"
           node outils/etalon.js --monde europe --experience loup --graines 3 --date "$jour" --sortie "$RUNNER_TEMP/etalon/europe/$jour-loup.json" | tee -a "$RUNNER_TEMP/etalon.txt"
+          node outils/etalon.js --monde europe --experience chacal --graines 3 --date "$jour" --sortie "$RUNNER_TEMP/etalon/europe/$jour-chacal.json" | tee -a "$RUNNER_TEMP/etalon.txt"
           { echo '### L’étalon'; echo; sed 's/^/    /' "$RUNNER_TEMP/etalon.txt"; } >> "$GITHUB_STEP_SUMMARY"
       - name: le rapport (la branche etalon)
         run: |

@@ -211,9 +211,15 @@ Les trois tests passent : il arrive en 1994, la centaine est atteinte en 2008, i
 
 **Ce que vaut ce résultat.** La seule constante libre, le « / 25 », a été posée d'avance d'après la vitesse connue du front du loup en France (20 à 30 km par an). Elle a marché du premier coup, sans qu'on la retouche. Le loup a donc servi à la régler, et ne la prouve pas. Il faut une autre expansion pour la vérifier.
 
+## Une expérience : la vague du chacal doré
+
+`node outils/etalon.js --experience chacal` prend l'Europe des Balkans à l'Atlantique (223 lieux) en 1980, quand le chacal doré ne vit plus que dans les Balkans : la Bulgarie, la Grèce, la Thrace, la côte dalmate. Avec lui, ses proies et le renard, son concurrent, mis à leur équilibre comme pour le loup. Il gagne ensuite l'Europe centrale, puis l'ouest. Ce que la réalité a vu, les premières observations par pays (Arnold et al. 2012, *Mammal Review* 42 ; Trouwborst et al. 2015, *Biodivers. Conserv.* 24) : l'Italie 1984, l'Autriche 1987, la Slovaquie 1989, l'Allemagne 1997, la Tchéquie 2006, la Suisse 2011, la Pologne et le Danemark 2015, les Pays-Bas 2016, la France 2017.
+
+**C'est une validation, non un réglage.** La dispersion a été posée d'après le loup : rien n'a été réglé sur le chacal. Le moteur compte une lignée installée (au moins deux bêtes dans le pays), quand une première observation est souvent un jeune de passage, loin devant le front : il doit arriver un peu plus tard. La cible : l'écart médian à moins de 8 ans.
+
 ## Chaque dimanche
 
-`.github/workflows/etalon.yml` fait vivre l'Europe trois années chaque dimanche, sur trois graines, puis refait le retour du loup, sur trois graines aussi. Le rapport va dans le résumé de l'action et sur la branche `etalon` (`etalon/europe/AAAA-MM-JJ.json`, et `index.json` qui les liste), jamais sur `main`. Le monde hébergé n'en voit rien.
+`.github/workflows/etalon.yml` fait vivre l'Europe trois années chaque dimanche, sur trois graines, puis refait le retour du loup et la vague du chacal, sur trois graines aussi. Le rapport va dans le résumé de l'action et sur la branche `etalon` (`etalon/europe/AAAA-MM-JJ.json`, et `index.json` qui les liste), jamais sur `main`. Le monde hébergé n'en voit rien.
 
 Une modification du moteur peut aussi passer l'étalon à la main avant d'arriver dans Orvane. Il suffit de lancer l'action (« Run workflow », avec le nombre d'années) sur sa branche.
 
