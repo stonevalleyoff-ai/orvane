@@ -56,7 +56,7 @@ Orvane only keeps a hash of the admin key. If you lose it, it cannot be recovere
 
 ## 2. Read the world
 
-Once a day, around 03:17 UTC, the cycle publishes to `https://stonevalleyoff-ai.github.io/orvane/mondes/orvane/`:
+Once a day, around 03:05 UTC (the trigger in Orvane's Supabase, `hebergement/declencheur.sql`; failing that, the 03:17 GitHub action), the cycle publishes to `https://stonevalleyoff-ai.github.io/orvane/mondes/orvane/`:
 
 | file | what the game does with it |
 | --- | --- |
@@ -111,14 +111,17 @@ What a lineage carries (`inst.taxons[i]`):
 
 ## 3. Translate
 
-**Biomes.** The world has 24 biomes. Each terrain of the game must match one or more biomes; each biome gives its `milieu` and its `voisins` (neighbours).
+**Biomes.** The published world has **47 biomes** at cycle 59 (24 at its birth), and it gains more: a place can change or be born (an island risen from a volcano, `ile-1`, docs/28 and 31), and a fusion brings others (docs/23). Each terrain of the game must match one or more biomes; each biome gives its `milieu` (medium), its five `axes` (docs/1) and its `voisins` (neighbours).
 
-| medium | biomes |
+| `milieu` | biomes (cycle 59) |
 | --- | --- |
-| land | `banquise` (pack ice) `toundra` `taiga` `steppe` `prairie` `foret` (forest) `jungle` `savane` `desert` `desert-froid` (cold desert) `maquis` (scrubland) `montagne` (mountain) `sommets` (peaks) `volcan` |
-| underground | `grotte` (cave) |
-| fresh water and shores | `marais` (marsh) `mangrove` `lac` (lake) `riviere` (river) |
-| sea | `cote` (coast) `recif` (reef) `large` (open sea) `mer-froide` (cold sea) `abysses` (abyss) |
+| `terrestre` (land) | `banquise` (pack ice) `toundra` `taiga` `steppe` `prairie` `foret` (forest) `jungle` `savane` `desert` `desert-froid` (cold desert) `maquis` (scrubland) `montagne` (mountain) `sommets` (peaks) `volcan` `bois` (woods) `lande` (heath) `falaise` (cliff) `pierre` (stone) `neige` (snow) `canyon` `sylve` (deep forest) `cristal` (crystal fields) `caldeira` `braises` (embers) `ossuaire` (ossuary) `terres-creuses` (hollow lands) `cerisaie` (cherry grove) `ile-1` (ash island) |
+| `souterrain` (underground) | `grotte` (cave) |
+| `amphibie` (shore) | `marais` (marsh) `mangrove` `cote` (coast) `rivage` (shore) `tourbiere` (peat bog) `roseliere` (reed bed) `delta` |
+| `aquatique` (fresh water) | `lac` (lake) `riviere` (river) `torrent` `lac-profond` (deep lake) `etang` (pond) `source-chaude` (hot spring) `grotte-inondee` (flooded cave) |
+| `marin` (sea) | `recif` (reef) `large` (open sea) `mer-froide` (cold sea) `abysses` (abyss) |
+
+**A translator ignores the places it does not know** (docs/43): a new biome must never crash the game. At best, it maps it to one of its terrains by its `milieu` and `axes`; otherwise it spawns nothing there and reports nothing for it. Today's list is always `inst.biomes`.
 
 **Lineages.** A lineage lives where it has a head count. Spawn it in the terrains that match its biomes, in proportion to its head count.
 - Take its behaviour from `plan.regime`, `temperament`, `sociabilite` and `activite`, its size from `masse_kg`, its movement from `locomotion`, its drawing from `plan.corps`.
@@ -204,7 +207,7 @@ if (answer.ok) forgetBatch(); else keepForLater(answer.erreur);
 - Keep the batch in memory and in local storage until `ok: true`, then send it at a natural moment: a save, a logout, a change of area.
 - Limits: 500 events and 64 KB per batch; every event must follow the schema (a known action, `n` between 0 and 10,000); 48 batches per player per day; 500 batches per day for a new game (raised on request: Stone Valley has 20,000).
 
-At the next cycle, the world reads the batches of every game and relates each to that game's exposure. It caps them: one player weighs no more than another, and a single game makes at most half of the pressure on a species. Then it smooths them and moves the world forward. The effect shows in the next instantané. Details: [docs/4](docs/4-renvoyer-des-pressions.md) and `schemas/pression.schema.json`.
+At the next cycle, the world reads the batches of every game and relates each to that game's exposure. It caps them: one player weighs no more than another (`par_compte_cycle`, `part_max_compte`), a population loses at most 20 % of its headcount in one cycle (`part_max_population`), and when **several** games weigh on the same population, a single game's share is brought down to half of the pressure (`part_max_jeu`). That last cap only bites on what really weighs: each game keeps the right to remove up to 10 % of the population (0.5 × 20 %). **A game alone on a population is only held by the population cap**: it can remove up to 20 % of it per cycle (`plafondPart` in `tampon/tampon.js` caps nothing below two contributors). A per-game cap that holds even for a lone game is being prepared (issue #32). Then it smooths them and moves the world forward. The effect shows in the next instantané. Details: [docs/4](docs/4-renvoyer-des-pressions.md) and `schemas/pression.schema.json`.
 
 ## Answers and errors
 
@@ -229,7 +232,7 @@ The `erreur` strings are in French:
 
 - The admin key never goes into a published game, nor into a code repository. No Supabase service key is ever needed to connect a game.
 - Orvane only receives counts ("14 killed, 31 met"), never conclusions, and no personal data: `p_compte` is opaque.
-- The world belongs to every game: a game weighs on it in proportion to its players, and never makes more than half of the pressure on a species.
+- The world belongs to every game: a game weighs on it in proportion to its players, and when several games hunt the same population, a single game's share is brought down to half of the pressure (section 5).
 - **Licence.** Orvane is under [PolyForm Shield 1.0.0](https://polyformproject.org/licenses/shield/1.0.0) (`LICENSE`).
   - **Allowed:** connecting any game, commercial or closed-source; copying `tampon/tampon.js`, `tampon/morceaux.js`, the schemas or a translator into the game, and adapting them. Keep the licence URL and the line `Required Notice: Copyright StoneValley (https://github.com/stonevalleyoff-ai/orvane)`, for instance as a comment at the top of each copied file.
   - **Not allowed:** using Orvane's code to provide a competing product (another ecosystem engine, another shared world for games to plug into, a renamed copy).

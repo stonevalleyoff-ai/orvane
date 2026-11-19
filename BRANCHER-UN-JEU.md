@@ -57,7 +57,7 @@ Orvane ne garde que l'empreinte de la clé d'administration : perdue, elle ne se
 
 ## 2. Lire le monde
 
-Le cycle nocturne tourne à 03:17 UTC, puis publie dans `https://stonevalleyoff-ai.github.io/orvane/mondes/orvane/` :
+Le cycle nocturne tourne vers 03:05 UTC (le déclencheur du Supabase d'Orvane, `hebergement/declencheur.sql` ; à défaut, l'action GitHub de 03:17), puis publie dans `https://stonevalleyoff-ai.github.io/orvane/mondes/orvane/` :
 
 | fichier | ce que le jeu en fait |
 | --- | --- |
@@ -104,14 +104,17 @@ Ce que porte une lignée (`inst.taxons[i]`) :
 
 ## 3. Traduire
 
-**Les biomes.** Le monde a 24 biomes. Chaque terrain du jeu doit correspondre à un ou plusieurs biomes ; chaque biome dit son `milieu` et ses `voisins`.
+**Les biomes.** Le monde publié a **47 biomes** au cycle 59 (24 à sa naissance), et il en gagne : un lieu se transforme ou naît (une île sortie d'un volcan, `ile-1`, docs/28 et 31), une fusion en apporte d'autres (docs/23). Chaque terrain du jeu doit correspondre à un ou plusieurs biomes ; chaque biome dit son `milieu`, ses cinq `axes` (docs/1) et ses `voisins`.
 
-| milieu | biomes |
+| milieu | biomes (cycle 59) |
 | --- | --- |
-| terre | `banquise` `toundra` `taiga` `steppe` `prairie` `foret` `jungle` `savane` `desert` `desert-froid` `maquis` `montagne` `sommets` `volcan` |
-| sous-sol | `grotte` |
-| eau douce et bords | `marais` `mangrove` `lac` `riviere` |
-| mer | `cote` `recif` `large` `mer-froide` `abysses` |
+| `terrestre` | `banquise` `toundra` `taiga` `steppe` `prairie` `foret` `jungle` `savane` `desert` `desert-froid` `maquis` `montagne` `sommets` `volcan` `bois` `lande` `falaise` `pierre` `neige` `canyon` `sylve` `cristal` `caldeira` `braises` `ossuaire` `terres-creuses` `cerisaie` `ile-1` |
+| `souterrain` | `grotte` |
+| `amphibie` | `marais` `mangrove` `cote` `rivage` `tourbiere` `roseliere` `delta` |
+| `aquatique` (eau douce) | `lac` `riviere` `torrent` `lac-profond` `etang` `source-chaude` `grotte-inondee` |
+| `marin` | `recif` `large` `mer-froide` `abysses` |
+
+**Un traducteur ignore les lieux qu'il ne connaît pas** (docs/43) : un biome nouveau ne doit jamais faire tomber le jeu. Au mieux, il le rapproche d'un de ses terrains par son `milieu` et ses `axes` ; sinon il n'y fait rien paraître, et ne renvoie rien pour lui. La liste du jour est toujours `inst.biomes`.
 
 **Les lignées.** Une lignée vit là où elle a un effectif. Faites-la apparaître dans les terrains qui correspondent à ses biomes, en proportion de son effectif ; tirez son comportement de `plan.regime`, `temperament`, `sociabilite` et `activite`, sa taille de `masse_kg`, ses déplacements de `locomotion`, son dessin de `plan.corps`. Une lignée qui disparaît de l'instantané, ou dont `eteint` n'est plus `null`, quitte le jeu.
 
@@ -186,7 +189,7 @@ if (rep.ok) oublierLeLot(); else garderPourPlusTard(rep.erreur);
 - Gardez le lot en mémoire et dans le stockage local jusqu'à `ok: true`, puis envoyez-le à un moment naturel : une sauvegarde, une déconnexion, un changement de zone.
 - Limites : 500 événements et 64 Ko par lot ; chaque événement au contrat (une action connue, `n` entre 0 et 10 000) ; 48 lots par joueur et par jour ; 500 lots par jour pour un jeu neuf (relevé sur demande : Stone Valley en a 20 000).
 
-La nuit suivante, le cycle lit les lots de tous les jeux et les rapporte à l'exposition de chacun. Il les plafonne : un joueur ne pèse pas plus qu'un autre, et un même jeu ne fait au plus que la moitié de la pression sur une espèce. Puis il les lisse et fait avancer le monde. L'effet se lit dans l'instantané du lendemain. Le détail est dans [docs/4](docs/4-renvoyer-des-pressions.md) et `schemas/pression.schema.json`.
+La nuit suivante, le cycle lit les lots de tous les jeux et les rapporte à l'exposition de chacun. Il les plafonne : un joueur ne pèse pas plus qu'un autre (`par_compte_cycle`, `part_max_compte`), une population ne perd pas plus de 20 % de son effectif en un cycle (`part_max_population`), et quand **plusieurs** jeux pèsent sur une même population, la part d'un seul est ramenée à la moitié de la pression (`part_max_jeu`). Ce dernier plafond ne mord que sur ce qui pèse vraiment : chaque jeu garde le droit d'ôter jusqu'à 10 % de la population (0,5 × 20 %). **Un jeu seul sur une population n'est tenu que par le plafond de population** : il peut lui ôter jusqu'à 20 % par cycle (`plafondPart`, `tampon/tampon.js`, ne plafonne rien sous deux contributeurs). Un plafond par jeu valable même seul est en préparation (issue #32). Puis il les lisse et fait avancer le monde. L'effet se lit dans l'instantané du lendemain. Le détail est dans [docs/4](docs/4-renvoyer-des-pressions.md) et `schemas/pression.schema.json`.
 
 ## Réponses et erreurs
 
@@ -211,7 +214,7 @@ La nuit suivante, le cycle lit les lots de tous les jeux et les rapporte à l'ex
 
 - La clé d'administration ne va jamais dans un jeu publié, ni dans un dépôt de code. Aucune clé de service Supabase ne sert à brancher un jeu.
 - Orvane ne reçoit que des comptes (« 14 tués, 31 croisés »), jamais des conclusions, et aucune donnée personnelle : `p_compte` est opaque.
-- Le monde appartient à tous les jeux : un jeu n'y pèse qu'en proportion de ses joueurs, et jamais plus de la moitié de la pression sur une espèce.
+- Le monde appartient à tous les jeux : un jeu n'y pèse qu'en proportion de ses joueurs, et quand plusieurs jeux chassent une même population, la part d'un seul est ramenée à la moitié de la pression (section 5).
 - **Les versions.** Le contrat est versionné (`"orvane": "1.0"` dans chaque instantané). Tant que le premier chiffre ne change pas, rien ne casse : il suffit que le jeu **ignore ce qu'il ne connaît pas** (un champ, une valeur, un biome). Un changement qui casserait un jeu est annoncé à l'avance dans [CHANGELOG.md](CHANGELOG.md) (docs/43). En JavaScript, le moteur et le tampon s'installent à une version précise : `npm install github:stonevalleyoff-ai/orvane#v1.0.0`.
 - **La licence.** Orvane est sous [PolyForm Shield 1.0.0](https://polyformproject.org/licenses/shield/1.0.0) (`LICENSE`). Brancher un jeu, même commercial ou au code fermé, est permis, de même que copier dans le jeu `tampon/tampon.js`, les schémas ou un traducteur et les adapter. Joignez alors l'adresse de la licence et la ligne `Required Notice: Copyright StoneValley (https://github.com/stonevalleyoff-ai/orvane)`, par exemple en commentaire en tête du fichier copié. Ce qui n'est pas permis : se servir du code d'Orvane pour fournir un produit qui lui fait concurrence (un autre moteur d'écosystème, un autre monde partagé où brancher des jeux, une copie renommée).
 
@@ -233,7 +236,7 @@ La nuit suivante, le cycle lit les lots de tous les jeux et les rapporte à l'ex
 
 Orvane runs one shared ecosystem world that any game can plug into. **The full guide in English is [CONNECT-A-GAME.md](CONNECT-A-GAME.md)**, and every French field name is translated in [docs/glossary.md](docs/glossary.md).
 1. **Register** on the [sign-up page](https://stonevalleyoff-ai.github.io/orvane/inscription/), or call the `orvane_inscrire_jeu` RPC described below. You get a public **game key** (`orv_…`, it goes in your game) and a secret **admin key** (`orvadm_…`, never ship it).
-2. **Read** the world once a day from `https://stonevalleyoff-ai.github.io/orvane/mondes/orvane/instantane.json`: its 24 biomes, and lineages (`taxons`) with a body plan (`plan`), populations per biome (`populations[].effectif`) and variants (`phenotypes`). It is published nightly at 03:17 UTC.
+2. **Read** the world once a day from `https://stonevalleyoff-ai.github.io/orvane/mondes/orvane/instantane.json`: its biomes (47 at cycle 59, and growing: ignore any you do not know), and lineages (`taxons`) with a body plan (`plan`), populations per biome (`populations[].effectif`) and variants (`phenotypes`). It is published nightly, around 03:05 UTC.
    A world may carry its own catalogue (`catalogue.monde`: extra biome axes, traits, organs, body forms); their definitions are in the snapshot, and `OrvaneCorps.etendre(inst.catalogue.monde)` lets `corps.js` draw them (docs/20).
    For a solo or offline game, `moteur/solo.js` runs a private copy of the world inside the game, in real time or accelerated, and nothing goes back to the shared world (docs/19).
 3. **Translate**: map your terrains to Orvane biomes, and spawn each lineage where it lives, in proportion to its population. The reference translator is `traducteurs/stone-valley/`. A creature drawn from a lineage is a member of that population: report what happens to it. A creature that belongs to your game (a human, a monster, a boss), even if its looks come from a lineage, is not: report nothing for it. Lineages come in families (`animale`, `synthetique` for machines); keep only those your game can play with `Tampon.filtrer(inst, { familles: ['animale'] })`, and list them in each batch (`"familles": [...]`). By default a game plays animals only, so new kinds of life never reach it unasked.

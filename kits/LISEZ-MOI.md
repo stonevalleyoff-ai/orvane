@@ -92,4 +92,4 @@ func _on_fin_de_partie() -> void:   # (ou un moment naturel : un retour au menu,
 
 - **Faire tourner le moteur dans le jeu** (un monde solo dans Unity ou Godot, docs/19) : aujourd'hui, seulement en JavaScript. Un jeu Unity ou Godot lit le monde partagé et lui écrit, mais ne fait pas encore vivre sa propre copie.
 - **Le kit Godot dans Godot** : un banc qui le fasse tourner dans le moteur, sans fenêtre.
-- **Les morceaux** (`morceaux/`, ne lire que ses biomes) : en JavaScript seulement (`tampon/morceaux.js`).
+- **Les morceaux dans le kit Unity** (`morceaux/`, ne lire que ses biomes) : le kit Godot les lit (`lire_lieux`, `assembler`, plus haut) comme le JavaScript (`tampon/morceaux.js`) ; le kit Unity lit encore l'instantané entier.

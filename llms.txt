@@ -1,6 +1,6 @@
 # Orvane
 
-> Orvane est un moteur d'écosystème et d'évolution qui fait vivre un seul monde partagé par tous les jeux. Le monde compte 24 biomes et plus d'une centaine de lignées inventées par l'évolution, et il avance d'un cycle chaque nuit. Un jeu s'y branche en trois temps : il s'inscrit pour recevoir une clé, il lit le monde publié en JSON, et il renvoie ce que font ses joueurs dans le Supabase d'Orvane. La documentation est en français ; le guide de branchement finit par un résumé en anglais.
+> Orvane est un moteur d'écosystème et d'évolution qui fait vivre un seul monde partagé par tous les jeux. Le monde compte 47 biomes au cycle 59 (24 à sa naissance, et il en gagne) et plus d'une centaine de lignées inventées par l'évolution, et il avance d'un cycle chaque nuit. Un jeu s'y branche en trois temps : il s'inscrit pour recevoir une clé, il lit le monde publié en JSON, et il renvoie ce que font ses joueurs dans le Supabase d'Orvane. La documentation est en français ; le guide de branchement finit par un résumé en anglais.
 >
 > Orvane is an ecosystem and evolution engine running one shared living world that any game can plug into: register for a key, read the world as JSON, report player actions back through Supabase.
 

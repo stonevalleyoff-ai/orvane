@@ -2,7 +2,7 @@
 
 **Un moteur d'écosystème et d'évolution, et un monde vivant que tous les jeux partagent.**
 
-Orvane fait vivre un seul monde, le monde d'Orvane : 24 biomes, de la banquise aux abysses, et plus d'une centaine de lignées inventées par l'évolution, pas par un dessinateur. Elles naissent, se nourrissent, se chassent, migrent, mutent et se séparent en espèces nouvelles. Le monde avance d'un cycle chaque nuit.
+Orvane fait vivre un seul monde, le monde d'Orvane : 47 biomes au cycle 59, de la banquise aux abysses (24 à sa naissance, et il en gagne), et plus d'une centaine de lignées inventées par l'évolution, pas par un dessinateur. Elles naissent, se nourrissent, se chassent, migrent, mutent et se séparent en espèces nouvelles. Le monde avance d'un cycle chaque nuit.
 
 N'importe quel jeu peut s'y brancher. Il lit le monde et en fait ses créatures, chacune à sa façon. Puis il renvoie ce que font ses joueurs (les bêtes croisées, chassées, apprivoisées), et le monde en tient compte la nuit suivante. Une espèce trop chassée se raréfie, devient méfiante, rapetisse si l'on prend toujours les plus grandes, et cela dans tous les jeux à la fois.
 
@@ -15,7 +15,7 @@ N'importe quel jeu peut s'y brancher. Il lit le monde et en fait ses créatures,
 ## Comment ça marche
 
 ```
-            chaque nuit, 03:17 UTC
+            chaque nuit, 03:05 UTC
    lots des joueurs ──► tampon ──► moteur ──► instantané publié (GitHub Pages)
           ▲                                          │
           │                                          ▼
@@ -23,7 +23,7 @@ N'importe quel jeu peut s'y brancher. Il lit le monde et en fait ses créatures,
 ```
 
 - **Le moteur** (`moteur/`) fait évoluer des populations : effectifs par biome, chaîne alimentaire, génétique continue, reproduction, hybrides, organes, méfiance. Il est déterministe, sans dépendance, et tourne sous Node ou dans le navigateur.
-- **Le tampon** (`tampon/`) se place entre le monde et chaque jeu. Il adoucit ce que le jeu montre et plafonne ce que les joueurs pèsent : un seul jeu ne fait jamais plus de la moitié de la pression sur une espèce.
+- **Le tampon** (`tampon/`) se place entre le monde et chaque jeu. Il adoucit ce que le jeu montre et plafonne ce que les joueurs pèsent : une population ne perd pas plus d'une part de son effectif par cycle, et quand plusieurs jeux chassent la même, la part d'un seul est ramenée à la moitié de la pression.
 - **Le contrat** (`schemas/`) tient en trois objets JSON : l'instantané, le lot de pressions, le profil. Il est versionné (1.0) et ne casse pas sans prévenir ; ce qui change est dans [le journal](CHANGELOG.md) (docs/43).
 - **Le paquet** : `npm install github:stonevalleyoff-ai/orvane#v1.0.0`, puis `const { Orvane, Tampon, Solo } = require('orvane')`.
 - **Le premier client** est Stone Valley. Son traducteur complet est dans `traducteurs/stone-valley/`.
@@ -34,7 +34,7 @@ Orvane est distribué sous la licence [PolyForm Shield 1.0.0](https://polyformpr
 
 ## In English
 
-Orvane is an ecosystem and evolution engine running **one shared living world**: 24 biomes and over a hundred lineages invented by evolution. The world advances one cycle every night. Any game can plug in:
+Orvane is an ecosystem and evolution engine running **one shared living world**: 47 biomes at cycle 59 (24 at its birth, and growing) and over a hundred lineages invented by evolution. The world advances one cycle every night. Any game can plug in:
 1. register on the [sign-up page](https://stonevalleyoff-ai.github.io/orvane/inscription/) to get a game key;
 2. read the world from `https://stonevalleyoff-ai.github.io/orvane/mondes/orvane/instantane.json` and turn its lineages into creatures;
 3. report what players do (encounters, kills, captures) through the `orvane_deposer` RPC.
