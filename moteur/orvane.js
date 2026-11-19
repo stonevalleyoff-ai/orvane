@@ -753,12 +753,13 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   const NSR = REGLES.naissances, NS = SL && NSR?.force > 0 ? (t, b) => { const s = SL.get(b.id); if (!s) return 1; const W = t.plan.naissances || {}, c = W.centre ?? NSR.centre, L = W.largeur ?? NSR.largeur;
     let d = Math.abs(s.phase - c); d = Math.min(d, 1 - d); const w = NSR.fond + (1 - NSR.fond) * (d < L / 2 ? Math.cos(Math.PI * d / L) ** 2 : 0) / (L / 2);
     return 1 + NSR.force * (s.force ?? 1) * (w - 1); } : null;
+  const bSc = new Map();
   for (const t of taxons) {
     if (t.eteint) continue;
     const E = etat.get(t.id), K = t.phenotypes.length;
     for (const [bid, pop] of Object.entries(E.pops)) {
       const b = biomes[bid]; if (!b) { delete E.pops[bid]; continue; }
-      const bS = phase == null && !SMe ? b : { ...b, axes: axesCycle(b) };                    // le biome tel qu'il est en cette saison
+      let bS = phase == null && !SMe ? b : bSc.get(bid); if (!bS) bSc.set(bid, bS = { ...b, axes: axesCycle(b) });   // le biome tel qu'il est en cette saison (vitesse : une fois par lieu, il n'est que lu)
       const conv = convenance(t.plan, bS), Keff = b.capacite * prodCycle(b) * (SF ? SF.ratio(t, bid) : 1) * (t.plan.place ?? 1);   // (docs/52 : la place qu'une espèce réelle trouve, plan.place)   // (docs/17 : ce qui reste à brouter)
       const syn = SY && t.plan.regime === 'synthetique';                                        // (une machine : sa presse est celle de l'énergie, docs/16)
       const sat = syn ? SY.sat(bid) : Keff > 0 ? charge(B[bid], t.plan.masse_kg || 1) / (Keff * BANDE) * (SF ? SF.concurrence(t, bid) : 1) : 9;   // (docs/17 : pesée par ce qu'on mange en commun)

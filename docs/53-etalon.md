@@ -25,7 +25,7 @@ node outils/etalon.js [--monde europe] [--ans 3] [--sortie etalon/europe/AAAA-MM
 node outils/etalon.js --ans 1 --jours 30      # un essai court (les saisons ne diront rien)
 ```
 
-Le point de départ est toujours l'amorce : deux lancements donnent le même rapport. Une année d'Europe prend environ 50 minutes sur un ordinateur.
+Le point de départ est toujours l'amorce : deux lancements donnent le même rapport. Une année d'Europe prend environ 25 minutes sur un ordinateur (un jour : 4 s).
 
 ## Le premier rapport
 

@@ -261,13 +261,15 @@ function preparer(ctx) {
       const uo = D && broute(t) && pl && araccorder.has(bid) ? pl.flatMap(({ t: q, p }) => { const A = atteinte(E.plans[0], t.phenotypes[0]?.traits, q.plan), R = resistances(E.plans[0], t.phenotypes[0]?.traits); return [0, 1, 2, 3].map(k => p.effectif * q.plan.masse_kg * (p.frequences[k] || 0) * A * gout(R, k)); }) : null;
       (mangeurs[bid] ??= []).push({ t, P, Bio, m: t.plan.masse_kg || 1, u, n2: u ? norme(u) : 0, uo, n2o: uo ? Math.sqrt(somme(uo.map(x => x * x))) : 0 }); } }
   // (les cases non nulles d'un vecteur, dans l'ordre : un produit n'additionne que là où les deux mangent — ajouter 0 ne change rien)
+  // (le recouvrement de deux masses : une fois par paire de masses et par cycle)
+  const RECc = new Map(), REC = (a, b) => { let m = RECc.get(a); if (!m) RECc.set(a, m = new Map()); let r = m.get(b); if (r === undefined) { r = ctx.recouvrement(a, b); m.set(b, r); } return r; };
   const NZc = new WeakMap(), NZ = u => { let a = NZc.get(u); if (!a) { a = []; for (let i = 0; i < u.length; i++) if (u[i] !== 0) a.push(i); NZc.set(u, a); } return a; };
   const DOT = new WeakMap(), dot = (u, v) => { let m = DOT.get(u); if (!m) DOT.set(u, m = new Map()); let r = m.get(v); if (r !== undefined) return r;
     r = 0; const a = NZ(u), c = NZ(v); for (let x = 0, y = 0; x < a.length && y < c.length;) { const i = a[x], j = c[y]; if (i === j) { r += u[i] * v[i]; x++; y++; } else if (i < j) x++; else y++; } m.set(v, r); let n = DOT.get(v); if (!n) DOT.set(v, n = new Map()); n.set(u, r); return r; };   // (un produit par paire et par cycle : x·y = y·x au bit près)
   const recouvrementDe = (t, bid, ancien) => { const k = t.id + '|' + bid + (ancien ? '|a' : ''); if (conc.has(k)) return conc.get(k);
     const M = mangeurs[bid] || [], h = M.find(x => x.t === t), U = x => ancien && x.uo ? x.uo : x.u, Z = x => ancien && x.uo ? x.n2o : x.n2; let r = null;
     if (h && U(h) && Z(h) > 0) { let num = 0, den = 0;
-      for (const j of M) { const w = j.Bio * ctx.recouvrement(h.m, j.m); if (!(w > 0)) continue;
+      for (const j of M) { const w = j.Bio * REC(h.m, j.m); if (!(w > 0)) continue;
         const O = j === h ? 1 : U(j) && Z(j) > 0 && U(j).length === U(h).length ? dot(U(h), U(j)) / (Z(h) * Z(j)) : 1; num += w * O; den += w; }
       r = den > 0 ? num / den : null; }
     conc.set(k, r); return r; };

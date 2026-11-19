@@ -15,7 +15,7 @@
 // Un échec est un renseignement, pas une panne : il dit ce que le moteur ne sait pas encore faire.
 //   node outils/etalon.js [--monde europe] [--ans 3] [--sortie etalon/europe/AAAA-MM-JJ.json] [--date AAAA-MM-JJ]
 // L'amorce du monde (mondes/<monde>/amorce.json) est le point de départ, toujours le même : deux lancements donnent le même rapport.
-// Une année d'Europe prend ~50 minutes sur un ordinateur. Node, sans dépendance.
+// Une année d'Europe prend ~25 minutes sur un ordinateur. Node, sans dépendance.
 'use strict';
 const fs = require('fs'), path = require('path');
 const Orvane = require('../moteur/orvane.js');

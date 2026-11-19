@@ -275,7 +275,7 @@ for (let pass = 0; pass < CALER; pass++) {
 // vivre une année entière, puis compare chaque espèce à elle-même un an plus tôt (λ, à la même saison) : un brouteur qui a crû a trop de
 // place, un carnivore qui a crû chasse trop bien ; on corrige d'une part de l'écart (λ^0,8), et l'on recommence.
 // Les grands carnivores (le loup, l'ours, les lynx, le glouton) n'y sont pas : en Europe, les hommes les tiennent bas, et sans joueurs ils
-// remontent, comme ils remontent en vrai ; les caler les figerait (et le retour du loup ne se ferait plus). Une passe : ~50 minutes.
+// remontent, comme ils remontent en vrai ; les caler les figerait (et le retour du loup ne se ferait plus). Une passe : ~25 minutes.
 // Une espèce qui passe d'un côté à l'autre (×10, puis ×0,11 : les papillons) a reçu un pas trop grand : le suivant est deux fois plus petit,
 // comme une recherche par moitiés (au plus bas 0,1). Ce que chaque passe a vu (λ et le pas) est gardé à côté de sa sortie
 // (<sortie>.lambda.json), et relu par la passe suivante (--depuis).
