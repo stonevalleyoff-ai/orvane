@@ -170,6 +170,7 @@ Orvane's files use French field names. This page translates them all, object by 
 | --- | --- | --- |
 | `lot` | batch | what a game sends |
 | `monde`, `instantane` | world, snapshot | the world, and the `cycle.n` the game was using |
+| `id` | id | optional: the batch's random id, kept with it until accepted; a batch resent with the same `id` counts once, and `orvane_deposer` answers `deja` (already) |
 | `familles` | families | the families the game plays |
 | `source` | source | `jeu` game, `compte` opaque player id, `zone` area |
 | `periode` | period | `debut` start, `fin` end |
@@ -186,8 +187,28 @@ Orvane's files use French field names. This page translates them all, object by 
 | `propagation_cycles`, `inertie_max` | spreading, max inertia | a change is spread over this many cycles, at most this much per cycle |
 | `traits_rendus` | rendered traits | what the game can draw; the others are merged into the base variant |
 | `seuil_extinction_jeu`, `retour_apres_extinction` | game extinction threshold, return after extinction | |
+| `part_max_population_jeu` | max share of a population per game | (game → Orvane) a game lowers for itself the per-game cap of the world's profile, never raises it |
 | `mode`, `taux_jeu`, `reference_min`, `non_rendus` | mode, game rates, min reference, not rendered | the relative mode: the game keeps its own rates and follows Orvane's changes |
 | `quantitatifs`, `mefiance`, `bestiaire` | continuous traits, wariness, bestiary | what the game shows of them |
+
+## The caps (`influence.plafonds`, in `schemas/profil.schema.json`)
+
+| field | English | meaning |
+| --- | --- | --- |
+| `par_compte_cycle` | per account per cycle | what one account can remove from a lineage in one cycle |
+| `part_max_compte`, `part_max_jeu` | max share of an account, of a game | of the total pressure on a population |
+| `part_max_population_jeu` | max share of a population per game | what a single game removes from a population in one cycle, or gives back to it, even when it is alone (5 % in the world of Orvane), also plot by plot |
+| `part_max_population` | max share of a population | what all games together remove from a population in one cycle |
+
+## Deposits (`hebergement/supabase.sql`)
+
+| French | English |
+| --- | --- |
+| `cle` | game key (public, in the client) |
+| `cle_admin` | admin key (secret) |
+| `cle_depot` | deposit key (secret, on the game's server only: `orvane_cle_depot`; `orvane_exiger_cle_depot` requires it) |
+| `deja` | already: the batch with this `id` was already in, it is not counted twice |
+| `plusTard` | later (`kits/serveur/depot.mjs`): the same batch, with the same `id`, can be sent again later |
 
 ## Words of the world
 
