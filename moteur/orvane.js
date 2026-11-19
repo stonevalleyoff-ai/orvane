@@ -862,7 +862,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
       pop.mortsNat = mortsNat; pop.mortsExt = mortsExt; pop.mortsPred = pop.predation.reduce((a, x) => a + x, 0); pop.mortsMal = mortsMal;
       if (GEN && pop.Q) evoluerQ(pop.Q, { N: pop.N.reduce((a, x) => a + x, 0), Dmorts: morts.reduce((a, x) => a + x, 0), Dmal: mortsMal, Dpred: pop.mortsPred,
         Dext: mortsExt, qExt: pr.q, B: nais.reduce((a, x) => a + x, 0), plan: t.plan, b, gauss, sexe: SEX });
-      if (opt.trace) opt.trace({ taxon: t.id, biome: bid, N: tot, sat, conv, satiete: pop.satiete, nais: nais.reduce((a, x) => a + x, 0), mortsNat, mortsPred: pop.mortsPred, mortsExt, mortsMal, saison: saison?.nom });
+      if (opt.trace) opt.trace({ taxon: t.id, biome: bid, N: tot, sat, conv, satiete: pop.satiete, ration: pop.ration ? pop.ration.reduce((a, x) => a + x, 0) : 0, nais: nais.reduce((a, x) => a + x, 0), mortsNat, mortsPred: pop.mortsPred, mortsExt, mortsMal, saison: saison?.nom });
       // essaimer vers les voisins où l'on peut vivre, chacun à proportion de ce qu'il convient : un flux continu, pas une
       // vague vers un voisin tiré au sort (qui faisait d'une petite population voisine une suite d'explosions et d'effondrements)
       // (docs/52 : dans un monde réel, on essaime dans son milieu — la terre vers la terre, l'eau vers l'eau, les rives vers les deux :
