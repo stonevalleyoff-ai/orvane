@@ -122,8 +122,20 @@ Le loup remonte désormais comme il remonte en vrai (de 5 à 10 % par an, là o�
 - **les lynx** : à l'adresse du moteur, ils ne trouvent pas de quoi vivre aux effectifs comptés. Le calage d'un jour leur donnait une adresse de 2,1 (le boréal) et de 6,7 (le pardelle) pour qu'ils tiennent : ils perdent leurs proies devant les renards et les rapaces, qui mangent les mêmes lièvres et les mêmes lapins. En vrai, un lynx tue le renard qu'il croise, et le chasse de son territoire. Le moteur ne connaît pas cette domination d'un grand chasseur sur les petits qui mangent comme lui ;
 - **le glouton** : en vrai, il vit l'hiver des carcasses que laissent les loups et les lynx. L'Europe ne fait pas encore vivre ses charognards des morts (`regles.cadavres = 0`).
 
+**La part de chair et la domination** (docs/52). Le premier concurrent du lynx boréal était… le sanglier (87 % du poids qui pesait sur lui) : un omnivore cherchait autant de proies qu'un carnivore de sa masse. Il ne cherche plus que sa part de chair (`regles.viande_part`). Le lynx pardelle perdait ses lapins devant la genette et le renard : entre chasseurs à sang chaud, le plus grand domine désormais (`regles.domination = 0,5`). Recalé (un jour, trois années), deux années encore : 7 ✓, 1 ≈, 1 ✗, mais les lynx ne s'effondrent plus.
+
+| | sans les deux règles | avec |
+| --- | --- | --- |
+| le loup | +5,5 % par an | **+7,5 %** |
+| le lynx boréal | −6,8 % | −1,2 % |
+| le lynx pardelle | −15,2 % | −1,6 % |
+| l'ours | +5,4 % | +5,4 % |
+| le glouton | −6,0 % | −6,0 % |
+
+Les autres tests ne bougent pas (la stabilité 98 %, les naissances, les cigognes, les prédateurs ×1,7, Damuth −0,698) ; au bord du test des espèces qui fondent ou s'emballent : les papillons ×2,1, les coccinelles, les araignées et les carabes ×0,47 à ×0,50. Le retour du loup passe toujours : 106 loups en France en 2008, 315 en 2018, 460 en 2023 ; **l'Italie arrive à 3 030 loups en 2023, quand on en compte ~3 300**.
+
 Ce que l'étalon dit de faire maintenant :
-1. **la domination entre chasseurs** : un grand prédateur qui chasse ou tue les petits de sa guilde, et prend leur part ;
+1. ~~**la domination entre chasseurs**~~ (fait : les lynx tiennent presque ; il leur manque encore de remonter) ;
 2. **les charognards** : le glouton, les vautours, les corvidés vivent en partie des morts ;
 3. **le reste des insectes chasseurs** : seule, l'araignée n'a que 32 % de sa satiété. Elle doit trouver son équilibre plus bas que ses effectifs comptés, et le trouve lentement (la moitié par an).
 
