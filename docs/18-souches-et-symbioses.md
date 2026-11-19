@@ -61,7 +61,7 @@ Chaque événement d'une souche dit laquelle (`souche`, sa clé dans `monde.path
 
 - Une épidémie d'avant les souches (dans un monde qui ne les a pas, ou une population qui en garde une d'avant leur éveil) reste un `epidemie` ou un `remission` sans `souche` ni `nature`.
 - D'autres natures pourront venir : un jeu ignore celles qu'il ne connaît pas.
-- La chronique (docs/37) les lit. Pour un instantané d'avant ces champs, la chronique relit le texte, et retrouve la souche par son nom.
+- La chronique (docs/37) et le directeur (docs/40) les lisent. Pour un instantané d'avant ces champs, la chronique relit le texte, et retrouve la souche par son nom.
 
 ## L'infection par parcelle
 

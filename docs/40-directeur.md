@@ -20,6 +20,8 @@ const M = D.moments(instantane, {
 //      titre: 'Les chasseurs se multiplient', texte: 'Vidun rôdeur de forêt : +38 % sur le cycle, à Forêt — 24 kg.' }, …]
 ```
 
+Un moment de maladie dit aussi sa souche (`souche`, une clé de `monde.pathogenes.souches`, docs/18) : un jeu peut en faire une mission.
+
 ## Les moments
 
 | sorte | quand | sa force |
@@ -29,6 +31,11 @@ const M = D.moments(instantane, {
 | `rarete` | une lignée de moins de 500 bêtes dans le monde | plus elle est rare |
 | `predateurs` | un carnivore qui gagne plus de 5 % sur le cycle | sa croissance, et sa taille |
 | `epidemie` | une population dont 5 % au moins sont malades | la part des malades, et la virulence de la souche |
+| `souche_nouvelle` | une souche naît ce cycle | sa virulence |
+| `saut_hote` | une souche gagne une lignée de plus | sa virulence |
+| `mutation` | un mutant naît (docs/29) | sa virulence ; plus encore s'il est plus virulent que sa mère |
+| `vecteur` | un mutant naît, porté par un insecte : il passera d'une lignée à l'autre sans parenté | fort, et sa virulence |
+| `remission` | une souche s'éteint dans le monde | |
 | `migration` | une population qui part, ou revient, avec la saison (docs/38) | la part qui part |
 | `forme_nouvelle` | un corps segmenté, rayonné ou à tentacules, né il y a moins de 30 cycles (docs/33) | plus il est récent |
 | `explosion`, `effondrement` | ce que le cycle a vu | |
@@ -36,21 +43,23 @@ const M = D.moments(instantane, {
 | `nom` | un nom donné par un joueur ce cycle (la chronique) | |
 | `annonce` | une entrée de la chronique d'importance 3, ce cycle | |
 
+Les cinq moments d'une souche se lisent sur les événements du cycle qui la nomment (`evenements[].souche`, `evenements[].nature`, docs/18) : un instantané d'avant ces champs n'en donne pas. Leur clé dit la souche (`mutation:pheva:cote:souche-10`) : une autre souche, plus tard au même lieu, reste à montrer.
+
 ## Les genres
 
 Les genres de la feuille de route (« Ce que chaque genre en tire »). Chacun donne un poids à chaque sorte de moment, et une dose : combien de moments par session.
 
 | genre | dose | ce qu'il met en avant |
 | --- | --- | --- |
-| `horreur` | 2 | les chasseurs qui se multiplient, les corps nouveaux, les maladies, les lignées qui s'éteignent, les catastrophes |
-| `cozy` | 4 | les noms, les migrations, les savoirs, les lignées neuves, les raretés ; presque jamais un chasseur ni une maladie |
+| `horreur` | 2 | les chasseurs qui se multiplient, les corps nouveaux, les maladies (surtout celles qui mutent, que portent les insectes, qui gagnent une lignée), les lignées qui s'éteignent, les catastrophes |
+| `cozy` | 4 | les noms, les migrations, les savoirs, les lignées neuves, les raretés ; presque jamais un chasseur ni une maladie (une maladie qui s'éteint, parfois) |
 | `collection` | 5 | les lignées neuves, les raretés, les corps nouveaux, les dernières chances de voir une lignée |
 | `voxel` | 3 | les migrations, les explosions et les effondrements, les lignées neuves, les savoirs |
-| `survie` | 3 | les chasseurs, les maladies, les catastrophes, le gibier qui s'effondre ou qui part |
+| `survie` | 3 | les chasseurs, les maladies (leur naissance, leurs mutations, leurs sauts, celles que portent les insectes, leur fin), les catastrophes, le gibier qui s'effondre ou qui part |
 | `strategie` | 4 | les explosions et les effondrements, les lignées menacées, les maladies |
 | `mmo` | 3 | ce que tout le serveur vit : les catastrophes, les épidémies, les migrations, les annonces |
 
-Dans la dose, une lignée ne revient pas deux fois, et une sorte de moment pas plus de deux fois — une session n'est pas une liste de raretés —, sauf s'il n'y a rien d'autre à montrer.
+Dans la dose, une lignée ne revient pas deux fois, une souche non plus (une souche qui gagne trois lignées en un cycle fait un moment), et une sorte de moment pas plus de deux fois — une session n'est pas une liste de raretés —, sauf s'il n'y a rien d'autre à montrer.
 
 ## Dans l'observatoire
 
@@ -62,7 +71,8 @@ La vue d'ensemble a un panneau « Ce que montrerait un jeu », un bouton par gen
 - chaque genre met en avant ce qu'il doit : l'horreur ouvre sur les chasseurs, le cozy montre le nom, la migration et le savoir et aucun chasseur, la collection ouvre sur la lignée neuve ; les sept genres font sept choix différents ;
 - chaque moment est une lignée vivante que le jeu montre, dans un lieu qu'il joue, avec son titre, son texte et son poids ; la dose ; deux moments d'une sorte au plus ; une lignée une fois ; classés ;
 - les moments déjà montrés ne reviennent pas ; un jeu qui ne joue que la prairie n'a que des moments de la prairie ; la même scène, le même choix ; le monde n'est pas touché ;
-- le monde piège (docs/39) ne le fait pas tomber.
+- le monde piège (docs/39) ne le fait pas tomber ;
+- les souches : cinq événements de souche, un par nature, donnent chacun son moment, chez sa lignée, à son lieu, avec sa souche ; la survie et l'horreur les pèsent fort (de 1 à 3,6), le cozy et la collection peu ; la survie en montre trois dans sa dose de trois, l'horreur deux sur deux, le cozy seulement une maladie qui s'éteint ; déjà montrés, ils ne reviennent pas, mais une autre souche au même lieu si ; une souche qui gagne trois lignées en un cycle fait un moment dans la dose ; sans `souche` ni `nature`, aucun moment de souche.
 
 ## Ce qui reste ouvert
 

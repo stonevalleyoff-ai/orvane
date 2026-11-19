@@ -3,10 +3,12 @@
 // d'horreur veut ses prédateurs qui se multiplient et ses mutations, un jeu cozy ses naissances, ses noms et ses migrations, un jeu
 // de collection ses lignées neuves et ses raretés. Le directeur lit l'instantané (son cycle d'avant, `precedent`, et la chronique
 // si on la lui donne), trouve les moments, les pèse selon le genre et les rend classés, chacun avec sa raison.
-//   OrvaneDirecteur.moments(instantane, { genre, biomes, familles, chronique, deja, max }) → [{ cle, type, taxon, biome, poids, titre, texte }]
+//   OrvaneDirecteur.moments(instantane, { genre, biomes, familles, chronique, deja, max }) → [{ cle, type, taxon, biome, souche, poids, titre, texte }]
 //     genre      un des GENRES (« cozy » par défaut) ; biomes : ceux que le jeu joue, par type (« prairie » vaut pour « prairie~1 »)
 //     familles   ce qu'il montre (animale, synthetique, vegetale ; les bêtes par défaut) ; chronique : chronique/index.json
 //     deja       les clés des moments déjà montrés (le jeu les garde) : ils ne reviennent pas ; max : combien en rendre (la dose du genre)
+//   Un moment de maladie dit sa souche (souche : une clé de monde.pathogenes.souches). Ceux d'une souche (souche_nouvelle, saut_hote,
+//   mutation, vecteur, remission) se lisent sur les événements du cycle qui la nomment (evenements[].souche, evenements[].nature, docs/18).
 //   OrvaneDirecteur.GENRES, OrvaneDirecteur.TYPES
 // Une lecture : rien ne change dans le monde. Déterministe. Node (require) ou navigateur (globalThis.OrvaneDirecteur), sans dépendance.
 'use strict';
@@ -18,6 +20,11 @@ const TYPES = {
   rarete: 'une lignée rare, qu\'on voit peu',
   predateurs: 'des chasseurs qui se multiplient',
   epidemie: 'une maladie qui court',
+  souche_nouvelle: 'une maladie qui naît',
+  saut_hote: 'une maladie qui gagne une lignée de plus',
+  mutation: 'une maladie qui mute',
+  vecteur: 'une maladie que porte un insecte, d\'une lignée à l\'autre',
+  remission: 'une maladie qui s\'éteint',
   migration: 'une population qui part ou qui revient avec la saison',
   forme_nouvelle: 'un corps que le monde n\'avait pas encore fait',
   explosion: 'une population qui explose',
@@ -30,15 +37,19 @@ const TYPES = {
 };
 // les genres de la feuille de route : ce que chacun met en avant (poids), et combien de moments par session (dose)
 const GENRES = {
-  horreur:    { nom: 'horreur', dose: 2, poids: { predateurs: 3, forme_nouvelle: 2.8, epidemie: 2.5, extinction_proche: 2, catastrophe: 2, effondrement: 1.6, explosion: 1.4, lignee_neuve: 1.2, rarete: 1, invention: 1.5, annonce: 1, migration: .4, savoir: .4, nom: .2 } },
-  cozy:       { nom: 'cozy', dose: 4, poids: { nom: 3, migration: 2.6, savoir: 2.5, lignee_neuve: 2.2, rarete: 1.6, forme_nouvelle: 1.4, invention: 1.2, explosion: 1, annonce: 1, extinction_proche: .9, effondrement: .4, epidemie: .3, predateurs: .2, catastrophe: .3 } },
-  collection: { nom: 'collection', dose: 5, poids: { lignee_neuve: 3, rarete: 3, forme_nouvelle: 3, extinction_proche: 2.2, invention: 2, nom: 1.5, annonce: 1.2, migration: 1, savoir: 1, explosion: .8, effondrement: .6, epidemie: .5, predateurs: .5, catastrophe: .5 } },
-  voxel:      { nom: 'voxel', dose: 3, poids: { migration: 2, explosion: 2, effondrement: 2, lignee_neuve: 1.8, savoir: 1.6, nom: 1.5, rarete: 1.2, forme_nouvelle: 1.2, catastrophe: 1.2, annonce: 1, extinction_proche: 1, epidemie: 1, predateurs: 1, invention: 1 } },
-  survie:     { nom: 'survie', dose: 3, poids: { predateurs: 3, epidemie: 3, catastrophe: 2.5, effondrement: 2.2, migration: 1.8, explosion: 1.5, extinction_proche: 1.2, forme_nouvelle: 1, annonce: 1, rarete: .8, lignee_neuve: .8, invention: .8, savoir: .6, nom: .3 } },
-  strategie:  { nom: 'stratégie, gestion', dose: 4, poids: { explosion: 2.6, effondrement: 2.6, extinction_proche: 2.2, epidemie: 2, migration: 1.6, predateurs: 1.4, catastrophe: 1.4, lignee_neuve: 1.2, annonce: 1.2, rarete: 1, forme_nouvelle: 1, invention: 1, savoir: .8, nom: .5 } },
-  mmo:        { nom: 'monde partagé', dose: 3, poids: { catastrophe: 3, epidemie: 2.8, migration: 2.5, explosion: 2, effondrement: 2, annonce: 2, extinction_proche: 1.6, lignee_neuve: 1.4, nom: 1.4, forme_nouvelle: 1.2, predateurs: 1.2, rarete: 1, invention: 1, savoir: .8 } }
+  horreur:    { nom: 'horreur', dose: 2, poids: { predateurs: 3, forme_nouvelle: 2.8, epidemie: 2.5, extinction_proche: 2, catastrophe: 2, effondrement: 1.6, explosion: 1.4, lignee_neuve: 1.2, rarete: 1, invention: 1.5, annonce: 1, migration: .4, savoir: .4, nom: .2, souche_nouvelle: 2.4, saut_hote: 2.6, mutation: 2.8, vecteur: 3, remission: 1.5 } },
+  cozy:       { nom: 'cozy', dose: 4, poids: { nom: 3, migration: 2.6, savoir: 2.5, lignee_neuve: 2.2, rarete: 1.6, forme_nouvelle: 1.4, invention: 1.2, explosion: 1, annonce: 1, extinction_proche: .9, effondrement: .4, epidemie: .3, predateurs: .2, catastrophe: .3, souche_nouvelle: .3, saut_hote: .2, mutation: .2, vecteur: .2, remission: 1 } },
+  collection: { nom: 'collection', dose: 5, poids: { lignee_neuve: 3, rarete: 3, forme_nouvelle: 3, extinction_proche: 2.2, invention: 2, nom: 1.5, annonce: 1.2, migration: 1, savoir: 1, explosion: .8, effondrement: .6, epidemie: .5, predateurs: .5, catastrophe: .5, souche_nouvelle: 1, saut_hote: .5, mutation: 1.2, vecteur: .8, remission: .5 } },
+  voxel:      { nom: 'voxel', dose: 3, poids: { migration: 2, explosion: 2, effondrement: 2, lignee_neuve: 1.8, savoir: 1.6, nom: 1.5, rarete: 1.2, forme_nouvelle: 1.2, catastrophe: 1.2, annonce: 1, extinction_proche: 1, epidemie: 1, predateurs: 1, invention: 1, souche_nouvelle: 1, saut_hote: 1, mutation: 1, vecteur: 1, remission: .8 } },
+  survie:     { nom: 'survie', dose: 3, poids: { predateurs: 3, epidemie: 3, catastrophe: 2.5, effondrement: 2.2, migration: 1.8, explosion: 1.5, extinction_proche: 1.2, forme_nouvelle: 1, annonce: 1, rarete: .8, lignee_neuve: .8, invention: .8, savoir: .6, nom: .3, souche_nouvelle: 2.6, saut_hote: 2.8, mutation: 2.6, vecteur: 3, remission: 2.2 } },
+  strategie:  { nom: 'stratégie, gestion', dose: 4, poids: { explosion: 2.6, effondrement: 2.6, extinction_proche: 2.2, epidemie: 2, migration: 1.6, predateurs: 1.4, catastrophe: 1.4, lignee_neuve: 1.2, annonce: 1.2, rarete: 1, forme_nouvelle: 1, invention: 1, savoir: .8, nom: .5, souche_nouvelle: 1.8, saut_hote: 2, mutation: 1.6, vecteur: 2, remission: 1.6 } },
+  mmo:        { nom: 'monde partagé', dose: 3, poids: { catastrophe: 3, epidemie: 2.8, migration: 2.5, explosion: 2, effondrement: 2, annonce: 2, extinction_proche: 1.6, lignee_neuve: 1.4, nom: 1.4, forme_nouvelle: 1.2, predateurs: 1.2, rarete: 1, invention: 1, savoir: .8, souche_nouvelle: 2.2, saut_hote: 2.4, mutation: 1.8, vecteur: 2.6, remission: 2 } }
 };
 const FORMES_NOUVELLES = new Set(['segmente', 'radiaire', 'tentaculaire']);
+// ce qui arrive à une souche (evenements[].nature, docs/18) → la sorte de moment. Un moment de souche a sa clé à elle : une autre
+// souche, plus tard au même lieu, reste à montrer
+const DE_SOUCHE = { naissance: 'souche_nouvelle', saut_hote: 'saut_hote', mutation: 'mutation', vecteur: 'vecteur', extinction: 'remission' };
+const SORTES_SOUCHE = new Set(Object.values(DE_SOUCHE));
 const typeDe = id => String(id ?? '').split('~')[0];
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const nb = v => Math.round(v).toLocaleString('fr-FR'), pc = v => `${v > 0 ? '+' : '−'}${Math.round(Math.abs(v) * 100)} %`;
@@ -52,8 +63,9 @@ function moments(inst, opt = {}) {
   const montre = t => t && !t.eteint && familles.has(familleDe(t));
   const total = t => (t.populations || []).reduce((a, p) => a + (p.effectif || 0), 0);
   const avant = new Map((inst?.precedent?.taxons || []).map(t => [t.id, (t.populations || []).reduce((a, p) => a + (p.effectif || 0), 0)]));
-  const M = [], ajouter = (type, taxon, biome, force, titre, texte) => { const cle = `${type}:${taxon || ''}:${biome || ''}`;
-    if (deja.has(cle) || !(force > 0) || !G.poids[type]) return; M.push({ cle, type, taxon: taxon || null, biome: biome || null, poids: +(G.poids[type] * clamp(force, 0, 1.5)).toFixed(3), titre, texte }); };
+  const M = [], ajouter = (type, taxon, biome, force, titre, texte, souche) => { const cle = `${type}:${taxon || ''}:${biome || ''}${souche && SORTES_SOUCHE.has(type) ? ':' + souche : ''}`;
+    if (deja.has(cle) || !(force > 0) || !G.poids[type]) return; M.push({ cle, type, taxon: taxon || null, biome: biome || null, ...(souche ? { souche } : {}), poids: +(G.poids[type] * clamp(force, 0, 1.5)).toFixed(3), titre, texte }); };
+  const SO = inst?.monde?.pathogenes?.souches || {}, pv = v => Math.round((v || 0) * 100);
   // où une lignée se montre : son lieu le plus peuplé parmi ceux que le jeu joue
   const lieuDe = t => (t.populations || []).filter(p => p.effectif >= 1 && joue(p.biome)).sort((a, b) => b.effectif - a.effectif)[0];
   for (const t of inst?.taxons || []) {
@@ -73,7 +85,7 @@ function moments(inst, opt = {}) {
     // une maladie : la plus forte part de malades de ses populations jouées
     for (const q of t.populations || []) { if (!joue(q.biome) || !(q.effectif >= 1)) continue;
       const I = Object.entries(q.infection || {}).sort((a, b) => (b[1].i || 0) - (a[1].i || 0))[0], souche = I && inst.monde?.pathogenes?.souches?.[I[0]];
-      if (I && I[1].i >= .05) ajouter('epidemie', t.id, q.biome, clamp(I[1].i * 3) * (.5 + (souche?.virulence ?? .2)), 'Une maladie court', `${souche?.nom || 'Une maladie'} touche ${Math.round(I[1].i * 100)} % de ${nom(t)}, à ${ici(q.biome)}${souche ? ` (virulence ${Math.round(souche.virulence * 100)} % par cycle)` : ''}.`);
+      if (I && I[1].i >= .05) ajouter('epidemie', t.id, q.biome, clamp(I[1].i * 3) * (.5 + (souche?.virulence ?? .2)), 'Une maladie court', `${souche?.nom || 'Une maladie'} touche ${Math.round(I[1].i * 100)} % de ${nom(t)}, à ${ici(q.biome)}${souche ? ` (virulence ${Math.round(souche.virulence * 100)} % par cycle)` : ''}.`, I[0]);
       else if (q.maladie) ajouter('epidemie', t.id, q.biome, .3 + q.maladie.virulence, 'Une maladie court', `${nom(t)} est malade à ${ici(q.biome)} (encore ${q.maladie.reste} cycles).`);
       // une migration qui part ou qui revient
       const m = q.migration; if (m && (m.etat === 'au depart' || m.etat === 'au retour')) ajouter('migration', t.id, q.biome, .4 + clamp(m.part || 0), m.etat === 'au depart' ? 'Une migration part' : 'Une migration revient',
@@ -86,6 +98,16 @@ function moments(inst, opt = {}) {
   for (const e of inst?.evenements || []) { const t = T.get(e.taxon), b = e.biome || (t && lieuDe(t)?.biome);
     if (e.type === 'catastrophe') { if (!e.biome || joue(e.biome)) ajouter('catastrophe', e.taxon, e.biome, .9, 'Une catastrophe', e.detail || 'une catastrophe'); continue; }
     if (!montre(t) || !b || !joue(b)) continue;
+    // les souches (docs/18) : une souche nouvelle, une lignée qu'elle gagne, une mutante, une portée par un insecte, une qui s'éteint
+    // (là où elle s'éteint, l'événement ne dit pas de lieu : celui de sa lignée d'origine). Seuls les événements qui la nomment comptent
+    const sorte = typeof e.souche === 'string' && DE_SOUCHE[e.nature];
+    if (sorte) { const s = SO[e.souche], v = s?.virulence ?? .2, nomS = s?.nom || 'Une maladie', mere = s?.parent ? SO[s.parent] : null, nee = s?.origine && s.origine !== t.id ? T.get(s.origine) : null;
+      if (sorte === 'souche_nouvelle') ajouter(sorte, t.id, b, .6 + clamp(v * 1.5, 0, .6), 'Une maladie naît', `${nomS}, une souche nouvelle, apparaît chez ${nom(t)}, à ${ici(b)}${s ? ` : virulence ${pv(v)} % par cycle` : ''}.`, e.souche);
+      else if (sorte === 'saut_hote') ajouter(sorte, t.id, b, .7 + clamp(v * 1.5, 0, .6), 'Une maladie gagne une lignée', `${nomS} passe à ${nom(t)}, à ${ici(b)}${nee ? ` : née chez ${nom(nee)}, elle touche désormais ${(s.hotes || []).length} lignées` : ''}.`, e.souche);
+      else if (sorte === 'mutation') ajouter(sorte, t.id, b, .6 + clamp(v * 1.5, 0, .6) + (mere && v > mere.virulence ? .2 : 0), 'Une maladie mute', `${nomS} naît chez ${nom(t)}, à ${ici(b)}${mere ? `, d'une mutation de ${mere.nom}` : ''}${s ? ` : virulence ${pv(v)} % par cycle${mere ? ` (sa mère : ${pv(mere.virulence)} %)` : ''}` : ''}.`, e.souche);
+      else if (sorte === 'vecteur') ajouter(sorte, t.id, b, 1 + clamp(v, 0, .5), 'Une maladie que portent les insectes', `${nomS}, née chez ${nom(t)} à ${ici(b)}, est portée par ${s?.vecteur ? nom(T.get(s.vecteur) || { id: s.vecteur }) : 'un insecte'} : elle passera d'une lignée à l'autre, sans parenté.`, e.souche);
+      else ajouter(sorte, t.id, b, .7, 'Une maladie s\'éteint', `${String(e.detail || 'une maladie s\'éteint').split(' · ')[0].replace(/^./, c => c.toUpperCase())}.`, e.souche);
+      continue; }
     if (e.type === 'explosion') ajouter('explosion', t.id, b, .7, 'Une population explose', `${nom(t)}, à ${ici(b)} : ${String(e.detail || '').split(' · ')[0]}.`);
     else if (e.type === 'effondrement') ajouter('effondrement', t.id, b, .8, 'Une population s\'effondre', `${nom(t)}, à ${ici(b)} : ${String(e.detail || '').split(' · ')[0]}.`);
     else if (e.type === 'savoir') ajouter('savoir', t.id, b, .7, 'Un savoir', `${String(e.detail || '').split(' · ')[0]}.`);
@@ -94,11 +116,13 @@ function moments(inst, opt = {}) {
   for (const e of opt.chronique?.derniers || []) { if (e.n !== n) continue; const t = T.get(e.taxon); if (e.taxon && !montre(t)) continue; if (e.biome && !joue(e.biome)) continue;
     if (e.type === 'nom') ajouter('nom', e.taxon, e.biome || (t && lieuDe(t)?.biome), 1, 'Un nom donné', e.texte || `${nom(t)} a un nom.`);
     else if (e.importance >= 3) ajouter('annonce', e.taxon, e.biome, 1, e.titre || 'À annoncer', e.texte || ''); }
-  // le classement : les plus forts d'abord ; dans la dose, une lignée ne revient pas deux fois, et pas plus de deux moments d'une
-  // même sorte (une session n'est pas une liste de raretés) — sauf s'il n'y a rien d'autre à montrer
+  // le classement : les plus forts d'abord ; dans la dose, une lignée ne revient pas deux fois, une souche non plus (une souche qui
+  // gagne trois lignées en un cycle : un moment), et pas plus de deux moments d'une même sorte (une session n'est pas une liste de
+  // raretés) — sauf s'il n'y a rien d'autre à montrer
   M.sort((a, b) => b.poids - a.poids || (a.cle < b.cle ? -1 : 1));
-  const max = opt.max ?? G.dose, R = [], vus = new Set(), parType = {};
-  for (const m of M) { if (R.length >= max) break; if ((m.taxon && vus.has(m.taxon)) || (parType[m.type] || 0) >= 2) continue; R.push(m); if (m.taxon) vus.add(m.taxon); parType[m.type] = (parType[m.type] || 0) + 1; }
+  const max = opt.max ?? G.dose, R = [], vus = new Set(), vuesS = new Set(), parType = {};
+  for (const m of M) { if (R.length >= max) break; if ((m.taxon && vus.has(m.taxon)) || (m.souche && vuesS.has(m.souche)) || (parType[m.type] || 0) >= 2) continue;
+    R.push(m); if (m.taxon) vus.add(m.taxon); if (m.souche) vuesS.add(m.souche); parType[m.type] = (parType[m.type] || 0) + 1; }
   for (const m of M) { if (R.length >= max) break; if (!R.includes(m) && !(m.taxon && vus.has(m.taxon))) { R.push(m); if (m.taxon) vus.add(m.taxon); } }
   for (const m of M) { if (R.length >= max) break; if (!R.includes(m)) R.push(m); }
   return R.sort((a, b) => b.poids - a.poids || (a.cle < b.cle ? -1 : 1));
