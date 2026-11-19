@@ -670,6 +670,9 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   // 3. la chaîne alimentaire, biome par biome : chaque prédateur prélève des proies selon ce qui est à sa portée ;
   //    sa satiété décide de ses naissances et de sa faim ; la vulnérabilité de chaque phénotype de proie décide qui est mangé.
   //    L'appétence se calcule entre taxons (plan de base) ; les phénotypes se partagent ensuite au prorata de ce qu'ils pèsent.
+  // (vitesse) l'appétence d'un chasseur pour une proie ne dépend que de leurs deux plans : une fois par cycle, non une fois par lieu
+  const APc = new WeakMap(), APP = (pp, qp) => { let m = APc.get(pp); if (!m) APc.set(pp, m = new Map()); let f = m.get(qp);
+    if (f === undefined) { f = DT ? DI.appetence(pp, qp, appetence(pp, qp)) : appetence(pp, qp); m.set(qp, f); } return f; };
   for (const bid of Object.keys(biomes)) {
     const T = [];   // un taxon présent : ses phénotypes, leur poids de proie (N × masse × vulnérabilité), son appétit
     for (const t of taxons) { if (t.eteint || t.plan.regime === 'synthetique') continue; const E = etat.get(t.id), pop = E.pops[bid]; if (!pop) continue;   // (une machine ne se mange pas)
@@ -679,7 +682,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
     const preds = T.filter(q => q.regime === 'carnivore' || q.regime === 'omnivore');
     for (const p of preds) {
       let A = 0; const x = new Array(T.length).fill(0);   // (docs/30 : un spectre choisit entre insectes, viande et sang)
-      T.forEach((q, k) => { if (q === p) return; let f = DT ? DI.appetence(p.t.plan, q.t.plan, appetence(p.t.plan, q.t.plan)) : appetence(p.t.plan, q.t.plan);
+      T.forEach((q, k) => { if (q === p) return; let f = APP(p.t.plan, q.t.plan);
         // (docs/53 : dans un monde réel, un buveur de sang de naissance — la tique, le moustique — boit aux bêtes vingt fois plus grandes que lui ;
         //  le moteur ne le laissait qu'à une lignée venue au sang par l'évolution, et la tique n'avait aucun hôte)
         if (REGLES.petites_proies && DT && !f && (p.t.plan.diete?.sang || 0) > 0 && (q.t.plan.masse_kg || 1) >= DI.REGLES.sang.rapport * (p.t.plan.masse_kg || 1) && q.t.plan.regime !== 'vegetal') f = DI.REGLES.sang.appetence * p.t.plan.diete.sang / Math.max(.05, DI.chair(p.t.plan.diete));
@@ -699,9 +702,14 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
     //  celle des brouteurs, d'un écart-type de concurrence_masse décades. Sans cela, une araignée pesait d'autant moins devant les mésanges
     //  que ses besoins étaient petits, et n'avait jamais sa part)
     // (docs/30 : boire le sang d'une bête ne dispute pas sa chair aux chasseurs)
+    // (les proies de chacun, et si sa prise les tue, une fois par lieu : la même somme, dans le même ordre, sans tout reparcourir)
+    // (et un masque de bits de ce que chacun mange : deux chasseurs sans une proie commune ne parcourent rien — leur part commune est 0)
+    const NW = (T.length + 31) >> 5;
+    for (const p of preds) { p.pk = []; p.mor = DT ? new Array(T.length) : null; p.bits = new Uint32Array(NW); for (let k = 0; k < T.length; k++) { if (p.part[k]) p.pk.push(k); if (p.x[k]) { p.bits[k >> 5] |= 1 << (k & 31); if (DT) p.mor[k] = DI.mortel(p.t.plan, T[k].t.plan); } } }
+    const touche = (a, b) => { for (let w = 0; w < NW; w++) if (a[w] & b[w]) return true; return false; };
     for (const p of preds) {
       let C = 0;
-      if (p.A > 0) for (const q of preds) { if (q === p || q.A <= 0) continue; let commun = 0; p.part.forEach((v, k) => { if (v && q.x[k] && (!DT || DI.mortel(p.t.plan, T[k].t.plan) === DI.mortel(q.t.plan, T[k].t.plan))) commun += v; }); C += q.Nt * (p.besoinMoy > 0 ? q.besoinMoy / p.besoinMoy : 0) * q.effMoy * commun * (CMP ? CMP(p.t.plan.masse_kg, q.t.plan.masse_kg) : 1) * (DOM ? DOM(p.t.plan, q.t.plan) : 1); }
+      if (p.A > 0) for (const q of preds) { if (q === p || q.A <= 0) continue; let commun = 0; if (touche(p.bits, q.bits)) for (const k of p.pk) { if (q.x[k] && (!DT || p.mor[k] === q.mor[k])) commun += p.part[k]; } C += q.Nt * (p.besoinMoy > 0 ? q.besoinMoy / p.besoinMoy : 0) * q.effMoy * commun * (CMP ? CMP(p.t.plan.masse_kg, q.t.plan.masse_kg) : 1) * (DOM ? DOM(p.t.plan, q.t.plan) : 1); }
       let R = 0, sN = 0;   // (une bête qui ne chasse pas, ou ne mange pas de viande : rien, jamais 0/0)
       p.pop.N.forEach((N, i) => { if (N <= 0) return; const den = p.Nt * p.effMoy + C, a = den > 0 ? p.A * p.eff[i] / den : 0, s = a > 0 ? a / (a + REGLES.demi_satiete * p.besoin[i]) : 0; const r = N * p.besoin[i] * s * PAS; R += r; sN += s * N; p.pop.ration[i] = r; });
       p.pop.satiete = sN / p.Nt;

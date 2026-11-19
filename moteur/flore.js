@@ -10,7 +10,7 @@
 'use strict';
 (function (racine) {
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
-const somme = a => a.reduce((s, x) => s + x, 0);
+const somme = a => { let s = 0; for (let i = 0; i < a.length; i++) s += a[i]; return s; };   // (une boucle : le même ordre que reduce, au bit près, sans fermeture)
 const typeDe = b => b.type || b.id;
 const estPlante = t => t?.plan?.regime === 'vegetal';
 // (docs/48) le port d'une plante : ce qu'elle est pour la mécanique (herbe, buisson, arbre, roseau, algue, lichen, succulente,
@@ -239,21 +239,32 @@ function preparer(ctx) {
     cache.set(k, r); return r; };
   // la concurrence par ce qu'on mange en commun : par lieu, chaque bête qui pèse sur la place, son régime de plantes (ce qu'elle
   // atteint et supporte de chacune) ; deux brouteurs qui ne mangent pas les mêmes plantes se gênent peu
+  // (vitesse) ce qu'un brouteur supporte, et son goût de chaque phénotype et de chaque part, ne dépendent que de lui ; ce qu'il atteint, que
+  // de lui et de la plante : calculés une fois par cycle, non une fois par plante et par lieu. Les mêmes produits, dans le même ordre
+  const BR = new WeakMap(), SANS = [];
+  const devantB = (h, traits) => { let m = BR.get(h); if (!m) BR.set(h, m = new Map()); const tk = traits || SANS; let c = m.get(tk);
+    if (!c) { const R = resistances(h, traits); c = { R, A: new Map(), g: [0, 1, 2, 3].map(k => gout(R, k)), gp: [0, 1, 2, 3].map(k => DIE ? DIE.VEG.map(part => goutPart(R, k, part)) : null) }; m.set(tk, c); } return c; };
+  const vecteur = (h, traits, D, pl) => { const c = devantB(h, traits), o = [];
+    for (const { t: q, p } of pl) { let A = c.A.get(q.plan); if (A === undefined) { A = atteinte(h, traits, q.plan); c.A.set(q.plan, A); }
+      if (D) { const Y = rendDe(q.plan); for (let k = 0; k < 4; k++) { const gp = c.gp[k]; for (let j = 0; j < DIE.VEG.length; j++) { const part = DIE.VEG[j]; o.push(p.effectif * q.plan.masse_kg * (p.frequences[k] || 0) * A * (D[part] || 0) * (Y[part] || 0) * gp[j]); } } }   // (docs/30 : part par part)
+      else for (let k = 0; k < 4; k++) o.push(p.effectif * q.plan.masse_kg * (p.frequences[k] || 0) * A * c.g[k]); }
+    return o; };
+  const norme = u => { let s = 0; for (let i = 0; i < u.length; i++) s += u[i] * u[i]; return Math.sqrt(s); };
   const conc = new Map(), mangeurs = {}, araccorder = new Set();   // (docs/30) les lieux où une population attend son raccord : l'ancienne mesure y est prise pour tous
   if (ctx.dietes) for (const t of taxons) { const E = etat.get(t.id); if (E) for (const [bid, P] of Object.entries(E.pops)) if (P.recAvant > 0) araccorder.add(bid); }
   for (const t of taxons) { if (t.eteint) continue; const E = etat.get(t.id); if (!E) continue; const w = ctx.PART_K[t.plan.regime] ?? 1; if (!(w > 0)) continue;
     for (const [bid, P] of Object.entries(E.pops)) { const Bio = somme(P.N.map((x, i) => x * (E.plans[i].masse_kg || 1))) * w; if (!(Bio > 0)) continue;
-      const pl = L[bid], D = ctx.dietes && DIE && E.plans[0]?.diete, u = broute(t) && pl ? pl.flatMap(({ t: q, p }) => { const A = atteinte(E.plans[0], t.phenotypes[0]?.traits, q.plan), R = resistances(E.plans[0], t.phenotypes[0]?.traits);
-        if (D) { const Y = rendDe(q.plan); return [0, 1, 2, 3].flatMap(k => DIE.VEG.map(part => p.effectif * q.plan.masse_kg * (p.frequences[k] || 0) * A * (D[part] || 0) * (Y[part] || 0) * goutPart(R, k, part))); }   // (docs/30 : part par part)
-        return [0, 1, 2, 3].map(k => p.effectif * q.plan.masse_kg * (p.frequences[k] || 0) * A * gout(R, k)); }) : null;
+      const pl = L[bid], D = ctx.dietes && DIE && E.plans[0]?.diete, u = broute(t) && pl ? vecteur(E.plans[0], t.phenotypes[0]?.traits, D, pl) : null;
       // (docs/30) l'ancienne mesure aussi, le temps de raccorder la référence de chaque population à l'éveil des régimes
       const uo = D && broute(t) && pl && araccorder.has(bid) ? pl.flatMap(({ t: q, p }) => { const A = atteinte(E.plans[0], t.phenotypes[0]?.traits, q.plan), R = resistances(E.plans[0], t.phenotypes[0]?.traits); return [0, 1, 2, 3].map(k => p.effectif * q.plan.masse_kg * (p.frequences[k] || 0) * A * gout(R, k)); }) : null;
-      (mangeurs[bid] ??= []).push({ t, P, Bio, m: t.plan.masse_kg || 1, u, n2: u ? Math.sqrt(somme(u.map(x => x * x))) : 0, uo, n2o: uo ? Math.sqrt(somme(uo.map(x => x * x))) : 0 }); } }
+      (mangeurs[bid] ??= []).push({ t, P, Bio, m: t.plan.masse_kg || 1, u, n2: u ? norme(u) : 0, uo, n2o: uo ? Math.sqrt(somme(uo.map(x => x * x))) : 0 }); } }
+  const DOT = new WeakMap(), dot = (u, v) => { let m = DOT.get(u); if (!m) DOT.set(u, m = new Map()); let r = m.get(v); if (r !== undefined) return r;
+    r = 0; for (let i = 0; i < u.length; i++) r += u[i] * v[i]; m.set(v, r); let n = DOT.get(v); if (!n) DOT.set(v, n = new Map()); n.set(u, r); return r; };   // (un produit par paire et par cycle : x·y = y·x au bit près)
   const recouvrementDe = (t, bid, ancien) => { const k = t.id + '|' + bid + (ancien ? '|a' : ''); if (conc.has(k)) return conc.get(k);
     const M = mangeurs[bid] || [], h = M.find(x => x.t === t), U = x => ancien && x.uo ? x.uo : x.u, Z = x => ancien && x.uo ? x.n2o : x.n2; let r = null;
     if (h && U(h) && Z(h) > 0) { let num = 0, den = 0;
       for (const j of M) { const w = j.Bio * ctx.recouvrement(h.m, j.m); if (!(w > 0)) continue;
-        const O = j === h ? 1 : U(j) && Z(j) > 0 && U(j).length === U(h).length ? somme(U(h).map((x, i) => x * U(j)[i])) / (Z(h) * Z(j)) : 1; num += w * O; den += w; }
+        const O = j === h ? 1 : U(j) && Z(j) > 0 && U(j).length === U(h).length ? dot(U(h), U(j)) / (Z(h) * Z(j)) : 1; num += w * O; den += w; }
       r = den > 0 ? num / den : null; }
     conc.set(k, r); return r; };
   const F = {
