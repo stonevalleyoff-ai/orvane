@@ -1,16 +1,19 @@
 // Orvane — LE BANC DES PLANCHES STRUCTURÉES (bancs/planches.js, docs/21)
 // Les parties du corps publiées à côté du SVG de chaque bête (monde/silhouette.js, monde/planches.js) :
-//  1. elles ne changent rien au dessin : le SVG, les yeux, sol sont ceux de main, au caractère près (quand main se lit ici) ;
+//  1. elles s'ajoutent à la planche, après ce qu'elle avait déjà ; avec --contre <version git>, la preuve qu'un changement ne touche
+//     pas le dessin : sans leurs parties, les planches sont celles de cette version, au caractère près (le SVG, les yeux, sol, la
+//     variante, l'ordre des lignées). Ce n'est pas un invariant : un changement qui retouche le dessin exprès la ferait échouer ;
 //  2. elles disent ce que dessine le SVG, sur chaque lignée de trois mondes réels : chaque patte est la chaîne de ses <line> (ses
 //     points, ses épaisseurs, au dixième près), posée au sol, puis son pied ; chaque partie montre ses éléments ; aucun nombre
-//     manquant ; autant de pattes que le plan quand la forme en a ;
+//     manquant ; autant de pattes que la règle du dessin (le plan, borné par la forme) ;
 //  3. la lecture de Lisière (jeux/lisiere/scripts/squelette.gd, refaite ici en JavaScript) trouve dans le SVG les mêmes pattes, les
 //     mêmes pieds, le même corps : un jeu qui lit les parties ne devine plus rien, et voit la même bête ;
 //  4. chaque forme a les siennes (quadrupède, bipède, oiseau, insecte, serpent, poisson, pieuvre, méduse, étoile, mille-pattes,
 //     machine), même celles qu'aucun de ces mondes n'a encore ;
 //  5. le même résultat à chaque fois, dans Node et dans un navigateur ; ce qu'elles pèsent.
 // Ce que seul Godot vérifie (Lisière lit les deux, et voit la même bête) : jeux/lisiere/outils/squelettes.gd
-//   node bancs/planches.js [--contre <version git>]       (main par défaut, s'il se lit)
+//   node bancs/planches.js
+//   node bancs/planches.js --contre origin/main           (pour prouver qu'un changement ne touche pas le dessin)
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm'), zlib = require('zlib'), { execFileSync } = require('child_process');
 const racine = p => path.join(__dirname, '..', p);
@@ -101,11 +104,22 @@ function controler(s, plan, cat = null) {
   if (JSON.stringify(P.yeux) !== JSON.stringify(s.yeux)) E.push('les yeux ne sont pas ceux de la planche');
   if (P.tete && !s.yeux.every(([x, y]) => els.slice(P.tete.svg[0], P.tete.svg[1] + 1).some(e => e.nom === 'ellipse' && dist(pt(+e.attr.cx, +e.attr.cy), [x, y]) <= .3))) E.push('un œil hors de la tête');
   if (!!P.contact !== !!s.sol || (P.contact && (P.contact[0] !== 85 || P.contact[1] !== 86))) E.push('le contact au sol');
-  // autant de pattes que le plan, quand la forme en a (un bipède à la queue tendue est dessiné sans les siennes : à part)
-  if (plan && P.dessin !== 'bipede-tendu') { const avant = Co.etendre(cat), c = Co.normaliser(plan.corps); Co.etendre(avant); const voulues = { serpent: 0, poisson: 0, pieuvre: 0, meduse: 0, etoile: 0, machine: 4 }[P.dessin] ?? c.pattes;
-    if (P.pattes.length !== voulues) E.push(`${P.pattes.length} pattes pour ${voulues}`);
-    if (['pieuvre', 'meduse', 'etoile'].includes(P.dessin) && (P.bras || []).length !== c.pattes) E.push(`${(P.bras || []).length} bras pour ${c.pattes}`); }
+  // autant de pattes que la règle du dessin (un bipède à la queue tendue est dessiné sans les siennes : à part)
+  if (plan && P.dessin !== 'bipede-tendu') { const r = regle(P.dessin, plan, cat);
+    if (P.pattes.length !== r.pattes) E.push(`${P.pattes.length} pattes pour ${r.pattes}`);
+    if (r.bras != null && (P.bras || []).length !== r.bras) E.push(`${(P.bras || []).length} bras pour ${r.bras}`); }
   return E;
+}
+// combien le dessin fait de pattes et de bras (monde/silhouette.js) : le plan (moteur/corps.js, normaliser), borné par la forme ;
+// et combien le plan en compte (plan : des pattes, ou les bras d'une pieuvre, d'une méduse, d'une étoile)
+const borne = (v, a, b) => Math.max(a, Math.min(b, v));
+function regle(dessin, plan, cat) {
+  const avant = Co.etendre(cat), c = Co.normaliser(plan.corps); Co.etendre(avant); const p = c.pattes;
+  const R = { quadrupede: { pattes: 4 }, bipede: { pattes: 2, bras: 2 }, oiseau: { pattes: 2 }, insecte: { pattes: 2 * borne(Math.round((p || 6) / 2), 2, 5) },
+    'mille-pattes': { pattes: 2 * borne(Math.round((p || 24) / 2), 6, 16) }, serpent: { pattes: 0 }, poisson: { pattes: 0 }, pieuvre: { pattes: 0, bras: borne(p || 8, 4, 10) },
+    meduse: { pattes: 0, bras: borne(p || 5, 4, 8) }, etoile: { pattes: 0, bras: borne(p || 5, 4, 8) }, machine: { pattes: 4 } }[dessin] || { pattes: p };
+  const rayonne = ['pieuvre', 'meduse', 'etoile'].includes(dessin);
+  return { ...R, plan: dessin === 'machine' ? 4 : p, dessinees: rayonne ? R.bras : R.pattes };
 }
 const memes = (A, B) => JSON.stringify(A.map(c => [c.lignes, c.pied, c.loin])) === JSON.stringify(B.map(c => [c.lignes, c.pied, c.loin]));
 
@@ -115,21 +129,21 @@ const mondes = MONDES.map(id => { const I = lireJ(`mondes/${id}/instantane.json`
 const tous = mondes.flatMap(W => Object.entries(W.Q).flatMap(([c, P]) => { const M = W.D['biomes/' + c.slice(12)];
   return Object.entries(P.silhouettes).map(([id, s]) => ({ monde: W.id, biome: P.biome, id, s, plan: M.taxons.find(t => t.id === id)?.plan, cat: W.cat })); }));
 
-console.log('1. Le dessin ne bouge pas');
-{ const git = (...x) => { try { return execFileSync('git', x, { cwd: racine('.'), encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 1 << 26 }); } catch (e) { return null; } };
-  const ref = arg('--contre', null) || ['main', 'origin/main'].find(r => git('rev-parse', '--verify', '--quiet', r + '^{commit}'));
-  const code = ref && ['moteur/corps.js', 'monde/silhouette.js', 'monde/planches.js'].map(f => git('show', `${ref}:${f}`));
-  if (!code || code.some(x => x == null)) console.log(`  (pas de version de référence à lire ici${ref ? ' : ' + ref : ''} ; la comparaison au caractère près se fait là où main se lit)`);
-  else { const ctx = vm.createContext({}); for (const c of code) vm.runInContext(c, ctx);
-    let n = 0, diff = 0, ex = '';
-    for (const W of mondes) { const Q0 = ctx.OrvanePlanches.planches(W.D);
-      for (const [c, P] of Object.entries(W.Q)) { const P0 = Q0[c], s0 = JSON.parse(JSON.stringify(P));
-        for (const s of Object.values(s0.silhouettes)) delete s.parties;
-        if (JSON.stringify(s0) !== JSON.stringify(P0)) { diff++; ex ||= `${W.id}/${c}`; }
-        n += Object.keys(P.silhouettes).length; } }
-    verif(!diff, `les planches de ${MONDES.length} mondes (${fx(n)} dessins), sans leurs parties, sont celles de ${ref} au caractère près : le même SVG, les mêmes yeux, le même sol` + (diff ? ` ; ${diff} diffèrent (${ex})` : '')); }
-  verif(tous.every(x => x.s.parties) && tous.every(x => Object.keys(x.s).join() === ['svg', 'yeux', 'sol', ...(x.s.phenotype ? ['phenotype'] : []), 'parties'].join()),
+console.log('1. Les parties s\'ajoutent à la planche');
+{ verif(tous.every(x => x.s.parties) && tous.every(x => Object.keys(x.s).join() === ['svg', 'yeux', 'sol', ...(x.s.phenotype ? ['phenotype'] : []), 'parties'].join()),
     'chaque dessin a ses parties, après ce qu\'il avait déjà (svg, yeux, sol, phenotype) : un jeu qui ne les lit pas ne voit rien changer');
+  // (--contre : le dessin de cette version et celui d'ici, sans les parties ni d'un côté ni de l'autre)
+  const ref = arg('--contre', null);
+  if (ref) { const lire = f => { try { return execFileSync('git', ['show', `${ref}:${f}`], { cwd: racine('.'), encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 1 << 26 }); } catch (e) { return null; } };
+    const code = ['moteur/corps.js', 'monde/silhouette.js', 'monde/planches.js'].map(lire);
+    if (code.some(x => x == null)) verif(false, `la version ${ref} ne se lit pas ici (son monde/silhouette.js, son monde/planches.js) : rien à comparer`);
+    else { const ctx = vm.createContext({}); for (const c of code) vm.runInContext(c, ctx);
+      const dessins = Q => Object.keys(Q).map(c => [c, Object.entries(Q[c].silhouettes).map(([id, x]) => [id, x.svg, x.yeux, x.sol, x.phenotype ?? null])]);
+      let n = 0, diff = 0, ex = '';
+      for (const W of mondes) { const A = dessins(ctx.OrvanePlanches.planches(W.D)), B = dessins(W.Q);
+        if (JSON.stringify(A.map(x => x[0])) !== JSON.stringify(B.map(x => x[0]))) { diff++; ex ||= `${W.id} : pas les mêmes planches`; }
+        for (const [c, L] of B) { const L0 = A.find(x => x[0] === c)?.[1]; n += L.length; if (JSON.stringify(L) !== JSON.stringify(L0)) { diff++; ex ||= `${W.id}/${c}`; } } }
+      verif(!diff, `contre ${ref} : les planches de ${MONDES.length} mondes (${fx(n)} dessins) ont le même SVG, les mêmes yeux, le même sol, la même variante, dans le même ordre, au caractère près` + (diff ? ` ; ${diff} diffèrent (${ex})` : '')); } }
 }
 
 console.log('2. Les parties disent ce que dessine le SVG');
@@ -140,7 +154,9 @@ console.log('2. Les parties disent ce que dessine le SVG');
     + (fautes.length ? ` ; ${fautes.length} fautes : ` + fautes.slice(0, 4).map(([x, E]) => `${x.monde}/${x.biome}/${x.id} (${E.slice(0, 2).join(', ')})`).join(' ; ') : ''));
   const sansJambes = tous.filter(x => x.s.parties.dessin === 'bipede-tendu'), ditMal = sansJambes.filter(x => x.s.parties.pattes.length || x.s.parties.bras?.length !== 2);
   if (ditMal.length) verif(false, `les bipèdes à la queue tendue : ${ditMal.map(x => x.id).join(', ')} n'ont pas leurs deux bras, ou ont des pattes`);
-  if (sansJambes.length) console.log(`  ⚠ ${sansJambes.length} dessins de bipèdes à la queue tendue (${[...new Set(sansJambes.map(x => x.id))].join(', ')}) n'ont pas de pattes au sol : le dessin ne fait que leurs bras (monde/silhouette.js, quadrupede). Leurs parties le disent (pattes : [], bras : 2) ; dessiner leurs jambes changerait le SVG`);
+  const bornes = tous.filter(x => x.plan && x.s.parties.dessin !== 'bipede-tendu').filter(x => { const r = regle(x.s.parties.dessin, x.plan, x.cat); return r.plan !== r.dessinees; });
+  console.log(`  (les pattes : ${fx(tous.length - sansJambes.length - bornes.length)} dessins en ont autant que leur plan ; ${bornes.length} autrement, la forme bornant le plan${bornes.length ? ' : ' + [...new Set(bornes.map(x => x.id))].slice(0, 5).join(', ') : ''})`);
+  if (sansJambes.length) console.log(`  (${sansJambes.length} dessins de bipèdes à la queue tendue, ${[...new Set(sansJambes.map(x => x.id))].join(', ')}, n'ont pas de pattes au sol : le dessin ne fait que leurs bras, monde/silhouette.js, quadrupede. Leurs parties le disent, pattes [] et deux bras ; dessiner leurs jambes changerait le SVG)`);
   const P0 = tous.find(x => x.s.parties.dessin === 'quadrupede').s.parties;
   verif(P0.corps && P0.tete && P0.tete.museau && P0.tete.pivot && P0.cou && P0.queue && P0.pattes.length === 4 && P0.pattes.filter(p => p.cote === 'loin').length === 2,
     `un quadrupède : son corps, sa tête (son museau, son pivot), son cou, sa queue, quatre pattes dont deux du côté lointain (${tous.find(x => x.s.parties === P0).id})`);
@@ -182,6 +198,8 @@ console.log('4. Chaque forme a ses parties');
     bete('meduse', corps('radiaire', { pattes: 6 }), { regime: 'filtreur', locomotion: ['nage'], masse_kg: .5 }),
     bete('etoile', corps('radiaire', { pattes: 5 }), { regime: 'detritivore', locomotion: ['reptation'], masse_kg: .3 }),
     bete('mille-pattes', corps('segmente', { pattes: 24 }), { regime: 'detritivore', locomotion: ['marche'], masse_kg: .05 }),
+    { ...bete('mille-pattes', corps('segmente', { pattes: 10 }), { regime: 'detritivore', locomotion: ['marche'], masse_kg: .02 }), pattes: 12 },
+    { ...bete('mille-pattes', corps('segmente', { pattes: 36 }), { regime: 'detritivore', locomotion: ['marche'], masse_kg: .2 }), pattes: 32 },
     { dessin: 'machine', plan: { regime: 'synthetique', masse_kg: 40, locomotion: ['marche'], modules: { panneau: .6, thermique: .5, batterie: .5, foreuse: .6, recycleur: .5, pince: .6, blindage: .5, arme: .5 } } }];
   const R = CAS.map(C => { const o = {}, svg = Sil.dessiner(C.plan.corps, C.plan, [], o); return { ...C, s: { svg, yeux: o.yeux, sol: o.sol, parties: o.parties } }; });
   const formes = ['quadrupede', 'bipede', 'bipede-tendu', 'oiseau', 'insecte', 'serpent', 'poisson', 'pieuvre', 'meduse', 'etoile', 'mille-pattes', 'machine'];
@@ -195,6 +213,9 @@ console.log('4. Chaque forme a ses parties');
     && n('insecte', 'pattes') === 8 && de('insecte').thorax && n('mille-pattes', 'pattes') === 24 && de('mille-pattes').corps.anneaux.length === 12 && n('machine', 'pattes') === 4 && n('pieuvre', 'bras') === 8 && n('meduse', 'bras') === 6 && n('etoile', 'bras') === 5
     && !n('serpent', 'pattes') && de('serpent').corps.points.length === 25 && de('poisson').queue && de('pieuvre').corps && !de('pieuvre').tete && R.filter(x => x.dessin !== 'machine').every(x => x.s.parties.tete || ['pieuvre', 'meduse', 'etoile'].includes(x.dessin)),
     'les pattes, les bras, la tête de chacune : quatre pattes et une machine aussi, deux jambes et deux bras (à mains) debout, huit pattes à un insecte qui en a huit et son thorax, vingt-quatre à un mille-pattes sous ses douze anneaux, huit bras à une pieuvre, six filaments à une méduse, cinq bras à une étoile, l\'échine d\'un serpent');
+  const bornes = R.filter(x => x.pattes != null);
+  verif(bornes.length === 2 && bornes.every(x => x.s.parties.pattes.length === x.pattes && x.s.parties.corps.anneaux.length === x.pattes / 2),
+    `un mille-pattes a deux pattes par anneau, de 12 à 32 : ${bornes.map(x => `${Co.normaliser(x.plan.corps).pattes} au plan, ${x.s.parties.pattes.length} dessinées`).join(' ; ')}`);
   verif(ORG.every(t => types.has(t)), `chaque organe que le dessin connaît dit son point d'attache et ses éléments : ${ORG.join(', ')}` + (ORG.some(t => !types.has(t)) ? ` ; manquent : ${ORG.filter(t => !types.has(t)).join(', ')}` : ''));
   const pieds = new Set(R.flatMap(x => x.s.parties.pattes.map(p => p.pied)));
   verif(Object.keys(PIEDS).every(p => pieds.has(p)), `chaque pied a son nom : ${Object.keys(PIEDS).join(', ')}`);
