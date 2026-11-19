@@ -44,6 +44,8 @@ monde/sante.js        la vue Santé de l'observatoire : le rapport de chaque sem
 outils/sante.js       les mesures du rapport de santé d'un monde publié, et ses alertes ; --indexer : l'index des rapports (docs/51)
 monde/silhouette.js   les silhouettes de l'observatoire : chaque lignée dessinée d'après son corps et sa façon de vivre (masse, déplacements, régime, heure), chaque forme à son dessin, les machines d'après leurs modules ; un jeu peut le reprendre
 monde/herbier.js      l'herbier : chaque plante dessinée d'après sa forme, son stade, son feuillage, ce qu'elle a subi ; publié à chaque cycle dans morceaux/herbier/ (docs/49)
+monde/fiche.js        la fiche de créature : chaque lignée décrite pour la DA 2D et 3D, sa famille visuelle, ses interdits, sa parenté, ses prompts ; dans le paquet (docs/52)
+outils/fiches.js      toutes les fiches de créature d'un instantané dans un dossier : Markdown, JSON, un index (docs/52)
 BRANCHER-UN-JEU.md    brancher un jeu, pas à pas : s'inscrire, lire le monde, traduire, régler l'exposition, déposer des lots, les erreurs
 CONNECT-A-GAME.md     le même guide, en anglais ; docs/glossary.md : chaque champ, traduit en anglais
 inscription/          la page d'inscription : inscrire un jeu et recevoir ses clés, régler son exposition, vérifier une clé
@@ -81,6 +83,7 @@ bancs/dietes.js       le banc des régimes en spectre : le mangeur de fruits qui
 bancs/climat.js       le banc du climat : un âge glaciaire, un pont de terre, une île qui se peuple
 bancs/phenologie.js   le banc des saisons des plantes : une forêt nue, en fleurs, en fruits ; les butineurs et les mangeurs de fruits au fil de l'année
 bancs/herbier.js      le banc de l'herbier : chaque forme de plante dessinée, ses stades, la planche d'un biome
+bancs/fiche.js        le banc de la fiche de créature : les 243 lignées, la même fiche deux fois, la table des familles, les interdits, le Kaume point par point, les cas limites
 bancs/diversite.js    le banc de la flore riche : de 54 à 257 lignées de plantes ; qui mange quoi ; le feu qui trie les caractères ; la place qui se dispute
 bancs/succession.js   le banc de la succession : une forêt brûlée, l'herbe, les buissons, puis les arbres ; le couvert qui tombe et revient
 bancs/meteo.js        le banc de la météo : des fronts qui passent, une sécheresse qui s'installe, la vie qui suit le temps
