@@ -82,6 +82,31 @@ Deux années, du 17 novembre 2026 au 16 novembre 2028, sur l'amorce calée :
     Le calage les a menées à ses bornes, sans les rattraper : ce n'est plus un réglage, c'est un mécanisme qui manque. Pour les rapaces, il faut sans doute regarder leurs proies d'hiver ;
   - les grands carnivores s'éloignent de la loi au lieu de s'en approcher : le loup ×0,042 → ×0,032, le lynx boréal ×0,16 → ×0,12, le lynx pardelle ×0,83 → ×0,32. Sans joueurs, leurs proies croissent plus vite qu'eux. Un test devrait le dire.
 
+## Le troisième rapport : les insectes chasseurs
+
+Le deuxième rapport laissait fondre les coccinelles (×0,10 par an), les araignées (×0,21) et les méduses, quoi que fasse le calage. Le diagnostic a mesuré la satiété qu'aurait chaque chasseur seul, sans un concurrent. Seule, l'araignée n'aurait eu que 1,5 % de sa satiété, quand il lui en faut 67 %. Aucune adresse de chasse ne pouvait donc la sauver : l'adresse ne compte que devant les concurrents. Trois causes :
+- **les proies n'étaient pas là** : GBIF voit mal les invertébrés, et l'assemblage ne posait une guilde que là où quelqu'un l'avait signalée. Les pucerons étaient sur 128 lieux, les coccinelles qui les mangent sur 231. Une guilde d'invertébrés vit désormais partout où est son milieu (docs/52) ;
+- **les densités étaient des nombres ronds**, de dix à cent fois trop bas : le monde avait autant d'araignées que d'insectes à manger (0,15 g/m² contre 0,36). Elles viennent désormais de la littérature (les fourmis, Schultheiss et al. 2022 ; les collemboles, les acariens et les cloportes, Petersen et Luxton 1982 ; les carabes, Lövei et Sunderland 1996…). La première proie des araignées manquait, et a été ajoutée : les collemboles et les acariens du sol, des dizaines de milliers par m² ;
+- **le moteur ne regardait que ce qui est sur pied.** Le besoin d'un chasseur se compte sur ~120 jours, et un puceron se refait huit fois dans ce temps. `regles.renouvellement` (docs/52) : une proie offre ce qui est sur pied et ce qui en naît pendant ces jours-là.
+
+L'araignée seule passe de 1,5 % à 32 % de sa satiété. Il lui manque encore la moitié : elle doit trouver son équilibre plus bas que ses effectifs comptés. La truite, la perche, le maquereau ne sont plus à la borne du calage.
+
+Le calage sur l'année avance désormais par moitiés pour une espèce qui passe d'un côté à l'autre (docs/52) : les papillons passaient de ×10 à ×0,11. Trois passes : un écart médian de ×1,08 d'une année à l'autre, 90 % des espèces sous ×1,48.
+
+Deux années, du 17 novembre 2026 au 16 novembre 2028 :
+
+| | test | ce qu'il a donné |
+| --- | --- | --- |
+| ✓ | la stabilité | 98 % des espèces à moins d'un facteur 2, aucune extinction |
+| ≈ | aucune espèce ne fond ni ne s'emballe | 4 : les papillons ×2,2, les coccinelles ×0,46, les araignées ×0,47, les carabes ×0,50 (les méduses ×0,503, juste au-dessus). Les insectes chasseurs perdaient 80 à 90 % par an : ils perdent la moitié la deuxième année, et ralentissent |
+| ✓ | les naissances du chevreuil, du cerf | le 24 juin, le 24 juin |
+| ✓ | les cigognes | parties le 25 août, revenues le 8 mars |
+| ✓ | les prédateurs | ×1,6 de la loi en fin de course (au départ ×2,0) |
+| ✗ | les grands carnivores remontent | le loup −0,8 % par an, le lynx boréal +0,4 %, le lynx pardelle −3,0 %, l'ours +5,4 %, le glouton −6,2 %. Il leur fallait au moins +2 % |
+| ✓ | garde-fou : Damuth | −0,700 |
+
+**Ce que dit l'échec des grands carnivores.** Il est d'abord celui de l'assemblage : le calage sur l'année laisse de côté le loup, l'ours, les lynx et le glouton pour ne pas les figer, mais le calage d'un jour les mettait, comme les autres, à l'équilibre de leurs effectifs comptés. Le loup y recevait une adresse de 0,38 : à l'équilibre là où les hommes le tiennent, il ne pouvait pas remonter. Le calage d'un jour doit les laisser à l'adresse du moteur (1). Ce qu'ils feront alors dira ce que le moteur sait d'eux.
+
 ## Une expérience : le retour du loup
 
 `node outils/etalon.js --experience loup` prend un morceau de l'Europe (la France, l'Italie, la Suisse, Monaco : 96 lieux) en 1992. La France et la Suisse n'ont plus un loup, l'Italie en a environ 30 % d'aujourd'hui (≈ 350, ils étaient environ 400 vers 1990). Avec le loup, on garde ses grandes proies : les ongulés, les lièvres, le lapin, la marmotte, le castor. On laisse les autres carnivores et les plantes, pour aller vite : 31 ans en quatre minutes. On compare ensuite à ce qu'a vu l'Office français de la biodiversité :

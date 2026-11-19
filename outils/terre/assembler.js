@@ -244,9 +244,13 @@ inst = Meteo.eveiller(inst).inst; inst.monde.meteo = { depuis: 0 };
 //    mais le métabolisme d'un chasseur fait aussi son poids devant les autres : relevé chez le renard, il affamait l'épervier, et l'épervier
 //    finissait au plus bas, sans rien y gagner — docs/53) ;
 // chacun entre des bornes (la place de 0,001 à 50, l'efficacité de 0,02 à 50). Quatre passes, la concurrence se répondant.
-// (--depuis <amorce> : reprendre les réglages calés d'une amorce d'avant — la place, le métabolisme — et ne pas refaire le calage d'un jour)
+// (--depuis <amorce> : reprendre les réglages calés d'une amorce d'avant — la place, l'efficacité de chasse — et ne pas refaire le calage d'un jour)
+// Les grands carnivores (le loup, les lynx, le glouton) n'y sont pas : en Europe, les hommes les tiennent bas. Les mettre à l'équilibre de leurs
+// effectifs comptés les figeait (le loup recevait une adresse de 0,38 et ne remontait plus : l'étalon l'a vu, docs/53). Ils gardent celle du
+// moteur, et ce qu'ils font dit ce que le moteur sait d'eux. (L'ours, omnivore, a sa place comme les autres brouteurs.)
+const TENUS = new Set(['loup', 'lynx-boreal', 'lynx-pardelle', 'ours-brun', 'glouton']);
 const DEPUIS = arg('--depuis') ? JSON.parse(fs.readFileSync(path.resolve(arg('--depuis')), 'utf8')) : null;
-if (DEPUIS) { const P = new Map(DEPUIS.taxons.map(t => [t.id, t.plan])); for (const t of inst.taxons) { const q = P.get(t.id); if (!q) continue; for (const k of ['place', 'efficacite']) if (q[k] != null) t.plan[k] = q[k]; } }
+if (DEPUIS) { const P = new Map(DEPUIS.taxons.map(t => [t.id, t.plan])); for (const t of inst.taxons) { const q = P.get(t.id); if (!q) continue; for (const k of ['place', 'efficacite']) if (q[k] != null && !(k === 'efficacite' && TENUS.has(t.id))) t.plan[k] = q[k]; } }
 const CALER = +arg('--caler', DEPUIS ? 0 : 4), OMNI = new Set(['herbivore', 'omnivore', 'filtreur', 'detritivore']);
 const seq = (r, m, p) => { if (r <= m + p) return 1; let lo = 0, hi = 1; for (let k = 0; k < 40; k++) { const s = (lo + hi) / 2; if (r * s - m * (1 + 3 * (1 - s) ** 2) - p > 0) hi = s; else lo = s; } return hi; };
 for (let pass = 0; pass < CALER; pass++) {
@@ -260,7 +264,7 @@ for (let pass = 0; pass < CALER; pass++) {
     const r = t.plan.natalite, m = 365.25 / Math.max(2, t.plan.longevite), conv = o.conv / o.N, p = o.pred / o.N * 365.25;
     if (OMNI.has(t.plan.regime)) { const sa = o.prodsat / o.N, cible = clamp(1 - (m + p) / Math.max(1e-9, r * conv), .2, .97);
       if (sa > 1e-6) { t.plan.place = +clamp((t.plan.place ?? 1) * sa / cible, .001, 50).toPrecision(4); nB++; ecart.push(Math.abs(Math.log(sa / cible))); } }
-    else if (t.plan.regime === 'carnivore') { const s = clamp(o.s / o.N, .005, .995), cible = clamp(seq(r * conv, m, p), .02, .98), odds = x => x / (1 - x);
+    else if (t.plan.regime === 'carnivore' && !TENUS.has(t.id)) { const s = clamp(o.s / o.N, .005, .995), cible = clamp(seq(r * conv, m, p), .02, .98), odds = x => x / (1 - x);
       t.plan.efficacite = +clamp((t.plan.efficacite ?? 1) * odds(cible) / odds(s), A.efficacite[0], A.efficacite[1]).toPrecision(4); nC++; ecart.push(Math.abs(Math.log(odds(s) / odds(cible)))); } }
   ecart.sort((x, y) => x - y); console.log(`calage, passe ${pass + 1} : ${nB} brouteurs, ${nC} carnivores ; écart médian à l'équilibre ${ecart.length ? Math.exp(ecart[ecart.length >> 1]).toFixed(2) : '-'} ×`);
 }
@@ -273,7 +277,7 @@ for (let pass = 0; pass < CALER; pass++) {
 // Une espèce qui passe d'un côté à l'autre (×10, puis ×0,11 : les papillons) a reçu un pas trop grand : le suivant est deux fois plus petit,
 // comme une recherche par moitiés (au plus bas 0,1). Ce que chaque passe a vu (λ et le pas) est gardé à côté de sa sortie
 // (<sortie>.lambda.json), et relu par la passe suivante (--depuis).
-const ANNEE = +arg('--caler-annee', 0), TENUS = new Set(['loup', 'lynx-boreal', 'lynx-pardelle', 'ours-brun', 'glouton']);
+const ANNEE = +arg('--caler-annee', 0);
 const HIST = (() => { try { return DEPUIS ? JSON.parse(fs.readFileSync(path.resolve(arg('--depuis')) + '.lambda.json', 'utf8')) : {}; } catch { return {}; } })();
 for (let it = 0; it < ANNEE; it++) {
   const tot = I => new Map(I.taxons.map(t => [t.id, somme(t.populations.map(p => p.effectif))])), N0 = tot(inst), t0 = Date.now(); let J = inst;

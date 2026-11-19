@@ -135,7 +135,7 @@ Sans ce calage, les lapins partaient bien sous la place que leur donnait la prod
 - un brouteur qui a crû a trop de place ;
 - un carnivore qui a crû chasse trop bien.
 
-Puis elle recommence. Les grands carnivores (le loup, l'ours, les lynx, le glouton) n'y sont pas : les hommes les tiennent bas en Europe, et sans joueurs ils remontent, comme ils remontent en vrai. Une passe prend environ 50 minutes.
+Puis elle recommence. Les grands carnivores (le loup, l'ours, les lynx, le glouton) n'y sont pas : les hommes les tiennent bas en Europe, et sans joueurs ils doivent remonter, comme ils remontent en vrai. Le calage d'un jour ne les met pas non plus à l'équilibre de leurs effectifs comptés : il les figeait (le loup recevait une adresse de 0,38, et ne remontait plus, docs/53). Le loup, les lynx et le glouton gardent l'adresse du moteur. Une passe prend environ 50 minutes.
 
 Une espèce qui passe d'un côté à l'autre d'une passe à la suivante (les papillons, ×10 puis ×0,11) a reçu un pas trop grand : le suivant est deux fois plus petit, comme une recherche par moitiés. Ce que chaque passe a vu est gardé à côté de son amorce (`<sortie>.lambda.json`) et relu par la suivante (`--depuis`). Une passe par lancement :
 
