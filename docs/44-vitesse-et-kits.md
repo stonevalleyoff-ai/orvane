@@ -35,6 +35,9 @@ Contre une autre version du moteur, l'outil fait tourner les deux sur le même m
 | compter | `Compteur.Compter(taxon, biome, action)` | `Orvane.compter(taxon, biome, action)` |
 | déposer | `OrvaneUnity.Deposer(…)` | `Orvane.deposer(compte)` |
 | garder ce qui n'est pas déposé | `Compteur.Sauver()` / `Charger()` | `user://orvane.json`, tout seul |
+| lire les souches (docs/18) | `inst.Souches()`, `Souche(id)`, `Infection(lignee, lieu)`, `Infectes(…)`, `Foyers(souche)`, `EvenementsDeSouches()` | `Orvane.souches()`, `souche(id)`, `infection(lignee, lieu)`, `infectes(…)`, `foyers(souche)`, `evenements_souches()` |
+
+Les mêmes aides existent en JavaScript (`moteur/pathogenes.js`, `require('orvane').Pathogenes`), avec les mêmes réponses : un jeu sait quelles souches vivent, où elles frappent, parcelle par parcelle, et ce qui leur est arrivé au dernier cycle, sans lire le JSON lui-même.
 
 Les deux ignorent ce qu'ils ne connaissent pas (docs/43) : un champ, une valeur ou un biome ajoutés par Orvane ne cassent pas la lecture. Un lot fait 500 événements au plus, ce qu'Orvane accepte d'un coup ; au-delà, le kit en fait plusieurs.
 
@@ -44,9 +47,10 @@ Les deux ignorent ce qu'ils ne connaissent pas (docs/43) : un champ, une valeur 
   - il lit les trois instantanés du dépôt (le monde d'Orvane, la genèse 7, la genèse 2026) ;
   - un champ, une valeur inconnus ne cassent rien, et restent dans `Autres` ;
   - 700 rencontres comptées deux fois s'additionnent ; sauvé et repris, rien n'est perdu ; clos, cela fait deux lots, de 500 et de 203 événements ;
-  - ces lots passent `outils/verifier.js` : orvane_deposer les acceptera.
+  - ces lots passent `outils/verifier.js` : orvane_deposer les acceptera ;
+  - les souches : les vivantes, classées ; une souche par son id ; l'infection d'une lignée, dans un biome et dans une parcelle (celle de son biome dans un instantané d'avant) ; une lignée, un lieu inconnus ; les foyers, les événements de souche ; un monde sans souches.
   La couche propre à Unity (`UnityWebRequest`) est mince, mais n'a pas été essayée dans Unity.
-- **Godot.** La syntaxe GDScript 4 est vérifiée à chaque PR (`gdtoolkit`). Le kit n'a pas encore tourné dans Godot lui-même.
+- **Godot.** La syntaxe GDScript 4 est vérifiée à chaque PR (`gdtoolkit`). Les aides des souches ont tourné une fois dans Godot 4.3 sans écran, sur le monde publié : les mêmes réponses que le JavaScript et que le kit Unity, sur 960 questions. Le reste du kit n'a tourné que dans Lisière.
 
 ## Ce qui reste ouvert
 

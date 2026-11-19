@@ -3,7 +3,7 @@
 //  2. un monde à souches tient : des souches naissent, circulent, s'éteignent ; autant de lignées, autant de bêtes ; chaque
 //     événement de souche dit laquelle et ce qui lui arrive (souche, nature), et son texte la même chose ;
 //  3. une souche passe d'une parcelle à l'autre, de proche en proche ; la vue par biome publie l'infection de chaque parcelle,
-//     dont celle du biome est la moyenne ;
+//     dont celle du biome est la moyenne ; les aides de lecture (souches, souche, infection, infectes, foyers, evenements) ;
 //  4. elle prend chez les lignées proches, pas chez les lointaines ; jamais chez les machines ni les plantes ;
 //  5. l'immunité : une seconde vague dans une population guérie est plus petite ;
 //  6. le compromis : une souche moyennement virulente gagne plus d'hôtes que la plus douce et que la plus virulente ;
@@ -74,6 +74,15 @@ console.log("3. D'une parcelle à l'autre");
   const ipp = pv.infection_par_parcelle || {}, part = I => I?.['souche-essai']?.i || 0, moy = somme(ps.map(p => part(p.infection) * p.effectif)) / somme(ps.map(p => p.effectif));
   verif(ps.length === 4 && ps.every(p => JSON.stringify(ipp[p.biome] || {}) === JSON.stringify(p.infection || {})) && Object.keys(ipp).every(q => q in pv.parcelles) && Math.abs(moy - part(pv.infection)) < 1e-6,
     `la vue par biome publie l'infection de chaque parcelle (infection_par_parcelle), à côté de son effectif : ${ps.map(p => `${p.biome} ${fx(part(ipp[p.biome]) * 100, 1)} %`).join(', ')} ; la prairie, ${fx(part(pv.infection) * 100, 2)} %, en est la moyenne pesée par l'effectif`);
+  // les aides de lecture d'un jeu (moteur/pathogenes.js), et les mêmes sur un instantané d'avant l'infection par parcelle
+  const q = ps.map(p => p.biome).sort((a, b) => part(ipp[b]) - part(ipp[a]))[0], F = Pa.foyers(V, 'souche-essai').filter(f => f.taxon === cible.id && f.biome === 'prairie');
+  const ancien = clone(V); delete ancien.taxons.find(t => t.id === cible.id).populations.find(p => p.biome === 'prairie').infection_par_parcelle;
+  verif(Pa.souche(V, 'souche-essai')?.nom === 'Essaiose' && Pa.souches(V).some(s => s.id === 'souche-essai') && Pa.souche(V, 'souche-inconnue') === null
+    && JSON.stringify(Pa.infection(V, cible.id, q)) === JSON.stringify(ipp[q]) && JSON.stringify(Pa.infection(V, tv, 'prairie')) === JSON.stringify(pv.infection)
+    && Math.abs(Pa.infectes(V, cible.id, q, 'souche-essai') - part(ipp[q]) * pv.parcelles[q]) < 1e-9 && F.length === ps.filter(p => part(p.infection) > 0).length && Pa.foyers(V, 'souche-essai').every(f => f.parcelle && f.parcelle.split('~')[0] === f.biome)
+    && !Object.keys(Pa.infection(V, cible.id, 'nulle-part')).length && !Object.keys(Pa.infection(V, 'lignee-inconnue', 'prairie')).length && Pa.infectes(V, cible.id, 'nulle-part') === 0
+    && JSON.stringify(Pa.infection(ancien, cible.id, q)) === JSON.stringify(pv.infection),
+    `les aides d'un jeu la lisent : ${q}, ${fx(Pa.infectes(V, cible.id, q, 'souche-essai'), 0)} bêtes infectées ; ${F.length} foyers dans la prairie, parcelle par parcelle ; un lieu, une lignée inconnus : rien ; un instantané d'avant : l'infection de son biome`);
 }
 
 console.log('4. Les hôtes');

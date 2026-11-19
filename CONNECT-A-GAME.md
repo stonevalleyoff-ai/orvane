@@ -136,7 +136,7 @@ What a lineage carries (`inst.taxons[i]`):
 
 Among animals:
 - `populations[].nourriture` says how much a grazer finds to eat, relative to when the flora awoke. A game can show it without playing the plants.
-- `populations[].infection` gives, for each strain in circulation (`inst.monde.pathogenes`), the share of infected and immune animals. Enough to show sick animals.
+- `populations[].infection` gives, for each strain in circulation (`inst.monde.pathogenes`), the share of infected and immune animals. Enough to show sick animals. In a world of plots, `populations[].infection_par_parcelle` gives it plot by plot, and a strain's events say which strain (`souche`) and what happens to it (`nature`: birth, host jump, mutation, vector, extinction). The kits read it for the game (`Orvane.souches()`, `infection`, `foyers`; docs/18).
 
 A game says which families it can play, and does not receive the others: something new in the world only reaches a game that asks for it.
 - **When reading**: `Tampon.filtrer(inst, { familles: ['animale'] })` returns the instantané without the lineages of the other families (and, with `biomes`, without the biomes the game never visits).

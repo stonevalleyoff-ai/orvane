@@ -45,6 +45,12 @@ StartCoroutine(OrvaneUnity.Deposer(b, compteur, compteOpaque, rep => {
 - `compteOpaque` : un identifiant du joueur qu'Orvane ne peut pas relire, par exemple un hachage de son identifiant.
 - Un lot fait 500 événements au plus : `Clore` en fait autant qu'il faut, et `Deposer` les envoie un par un.
 - Les classes : `Instantane`, `Lignee`, `Plan`, `Population`, `Phenotype`, `Biome`, `Evenement`, `Lot`. Les détails (le corps, la vie en groupe, la migration) restent en `JObject`, à lire au besoin : `lignee.Plan.Corps["forme"]`.
+- **Les souches** (docs/18) : `inst.Souches()` les rend, les plus répandues d'abord (des `Souche` : `Nom`, `Virulence`, `Transmission`, `Origine`, `Hotes`, `Infectes`, `Parent`, `Vecteur`), `inst.Souche("souche-3")` une seule. `inst.Infection("pheva", "mangrove~3")` rend l'infection d'une lignée dans un biome ou une parcelle, par souche (`I` infectés, `R` immunisés, de 0 à 1), `inst.Infectes("pheva", "mangrove~3", "souche-3")` le nombre de bêtes infectées là, `inst.Foyers("souche-3")` où elle frappe, parcelle par parcelle (des `Foyer`), `inst.EvenementsDeSouches()` ce qui leur est arrivé au dernier cycle (`Evenement.Souche`, `Evenement.Nature` : `Natures.Naissance`, `SautHote`, `Mutation`, `Vecteur`, `Extinction`). Sur une population : `Infections`, `InfectionsParParcelle`, `Parcelles`.
+
+```csharp
+foreach (var f in inst.Foyers("souche-3").Take(3))
+    Debug.Log($"{f.Taxon} à {f.Parcelle} : {f.Infectes:0} bêtes infectées ({f.I:P1})");
+```
 
 **Hors de Unity** (un serveur de jeu, un outil), le même code avec `HttpClient` : `await new OrvaneHttp(b).LireAsync()`, `await new OrvaneHttp(b).DeposerAsync(compteur, compte)`.
 
@@ -85,8 +91,23 @@ func _on_fin_de_partie() -> void:   # (ou un moment naturel : un retour au menu,
 - **Dessiner les bêtes sans moteur de dessin** : `await Orvane.lire_silhouettes("foret")` lit la planche du lieu (chaque bête dessinée de profil, et ses yeux) ; `Orvane.texture("dunvi", 96.0)` rend l'image d'une lignée à 96 pixels de large (`Image.load_svg_from_string`), `Orvane.yeux("dunvi")` où sont ses yeux dans le cadre de 170 × 90. Une planche gardée dans le jeu : `Orvane.ajouter_planche(biome, silhouettes)`.
 - **Dessiner les plantes, lire le temps qu'il fait** (l'herbier, docs/49) : `await Orvane.lire_herbier("foret")` lit les plantes du lieu, dessinées dans leur stade du cycle ; `Orvane.plantes("foret")` les rend, les plus lourdes d'abord (leur forme, leur port, leur hauteur, leur part) ; `Orvane.texture_plante(id, 96.0, "foret")` rend l'image d'une plante à 96 pixels de large, le pied à 144/150 de sa hauteur ; `Orvane.meteo("foret")` rend le temps du lieu (`temps`, `vent`, `neige`, `secheresse`…), `Orvane.temps("foret")` son nom. Hors ligne : `Orvane.ajouter_herbier(biome, herbier)`.
 - `Orvane.lire_json(url)` lit n'importe quel document du monde ; `Orvane.oublier()` efface ce qui a été compté et pas encore clos (une partie d'essai, un jeu qui n'envoie rien).
+- **Les souches** (docs/18) : quelles souches vivent, où elles frappent, parcelle par parcelle, et ce qui leur est arrivé au dernier cycle, sans lire le JSON soi-même :
 
-**Vérifié** : la syntaxe GDScript 4 (`gdtoolkit`, à chaque PR). **Pas encore vérifié** : le kit n'a pas tourné dans Godot lui-même. Le premier jeu Godot qui s'en sert, [Lisière](../jeux/lisiere/LISEZ-MOI.md), le dira : son essai sans écran (`outils/godot.sh --headless --path jeux/lisiere -- --essai`) fait tourner le kit dans Godot 4.3.
+```gdscript
+for s in Orvane.souches():                          # les plus répandues d'abord
+	print(s.nom, " : ", s.infectes, " bêtes infectées, virulence ", s.virulence)
+var g := Orvane.souche("souche-3")                  # { id, nom, virulence, transmission, origine, apparu, hotes, infectes, parent, vecteur }
+var I := Orvane.infection("pheva", "mangrove~3")    # { "souche-3": { "i": 0.075, "r": 0.032 } } : dans un biome, ou une parcelle
+var n := Orvane.infectes("pheva", "mangrove~3", "souche-3")   # le nombre de bêtes infectées là
+for f in Orvane.foyers("souche-3"):                 # où elle frappe : { taxon, biome, parcelle, effectif, i, r, infectes }
+	print(f.taxon, " à ", f.parcelle, " : ", f.infectes)
+for e in Orvane.evenements_souches():               # naissance, saut_hote, mutation, vecteur, extinction
+	print(e.nature, " de ", e.souche, " chez ", e.taxon)
+```
+
+  `souches_eveillees()` dit si le monde a ses souches. Une parcelle, dans un instantané d'avant l'infection par parcelle, a l'infection de son biome ; un instantané d'avant les événements de souche n'en dit rien. Une lignée, un lieu ou une souche inconnus donnent une réponse vide. `lire_lieux` (et `assembler`) gardent aussi les parcelles du monde (`inst.parcelles`).
+
+**Vérifié** : la syntaxe GDScript 4 (`gdtoolkit`, à chaque PR). Le kit tourne dans Godot 4.3 avec le premier jeu qui s'en sert, [Lisière](../jeux/lisiere/LISEZ-MOI.md) : son essai sans écran (`outils/godot.sh --headless --path jeux/lisiere -- --essai`). Les aides des souches ont tourné une fois dans Godot 4.3, sans écran, sur le monde publié du cycle 59 et sur ce monde quelques cycles plus loin, au format d'aujourd'hui : sur 960 questions, les mêmes réponses que `moteur/pathogenes.js` et que le kit Unity. **Pas encore vérifié** : un banc du kit lui-même dans Godot, à chaque PR.
 
 ## Ce qui reste ouvert
 

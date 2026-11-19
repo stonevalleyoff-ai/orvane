@@ -8,7 +8,15 @@
 // epidemie ou remission qui dit laquelle (souche) et quoi (nature : naissance, saut_hote, extinction ; mutation et vecteur
 // viennent de moteur/derives.js).
 // Le moteur (moteur/orvane.js) appelle ce fichier à quelques points de son cycle, dans un monde qui a ses souches
-// (monde.pathogenes) ; sans elles, rien ne change. Déterministe. Node (require) ou navigateur (globalThis.OrvanePathogenes).
+// (monde.pathogenes) ; sans elles, rien ne change. Un jeu y trouve aussi de quoi lire les souches d'un instantané, sans toucher
+// au monde (plus bas) :
+//   souches(inst)                       → les souches vivantes, les plus répandues d'abord : [{ id, nom, virulence, … }]
+//   souche(inst, id)                    → une souche (null : inconnue, ou éteinte)
+//   infection(inst, lignee, lieu)       → { souche: { i, r } } : les parts infectée et immunisée, dans un biome ou une parcelle
+//   infectes(inst, lignee, lieu, souche) → combien de bêtes infectées là (toutes souches, sans souche)
+//   foyers(inst, souche)                → où elle frappe : [{ taxon, biome, parcelle, effectif, i, r, infectes }], par parcelle
+//   evenements(inst, souche)            → ce qui est arrivé aux souches au dernier cycle : [{ type, nature, souche, taxon, biome, detail }]
+// Déterministe. Node (require) ou navigateur (globalThis.OrvanePathogenes).
 'use strict';
 (function (racine) {
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -119,6 +127,62 @@ function preparer(ctx) {
 // ce qui peut arriver à une souche : la nature de ses événements (evenements[].nature, docs/18 ; mutation et vecteur : moteur/derives.js)
 const NATURES = ['naissance', 'saut_hote', 'mutation', 'vecteur', 'extinction'];
 
-const API = { REGLES, NATURES, eveiller, preparer, transmission, estHote };
+// --- lire les souches : ce qu'un jeu demande à un instantané publié (docs/18) ; une lecture, rien ne change dans le monde ---
+// lignee : une lignée de l'instantané, ou son id ; lieu : un biome (« mangrove »), ou une parcelle (« mangrove~2 ») dans un monde
+// à parcelles. Ce qui manque (une lignée, un lieu, une souche inconnus, un monde sans souches) donne une réponse vide, jamais une erreur.
+const propre = (o, k) => o != null && typeof o === 'object' && typeof k === 'string' && Object.prototype.hasOwnProperty.call(o, k);
+const nombre = x => typeof x === 'number' && Number.isFinite(x) ? x : 0;
+const lesSouches = inst => { const S = inst?.monde?.pathogenes?.souches; return S && typeof S === 'object' ? S : {}; };
+const fiche = (id, s) => ({ id, ...s, ...(Array.isArray(s.hotes) ? { hotes: s.hotes.slice() } : {}) });
+const lignee = (inst, l) => l && typeof l === 'object' ? l : (inst?.taxons || []).find(t => t && t.id === l) || null;
+// une infection telle que le contrat la publie, recopiée : { souche: { i, r } }, chaque part entre 0 et 1
+const parts = I => { const o = {}; if (!I || typeof I !== 'object') return o;
+  for (const [s, x] of Object.entries(I)) { if (typeof x === 'number') o[s] = { i: clamp(nombre(x), 0, 1), r: 0 }; else if (x && typeof x === 'object') o[s] = { i: clamp(nombre(x.i), 0, 1), r: clamp(nombre(x.r), 0, 1) }; }
+  return o; };
+// les souches vivantes, les plus répandues d'abord (à égalité, la plus ancienne)
+function souches(inst) {
+  return Object.entries(lesSouches(inst)).filter(([, s]) => s && typeof s === 'object').map(([id, s]) => fiche(id, s))
+    .sort((a, b) => nombre(b.infectes) - nombre(a.infectes) || nombre(a.apparu) - nombre(b.apparu) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+}
+function souche(inst, id) { const S = lesSouches(inst); return propre(S, id) && S[id] && typeof S[id] === 'object' ? fiche(id, S[id]) : null; }
+// où vit une lignée dans un lieu : les populations du biome, ou celle dont le biome porte la parcelle
+function ici(t, lieu) {
+  const P = (t?.populations || []).filter(p => p && p.biome === lieu); if (P.length) return { P };
+  const p = (t?.populations || []).find(q => q && (propre(q.infection_par_parcelle, lieu) || propre(q.parcelles, lieu)));
+  return p ? { p, effectif: nombre(p.parcelles?.[lieu]) } : null;
+}
+function infection(inst, l, lieu) {
+  const x = ici(lignee(inst, l), lieu); if (!x) return {};
+  if (x.p) return parts(x.p.infection_par_parcelle ? x.p.infection_par_parcelle[lieu] : x.p.infection);   // (un instantané d'avant l'infection par parcelle : celle du biome)
+  if (x.P.length === 1) return parts(x.P[0].infection);
+  // (plusieurs populations dans ce lieu : leur moyenne, pesée par l'effectif ; absente d'une population, une souche y vaut 0)
+  const w = x.P.map(p => Math.max(nombre(p.effectif), 1e-9)), W = w.reduce((a, v) => a + v, 0), o = {};
+  x.P.forEach((p, k) => { for (const [s, y] of Object.entries(parts(p.infection))) { const z = o[s] ??= { i: 0, r: 0 }; z.i += y.i * w[k] / W; z.r += y.r * w[k] / W; } });
+  return o;
+}
+function infectes(inst, l, lieu, s) {
+  const t = lignee(inst, l), x = ici(t, lieu); if (!x) return 0;
+  const N = x.p ? x.effectif : x.P.reduce((a, p) => a + nombre(p.effectif), 0), I = infection(inst, t, lieu);
+  return N * Object.entries(I).reduce((a, [k, y]) => a + (s == null || k === s ? y.i : 0), 0);
+}
+// où une souche frappe : chaque parcelle (chaque biome, dans un monde sans parcelles ou un instantané d'avant) où des bêtes
+// vivantes l'ont, les plus touchées d'abord
+function foyers(inst, s) {
+  const F = [];
+  for (const t of inst?.taxons || []) { if (!t || t.eteint != null) continue;
+    for (const p of t.populations || []) { if (!p || !propre(p.infection, s)) continue;
+      const lieux = p.infection_par_parcelle ? Object.keys(p.infection_par_parcelle).map(q => [q, p.infection_par_parcelle[q], nombre(p.parcelles?.[q])]) : [[null, p.infection, nombre(p.effectif)]];
+      for (const [parcelle, I, N] of lieux) { const y = parts(I)[s]; if (!y || !(y.i > 0)) continue;
+        F.push({ taxon: t.id, biome: p.biome, parcelle, effectif: N, i: y.i, r: y.r, infectes: y.i * N }); } } }
+  const cle = f => `${f.taxon}|${f.biome}|${f.parcelle ?? ''}`;
+  return F.sort((a, b) => b.infectes - a.infectes || (cle(a) < cle(b) ? -1 : cle(a) > cle(b) ? 1 : 0));
+}
+// ce qui est arrivé aux souches au dernier cycle (les événements qui disent leur souche) ; une seule, si on la nomme
+function evenements(inst, s) {
+  return (inst?.evenements || []).filter(e => e && typeof e.souche === 'string' && (s == null || e.souche === s))
+    .map(e => ({ type: e.type, nature: e.nature ?? null, souche: e.souche, taxon: e.taxon ?? null, biome: e.biome ?? null, detail: e.detail ?? '' }));
+}
+
+const API = { REGLES, NATURES, eveiller, preparer, transmission, estHote, souches, souche, infection, infectes, foyers, evenements };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else racine.OrvanePathogenes = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

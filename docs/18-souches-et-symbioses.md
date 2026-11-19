@@ -84,6 +84,29 @@ Goteose (`souche-3`) touche 14 % de la mangrove, mais de 7,5 % à 20,6 % selon l
 - **Le nombre de bêtes infectées** dans une parcelle : `i × parcelles[parcelle]`. C'est la borne « infectés × effectif » qu'un jeu qui joue à la parcelle respecte.
 - Les morceaux (docs/21) la portent avec le reste : `biomes/mangrove.json` la donne. Un monde sans parcelles n'en a pas.
 
+## Côté jeu : lire les souches
+
+Un jeu n'a pas à lire le JSON lui-même. Les mêmes aides, avec les mêmes réponses, en JavaScript, dans le kit Godot et dans le kit Unity (docs/44) :
+
+| | JavaScript (`moteur/pathogenes.js`, `require('orvane').Pathogenes`) | Godot (`Orvane.`) | Unity (`instantane.`) |
+| --- | --- | --- | --- |
+| les souches vivantes, les plus répandues d'abord | `souches(inst)` | `souches()` | `Souches()` |
+| une souche (nom, virulence, transmission, origine, hôtes, vecteur, parent) | `souche(inst, id)` | `souche(id)` | `Souche(id)` |
+| l'infection d'une lignée dans un biome ou une parcelle, par souche : `{ i, r }` | `infection(inst, lignee, lieu)` | `infection(lignee, lieu)` | `Infection(lignee, lieu)` |
+| combien de bêtes infectées là (par une souche, ou toutes) | `infectes(inst, lignee, lieu, souche)` | `infectes(lignee, lieu, souche)` | `Infectes(lignee, lieu, souche)` |
+| où une souche frappe, parcelle par parcelle | `foyers(inst, souche)` | `foyers(souche)` | `Foyers(souche)` |
+| ce qui leur est arrivé au dernier cycle | `evenements(inst, souche)` | `evenements_souches(souche)` | `EvenementsDeSouches(souche)` |
+
+- `lieu` est un biome (`"mangrove"`) ou une parcelle (`"mangrove~3"`). Pour une parcelle, dans un instantané d'avant l'infection par parcelle, c'est celle de son biome.
+- Un foyer : `{ taxon, biome, parcelle, effectif, i, r, infectes }`, une parcelle (ou un biome entier, dans un monde sans parcelles) où des bêtes vivantes sont infectées. Une parcelle d'immunisés seulement n'en est pas un.
+- Ce qui manque (une lignée, un lieu, une souche inconnus, un monde sans souches) donne une réponse vide, jamais une erreur.
+
+```js
+const { Pathogenes } = require('orvane');
+for (const f of Pathogenes.foyers(inst, 'souche-3').slice(0, 3)) console.log(f.taxon, f.parcelle, Math.round(f.infectes));
+// pheva mangrove~1 7385 · pheva mangrove~4 6027 · pheva mangrove~2 5034 …
+```
+
 ## La commande : le profil du monde
 
 ```json
@@ -117,7 +140,7 @@ Au cycle de nuit suivant, le monde reçoit ses souches, une fois pour toutes. Il
 
 Le banc vérifie aussi :
 - **les événements** : en 120 cycles, chaque naissance, chaque saut d'hôte et chaque extinction dit sa souche et sa nature, cohérentes avec le monde (une souche née ce cycle chez cette lignée, une lignée qui est bien son hôte, une souche qui n'est plus) ; leur texte seul, relu par la chronique, dit la même chose. Les mutations sont vérifiées dans `bancs/derives.js` ;
-- **l'infection par parcelle** : dans la prairie à quatre parcelles, chaque parcelle publie l'infection que tient le moteur, et celle du biome en est la moyenne pesée par l'effectif ;
+- **l'infection par parcelle** : dans la prairie à quatre parcelles, chaque parcelle publie l'infection que tient le moteur, et celle du biome en est la moyenne pesée par l'effectif ; les aides de lecture la rendent ;
 - le contrat et le cycle de nuit (le monde reçoit ses souches une fois).
 
 ```
