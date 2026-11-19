@@ -24,7 +24,7 @@ const RESUMES = ['cornes', 'crete', 'ailes', 'carapace', 'antennes'];   // les p
 const BASES = ['quadrupede', 'hexapode', 'bipede', 'oiseau', 'serpent', 'segmente', 'radiaire', 'tentaculaire'];
 
 // ——— les nombres, à la française, sans dépendre de la langue de la machine (la même fiche partout) ———
-const ESP = ' ';
+const ESP = '\u00a0';   // (une espace insécable, devant les unités et dans les milliers)
 const fr = (v, d = 0) => { const a = Math.abs(+v || 0), [e, f = ''] = a.toFixed(d).split('.'), q = f.replace(/0+$/, ''), g = e.replace(/\B(?=(\d{3})+(?!\d))/g, ESP);
   return (v < 0 && +a.toFixed(d) ? '−' : '') + g + (q ? ',' + q : ''); };
 const en = (v, d = 0) => String(+(+v || 0).toFixed(d));
@@ -116,7 +116,7 @@ const REGLES = [
   { id: 'pelage', famille: 'pelage', quand: 'quadrupède ou bipède vivipare, avec ou sans carapace, avec ou sans ailes', cas: 'tranché (bipède, ailé, à carapace)',
     pourquoi: 'Mettre bas est ce qui ressemble le plus à un mammifère : du poil ; une carapace s\'y pose comme sur un tatou, des ailes s\'y ajoutent, et la famille ne change pas quand l\'une ou l\'autre vient ou se perd.', si: k => QB(k) && k.reproduction === 'vivipare' },
   { id: 'cuirasse', famille: 'cuirasse', quand: 'quadrupède ou bipède ovipare à carapace', cas: 'tranché',
-    pourquoi: 'Pondre et porter une carapace, c\'est une tortue ou un pangolin plutôt qu\'un crabe : aucune de ces lignées n\'a de pinces.', si: k => QB(k) && k.carapace },
+    pourquoi: 'Pondre et porter une carapace, c\'est une tortue ou un pangolin plutôt qu\'un crabe : la fiche ne lui donne jamais de pinces qu\'elle n\'a pas (au cycle 44, aucune n\'en a).', si: k => QB(k) && k.carapace },
   { id: 'peau-nue', famille: 'peau-nue', quand: 'quadrupède ou bipède ovipare sans carapace, qui nage', cas: 'tranché',
     pourquoi: 'Pondre et nager sans carapace : un amphibien, à la peau lisse et humide.', si: k => QB(k) && k.nage },
   { id: 'ecailles-lezard', famille: 'ecailles', quand: 'quadrupède ou bipède ovipare sans carapace, qui ne nage pas', cas: 'tranché',
@@ -126,13 +126,13 @@ const REGLES = [
 const DETAILS = [
   { id: 'pelage-nageur', famille: 'pelage', quand: 'elle nage', fr: 'poil ras, serré et lustré, comme une loutre', en: 'short sleek dense waterproof fur', pourquoi: 'L\'eau plaque le poil : un nageur l\'a court et serré.' },
   { id: 'pelage-froid', famille: 'pelage', quand: 'niche froide (temperature < 0,3), et elle ne rampe ni ne fouit', fr: 'poil long et épais', en: 'long thick shaggy fur', pourquoi: 'Le froid épaissit la fourrure.' },
-  { id: 'pelage-froid-ras', famille: 'pelage', quand: 'niche froide (temperature < 0,3), et elle rampe ou fouit', fr: 'poil court et dense', en: 'short dense fur', pourquoi: 'Le froid la rend dense ; une bête qui rampe ou fouit la garde courte.' },
-  { id: 'pelage-chaud', famille: 'pelage', quand: 'niche chaude (temperature ≥ 0,7)', fr: 'poil ras et clairsemé', en: 'very short sparse fur', pourquoi: 'La chaleur l\'éclaircit.' },
+  { id: 'pelage-froid-ras', famille: 'pelage', quand: 'niche froide (temperature < 0,3), et elle rampe ou fouit', fr: 'poil court et dense', en: 'short dense fur', pourquoi: 'Le froid rend la fourrure dense ; une bête qui rampe ou fouit la garde courte.' },
+  { id: 'pelage-chaud', famille: 'pelage', quand: 'niche chaude (temperature ≥ 0,7)', fr: 'poil ras et clairsemé', en: 'very short sparse fur', pourquoi: 'La chaleur éclaircit la fourrure.' },
   { id: 'pelage-tempere', famille: 'pelage', quand: 'le reste', fr: 'poil court', en: 'short fur', pourquoi: 'Une niche tempérée ne pousse ni au long ni au ras.' },
   { id: 'pelage-carapace', famille: 'pelage', quand: 'une vivipare à carapace', fr: 'sur le dos, une carapace de plaques cornées, comme un tatou ; le poil reste au ventre, aux pattes et à la tête', en: 'armadillo-like dorsal shield of horny plates, fur on belly, legs and head', pourquoi: 'La carapace se pose sur un mammifère sans lui ôter son poil.' },
   { id: 'chitine-elytres', famille: 'chitine', quand: 'une carapace de plus de 0,3', fr: 'deux élytres, des étuis durs qui couvrent l\'abdomen, comme un scarabée', en: 'hard wing-cases (elytra) covering the abdomen, beetle-like', pourquoi: 'Chez un insecte, une carapace est une paire d\'élytres.' },
   { id: 'chitine-bouclier', famille: 'chitine', quand: 'une carapace de 0,3 ou moins', fr: 'une plaque dorsale courte et durcie, qui ne couvre pas tout l\'abdomen', en: 'short hardened dorsal plate that leaves the abdomen visible', pourquoi: 'Trop petite pour des élytres, elle reste un bouclier.' },
-  { id: 'chitine-geant', famille: 'chitine', quand: 'une masse de 1 kg ou plus', fr: 'géant : une cuticule épaisse et mate, en plaques jointives, des articulations larges et des pattes épaisses, pour qu\'on sente son poids', en: 'giant arthropod with thick matte armored cuticle in overlapping plates, sturdy thick jointed legs, heavy realistic weight, not toy-like', pourquoi: 'Le plus lourd des insectes de la Terre pèse 100 g : à 1 kg, une cuticule fine et luisante ferait un jouet.' },
+  { id: 'chitine-geant', famille: 'chitine', quand: 'une masse de 1 kg ou plus', fr: 'géant : une cuticule épaisse et mate, en plaques jointives, des articulations larges et des pattes épaisses, pour qu\'on sente son poids', en: 'giant arthropod with thick matte armored cuticle in overlapping plates, sturdy thick jointed legs, heavy realistic weight, not toy-like', pourquoi: 'Les plus lourds insectes de la Terre pèsent moins de 100 g : à 1 kg, dix fois plus, une cuticule fine et luisante ferait un jouet.' },
   { id: 'chitine-colosse', famille: 'chitine', quand: 'une masse de 10 kg ou plus', fr: 'des pattes comme des piliers', en: 'pillar-like legs', pourquoi: 'À la masse d\'un chien, il faut des appuis de chien.' },
   { id: 'chitine-nageur', famille: 'chitine', quand: 'elle nage', fr: 'pattes arrière aplaties en rames', en: 'flattened oar-like hind legs for swimming', pourquoi: 'Un insecte nageur rame avec ses pattes arrière.' },
   { id: 'cuirasse-nageur', famille: 'cuirasse', quand: 'elle nage', fr: 'carapace basse, lisse et profilée, comme une tortue d\'eau ; peau écailleuse sur la tête et les pattes', en: 'low smooth streamlined shell like a freshwater turtle, scaly skin on head and legs', pourquoi: 'L\'eau use et profile : un nageur porte sa carapace basse.' },
@@ -343,7 +343,8 @@ function rediger(t, I, opt, C) {
     if (t.parent) quand += `, issue ${parent ? art.du(nomT(parent)) + '**' + nomT(parent) + '**' : 'de `' + t.parent + '`'} ${par(ci('parent', t.parent))}${parent ? '' : ', une lignée qui n\'est plus dans l\'instantané'}`;
     else quand += p.regime === 'synthetique' ? `, assemblée par ${I.monde?.mere?.nom || 'la Mère'} ${par(ci('parent', null))}` : `, sans lignée mère ${par(ci('parent', null))}`;
     L.push(nom, quand + '.');
-    L.push(`${Maj(t.statut || 'statut inconnu')} ${par(ci('statut', t.statut ?? null))}${t.eteint != null ? `, éteinte au cycle ${fr(t.eteint)} ${par(ci('eteint', t.eteint))}` : ''}.`);
+    const statut = { stable: 'stable', croissance: 'en croissance', declin: 'en déclin', menace: 'menacée', eteint: 'éteinte' }[t.statut] || t.statut || 'statut inconnu';
+    L.push(`${Maj(statut)} ${par(ci('statut', t.statut ?? null))}${t.eteint != null ? `, éteinte au cycle ${fr(t.eteint)} ${par(ci('eteint', t.eteint))}` : ''}.`);
     L.push(N ? `${fr(N)} ${machine ? 'machines' : 'bêtes'} ${par('la somme de `populations[].effectif`')} : ${pops.map(x => nomBiome(x.biome) + ' ' + fr(x.effectif)).join(', ')}.`
       : `Aucune bête en vie ${par(ci('populations', []))}.`);
     section('Identité', L); }
@@ -396,8 +397,9 @@ function rediger(t, I, opt, C) {
     const pattesFr = al === 'radiaire' || al === 'tentaculaire' ? `${fr(c.pattes)} bras` : al === 'segmente' ? `${fr(c.pattes)} pattes, une paire par anneau (${fr(Math.round(c.pattes / 2))} anneaux)` : c.pattes ? `${nombreFr(c.pattes, 1)} pattes` : 'sans pattes';
     L.push(`**${Maj(nomA[0])}**, ${pattesFr} ${par(ci('forme', brut.forme ?? c.forme) + (brut.forme && brut.forme !== c.forme ? ', une forme que ce monde ne déclare pas : lue comme ' + (brut.repli === c.forme ? 'son repli, ' + ci('repli', brut.repli) : 'un ' + val(c.forme) + ', comme le fait moteur/corps.js') : ''), champ('pattes'), al === 'poisson' && 'lu comme un poisson par `OrvaneCorps.allure` : il ne fait que nager')}.`
       + (al === 'quadrupede' || al === 'bipede' ? ` En un mot : « ${dec} » ${par('`OrvaneCorps.decrire`')}.` : ''));
-    const ordinaire = car && car[1].includes('ordinaire'), leger = car && /fine|légère/.test(car[1]);
-    if (kc != null) L.push(`${longueur(L_)} de long ${par(ci('taille_m', L_))} pour ${masse(m)}${leger ? ' seulement' : ''} ${par(ci('masse_kg', m))} : une bête ${ordinaire ? car[1] : '**' + car[1] + '**'} ${interp(`d'après la masse pour la longueur : ${fr(kc, kc < 10 ? 2 : 0)}${ESP}kg/m³, quand ${nomA[0] === 'oiseau' ? 'un oiseau' : 'un ' + nomA[0]} de proportions ordinaires est entre ${fr(CR[0])} et ${fr(CR[1])}`)}${repere(fam, al, c, p, car) ? ', ' + repere(fam, al, c, p, car) + ' ' + interp('un repère terrestre, pour l\'œil') : ''}.`);
+    const ordinaire = car && car[1].includes('ordinaire'), leger = car && !ordinaire && /fine|légère/.test(car[1]);
+    if (kc != null && (al === 'radiaire' || al === 'tentaculaire')) L.push(`${longueur(L_)} de long ${par(ci('taille_m', L_))} pour ${masse(m)} ${par(ci('masse_kg', m))} : une bête au corps mou ${interp('sans squelette, la masse pour la longueur ne dit pas de carrure')}${repere(fam, al, c, p, car) ? ', ' + repere(fam, al, c, p, car) + ' ' + interp('un repère terrestre, pour l\'œil') : ''}.`);
+    else if (kc != null) L.push(`${longueur(L_)} de long ${par(ci('taille_m', L_))} pour ${masse(m)}${leger ? ' seulement' : ''} ${par(ci('masse_kg', m))} : une bête ${ordinaire ? car[1] : '**' + car[1] + '**'} ${interp(`d'après la masse pour la longueur : ${fr(kc, kc < 10 ? 2 : 0)}${ESP}kg/m³, quand ${nomA[0] === 'oiseau' ? 'un oiseau' : 'un ' + nomA[0]} de proportions ordinaires est entre ${fr(CR[0])} et ${fr(CR[1])}`)}${repere(fam, al, c, p, car) ? ', ' + repere(fam, al, c, p, car) + ' ' + interp('un repère terrestre, pour l\'œil') : ''}.`);
     // les proportions
     const props = [];
     for (const k2 of NUM7) { if (k2 === 'tete' || k2 === 'museau' || k2 === 'oreilles') continue; if (!utiles.includes(k2)) continue; const v = c[k2];
@@ -478,7 +480,7 @@ function rediger(t, I, opt, C) {
       : `Aucun organe ${par(Array.isArray(brut.organes) ? ci('organes', []) : '`organes` absente, et aucune proportion d\'organe à 0,2 ou plus')}.`);
     for (const o of mOrg) {
       const Tc = CO[o.type] || {}, fem = Tc.fem ?? 1, plur = o.nombre > 1, mot = (Tc.mot || [o.type, o.type + 's'])[plur ? 1 : 0], fs = formeFr(o.forme, fem, plur), tl = palier(o.taille, TAILLE_ORG);
-      const place = o.type === 'epines' && o.place === 'queue' ? 'sur la queue' : PLACE_FR[o.place] || o.place, teinte = TEINTE_ORG[o.type], col = teinte && pal[teinte === 'os' ? 'os' : teinte];
+      const place = (al === 'hexapode' || al === 'segmente') && o.place === 'queue' ? 'au bout de l\'abdomen' : o.type === 'epines' && o.place === 'queue' ? 'sur la queue' : PLACE_FR[o.place] || o.place, teinte = TEINTE_ORG[o.type], col = teinte && pal[teinte === 'os' ? 'os' : teinte];
       const fx = Tc.fonction ? FONCTIONS[Tc.fonction] : null, cond = Tc.conduite;
       let comment = '';
       if (o.type === 'defenses') comment = o.forme === 'droites' ? 'Elles pointent droit vers l\'avant depuis le museau' : 'Elles se recourbent vers le haut depuis le museau';
@@ -702,6 +704,7 @@ function rediger(t, I, opt, C) {
     if (c.posture >= .9 && al === 'bipede') interdit('posture', `pas à quatre pattes ${par(champ('posture'))}`, 'on all fours');
     if (al === 'quadrupede' || al === 'hexapode' || al === 'bipede') interdit('posture', `exactement ${nombreFr(c.pattes, 1)} pattes, pas une de plus ${par(champ('pattes'))}`, al === 'hexapode' ? 'four legs, extra legs' : 'extra legs, extra limbs');
     for (const [frx, enx] of FAMILLES[fam].autres) { const plumesAiles = frx === 'de plumes' && has('ailes')?.forme === 'plumes';
+      if (frx === 'de pinces de crabe' && has('pinces')) continue;   // (des pinces que le plan porte ne s'interdisent pas)
       interdit('tegument', `${plumesAiles ? 'pas de plumes sur le corps, seulement aux ailes' : 'pas ' + frx} ${regle(R.id)}`, plumesAiles ? 'feathered body' : enx); }
     const Mo = MOTIFS[c.motif] || MOTIFS.uni; if (Mo[4]) interdit('motif', `${c.motif === 'uni' ? 'pas de rayures ni de taches' : Mo[4] === 'spots' ? 'pas de taches' : 'pas de rayures'} ${par(ci('motif', c.motif))}`, Mo[4]);
   } else {

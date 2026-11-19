@@ -175,7 +175,7 @@ console.log('6. Le Kaume, point par point avec l\'exemple de l\'issue');
   verif(f.ia.prompt_3d.includes('Real scale: 0.42 m long, 0.142 kg') && /crawling pose/.test(f.ia.prompt_3d) && /plain light grey background/.test(f.ia.prompt_3d), 'le prompt 3D : la même bête, en reptation, sur fond uni, à sa taille vraie (0,42 m, 142 g)');
   verif(f.ia.palette.map(x => x.hex).join(' ') === '#A6607D #5B3A47 #BCA2A6 #B65757 #60A666 #EFE7D2' && f.ia.decor.includes('snow patches') && f.ia.variantes.some(v => v.trait === 'albinisme'),
     'la palette (robe, sombre, ventre, œil, puis l\'accent du panache et l\'ivoire des défenses), le décor des sommets, les variantes (l\'albinos)');
-  const longueur = H.length, exemple = 2850; verif(longueur > exemple * 3, `plus riche que l'exemple : ${fx(longueur)} caractères, contre ~${fx(exemple)} pour la fiche écrite à la main`); }
+  const longueur = H.length, exemple = 3600; verif(longueur > exemple * 3, `plus riche que l'exemple : ${fx(longueur)} caractères, contre ~${fx(exemple)} pour la fiche écrite à la main dans l'issue`); }
 
 console.log('7. Les cas limites');
 { const k0 = clone(T.find(t => t.id === 'kaume')), v0 = clone(T.find(t => t.id === 'vigie')), corpsK = k0.plan.corps;
