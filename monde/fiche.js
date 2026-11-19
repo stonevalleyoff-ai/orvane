@@ -206,7 +206,7 @@ const CARRURES = {
   poisson: [6, 45, [[6, 'fine et allongée, comme une anguille', 'slender eel-like', 'light'], [20, 'fuselée', 'streamlined', ''], [45, 'pleine', 'full-bodied', ''], [Infinity, 'massive et haute', 'deep-bodied massive', 'heavy']]],
   oiseau: [4, 12, [[4, 'légère et élancée', 'slender', 'light'], [12, 'de carrure ordinaire', '', ''], [Infinity, 'lourde', 'heavy-bodied', 'heavy']]],
 };
-CARRURES.bipede = CARRURES.quadrupede; CARRURES.segmente = CARRURES.hexapode; CARRURES.radiaire = CARRURES.tentaculaire = CARRURES.poisson;
+CARRURES.bipede = CARRURES.quadrupede; CARRURES.segmente = CARRURES.hexapode; CARRURES.radiaire = CARRURES.tentaculaire = [0, 0, [[Infinity, 'au corps mou', 'soft', '']]];   // (sans squelette : pas de carrure)
 const TAILLES_EN = [[.05, 'tiny'], [.2, 'very small'], [.6, 'small'], [1.5, 'medium-sized'], [3, 'large'], [Infinity, 'huge']];
 const CHIFFRES = ['aucun', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf', 'dix', 'onze', 'douze'];
 const NUMBERS = ['no', 'a single', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve'];
@@ -406,7 +406,7 @@ function rediger(t, I, opt, C) {
       if (k2 === 'haut' && !c.pattes) continue;
       if (v === 0 && ZERO[k2]) { props.push(`**${ZERO[k2][0]}** ${par(champ(k2))}`); continue; }
       const P = palier(v, PALIERS[k2]), gras = v <= .2 || v >= .8, w = gras ? '**' + P[1] + '**' : P[1];
-      props.push(k2 === 'long' ? `corps ${w} ${par(champ(k2))}` : k2 === 'haut' ? `pattes ${w}${loco.includes('reptation') && v < .35 ? ', écartées' : ''} ${par(champ(k2))}` : k2 === 'cou' ? `cou ${w} ${par(champ(k2))}`
+      props.push(k2 === 'long' ? `${al === 'radiaire' ? 'bras' : 'corps'} ${w} ${par(champ(k2))}` : k2 === 'haut' ? `pattes ${w}${loco.includes('reptation') && v < .35 ? ', écartées' : ''} ${par(champ(k2))}` : k2 === 'cou' ? `cou ${w} ${par(champ(k2))}`
         : al === 'poisson' ? `nageoire de queue ${gras ? '**' + palier(v, PALIERS.caudale)[1] + '**' : palier(v, PALIERS.caudale)[1]} ${par(champ(k2))}`
         : `queue ${w}${leger && v < .55 ? ' et fine' : ''} ${par(champ(k2))}${leger && v < .55 ? ' ' + interp('une bête légère') : ''}`); }
     if (props.length) L.push(Maj(props.join(', ')) + '.');
@@ -424,7 +424,7 @@ function rediger(t, I, opt, C) {
     const nomEn = al === 'hexapode' ? (c.pattes === 6 ? 'six-legged arthropod' : `${nombreEn(c.pattes)}-legged arthropod`) : al === 'segmente' ? `segmented creature with ${c.pattes} legs` : al === 'radiaire' || al === 'tentaculaire' ? `${nomA[1]} with ${c.pattes} arms` : nomA[1];
     const bas = (al === 'quadrupede' || al === 'bipede') && c.haut < .2 ? 'low-slung ' : (al === 'quadrupede' || al === 'bipede' || al === 'oiseau') && c.haut >= .75 ? 'long-legged ' : '';
     pro.avant.push(`a ${palier(Lv || .5, TAILLES_EN)[1]} ${bas}${nomEn}${/creature/.test(nomEn) ? '' : ' creature'}` + (kc != null ? `, ${length(Lv)} long${car[3] ? ' and ' + car[3] : ''} (${weight(mv)})` : ''));
-    if (utiles.includes('long')) pro.corps.push([car?.[2], al === 'poisson' && c.long > .85 ? 'eel-like elongated body' : palier(c.long, PALIERS.long)[2]].filter(Boolean).join(' '));
+    if (utiles.includes('long')) pro.corps.push([car?.[2], al === 'poisson' && c.long > .85 ? 'eel-like elongated body' : al === 'radiaire' ? palier(c.long, PALIERS.long)[2].replace(/body$/, 'arms') : palier(c.long, PALIERS.long)[2]].filter(Boolean).join(' '));
     if (c.pattes && utiles.includes('haut')) pro.corps.push(palier(c.haut, PALIERS.haut)[2] + (loco.includes('reptation') && c.haut < .35 && al !== 'hexapode' ? ' splayed close to the ground' : ''));
     if (al === 'serpent' || al === 'poisson') pro.corps.push('no legs');
   }
@@ -436,7 +436,9 @@ function rediger(t, I, opt, C) {
       pro.tete.push(`a single round glowing pale-cyan lens eye #7FE0FF at the front`); }
     else {
       const parts = [];
-      const te = palier(c.tete, PALIERS.tete); parts.push(`tête **${te[1]}** ${par(champ('tete'))}`.replace(/\*\*(moyenne|petite|grosse)\*\*/, '$1'));
+      // (la « tête » d'une méduse est sa cloche, celle d'une étoile sa partie centrale, celle d'une pieuvre son manteau)
+      const nomTete = al === 'radiaire' ? (loco.includes('nage') ? ['cloche', 'bell'] : ['partie centrale', 'central disc']) : al === 'tentaculaire' ? ['tête', 'mantle'] : ['tête', 'head'];
+      const te = palier(c.tete, PALIERS.tete); parts.push(`${nomTete[0]} **${te[1]}** ${par(champ('tete'))}`.replace(/\*\*(moyenne|petite|grosse)\*\*/, '$1'));
       const bouche = boucheDe(al, reg, D, loco), regimeSrc = ci('regime', reg ?? null) + (Object.keys(D).length ? ', ' + liste(Object.entries(D).sort((a, b) => b[1] - a[1]).map(([x, v]) => pc(v) + ' ' + (voyelle(x) ? 'd\'' : 'de ') + x)) : '');
       if (al === 'oiseau') { const b = palier(c.museau, PALIERS.bec); parts.push(`bec ${b[1]} ${par(champ('museau'))}, ${bouche[0]} ${interp(regimeSrc + (loco.includes('nage') ? ', ' + ci('locomotion', loco) : ''))}`); }
       else if (utiles.includes('museau')) parts.push(c.museau === 0 ? `**${ZERO.museau[0]}** ${par(champ('museau'))}` : `museau ${palier(c.museau, PALIERS.museau)[1]} ${par(champ('museau'))}`);
@@ -450,7 +452,7 @@ function rediger(t, I, opt, C) {
       if (c.motif === 'masque') L.push(`Un masque sombre sur les yeux ${par(ci('motif', 'masque'))}.`);
       const sansT = ['museau', 'oreilles'].filter(k2 => !utiles.includes(k2) && !(k2 === 'museau' && al === 'oiseau'));
       if (sansT.length) L.push(`${al === 'hexapode' || al === 'segmente' ? 'Ni museau ni oreilles : une tête d\'insecte' : al === 'oiseau' ? 'Pas d\'oreilles visibles : une tête d\'oiseau' : 'Ni oreilles ni museau'} ${par(sansT.map(champ).join(', '))} ${interp('les planches n\'en dessinent pas pour ce corps')}.`);
-      pro.tete.unshift(palier(c.tete, PALIERS.tete)[2]);
+      pro.tete.unshift(palier(c.tete, PALIERS.tete)[2].replace(/head$/, nomTete[1]));
       if (al === 'oiseau') pro.tete.push(palier(c.museau, PALIERS.bec)[2].replace(/ beak$/, ' ' + bouche[1])); else if (utiles.includes('museau')) pro.tete.push(c.museau === 0 ? ZERO.museau[1] : palier(c.museau, PALIERS.museau)[2]);
       if (utiles.includes('cou')) pro.tete.push(c.cou === 0 ? ZERO.cou[1] : palier(c.cou, PALIERS.cou)[2]);
       if (utiles.includes('oreilles') && c.oreilles === 0) pro.tete.push('earless');
