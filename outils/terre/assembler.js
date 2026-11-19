@@ -245,9 +245,9 @@ inst = Meteo.eveiller(inst).inst; inst.monde.meteo = { depuis: 0 };
 //    finissait au plus bas, sans rien y gagner — docs/53) ;
 // chacun entre des bornes (la place de 0,001 à 50, l'efficacité de 0,02 à 50). Quatre passes, la concurrence se répondant.
 // (--depuis <amorce> : reprendre les réglages calés d'une amorce d'avant — la place, l'efficacité de chasse — et ne pas refaire le calage d'un jour)
-// Les grands carnivores (le loup, les lynx, le glouton) n'y sont pas : en Europe, les hommes les tiennent bas. Les mettre à l'équilibre de leurs
+// Les grands carnivores (le loup, les lynx) n'y sont pas : en Europe, les hommes les tiennent bas. Les mettre à l'équilibre de leurs
 // effectifs comptés les figeait (le loup recevait une adresse de 0,38 et ne remontait plus : l'étalon l'a vu, docs/53). Ils gardent celle du
-// moteur, et ce qu'ils font dit ce que le moteur sait d'eux. (L'ours, omnivore, a sa place comme les autres brouteurs.)
+// moteur, et ce qu'ils font dit ce que le moteur sait d'eux. (L'ours et le glouton, omnivores, ont leur place comme les autres brouteurs.)
 const TENUS = new Set(['loup', 'lynx-boreal', 'lynx-pardelle', 'ours-brun', 'glouton']);
 const DEPUIS = arg('--depuis') ? JSON.parse(fs.readFileSync(path.resolve(arg('--depuis')), 'utf8')) : null;
 if (DEPUIS) { const P = new Map(DEPUIS.taxons.map(t => [t.id, t.plan])); for (const t of inst.taxons) { const q = P.get(t.id); if (!q) continue; for (const k of ['place', 'efficacite']) if (q[k] != null && !(k === 'efficacite' && TENUS.has(t.id))) t.plan[k] = q[k]; } }
