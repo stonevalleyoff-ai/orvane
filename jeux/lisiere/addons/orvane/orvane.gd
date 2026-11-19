@@ -9,6 +9,7 @@
 #   var inst = await Orvane.lire_lieux(["foret"])        # ou seulement les lieux qu'on joue (le monde par morceaux, docs/21)
 #   await Orvane.lire_silhouettes("foret")               # les planches : chaque bête du lieu dessinée, et ses yeux
 #   sprite.texture = Orvane.texture("dunvi", 96.0)       # l'image d'une lignée, à 96 pixels de large ; Orvane.yeux("dunvi")
+#   var p = Orvane.parties("dunvi", "foret", 96.0)       # ses parties, dans cette image : p.pattes[0].points, p.tete.pivot…
 #   Orvane.compter("dunvi", "savane", "rencontre")      # au moment où ça arrive, dans un biome d'Orvane (déjà traduit)
 #   Orvane.compter("dunvi", "savane", "prelevement", 1.0, "", "", "", "melee")   # … et par quel moyen (melee, distance, piege, feu…)
 #   Orvane.compter("dunvi", "savane", "attaque")        # la mémoire (docs/50) : blessure, effarouchement, pillage, attaque,
@@ -157,7 +158,7 @@ func lire_silhouettes(biome: String) -> Dictionary:
 	return s
 
 
-# une planche gardée dans le jeu (pour jouer hors ligne) : { lignée: { svg, yeux, sol } }
+# une planche gardée dans le jeu (pour jouer hors ligne) : { lignée: { svg, yeux, sol, parties } }
 func ajouter_planche(biome: String, silhouettes: Dictionary) -> void:
 	if not _planches.has(biome):
 		_planches[biome] = {}
@@ -192,6 +193,68 @@ func yeux(lignee: String, biome: String = "") -> Array:
 		if typeof(e) == TYPE_ARRAY and e.size() >= 3:
 			out.append(Vector3(float(e[0]), float(e[1]), float(e[2])))
 	return out
+
+
+# les parties du corps d'une lignée, pour l'animer (docs/21) : { dessin, corps, tete, cou, queue, pattes, bras, organes, yeux,
+# contact, boite, groupe }, dans l'image de cette largeur (170 : le cadre de la planche, comme yeux). Chaque point est un
+# Vector2 ; une chaîne, un PackedVector2Array (points : d'un bout à l'autre, une patte de la hanche au pied ; courbe : début,
+# contrôle, bout) ; une boîte, un Rect2 ; une épaisseur, un rayon, à la même échelle ; les yeux et les anneaux, des Vector3 (x, y,
+# rayon) ; groupe, le Transform2D qui pose le groupe du SVG dans l'image ; svg, les éléments de la partie dans ce groupe.
+# Un champ que le kit ne connaît pas reste tel qu'il est publié. {} : pas de planche, ou une planche d'avant les parties.
+func parties(lignee: String, biome: String = "", largeur: float = 170.0) -> Dictionary:
+	var p = _silhouette(lignee, biome).get("parties")
+	if typeof(p) != TYPE_DICTIONARY:
+		return {}
+	return _partie(p, maxf(0.001, largeur / 170.0), "")
+
+
+func _partie(v, s: float, cle: String) -> Variant:
+	if typeof(v) == TYPE_DICTIONARY:
+		var o := {}
+		for c in v:
+			o[c] = _partie(v[c], s, str(c))
+		return o
+	if (typeof(v) == TYPE_FLOAT or typeof(v) == TYPE_INT) and (cle == "epaisseur" or cle == "rayon"):
+		return float(v) * s
+	if typeof(v) != TYPE_ARRAY:
+		return v
+	match cle:
+		"points", "courbe":
+			var pts := PackedVector2Array()
+			for q in v:
+				pts.append(_point(q, s))
+			return pts
+		"epaisseurs":
+			var w := PackedFloat32Array()
+			for x in v:
+				w.append(float(x) * s)
+			return w
+		"centre", "museau", "pivot", "attache", "contact":
+			return _point(v, s)
+		"boite":
+			if v.size() >= 4:
+				return Rect2(_point(v, s), _point([float(v[2]) - float(v[0]), float(v[3]) - float(v[1])], s))
+		"groupe":
+			if v.size() >= 3:
+				return Transform2D(0.0, Vector2(float(v[2]), float(v[2])) * s, 0.0, _point(v, s))
+		"yeux", "anneaux":
+			var out := []
+			for e in v:
+				if typeof(e) == TYPE_ARRAY and e.size() >= 3:
+					out.append(Vector3(float(e[0]) * s, float(e[1]) * s, float(e[2]) * s))
+			return out
+		"svg":
+			return v
+		_:
+			var out := []
+			for x in v:
+				out.append(_partie(x, s, ""))
+			return out
+	return v
+
+
+func _point(q, s: float) -> Vector2:
+	return Vector2(float(q[0]), float(q[1])) * s if typeof(q) == TYPE_ARRAY and q.size() >= 2 else Vector2.ZERO
 
 
 func _silhouette(lignee: String, biome: String) -> Dictionary:
