@@ -107,6 +107,26 @@ Deux années, du 17 novembre 2026 au 16 novembre 2028 :
 
 **Ce que dit l'échec des grands carnivores.** Il est d'abord celui de l'assemblage : le calage sur l'année laisse de côté le loup, l'ours, les lynx et le glouton pour ne pas les figer, mais le calage d'un jour les mettait, comme les autres, à l'équilibre de leurs effectifs comptés. Le loup y recevait une adresse de 0,38 : à l'équilibre là où les hommes le tiennent, il ne pouvait pas remonter. Le calage d'un jour doit les laisser à l'adresse du moteur (1). Ce qu'ils feront alors dira ce que le moteur sait d'eux.
 
+**Avec l'adresse du moteur** (une quatrième passe d'un an, depuis la troisième ; 90 % des espèces sous ×1,41 d'une année à l'autre). Deux années encore :
+
+| | test | ce qu'il a donné |
+| --- | --- | --- |
+| ✓ | la stabilité | 98 % des espèces à moins d'un facteur 2, aucune extinction |
+| ≈ | aucune espèce ne fond ni ne s'emballe | 4, toutes au bord : les coccinelles ×0,46, les araignées ×0,46, les carabes ×0,50, les méduses ×0,50. Les papillons ne s'emballent plus |
+| ✓ | les naissances, les cigognes | le 24 juin, le 24 juin ; le 25 août, le 8 mars |
+| ✓ | les prédateurs | ×1,7 de la loi en fin de course (au départ ×2,0) |
+| ✗ | les grands carnivores remontent | **le loup +5,5 % par an**, **l'ours +5,4 %** ; le lynx boréal −6,8 %, le lynx pardelle −15,2 %, le glouton −6,0 % |
+| ✓ | garde-fou : Damuth | −0,701 |
+
+Le loup remonte désormais comme il remonte en vrai (de 5 à 10 % par an, là où on le laisse), et l'expérience du loup passe toujours (plus bas). L'échec qui reste est celui du moteur :
+- **les lynx** : à l'adresse du moteur, ils ne trouvent pas de quoi vivre aux effectifs comptés. Le calage d'un jour leur donnait une adresse de 2,1 (le boréal) et de 6,7 (le pardelle) pour qu'ils tiennent : ils perdent leurs proies devant les renards et les rapaces, qui mangent les mêmes lièvres et les mêmes lapins. En vrai, un lynx tue le renard qu'il croise, et le chasse de son territoire. Le moteur ne connaît pas cette domination d'un grand chasseur sur les petits qui mangent comme lui ;
+- **le glouton** : en vrai, il vit l'hiver des carcasses que laissent les loups et les lynx. L'Europe ne fait pas encore vivre ses charognards des morts (`regles.cadavres = 0`).
+
+Ce que l'étalon dit de faire maintenant :
+1. **la domination entre chasseurs** : un grand prédateur qui chasse ou tue les petits de sa guilde, et prend leur part ;
+2. **les charognards** : le glouton, les vautours, les corvidés vivent en partie des morts ;
+3. **le reste des insectes chasseurs** : seule, l'araignée n'a que 32 % de sa satiété. Elle doit trouver son équilibre plus bas que ses effectifs comptés, et le trouve lentement (la moitié par an).
+
 ## Une expérience : le retour du loup
 
 `node outils/etalon.js --experience loup` prend un morceau de l'Europe (la France, l'Italie, la Suisse, Monaco : 96 lieux) en 1992. La France et la Suisse n'ont plus un loup, l'Italie en a environ 30 % d'aujourd'hui (≈ 350, ils étaient environ 400 vers 1990). Avec le loup, on garde ses grandes proies : les ongulés, les lièvres, le lapin, la marmotte, le castor. On laisse les autres carnivores et les plantes, pour aller vite : 31 ans en quatre minutes. On compare ensuite à ce qu'a vu l'Office français de la biodiversité :
