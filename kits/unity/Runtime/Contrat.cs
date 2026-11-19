@@ -174,6 +174,7 @@ namespace Orvane
     {
         [JsonProperty("orvane")] public string Contrat = "1.0";
         [JsonProperty("monde")] public string Monde = "orvane";
+        [JsonProperty("id")] public string Id;                                 // l'id du lot : un renvoi avec le même id n'est compté qu'une fois
         [JsonProperty("instantane")] public int? Instantane;                   // le cycle.n de l'instantané que le jeu jouait
         [JsonProperty("familles")] public List<string> Familles;               // ce que le jeu joue : animale, synthetique, vegetale
         [JsonProperty("source")] public Source Source = new Source();

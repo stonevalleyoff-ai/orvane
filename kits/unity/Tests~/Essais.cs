@@ -59,15 +59,25 @@ static class Essais
             Verif(enCours == L.Count + 3, $"{L.Count} rencontres de deux fois, additionnées : {enCours} événements (et un prélèvement, un défrichage, un déplacement)");
             var sauve = c.Sauver(); var c2 = new Compteur("essai-unity", I.Monde.Id) { Instantane = I.Cycle.N, Zone = "carte:1" }; c2.Charger(sauve);
             Verif(c2.EnCours == enCours, "sauvé puis repris (le jeu se ferme, il se rouvre) : rien n'est perdu");
-            c2.Clore("h:essai"); int k = 0; string lot; var lots = new List<Lot>();
+            c2.Clore("h:essai");
+            // l'id de chaque lot : donné à la clôture, gardé avec le lot en attente d'un lancement à l'autre (un renvoi ne compte qu'une fois)
+            var avantId = Lot.DepuisJson(c2.Prochain()).Id; var c3 = new Compteur("essai-unity", I.Monde.Id); c3.Charger(c2.Sauver());
+            var ancien = new Compteur("essai-unity", I.Monde.Id); ancien.Charger("{\"Lots\":[\"{\\\"orvane\\\":\\\"1.0\\\",\\\"monde\\\":\\\"orvane\\\",\\\"periode\\\":{\\\"debut\\\":\\\"2026-11-01T10:00:00Z\\\",\\\"fin\\\":\\\"2026-11-01T11:00:00Z\\\"},\\\"evenements\\\":[]}\"]}");
+            var lotAncien = JObject.Parse(ancien.Prochain()); var c4 = new Compteur("essai-unity", I.Monde.Id); c4.Charger(ancien.Sauver());
+            Verif(avantId != null && avantId.Length == 32 && Lot.DepuisJson(c3.Prochain()).Id == avantId && (string)lotAncien["id"] != null && Lot.DepuisJson(c4.Prochain()).Id == (string)lotAncien["id"]
+                  && ancien.Prochain().Contains("\"debut\":\"2026-11-01T10:00:00Z\""),
+                $"chaque lot a son id ({avantId}), gardé d'un lancement à l'autre ; un lot gardé sans id par un kit d'avant en reçoit un, une fois, ses dates intactes");
+            int k = 0; string lot; var lots = new List<Lot>();
             while ((lot = c2.Prochain()) != null) { File.WriteAllText(Path.Combine(sortie, $"lot-{++k}.json"), lot); lots.Add(Lot.DepuisJson(lot)); c2.Depose(); }
             Verif(k == 2 && lots.All(x => x.Evenements.Count <= Compteur.MaxEvenements) && lots.Sum(x => x.Evenements.Count) == enCours
                   && lots[0].Evenements.First(x => x.Action == Actions.Rencontre).N == 5,
                 $"clos : {k} lots de {string.Join(" et ", lots.Select(x => x.Evenements.Count))} événements (500 au plus), une rencontre comptée 3 + 2 = 5");
             var corps = new Branchement { CleJeu = "orv_essai" }.CorpsDepot("h:essai", c.Sauver() == null ? "{}" : File.ReadAllText(Path.Combine(sortie, "lot-1.json")));
             var J = JObject.Parse(corps);
-            Verif((string)J["p_cle"] == "orv_essai" && (string)J["p_compte"] == "h:essai" && J["p_lot"]["evenements"] is JArray,
-                "l'appel orvane_deposer : p_cle, p_compte, p_lot, en JSON valide");
+            Verif((string)J["p_cle"] == "orv_essai" && (string)J["p_compte"] == "h:essai" && J["p_lot"]["evenements"] is JArray && J["p_cle_depot"] == null && lots.Select(x => x.Id).Distinct().Count() == lots.Count,
+                "l'appel orvane_deposer : p_cle, p_compte, p_lot, en JSON valide ; chaque lot son id");
+            var serveur = JObject.Parse(new Branchement { CleJeu = "orv_essai", CleDepot = "orvdep_essai" }.CorpsDepot("h:essai", "{\"evenements\":[]}"));
+            Verif((string)serveur["p_cle_depot"] == "orvdep_essai", "sur un serveur (OrvaneHttp), la clé de dépôt part avec le lot (p_cle_depot)");
         }
         Console.WriteLine(echecs == 0 ? "\ntout passe" : $"\nÉCHEC : {echecs}");
         return echecs == 0 ? 0 : 1;

@@ -51,7 +51,8 @@ namespace Orvane
             var fin = DateTime.UtcNow; var tous = evenements.Values.ToList();
             for (int i = 0; i < tous.Count; i += MaxEvenements)
             {
-                var lot = new Lot { Monde = Monde, Instantane = Instantane, Familles = Familles?.ToList(),
+                // (l'id du lot : gardé avec lui dans la file, il revient tel quel à chaque essai ; Orvane ne compte qu'une fois un lot renvoyé)
+                var lot = new Lot { Monde = Monde, Id = Guid.NewGuid().ToString("N"), Instantane = Instantane, Familles = Familles?.ToList(),
                     Source = new Source { Jeu = Jeu, Compte = compte, Zone = Zone },
                     Periode = new Periode { Debut = Iso(debut), Fin = Iso(fin) },
                     Evenements = tous.Skip(i).Take(MaxEvenements).Select(e => { e.N = Math.Min(10000, Math.Round(e.N, 3)); return e; }).ToList() };
@@ -70,12 +71,22 @@ namespace Orvane
         public void Charger(string texte)
         {
             if (string.IsNullOrEmpty(texte)) return; var s = JsonConvert.DeserializeObject<Sauvegarde>(texte); if (s == null) return;
-            enAttente.AddRange(s.Lots ?? new List<string>());
+            enAttente.AddRange((s.Lots ?? new List<string>()).Select(AvecId));
             foreach (var e in s.Evenements ?? new List<EvenementLot>())
                 if (e.Action == Actions.Deplacement) Deplacer(e.Taxon, e.Biome, e.Vers, e.N); else Compter(e.Taxon, e.Biome, e.Action, e.N, e.Phenotype, e.Parcelle, e.Age, e.Moyen);
             if (DateTime.TryParse(s.Debut, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal, out var d) && d < debut) debut = d;
         }
 
+        // un lot gardé par une version du kit qui ne donnait pas d'id en reçoit un, une fois (Sauver le garde ensuite avec lui)
+        static string AvecId(string json)
+        {
+            try
+            {
+                var o = Newtonsoft.Json.Linq.JObject.Load(new JsonTextReader(new System.IO.StringReader(json)) { DateParseHandling = DateParseHandling.None });   // (les dates restent telles quelles)
+                if (o["id"] != null) return json; o["id"] = Guid.NewGuid().ToString("N"); return o.ToString(Formatting.None);
+            }
+            catch (JsonException) { return json; }
+        }
         static string Iso(DateTime t) => t.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
         class Sauvegarde { public List<string> Lots; public List<EvenementLot> Evenements; public string Debut; }
     }
