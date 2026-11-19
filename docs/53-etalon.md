@@ -2,7 +2,7 @@
 
 Le monde d'Orvane est inventé, et rien ne dit si ses lynx mangent trop ou si ses hivers usent assez. L'Europe (docs/52) tourne sur le même moteur, avec de vraies espèces et un vrai climat : là, la réalité connaît la réponse. L'étalon fait vivre l'Europe plusieurs années, sans joueurs, depuis son amorce. Il note ensuite le moteur sur ce que la réalité sait **et que l'assemblage n'a pas calé**.
 
-Cette dernière condition est toute la difficulté. L'assemblage cale la place de chaque brouteur et le métabolisme de chaque prédateur pour que les effectifs comptés soient leur équilibre. « L'Europe a 31 000 loups » est donc vrai par construction et ne prouve rien du moteur. L'étalon ne regarde que ce qui doit émerger de lui-même.
+Cette dernière condition est toute la difficulté. L'assemblage cale la place de chaque brouteur et l'efficacité de chasse de chaque prédateur pour que les effectifs comptés soient leur équilibre. « L'Europe a 31 000 loups » est donc vrai par construction et ne prouve rien du moteur. L'étalon ne regarde que ce qui doit émerger de lui-même.
 
 ## Les tests
 
@@ -110,6 +110,15 @@ Cela donne au loup 5,9 fois la règle du monde, au lynx 4,6, au cerf 0,85, au ch
 Les trois tests du loup passent : il arrive en 1994, la centaine est atteinte en 2007, il y en a 916 en 2023.
 
 **Avec les règles du deuxième rapport**, le loup de France passe par 114 bêtes en 2008, 416 en 2018 et 682 en 2023 (~150, ~430, ~1 100 en vrai) : les trois tests passent toujours. L'Italie plafonne désormais vers 2 000 loups en 2023, quand on en compte environ 3 300.
+
+**Les proies à leur équilibre** (depuis le troisième rapport). Le morceau d'Europe de l'expérience n'a ni plantes ni autres bêtes, mais gardait la place que l'assemblage avait calée aux proies dans l'Europe entière. Chaque recalage de l'Europe changeait donc le loup de France du simple au quadruple, sans que le loup y soit pour rien : 682 loups en 2023 au deuxième rapport, puis 166 avec l'amorce du troisième, quand les nouvelles densités d'insectes avaient fait baisser de moitié la place calée des ongulés. L'expérience met désormais les brouteurs à leur équilibre dans son morceau d'Europe, comme le fait l'assemblage (un jour de moteur, quatre fois : leurs naissances égalent leurs morts et les leurs mangés). Le loup n'est pas touché.
+
+| | 1996 | 2005 | 2008 | 2014 | 2018 | 2020 | 2023 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| loups de France, simulés (troisième rapport) | 18 | 56 | 86 | 181 | 274 | 328 | 425 |
+| loups de France, réels (OFB) | ~20 | ~60 | ~150 | ~300 | ~430 | ~580 | ~1 100 |
+
+Les trois tests passent : il arrive en 1994, la centaine est atteinte en 2010, il y en a 425 en 2023, sous le réel mais à moins d'un facteur 3. Le front ralentit après 2010, quand le vrai loup gagne les Alpes du Nord, le Jura et les Vosges. L'Italie atteint 1 600 loups en 2023 (~3 300 en vrai).
 
 **Ce que vaut ce résultat.** La seule constante libre, le « / 25 », a été posée d'avance d'après la vitesse connue du front du loup en France (20 à 30 km par an). Elle a marché du premier coup, sans qu'on la retouche. Le loup a donc servi à la régler, et ne la prouve pas. Il faut une autre expansion pour la vérifier.
 
