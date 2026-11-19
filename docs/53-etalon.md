@@ -168,7 +168,7 @@ Deux années sur trois graines (1, 7920, 15839) : **9 ✓, 1 ≈, 1 ✗**, et le
 
 Le retour du loup, sur trois graines : il arrive en France en 1994, 1994, 1993 ; cent loups en 2008, 2008, 2006 ; 459, 439 et 572 loups en 2023. Les trois tests passent pour chacune.
 
-**Le glouton ne remonte toujours pas.** EltonTraits lui donne 20 % de fruits : il est omnivore, et ses naissances suivent sa place, non sa satiété de chasseur ni ce qu'il trouve de morts. Carnivore, à l'adresse du moteur, il ferait pire (sa satiété, 0,35 pour une cible de 0,77). Le vautour fauve, lui, était un détritivore qui broutait sa part du lieu : il est désormais carnivore et charognard, et un mangeur de charogne partage sa quête entre les morts et les vivants (docs/52). L'étalon qui le mesure est en cours.
+**Le glouton ne remonte toujours pas.** EltonTraits lui donne 20 % de fruits : il est omnivore, et ses naissances suivent sa place, non sa satiété de chasseur ni ce qu'il trouve de morts. Carnivore, à l'adresse du moteur, il ferait pire (sa satiété, 0,35 pour une cible de 0,77). Le vautour fauve, lui, était un détritivore qui broutait sa part du lieu : il est désormais carnivore et charognard, et un mangeur de charogne partage sa quête entre les morts et les vivants (docs/52). Recalé, l'étalon ne change pas (9 ✓, 1 ≈, 1 ✗ sur les trois graines) ; le loup de France passe par 524, 615 et 618 bêtes en 2023 selon la graine.
 
 ## Une expérience : le retour du loup
 
