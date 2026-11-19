@@ -81,6 +81,15 @@ if (arg('--experience') === 'loup') {
   const T = A.taxons.filter(t => GARDE.has(t.id)).map(t => ({ ...t, populations: t.populations.filter(p => ids.has(p.biome)) })).filter(t => t.populations.length);
   const loup = T.find(t => t.id === 'loup'); loup.populations = loup.populations.filter(p => pays.get(p.biome) === 'IT').map(p => ({ ...p, effectif: +(p.effectif * .3).toFixed(4) }));
   let E = { ...A, monde: { ...A.monde, flore: undefined, phenologie: undefined, parcelles: { ...A.monde.parcelles, types: A.monde.parcelles.types.filter(ty => B.some(b => b.type === ty.id)) } }, biomes: B, taxons: T, cycle: { ...A.cycle, date: '1992-01-01T03:17:00.000Z' } };
+  // les proies à leur équilibre dans ce morceau d'Europe : sans les plantes ni les autres bêtes, la place que l'assemblage leur a calée dans
+  // l'Europe entière ne leur convient plus (chaque recalage de l'Europe changeait le loup de France du simple au quadruple). Comme
+  // l'assemblage, un jour de moteur, quatre fois : la place de chaque brouteur pour que ses naissances égalent ses morts et les siens mangés.
+  // Le loup n'est pas touché
+  for (let pass = 0; pass < 4; pass++) { const brut = [], X = new Map(), J = Orvane.cycle(E, {}, { duree_ms: 864e5, trace: x => brut.push(x) }), PRO = new Map(J.biomes.map(b => [b.id, b.saison?.production ?? 1]));
+    for (const x of brut) { const o = X.get(x.taxon) || X.set(x.taxon, { N: 0, conv: 0, pred: 0, ps: 0 }).get(x.taxon); o.N += x.N; o.conv += x.conv * x.N; o.pred += x.mortsPred; o.ps += x.sat * x.N * (PRO.get(x.biome) ?? 1); }
+    for (const t of E.taxons) { const o = X.get(t.id); if (t.id === 'loup' || !o || !(o.N > 0) || !['herbivore', 'omnivore'].includes(t.plan.regime)) continue;
+      const m = 365.25 / Math.max(2, t.plan.longevite), p = o.pred / o.N * 365.25, cible = clamp(1 - (m + p) / Math.max(1e-9, t.plan.natalite * o.conv / o.N), .2, .97), sa = o.ps / o.N;
+      if (sa > 1e-6) t.plan = { ...t.plan, place: +clamp((t.plan.place ?? 1) * sa / cible, .0005, 100).toPrecision(4) }; } }
   const ANSX = +arg('--ans', 31), REEL = { 1992: 2, 2000: 35, 2005: 60, 2010: 190, 2015: 300, 2018: 430, 2020: 580, 2023: 1100 }, serie = [], t1 = Date.now();
   const enFrance = I => { const w = I.taxons.find(t => t.id === 'loup'); return w ? somme(w.populations.filter(p => pays.get(p.biome) === 'FR').map(p => p.effectif)) : 0; };
   const lieuxFR = I => (I.taxons.find(t => t.id === 'loup')?.populations || []).filter(p => pays.get(p.biome) === 'FR').length;
