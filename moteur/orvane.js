@@ -696,7 +696,8 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
       O *= REGLES.charognes / PAS; if (O > 0) T.push({ t: CHAROGNE, E: null, pop: { N: [] }, Nt: 0, poids: [], Bv: O, regime: 'charogne' }); }
     for (const p of preds) {
       let A = 0; const x = new Array(T.length).fill(0);   // (docs/30 : un spectre choisit entre insectes, viande et sang)
-      T.forEach((q, k) => { if (q === p) return; let f = q.t === CHAROGNE ? p.t.plan.charogne || 0 : APP(p.t.plan, q.t.plan);
+      // (docs/52 : un mangeur de charogne partage sa quête entre les morts et les vivants, selon sa part de charogne — le vautour ne tue pas)
+      T.forEach((q, k) => { if (q === p) return; let f = q.t === CHAROGNE ? p.t.plan.charogne || 0 : APP(p.t.plan, q.t.plan) * (REGLES.charognes > 0 && p.t.plan.charogne > 0 ? 1 - p.t.plan.charogne : 1);
         // (docs/53 : dans un monde réel, un buveur de sang de naissance — la tique, le moustique — boit aux bêtes vingt fois plus grandes que lui ;
         //  le moteur ne le laissait qu'à une lignée venue au sang par l'évolution, et la tique n'avait aucun hôte)
         if (REGLES.petites_proies && DT && !f && (p.t.plan.diete?.sang || 0) > 0 && (q.t.plan.masse_kg || 1) >= DI.REGLES.sang.rapport * (p.t.plan.masse_kg || 1) && q.t.plan.regime !== 'vegetal') f = DI.REGLES.sang.appetence * p.t.plan.diete.sang / Math.max(.05, DI.chair(p.t.plan.diete));

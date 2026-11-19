@@ -199,7 +199,7 @@ A('faucon-pelerin', 'Faucon pèlerin', 'Falco peregrinus', 'rapace', ['montagne'
 A('milan-royal', 'Milan royal', 'Milvus milvus', 'rapace', ['prairie', 'foret'], .1, '#a0522d', soc=.4, tem=.4, vit=18)
 A('pygargue', 'Pygargue à queue blanche', 'Haliaeetus albicilla', 'rapace', ['cote', 'marais', 'foret', 'taiga'], .01, '#6a5440', soc=.15, tem=.6, vit=20)
 A('balbuzard', 'Balbuzard pêcheur', 'Pandion haliaetus', 'rapace', ['cote', 'marais', 'foret', 'taiga'], .02, '#5a4632', soc=.1, tem=.5, vit=20)
-A('vautour-fauve', 'Vautour fauve', 'Gyps fulvus', 'rapace', ['montagne', 'maquis'], .05, '#a08460', soc=.8, tem=.3, vit=20, regime='detritivore', diete=None, force_corps=dict(cou=.5))
+A('vautour-fauve', 'Vautour fauve', 'Gyps fulvus', 'rapace', ['montagne', 'maquis'], .05, '#a08460', soc=.8, tem=.3, vit=20, regime='carnivore', diete={'viande': 1}, force_corps=dict(cou=.5))   # (docs/52 : il vit des morts, plan.charogne = 1 ; il ne tue pas)
 A('grand-duc', "Grand-duc d'Europe", 'Bubo bubo', 'strigide', ['montagne', 'foret'], .02, '#8a6440', soc=.05, tem=.7, vit=15)
 A('chouette-hulotte', 'Chouette hulotte', 'Strix aluco', 'strigide', ['foret'], 1, '#7a5a3e', soc=.05, tem=.5, vit=12, force_corps=dict(oreilles=0))
 A('effraie', 'Effraie des clochers', 'Tyto alba', 'strigide', ['prairie'], .3, '#d8b88a', soc=.05, tem=.35, vit=12, force_corps=dict(oreilles=0))
