@@ -133,9 +133,16 @@ Sans ce calage, les lapins partaient bien sous la place que leur donnait la prod
 
 **Le calage sur une année entière** (`--caler-annee 3`). Le calage d'un jour ne voit que novembre. L'étalon (docs/53) a montré qu'au bout de deux ans, les insectes chasseurs s'effondraient, les rapaces perdaient les deux tiers, et les lapins et les lièvres doublaient. Chaque passe fait vivre une année entière, puis compare chaque espèce à elle-même un an plus tôt, à la même saison (λ). Elle corrige d'une part de l'écart (λ^0,8) :
 - un brouteur qui a crû a trop de place ;
-- un carnivore qui a crû a trop à manger pour ce qu'il brûle.
+- un carnivore qui a crû chasse trop bien.
 
 Puis elle recommence. Les grands carnivores (le loup, l'ours, les lynx, le glouton) n'y sont pas : les hommes les tiennent bas en Europe, et sans joueurs ils remontent, comme ils remontent en vrai. Une passe prend environ 50 minutes.
+
+Une espèce qui passe d'un côté à l'autre d'une passe à la suivante (les papillons, ×10 puis ×0,11) a reçu un pas trop grand : le suivant est deux fois plus petit, comme une recherche par moitiés. Ce que chaque passe a vu est gardé à côté de son amorce (`<sortie>.lambda.json`) et relu par la suivante (`--depuis`). Une passe par lancement :
+
+```
+node outils/terre/assembler.js --monde europe --date 2026-11-18 --sortie f0.json                                   # le calage d'un jour
+node outils/terre/assembler.js --monde europe --date 2026-11-18 --depuis f0.json --caler-annee 1 --sortie f1.json  # une année ; puis f1 → f2…
+```
 
 **Le repos d'hiver** (`regles.diapause`). Un animal à sang froid (`plan.metabolisme` < 1 : un insecte, un poisson, un reptile, un amphibien) passe la mauvaise saison en diapause : un œuf, une nymphe, une bête engourdie. Quand son lieu ne produit presque plus rien, il fait tout dix fois moins au cœur de l'hiver :
 - il meurt moins ;

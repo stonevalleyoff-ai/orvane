@@ -270,17 +270,22 @@ for (let pass = 0; pass < CALER; pass++) {
 // place, un carnivore qui a crû chasse trop bien ; on corrige d'une part de l'écart (λ^0,8), et l'on recommence.
 // Les grands carnivores (le loup, l'ours, les lynx, le glouton) n'y sont pas : en Europe, les hommes les tiennent bas, et sans joueurs ils
 // remontent, comme ils remontent en vrai ; les caler les figerait (et le retour du loup ne se ferait plus). Une passe : ~50 minutes.
+// Une espèce qui passe d'un côté à l'autre (×10, puis ×0,11 : les papillons) a reçu un pas trop grand : le suivant est deux fois plus petit,
+// comme une recherche par moitiés (au plus bas 0,1). Ce que chaque passe a vu (λ et le pas) est gardé à côté de sa sortie
+// (<sortie>.lambda.json), et relu par la passe suivante (--depuis).
 const ANNEE = +arg('--caler-annee', 0), TENUS = new Set(['loup', 'lynx-boreal', 'lynx-pardelle', 'ours-brun', 'glouton']);
+const HIST = (() => { try { return DEPUIS ? JSON.parse(fs.readFileSync(path.resolve(arg('--depuis')) + '.lambda.json', 'utf8')) : {}; } catch { return {}; } })();
 for (let it = 0; it < ANNEE; it++) {
   const tot = I => new Map(I.taxons.map(t => [t.id, somme(t.populations.map(p => p.effectif))])), N0 = tot(inst), t0 = Date.now(); let J = inst;
   for (let k = 0; k < 365; k++) { J = Orvane.cycle(J, {}, { duree_ms: 864e5 }); if ((k + 1) % 61 === 0) process.stderr.write(`calage sur l'année, passe ${it + 1} : ${J.cycle.jour}\n`); }
   const N1 = tot(J), ec = [], pires = [];
   for (const t of inst.taxons) { if (t.plan.regime === 'vegetal' || TENUS.has(t.id)) continue; const a0 = N0.get(t.id); if (!(a0 > 0)) continue;
-    const lam = clamp((N1.get(t.id) || 0) / a0, .1, 10), k = .8; ec.push(Math.abs(Math.log(lam))); pires.push([t.id, lam]);
+    const lam = clamp((N1.get(t.id) || 0) / a0, .1, 10), h = HIST[t.id], volte = h && Math.abs(Math.log(lam)) > .05 && Math.sign(Math.log(lam)) !== Math.sign(Math.log(h.lam));
+    const k = volte ? Math.max(.1, (h.k ?? .8) / 2) : .8; HIST[t.id] = { lam: +lam.toPrecision(4), k }; ec.push(Math.abs(Math.log(lam))); pires.push([t.id, lam]);
     if (OMNI.has(t.plan.regime)) t.plan.place = +clamp((t.plan.place ?? 1) * Math.pow(lam, -k), .0005, 100).toPrecision(4);
     else if (t.plan.regime === 'carnivore') t.plan.efficacite = +clamp((t.plan.efficacite ?? 1) * Math.pow(lam, -k), A.efficacite[0], A.efficacite[1]).toPrecision(4); }
   ec.sort((x, y) => x - y); pires.sort((x, y) => Math.abs(Math.log(y[1])) - Math.abs(Math.log(x[1])));
-  if (arg('--sortie')) fs.writeFileSync(arg('--sortie'), JSON.stringify(inst));   // (chaque passe est gardée : un arrêt n'en perd qu'une)
+  if (arg('--sortie')) { fs.writeFileSync(arg('--sortie'), JSON.stringify(inst)); fs.writeFileSync(arg('--sortie') + '.lambda.json', JSON.stringify(HIST)); }   // (chaque passe est gardée : un arrêt n'en perd qu'une)
   console.log(`calage sur l'année, passe ${it + 1} (${Math.round((Date.now() - t0) / 6e4)} min) : écart médian ×${Math.exp(ec[ec.length >> 1]).toFixed(2)}, 90 % sous ×${Math.exp(ec[Math.floor(ec.length * .9)]).toFixed(2)} ; les plus loin : ${pires.slice(0, 6).map(([id, l]) => `${id} ×${l.toFixed(2)}`).join(', ')}`);
 }
 const rodage = +arg('--rodage', 0);
