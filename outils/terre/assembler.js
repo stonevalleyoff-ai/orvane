@@ -102,7 +102,12 @@ const types = [...new Set(biomes.map(b => b.type))].sort().map(ty => { const L =
 const dist = (x, y) => Math.sqrt(['temperature', 'humidite', 'altitude', 'lumiere', 'couvert'].reduce((s, k) => s + ((x[k] ?? .5) - (y[k] ?? .5)) ** 2, 0));
 // les lieux où vit une espèce : ceux de sa présence (cellules H3, ou pays) dont le type est un de ses habitats
 const h3court = h => String(h || '').replace(/f+$/, '');
+// (docs/53) un groupe d'invertébrés, de petits poissons, de plantes (une guilde qui n'est ni d'oiseaux ni de mammifères) vit partout où est son
+// milieu : GBIF le voit mal (les pucerons y étaient sur 128 lieux, le zooplancton des lacs sur 25), et les coccinelles se retrouvaient sans
+// pucerons, les truites sans larves. Il est posé dans tous les lieux de ses habitats ; la convenance de chacun fait son abondance
+const partout = e => e.guilde && !['Aves', 'Mammalia'].includes(e.reel?.classe ?? String(e.reel?.groupe || '').split(' ')[0]);
 function lieuxDe(e) {
+  if (partout(e)) { const H = new Set(e.habitats || []); return biomes.filter(b => !H.size || H.has(b.type)); }
   const H = new Set(e.habitats || []), P = e.presence || {}, cel = P.cellules || P.h3 || null, pays = P.pays || null;
   const enCellule = cel ? new Map(Object.entries(Array.isArray(cel) ? Object.fromEntries(cel.map(c => [c, 1])) : cel).map(([k, v]) => [h3court(k), v])) : null;
   return biomes.filter(b => (!H.size || H.has(b.type)) && (enCellule ? enCellule.has(h3court(b.lieu.h3 || b.id.split('~')[1])) : pays ? (Array.isArray(pays) ? pays.includes(b.lieu.pays) : pays[b.lieu.pays] != null) : true));
