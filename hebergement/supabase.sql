@@ -4,7 +4,11 @@
 -- par les fonctions ci-dessous (hebergement/LISEZ-MOI.md).
 --   orvane_inscrire_jeu(nom, contact)        n'importe qui      → { jeu, cle, cle_admin } : la clé publique du jeu, sa clé d'administration
 --   orvane_regler_jeu(cle_admin, exposition) le jeu            → ce que le jeu sait montrer (le tampon en a besoin pour dénormaliser)
---   orvane_deposer(cle, compte, lot)         le client du jeu  → un lot de pressions (compte : l'identifiant du joueur dans le jeu)
+--   orvane_deposer(cle, compte, lot, cle_depot)  le jeu       → un lot de pressions (compte : l'identifiant du joueur dans le jeu) ;
+--                                            cle_depot : la clé de dépôt, pour un jeu qui dépose depuis son serveur (facultative) ;
+--                                            un lot renvoyé avec le même id répond { ok: true, deja: true }, sans rien consommer
+--   orvane_cle_depot(cle_admin)              le jeu            → crée ou renouvelle sa clé de dépôt, réservée à son serveur (montrée une fois)
+--   orvane_exiger_cle_depot(cle_admin, exiger)  le jeu         → n'accepter que les dépôts qui portent la clé de dépôt (faux par défaut)
 --   orvane_jeu(cle)                          le client du jeu  → ce qu'Orvane sait du jeu
 --   orvane_lire_lots(secret, monde, après)   l'action nocturne → les lots, comptes pseudonymisés
 --   orvane_lire_jeux(secret)                 l'action nocturne → les jeux et leur exposition
@@ -37,6 +41,14 @@ create table if not exists public.orvane_lots (
 create index if not exists orvane_lots_monde_id on public.orvane_lots (monde, id);                 -- la lecture nocturne
 create index if not exists orvane_lots_jeu_compte_recu on public.orvane_lots (jeu, compte, recu);  -- les quotas
 create index if not exists orvane_lots_jeu_recu on public.orvane_lots (jeu, recu);
+-- (19 novembre) ajouts, sans rien changer aux jeux déjà branchés :
+--  - la clé de dépôt d'un jeu, réservée à son serveur : son empreinte seulement (la clé, jamais), et si le jeu l'exige (non par défaut) ;
+--  - l'id qu'un jeu donne à un lot (lot.id, facultatif) : un même id, du même jeu, n'entre qu'une fois (les id absents ne se gênent pas)
+alter table public.orvane_jeux add column if not exists depot_empreinte bytea;
+alter table public.orvane_jeux add column if not exists depot_exige boolean not null default false;
+alter table public.orvane_jeux add column if not exists depot_cree timestamptz;
+alter table public.orvane_lots add column if not exists lot_id text;
+create unique index if not exists orvane_lots_jeu_lot_id on public.orvane_lots (jeu, lot_id);
 alter table public.orvane_jeux enable row level security;
 alter table public.orvane_lots enable row level security;
 revoke all on public.orvane_jeux, public.orvane_lots from anon, authenticated;
@@ -50,6 +62,12 @@ revoke all on orvane_prive.cles from public, anon, authenticated;
 create or replace function orvane_prive.secret_ok(p_secret text) returns boolean
 language sql stable security definer set search_path = orvane_prive, extensions as $$
   select p_secret is not null and exists (select 1 from orvane_prive.cles c where c.nom = 'lecture' and c.empreinte = extensions.digest(p_secret, 'sha256'))
+$$;
+-- deux empreintes égales, comparées octet par octet sans s'arrêter au premier écart (le temps ne dit pas où elles diffèrent)
+create or replace function orvane_prive.egales(a bytea, b bytea) returns boolean
+language sql immutable set search_path = orvane_prive as $$
+  select case when a is null or b is null or length(a) <> length(b) or length(a) = 0 then false
+    else (select bit_or(get_byte(a, i) # get_byte(b, i)) from generate_series(0, length(a) - 1) i) = 0 end
 $$;
 
 -- === s'inscrire : n'importe quel jeu, sans compte. 30 inscriptions par heure au plus, pour tout le monde ===
@@ -87,16 +105,57 @@ begin
   return jsonb_build_object('ok', true, 'jeu', ident);
 end $$;
 
--- === déposer un lot : 64 Ko, 500 événements, 48 lots par joueur et par jour, le quota du jeu ===
-create or replace function public.orvane_deposer(p_cle text, p_compte text, p_lot jsonb) returns jsonb
+-- === la clé de dépôt : réservée au serveur du jeu ; avec la clé d'administration ===
+-- La clé du jeu est publique (elle est dans le client) : n'importe qui peut déposer en son nom, et changer de compte à chaque lot.
+-- Un jeu qui dépose depuis son serveur y range une clé de dépôt, puis l'exige : un dépôt sans elle est refusé. Elle est rendue une
+-- seule fois ; Orvane n'en garde que l'empreinte. En demander une autre remplace l'ancienne, qui ne vaut plus rien aussitôt.
+create or replace function public.orvane_cle_depot(p_cle_admin text) returns jsonb
 language plpgsql security definer set search_path = public, extensions as $$
-declare j public.orvane_jeux; pseudo text; n int;
+declare ident text; exige boolean; neuve text;
+begin
+  select id, depot_exige into ident, exige from public.orvane_jeux where admin_empreinte = extensions.digest(coalesce(p_cle_admin, ''), 'sha256');
+  if ident is null then return jsonb_build_object('ok', false, 'erreur', 'clé d''administration inconnue'); end if;
+  neuve := 'orvdep_' || encode(extensions.gen_random_bytes(24), 'hex');
+  update public.orvane_jeux set depot_empreinte = extensions.digest(neuve, 'sha256'), depot_cree = now() where id = ident;
+  return jsonb_build_object('ok', true, 'jeu', ident, 'cle_depot', neuve, 'exigee', exige,
+    'note', 'la clé de dépôt va dans le serveur du jeu, jamais dans le client ; elle n''est montrée qu''une fois ; elle remplace la précédente');
+end $$;
+-- exiger la clé de dépôt (p_exiger = true), ou ne plus l'exiger (false) ; il faut d'abord en avoir une
+create or replace function public.orvane_exiger_cle_depot(p_cle_admin text, p_exiger boolean) returns jsonb
+language plpgsql security definer set search_path = public, extensions as $$
+declare ident text; une boolean;
+begin
+  select id, depot_empreinte is not null into ident, une from public.orvane_jeux where admin_empreinte = extensions.digest(coalesce(p_cle_admin, ''), 'sha256');
+  if ident is null then return jsonb_build_object('ok', false, 'erreur', 'clé d''administration inconnue'); end if;
+  if p_exiger is null then return jsonb_build_object('ok', false, 'erreur', 'exiger : vrai ou faux'); end if;
+  if p_exiger and not une then return jsonb_build_object('ok', false, 'erreur', 'pas encore de clé de dépôt : la créer d''abord (orvane_cle_depot)'); end if;
+  update public.orvane_jeux set depot_exige = p_exiger where id = ident;
+  return jsonb_build_object('ok', true, 'jeu', ident, 'exigee', p_exiger);
+end $$;
+
+-- === déposer un lot : 64 Ko, 500 événements, 48 lots par joueur et par jour, le quota du jeu ===
+-- p_cle_depot (facultatif) : la clé de dépôt. Un jeu qui l'exige refuse un dépôt qui ne la porte pas ; une clé fausse est toujours
+-- refusée. lot.id (facultatif) : un lot renvoyé avec le même id, par le même jeu, est reconnu avant les quotas, ne consomme rien, et
+-- répond { ok: true, deja: true } (le même id sur un autre lot est refusé). L'appel d'avant, à trois paramètres, est toujours servi :
+-- p_cle_depot vaut null par défaut. L'ancienne fonction est retirée, pour que l'API n'ait pas deux fonctions entre lesquelles choisir.
+drop function if exists public.orvane_deposer(text, text, jsonb);
+create or replace function public.orvane_deposer(p_cle text, p_compte text, p_lot jsonb, p_cle_depot text default null) returns jsonb
+language plpgsql security definer set search_path = public, extensions as $$
+declare j public.orvane_jeux; pseudo text; n int; ident text; vu public.orvane_lots; nouveau bigint;
 begin
   select * into j from public.orvane_jeux where cle = p_cle;
   if j.id is null then return jsonb_build_object('ok', false, 'erreur', 'clé de jeu inconnue'); end if;
   if not j.actif then return jsonb_build_object('ok', false, 'erreur', 'ce jeu est suspendu'); end if;
+  if j.depot_exige and p_cle_depot is null then return jsonb_build_object('ok', false, 'erreur', 'ce jeu ne dépose que depuis son serveur : clé de dépôt manquante'); end if;
+  if p_cle_depot is not null and not orvane_prive.egales(j.depot_empreinte, extensions.digest(p_cle_depot, 'sha256')) then
+    return jsonb_build_object('ok', false, 'erreur', 'clé de dépôt invalide'); end if;
   if p_compte is null or length(p_compte) < 1 or length(p_compte) > 128 then return jsonb_build_object('ok', false, 'erreur', 'compte : 1 à 128 caractères'); end if;
   if jsonb_typeof(p_lot) is distinct from 'object' or jsonb_typeof(p_lot->'evenements') is distinct from 'array' then return jsonb_build_object('ok', false, 'erreur', 'lot mal formé'); end if;
+  if p_lot ? 'id' then
+    if jsonb_typeof(p_lot->'id') is distinct from 'string' or (p_lot->>'id') !~ '^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$' then
+      return jsonb_build_object('ok', false, 'erreur', 'id du lot : 1 à 64 lettres, chiffres, points, tirets, deux-points'); end if;
+    ident := p_lot->>'id';
+  end if;
   if pg_column_size(p_lot) > 65536 or jsonb_array_length(p_lot->'evenements') > 500 then return jsonb_build_object('ok', false, 'erreur', 'lot trop gros'); end if;
   -- chaque événement au contrat (schemas/pression.schema.json) : un objet, une action connue, un n entre 0 et 10 000, des noms qui
   -- sont des chaînes ; le cycle de nuit les revérifie, mais un lot qui n'y répond pas n'entre pas
@@ -114,18 +173,30 @@ begin
   then return jsonb_build_object('ok', false, 'erreur', 'événement mal formé (schemas/pression.schema.json)'); end if;
   perform pg_advisory_xact_lock(hashtext('orvane_deposer:' || j.id));   -- les comptages des quotas qui suivent, sans course entre deux dépôts
   pseudo := left(encode(extensions.digest(j.id || ':' || p_compte || ':orvane', 'sha256'), 'hex'), 16);   -- Orvane distingue les joueurs, sans savoir qui ils sont
+  -- un renvoi (la réponse d'un dépôt s'est perdue) : le même id, déjà reçu de ce jeu, pour le même joueur et le même lot. Reconnu
+  -- avant les quotas, il ne consomme rien. (Le verrou ci-dessus range les dépôts d'un jeu l'un après l'autre : un renvoi qui arrive
+  -- pendant le premier dépôt attend sa fin, puis le voit. L'index unique garde la même règle si deux dépôts passaient quand même.)
+  if ident is not null then
+    select * into vu from public.orvane_lots where jeu = j.id and lot_id = ident;
+    if vu.id is not null then
+      if vu.compte = pseudo and vu.lot = (p_lot - 'source') then return jsonb_build_object('ok', true, 'deja', true); end if;
+      return jsonb_build_object('ok', false, 'erreur', 'id du lot déjà pris par un autre lot de ce jeu');
+    end if;
+  end if;
   select count(*) into n from public.orvane_lots where jeu = j.id and compte = pseudo and recu > now() - interval '1 day';
   if n >= 48 then return jsonb_build_object('ok', false, 'erreur', 'trop de dépôts aujourd''hui pour ce joueur'); end if;
   select count(*) into n from public.orvane_lots where jeu = j.id and recu > now() - interval '1 day';
   if n >= j.quota_jour then return jsonb_build_object('ok', false, 'erreur', 'quota du jeu atteint pour aujourd''hui'); end if;
-  insert into public.orvane_lots (jeu, compte, monde, lot) values (j.id, pseudo, left(coalesce(p_lot->>'monde', 'orvane'), 40), p_lot - 'source');
+  insert into public.orvane_lots (jeu, compte, monde, lot, lot_id) values (j.id, pseudo, left(coalesce(p_lot->>'monde', 'orvane'), 40), p_lot - 'source', ident)
+    on conflict (jeu, lot_id) do nothing returning id into nouveau;
+  if nouveau is null then return jsonb_build_object('ok', true, 'deja', true); end if;
   return jsonb_build_object('ok', true);
 end $$;
 
 -- === ce qu'Orvane sait d'un jeu (sa clé publique suffit) ===
 create or replace function public.orvane_jeu(p_cle text) returns jsonb
 language sql stable security definer set search_path = public as $$
-  select coalesce((select jsonb_build_object('ok', true, 'jeu', id, 'nom', nom, 'actif', actif, 'exposition', exposition) from public.orvane_jeux where cle = p_cle),
+  select coalesce((select jsonb_build_object('ok', true, 'jeu', id, 'nom', nom, 'actif', actif, 'exposition', exposition, 'cle_depot_exigee', depot_exige) from public.orvane_jeux where cle = p_cle),
     jsonb_build_object('ok', false, 'erreur', 'clé de jeu inconnue'))
 $$;
 
@@ -205,9 +276,11 @@ revoke all on function public.orvane_nommer(text, text, text, text, text, text),
 grant execute on function public.orvane_nommer(text, text, text, text, text, text), public.orvane_lire_noms(text, text, bigint, int) to anon, authenticated;
 
 -- === qui peut appeler quoi : les jeux (anon) déposent et s'inscrivent ; la lecture demande le secret ===
-revoke all on function public.orvane_inscrire_jeu(text, text), public.orvane_regler_jeu(text, jsonb, text), public.orvane_deposer(text, text, jsonb),
-  public.orvane_jeu(text), public.orvane_lire_lots(text, text, bigint, int), public.orvane_lire_jeux(text), orvane_prive.secret_ok(text) from public;
-grant execute on function public.orvane_inscrire_jeu(text, text), public.orvane_regler_jeu(text, jsonb, text), public.orvane_deposer(text, text, jsonb),
+revoke all on function public.orvane_inscrire_jeu(text, text), public.orvane_regler_jeu(text, jsonb, text), public.orvane_deposer(text, text, jsonb, text),
+  public.orvane_cle_depot(text), public.orvane_exiger_cle_depot(text, boolean),
+  public.orvane_jeu(text), public.orvane_lire_lots(text, text, bigint, int), public.orvane_lire_jeux(text), orvane_prive.secret_ok(text), orvane_prive.egales(bytea, bytea) from public;
+grant execute on function public.orvane_inscrire_jeu(text, text), public.orvane_regler_jeu(text, jsonb, text), public.orvane_deposer(text, text, jsonb, text),
+  public.orvane_cle_depot(text), public.orvane_exiger_cle_depot(text, boolean),
   public.orvane_jeu(text), public.orvane_lire_lots(text, text, bigint, int), public.orvane_lire_jeux(text) to anon, authenticated;
 
 -- === le volume (5 novembre) : un jeu neuf commence à 500 lots par jour (relevé à la main pour un jeu qui en a besoin :
@@ -220,3 +293,5 @@ do $$ begin
   perform cron.schedule('orvane-purge', '41 5 * * *', 'delete from public.orvane_lots where recu < now() - interval ''14 days''; delete from public.orvane_noms where recu < now() - interval ''90 days''');
 exception when others then raise notice 'pg_cron indisponible : la purge des vieux lots se fera à la main (%).', sqlerrm;
 end $$;
+-- (l'API relit les fonctions : une fonction changée de signature, comme orvane_deposer, est servie tout de suite)
+notify pgrst, 'reload schema';

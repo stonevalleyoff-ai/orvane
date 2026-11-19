@@ -31,13 +31,15 @@ Il est né de la genèse « universelle » : 24 biomes neutres (de la banquise a
 
 ## Le Supabase d'Orvane
 
-`hebergement/supabase.sql`, collé une fois dans l'éditeur SQL du projet (il peut être recollé). Aucune table n'est lisible directement ; tout passe par huit fonctions :
+`hebergement/supabase.sql`, collé une fois dans l'éditeur SQL du projet (il peut être recollé). Aucune table n'est lisible directement ; tout passe par dix fonctions :
 
 | fonction | qui l'appelle | ce qu'elle fait |
 | --- | --- | --- |
 | `orvane_inscrire_jeu(nom, contact)` | n'importe qui | inscrit un jeu ; rend son identifiant, **sa clé** (publique : elle va dans le code du jeu) et **sa clé d'administration** (secrète). 30 inscriptions par heure au plus |
 | `orvane_regler_jeu(cle_admin, exposition, nom)` | l'auteur du jeu | ce que le jeu sait montrer (`schemas/profil.schema.json`, `exposition` ; 32 Ko au plus) |
-| `orvane_deposer(cle, compte, lot)` | le jeu | un lot : 64 Ko et 500 événements au plus, chacun au contrat (une action connue, `n` de 0 à 10 000), 48 lots par joueur et par jour, et le quota du jeu (500 lots par jour pour un jeu neuf, relevé à la main ; 20 000 pour Stone Valley) |
+| `orvane_deposer(cle, compte, lot, cle_depot)` | le jeu, ou son serveur | un lot : 64 Ko et 500 événements au plus, chacun au contrat (une action connue, `n` de 0 à 10 000), 48 lots par joueur et par jour, et le quota du jeu (500 lots par jour pour un jeu neuf, relevé à la main ; 20 000 pour Stone Valley). Un lot renvoyé avec le même `id` répond `{ ok: true, deja: true }`, reconnu avant les quotas, sans rien consommer. `cle_depot` : facultative, sauf pour un jeu qui l'exige |
+| `orvane_cle_depot(cle_admin)` | l'auteur du jeu | crée ou renouvelle la clé de dépôt du jeu, réservée à son serveur ; rendue une fois, Orvane n'en garde que l'empreinte |
+| `orvane_exiger_cle_depot(cle_admin, exiger)` | l'auteur du jeu | n'accepter que les dépôts qui portent la clé de dépôt (non par défaut) |
 | `orvane_nommer(cle, compte, monde, taxon, nom, auteur)` | le jeu | un joueur propose le nom commun d'une lignée (docs/37) : 2 à 40 lettres, dix par jour et par joueur ; `deja` dit si quelqu'un l'a devancé |
 | `orvane_jeu(cle)` | le jeu | ce qu'Orvane sait du jeu |
 | `orvane_lire_lots(secret, monde, après)` | l'action nocturne | les lots, par pages de 1000, comptes pseudonymisés |
@@ -46,7 +48,7 @@ Il est né de la genèse « universelle » : 24 biomes neutres (de la banquise a
 
 Les lectures de l'action ne voient que les jeux actifs (suspendre un jeu écarte aussi ses lots en attente), et seulement ce qui est arrivé depuis plus de deux minutes (un dépôt encore en cours n'est jamais sauté). Avec pg_cron, les lots de plus de 14 jours et les noms de plus de 90 jours sont effacés chaque jour ; sans lui, la requête est dans le script, à lancer à la main.
 
-Le secret de lecture n'est gardé que par son empreinte, dans un schéma que l'API ne sert pas. Orvane n'a la clé de service d'aucun jeu, et aucun jeu n'a la sienne.
+Le secret de lecture n'est gardé que par son empreinte, dans un schéma que l'API ne sert pas. Orvane n'a la clé de service d'aucun jeu, et aucun jeu n'a la sienne. La clé d'administration et la clé de dépôt d'un jeu ne sont gardées, elles aussi, que par leur empreinte (sha256) ; la clé de dépôt se compare octet par octet, sans s'arrêter au premier écart (`orvane_prive.egales`).
 
 ## Brancher un jeu
 
@@ -58,6 +60,26 @@ Le guide pas à pas, avec les adresses, les appels et les erreurs : [BRANCHER-UN
 4. **Renvoyer des pressions** : `orvane_deposer` (docs/4), `lot.monde = "orvane"`.
 
 ## Mettre en place
+
+### Appliquer une version nouvelle de supabase.sql
+
+Le fichier se recolle tel quel dans l'éditeur SQL du projet : il ne fait qu'ajouter, et ce qui existe reste (les jeux, les lots, les noms, les clés). Celui du 19 novembre (#32, les dépôts sûrs) ajoute :
+- à `orvane_jeux` : `depot_empreinte` (l'empreinte de la clé de dépôt), `depot_exige` (faux pour tous les jeux), `depot_cree` ; à `orvane_lots` : `lot_id` (l'`id` du lot), et l'index unique `orvane_lots_jeu_lot_id` (un même `id`, d'un même jeu, n'entre qu'une fois ; les lots d'avant n'en ont pas) ;
+- `orvane_cle_depot`, `orvane_exiger_cle_depot`, `orvane_prive.egales` ;
+- `orvane_deposer` prend un quatrième paramètre, `p_cle_depot`, nul par défaut : l'appel d'avant, à trois paramètres, est servi comme avant. L'ancienne fonction est retirée (`drop function … (text, text, jsonb)`), pour que l'API n'ait pas deux fonctions du même nom entre lesquelles choisir ; la fin du fichier redonne les droits et demande à l'API de relire ses fonctions (`notify pgrst`).
+
+Rien ne change pour un jeu branché : ses lots sans `id` passent comme avant, et aucun jeu n'exige de clé de dépôt tant qu'il ne l'a pas demandé. `node outils/essai-sql.js` rejoue tout cela sur un Postgres jetable, avant de toucher au vrai : le fichier de `main`, un jeu et un lot ; puis celui-ci, deux fois ; puis la clé de dépôt, les renvois (dix dépôts du même lot à la fois), les quotas, les droits, et le client des serveurs sous Node et Deno (`--deno <chemin>`). Sans Postgres sur la machine, il ne fait rien. Pour vérifier après l'avoir collé :
+
+```sql
+select pg_get_function_identity_arguments(oid) from pg_proc where proname = 'orvane_deposer';   -- une seule ligne : p_cle text, p_compte text, p_lot jsonb, p_cle_depot text
+select id, depot_exige, depot_empreinte is not null as a_une_cle from public.orvane_jeux order by id;
+```
+
+### Exiger la clé de dépôt d'un jeu
+
+C'est l'auteur du jeu qui le fait, avec sa clé d'administration (`BRANCHER-UN-JEU.md`, chapitre 6) : `orvane_cle_depot` (la clé, montrée une fois, va dans les secrets de son serveur), puis, une fois que son serveur dépose, `orvane_exiger_cle_depot` avec `p_exiger: true`. Orvane ne voit jamais la clé. Un jeu qui s'est fermé la porte (sa clé de dépôt perdue) en demande une autre ; un jeu qui a tout perdu, clé d'administration comprise, se rouvre à la main, dans l'éditeur SQL : `update public.orvane_jeux set depot_exige = false where id = '…';`.
+
+### Le reste
 
 - **Supabase** : coller `hebergement/supabase.sql`, puis le script d'installation (qu'on ne publie pas : il pose l'empreinte du secret de lecture, et peut inscrire les premiers jeux). Le profil du monde dit où lire : `monde.pressions` (l'adresse du projet, sa clé **publique**, les deux fonctions de lecture).
 - **Secret du dépôt** (Settings › Secrets and variables › Actions) : `ORVANE_LECTURE_SECRET`, le secret de lecture. Il n'ouvre que la lecture des lots et des jeux.
@@ -130,6 +152,7 @@ Ce qu'on écrit à la main (le profil, l'amorce) vient toujours de `main`. Une s
 ```
 node hebergement/cycle.js orvane --sans-reseau          # un cycle, lots du dossier seulement (expositions du dernier jeux.json)
 node hebergement/cycle.js orvane --cycles 7             # rattraper une semaine (lots en ligne + dossier)
+node hebergement/cycle.js .essai --sans-reseau --cycles 5   # rejouer des lots sur une copie du monde, chez soi (docs/5, « Rejouer ses lots »)
 ```
 
 Le premier cycle part de l'amorce du profil (`monde.amorce`), et pose la naissance du monde (`monde.ne`). Une **fusion** se commande dans le profil (`monde.fusions : [{ id, source, part }]`) : le cycle de la nuit suivante verse la source dans le monde, une seule fois (docs/14). C'est ainsi que la mer d'Orvane (`mondes/marin/`) rejoint le monde d'Orvane (`mer-1`). Avec `ponts` (`{ id, source, ponts: 3 }`), la source devient plutôt un continent du monde, relié par quelques ponts (docs/23). De même, `monde.parcelles : { par: 4 }` découpe le monde en parcelles au cycle suivant, une fois pour toutes (docs/15) : l'état tourne alors par parcelle, l'instantané publié et l'historique restent par biome. Et `monde.synthetique : true` éveille la Mère au cycle suivant, une fois pour toutes : la vie synthétique (docs/16) ; `monde.flore : true`, la flore (docs/17), dont les plantes sont publiées à part (`flore.json`) ; `monde.pathogenes : true`, les souches (docs/18). Pour repartir de zéro : supprimer `etat.json`, `generation-0.json`, `instantane.json`, `historique.json`, `tampon.json`, et poser dans le profil `monde.renaitre` (une date, `"2026-11-06"`) : la passe suivante repart de `main` au lieu de la branche `publication`, une fois ; une autre date, une autre renaissance. Les traducteurs verront un monde neuf (autre naissance) et repartiront de sa génération 0.
