@@ -42,6 +42,14 @@ Stone Valley le fait (§222 du jeu). Chaque île tire de sa graine, pour chacun 
 
 Une chasse dite dans une parcelle où la lignée n'est pas revient ainsi exactement à une chasse sans parcelle, méfiance comprise. Le tampon borne déjà la chasse à `part_max_population` de la population du biome, si bien que ses parcelles ont de quoi la prendre. Ce qu'aucune parcelle ne peut prendre se perd, comme avant : c'est le cas d'une lignée absente du biome entier.
 
+**Le plafond d'un jeu tient aussi par parcelle.** Le tampon borne ce qu'un seul jeu ôte à une population en un cycle (`part_max_population_jeu`, 5 % dans le monde d'Orvane, docs/5). Sans rien de plus, un jeu qui dit toute sa chasse dans une petite parcelle y prendrait ses 5 % du biome entier, soit bien plus que 5 % de la parcelle. Dans un monde qui donne ce plafond, le partage se fait donc jeu par jeu :
+- le tampon dit, pour chaque population, la part de chaque jeu dans ce qui lui est ôté, et son plafond (`pressions.jeux`) ;
+- la part de chaque jeu est posée là où **ses** lots l'ont dite (`Parcelles.localiser` compte aussi jeu par jeu) : un jeu ne déplace plus la chasse d'un autre. Avant, un jeu qui disait une parcelle y entraînait aussi la chasse des jeux qui n'en disaient aucune ;
+- aucune parcelle ne perd, du fait d'un seul jeu, plus que son plafond de ce que la lignée y compte. Le reste va aux parcelles où la lignée vit, selon leur effectif, chacune sous le même plafond ;
+- puis, tous jeux ensemble, aucune parcelle ne perd plus que `part_max_population` d'elle-même, comme plus haut.
+
+Ce qu'un jeu rend (libérations, nourrissages, bêtes d'élevage) suit sa chasse, comme avant : le tampon le borne au même plafond, sur le biome. Un monde qui ne donne pas de plafond par jeu partage comme avant, au caractère près. `bancs/tampon.js` (§9) et `bancs/parcelles.js` (§2) le vérifient.
+
 Une fusion (docs/14) dans un monde à parcelles répartit les arrivées entre les parcelles de leurs biomes.
 
 ## La commande : le profil du monde
@@ -72,7 +80,7 @@ Le banc vérifie aussi :
 - que le découpage ne perd ni bête ni capacité et n'émiette pas les petites populations ;
 - que l'aller-retour vers la vue par biome est exact, et que le découpage est déterministe ;
 - le contrat ;
-- que les pressions des jeux sont réparties sans perte, même dites dans une parcelle où la lignée n'est pas, ou trop peu (et `bancs/tampon.js`, du lot du jeu jusqu'aux parcelles) ;
+- que les pressions des jeux sont réparties sans perte, même dites dans une parcelle où la lignée n'est pas, ou trop peu, et chaque jeu sous son plafond (et `bancs/tampon.js`, du lot du jeu jusqu'aux parcelles) ;
 - le cycle de nuit : un découpage une seule fois, un instantané et un historique par biome, le lot d'un jeu bien lu ;
 - une fusion dans un monde à parcelles.
 

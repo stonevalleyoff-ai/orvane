@@ -49,7 +49,7 @@
     "poids": { "prelevement": 1, "capture": 1, "liberation": -1, "nourrissage": -0.2, "deplacement": 1, "habitat_perdu": 1, "habitat_gagne": -1 },
     "denormaliser": true,
     "exposition_ref": 60,
-    "plafonds": { "par_compte_cycle": 30, "part_max_compte": 0.15, "part_max_jeu": 0.5, "part_max_population": 0.2 },
+    "plafonds": { "par_compte_cycle": 30, "part_max_compte": 0.15, "part_max_jeu": 0.5, "part_max_population": 0.2, "part_max_population_jeu": 0.05 },
     "memoire_cycles": 5,
     "pseudo_comptes": 20
   }
