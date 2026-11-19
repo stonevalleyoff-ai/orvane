@@ -157,6 +157,14 @@ const REGLES = {
   // ceux sur lesquels se compte le besoin d'un prédateur (un cycle de référence, ~120). Un puceron se refait huit fois dans ce temps, un cerf
   // à peine. 0 : ce qui est sur pied (les mondes d'Orvane)
   renouvellement: 0,
+  // (docs/53) un monde réel : un omnivore ne cherche en proies que sa part de chair (le sanglier, 20 % de viande et 10 % d'insectes : 30 % du
+  // besoin d'un carnivore de sa masse). Sans cela, son besoin se comparait à son régime d'origine, qui est le même : il cherchait autant de
+  // proies qu'un carnivore, et pesait sur le lynx comme sept lynx. false : comme avant (les mondes d'Orvane)
+  viande_part: false,
+  // (docs/53) un monde réel : entre deux chasseurs à sang chaud, le plus grand domine — il tue le plus petit qu'il croise, le chasse de son
+  // territoire (Palomares et Caro 1999 ; Donadio et Buskirk 2006). Le poids d'un concurrent devant un chasseur est multiplié par le rapport de
+  // leurs masses à cette puissance : le renard pèse moins devant le lynx, le lynx plus devant le renard. 0 : tous à égalité
+  domination: 0,
   petites_proies: false      // (docs/52) un monde réel : un mangeur d'insectes prend les insectes, si petits soient-ils (plus haut, appetence)
 };
 // (docs/52) le pas de temps : la part d'un cycle de référence (une « tranche de vie » d'environ 120 jours, celle sur laquelle le
@@ -580,6 +588,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   // (REGLES.diapause) ; sans cela, les insectes mouraient chaque hiver de faim, sans naître, et leurs chasseurs avec eux
   const CMP = REGLES.concurrence_masse > 0 ? (m1, m2) => { const d = Math.log10((m1 || 1) / (m2 || 1)); return Math.exp(-(d * d) / (2 * REGLES.concurrence_masse ** 2)); } : null;
   // (docs/53) ce qu'une proie offre en un cycle de référence : ce qui est sur pied, et ce qui en naît dans ce temps (sa natalité de l'année)
+  const DOM = REGLES.domination > 0 ? (a, b) => (a.metabolisme ?? 1) < 1 || (b.metabolisme ?? 1) < 1 ? 1 : Math.pow((b.masse_kg || 1) / (a.masse_kg || 1), REGLES.domination) : null;   // (le poids de b devant a ; entre bêtes à sang chaud)
   const REN = REGLES.renouvellement > 0 ? pl => 1 + Math.max(0, pl.natalite ?? 0) * REGLES.renouvellement / 365.25 : null;
   const DIA = REGLES.diapause && SL ? (pl, b) => (pl.metabolisme ?? 1) < 1 && b ? clamp((prodS(b) - .3) / .7, REGLES.diapause.plancher ?? .1, 1) : 1 : null;
   // l'hiver et l'été d'un lieu (les routes de l'hiver) : dans un monde au calendrier, ceux de son climat
@@ -681,7 +690,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
       // (un omnivore ne cherche en viande qu'une part de ce qu'il mange : il ne dispute aux carnivores que cette part)
       // (docs/52 : un plan peut dire son métabolisme, ce qu'il brûle rapporté à un mammifère de sa masse : un poisson, un insecte mangent
       //  bien moins ; sans lui, 1)
-      p.besoin = p.E.plans.map(pl => REGLES.besoin * Math.pow(pl.masse_kg || 1, .75) * (p.regime === 'omnivore' ? (REGLES.viande_omnivore ?? 1) * (DT ? DI.viande(pl) : 1) : 1) * (pl.metabolisme ?? 1) * (DIA ? DIA(pl, biomes[bid]) : 1));
+      p.besoin = p.E.plans.map(pl => REGLES.besoin * Math.pow(pl.masse_kg || 1, .75) * (p.regime === 'omnivore' ? (REGLES.viande_omnivore ?? 1) * (DT ? (REGLES.viande_part ? DI.chair(pl.diete) : DI.viande(pl)) : 1) : 1) * (pl.metabolisme ?? 1) * (DIA ? DIA(pl, biomes[bid]) : 1));
       p.effMoy = p.pop.N.reduce((a, N, i) => a + N * p.eff[i], 0) / p.Nt; p.besoinMoy = p.pop.N.reduce((a, N, i) => a + N * p.besoin[i], 0) / p.Nt;
     }
     // les prédateurs se partagent les proies : chacun compte, en concurrents, ceux qui mangent les mêmes, au prorata de leur besoin
@@ -692,7 +701,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
     // (docs/30 : boire le sang d'une bête ne dispute pas sa chair aux chasseurs)
     for (const p of preds) {
       let C = 0;
-      if (p.A > 0) for (const q of preds) { if (q === p || q.A <= 0) continue; let commun = 0; p.part.forEach((v, k) => { if (v && q.x[k] && (!DT || DI.mortel(p.t.plan, T[k].t.plan) === DI.mortel(q.t.plan, T[k].t.plan))) commun += v; }); C += q.Nt * (p.besoinMoy > 0 ? q.besoinMoy / p.besoinMoy : 0) * q.effMoy * commun * (CMP ? CMP(p.t.plan.masse_kg, q.t.plan.masse_kg) : 1); }
+      if (p.A > 0) for (const q of preds) { if (q === p || q.A <= 0) continue; let commun = 0; p.part.forEach((v, k) => { if (v && q.x[k] && (!DT || DI.mortel(p.t.plan, T[k].t.plan) === DI.mortel(q.t.plan, T[k].t.plan))) commun += v; }); C += q.Nt * (p.besoinMoy > 0 ? q.besoinMoy / p.besoinMoy : 0) * q.effMoy * commun * (CMP ? CMP(p.t.plan.masse_kg, q.t.plan.masse_kg) : 1) * (DOM ? DOM(p.t.plan, q.t.plan) : 1); }
       let R = 0, sN = 0;   // (une bête qui ne chasse pas, ou ne mange pas de viande : rien, jamais 0/0)
       p.pop.N.forEach((N, i) => { if (N <= 0) return; const den = p.Nt * p.effMoy + C, a = den > 0 ? p.A * p.eff[i] / den : 0, s = a > 0 ? a / (a + REGLES.demi_satiete * p.besoin[i]) : 0; const r = N * p.besoin[i] * s * PAS; R += r; sN += s * N; p.pop.ration[i] = r; });
       p.pop.satiete = sN / p.Nt;
