@@ -51,6 +51,7 @@ const REGLES = {
   petites_proies: true,      // un mangeur d'insectes prend les insectes, si petits soient-ils
   concurrence_masse: .7,       // deux chasseurs se gênent d'autant moins que leurs masses diffèrent (0,7 décade : l'araignée et la mésange presque pas)
   diapause: { plancher: .1 },  // une bête à sang froid passe l'hiver en diapause : elle meurt, mange, se montre dix fois moins (docs/53)
+  renouvellement: 120,       // une proie offre ce qui est sur pied et ce qui en naît pendant les ~120 jours où se compte le besoin d'un chasseur (docs/53)
   longevite_predateur: 0,
   // les migrateurs partent quand les jours passent sous 13 h 30 après l'été (fin août à 50° N), et reviennent quand ils repassent au-dessus de
   // 11 h 30 (début mars) : un seuil pour tous, tiré de ce que font la plupart des migrateurs d'Europe — pas réglé sur une espèce (docs/53)

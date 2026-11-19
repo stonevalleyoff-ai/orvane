@@ -113,6 +113,8 @@ Tout est ajouté, rien n'est retiré (`node outils/contrat.js` : le contrat tien
 3. **l'assemblage** (`outils/terre/assembler.js`) :
    - les axes viennent des passages du calendrier (`axeTemperature`, `axeHumidite`, `axeAltitude`, `axeLumiere`) ;
    - la capacité d'un lieu vient de sa production primaire (le modèle de Miami, à défaut d'une mesure) et de sa surface ;
+   - une espèce vit dans les cellules où GBIF l'a vue. Une guilde d'invertébrés, de petits poissons ou de plantes vit partout où est son milieu : GBIF voit mal les invertébrés (les pucerons n'y étaient que sur 128 lieux, quand les coccinelles qui les mangent étaient sur 231) ;
+   - la densité d'une guilde d'invertébrés vient de la littérature quand on la connaît (`especes-catalogue.py`, `SOURCES_DENSITE`) : les fourmis (Schultheiss et al. 2022), les collemboles et les acariens du sol, les cloportes (Petersen et Luxton 1982), les carabes (Lövei et Sunderland 1996), les larves des rivières, le zooplancton. Avec les premiers nombres ronds, il y avait autant d'araignées que d'insectes à manger ;
    - la niche d'une espèce est la moyenne des lieux où elle vit, sa tolérance leur dispersion ;
    - les effectifs viennent de sa densité et de la surface des lieux ;
    - la place de chaque port de plante se partage entre les plantes de ce port.
@@ -147,6 +149,8 @@ Son activité va de 0,1 au cœur de l'hiver à 1, dès que le lieu produit autan
 
 Sans cela, une araignée pesait d'autant moins devant les mésanges que ses besoins étaient petits, et n'avait jamais sa part, quel que soit son métabolisme. Avec cette règle, en novembre, la satiété des carabes passe de 0,08 à 0,68, celle des libellules de 0,09 à 0,82, celle du renard de 0,55 à 0,85.
 
+**Ce que produit une proie** (`regles.renouvellement = 120`). Le besoin d'un prédateur se compte sur un cycle de référence, environ 120 jours. Ce qu'une proie lui offre est donc ce qui est sur pied **et** ce qui en naît pendant ces 120 jours, à la natalité de la proie : ×9 pour un puceron (25 petits par an), ×2,6 pour un criquet, ×1,9 pour un campagnol, ×1,1 pour un cerf. Le moteur ne regardait que ce qui était sur pied. Or un chasseur d'insectes mange, en une année, des dizaines de fois sa masse (l'araignée de 16 à 32 fois, Nyffeler et Birkhofer 2017), et des proies qui se refont vite ne sont jamais nombreuses sur pied. Seule, sans un concurrent, l'araignée n'aurait trouvé que 1,5 % de sa satiété, et aucune adresse de chasse ne pouvait l'en sortir. Dans Orvane, 0 : ce qui est sur pied.
+
 **Les migrateurs** (`regles.hivernage.photoperiode`). Ils partent quand les jours raccourcissent sous 13 h 30 après l'été, à la latitude de leur lieu (fin août à 50° N), et reviennent quand ils repassent au-dessus de 11 h 30 (début mars). C'est un seuil pour tous, tiré de ce que font la plupart des migrateurs d'Europe, pas réglé sur une espèce. Avant, ils partaient avec le froid, fin octobre.
 
 Un oiseau qui vole a aussi la niche de l'été, quand il niche : à la moyenne de l'année, son hiver lui paraissait aussi doux que l'été, et il ne partait jamais.
@@ -171,7 +175,7 @@ Le premier monde réel (`mondes/europe/`) :
   - haute mer 93, mer froide 95, abysses 89.
 
   Les îles le sont pour les bêtes de terre (la Grande-Bretagne, l'Irlande, l'Islande, la Corse, la Sicile, la Crète, Chypre, le Svalbard). Les normales 1991–2020 collent aux stations de Dijon, Rovaniemi et Séville à 1,6 °C près ;
-- **le vivant** : 168 espèces jouées une à une (69 mammifères, 61 oiseaux, 9 reptiles, 6 amphibiens, 23 poissons), 32 guildes qui montrent 208 espèces réelles (les insectes, les tiques, le plancton, les petits passereaux…), 68 plantes. Cela fait 29 000 populations ;
+- **le vivant** : 168 espèces jouées une à une (69 mammifères, 61 oiseaux, 9 reptiles, 6 amphibiens, 23 poissons), 33 guildes qui montrent 218 espèces réelles (les insectes, les tiques, le plancton, les petits passereaux…), 68 plantes. Cela fait 31 500 populations ;
 - **les effectifs posés**, hors Russie, Biélorussie et Ukraine : chevreuil 15 millions, sanglier 7 millions, cerf 2,6 millions, loup 19 700, ours brun 18 000, lynx boréal 8 400, glouton 1 100. Ce sont les ordres de grandeur connus. La densité de chaque espèce est une densité dans un habitat favorable × la part qu'elle en occupe à l'échelle d'une cellule (`densite_favorable_km2`, `occupation`), calée sur ces sept espèces ;
 - **le coût** : environ 8 secondes par cycle sur un ordinateur, et une trentaine de secondes pour deux nuits complètes hébergées (le tampon, la publication, les morceaux). L'état pèse 19 Mo, l'instantané 3 Mo. L'essentiel du temps passe dans la concurrence entre brouteurs (`moteur/flore.js`).
 

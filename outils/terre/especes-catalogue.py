@@ -309,26 +309,26 @@ G('chenilles-defoliatrices', 'Chenilles défoliatrices', 'chenille', ['foret', '
     ('Operophtera brumata', 'Cheimatobie hiémale', .3), ('Tortrix viridana', 'Tordeuse verte du chêne', .2), ('Lymantria dispar', 'Bombyx disparate', .1),
     ('Thaumetopoea processionea', 'Processionnaire du chêne', .1), ('Thaumetopoea pityocampa', 'Processionnaire du pin', .15), ('Erannis defoliaria', 'Hibernie défeuillante', .15)],
   masse=.0002, taille=.03, longevite=.2, maturite=.6, portee=150, regime='herbivore', diete={'feuilles': 1}, soc=.5, tem=.05, vit=.01, act='continue', role='phytophages des arbres ; pullulations')
-G('pucerons', 'Pucerons', 'insecte', ['prairie', 'foret', 'maquis', 'steppe'], 50000000, '#6a9a4a', [
+G('pucerons', 'Pucerons', 'insecte', ['prairie', 'foret', 'maquis', 'steppe'], 500000000, '#6a9a4a', [
     ('Aphis fabae', 'Puceron noir de la fève', .3), ('Myzus persicae', 'Puceron vert du pêcher', .2), ('Acyrthosiphon pisum', 'Puceron du pois', .15),
     ('Sitobion avenae', 'Puceron des épis', .2), ('Rhopalosiphum padi', 'Puceron du merisier', .15)],
   masse=.000001, taille=.002, longevite=.08, maturite=.03, portee=600, regime='herbivore', diete={'feuilles': 1}, soc=.9, tem=0, vit=.001, act='continue', role='phytophages (sève) ; proies des coccinelles et des syrphes')
-G('criquets-sauterelles', 'Criquets et sauterelles', 'insecte', ['prairie', 'steppe', 'maquis', 'montagne'], 500000, '#7a8a3a', [
+G('criquets-sauterelles', 'Criquets et sauterelles', 'insecte', ['prairie', 'steppe', 'maquis', 'montagne'], 3000000, '#7a8a3a', [
     ('Chorthippus parallelus', 'Criquet des pâtures', .3), ('Chorthippus brunneus', 'Criquet duettiste', .2), ('Roeseliana roeselii', 'Decticelle bariolée', .15),
     ('Tettigonia viridissima', 'Grande sauterelle verte', .1), ('Gryllus campestris', 'Grillon champêtre', .15), ('Calliptamus italicus', 'Criquet italien', .1)],
   masse=.0008, taille=.025, longevite=.4, maturite=.4, portee=100, regime='herbivore', diete={'feuilles': .9, 'insectes': .1}, soc=.3, tem=.05, vit=1, act='diurne', role='phytophages des herbes ; proies des oiseaux')
-G('coleopteres-phytophages', 'Hannetons, doryphores et chrysomèles', 'coleoptere', ['prairie', 'foret', 'steppe'], 200000, '#8a5a2a', [
+G('coleopteres-phytophages', 'Hannetons, doryphores et chrysomèles', 'coleoptere', ['prairie', 'foret', 'steppe'], 2000000, '#8a5a2a', [
     ('Melolontha melolontha', 'Hanneton commun', .3), ('Leptinotarsa decemlineata', 'Doryphore', .2), ('Phyllopertha horticola', 'Hanneton horticole', .2),
     ('Oulema melanopus', 'Criocère des céréales', .2), ('Chrysolina americana', 'Chrysomèle du romarin', .1)],
   masse=.0005, taille=.015, longevite=.5, maturite=1, portee=60, regime='herbivore', diete={'feuilles': 1}, soc=.2, tem=.05, vit=.1, act='crepusculaire', role='phytophages ; larves dans le sol')
 G('scolytes', 'Scolytes', 'coleoptere', ['taiga', 'foret', 'montagne'], 1000000, '#5a3a24', [
     ('Ips typographus', 'Typographe', .5), ('Pityogenes chalcographus', 'Chalcographe', .25), ('Tomicus piniperda', 'Hylésine du pin', .25)],
   masse=.00001, taille=.005, longevite=.5, maturite=.15, portee=60, regime='herbivore', diete={'feuilles': 1}, soc=.8, tem=0, vit=.01, act='diurne', role='ravageurs des résineux (sous l\'écorce) ; pullulent après les sécheresses')
-G('fourmis', 'Fourmis', 'insecte', TER, 5000000, '#5a2e1e', [
+G('fourmis', 'Fourmis', 'insecte', TER, 300000000, '#5a2e1e', [
     ('Lasius niger', 'Fourmi noire des jardins', .35), ('Formica rufa', 'Fourmi rousse des bois', .15), ('Myrmica rubra', 'Myrmique rouge', .2),
     ('Formica polyctena', 'Fourmi des bois', .1), ('Lasius flavus', 'Fourmi jaune', .2)],
   masse=.000005, taille=.005, longevite=1, maturite=.15, portee=50, regime='omnivore', diete={'insectes': .4, 'nectar': .4, 'graines': .2}, soc=1, tem=.6, vit=.05, act='diurne', role='prédatrices, éleveuses de pucerons, disperseuses de graines')
-G('carabes', 'Carabes et coléoptères prédateurs du sol', 'coleoptere', ['foret', 'prairie', 'taiga', 'montagne'], 300000, '#2a3a2a', [
+G('carabes', 'Carabes et coléoptères prédateurs du sol', 'coleoptere', ['foret', 'prairie', 'taiga', 'montagne'], 3000000, '#2a3a2a', [
     ('Carabus nemoralis', 'Carabe des bois', .2), ('Pterostichus melanarius', 'Ptérostique noir', .3), ('Poecilus cupreus', 'Poecile cuivré', .2),
     ('Nebria brevicollis', 'Nébrie', .15), ('Carabus auratus', 'Carabe doré', .15)],
   masse=.0003, taille=.02, longevite=1.5, maturite=1, portee=40, regime='carnivore', diete={'insectes': 1}, soc=.05, tem=.5, vit=.2, act='nocturne', role='prédateurs des limaces et des larves')
@@ -344,7 +344,7 @@ G('coprophages-necrophages', 'Bousiers et nécrophores', 'coleoptere', ['prairie
     ('Geotrupes stercorarius', 'Géotrupe du fumier', .25), ('Anoplotrupes stercorosus', 'Géotrupe des bois', .25), ('Nicrophorus vespilloides', 'Nécrophore', .2),
     ('Aphodius fimetarius', 'Aphodie', .2), ('Silpha atrata', 'Silphe noir', .1)],
   masse=.0005, taille=.015, longevite=1, maturite=1, portee=20, regime='detritivore', diete=None, soc=.1, tem=.1, vit=.1, act='crepusculaire', role='décomposeurs des bouses et des cadavres')
-G('cloportes-mille-pattes', 'Cloportes et mille-pattes', 'crustace', ['foret', 'prairie', 'maquis', 'grotte'], 5000000, '#5a5650', [
+G('cloportes-mille-pattes', 'Cloportes et mille-pattes', 'crustace', ['foret', 'prairie', 'maquis', 'grotte'], 50000000, '#5a5650', [
     ('Oniscus asellus', 'Cloporte commun', .3), ('Porcellio scaber', 'Cloporte rugueux', .25), ('Armadillidium vulgare', 'Cloporte boule', .2),
     ('Glomeris marginata', 'Gloméris', .15), ('Tachypodoiulus niger', 'Iule à pattes blanches', .1)],
   masse=.00005, taille=.012, longevite=2, maturite=1, portee=40, regime='detritivore', diete=None, soc=.6, tem=0, vit=.02, act='nocturne', role='décomposeurs de la litière', force_corps=dict(organes=[]))
@@ -356,7 +356,7 @@ G('limaces-escargots', 'Limaces et escargots', 'escargot', ['foret', 'prairie', 
     ('Arion vulgaris', 'Loche espagnole', .3), ('Deroceras reticulatum', 'Limace grise', .25), ('Cepaea nemoralis', 'Escargot des haies', .2),
     ('Cornu aspersum', 'Petit-gris', .15), ('Helix pomatia', 'Escargot de Bourgogne', .1)],
   masse=.005, taille=.05, longevite=2, maturite=1, portee=200, regime='herbivore', diete={'feuilles': 1}, soc=.1, tem=0, vit=.002, act='nocturne', role='phytophages, détritivores ; proies des hérissons, des grives')
-G('moustiques', 'Moustiques', 'mouche', ['marais', 'riviere', 'lac', 'prairie', 'foret', 'taiga', 'toundra'], 1000000, '#5a5048', [
+G('moustiques', 'Moustiques', 'mouche', ['marais', 'riviere', 'lac', 'prairie', 'foret', 'taiga', 'toundra'], 10000000, '#5a5048', [
     ('Culex pipiens', 'Moustique commun', .45), ('Aedes vexans', 'Moustique des inondations', .2), ('Aedes albopictus', 'Moustique tigre', .15),
     ('Anopheles maculipennis', 'Anophèle', .1), ('Ochlerotatus cantans', 'Moustique des bois', .1)],
   masse=.000003, taille=.006, longevite=.05, maturite=.03, portee=600, regime='omnivore', diete={'nectar': .6, 'sang': .4}, soc=.4, tem=.6, vit=.5, act='crepusculaire', eau='douce', role='piqueurs, vecteurs ; larves aquatiques ; le tigre est invasif')
@@ -367,19 +367,19 @@ G('libellules', 'Libellules et demoiselles', 'libellule', ['marais', 'prairie', 
     ('Anax imperator', 'Anax empereur', .1), ('Libellula depressa', 'Libellule déprimée', .15), ('Sympetrum striolatum', 'Sympétrum strié', .2),
     ('Calopteryx splendens', 'Caloptéryx éclatant', .2), ('Ischnura elegans', 'Agrion élégant', .25), ('Aeshna cyanea', 'Aeschne bleue', .1)],
   masse=.0004, taille=.05, longevite=1, maturite=1, portee=500, regime='carnivore', diete={'insectes': 1}, soc=.1, tem=.6, vit=10, act='diurne', role='chasseuses d\'insectes ; larves aquatiques')
-G('larves-aquatiques', 'Éphémères, trichoptères et chironomes', 'larve', ['riviere', 'lac', 'marais'], 10000000, '#6a5a3a', [
+G('larves-aquatiques', 'Éphémères, trichoptères et chironomes', 'larve', ['riviere', 'lac', 'marais'], 500000000, '#6a5a3a', [
     ('Baetis rhodani', 'Éphémère', .2), ('Ephemera danica', 'Mouche de mai', .15), ('Hydropsyche angustipennis', 'Trichoptère', .2),
     ('Chironomus plumosus', 'Chironome', .3), ('Limnephilus lunatus', 'Phrygane', .15)],
   masse=.00002, taille=.012, longevite=1, maturite=.8, portee=1000, regime='omnivore', diete={'feuilles': .75, 'insectes': .25}, soc=.6, tem=0, vit=.05, act='continue', eau='douce', role='décomposeurs et brouteurs des cours d\'eau ; nourriture des truites')
-G('crustaces-eau-douce', "Gammares et écrevisses", 'crustace', ['riviere', 'lac', 'marais'], 2000000, '#7a6a5a', [
+G('crustaces-eau-douce', "Gammares et écrevisses", 'crustace', ['riviere', 'lac', 'marais'], 20000000, '#7a6a5a', [
     ('Gammarus pulex', 'Gammare', .45), ('Asellus aquaticus', 'Aselle', .3), ('Astacus astacus', 'Écrevisse à pattes rouges', .05),
     ('Pacifastacus leniusculus', 'Écrevisse signal', .1), ('Procambarus clarkii', 'Écrevisse de Louisiane', .1)],
   masse=.0002, taille=.02, longevite=1.5, maturite=1, portee=50, regime='detritivore', diete=None, soc=.5, tem=.2, vit=.1, act='nocturne', eau='douce', role='décomposeurs des feuilles mortes ; deux écrevisses américaines invasives')
-G('zooplancton-eau-douce', "Zooplancton d'eau douce", 'plancton', ['lac', 'marais'], 1000000000, '#c8b89a', [
+G('zooplancton-eau-douce', "Zooplancton d'eau douce", 'plancton', ['lac', 'marais'], 50000000000, '#c8b89a', [
     ('Daphnia pulex', 'Daphnie', .3), ('Daphnia magna', 'Grande daphnie', .15), ('Cyclops strenuus', 'Cyclope', .2),
     ('Bosmina longirostris', 'Bosmine', .2), ('Eudiaptomus gracilis', 'Diaptome', .15)],
   masse=.0000001, taille=.002, longevite=.1, maturite=.02, portee=200, regime='filtreur', diete=None, soc=.9, tem=0, vit=.005, act='continue', eau='douce', role='mangent le phytoplancton ; nourriture des alevins')
-G('zooplancton-marin', 'Zooplancton marin et krill', 'plancton', ['large', 'mer-froide', 'cote'], 1000000000, '#d8a890', [
+G('zooplancton-marin', 'Zooplancton marin et krill', 'plancton', ['large', 'mer-froide', 'cote'], 10000000000, '#d8a890', [
     ('Calanus finmarchicus', 'Calanus', .35), ('Calanus helgolandicus', 'Calanus du sud', .15), ('Temora longicornis', 'Témora', .15),
     ('Acartia clausi', 'Acartia', .15), ('Meganyctiphanes norvegica', 'Krill nordique', .1), ('Oithona similis', 'Oithona', .1)],
   masse=.000001, taille=.004, longevite=.4, maturite=.15, portee=500, regime='filtreur', diete=None, soc=.9, tem=0, vit=.01, act='continue', eau='salee', role='base de la chaîne marine : harengs, maquereaux, baleines')
@@ -417,6 +417,30 @@ G('petits-poissons-eau-douce', "Petits poissons d'eau douce", 'poisson', ['rivie
 G('poissons-fourrage-marins', 'Lançons et gobies', 'anguille', ['cote', 'mer-froide'], 200000, '#a0a890', [
     ('Ammodytes tobianus', 'Lançon', .35), ('Ammodytes marinus', 'Lançon du nord', .3), ('Pomatoschistus minutus', 'Gobie buhotte', .2), ('Pomatoschistus microps', 'Gobie tacheté', .15)],
   masse=.01, taille=.12, longevite=4, maturite=1.5, portee=5000, regime='filtreur', diete=None, soc=.9, tem=.05, vit=1, act='diurne', eau='salee', role='fourrage des macareux, des sternes, des phoques')
+
+G('collemboles-acariens', 'Collemboles et acariens du sol', 'insecte', TER + ['marais', 'toundra'], 100000000000, '#8a7a6a', [
+    ('Folsomia candida', 'Folsomie', .15), ('Isotoma viridis', 'Isotome verte', .12), ('Orchesella cincta', 'Orchésella', .1), ('Lepidocyrtus lanuginosus', 'Lépidocyrte', .12),
+    ('Tomocerus minor', 'Tomocère', .08), ('Sminthurus viridis', 'Sminthure vert', .08), ('Protaphorura armata', 'Onychiure', .1),
+    ('Oppiella nova', 'Oppie', .1), ('Platynothrus peltifer', 'Platynothre', .08), ('Steganacarus magnus', 'Stéganacare', .07)],
+  masse=.00000001, taille=.0015, longevite=.5, maturite=.1, portee=100, regime='detritivore', diete=None, soc=.8, tem=0, vit=.05, act='continue', role='mangeurs de champignons et de litière ; la proie des araignées, des carabes et des fourmis')
+
+# les densités des guildes d'invertébrés (en un habitat favorable, par km²) : la littérature, et non plus des nombres ronds. Avec les premiers
+# nombres, il y avait dans le monde autant d'araignées que d'insectes à manger (0,15 g/m² contre 0,36), quand le monde réel en a des
+# dizaines de fois plus (docs/53). Les autres guildes gardent une densité estimée
+SOURCES_DENSITE = {
+    'fourmis': 'Schultheiss et al. 2022, PNAS 119:e2201550119 (~2·10^16 fourmis sur Terre ; des centaines par m² au sol des forêts et des prairies tempérées)',
+    'collemboles-acariens': 'Petersen & Luxton 1982, Oikos 39:288-388 (collemboles et acariens : 10^4 à 10^5 par m² chacun dans les sols tempérés)',
+    'cloportes-mille-pattes': 'Petersen & Luxton 1982, Oikos 39:288-388 (des dizaines à des centaines par m² dans la litière)',
+    'carabes': 'Lövei & Sunderland 1996, Annu. Rev. Entomol. 41:231-256 (quelques-uns à quelques dizaines par m²)',
+    'pucerons': 'ordre de grandeur des comptages en prairie et en culture (des centaines à des milliers par m² en saison ; Dixon 1998, Aphid Ecology)',
+    'criquets-sauterelles': 'ordre de grandeur des relevés en prairie (un à vingt orthoptères par m² en été)',
+    'coleopteres-phytophages': 'ordre de grandeur (des adultes et des larves du sol : quelques-uns par m²)',
+    'moustiques': 'ordre de grandeur (des petits diptères piqueurs : une dizaine par m²)',
+    'larves-aquatiques': 'Allan & Castillo 2007, Stream Ecology (des centaines à des milliers de larves par m² de fond)',
+    'crustaces-eau-douce': 'ordre de grandeur (les gammares : des dizaines à des centaines par m² de fond)',
+    'zooplancton-eau-douce': "ordre de grandeur (quelques dizaines par litre sur quelques mètres d'eau : ~5·10^4 par m² de lac)",
+    'zooplancton-marin': "Moriarty & O'Brien 2013, Earth Syst. Sci. Data 5:45-55 (COPEPOD : quelques grammes à quelques dizaines de grammes de mésozooplancton par m² de mer)",
+}
 
 # ---------------------------------------------------------------------------------------------------------------------------
 # LA FLORE : des espèces dominantes, ou des groupes (« especes ») quand une seule ne dit rien (les graminées des prés, le

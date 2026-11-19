@@ -103,7 +103,7 @@ def cellules():
         L = json.load(open(lj)); L = L.get('lieux', L.get('biomes', L)) if isinstance(L, dict) else L
         ids = set()
         for l in L:
-            i = l.get('h3') or (l.get('id', '').split('~', 1)[1] if '~' in l.get('id', '') else None)
+            i = l.get('h3') or (l.get('lieu') or {}).get('h3') or (l.get('id', '').split('~', 1)[1].split('-')[0] if '~' in l.get('id', '') else None)   # (un deuxième lieu d'un type dans une cellule : « ~82002-2 »)
             if i: ids.add(i.ljust(15, 'f'))
         if ids: return sorted(ids), 'mondes/europe/lieux.json'
     o, s, e, n = map(float, args.cadre.split(','))

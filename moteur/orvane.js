@@ -151,8 +151,12 @@ const REGLES = {
   // (docs/52) un monde réel : la chance, par cycle de référence et par lieu voisin qui lui convient tout à fait, qu'une lignée fonde un lieu
   // où elle n'est pas ; null : partout où l'on essaime, on arrive (les mondes d'Orvane)
   colonisation: null,
-  diapause: null,
-  concurrence_masse: 0,      // (docs/53) un monde réel : l'écart-type (en décades de masse) de la concurrence entre deux chasseurs ; 0 : tous se gênent            // (docs/53) un monde réel : { plancher } — le repos d'hiver des bêtes à sang froid (plus bas, DIA)
+  diapause: null,            // (docs/53) un monde réel : { plancher } — le repos d'hiver des bêtes à sang froid (plus bas, DIA)
+  concurrence_masse: 0,      // (docs/53) un monde réel : l'écart-type (en décades de masse) de la concurrence entre deux chasseurs ; 0 : tous se gênent
+  // (docs/53) un monde réel : ce qu'une proie offre à ses chasseurs, c'est ce qui est sur pied et ce qui en naît pendant autant de jours —
+  // ceux sur lesquels se compte le besoin d'un prédateur (un cycle de référence, ~120). Un puceron se refait huit fois dans ce temps, un cerf
+  // à peine. 0 : ce qui est sur pied (les mondes d'Orvane)
+  renouvellement: 0,
   petites_proies: false      // (docs/52) un monde réel : un mangeur d'insectes prend les insectes, si petits soient-ils (plus haut, appetence)
 };
 // (docs/52) le pas de temps : la part d'un cycle de référence (une « tranche de vie » d'environ 120 jours, celle sur laquelle le
@@ -575,6 +579,8 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   // moins, et se cache. Son activité : de plancher (au cœur de l'hiver) à 1 (dès que le lieu produit autant qu'en moyenne). Un monde qui le dit
   // (REGLES.diapause) ; sans cela, les insectes mouraient chaque hiver de faim, sans naître, et leurs chasseurs avec eux
   const CMP = REGLES.concurrence_masse > 0 ? (m1, m2) => { const d = Math.log10((m1 || 1) / (m2 || 1)); return Math.exp(-(d * d) / (2 * REGLES.concurrence_masse ** 2)); } : null;
+  // (docs/53) ce qu'une proie offre en un cycle de référence : ce qui est sur pied, et ce qui en naît dans ce temps (sa natalité de l'année)
+  const REN = REGLES.renouvellement > 0 ? pl => 1 + Math.max(0, pl.natalite ?? 0) * REGLES.renouvellement / 365.25 : null;
   const DIA = REGLES.diapause && SL ? (pl, b) => (pl.metabolisme ?? 1) < 1 && b ? clamp((prodS(b) - .3) / .7, REGLES.diapause.plancher ?? .1, 1) : 1 : null;
   // l'hiver et l'été d'un lieu (les routes de l'hiver) : dans un monde au calendrier, ceux de son climat
   const axesAc = new Map(), axesA = SL ? (x, ph) => { const k = x.id + '|' + ph; let v = axesAc.get(k); if (!v) axesAc.set(k, v = (x.normales ? CALEN.saisonLieu(x, CALEN.dateDeLaPhase(x, ph, JOURC))?.axes : null) ?? axesSaison(x, ph)); return v; } : axesSaison;
@@ -668,7 +674,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
         // (docs/53 : dans un monde réel, un buveur de sang de naissance — la tique, le moustique — boit aux bêtes vingt fois plus grandes que lui ;
         //  le moteur ne le laissait qu'à une lignée venue au sang par l'évolution, et la tique n'avait aucun hôte)
         if (REGLES.petites_proies && DT && !f && (p.t.plan.diete?.sang || 0) > 0 && (q.t.plan.masse_kg || 1) >= DI.REGLES.sang.rapport * (p.t.plan.masse_kg || 1) && q.t.plan.regime !== 'vegetal') f = DI.REGLES.sang.appetence * p.t.plan.diete.sang / Math.max(.05, DI.chair(p.t.plan.diete));
-        if (!f) return; x[k] = q.Bv * f * (ES ? ES.acces(p.t, bid) : 1) * (GR ? GR.acces(p.t, biomes[bid]) : 1); A += x[k]; });
+        if (!f) return; x[k] = q.Bv * (REN ? REN(q.t.plan) : 1) * f * (ES ? ES.acces(p.t, bid) : 1) * (GR ? GR.acces(p.t, biomes[bid]) : 1); A += x[k]; });
       const puiss = x.map(v => v > 0 ? Math.pow(v, REGLES.report_proies) : 0), z = puiss.reduce((a, v) => a + v, 0);
       p.part = puiss.map(v => z ? v / z : 0); p.x = x; p.A = A;                       // la part de chaque proie dans ce que ce prédateur prélève
       p.eff = p.E.chasse.map((c, i) => c * (.7 + .6 * (p.E.plans[i].perception ?? .5)) * (p.regime === 'omnivore' ? REGLES.chasse_omnivore : 1) * (GR ? GR.chasse(p.t, biomes[bid], i) : 1) * (ES ? ES.chasse(p.t, bid, i) : 1) * (p.t.plan.efficacite ?? 1));   // (docs/53 : plan.efficacite, l'adresse d'un chasseur réel, calée à l'assemblage)

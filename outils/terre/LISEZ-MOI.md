@@ -211,8 +211,9 @@ Les températures tiennent à 1,6 °C près, les pluies à 15 % près : c'est ce
   - 9 reptiles ;
   - 6 amphibiens ;
   - 23 poissons d'eau douce et de mer.
-- **32 guildes**, chacune avec ses espèces réelles :
+- **33 guildes**, chacune avec ses espèces réelles :
   - des insectes (pollinisateurs, phytophages, décomposeurs, prédateurs, piqueurs) et des vers ;
+  - les collemboles et les acariens du sol, la proie des araignées et des carabes ;
   - le plancton ;
   - les coquillages ;
   - les petits passereaux ;
@@ -241,7 +242,7 @@ Les scripts :
   - les guildes et leurs espèces ;
   - la flore ;
   - un gabarit de silhouette par famille ;
-  - ce que nulle base ouverte ne mesure : la sociabilité, le tempérament, la vitesse de pointe, la perception, la couleur, les habitats et la densité dans un habitat favorable. Tout cela est **estimé**.
+  - ce que nulle base ouverte ne mesure : la sociabilité, le tempérament, la vitesse de pointe, la perception, la couleur, les habitats et la densité dans un habitat favorable. Tout cela est **estimé**, sauf la densité des guildes d'invertébrés que la littérature donne (`SOURCES_DENSITE` : les fourmis, les collemboles et les acariens, les cloportes, les carabes, les pucerons, les larves des rivières, le zooplancton ; la source va dans `densite_source`).
 - **`especes-gbif.py`** : pour chaque nom, trois choses.
   - Sa clé et sa classification dans l'épine dorsale de GBIF.
   - Son élément Wikidata (par P846), son nom français, la comestibilité d'un champignon (P789).
@@ -370,6 +371,7 @@ Ce qu'il fait (docs/52) :
   - leur capacité vient de la production primaire et de la surface : 5 kg de bêtes par km² et par g/m²/an. Sur les terres, c'est le modèle de Miami ; sur l'eau, une valeur par type ;
   - leurs normales font leur saison, jour après jour ;
 - **les animaux** :
+  - une espèce vit dans les lieux de ses habitats, dans les cellules où GBIF l'a vue. Une guilde qui n'est ni d'oiseaux ni de mammifères (les insectes, le plancton, les petits poissons, les plantes en groupe) vit dans tous les lieux de ses habitats : GBIF voit mal les invertébrés, et les coccinelles se retrouvaient sans pucerons ;
   - leur niche est la moyenne des lieux où ils vivent, pesée par la surface, et leur tolérance l'écart de ces lieux à la moyenne ;
   - leur natalité, s'ils n'en ont pas, vient de la portée, de la maturité, de la longévité et de la survie des jeunes (selon la masse) ; un chasseur en meute la partage ;
   - leurs effectifs viennent de la densité × la surface × la convenance ;

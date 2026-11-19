@@ -322,7 +322,7 @@ def guilde(g):
     if S_all: reel['traits'] = sorted(S_all)
     if g.get('note'): reel['note'] = g['note']
     return {'id': g['id'], 'nom': g['nom'], 'guilde': True, 'reel': {k: v for k, v in reel.items() if v}, 'especes': especes, 'plan': plan,
-            'phenotypes': [{'id': 'base', 'frequence': 1, 'traits': []}], 'habitats': habitats_de(g['habitats'], plan), **densite(g['id'], g['densite']), 'estimes': sorted(set(est)), **({} if S_all else {'estime': True}),
+            'phenotypes': [{'id': 'base', 'frequence': 1, 'traits': []}], 'habitats': habitats_de(g['habitats'], plan), **densite(g['id'], g['densite'], getattr(CAT, 'SOURCES_DENSITE', {}).get(g['id'])), 'estimes': sorted(set(est)), **({} if S_all else {'estime': True}),
             '_cles': [m['cle'] for m in membres if m['cle']]}
 
 PHENOS = [('base', []), ('toxique', ['toxique']), ('epineux', ['epineux']), ('epineux+toxique', ['epineux', 'toxique'])]
