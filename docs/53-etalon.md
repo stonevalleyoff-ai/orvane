@@ -141,9 +141,10 @@ Les trois tests du loup passent : il arrive en 1994, la centaine est atteinte en
 | | 1996 | 2005 | 2008 | 2014 | 2018 | 2020 | 2023 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | loups de France, simulés (troisième rapport) | 18 | 56 | 86 | 181 | 274 | 328 | 425 |
+| … le loup à l'adresse du moteur (quatrième passe) | 18 | 75 | 113 | 230 | 339 | 398 | 497 |
 | loups de France, réels (OFB) | ~20 | ~60 | ~150 | ~300 | ~430 | ~580 | ~1 100 |
 
-Les trois tests passent : il arrive en 1994, la centaine est atteinte en 2010, il y en a 425 en 2023, sous le réel mais à moins d'un facteur 3. Le front ralentit après 2010, quand le vrai loup gagne les Alpes du Nord, le Jura et les Vosges. L'Italie atteint 1 600 loups en 2023 (~3 300 en vrai).
+Les trois tests passent : il arrive en 1994, la centaine est atteinte en 2008, il y en a 497 en 2023, sous le réel mais à moins d'un facteur 3. Le front ralentit après 2010, quand le vrai loup gagne les Alpes du Nord, le Jura et les Vosges. L'Italie atteint 2 400 loups en 2023 (~3 300 en vrai).
 
 **Ce que vaut ce résultat.** La seule constante libre, le « / 25 », a été posée d'avance d'après la vitesse connue du front du loup en France (20 à 30 km par an). Elle a marché du premier coup, sans qu'on la retouche. Le loup a donc servi à la régler, et ne la prouve pas. Il faut une autre expansion pour la vérifier.
 
