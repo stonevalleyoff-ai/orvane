@@ -85,14 +85,14 @@ function controler(s, plan, cat = null) {
   for (const [c, x] of rangs) if (!(Array.isArray(x.svg) && x.svg[0] >= 0 && x.svg[0] <= x.svg[1] && x.svg[1] < els.length)) E.push(c + ' : ses éléments');
   if (E.length) return E;
   // chaque patte (et chaque bras articulé) : ses <line>, l'une au bout de l'autre, aux points et aux épaisseurs des parties
-  const chaine = (p, c, sol) => { const n = p.points.length - 1;
-    for (let j = 0; j < n; j++) { const el = els[p.svg[0] + j]; if (el?.nom !== 'line') return E.push(c + ' : pas une <line>');
+  const chaine = (p, c, sol) => { const n = p.points.length - 1, faute = m => { E.push(c + ' : ' + m); return -1; };
+    for (let j = 0; j < n; j++) { const el = els[p.svg[0] + j]; if (el?.nom !== 'line') return faute('pas une <line>');
       const A = el.attr, q0 = pt(+A.x1, +A.y1), q1 = pt(+A.x2, +A.y2);
-      if (![q0[0] - p.points[j][0], q0[1] - p.points[j][1], q1[0] - p.points[j + 1][0], q1[1] - p.points[j + 1][1]].every(d => pres(d, 0)) || !pres(k * +A['stroke-width'], p.epaisseurs[j])) return E.push(c + ' : ses points ou ses épaisseurs'); }
+      if (![q0[0] - p.points[j][0], q0[1] - p.points[j][1], q1[0] - p.points[j + 1][0], q1[1] - p.points[j + 1][1]].every(d => pres(d, 0)) || !pres(k * +A['stroke-width'], p.epaisseurs[j])) return faute('ses points ou ses épaisseurs'); }
     if (sol && Math.abs(+els[p.svg[0] + n - 1].attr.y2) > 1e-9) E.push(c + ' : pas au sol');
     if (p.points.some(([x, y]) => x < -.5 || x > 170.5 || y < -.5 || y > 90.5)) E.push(c + ' : hors du cadre');
     return n; };
-  P.pattes.forEach((p, i) => { const n = chaine(p, 'patte ' + i, true), f = PIEDS[p.pied];
+  P.pattes.forEach((p, i) => { const n = chaine(p, 'patte ' + i, true), f = PIEDS[p.pied]; if (n < 0) return;
     if (!f) E.push(`patte ${i} : pied inconnu (${p.pied})`); else if (els.slice(p.svg[0] + n, p.svg[1] + 1).map(e => e.nom).join() !== f.join()) E.push(`patte ${i} : son pied (${p.pied})`);
     if (!['loin', 'pres'].includes(p.cote)) E.push(`patte ${i} : son côté`); });
   (P.bras || []).forEach((p, i) => { if (p.points && p.epaisseurs) chaine(p, 'bras ' + i, false); });
@@ -138,7 +138,8 @@ console.log('2. Les parties disent ce que dessine le SVG');
   const np = tous.reduce((s, x) => s + x.s.parties.pattes.length, 0);
   verif(!fautes.length, `${fx(tous.length)} dessins de ${MONDES.length} mondes (${Object.entries(dessins).map(([d, n]) => `${d} ${fx(n)}`).join(', ')}) : chacune de leurs ${fx(np)} pattes est la chaîne de ses <line> dans le SVG, aux mêmes points et aux mêmes épaisseurs au dixième près, posée au sol, puis son pied ; aucun nombre manquant`
     + (fautes.length ? ` ; ${fautes.length} fautes : ` + fautes.slice(0, 4).map(([x, E]) => `${x.monde}/${x.biome}/${x.id} (${E.slice(0, 2).join(', ')})`).join(' ; ') : ''));
-  const sansJambes = tous.filter(x => x.s.parties.dessin === 'bipede-tendu');
+  const sansJambes = tous.filter(x => x.s.parties.dessin === 'bipede-tendu'), ditMal = sansJambes.filter(x => x.s.parties.pattes.length || x.s.parties.bras?.length !== 2);
+  if (ditMal.length) verif(false, `les bipèdes à la queue tendue : ${ditMal.map(x => x.id).join(', ')} n'ont pas leurs deux bras, ou ont des pattes`);
   if (sansJambes.length) console.log(`  ⚠ ${sansJambes.length} dessins de bipèdes à la queue tendue (${[...new Set(sansJambes.map(x => x.id))].join(', ')}) n'ont pas de pattes au sol : le dessin ne fait que leurs bras (monde/silhouette.js, quadrupede). Leurs parties le disent (pattes : [], bras : 2) ; dessiner leurs jambes changerait le SVG`);
   const P0 = tous.find(x => x.s.parties.dessin === 'quadrupede').s.parties;
   verif(P0.corps && P0.tete && P0.tete.museau && P0.tete.pivot && P0.cou && P0.queue && P0.pattes.length === 4 && P0.pattes.filter(p => p.cote === 'loin').length === 2,

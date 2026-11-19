@@ -72,7 +72,7 @@ jobs:
         run: |
           pip install -q "gdtoolkit==4.*"
           gdparse kits/godot/addons/orvane/orvane.gd kits/godot/addons/orvane/plugin.gd > /dev/null && echo "le kit Godot se lit"
-          gdparse jeux/lisiere/scripts/*.gd > /dev/null && echo "les scripts de Lisière se lisent"
+          gdparse jeux/lisiere/scripts/*.gd jeux/lisiere/outils/*.gd > /dev/null && echo "les scripts de Lisière et ses outils se lisent"
   bancs:
     runs-on: ubuntu-latest
     timeout-minutes: 330
