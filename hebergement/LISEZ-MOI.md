@@ -37,7 +37,7 @@ Il est né de la genèse « universelle » : 24 biomes neutres (de la banquise a
 | --- | --- | --- |
 | `orvane_inscrire_jeu(nom, contact)` | n'importe qui | inscrit un jeu ; rend son identifiant, **sa clé** (publique : elle va dans le code du jeu) et **sa clé d'administration** (secrète). 30 inscriptions par heure au plus |
 | `orvane_regler_jeu(cle_admin, exposition, nom)` | l'auteur du jeu | ce que le jeu sait montrer (`schemas/profil.schema.json`, `exposition` ; 32 Ko au plus) |
-| `orvane_deposer(cle, compte, lot)` | le jeu | un lot : 64 Ko et 500 événements au plus, chacun au contrat (une action connue, `n` de 0 à 10 000), 48 lots par joueur et par jour, et le quota du jeu (500 lots par jour pour un jeu neuf, relevé à la main ; 20 000 pour Stone Valley) |
+| `orvane_deposer(cle, compte, lot)` | le jeu | un lot : 64 Ko et 500 événements au plus, chacun au contrat (une action connue, `n` de 0 à 10 000), 48 lots par joueur et par jour, et le quota du jeu (500 lots par jour pour un jeu neuf, relevé par paliers : « Relever le quota d'un jeu », plus bas ; 20 000 pour Stone Valley) |
 | `orvane_nommer(cle, compte, monde, taxon, nom, auteur)` | le jeu | un joueur propose le nom commun d'une lignée (docs/37) : 2 à 40 lettres, dix par jour et par joueur ; `deja` dit si quelqu'un l'a devancé |
 | `orvane_jeu(cle)` | le jeu | ce qu'Orvane sait du jeu |
 | `orvane_lire_lots(secret, monde, après)` | l'action nocturne | les lots, par pages de 1000, comptes pseudonymisés |
@@ -56,6 +56,45 @@ Le guide pas à pas, avec les adresses, les appels et les erreurs : [BRANCHER-UN
 2. **Dire ce qu'on montre** : `orvane_regler_jeu` avec l'exposition du jeu. Sans exposition, le jeu est lu « tel quel ».
 3. **Lire le monde** : `https://<compte>.github.io/orvane/mondes/orvane/instantane.json` (docs/1), `generation-0.json` pour le mode relatif, `jeux.json` pour son exposition.
 4. **Renvoyer des pressions** : `orvane_deposer` (docs/4), `lot.monde = "orvane"`.
+
+## Relever le quota d'un jeu
+
+Un jeu neuf a **500 lots par jour** (`orvane_jeux.quota_jour`, compté sur les 24 dernières heures, tous joueurs confondus). Un lot par joueur et par cycle, déposé à un moment naturel, en fait 500 joueurs par jour. Le plafond de 48 lots par joueur et par jour ne bouge pas, ni les plafonds du tampon : relever un quota ne donne pas plus de poids à un jeu dans le monde (ce que pèse un compte, puis un jeu, est plafonné au cycle, docs/4). Il lui permet seulement d'être entendu pour tous ses joueurs. Ce qu'un quota coûte à Orvane, c'est la place des lots (gardés 14 jours, 64 Ko au plus chacun) et le temps de leur lecture la nuit ; ce qu'il risque, c'est une clé publique qui dépose beaucoup au nom d'un jeu. D'où une montée par paliers, chacun mérité au précédent.
+
+**La demande.** Le jeu ouvre une issue sur le dépôt, avec le modèle « Relever le quota d'un jeu » (`.github/ISSUE_TEMPLATE/quota.md`) : l'identifiant du jeu, le quota voulu, ses joueurs par jour (aujourd'hui et attendus), combien de lots un joueur dépose par jour et à quel moment, et un contact. Jamais de clé dans l'issue.
+
+**Les paliers.** 500 → 2 000 → 5 000 → 20 000 lots par jour (Stone Valley en a 20 000). Un palier à la fois, au plus une fois par semaine. Au-delà de 20 000, la demande se discute à part (le volume de la nuit, la place).
+
+| pour passer à | le jeu doit |
+| --- | --- |
+| 2 000 | être actif depuis 7 jours au moins à son quota présent, et l'avoir approché (60 % au moins, un jour sur trois) ; des lots tous acceptés au contrat (moins de 2 % de refus pour « événement mal formé » sur 7 jours) ; un `p_compte` stable et opaque par joueur (un joueur, un pseudonyme : pas un compte neuf à chaque partie) ; des lots déposés à des moments naturels (une sauvegarde, une fin de partie), pas un lot par événement ; son traducteur qui passe le banc générique (`node outils/banc-traducteur.js`, docs/39) |
+| 5 000 | tout ce qui précède, plus : déposer depuis son serveur avec sa **clé de dépôt**, l'exigence de clé activée pour lui (issue #32) ; un `id` à chaque lot, pour que les renvois ne comptent qu'une fois |
+| 20 000 | tout ce qui précède, plus : 14 jours au palier de 5 000 sans anomalie ; s'engager à suivre son bilan de saison (ce qu'il a retiré à chaque population, issue #35, point 4.4) et à répondre à son contact sous une semaine |
+
+Tant que la clé de dépôt n'existe pas sur le Supabase d'Orvane, le palier de 5 000 et au-delà demande au moins que le jeu dépose depuis son serveur, la clé du jeu hors du client, et Orvane ne le relève qu'après le passage de la migration.
+
+**Ce qu'Orvane vérifie**, dans l'éditeur SQL du Supabase (clé de service, jamais dans un jeu) :
+
+```sql
+-- les 14 derniers jours d'un jeu : lots par jour, joueurs distincts, lots par joueur, taille moyenne
+select date_trunc('day', recu) jour, count(*) lots, count(distinct compte) joueurs,
+       round(count(*)::numeric / nullif(count(distinct compte), 0), 2) lots_par_joueur,
+       round(avg(pg_column_size(lot))) octets
+from public.orvane_lots where jeu = 'mon-jeu' and recu > now() - interval '14 days' group by 1 order by 1;
+-- les joueurs qui déposent le plus (un seul pseudonyme au plafond de 48 chaque jour est un signe à regarder)
+select compte, count(*) from public.orvane_lots where jeu = 'mon-jeu' and recu > now() - interval '1 day' group by 1 order by 2 desc limit 20;
+```
+
+Les refus ne laissent pas de ligne : le jeu les compte de son côté (chaque dépôt refusé reçoit `ok: false` et sa raison) et les donne dans sa demande. Côté monde, ce que les jeux envoient et ce que le monde en fait se lit dans l'Observatoire (vue Santé, docs/51).
+
+**Relever, baisser, suspendre.** Une ligne SQL, notée dans l'issue de la demande (qui fait foi) :
+
+```sql
+update public.orvane_jeux set quota_jour = 2000 where id = 'mon-jeu';    -- relever (ou baisser) le quota
+update public.orvane_jeux set actif = false where id = 'mon-jeu';        -- suspendre : ses dépôts sont refusés, ses lots en attente écartés
+```
+
+Orvane peut redescendre d'un palier, ou suspendre un jeu, quand une condition n'est plus tenue : des lots qui ne disent pas des choses réelles (docs/4, « Ce que représente une créature du jeu » dans BRANCHER-UN-JEU.md), une rafale de pseudonymes neufs, une clé de jeu qui a fui. Le jeu en est prévenu par son contact et dans l'issue, avec la raison.
 
 ## Mettre en place
 

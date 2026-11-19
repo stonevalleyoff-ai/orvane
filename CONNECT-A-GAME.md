@@ -205,7 +205,7 @@ if (answer.ok) forgetBatch(); else keepForLater(answer.erreur);
 
 - `p_compte` is an opaque player id, for example a hash of their account id. Orvane only keeps a pseudonym of it, and only uses it for the per-player caps.
 - Keep the batch in memory and in local storage until `ok: true`, then send it at a natural moment: a save, a logout, a change of area.
-- Limits: 500 events and 64 KB per batch; every event must follow the schema (a known action, `n` between 0 and 10,000); 48 batches per player per day; 500 batches per day for a new game (raised on request: Stone Valley has 20,000).
+- Limits: 500 events and 64 KB per batch; every event must follow the schema (a known action, `n` between 0 and 10,000); 48 batches per player per day; 500 batches per day for a new game, raised in steps on request (2,000, 5,000, 20,000: the procedure and what it asks in return are in [hebergement/LISEZ-MOI.md](hebergement/LISEZ-MOI.md#relever-le-quota-dun-jeu), in French; Stone Valley has 20,000).
 
 At the next cycle, the world reads the batches of every game and relates each to that game's exposure. It caps them: one player weighs no more than another (`par_compte_cycle`, `part_max_compte`), a population loses at most 20 % of its headcount in one cycle (`part_max_population`), and when **several** games weigh on the same population, a single game's share is brought down to half of the pressure (`part_max_jeu`). That last cap only bites on what really weighs: each game keeps the right to remove up to 10 % of the population (0.5 × 20 %). **A game alone on a population is only held by the population cap**: it can remove up to 20 % of it per cycle (`plafondPart` in `tampon/tampon.js` caps nothing below two contributors). A per-game cap that holds even for a lone game is being prepared (issue #32). Then it smooths them and moves the world forward. The effect shows in the next instantané. Details: [docs/4](docs/4-renvoyer-des-pressions.md) and `schemas/pression.schema.json`.
 
@@ -225,7 +225,7 @@ The `erreur` strings are in French:
 | `lot mal formé` | `p_lot` is not an object, or has no `evenements` array | follow the schema |
 | `lot trop gros` | more than 500 events or 64 KB | split the batch |
 | `trop de dépôts aujourd'hui pour ce joueur` | 48 batches in the last 24 hours | group them, keep the batch for tomorrow |
-| `quota du jeu atteint pour aujourd'hui` | the game's quota in 24 hours (500 for a new game) | keep the batches for tomorrow; a game that needs more writes to the project |
+| `quota du jeu atteint pour aujourd'hui` | the game's quota in 24 hours (500 for a new game) | keep the batches for tomorrow; a game that needs more opens a quota request (an issue, template « Relever le quota d'un jeu ») |
 | `événement mal formé (schemas/pression.schema.json)` | an event that is not an object, an unknown action, `n` missing, negative or above 10,000, a name that is not a string | follow the schema |
 
 ## Rules

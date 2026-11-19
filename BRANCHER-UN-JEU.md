@@ -187,7 +187,7 @@ if (rep.ok) oublierLeLot(); else garderPourPlusTard(rep.erreur);
 
 - `p_compte` est un identifiant opaque du joueur, par exemple un hachage de son identifiant de compte. Orvane n'en garde qu'un pseudonyme et ne s'en sert que pour les plafonds par joueur.
 - Gardez le lot en mémoire et dans le stockage local jusqu'à `ok: true`, puis envoyez-le à un moment naturel : une sauvegarde, une déconnexion, un changement de zone.
-- Limites : 500 événements et 64 Ko par lot ; chaque événement au contrat (une action connue, `n` entre 0 et 10 000) ; 48 lots par joueur et par jour ; 500 lots par jour pour un jeu neuf (relevé sur demande : Stone Valley en a 20 000).
+- Limites : 500 événements et 64 Ko par lot ; chaque événement au contrat (une action connue, `n` entre 0 et 10 000) ; 48 lots par joueur et par jour ; 500 lots par jour pour un jeu neuf, relevé par paliers sur demande (2 000, 5 000, 20 000 : la procédure et ce qu'elle demande en échange sont dans [hebergement/LISEZ-MOI.md](hebergement/LISEZ-MOI.md#relever-le-quota-dun-jeu) ; Stone Valley en a 20 000).
 
 La nuit suivante, le cycle lit les lots de tous les jeux et les rapporte à l'exposition de chacun. Il les plafonne : un joueur ne pèse pas plus qu'un autre (`par_compte_cycle`, `part_max_compte`), une population ne perd pas plus de 20 % de son effectif en un cycle (`part_max_population`), et quand **plusieurs** jeux pèsent sur une même population, la part d'un seul est ramenée à la moitié de la pression (`part_max_jeu`). Ce dernier plafond ne mord que sur ce qui pèse vraiment : chaque jeu garde le droit d'ôter jusqu'à 10 % de la population (0,5 × 20 %). **Un jeu seul sur une population n'est tenu que par le plafond de population** : il peut lui ôter jusqu'à 20 % par cycle (`plafondPart`, `tampon/tampon.js`, ne plafonne rien sous deux contributeurs). Un plafond par jeu valable même seul est en préparation (issue #32). Puis il les lisse et fait avancer le monde. L'effet se lit dans l'instantané du lendemain. Le détail est dans [docs/4](docs/4-renvoyer-des-pressions.md) et `schemas/pression.schema.json`.
 
@@ -208,7 +208,7 @@ La nuit suivante, le cycle lit les lots de tous les jeux et les rapporte à l'ex
 | `nom : 2 à 40 lettres, espaces, apostrophes ou traits d'union` | un nom commun qui n'en est pas un (`orvane_nommer`) | corriger le nom |
 | `dix noms par jour et par joueur` | `orvane_nommer` | attendre demain |
 | `trop de dépôts aujourd'hui pour ce joueur` | 48 lots dans les 24 dernières heures | regrouper, garder le lot pour demain |
-| `quota du jeu atteint pour aujourd'hui` | le quota du jeu en 24 heures (500 pour un jeu neuf) | garder les lots pour demain ; un jeu qui a besoin de plus écrit au projet |
+| `quota du jeu atteint pour aujourd'hui` | le quota du jeu en 24 heures (500 pour un jeu neuf) | garder les lots pour demain ; un jeu qui a besoin de plus ouvre une demande de quota (une issue, modèle « Relever le quota d'un jeu ») |
 
 ## Règles
 
