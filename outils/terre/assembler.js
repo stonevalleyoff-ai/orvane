@@ -53,6 +53,7 @@ const REGLES = {
   diapause: { plancher: .1 },  // une bête à sang froid passe l'hiver en diapause : elle meurt, mange, se montre dix fois moins (docs/53)
   viande_part: true,         // un omnivore ne cherche en proies que sa part de chair (docs/53)
   domination: .5,            // entre chasseurs à sang chaud, le plus grand domine le plus petit (docs/53)
+  charognes: .5,             // la moitié des morts de vertébrés nourrit les charognards (DeVault et al. 2003 : souvent plus de la moitié des carcasses)
   renouvellement: 120,       // une proie offre ce qui est sur pied et ce qui en naît pendant les ~120 jours où se compte le besoin d'un chasseur (docs/53)
   longevite_predateur: 0,
   // les migrateurs partent quand les jours passent sous 13 h 30 après l'été (fin août à 50° N), et reviennent quand ils repassent au-dessus de

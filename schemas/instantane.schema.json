@@ -1656,6 +1656,12 @@
                 "exclusiveMinimum": 0,
                 "description": "(docs/53) Dans un monde réel : l'adresse d'un chasseur, rapportée à celle du moteur (1) : sa part des proies devant ses concurrents. Calée à l'assemblage."
               },
+              "charogne": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "(docs/52) Dans un monde réel : la part de charogne dans ce que mange la bête (EltonTraits) — le vautour 1, le milan 0,7, le glouton 0,4. Elle vit d'autant des morts du lieu, quand le monde le dit (regles.charognes)."
+              },
               "metabolisme": {
                 "type": "number",
                 "exclusiveMinimum": 0,

@@ -158,6 +158,8 @@ def traits(sci, classe):
     if el:
         d = diete_elton(el)
         if d: V['diete'] = d; S['diete'] = 'EltonTraits'
+        sc = num(el.get('Diet-Scav')) or 0   # (docs/52) la part de charogne, comptée aussi dans la viande : le glouton, le vautour, le milan
+        if sc > 0: V['charogne'] = round(sc / 100, 2); S['charogne'] = 'EltonTraits'
         a = activite(el.get('Activity-Nocturnal') == '1', el.get('Activity-Crepuscular') == '1', el.get('Activity-Diurnal') == '1') if classe == 'Mammalia' else ('nocturne' if el.get('Nocturnal') == '1' else 'diurne')
         if a: V['activite'] = a; S['activite'] = 'EltonTraits'
     if amph:
@@ -260,6 +262,7 @@ def animal(e, groupe=None):
             'vitesse_rel': round((e.get('vit') or 1) / taille, 2), 'perception': e.get('per', gab['per']), 'reproduction': e.get('repro') or gab['repro']}
     if 'activite' not in V and not e.get('act'): est.append('activite')
     if diete: plan['diete'] = diete
+    if V.get('charogne'): plan['charogne'] = V['charogne']
     eau = e.get('eau') or eau_de(e['habitats'], plan)
     if eau: plan['eau'] = eau
     if e.get('meute'): plan['meute'] = e['meute']

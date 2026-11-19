@@ -165,6 +165,10 @@ const REGLES = {
   // territoire (Palomares et Caro 1999 ; Donadio et Buskirk 2006). Le poids d'un concurrent devant un chasseur est multiplié par le rapport de
   // leurs masses à cette puissance : le renard pèse moins devant le lynx, le lynx plus devant le renard. 0 : tous à égalité
   domination: 0,
+  // (docs/52) un monde réel : la part des morts du lieu (les bêtes d'au moins 10 g, mortes de vieillesse ce jour) que trouvent les mangeurs de
+  // charogne (plan.charogne : le vautour, le milan, le glouton, les corvidés). Une proie de plus, qu'on ne tue pas. 0 : les morts ne
+  // nourrissent personne (les mondes d'Orvane)
+  charognes: 0,
   petites_proies: false      // (docs/52) un monde réel : un mangeur d'insectes prend les insectes, si petits soient-ils (plus haut, appetence)
 };
 // (docs/52) le pas de temps : la part d'un cycle de référence (une « tranche de vie » d'environ 120 jours, celle sur laquelle le
@@ -463,6 +467,7 @@ const croissance = p => { if (JOURS && Number.isFinite(p.natalite)) return Math.
   const rmax = .35 * Math.pow(Math.max(.1, p.masse_kg || 1), -.25), r = .6 * Math.log(1 + (p.portee || 2)) / Math.max(1, p.maturite || 1);
   return PAS === 1 ? clamp(r * Math.min(1, rmax / .35), .01, rmax) : clamp(r * Math.min(1, rmax / .35), .01 * PAS, rmax * PAS); };
 const mortalite = p => 1 / Math.max(2, p.longevite || 20);
+const CHAROGNE = { id: '(les morts du lieu)', plan: { regime: 'vegetal', masse_kg: 1 } };   // (docs/52 : une proie de plus, qu'on ne tue pas)
 // convenance d'un biome (0..1) : 1 dans la niche, décroît avec la distance ; nulle si le milieu est impossible
 // L'eau : un nageur vit en eau douce (plan.eau absent, ou 'douce'), en mer ('salee'), ou dans les deux ('mixte', comme
 // les poissons qui remontent les fleuves) ; une côte, une mangrove, un estuaire (amphibie) accueillent tous les nageurs.
@@ -685,9 +690,13 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
       const poids = pop.N.map((N, i) => N * (E.plans[i].masse_kg || 1) * E.vuln[i] * (pop.fp ?? 1) * (GR ? GR.vuln(t, biomes[bid], i) : 1) * (SCa ? SCa.vuln(t, i) : 1) * (ES ? ES.vuln(t, bid, i) : 1) * (DIA ? .3 + .7 * DIA(E.plans[i], biomes[bid]) : 1));
       T.push({ t, E, pop, Nt, poids, Bv: poids.reduce((a, x) => a + x, 0), regime: t.plan.regime }); }
     const preds = T.filter(q => q.regime === 'carnivore' || q.regime === 'omnivore');
+    // (docs/52) les morts du lieu, une proie de plus pour ceux qui mangent la charogne : ce que la mort naturelle laisse en un cycle de référence
+    if (REGLES.charognes > 0 && preds.some(p => p.t.plan.charogne > 0)) { let O = 0;
+      for (const q of T) if (q.regime !== 'vegetal') q.pop.N.forEach((N, i) => { const m = q.E.plans[i].masse_kg || 1; if (m >= .01) O += N * m * mortalite(q.E.plans[i]); });
+      O *= REGLES.charognes / PAS; if (O > 0) T.push({ t: CHAROGNE, E: null, pop: { N: [] }, Nt: 0, poids: [], Bv: O, regime: 'charogne' }); }
     for (const p of preds) {
       let A = 0; const x = new Array(T.length).fill(0);   // (docs/30 : un spectre choisit entre insectes, viande et sang)
-      T.forEach((q, k) => { if (q === p) return; let f = APP(p.t.plan, q.t.plan);
+      T.forEach((q, k) => { if (q === p) return; let f = q.t === CHAROGNE ? p.t.plan.charogne || 0 : APP(p.t.plan, q.t.plan);
         // (docs/53 : dans un monde réel, un buveur de sang de naissance — la tique, le moustique — boit aux bêtes vingt fois plus grandes que lui ;
         //  le moteur ne le laissait qu'à une lignée venue au sang par l'évolution, et la tique n'avait aucun hôte)
         if (REGLES.petites_proies && DT && !f && (p.t.plan.diete?.sang || 0) > 0 && (q.t.plan.masse_kg || 1) >= DI.REGLES.sang.rapport * (p.t.plan.masse_kg || 1) && q.t.plan.regime !== 'vegetal') f = DI.REGLES.sang.appetence * p.t.plan.diete.sang / Math.max(.05, DI.chair(p.t.plan.diete));

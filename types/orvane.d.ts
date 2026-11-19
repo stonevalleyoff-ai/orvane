@@ -696,6 +696,8 @@ export interface Instantane {
       dispersion?: number;
       /** (docs/53) Dans un monde réel : l'adresse d'un chasseur, rapportée à celle du moteur (1) : sa part des proies devant ses concurrents. Calée à l'assemblage. */
       efficacite?: number;
+      /** (docs/52) Dans un monde réel : la part de charogne dans ce que mange la bête (EltonTraits) — le vautour 1, le milan 0,7, le glouton 0,4. Elle vit d'autant des morts du lieu, quand le monde le dit (regles.charognes). */
+      charogne?: number;
       /** (docs/52) Dans un monde réel : ce que la bête brûle, rapporté à un mammifère de sa masse (1 ; un poisson, un reptile, un insecte ~0,15). Elle mange d'autant moins, et fait d'autant plus de petits de ce qu'elle mange. */
       metabolisme?: number;
       /** (docs/52) Un chasseur en meute : la taille du groupe qui chasse (le loup, ~6). La meute abat ce qu'une bête seule n'abattrait pas. */
