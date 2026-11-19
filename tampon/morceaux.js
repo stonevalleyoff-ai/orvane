@@ -2,7 +2,9 @@
 // instantane.json fait plus d'un mégaoctet. À chaque cycle, le monde est aussi publié par morceaux, dans mondes/<id>/morceaux/ :
 //   index.json            le monde, le cycle, les biomes, le catalogue, le journal, et une ligne par lignée (son nom, sa famille,
 //                         son régime, sa masse, son effectif, ses biomes) : quelques dizaines de kilo-octets
-//   biomes/<biome>.json   les lignées qui y vivent, avec leurs seules populations de ce biome (et le cycle d'avant, pour interpoler)
+//   biomes/<biome>.json   les lignées qui y vivent, avec leurs seules populations de ce biome (et le cycle d'avant, pour interpoler) ;
+//                         dans un monde à parcelles, chacune dit son effectif et son infection parcelle par parcelle (parcelles,
+//                         infection_par_parcelle : moteur/parcelles.js, docs/15, 18)
 //   lignees/<id>.json     une lignée entière, avec toutes ses populations
 // Un jeu lit l'index, puis les biomes qu'il joue :
 //   const inst = await OrvaneMorceaux.lire('https://…/mondes/orvane/', { biomes: ['foret', 'prairie'] });

@@ -2,7 +2,8 @@
 //  1. le jour un : un monde sans souches tourne exactement comme le moteur sans moteur/pathogenes.js ;
 //  2. un monde à souches tient : des souches naissent, circulent, s'éteignent ; autant de lignées, autant de bêtes ; chaque
 //     événement de souche dit laquelle et ce qui lui arrive (souche, nature), et son texte la même chose ;
-//  3. une souche passe d'une parcelle à l'autre, de proche en proche ;
+//  3. une souche passe d'une parcelle à l'autre, de proche en proche ; la vue par biome publie l'infection de chaque parcelle,
+//     dont celle du biome est la moyenne ;
 //  4. elle prend chez les lignées proches, pas chez les lointaines ; jamais chez les machines ni les plantes ;
 //  5. l'immunité : une seconde vague dans une population guérie est plus petite ;
 //  6. le compromis : une souche moyennement virulente gagne plus d'hôtes que la plus douce et que la plus virulente ;
@@ -68,6 +69,11 @@ console.log("3. D'une parcelle à l'autre");
   const arrivee = {}; for (let k = 1; k <= (court ? 25 : 40); k++) { P = Orvane.cycle(P, {}); for (const p of P.taxons.find(t => t.id === cible.id).populations) if (p.biome.startsWith('prairie~') && (p.infection?.['souche-essai']?.i || 0) >= .01 && arrivee[p.biome] == null) arrivee[p.biome] = k; }
   const L = Object.entries(d).filter(([b]) => b !== 'prairie~1'), okOrdre = L.every(([b, x]) => arrivee[b] != null) && L.every(([b, x]) => L.every(([c, y]) => x <= y || arrivee[b] >= arrivee[c]));
   verif(okOrdre, `${cible.nom}, infecté dans une parcelle de prairie : la souche gagne les autres de proche en proche (` + L.map(([b, x]) => `${b} à ${x} pas : cycle ${arrivee[b] ?? '—'}`).join(', ') + ')');
+  // (docs/15, 18) la vue par biome publie l'infection de chaque parcelle, à côté de son effectif ; celle du biome en est la moyenne
+  const V = Parcelles.regrouper(P), tv = V.taxons.find(t => t.id === cible.id), pv = tv.populations.find(p => p.biome === 'prairie'), ps = P.taxons.find(t => t.id === cible.id).populations.filter(p => p.biome.startsWith('prairie~'));
+  const ipp = pv.infection_par_parcelle || {}, part = I => I?.['souche-essai']?.i || 0, moy = somme(ps.map(p => part(p.infection) * p.effectif)) / somme(ps.map(p => p.effectif));
+  verif(ps.length === 4 && ps.every(p => JSON.stringify(ipp[p.biome] || {}) === JSON.stringify(p.infection || {})) && Object.keys(ipp).every(q => q in pv.parcelles) && Math.abs(moy - part(pv.infection)) < 1e-6,
+    `la vue par biome publie l'infection de chaque parcelle (infection_par_parcelle), à côté de son effectif : ${ps.map(p => `${p.biome} ${fx(part(ipp[p.biome]) * 100, 1)} %`).join(', ')} ; la prairie, ${fx(part(pv.infection) * 100, 2)} %, en est la moyenne pesée par l'effectif`);
 }
 
 console.log('4. Les hôtes');

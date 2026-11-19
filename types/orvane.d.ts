@@ -824,6 +824,15 @@ export interface Instantane {
           r?: number;
         };
       };
+      /** (monde à parcelles, docs/15, 18) L'infection de la population dans chacune des parcelles de son biome où une souche circule, au même format que infection : { parcelle: { souche: { i, r } } }. infection en est la moyenne, pesée par l'effectif de chaque parcelle (parcelles). Une parcelle absente n'a ni malade ni immunisé. */
+      infection_par_parcelle?: {
+        [cle: string]: {
+          [cle: string]: {
+            i?: number;
+            r?: number;
+          };
+        };
+      };
       /** (docs/47) Une plante qu'une catastrophe vient de toucher, dans un monde à la succession éveillée : laquelle (type : incendie, crue, secheresse), à quel cycle, et la part de ses pieds qu'elle y a perdue. Elle le dit douze cycles. */
       sinistre?: {
         type?: string;

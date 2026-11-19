@@ -72,7 +72,7 @@ function fusionner(cible, source0, opt = {}) {
   const arrivent = [];
   for (const t of source.taxons) {
     if (t.eteint != null || t.plan?.regime === 'vegetal' || t.plan?.regime === 'synthetique') continue;
-    const pops = t.populations.filter(p => choisis.has(p.biome)).map(p => { const q = { ...clone(p), effectif: Math.round(p.effectif * part) }; delete q.hybride; delete q.infection; delete q.parcelles; return q; }).filter(p => p.effectif >= 1).flatMap(etaler).filter(p => p.effectif >= 1);   // (une zone hybride de la source n'a plus de sens ici)
+    const pops = t.populations.filter(p => choisis.has(p.biome)).map(p => { const q = { ...clone(p), effectif: Math.round(p.effectif * part) }; delete q.hybride; delete q.infection; delete q.parcelles; delete q.infection_par_parcelle; return q; }).filter(p => p.effectif >= 1).flatMap(etaler).filter(p => p.effectif >= 1);   // (une zone hybride de la source n'a plus de sens ici)
     if (pops.length) arrivent.push({ t, pops });
   }
   if (!arrivent.length) return rien('aucune lignée de la source ne vit dans ces biomes');

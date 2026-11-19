@@ -2,12 +2,14 @@
 //  1. le découpage : un index léger, un fichier par biome, un fichier par lignée ;
 //  2. tous les biomes réunis redonnent instantane.json ; quelques biomes, l'instantané réduit à ces biomes, au même contrat ;
 //  3. dans un navigateur, le même résultat ; le cycle de nuit publie les morceaux et retire ceux d'une lignée éteinte ;
-//  4. les planches (monde/planches.js) : chaque bête de chaque biome dessinée, avec ses yeux, le même texte à chaque fois.
+//  4. les planches (monde/planches.js) : chaque bête de chaque biome dessinée, avec ses yeux, le même texte à chaque fois ;
+//  5. l'infection par parcelle (docs/18) : à côté de l'effectif de chaque parcelle, celle que tient le moteur ; celle du biome en est
+//     la moyenne ; les morceaux la portent, et la rendent.
 //   node bancs/morceaux.js
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm'), { execFileSync } = require('child_process');
 const racine = p => path.join(__dirname, '..', p);
-const M = require(racine('tampon/morceaux.js')), Tampon = require(racine('tampon/tampon.js'));
+const M = require(racine('tampon/morceaux.js')), Tampon = require(racine('tampon/tampon.js')), Parcelles = require(racine('moteur/parcelles.js'));
 const lireJ = f => JSON.parse(fs.readFileSync(racine(f), 'utf8'));
 let ok = true; const verif = (c, m) => { ok = ok && !!c; console.log((c ? '  ✓ ' : '  ✗ ') + m); };
 const clone = o => JSON.parse(JSON.stringify(o)), ko = o => fmt(JSON.stringify(o).length / 1024), fmt = x => (+x).toLocaleString('fr-FR', { maximumFractionDigits: 0 });
@@ -57,6 +59,9 @@ const pareil = (a, b) => ['orvane', 'monde', 'cycle', 'biomes', 'catalogue', 'ta
     const lu = await M.lire('x', { lecteur: async c => JSON.parse(fs.readFileSync(path.join(mo, c), 'utf8')) }), n = fs.readdirSync(path.join(mo, 'lignees')).length;
     verif(lu.cycle.n === P.cycle.n && lu.taxons.length === P.taxons.length && n === P.taxons.length && !fs.existsSync(path.join(mo, 'lignees', 'eteinte.json')),
       `le cycle de nuit publie les morceaux à côté de instantane.json (${n} lignées, celles du cycle), et retire ceux d'une lignée qui n'est plus`);
+    const inf = P.taxons.flatMap(t => t.populations.filter(p => p.infection).map(p => [t.id, p])), [ti, pi] = inf[0] || [], fb = pi && JSON.parse(fs.readFileSync(path.join(mo, 'biomes', encodeURIComponent(pi.biome) + '.json'), 'utf8'));
+    verif(inf.length && inf.every(([, p]) => p.infection_par_parcelle && p.parcelles) && JSON.stringify(fb.taxons.find(t => t.id === ti).populations[0].infection_par_parcelle) === JSON.stringify(pi.infection_par_parcelle),
+      `il publie l'infection de chaque parcelle (${inf.length} populations infectées), dans instantane.json et dans biomes/<biome>.json, à côté des effectifs par parcelle`);
     const ns = fs.existsSync(path.join(mo, 'silhouettes')) ? fs.readdirSync(path.join(mo, 'silhouettes')).length : 0;
     verif(ns === P.biomes.length, `il publie aussi une planche par biome (morceaux/silhouettes/, ${ns} fichiers pour ${P.biomes.length} biomes)`);
   } finally { fs.rmSync(dossier, { recursive: true, force: true }); }
@@ -76,5 +81,23 @@ const pareil = (a, b) => ['orvane', 'monde', 'cycle', 'biomes', 'catalogue', 'ta
   verif(JSON.stringify(Pl.planches(D)) === JSON.stringify(Q), 'dessinées deux fois, les planches sont les mêmes, au caractère près (rien ne change d\'un cycle à l\'autre si les bêtes ne changent pas)');
   const pr = Q['silhouettes/prairie.json'], t0 = Object.keys(pr.silhouettes)[0], ph = Pl.dominant(D['biomes/prairie.json'].taxons.find(t => t.id === t0), 'prairie');
   verif(!ph || pr.silhouettes[t0].phenotype === ph.id, `chaque bête est dessinée sous sa variante la plus fréquente dans ce biome (${t0} : ${ph?.id ?? 'sans variante'})`);
+  console.log('5. L\'infection par parcelle');
+  { // l'état du monde d'Orvane (par parcelle, cycle 44) vu par biome : l'infection de chaque parcelle, telle que le moteur la tient
+    const E = lireJ('mondes/orvane/etat.json'), V = Parcelles.regrouper(E), ty = new Map(E.biomes.map(b => [b.id, b.type || b.id])), fautes = []; let n = 0, k = 0;
+    for (const t of V.taxons) for (const p of t.populations) {
+      const L = E.taxons.find(x => x.id === t.id).populations.filter(q => ty.get(q.biome) === p.biome), ipp = p.infection_par_parcelle;
+      if (!L.some(q => q.infection)) { if (ipp) fautes.push(`${t.id} ${p.biome} : une infection par parcelle sans infection`); continue; }
+      n++; k += Object.keys(ipp || {}).length; if (!ipp || L.length < 2) { if (L.length >= 2) fautes.push(`${t.id} ${p.biome} : pas d'infection par parcelle`); continue; }
+      if (!L.every(q => JSON.stringify(ipp[q.biome] || {}) === JSON.stringify(q.infection || {})) || !Object.keys(ipp).every(q => q in p.parcelles)) fautes.push(`${t.id} ${p.biome} : pas celle des parcelles`);
+      // celle du biome : la moyenne des parcelles, pesée par l'effectif (une parcelle où la souche n'est pas compte pour 0)
+      const W = L.reduce((s, q) => s + q.effectif, 0);
+      for (const [s, x] of Object.entries(p.infection)) for (const c of ['i', 'r']) { const m = L.reduce((a, q) => a + (q.infection?.[s]?.[c] || 0) * q.effectif, 0) / W; if (Math.abs(m - x[c]) > 1e-6) fautes.push(`${t.id} ${p.biome} ${s}.${c} : ${x[c]} ≠ ${m}`); }
+    }
+    verif(n > 0 && k >= n && !fautes.length, `${n} populations infectées, dans ${k} parcelles : chacune publie l'infection que tient le moteur (infection_par_parcelle), à côté de son effectif ; celle du biome en est la moyenne pesée par l'effectif` + (fautes.length ? ` ; ${fautes.slice(0, 3).join(' ; ')}` : ''));
+    const D5 = M.decouper(V), [t5, p5] = V.taxons.flatMap(t => t.populations.filter(p => p.infection_par_parcelle).map(p => [t, p]))[0], m5 = D5['biomes/' + encodeURIComponent(p5.biome) + '.json'].taxons.find(t => t.id === t5.id).populations[0];
+    const lu5 = await M.lire('x', { lecteur: async c => clone(D5[c]), biomes: [p5.biome] }), e5 = val(S, lu5, '$');
+    verif(JSON.stringify(m5.infection_par_parcelle) === JSON.stringify(p5.infection_par_parcelle) && JSON.stringify(lu5.taxons.find(t => t.id === t5.id).populations[0]) === JSON.stringify(p5) && !e5.length,
+      `le morceau biomes/${p5.biome}.json la porte (${t5.nom} : ${Object.entries(p5.infection_par_parcelle).map(([q, I]) => `${q} ${Object.values(I).map(x => (x.i * 100).toFixed(2) + ' %').join('/')}`).join(', ')}) ; lu, il la rend, au contrat` + (e5.length ? ' : ' + e5.slice(0, 2).join(' ; ') : ''));
+  }
   console.log(`\n${ok ? 'tout passe' : 'ÉCHEC'}`); process.exit(ok ? 0 : 1);
 })();
