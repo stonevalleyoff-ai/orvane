@@ -170,9 +170,10 @@ if (arg('--experience') === 'chacal') {
     serie.push({ an, ...Object.fromEntries(Object.entries(o).map(([c, n]) => [c, Math.round(n)])) });
     process.stderr.write(`le chacal : ${an}, ${Object.keys(REELC).filter(c => arrivee[c]).map(c => c + ' ' + arrivee[c]).join(', ') || 'encore dans les Balkans'} (${((Date.now() - t1) / (y + 1) / 1000).toFixed(0)} s par an)\n`); }
   const fin = 1980 + ANSX, ecarts = Object.entries(REELC).map(([c, r0]) => ({ pays: c, reel: r0, simule: arrivee[c] ?? null, ecart: (arrivee[c] ?? fin + 1) - r0 }));
-  const med = (() => { const v = ecarts.map(e => Math.abs(e.ecart)).sort((x, y) => x - y); return v[v.length >> 1]; })(), atteints = ecarts.filter(e => e.simule != null).length;
-  const tests = [{ id: 'chacal-vague', nom: 'La vague du chacal doré', valeur: med, valeur_dite: `écart médian ${med} ans ; ${atteints}/${ecarts.length} pays atteints en ${fin} — ${ecarts.map(e => `${e.pays} ${e.simule ?? '—'} (${e.reel})`).join(', ')}`,
-    cible: "à moins de 8 ans des premières observations (une première observation est souvent un jeune de passage)", etat: med <= 8 ? 'ok' : med <= 16 ? 'limite' : 'echec' }];
+  // (un pays jamais atteint est un écart sans fin : sans cela, la France, attendue en 2017, ne coûtait que sept ans à un chacal resté dans les Balkans)
+  const med = (() => { const v = ecarts.map(e => e.simule == null ? Infinity : Math.abs(e.ecart)).sort((x, y) => x - y); return v[v.length >> 1]; })(), atteints = ecarts.filter(e => e.simule != null).length;
+  const tests = [{ id: 'chacal-vague', nom: 'La vague du chacal doré', valeur: med, valeur_dite: `écart médian ${Number.isFinite(med) ? med + ' ans' : 'sans fin (la plupart des pays jamais atteints)'} ; ${atteints}/${ecarts.length} pays atteints en ${fin} — ${ecarts.map(e => `${e.pays} ${e.simule ?? '—'} (${e.reel})`).join(', ')}`,
+    cible: "au moins 8 pays sur 10 atteints, à moins de 8 ans des premières observations en médiane (une première observation est souvent un jeune de passage)", etat: med <= 8 && atteints >= 8 ? 'ok' : med <= 16 && atteints >= 5 ? 'limite' : 'echec' }];
   const rapport = { etalon: 1, experience: 'chacal', monde: MONDE, date: arg('--date', new Date().toISOString().slice(0, 10)), ans: ANSX, lieux: B.length, reel: REELC, ecarts, serie, tests };
   const S = { ok: '✓', limite: '≈', echec: '✗' }; console.log(`La vague du chacal doré (${B.length} lieux ; ${ANSX} ans depuis 1980) :`); for (const t of tests) console.log(`  ${S[t.etat]} ${t.nom} : ${t.valeur_dite} — cible ${t.cible}`);
   const so = arg('--sortie'); if (so) { fs.mkdirSync(path.dirname(path.resolve(so)), { recursive: true }); fs.writeFileSync(so, JSON.stringify(rapport, null, 1)); console.log('→', so); }

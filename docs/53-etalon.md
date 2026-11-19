@@ -217,6 +217,10 @@ Les trois tests passent : il arrive en 1994, la centaine est atteinte en 2008, i
 
 **C'est une validation, non un réglage.** La dispersion a été posée d'après le loup : rien n'a été réglé sur le chacal. Le moteur compte une lignée installée (au moins deux bêtes dans le pays), quand une première observation est souvent un jeune de passage, loin devant le front : il doit arriver un peu plus tard. La cible : l'écart médian à moins de 8 ans.
 
+**Ce que l'expérience a trouvé : un échec franc.** Sur trois graines, en 44 ans, le chacal ne quitte presque pas les Balkans : il atteint l'Italie en 1993, en 1984, ou jamais, et aucun autre pays. Le moteur reproduit exactement son hypothèse : le front d'une espèce avance chaque année de sa plus longue dispersion / 25 (une constante posée d'après le loup, ~25 km par an pour lui), soit ~11 km par an pour le chacal ; des Balkans à la France entre 1980 et 2017, il en a fait ~40. Une seule constante ne vaut pas pour les deux.
+
+La théorie des invasions dit pourquoi (Fisher 1937 ; Skellam 1951 ; Andow et al. 1990) : la vitesse d'un front est 2√(r D), où D dit la dispersion et r la croissance de la population. Le chacal, qui fait beaucoup de petits et tôt, avance plus vite que le loup bien qu'il se disperse moins loin. Ce qui manque est ce mécanisme, non un réglage : caler la constante sur le chacal en ferait un deuxième réglage, et l'expérience ne prouverait plus rien. Il faudrait une troisième expansion connue, qui n'aurait servi à rien régler, pour vérifier la nouvelle vitesse : celle du chien viverrin, lâché en Union soviétique de 1928 à 1955 et parvenu en Finlande, en Pologne, en Allemagne, au Danemark (Kauhala et Kowalczyk 2011, *Current Zoology* 57).
+
 ## Chaque dimanche
 
 `.github/workflows/etalon.yml` fait vivre l'Europe trois années chaque dimanche, sur trois graines, puis refait le retour du loup et la vague du chacal, sur trois graines aussi. Le rapport va dans le résumé de l'action et sur la branche `etalon` (`etalon/europe/AAAA-MM-JJ.json`, et `index.json` qui les liste), jamais sur `main`. Le monde hébergé n'en voit rien.
