@@ -18,7 +18,7 @@ const Orvane = require('./orvane.js'), CAT = require('./catalogue.js'), CORPS = 
 // de reprise — sans cela, une reprise sans ses --regles ou ses --lignees continuait un autre monde)
 const a = process.argv.slice(2), iR = a.indexOf('--reprise'), ARGS0 = iR >= 0 && a[iR + 1] ? JSON.parse(fs.readFileSync(a[iR + 1], 'utf8')).args || {} : {};
 const arg = (k, d) => { const i = a.indexOf(k); return i >= 0 && a[i + 1] != null ? a[i + 1] : k in ARGS0 ? ARGS0[k] : d; };
-const DRAPEAUX = ['--cycles', '--graine', '--nom', '--sortie', '--lignees', '--rarete', '--etage', '--regles', '--milieux', '--ancetres', '--catalogue', '--point', '--sursis', '--rarete-lieu', '--etage-detritivore'];
+const DRAPEAUX = ['--cycles', '--graine', '--nom', '--sortie', '--lignees', '--rarete', '--etage', '--regles', '--ecologie', '--milieux', '--ancetres', '--catalogue', '--point', '--sursis', '--rarete-lieu', '--etage-detritivore'];
 const src = a.find((x, i) => !x.startsWith('--') && !(i > 0 && a[i - 1].startsWith('--'))) || ARGS0._src || 'mondes/sv-1', cycles = +arg('--cycles', 3000), graine = +arg('--graine', 7), nom = arg('--nom', 'Monde né d\'Orvane'), sortie = arg('--sortie', 'genese.json');
 const ARGS = { _src: src, ...Object.fromEntries(DRAPEAUX.map(k => [k, arg(k, undefined)]).filter(([, v]) => v !== undefined)) };
 
@@ -116,7 +116,12 @@ Object.assign(Orvane.REGLES, { mutation: .01, nouveau_trait: .08, menace: 20, ma
 // (6 novembre) les charognards vivent des morts du lieu (REGLES.cadavres, docs/13), et le monde garde la règle. Par défaut, la moitié
 // de ces morts les nourrit : sur deux graines, 3 000 cycles, ils tiennent (11 à 13 lignées) et les carnivores gardent leurs lignées ;
 // toutes les morts (1) leur en coûtaient trois. --regles '{"cadavres": 0}' revient à la genèse d'avant
-const reglesMonde = { cadavres: .5, ...(arg('--regles', null) ? JSON.parse(arg('--regles', '{}')) : {}) };   // gardées par le monde (monde.regles) : elles valent ensuite à chacun de ses cycles
+// (docs/53) --ecologie terre : une genèse aux constantes du monde réel (la ration d'un prédateur, la viande qui fait des petits, la
+// demi-satiété : celles de l'Europe) et à ses règles (les petites proies, la concurrence et la domination selon la masse, la part de chair).
+// Dans Orvane, les carnivores faisaient naître 32 % de ce qu'ils mangent, dix fois une vraie bête à sang chaud : la genèse suivante d'Orvane
+// part de celles-ci. Sans l'option, la genèse d'avant
+const ECOLOGIE_TERRE = arg('--ecologie', null) === 'terre' ? { besoin: 6, conversion: .06, demi_satiete: 5, petites_proies: true, concurrence_masse: .7, domination: .5, viande_part: true } : {};
+const reglesMonde = { cadavres: .5, ...ECOLOGIE_TERRE, ...(arg('--regles', null) ? JSON.parse(arg('--regles', '{}')) : {}) };   // gardées par le monde (monde.regles) : elles valent ensuite à chacun de ses cycles
 if (reglesMonde) for (const [k, v] of Object.entries(reglesMonde)) { const b = Orvane.REGLES[k]; Orvane.REGLES[k] = v && typeof v === 'object' && !Array.isArray(v) && b && typeof b === 'object' && !Array.isArray(b) ? { ...b, ...v } : v; }   // (d'un niveau, comme le moteur : { derive: { tolerance: .3 } } garde le reste de la dérive)
 const rarete = +arg('--rarete', .0005);   // une lignée installée qui reste sous cette part de la BIOMASSE du monde est rayée : la place se libère
 // (la rareté se juge à l'étage de la chaîne : un prédateur ne pèse naturellement qu'un dixième de ses proies — Lindeman)
