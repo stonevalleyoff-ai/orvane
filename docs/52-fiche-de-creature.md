@@ -23,14 +23,16 @@ f.champs    // la même chose en JSON, pour un outil ; champs.sections : chaque 
 - **`table()`** : la table des familles en JSON, avec sa version (`VERSION`, aujourd'hui `1.0`).
 - Une plante n'a pas de fiche de créature : `ecrire` la refuse, et renvoie à l'herbier (docs/49).
 
-La fiche est **pure** et **déterministe** : la même lignée dans le même instantané donne toujours la même fiche, au caractère près, sous Node comme dans un navigateur ; rien n'est modifié. Elle ne dépend que de `moteur/corps.js`, qui normalise le corps (et que la fiche remet dans son état après usage).
+La fiche est **pure** et **déterministe** : la même lignée dans le même instantané donne toujours la même fiche, au caractère près, sous Node comme dans un navigateur, quel que soit l'ordre des lignées dans l'instantané et l'ordre des clés de chaque objet (un ex aequo se départage par le nom, jamais par l'ordre d'arrivée). Rien n'est modifié, et rien n'est partagé : la fiche rend des copies, qu'un jeu peut changer sans toucher l'instantané ; ses tables sont gelées. Elle ne dépend que de `moteur/corps.js`, qui normalise le corps (et que la fiche remet dans son état après usage) ; sans lui, elle le dit (« moteur/corps.js manque ») au lieu de planter plus loin.
 
-Toutes les fiches d'un instantané, dans un dossier (un `.md` et un `.json` par lignée, et un `index.json`) :
+Toutes les fiches d'un instantané, dans un dossier (un `.md` et un `.json` par lignée, et un `index.json` qui dit le fichier de chacune) :
 
 ```
-node outils/fiches.js                                  le monde d'Orvane, dans fiches/orvane/
-node outils/fiches.js mondes/genese-7/instantane.json --dossier /tmp/fiches [--style "…"] [--lignees kaume,firtis]
+node outils/fiches.js                                  le monde d'Orvane, dans le dossier temporaire de la machine
+node outils/fiches.js mondes/genese-7/instantane.json --sortie ./mes-fiches [--style "…"] [--lignees kaume,firtis]
 ```
+
+Sans `--sortie`, les fiches vont hors du dépôt, dans `orvane-fiches/<monde>/` du dossier temporaire (`os.tmpdir()`), et l'outil dit où. Un nom de fichier garde les lettres, les chiffres, `.`, `_` et `-`, et code le reste (`a~1` donne `a%7e1.md`) : deux lignées n'écrasent jamais le même fichier.
 
 ## Les familles visuelles
 
@@ -38,7 +40,7 @@ Orvane ne dit jamais « mammifère », « insecte » ni « poisson » : ses bêt
 
 Les familles restent proches de la Terre, parce qu'un humain comme une IA les lit sans ambiguïté. Leurs identifiants sont à Orvane, et la table est **versionnée** : une règle qui change fait une version nouvelle de la table (`OrvaneFiche.VERSION`), et chaque fiche dit la version qui l'a écrite.
 
-La famille ne lit que le **plan visuel** de la lignée : sa forme (et son allure, docs/11 : un corps de serpent qui ne fait que nager est un poisson), son mode de reproduction (docs/25), la présence d'un organe `carapace`, et la nage. Rien d'autre : ni la masse, ni les couleurs. Les règles, dans l'ordre (la première qui convient choisit) :
+La famille ne lit que le **plan visuel** de la lignée : sa forme (et son allure, docs/11 : un corps de serpent qui ne fait que nager est un poisson), son mode de reproduction (docs/25), la présence d'un organe `carapace`, et la nage. Rien d'autre : ni la masse, ni les couleurs, ni la mère. Les règles, dans l'ordre (la première qui convient choisit) :
 
 | famille | règle | tégument | au cycle 44 |
 | --- | --- | --- | --- |
@@ -54,7 +56,13 @@ La famille ne lit que le **plan visuel** de la lignée : sa forme (et son allure
 | `peau-nue` | quadrupède ou bipède ovipare sans carapace, qui nage | peau nue, lisse et humide | 1 |
 | `ecailles` | quadrupède ou bipède ovipare sans carapace, qui ne nage pas | écailles de lézard | 2 |
 
-Soit 89 lignées à poil, 74 à chitine, 43 à écailles, 30 à cuirasse, 4 à plumes, 2 machines et une à peau nue, sur les 243 du cycle 44.
+Soit 89 lignées à poil, 74 à chitine, 43 à écailles, 30 à cuirasse, 4 à plumes, 2 machines et une à peau nue, sur les 243 du cycle 44. Une machine qui a un corps (aucune dans les trois mondes du banc, mais le contrat le permet) reste une `machine`, son corps décrit comme celui d'une bête, en métal.
+
+### La famille se lit sur la lignée seule (décision révisable)
+
+Une fille peut changer de peau sans changer de forme : `anloro`, fille du Firtis, a gardé sa silhouette mais pond, et passe du poil aux écailles. Au cycle 44, 8 des 21 changements de famille sont ainsi dus à la seule reproduction, ou à une carapace venue ou perdue. La famille aurait pu suivre la mère (une fille garde la peau de sa lignée tant que sa forme ne change pas) : elle ne le fait pas. Elle ne lit que les données de la lignée, parce qu'une mère peut sortir de l'instantané (éteinte depuis plus de dix cycles, ou restée dans son monde) et que la peau ne doit pas basculer alors ; parce qu'une lignée se dessine aussi seule, dans un jeu qui ne montre pas sa mère.
+
+L'air de famille est gardé par la section Parenté, qui le dit en toutes lettres : « La peau change : écailles fines et sèches, comme un lézard, au lieu de poil (règle …) ; la forme du corps est la même : pour l'air de famille, garder sa silhouette, ses couleurs et son motif, et ne changer que la peau ». Le prompt de la fille dit sa peau à elle, jamais celle de sa mère. Si l'essai de DA montre des filles trop loin de leur mère, une version prochaine de la table pourra faire suivre la mère tant que la forme reste.
 
 ### Les cas ambigus, tranchés
 
@@ -66,7 +74,7 @@ Chaque décision est écrite dans la table, avec sa raison (`REGLES[].pourquoi`)
 - **Bipède vivipare → `pelage`** (`phebel`) ; **bipède ovipare à carapace → `cuirasse`** (`umeouro` sur terre, `rososil` qui nage).
 - **Quadrupède vivipare ailé (`renel`) → `pelage`.** L'issue pensait à une chauve-souris ; ses organes disent autre chose : **trois ailes de plumes** (`forme: "plumes"`, `nombre: 3`). La fiche le dit tel quel : un corps à poil, les plumes seulement aux ailes, et « membranous bat wings » au négatif.
 - **Quadrupède vivipare à carapace → `pelage`**, une carapace de tatou sur le dos, le poil au ventre, aux pattes et à la tête (`pelage-carapace`). Quatre lignées au cycle 44 (`dunlinro`, `toran`, `silvamu`, `ounou`), que l'issue comptait parmi les 87 quadrupèdes vivipares. Mettre bas est ce qui ressemble le plus à un mammifère, et la famille ne change pas quand une carapace vient ou se perd.
-- **Les hexapodes géants gardent la chitine.** Mais à partir de 1 kg, la cuticule devient épaisse, mate, en plaques jointives, les articulations larges, les pattes épaisses (`chitine-geant`, 14 lignées) ; à partir de 10 kg, des pattes comme des piliers (`chitine-colosse` : `silouor`, 17,7 kg, et `katorgra`, 21,8 kg). Le seuil : les plus lourds insectes de la Terre pèsent moins de 100 g. À 1 kg, dix fois plus, une cuticule fine et luisante ferait un jouet ; le prompt le dit (« not toy-like »).
+- **Les hexapodes géants gardent la chitine.** Mais à partir de 1 kg, la cuticule devient épaisse, mate, en plaques jointives, les articulations larges, les pattes épaisses (`chitine-geant`) ; à partir de 10 kg, des pattes comme des piliers (`chitine-colosse`). Le seuil : les plus lourds insectes de la Terre pèsent moins de 100 g. À 1 kg, dix fois plus, une cuticule fine et luisante ferait un jouet ; le prompt le dit (« not toy-like »), et n'a plus alors ni « light » ni « slender ». Le seuil se lit sur la **masse que montrent la plupart des bêtes**, celle qu'on dessine : `katorgra` pèse 21,8 kg au plan, mais 93 % de ses bêtes sont naines et en montrent 9,8 ; `silouor`, 17,7 kg au plan, en montre 8. Au cycle 44, neuf lignées sont ainsi des géants, et aucune un colosse.
 - **Synthétique sans corps → `machine`**, décrite d'après ses `modules`, comme sur les planches : un châssis sur quatre pattes articulées, un œil-lentille, un panneau solaire, une pince, une foreuse… selon ce qui dépasse les seuils des planches.
 
 ### Les détails du tégument
@@ -82,7 +90,7 @@ Dans une famille, la DA décide encore quelques détails, chacun avec sa raison 
 | `pelage-tempere` | le reste | poil court |
 | `pelage-carapace` | une vivipare à carapace | une carapace de tatou sur le dos |
 | `chitine-elytres`, `chitine-bouclier` | une carapace de plus de 0,3, ou moins | deux élytres qui couvrent l'abdomen, ou une plaque dorsale courte |
-| `chitine-geant`, `chitine-colosse` | 1 kg et plus, 10 kg et plus | une cuticule épaisse et mate ; des pattes comme des piliers |
+| `chitine-geant`, `chitine-colosse` | 1 kg et plus, 10 kg et plus, de masse vue | une cuticule épaisse et mate ; des pattes comme des piliers |
 | `chitine-nageur` | elle nage | les pattes arrière en rames |
 | `cuirasse-nageur`, `cuirasse-terre` | elle nage, ou non | basse, lisse et profilée ; haute, en plaques |
 | `ecailles-poisson`, `-serpent`, `-lezard` | selon le corps | écailles de poisson et nageoires ordinaires ; écailles lisses et plaques ventrales ; écailles sèches de lézard |
@@ -91,15 +99,19 @@ Dans une famille, la DA décide encore quelques détails, chacun avec sa raison 
 | `parade-accent` | un organe de parade ou d'avertissement (crête, collerette, panache, plaques) | la teinte d'accent des planches, la robe tournée de 150° |
 | `robe-du-plan` | plus de la moitié des bêtes portent une robe d'allèle | le modèle garde la robe du plan ; la robe d'allèle est une variante |
 
+Les deux dernières ne sont pas des peaux : ce sont des **règles de DA versionnées**, que l'essai de DA pourra changer (voir « Les limites »). Les autres ne valent que dans leur famille : pas de moustaches à une méduse, pas de pattes palmées ni de « coat » à un insecte (sa robe noire est « all-black body »).
+
+La matière d'un organe suit aussi la famille. Le panache est une touffe ou un éventail de poils chez une bête à poil, de soies chez un insecte, de plumes chez un oiseau, d'écailles effilées chez une bête à écailles ou à cuirasse, de filaments de peau chez une peau nue, de câbles chez une machine ; ses mots, en français comme en anglais (« fluffy tuft of fur », « tuft of bristles »), viennent d'une seule table (`MATIERE`).
+
 ## Les treize sections
 
 1. **Identité** : le nom, l'identifiant, la mère, le cycle d'apparition (une date de la genèse est dite comme telle, comme le fait l'Observatoire ; une lignée venue d'une fusion dit d'où), le statut, l'effectif total et par biome, du plus peuplé au moins peuplé.
 2. **Famille visuelle et tégument** : la famille, la règle qui l'a choisie et pourquoi, les détails du tégument, la version de la table.
-3. **Silhouette** : la forme et les pattes, la phrase de `OrvaneCorps.decrire`, la longueur et la masse vraies (`taille_m`, `masse_kg`), la **carrure** (la masse pour la longueur, rapportée à ce qu'est une bête ordinaire de cette allure), les proportions du corps traduites en mots, la posture. Ce qui ne compte pas pour ce corps (le cou d'un insecte) est dit « sans objet ».
+3. **Silhouette** : la forme et les pattes, la phrase de `OrvaneCorps.decrire`, la longueur et la masse du plan (`taille_m`, `masse_kg`), et celles que montrent la plupart des bêtes quand un trait majoritaire les change (le nanisme, le gigantisme : c'est la taille qu'on dessine), la **carrure** (la masse vue pour la longueur vue, rapportée à ce qu'est une bête ordinaire de cette allure), les proportions du corps traduites en mots, la posture. Ce qui ne compte pas pour ce corps (le cou d'un insecte) est dit « sans objet ». Un bipède porte deux petits bras, comme sur les planches ; une machine dont la taille n'est pas connue le dit, sans en inventer une.
 4. **Tête** : la taille de la tête, le museau (le bec d'un oiseau), les oreilles et leur forme, les yeux (grands chez une bête de nuit), la bouche d'après le régime.
 5. **Organes** : chacun avec son nombre, sa forme, sa place, sa taille, sa fonction et sa conduite (tirées de `catalogue.organes` de l'instantané), comment il se montre, et sa teinte. Une machine : ses modules.
 6. **Couleurs** : les quatre couleurs en hexadécimal, avec leur rôle (robe, sombre, ventre, œil) et un nom en mots ; le motif, et où il se pose ; les teintes de la DA (l'accent, l'ivoire) quand un organe les prend.
-7. **Posture et mouvement** : chaque façon de se déplacer et ce qu'elle donne au corps, la vitesse de pointe en longueurs par seconde et en m/s, ce que les traits de la plupart des bêtes y changent.
+7. **Posture et mouvement** : chaque façon de se déplacer et ce qu'elle donne au corps, la vitesse de pointe en longueurs par seconde et en vitesse réelle (des mm/s aux m/s), ce que les traits de la plupart des bêtes y changent, et la vitesse qu'ils lui donnent (`vitesse_rel` × leurs écarts × la taille vue).
 8. **Comportement** : l'heure, la vie en groupe, le tempérament (fuir ou faire front, et avec quoi), ce qu'elle mange, la reproduction, la maturité et la longévité (en cycles), les traits de la plupart des bêtes et leur présage ; la colonie et le caractère, s'il y en a.
 9. **Milieu** : la niche (`altitude`, `temperature`, `humidite`, `lumiere`, `couvert`, `tolerance`) traduite en mots, le lieu principal, l'eau ; puis un décor et une lumière pour une image.
 10. **Variations** : les traits d'une partie des bêtes, la part qui les montre (`phenotypes`) ou, quand aucune ne les montre, la fréquence de l'allèle (pondérée par l'effectif), avec ce qu'ils changent à l'aspect. Ce sont les variantes qu'un jeu peut montrer.
@@ -109,17 +121,18 @@ Dans une famille, la DA décide encore quelques détails, chacun avec sa raison 
 
 ## Donnée ou interprétation
 
-Chaque phrase dit sa source, et le banc le vérifie pour les quinze mille phrases du monde :
+Chaque phrase dit sa source, et le banc le vérifie, phrase par phrase et non paragraphe par paragraphe, pour les 33 000 phrases des trois mondes :
 
 - **une donnée** : le champ et sa valeur, entre parenthèses, en code : `(haut: 0.13)`, `(couleurs.robe: [166, 96, 125])`. Une valeur absente de l'instantané est dite absente, avec celle que lui donne `moteur/corps.js` (« `posture` absente : 0, la valeur d'un quadrupède ») ;
 - **une règle de DA** : en italique, *(règle `pelage-froid-ras` : …)*, une décision de la table, la même pour toutes les lignées ;
-- **une interprétation** : en italique, *(interprété : …)*, ce que la fiche lit dans les données pour les rendre visibles. Ce sont : les mots des proportions (0,13 de pattes : « très courtes »), la carrure, les repères terrestres (« presque une belette aplatie »), la forme des oreilles et de la bouche (celles des planches), la taille des yeux, ce qu'une façon de se déplacer donne au corps, le décor et la lumière, les teintes de la DA.
+- **une interprétation** : en italique, *(interprété : …)*, ce que la fiche lit dans les données pour les rendre visibles. Ce sont : les mots des proportions (0,13 de pattes : « très courtes »), la carrure, les repères terrestres (« presque une belette aplatie »), la forme des oreilles et de la bouche (celles des planches), la taille des yeux, ce qu'une façon de se déplacer donne au corps, le décor et la lumière, les teintes de la DA ;
+- **une valeur par défaut** : ce que l'instantané ne dit pas et que `moteur/corps.js` donne. Un corps sans liste `organes` (198 dans les trois mondes) a des organes déduits de ses proportions : la fiche les dit « déduits de la proportion d'avant », leur nombre, leur forme et leur place « par défaut », et ne les cite jamais comme des données.
 
 Les seuils des mots sont des paliers fixes (0,2, 0,35, 0,55, 0,75 pour les pattes, par exemple) : une valeur extrême (0,2 et moins, 0,8 et plus) est en gras. La carrure compare la masse au cube de la longueur à une bête ordinaire de la même allure : de 15 à 45 pour un quadrupède, de 60 à 130 pour un insecte, de 1 à 3 pour un serpent, de 6 à 45 pour un poisson, de 4 à 12 pour un oiseau.
 
 Les durées (`maturite`, `longevite`) sont en **cycles** du monde, comme dans tout le contrat (docs/1, glossaire), et non en années.
 
-Les traits que montrent **plus de la moitié des bêtes** font partie de la bête : le métabolisme lent du Kaume (99 % des bêtes) entre dans son mouvement, la crépuscularité d'une lignée entre dans ses yeux et sa lumière, le nanisme dans sa taille vraie. Une **robe d'allèle** (mélanisme, albinisme, robe dorée, camouflage) reste une variante, même portée par la plupart : le modèle garde la robe du plan, celle des planches et celle que compare la parenté, et la variante se fait en le recolorant (`robe-du-plan`). La fiche le dit en tête des couleurs.
+Les traits que montrent **plus de la moitié des bêtes** font partie de la bête : le métabolisme lent du Kaume (99 % des bêtes) entre dans son mouvement, la crépuscularité d'une lignée entre dans ses yeux et sa lumière, le nanisme dans sa taille vraie. Une **robe d'allèle** (mélanisme, albinisme, robe dorée, camouflage) reste une variante, même portée par la plupart : le modèle garde la robe du plan, celle des planches et celle que compare la parenté, et la variante se fait en le recolorant (`robe-du-plan`). La fiche le dit à la fin de la section Couleurs, avec la part des bêtes et la règle, et la variante est dans `ia.variantes`. Les teintes de la DA, qui ne sont pas des données, sont dites trois fois : dans la section Couleurs (« Teintes de la DA, hors données : accent vert grisé `#60A666` (panache) », pour le Kaume), sur la ligne de l'organe qui les prend, et dans `ia.palette`, chacune avec sa source.
 
 ## Les interdits
 
@@ -134,7 +147,7 @@ C'est ce qui manquait à l'essai. Chaque interdit est dans la fiche, avec sa sou
 - **le tégument d'une autre famille** : une bête à poil n'a ni écailles ni plumes (sauf les plumes de ses ailes, si elle en a) ;
 - **son motif** : une robe unie n'a ni rayures ni taches.
 
-Les modèles d'image qui n'ont pas de négatif (FLUX, par exemple) lisent mal une négation. Le prompt 2D dit donc aussi les absences en positif, quand il le peut : *earless*, *tailless*, *no neck, head set directly on the shoulders*, *no legs*.
+Les modèles d'image qui n'ont pas de négatif (FLUX, par exemple) lisent mal une négation. Le prompt 2D dit donc aussi les absences en positif, sans négation, quand il le peut : *earless*, *tailless*, *neckless, head set directly on the shoulders*, *flat snoutless face*, *legless*. Le banc vérifie aussi, sur les trois mondes, qu'aucun terme du négatif n'est dans le prompt 2D ni dans le prompt 3D de sa lignée : les ailes d'un insecte à élytres, au négatif, sont « membranous flight wings » et non « wings » ; les oreilles dressées d'une bête qui ne se dresse pas (« upright » à son négatif) sont « pricked pointed ears » ; la taille du prompt 3D, « True size » et non « Real scale », quand « scales » est au négatif d'une bête à poil. Avant ces corrections, 386 lignées sur 491 avaient au moins une contradiction (428 en tout) ; aucune aujourd'hui.
 
 ## La parenté
 
@@ -156,7 +169,7 @@ Une lignée sans mère est dite fondatrice ; une mère absente de l'instantané 
 
 **Une IA, en 2D.** Remplacer `[STYLE ORVANE]` par le style de la DA (`ecrire(t, inst, { style })`), donner `ia.prompt_2d` et `ia.negatif`. Le prompt montre la bête entière, de trois quarts, sur un fond neutre : l'image de référence. Pour une image en situation, remplacer « neutral background » par `ia.decor`.
 
-**Une IA, en 3D.** `ia.prompt_3d` décrit la même bête pour un modèle 3D : une seule bête, en pose neutre (ses pattes visibles et détachées du corps, la gueule fermée), centrée, sur un fond gris uni, sans ombre portée ni sol, à sa taille vraie. Il sert à générer l'image qu'une IA de 3D convertit, ou à guider une IA qui fait la 3D d'après un texte. Mettre ensuite le modèle à l'échelle d'après `taille_m`.
+**Une IA, en 3D.** `ia.prompt_3d` décrit la même bête pour un modèle 3D : une seule bête, en pose neutre (ses pattes visibles et détachées du corps, la gueule fermée), centrée, sur un fond gris uni, sans ombre portée ni sol, à sa taille vraie (« True size » : la taille et la masse que montrent la plupart des bêtes, `champs.silhouette.taille_vue_m`). Il sert à générer l'image qu'une IA de 3D convertit, ou à guider une IA qui fait la 3D d'après un texte. Mettre ensuite le modèle à l'échelle d'après `taille_vue_m` (`taille_m` est celle du plan).
 
 **Les variantes.** `ia.variantes` donne, en anglais, ce que chaque trait change à l'aspect (« albino variant: white coat, pale pinkish eyes », la teinte du sol pour le camouflage) : partir de l'image de la lignée et n'y changer que cela.
 
@@ -174,31 +187,32 @@ La fiche du Kaume, telle que `monde/fiche.js` l'écrit, est plus de trois fois p
 ```
 [STYLE ORVANE], a small low-slung quadruped creature, 42 cm long and very light (142 g), very slender elongated body, very short
 legs splayed close to the ground, crawling belly-low like a skink. Oversized broad head, short snout, visible neck, earless,
-grazer's mouth. Two straight tusks pointing forward. Short thin tail ending in a single fluffy tuft in contrasting sage green
-#60A666. Short dense fur, dusty mauve #A6607D with dark plum stripes #5B3A47 across back and flanks, pale pinkish-grey belly
-#BCA2A6, red eyes #B65757. Full body, side three-quarter view, neutral background.
+grazer's mouth. Two straight tusks pointing forward. Short thin tail ending in a single fluffy tuft of fur in contrasting sage
+green #60A666. Short dense fur, dusty mauve #A6607D with dark plum stripes #5B3A47 across back and flanks, pale pinkish-grey
+belly #BCA2A6, red eyes #B65757. Full body, side three-quarter view, neutral background.
 ```
 
 ```
-ears, ear flaps, horns, antlers, crest, wings, shell, carapace, antennae, neck frill, trunk, proboscis, dorsal plates, spines,
-quills, pincers, crab claws, hands, fingers, tail club, stinger, fins, curved tusks, fan-shaped plume, long legs, long tail,
-small head, long snout, short compact body, standing tall, upright, bipedal, extra legs, extra limbs, scales, feathers, spots,
-text, signature, watermark
+ears, ear flaps, horns, antlers, crest, wings, shell, carapace, antennae, head frill, neck frill, trunk, proboscis,
+dorsal plates, spines, quills, pincers, crab claws, hands, fingers, tail club, stinger, fins, curved tusks, fan-shaped plume,
+long legs, long tail, small head, long snout, short compact body, standing tall, upright, bipedal, extra legs, extra limbs,
+scales, feathers, spots, text, signature, watermark
 ```
 
-La fiche entière : `node outils/fiches.js --lignees kaume`, puis `fiches/orvane/kaume.md`.
+La fiche entière : `node outils/fiches.js --lignees kaume --sortie ./fiches`, puis `fiches/kaume.md`.
 
 ## Ce que le banc vérifie
 
-`bancs/fiche.js`, en quatre secondes :
-- **Une fiche par lignée.** Les 243 lignées du cycle 44 ont leur fiche, sans erreur ni trou (`undefined`, `NaN`), en treize sections, chacune de 6 600 à 15 600 caractères ; ses quinze mille phrases disent toutes leur source.
-- **La même entrée, la même fiche.** Deux fois, sur une copie, la liste des lignées à l'envers : les mêmes empreintes ; l'instantané ne bouge pas ; `moteur/corps.js` retrouve son état ; dans un navigateur (`globalThis`, sans `require`), les mêmes 243 fiches que dans Node.
-- **La table des familles.** Versionnée, chaque règle et chaque détail justifiés ; la répartition, ligne à ligne avec la table de l'issue (les onze lignes ont le compte de l'issue), et chaque cas ambigu tranché comme ci-dessus ; les hexapodes géants ; sans `reproduction`, la même déduction que `moteur/ponte.js`.
-- **La famille suit le plan visuel.** 21 plans visuels, une famille chacun. Sur 182 lignées et leur mère, 161 ont la même famille ; les 21 autres ont changé de plan, et leur fiche dit lequel.
-- **Tout est couvert.** Les 18 champs du corps sont cités avec leur valeur dans chaque fiche ; les 269 organes présents sont dans la fiche (avec leur fonction tirée du catalogue) et dans le prompt ; les 96 parties à 0 et les 3 587 organes absents sont interdits, dans la fiche et au négatif ; la parenté de 182 lignées est chiffrée ; les couleurs sont en hexadécimal et en mots (63 noms sur le monde) ; les unités sont réelles ; les effectifs triés.
+`bancs/fiche.js`, en sept secondes, sur trois mondes : Orvane au cycle 44 (243 lignées), la genèse 2026 (149) et la genèse 7 (99). Ses contrôles principaux ne relisent pas la fiche avec son propre code : ils recomptent depuis les données brutes.
+- **Une fiche par lignée, chaque phrase avec sa source.** Les 491 fiches, en treize sections, sans erreur ni trou (`undefined`, `NaN`) ; chacune de leurs 33 000 phrases dit sa source ; les 14 800 valeurs citées du plan, du corps et de la niche sont relues dans l'instantané.
+- **La même entrée, la même fiche.** Deux fois, sur une copie, les lignées à l'envers et les clés de chaque objet à l'envers : les mêmes empreintes ; l'instantané ne bouge pas d'un caractère ; modifier chaque objet d'une fiche rendue ne le change pas ; `moteur/corps.js` retrouve son état ; les tables sont gelées ; dans un navigateur (`globalThis`, sans `require`), les mêmes 491 fiches que dans Node.
+- **La table des familles.** Versionnée, chaque règle et chaque détail justifiés ; la famille de chaque lignée, recomptée d'après ses données brutes par une petite table écrite dans le banc ; la répartition, ligne à ligne avec la table de l'issue (les onze lignes ont le compte de l'issue), et chaque cas ambigu tranché comme ci-dessus ; les hexapodes géants, sur leur masse vue ; sans `reproduction`, la même déduction que `moteur/ponte.js`.
+- **De la mère aux filles.** 372 lignées et leur mère sur les trois mondes ; quand la famille change, la fiche dit que la peau change, et quoi garder quand la forme reste ; les mères citent toutes leurs filles.
+- **Tout est couvert.** Les 18 champs du corps sont cités dans chacune des 476 fiches à corps ; les 577 organes présents sont dans la fiche et dans le prompt ; les organes déduits des proportions sont dits déduits ; les 170 parties à 0 et les 7 039 organes absents sont interdits, dans la fiche et au négatif ; les couleurs sont en hexadécimal et en mots (72 noms) ; les unités sont réelles, des millimètres aux tonnes ; les effectifs sont ceux des populations brutes, triés.
+- **Le positif et le négatif ne se contredisent pas.** Aucun des 18 700 termes du négatif n'est dans le prompt 2D ni dans le prompt 3D de sa lignée ; pas de longues pattes à une bête aux pattes courtes ; deux petits bras à un bipède ; « de jour » seulement pour une bête de jour ; la matière du panache suit la famille.
 - **Le Kaume, point par point** avec l'exemple de l'issue : 106 points, les 18 morceaux du prompt 2D et les 13 termes du négatif de l'issue, et juste là où l'essai s'était trompé.
-- **Les cas limites** : une lignée sans mère, une mère absente ou éteinte, une lignée éteinte, un organe inconnu du catalogue, un organe propre au monde, un corps rayonné (qui nage, ou du fond), à tentacules, segmenté à 60 pattes, une forme inconnue, une machine à module inconnu, des couleurs manquantes, un corps vide, une reproduction absente, une colonie qui se métamorphose, une plante.
-- **Le paquet** emporte `monde/fiche.js` (`files`, `exports`, `require('orvane').Fiche`), et `outils/fiches.js` écrit les 243 fiches.
+- **Les cas limites** : une lignée sans mère, une mère absente ou éteinte, une lignée éteinte, une fille sans régime ni heure, un organe inconnu du catalogue, un organe propre au monde, un organe sans forme ni nombre ni place, des organes déduits, un corps rayonné (qui nage, ou du fond), à tentacules, segmenté à 60 pattes, une forme inconnue ou absente, une machine à module inconnu, sans taille, ou qui a un corps, une toute petite bête, une queue à 0 qui porte un organe, un poisson à `queue: 0`, des couleurs manquantes, un corps vide, une reproduction absente, une colonie qui se métamorphose, une plante (pour `ecrire` et `famille`), un `require` qui échoue.
+- **Le paquet** emporte `monde/fiche.js` (`files`, `exports`, `require('orvane').Fiche`), et `outils/fiches.js` écrit les 243 fiches là où on lui dit, hors du dépôt sans `--sortie`, sans qu'un nom de fichier en écrase un autre.
 
 ```
 node bancs/fiche.js
@@ -207,11 +221,11 @@ node bancs/fiche.js
 ## Les limites
 
 - **Le style** (`[STYLE ORVANE]`) n'est pas choisi : il le sera sur une planche d'essais. La génération des 243 lignées en 2D et en 3D, le recalage des couleurs et la mise en cache viendront ensuite, comme l'affichage de la fiche dans l'Observatoire.
-- **Les planches et la fiche diffèrent sur deux points.** Les planches de l'Observatoire dessinent de courtes antennes à tout insecte et des nageoires à tout poisson. La fiche suit les données : sans organe `antennes`, pas d'antennes ; un poisson garde ses nageoires ordinaires, mais pas de grandes nageoires sans organe `nageoires`.
-- **La teinte d'accent** des organes de parade (le panache vert du Kaume) vient des planches, pas des données. Elle est une règle de DA (`parade-accent`), qu'une version prochaine de la table peut changer.
-- **La robe d'allèle majoritaire** (le mélanisme chez 91 % des bêtes d'une lignée, par exemple) reste une variante : la référence garde la robe du plan (`robe-du-plan`). Une autre DA pourrait choisir l'inverse.
+- **Les planches et la fiche diffèrent sur deux points.** Les planches de l'Observatoire dessinent de courtes antennes à tout insecte et des nageoires à tout poisson. La fiche suit les données : sans organe `antennes`, pas d'antennes (44 des 74 hexapodes du cycle 44 n'en ont pas : elles sont dans leurs interdits, et « antennae » au négatif) ; un poisson garde ses nageoires ordinaires, mais pas de grandes nageoires sans organe `nageoires`. Pourquoi : la planche est un schéma, la même pour toutes les lignées d'une forme, qui dessine ce qu'on attend d'un insecte ; la fiche est la référence d'un modèle fidèle, et le catalogue a un organe `antennes`, qu'une lignée porte ou non. Une antenne dessinée sans l'organe serait un organe inventé, celui que l'essai du 18 novembre avait ajouté (des oreilles au Kaume). Le modèle d'une lignée sans antennes ne ressemblera donc pas tout à fait à sa planche : c'est voulu : si les deux doivent s'accorder, c'est la planche qui devra suivre les données.
+- **La teinte d'accent** des organes de parade (le panache vert du Kaume) vient des planches, pas des données. Elle est une règle de DA versionnée (`parade-accent`), acceptée pour que le modèle s'accorde à la planche, et qu'une version prochaine de la table peut changer.
+- **La robe d'allèle majoritaire** (le mélanisme chez 97 % des bêtes du Soméne, par exemple ; 27 lignées au cycle 44) reste une variante : la référence garde la robe du plan (`robe-du-plan`). C'est une règle de DA versionnée : une autre DA pourrait choisir l'inverse.
 - **Les noms de couleur** viennent d'une petite table de teintes : ils aident l'œil, l'hexadécimal fait foi.
-- **Les repères terrestres** (une belette, un scinque, une gerboise) sont des comparaisons pour l'œil, jamais des modèles ; ils ne vont pas dans les prompts, sauf l'allure (« like a skink »).
+- **Les repères terrestres sont aussi dans les prompts**, pour ce qu'un mot dit mieux qu'une phrase : la peau et le corps (« beetle-like » pour des élytres, « like a freshwater turtle », « like a tortoise or a pangolin », « armadillo-like », « like a salamander or an axolotl », « lizard scales », « eel-like », « snake-like », « octopus-like », « jellyfish-like », « starfish-like », « bird-like », « fish-like »), l'allure (« like a skink », « like a grasshopper ») et un organe (un dard « like a scorpion »). Une IA d'image risque d'y prendre plus que la peau ou le geste : une tête de tortue, un corps de scarabée. Les repères de silhouette, eux (« presque une belette aplatie », « de loin, un pangolin », une gerboise), restent dans la fiche humaine, jamais dans les prompts. L'essai de DA dira s'il faut retirer les premiers.
 - **Ce qui est propre à un monde** (un organe, une forme, un trait inventé) est décrit d'après son catalogue, mais son anglais reste générique (« a single lueur organ »).
 - **La larve** d'une lignée qui se métamorphose, **la reine et les soldats** d'une colonie sont d'autres silhouettes : la fiche les signale, sans les décrire.
 - **Une tête à 0** est la plus petite tête, pas une tête absente.
