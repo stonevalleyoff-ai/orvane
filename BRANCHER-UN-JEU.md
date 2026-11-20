@@ -190,7 +190,7 @@ if (rep.ok) oublierLeLot(); else garderPourPlusTard(rep.erreur);
 - Gardez le lot en mémoire et dans le stockage local jusqu'à `ok: true`, avec son `id`, puis envoyez-le à un moment naturel : une sauvegarde, une déconnexion, un changement de zone. Sans réponse, renvoyez-le tel quel : `deja: true` dit qu'il était déjà entré.
 - Limites : 500 événements et 64 Ko par lot ; chaque événement au contrat (une action connue, `n` entre 0 et 10 000) ; 48 lots par joueur et par jour ; 500 lots par jour pour un jeu neuf (relevé sur demande : Stone Valley en a 20 000).
 
-La nuit suivante, le cycle lit les lots de tous les jeux et les rapporte à l'exposition de chacun. Il les plafonne : un joueur ne pèse pas plus qu'un autre ; un jeu ne fait pas seul la pression sur une espèce que d'autres jeux montrent ; et, même seul, un jeu n'ôte pas plus de 5 % d'une population en un cycle, ni ne lui en rend plus (dans un monde à parcelles, pas plus de 5 % de chaque parcelle ; un jeu peut baisser ce plafond dans son exposition, jamais le relever : [docs/5](docs/5-profil-et-essais.md)). Puis il les lisse et fait avancer le monde. L'effet se lit dans l'instantané du lendemain. Le détail est dans [docs/4](docs/4-renvoyer-des-pressions.md) et `schemas/pression.schema.json`.
+La nuit suivante, le cycle lit les lots de tous les jeux et les rapporte à l'exposition de chacun. Il les plafonne : un joueur ne pèse pas plus qu'un autre ; un jeu ne fait pas seul la pression sur une espèce que d'autres jeux montrent ; et, même seul, un jeu n'ôte pas plus de 5 % d'une population par cycle, compté avant le lissage. Dans un monde à parcelles, ce qu'il dit dans une parcelle ne lui prend pas plus de 5 % de ce que la lignée y compte : le reste va aux parcelles où elle vit (sauf ce que le lissage reporte des jours passés, posé selon les effectifs). Ce qu'il rend (libérations, nourrissages, élevage) n'a pas ce plafond. Un jeu peut le baisser dans son exposition, jamais le relever ([docs/5](docs/5-profil-et-essais.md), [docs/15](docs/15-parcelles.md)). Puis il les lisse et fait avancer le monde. L'effet se lit dans l'instantané du lendemain. Le détail est dans [docs/4](docs/4-renvoyer-des-pressions.md) et `schemas/pression.schema.json`.
 
 ## 6. Déposer depuis un serveur
 
@@ -227,8 +227,11 @@ Deno.serve(async (req) => {
   if (!joueur) return new Response('non', { status: 401 });
   const lot = await req.json();                   // le lot que le client a clos, avec son id
   const r = await deposer({ cle: Deno.env.get('ORVANE_CLE_JEU')!, cleDepot: Deno.env.get('ORVANE_CLE_DEPOT')! }, await opaque(joueur.id), lot);
-  // r : { ok: true, id } · { ok: true, deja: true, id } · { ok: false, erreur, id, plusTard }
-  return Response.json(r, { status: r.ok ? 200 : r.plusTard ? 503 : 400 });
+  // r : { ok: true, id } · { ok: true, deja: true, id } · { ok: false, erreur, id, plusTard, config? }
+  if (r.ok) return Response.json({ ok: true, id: r.id });                            // le jeu oublie le lot (accepté, ou déjà là)
+  console.error('dépôt Orvane refusé :', r.erreur, r.config ? '(configuration à réparer : une clé)' : '');   // pour vous, pas pour le joueur
+  // plusTard : le jeu garde le lot et le renvoie plus tard, tel quel (le réseau, un quota, une clé renouvelée) ; sinon, il le met de côté
+  return Response.json({ ok: false, id: r.id, plusTard: r.plusTard }, { status: r.plusTard ? 503 : 422 });
 });
 ```
 
@@ -239,8 +242,9 @@ import { deposer } from 'orvane/serveur';          // npm install github:stoneva
 const options = { cle: process.env.ORVANE_CLE_JEU, cleDepot: process.env.ORVANE_CLE_DEPOT };
 const r = await deposer(options, compteOpaque, lot);
 if (r.ok) oublier(lot.id);                        // accepté, ou déjà là (r.deja)
-else if (r.plusTard) garderPourPlusTard(lot);     // le réseau, un quota du jour : le même lot, avec le même id, plus tard
-else signaler(r.erreur);                          // une clé, un lot hors du contrat : le renvoyer n'y changera rien
+else if (r.plusTard) garderPourPlusTard(lot);     // le réseau, un quota du jour, une clé à réparer (r.config) : le même lot, le même id, plus tard
+else mettreDeCote(lot, r.erreur);                 // le lot lui-même (hors du contrat, un id déjà pris) : le renvoyer n'y changera rien
+if (r.config) signaler(r.erreur);                 // une clé de dépôt renouvelée, fausse, absente : à réparer, les lots attendent
 ```
 
 Copier `depot.mjs` à côté de la fonction est plus sûr que de l'importer d'une adresse : le code qui tient la clé de dépôt ne change pas sans vous. Pour l'importer quand même, épinglez une version publiée, la première qui le porte ou une plus récente (`CHANGELOG.md`), jamais une branche : `https://cdn.jsdelivr.net/gh/stonevalleyoff-ai/orvane@<version>/kits/serveur/depot.mjs`.
@@ -255,9 +259,9 @@ curl -X POST https://rospodujiyltmxitykwc.supabase.co/rest/v1/rpc/orvane_exiger_
 
 `orvane_jeu` le dit ensuite (`cle_depot_exigee: true`). `p_exiger: false` revient en arrière. Une clé de dépôt fausse est refusée même quand elle n'est pas exigée.
 
-**Le client du jeu**, lui, compte et clôt ses lots comme avant, puis les envoie à son serveur au lieu de les déposer : avec le kit Godot, `Orvane.prochain_lot()` rend le prochain lot en attente (avec son `id`), et `Orvane.oublier_lot(id)` le retire quand le serveur a répondu `ok` ; avec le kit Unity, `compteur.Prochain()` et `compteur.Depose()`. Le serveur ne fait confiance qu'à ce qu'il sait : le joueur de la session, pas un compte écrit dans le lot.
+**Le client du jeu**, lui, compte et clôt ses lots comme avant, puis les envoie à son serveur au lieu de les déposer : avec le kit Godot, `Orvane.prochain_lot()` rend le prochain lot en attente (avec son `id`), et `Orvane.oublier_lot(id)` le retire quand le serveur a répondu `ok` (`oublier_lot(id, true)` quand il l'a refusé pour de bon : le lot est mis de côté, `lots_refuses()`) ; avec le kit Unity, `compteur.Prochain()`, puis `compteur.Depose()` ou `compteur.Refuse()`. Quand le serveur répond `plusTard`, le lot reste en tête de file. Un lot refusé pour de bon ne bloque jamais les suivants : en déposant eux-mêmes (`Orvane.deposer`, `OrvaneUnity.Deposer`), les kits le mettent de côté aussi. Le serveur ne fait confiance qu'à ce qu'il sait : le joueur de la session, pas un compte écrit dans le lot.
 
-**Renouveler la clé** (une fuite, un départ) : `orvane_cle_depot` donne une clé neuve, l'ancienne ne vaut plus rien. Le temps de mettre la neuve dans les secrets du serveur, ses dépôts sont refusés : il les garde et les renvoie, avec leur `id`. Pour n'en refuser aucun, ne plus l'exiger le temps du changement, puis l'exiger de nouveau.
+**Renouveler la clé** (une fuite, un départ) : `orvane_cle_depot` donne une clé neuve, l'ancienne ne vaut plus rien. Le temps de mettre la neuve dans les secrets du serveur, ses dépôts sont refusés (`clé de dépôt invalide`) : le client répond `plusTard` et `config`, le serveur et le jeu gardent les lots, et les renvoient tels quels, avec leur `id`, une fois la neuve en place. Pour n'en refuser aucun, ne plus l'exiger le temps du changement, puis l'exiger de nouveau.
 
 ## 7. Essayer ses lots sur une copie du monde
 
@@ -282,9 +286,9 @@ Le monde `essai` garde les lots quatorze jours sans qu'aucun monde ne les lise :
 | `trop de dépôts aujourd'hui pour ce joueur` | 48 lots dans les 24 dernières heures | regrouper, garder le lot pour demain |
 | `quota du jeu atteint pour aujourd'hui` | le quota du jeu en 24 heures (500 pour un jeu neuf) | garder les lots pour demain ; un jeu qui a besoin de plus écrit au projet |
 | `id du lot : 1 à 64 lettres, chiffres, points, tirets, deux-points` | un `id` vide, trop long, qui n'est pas une chaîne ou porte un autre signe | tirer l'`id` au hasard (un UUID, 32 chiffres hexadécimaux) |
-| `id du lot déjà pris par un autre lot de ce jeu` | le même `id` pour un autre lot, ou un autre joueur | un `id` neuf pour chaque lot ; le même seulement pour renvoyer le même lot |
+| `id du lot déjà pris par un autre lot de ce jeu` | le même `id` pour un autre lot (le même lot renvoyé, même par un autre compte, répond `deja`) | un `id` neuf pour chaque lot ; le même seulement pour renvoyer le même lot ; ce lot-là se met de côté |
 | `ce jeu ne dépose que depuis son serveur : clé de dépôt manquante` | le jeu exige sa clé de dépôt, le dépôt ne la porte pas | déposer depuis le serveur (chapitre 6) |
-| `clé de dépôt invalide` | une clé de dépôt fausse, ou remplacée | la clé du dernier `orvane_cle_depot` |
+| `clé de dépôt invalide` | une clé de dépôt fausse, ou remplacée | garder les lots ; mettre dans le serveur la clé du dernier `orvane_cle_depot`, puis les renvoyer |
 | `pas encore de clé de dépôt : la créer d'abord (orvane_cle_depot)` | `orvane_exiger_cle_depot` avant d'avoir une clé | `orvane_cle_depot` d'abord |
 
 ## Règles

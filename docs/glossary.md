@@ -197,7 +197,7 @@ Orvane's files use French field names. This page translates them all, object by 
 | --- | --- | --- |
 | `par_compte_cycle` | per account per cycle | what one account can remove from a lineage in one cycle |
 | `part_max_compte`, `part_max_jeu` | max share of an account, of a game | of the total pressure on a population |
-| `part_max_population_jeu` | max share of a population per game | what a single game removes from a population in one cycle, or gives back to it, even when it is alone (5 % in the world of Orvane), also plot by plot |
+| `part_max_population_jeu` | max share of a population per game | what a single game removes from a population in one cycle, even when it is alone (5 % in the world of Orvane), also plot by plot; what it gives back has no per-game cap |
 | `part_max_population` | max share of a population | what all games together remove from a population in one cycle |
 
 ## Deposits (`hebergement/supabase.sql`)
@@ -208,7 +208,9 @@ Orvane's files use French field names. This page translates them all, object by 
 | `cle_admin` | admin key (secret) |
 | `cle_depot` | deposit key (secret, on the game's server only: `orvane_cle_depot`; `orvane_exiger_cle_depot` requires it) |
 | `deja` | already: the batch with this `id` was already in, it is not counted twice |
-| `plusTard` | later (`kits/serveur/depot.mjs`): the same batch, with the same `id`, can be sent again later |
+| `plusTard` | later (`kits/serveur/depot.mjs`): keep the batch, with the same `id`, and send it again later |
+| `config` | configuration (`kits/serveur/depot.mjs`): a key or an address to fix; the batch is kept |
+| `lots_refuses`, `LotsRefuses` | refused batches (Godot, Unity kits): refused for good, set aside so they do not block the queue |
 
 ## Words of the world
 

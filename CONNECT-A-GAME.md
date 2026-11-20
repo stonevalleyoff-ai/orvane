@@ -208,7 +208,7 @@ if (answer.ok) forgetBatch(); else keepForLater(answer.erreur);
 - Keep the batch in memory and in local storage until `ok: true`, with its `id`, then send it at a natural moment: a save, a logout, a change of area. Without an answer, send it again as it is: `deja: true` says it was already in.
 - Limits: 500 events and 64 KB per batch; every event must follow the schema (a known action, `n` between 0 and 10,000); 48 batches per player per day; 500 batches per day for a new game (raised on request: Stone Valley has 20,000).
 
-At the next cycle, the world reads the batches of every game and relates each to that game's exposure. It caps them: one player weighs no more than another; a single game does not make alone the pressure on a species that other games also show; and, even alone, a game removes no more than 5% of a population in one cycle, nor gives back more (in a world with plots, no more than 5% of each plot; a game can lower this cap in its exposure, never raise it: `part_max_population_jeu`, [docs/5](docs/5-profil-et-essais.md), in French). Then it smooths them and moves the world forward. The effect shows in the next instantané. Details: [docs/4](docs/4-renvoyer-des-pressions.md) and `schemas/pression.schema.json`.
+At the next cycle, the world reads the batches of every game and relates each to that game's exposure. It caps them: one player weighs no more than another; a single game does not make alone the pressure on a species that other games also show; and, even alone, a game removes no more than 5% of a population per cycle, counted before smoothing. In a world with plots, what it says it did in a plot takes no more than 5% of what the lineage counts there: the rest goes to the plots where it lives (except what smoothing carries over from past days, spread by head count). What it gives back (releases, feeding, breeding) has no such cap. A game can lower it in its exposure, never raise it (`part_max_population_jeu`, [docs/5](docs/5-profil-et-essais.md) and [docs/15](docs/15-parcelles.md), in French). Then it smooths them and moves the world forward. The effect shows in the next instantané. Details: [docs/4](docs/4-renvoyer-des-pressions.md) and `schemas/pression.schema.json`.
 
 ## 6. Deposit from a server
 
@@ -245,8 +245,11 @@ Deno.serve(async (req) => {
   if (!player) return new Response('no', { status: 401 });
   const batch = await req.json();                 // the batch the client closed, with its id
   const r = await deposer({ cle: Deno.env.get('ORVANE_CLE_JEU')!, cleDepot: Deno.env.get('ORVANE_CLE_DEPOT')! }, await opaque(player.id), batch);
-  // r: { ok: true, id } · { ok: true, deja: true, id } · { ok: false, erreur, id, plusTard }
-  return Response.json(r, { status: r.ok ? 200 : r.plusTard ? 503 : 400 });
+  // r: { ok: true, id } · { ok: true, deja: true, id } · { ok: false, erreur, id, plusTard, config? }
+  if (r.ok) return Response.json({ ok: true, id: r.id });                            // the game forgets the batch (accepted, or already in)
+  console.error('Orvane deposit refused:', r.erreur, r.config ? '(configuration to fix: a key)' : '');   // for you, not for the player
+  // plusTard: the game keeps the batch and sends it again later, as it is (the network, a quota, a renewed key); otherwise it sets it aside
+  return Response.json({ ok: false, id: r.id, plusTard: r.plusTard }, { status: r.plusTard ? 503 : 422 });
 });
 ```
 
@@ -257,8 +260,9 @@ import { deposer } from 'orvane/serveur';          // npm install github:stoneva
 const options = { cle: process.env.ORVANE_CLE_JEU, cleDepot: process.env.ORVANE_CLE_DEPOT };
 const r = await deposer(options, opaquePlayerId, batch);
 if (r.ok) forget(batch.id);                       // accepted, or already in (r.deja)
-else if (r.plusTard) keepForLater(batch);         // the network, a daily quota: the same batch, with the same id, later
-else report(r.erreur);                            // a key, a batch outside the contract: resending it will not help
+else if (r.plusTard) keepForLater(batch);         // the network, a daily quota, a key to fix (r.config): the same batch, the same id, later
+else setAside(batch, r.erreur);                   // the batch itself (outside the contract, an id already taken): resending it will not help
+if (r.config) report(r.erreur);                   // a renewed, wrong or missing deposit key: to fix, the batches wait
 ```
 
 Copying `depot.mjs` next to the function is safer than importing it from an address: the code that holds the deposit key does not change behind your back. To import it anyway, pin a published version, the first one that carries it or a later one (`CHANGELOG.md`), never a branch: `https://cdn.jsdelivr.net/gh/stonevalleyoff-ai/orvane@<version>/kits/serveur/depot.mjs`.
@@ -273,9 +277,9 @@ curl -X POST https://rospodujiyltmxitykwc.supabase.co/rest/v1/rpc/orvane_exiger_
 
 `orvane_jeu` then says so (`cle_depot_exigee: true`). `p_exiger: false` goes back. A wrong deposit key is refused even when it is not required.
 
-**The game's client** counts and closes its batches as before, then sends them to its server instead of depositing them: with the Godot kit, `Orvane.prochain_lot()` returns the next pending batch (with its `id`) and `Orvane.oublier_lot(id)` removes it once the server has answered `ok`; with the Unity kit, `compteur.Prochain()` and `compteur.Depose()`. The server trusts only what it knows: the session's player, not a player id written in the batch.
+**The game's client** counts and closes its batches as before, then sends them to its server instead of depositing them: with the Godot kit, `Orvane.prochain_lot()` returns the next pending batch (with its `id`) and `Orvane.oublier_lot(id)` removes it once the server has answered `ok` (`oublier_lot(id, true)` when it was refused for good: the batch is set aside, `lots_refuses()`); with the Unity kit, `compteur.Prochain()`, then `compteur.Depose()` or `compteur.Refuse()`. When the server answers `plusTard`, the batch stays at the head of the queue. A batch refused for good never blocks the next ones: when they deposit themselves (`Orvane.deposer`, `OrvaneUnity.Deposer`), the kits set it aside too. The server trusts only what it knows: the session's player, not a player id written in the batch.
 
-**Renewing the key** (a leak, someone leaving): `orvane_cle_depot` gives a new key, and the old one stops working. Until the new one is in the server's secrets, its deposits are refused: it keeps them and resends them, with their `id`. To refuse none, stop requiring it during the change, then require it again.
+**Renewing the key** (a leak, someone leaving): `orvane_cle_depot` gives a new key, and the old one stops working. Until the new one is in the server's secrets, its deposits are refused (`clé de dépôt invalide`): the client answers `plusTard` and `config`, the server and the game keep the batches, and send them again as they are, with their `id`, once the new key is in place. To refuse none, stop requiring it during the change, then require it again.
 
 ## 7. Try your batches on a copy of the world
 
@@ -300,9 +304,9 @@ The `erreur` strings are in French:
 | `quota du jeu atteint pour aujourd'hui` | the game's quota in 24 hours (500 for a new game) | keep the batches for tomorrow; a game that needs more writes to the project |
 | `événement mal formé (schemas/pression.schema.json)` | an event that is not an object, an unknown action, `n` missing, negative or above 10,000, a name that is not a string | follow the schema |
 | `id du lot : 1 à 64 lettres, chiffres, points, tirets, deux-points` | an `id` that is empty, too long, not a string, or has another sign | draw the `id` at random (a UUID, 32 hex digits) |
-| `id du lot déjà pris par un autre lot de ce jeu` | the same `id` on another batch, or for another player | a new `id` for each batch; the same one only to resend the same batch |
+| `id du lot déjà pris par un autre lot de ce jeu` | the same `id` on another batch (the same batch resent, even by another player id, answers `deja`) | a new `id` for each batch; the same one only to resend the same batch; set this one aside |
 | `ce jeu ne dépose que depuis son serveur : clé de dépôt manquante` | the game requires its deposit key, the deposit does not carry it | deposit from the server (section 6) |
-| `clé de dépôt invalide` | a wrong or replaced deposit key | the key from the last `orvane_cle_depot` |
+| `clé de dépôt invalide` | a wrong or replaced deposit key | keep the batches; put the key from the last `orvane_cle_depot` in the server, then resend them |
 | `pas encore de clé de dépôt : la créer d'abord (orvane_cle_depot)` | `orvane_exiger_cle_depot` before having a key | `orvane_cle_depot` first |
 
 ## Rules
