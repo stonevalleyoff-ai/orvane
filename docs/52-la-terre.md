@@ -219,7 +219,7 @@ Ces chiffres couvrent toute l'Europe, Russie d'Europe comprise ; les espèces ga
 
 Le prochain pas est un calage sur une année entière : faire tourner un an, ajuster la place et le métabolisme d'après la croissance de l'année, recommencer.
 
-Le monde ne tourne pas encore la nuit (`profil.monde.nocturne = false`) : il tournera quand on l'aura décidé. Ce qui est approché est dit dans `outils/terre/LISEZ-MOI.md`.
+Le monde tourne chaque nuit, à 3 h (UTC), un jour par nuit, depuis le 20 novembre 2026 : l'Europe vit au rythme du calendrier. Ce qui est approché est dit dans `outils/terre/LISEZ-MOI.md`.
 
 ## Ce que le banc vérifie
 

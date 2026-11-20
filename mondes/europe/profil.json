@@ -10,7 +10,7 @@
     "amorce": "mondes/europe/amorce.json",
     "rodage": 0,
     "historique": 30,
-    "nocturne": false,
+    "nocturne": true,
     "flore": true,
     "meteo": true,
     "phenologie": true,
