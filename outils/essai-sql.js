@@ -41,13 +41,14 @@ r = lancer('pg_ctl', ['-D', donnees, '-l', path.join(tmp, 'journal'), '-w', '-o'
 if (r.status !== 0) { console.log('pg_ctl : ' + r.stderr + r.stdout); process.exit(1); }
 demarre = true;
 const ARGS = ['-X', '-q', '-A', '-t', '-v', 'ON_ERROR_STOP=1', '-h', tmp, '-p', port, '-U', 'postgres', '-d', 'postgres'];
-// une requête ; vars : des variables psql (:'nom' dans le texte, citées par psql : rien de ce qu'on y met ne devient du SQL)
-function sql(texte, vars = {}) {
+// une requête ; vars : des variables psql (:'nom' dans le texte, citées par psql : rien de ce qu'on y met ne devient du SQL) ; base : une
+// autre base que postgres
+function sql(texte, vars = {}, base = null) {
   const v = Object.entries(vars).flatMap(([k, x]) => ['-v', `${k}=${typeof x === 'string' ? x : JSON.stringify(x)}`]);
-  const [c, x] = cmd('psql', [...ARGS, ...v]); const q = spawnSync(c, x, { input: texte, encoding: 'utf8' });
+  const [c, x] = cmd('psql', [...(base ? [...ARGS.slice(0, -1), base] : ARGS), ...v]); const q = spawnSync(c, x, { input: texte, encoding: 'utf8' });
   return { ok: q.status === 0, sortie: q.stdout.trim(), erreur: q.stderr.trim() };
 }
-const sqlOk = (texte, vars) => { const q = sql(texte, vars); if (!q.ok) throw new Error(q.erreur); return q.sortie; };
+const sqlOk = (texte, vars, base) => { const q = sql(texte, vars, base); if (!q.ok) throw new Error(q.erreur); return q.sortie; };
 // un appel comme celui de l'API (PostgREST) : le rôle anon, des paramètres nommés, ceux du corps seulement
 const TYPES = { p_lot: 'jsonb', p_exposition: 'jsonb', p_exiger: 'boolean', p_apres: 'bigint', p_limite: 'int' };
 function rpcSql(fn, corps, { role = 'anon', avant = '', apres = '' } = {}) {
@@ -56,7 +57,7 @@ function rpcSql(fn, corps, { role = 'anon', avant = '', apres = '' } = {}) {
   const args = cles.map(k => `${k} => ${corps[k] == null ? 'null' : `(:'v_${k}')::${TYPES[k] || 'text'}`}`).join(', ');
   return { texte: `${avant}set role ${role}; select public.${fn}(${args});${apres}`, vars };
 }
-function rpc(fn, corps, opt) { const q = rpcSql(fn, corps, opt), s = sql(q.texte, q.vars); if (!s.ok) return { _erreur: s.erreur }; const l = s.sortie.split('\n').filter(Boolean).pop(); try { return JSON.parse(l); } catch (e) { return { _sortie: s.sortie }; } }
+function rpc(fn, corps, opt) { const q = rpcSql(fn, corps, opt), s = sql(q.texte, q.vars, opt?.base); if (!s.ok) return { _erreur: s.erreur }; const l = s.sortie.split('\n').filter(Boolean).pop(); try { return JSON.parse(l); } catch (e) { return { _sortie: s.sortie }; } }
 const rpcAsync = (fn, corps, opt) => new Promise(fin => { const q = rpcSql(fn, corps, opt), v = Object.entries(q.vars).flatMap(([k, x]) => ['-v', `${k}=${x}`]), [c, x] = cmd('psql', [...ARGS, ...v]);
   const p = spawn(c, x, { stdio: ['pipe', 'pipe', 'pipe'] }); let o = '', e = ''; p.stdout.on('data', d => { o += d; }); p.stderr.on('data', d => { e += d; });
   p.on('close', code => { const l = o.trim().split('\n').filter(Boolean).pop(); try { fin(JSON.parse(l)); } catch (er) { fin({ _erreur: e || o, code }); } }); p.stdin.end(q.texte); });
@@ -132,7 +133,8 @@ const compter = (where, vars) => +sqlOk(`select count(*) from public.orvane_lots
   const p2 = rpc('orvane_deposer', { ...avec('joueur-2'), p_lot: lot('a1b2c3d4e5f60718') });
   verif(p1.ok && !p1.deja && p2.ok && p2.deja === true && compter(`jeu = :'j'`, { j: A.jeu }) === n1, `un lot renvoyé avec le même id : { ok: true, deja: true }, et il n'entre pas deux fois`);
   const autreLot = rpc('orvane_deposer', { ...avec('joueur-2'), p_lot: lot('a1b2c3d4e5f60718', 7) }), autreCompte = rpc('orvane_deposer', { ...avec('joueur-3'), p_lot: lot('a1b2c3d4e5f60718') });
-  verif(!autreLot.ok && /déjà pris/.test(autreLot.erreur) && !autreCompte.ok, `le même id sur un autre lot, ou pour un autre joueur : refusé (« ${autreLot.erreur} »), plutôt qu'avalé en silence`);
+  verif(!autreLot.ok && /déjà pris/.test(autreLot.erreur) && autreCompte.ok && autreCompte.deja === true && compter(`jeu = :'j'`, { j: A.jeu }) === n1,
+    `le même id sur un autre lot : refusé (« ${autreLot.erreur} »), plutôt qu'avalé en silence ; le même lot renvoyé par un autre compte : deja, rien n'est écrit (un kit qui a changé de compte ne reste pas bloqué)`);
   const ailleurs = rpc('orvane_deposer', { p_cle: B.cle, p_compte: 'joueur-2', p_lot: lot('a1b2c3d4e5f60718') });
   verif(ailleurs.ok && !ailleurs.deja, 'le même id venu d\'un autre jeu : un autre lot, accepté (l\'id est propre à chaque jeu)');
   const mauvaisId = ['', 'x'.repeat(65), '-commence', 'avec espace', 'é1', 'a/b', "a'b"].map(id => rpc('orvane_deposer', { ...avec('joueur-2'), p_lot: { ...lot(null), id } }));
@@ -165,6 +167,31 @@ const compter = (where, vars) => +sqlOk(`select count(*) from public.orvane_lots
     update public.orvane_lots set recu = recu - interval '5 minutes';`);
   const lus = sqlOk(`set role anon; select coalesce(json_agg(lot->>'id'), '[]') from public.orvane_lire_lots('secret-essai', 'orvane', 0, 1000) where lot ? 'id';`);
   verif(JSON.parse(lus).includes('a1b2c3d4e5f60718') && JSON.parse(lus).filter(x => x === 'dix-fois').length === 1, 'la lecture de la nuit rend l\'id de chaque lot (le tampon écarte aussi un doublon, par défense)');
+
+  console.log('\n3 bis. Les recollages (une seconde base)');
+  if (avant) {
+    const B2 = 'recollages', prea = `create schema extensions; grant usage on schema public, extensions to anon, authenticated, service_role;
+      alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
+      alter default privileges in schema public grant all on functions to anon, authenticated, service_role;`;
+    sqlOk(`create database ${B2};`); sqlOk(prea, {}, B2); sqlOk(avant, {}, B2);
+    const G = rpc('orvane_inscrire_jeu', { p_nom: 'Jeu des recollages' }, { base: B2 }), dep = (l, extra = {}) => rpc('orvane_deposer', { p_cle: G.cle, p_compte: 'j', p_lot: l, ...extra }, { base: B2 });
+    dep(lot(null)); const sig = () => sql(`select string_agg(pg_get_function_identity_arguments(oid), ' | ') from pg_proc where proname = 'orvane_deposer';`, {}, B2).sortie;
+    // un recollage interrompu (une erreur juste après le retrait de l'ancienne fonction) : rien ne bouge, l'ancienne sert toujours
+    const casse = fichier.replace('drop function if exists public.orvane_deposer(text, text, jsonb);', m => m + '\nselect 1 / 0;');
+    const q1 = sql(casse, {}, B2), apres1 = dep(lot(null));
+    verif(casse !== fichier && !q1.ok && /division by zero/.test(q1.erreur) && sig() === 'p_cle text, p_compte text, p_lot jsonb' && apres1.ok && sql("select count(*) from information_schema.columns where table_name = 'orvane_lots' and column_name = 'lot_id';", {}, B2).sortie === '0',
+      `un recollage interrompu au milieu (juste après le retrait de l'ancienne orvane_deposer) ne laisse rien à moitié : le fichier passe d'un bloc, l'ancienne fonction sert toujours, aucune colonne n'est ajoutée`);
+    const q2 = sql(fichier, {}, B2), q3 = sql(fichier, {}, B2), apres2 = dep(lot('recolle-1'));
+    verif(q2.ok && q3.ok && sig() === 'p_cle text, p_compte text, p_lot jsonb, p_cle_depot text' && apres2.ok && +sql(`select count(*) from public.orvane_lots;`, {}, B2).sortie === 3, 'puis collé deux fois sur cette base qui sert : une seule orvane_deposer, les lots d\'avant restent');
+    // une version plus ancienne recollée par-dessus : une seconde orvane_deposer, et plus aucun dépôt ne passe
+    const q4 = sql(avant, {}, B2), panne = dep(lot(null)), panneSql = sql(`set role anon; select public.orvane_deposer(:'c', 'j', :'l'::jsonb);`, { c: G.cle, l: lot(null) }, B2);
+    verif(q4.ok && sig().split(' | ').length === 2 && (!panneSql.ok && /not unique/.test(panneSql.erreur)) && panne._erreur, `recoller une version plus ancienne ajoute une seconde orvane_deposer, et plus aucun dépôt ne passe (« ${(panneSql.erreur.match(/function [^\n]*not unique/) || [''])[0]} ») : hebergement/LISEZ-MOI.md l'interdit`);
+    // le retour en arrière, tel que hebergement/LISEZ-MOI.md le dit : retirer la fonction nouvelle, puis recoller l'ancien fichier
+    const q5 = sql('drop function public.orvane_deposer(text, text, jsonb, text);', {}, B2), q6 = sql(avant, {}, B2), retour = dep(lot(null));
+    verif(q5.ok && q6.ok && sig() === 'p_cle text, p_compte text, p_lot jsonb' && retour.ok, 'le retour en arrière décrit (retirer orvane_deposer à quatre paramètres, puis recoller l\'ancien) : une seule fonction, les dépôts repassent');
+    const q7 = sql(fichier, {}, B2), deNouveau = dep(lot('recolle-1'));
+    verif(q7.ok && sig() === 'p_cle text, p_compte text, p_lot jsonb, p_cle_depot text' && deNouveau.ok && deNouveau.deja === true, 'et la version d\'ici, recollée ensuite, reprend tout (les id d\'avant le retour sont reconnus)');
+  } else console.log('  (pas de version de référence : les recollages ne sont pas essayés)');
 
   console.log('\n4. Les droits');
   const tables = ['public.orvane_jeux', 'public.orvane_lots', 'public.orvane_noms', 'orvane_prive.cles'].map(t => sql(`set role anon; select count(*) from ${t};`));
@@ -212,11 +239,20 @@ const compter = (where, vars) => +sqlOk(`select count(*) from public.orvane_lots
   sabot = null; const d5b = await deposer(O, 'serveur-1', l5);
   verif(d5b.ok && !d5b.deja, 'plus tard, le même lot passe');
   appels = 0; const d6 = await deposer({ ...O, cleDepot: 'orvdep_faux' }, 'serveur-1', lot(null)), d7 = await deposer({ ...O, cleDepot: undefined }, 'serveur-1', lot(null));
-  verif(!d6.ok && !d6.plusTard && d6.essais === 1 && !d7.ok && /manquante/.test(d7.erreur) && appels === 2, 'une clé de dépôt fausse, ou absente quand le jeu l\'exige : refusé tout de suite, sans renvoi');
+  verif(!d6.ok && d6.plusTard && d6.config && d6.essais === 1 && !d7.ok && /manquante/.test(d7.erreur) && d7.plusTard && d7.config && appels === 2,
+    'une clé de dépôt fausse, ou absente quand le jeu l\'exige : pas de renvoi tout de suite, mais plusTard et config (une configuration à réparer : le lot se garde)');
+  // la clé renouvelée : le serveur a encore l'ancienne ; il garde ses lots, puis les renvoie tels quels avec la nouvelle
+  const K3 = rpc('orvane_cle_depot', { p_cle_admin: A.cle_admin }), lr = lot(null), dr1 = await deposer(O, 'serveur-1', lr), dr2 = await deposer({ ...O, cleDepot: K3.cle_depot }, 'serveur-1', lr);
+  O.cleDepot = K3.cle_depot;
+  verif(K3.ok && !dr1.ok && /invalide/.test(dr1.erreur) && dr1.plusTard && dr1.config && dr2.ok && !dr2.deja && dr2.id === dr1.id && compter(`lot_id = :'i'`, { i: lr.id }) === 1,
+    'la clé renouvelée, le serveur a encore l\'ancienne : le lot est gardé (plusTard, config), puis passe tel quel, avec son id, une fois la nouvelle en place');
   const d8 = await deposer({ ...O, apikey: 'mauvaise' }, 'serveur-1', lot(null)), d9 = await deposer(O, 'serveur-1', { ...lot(null), id: 'pas bon' }), d10 = await deposer(O, '', lot(null));
-  verif(!d8.ok && /HTTP 401/.test(d8.erreur) && !d8.plusTard && !d9.ok && /id du lot/.test(d9.erreur) && !d10.ok, 'une clé publique refusée (401) : sans renvoi ; un id ou un compte mal formés : refusés avant le réseau');
+  verif(!d8.ok && /HTTP 401/.test(d8.erreur) && d8.plusTard && d8.config && !d9.ok && /id du lot/.test(d9.erreur) && !d9.plusTard && !d10.ok && d10.config,
+    'une clé publique refusée (401) : config, le lot se garde ; un id mal formé : le lot lui-même est refusé (plusTard : false) ; un compte vide : refusé avant le réseau');
+  let leve = null, gele = null, geleId = null; try { gele = await deposer(O, 'serveur-1', Object.freeze(lot(null))); geleId = await deposer(O, 'serveur-1', Object.freeze(lot(await nouvelId()))); } catch (e) { leve = e; }
+  verif(!leve && gele && !gele.ok && /gelé/.test(gele.erreur) && !gele.plusTard && geleId?.ok, `un lot gelé (Object.freeze) sans id : { ok: false } sans lever (« ${gele?.erreur} ») ; gelé avec son id : déposé`);
   appels = 0; const d11 = await deposer({ ...O, url: 'http://exemple.invalid' }, 'serveur-1', lot(null)), d12 = await deposer({ ...O, essais: NaN, attente: -1, delai: 'x' }, 'serveur-1', lot(null));
-  verif(!d11.ok && /https/.test(d11.erreur) && appels === 1 && d12.ok, 'la clé de dépôt ne part jamais en clair vers une autre machine (https seulement) ; des options absurdes reprennent leurs valeurs par défaut');
+  verif(!d11.ok && /https/.test(d11.erreur) && d11.config && appels === 1 && d12.ok, 'la clé de dépôt ne part jamais en clair vers une autre machine (https seulement) ; des options absurdes reprennent leurs valeurs par défaut');
   const lc = lot(null), dc = await Cjs.deposer(O, 'serveur-2', lc), dcb = await Cjs.depot(O).deposer('serveur-2', lc);
   verif(dc.ok && dcb.deja && JSON.stringify(Cjs.ORVANE) === JSON.stringify(ORVANE) && /^[0-9a-f]{32}$/.test(await Cjs.nouvelId()) && (await nouvelId()) !== (await nouvelId()), 'en CommonJS (require, depot.cjs) : la même chose, les mêmes adresses');
   // sous Deno : le même module, tel qu'une fonction Supabase l'importe
@@ -224,7 +260,7 @@ const compter = (where, vars) => +sqlOk(`select count(*) from public.orvane_lots
   if (deno && fs.existsSync(deno)) {
     const script = path.join(tmp, 'essai-deno.ts');
     fs.writeFileSync(script, `import { deposer } from ${JSON.stringify('file://' + path.join(racine, 'kits/serveur/depot.mjs'))};
-const O = { cle: ${JSON.stringify(A.cle)}, cleDepot: ${JSON.stringify(K2.cle_depot)}, url: ${JSON.stringify(url)}, apikey: 'cle-publique', attente: 20 };
+const O = { cle: ${JSON.stringify(A.cle)}, cleDepot: ${JSON.stringify(O.cleDepot)}, url: ${JSON.stringify(url)}, apikey: 'cle-publique', attente: 20 };
 const lot = ${JSON.stringify(lot(null))};
 const a = await deposer(O, 'deno-1', lot), b = await deposer(O, 'deno-1', lot);
 console.log(JSON.stringify({ a, b, id: lot.id }));\n`);

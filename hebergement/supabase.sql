@@ -14,7 +14,11 @@
 --   orvane_lire_jeux(secret)                 l'action nocturne → les jeux et leur exposition
 --   orvane_nommer(cle, compte, monde, taxon, nom, auteur)   le client du jeu → un joueur propose le nom commun d'une lignée (docs/37)
 --   orvane_lire_noms(secret, monde, après)   l'action nocturne → les noms proposés, dans l'ordre d'arrivée
--- À coller une fois dans l'éditeur SQL du projet (il peut être recollé : tout est « if not exists » / « or replace »).
+-- À coller une fois dans l'éditeur SQL du projet (il peut être recollé : tout est « if not exists » / « or replace »). Il passe d'un
+-- bloc (begin … commit) : une erreur au milieu ne laisse rien à moitié, et il n'y a jamais d'instant sans orvane_deposer. Ne jamais
+-- recoller une version PLUS ANCIENNE de ce fichier par-dessus : elle ajouterait une seconde orvane_deposer, et plus aucun dépôt ne
+-- passerait (hebergement/LISEZ-MOI.md, « Revenir à une version d'avant »).
+begin;
 create extension if not exists pgcrypto with schema extensions;
 
 -- === les jeux ===
@@ -173,13 +177,14 @@ begin
   then return jsonb_build_object('ok', false, 'erreur', 'événement mal formé (schemas/pression.schema.json)'); end if;
   perform pg_advisory_xact_lock(hashtext('orvane_deposer:' || j.id));   -- les comptages des quotas qui suivent, sans course entre deux dépôts
   pseudo := left(encode(extensions.digest(j.id || ':' || p_compte || ':orvane', 'sha256'), 'hex'), 16);   -- Orvane distingue les joueurs, sans savoir qui ils sont
-  -- un renvoi (la réponse d'un dépôt s'est perdue) : le même id, déjà reçu de ce jeu, pour le même joueur et le même lot. Reconnu
-  -- avant les quotas, il ne consomme rien. (Le verrou ci-dessus range les dépôts d'un jeu l'un après l'autre : un renvoi qui arrive
-  -- pendant le premier dépôt attend sa fin, puis le voit. L'index unique garde la même règle si deux dépôts passaient quand même.)
+  -- un renvoi (la réponse d'un dépôt s'est perdue) : le même id, déjà reçu de ce jeu, pour le même lot. Reconnu avant les quotas, il
+  -- ne consomme rien et n'écrit rien : peu importe le compte qui le renvoie (un kit qui a changé de compte entre deux essais ne doit
+  -- pas rester bloqué). Le même id sur un AUTRE lot est refusé. (Le verrou ci-dessus range les dépôts d'un jeu l'un après l'autre : un
+  -- renvoi qui arrive pendant le premier dépôt attend sa fin, puis le voit.)
   if ident is not null then
     select * into vu from public.orvane_lots where jeu = j.id and lot_id = ident;
     if vu.id is not null then
-      if vu.compte = pseudo and vu.lot = (p_lot - 'source') then return jsonb_build_object('ok', true, 'deja', true); end if;
+      if vu.lot = (p_lot - 'source') then return jsonb_build_object('ok', true, 'deja', true); end if;
       return jsonb_build_object('ok', false, 'erreur', 'id du lot déjà pris par un autre lot de ce jeu');
     end if;
   end if;
@@ -189,7 +194,12 @@ begin
   if n >= j.quota_jour then return jsonb_build_object('ok', false, 'erreur', 'quota du jeu atteint pour aujourd''hui'); end if;
   insert into public.orvane_lots (jeu, compte, monde, lot, lot_id) values (j.id, pseudo, left(coalesce(p_lot->>'monde', 'orvane'), 40), p_lot - 'source', ident)
     on conflict (jeu, lot_id) do nothing returning id into nouveau;
-  if nouveau is null then return jsonb_build_object('ok', true, 'deja', true); end if;
+  -- (si deux dépôts du même id passaient quand même, l'index unique n'en garde qu'un, et la même règle répond : le même lot, deja ;
+  -- un autre lot, refusé)
+  if nouveau is null then
+    if exists (select 1 from public.orvane_lots where jeu = j.id and lot_id = ident and lot = (p_lot - 'source')) then return jsonb_build_object('ok', true, 'deja', true); end if;
+    return jsonb_build_object('ok', false, 'erreur', 'id du lot déjà pris par un autre lot de ce jeu');
+  end if;
   return jsonb_build_object('ok', true);
 end $$;
 
@@ -293,5 +303,7 @@ do $$ begin
   perform cron.schedule('orvane-purge', '41 5 * * *', 'delete from public.orvane_lots where recu < now() - interval ''14 days''; delete from public.orvane_noms where recu < now() - interval ''90 days''');
 exception when others then raise notice 'pg_cron indisponible : la purge des vieux lots se fera à la main (%).', sqlerrm;
 end $$;
--- (l'API relit les fonctions : une fonction changée de signature, comme orvane_deposer, est servie tout de suite)
+-- (l'API relit les fonctions : une fonction changée de signature, comme orvane_deposer, est servie tout de suite ; la notification part
+-- au commit)
 notify pgrst, 'reload schema';
+commit;

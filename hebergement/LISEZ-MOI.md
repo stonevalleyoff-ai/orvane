@@ -69,21 +69,37 @@ Le guide pas à pas, avec les adresses, les appels et les erreurs : [BRANCHER-UN
 
 ### Appliquer une version nouvelle de supabase.sql
 
-Le fichier se recolle tel quel dans l'éditeur SQL du projet : il ne fait qu'ajouter, et ce qui existe reste (les jeux, les lots, les noms, les clés). Celui du 19 novembre (#32, les dépôts sûrs) ajoute :
+Le fichier se recolle tel quel dans l'éditeur SQL du projet : il ne fait qu'ajouter, et ce qui existe reste (les jeux, les lots, les noms, les clés). Il passe d'un bloc (`begin;` … `commit;`) : une erreur au milieu ne laisse rien à moitié, et il n'y a jamais d'instant sans `orvane_deposer`. Celui du 19 novembre (#32, les dépôts sûrs) ajoute :
 - à `orvane_jeux` : `depot_empreinte` (l'empreinte de la clé de dépôt), `depot_exige` (faux pour tous les jeux), `depot_cree` ; à `orvane_lots` : `lot_id` (l'`id` du lot), et l'index unique `orvane_lots_jeu_lot_id` (un même `id`, d'un même jeu, n'entre qu'une fois ; les lots d'avant n'en ont pas) ;
 - `orvane_cle_depot`, `orvane_exiger_cle_depot`, `orvane_prive.egales` ;
 - `orvane_deposer` prend un quatrième paramètre, `p_cle_depot`, nul par défaut : l'appel d'avant, à trois paramètres, est servi comme avant. L'ancienne fonction est retirée (`drop function … (text, text, jsonb)`), pour que l'API n'ait pas deux fonctions du même nom entre lesquelles choisir ; la fin du fichier redonne les droits et demande à l'API de relire ses fonctions (`notify pgrst`).
 
-Rien ne change pour un jeu branché : ses lots sans `id` passent comme avant, et aucun jeu n'exige de clé de dépôt tant qu'il ne l'a pas demandé. `node outils/essai-sql.js` rejoue tout cela sur un Postgres jetable, avant de toucher au vrai : le fichier de `main`, un jeu et un lot ; puis celui-ci, deux fois ; puis la clé de dépôt, les renvois (dix dépôts du même lot à la fois), les quotas, les droits, et le client des serveurs sous Node et Deno (`--deno <chemin>`). Sans Postgres sur la machine, il ne fait rien. Pour vérifier après l'avoir collé :
+Rien ne change pour un jeu branché : ses lots sans `id` passent comme avant, et aucun jeu n'exige de clé de dépôt tant qu'il ne l'a pas demandé. `node outils/essai-sql.js` rejoue tout cela sur un Postgres jetable, avant de toucher au vrai : le fichier de `main`, un jeu et un lot ; puis celui-ci, deux fois ; puis la clé de dépôt, les renvois (dix dépôts du même lot à la fois), les quotas, les droits, et le client des serveurs sous Node et Deno (`--deno <chemin>`), dans une seconde base un recollage interrompu, une version plus ancienne recollée et le retour en arrière ci-dessous. Sans Postgres sur la machine, il ne fait rien. Pour vérifier après l'avoir collé :
 
 ```sql
 select pg_get_function_identity_arguments(oid) from pg_proc where proname = 'orvane_deposer';   -- une seule ligne : p_cle text, p_compte text, p_lot jsonb, p_cle_depot text
 select id, depot_exige, depot_empreinte is not null as a_une_cle from public.orvane_jeux order by id;
 ```
 
+### Ne jamais recoller une version plus ancienne
+
+Recoller par-dessus un `supabase.sql` d'avant le 19 novembre ajoute une seconde `orvane_deposer`, à trois paramètres, à côté de celle à quatre : Postgres ne sait plus laquelle prendre (`function public.orvane_deposer(unknown, unknown, jsonb) is not unique`), et plus aucun dépôt ne passe. Selon la façon dont l'API choisit, un appel pourrait même aller à l'ancienne, qui ne connaît pas l'exigence de la clé de dépôt. **Ne le faites jamais.** Pour revenir vraiment à une version d'avant :
+
+```sql
+drop function public.orvane_deposer(text, text, jsonb, text);   -- d'abord : la fonction nouvelle
+-- puis coller le fichier d'avant, en entier ; les colonnes ajoutées (depot_*, lot_id) restent, sans gêner
+select pg_get_function_identity_arguments(oid) from pg_proc where proname = 'orvane_deposer';   -- une seule ligne : p_cle text, p_compte text, p_lot jsonb
+```
+
+Recoller ensuite la version d'ici reprend tout : les `id` déjà reçus sont reconnus, les clés de dépôt et leur exigence restent. Si la requête de contrôle rend deux lignes, retirer celle qui ne doit pas être là (`drop function public.orvane_deposer(text, text, jsonb);` pour garder la nouvelle), puis la relancer.
+
 ### Exiger la clé de dépôt d'un jeu
 
 C'est l'auteur du jeu qui le fait, avec sa clé d'administration (`BRANCHER-UN-JEU.md`, chapitre 6) : `orvane_cle_depot` (la clé, montrée une fois, va dans les secrets de son serveur), puis, une fois que son serveur dépose, `orvane_exiger_cle_depot` avec `p_exiger: true`. Orvane ne voit jamais la clé. Un jeu qui s'est fermé la porte (sa clé de dépôt perdue) en demande une autre ; un jeu qui a tout perdu, clé d'administration comprise, se rouvre à la main, dans l'éditeur SQL : `update public.orvane_jeux set depot_exige = false where id = '…';`.
+
+### Ce que les plafonds ne protègent pas encore
+
+Le plafond d'un jeu (5 % d'une population par cycle, docs/5) est compté par jeu inscrit, et l'inscription est libre : une même personne qui inscrit quatre jeux, chacun avec sa clé, prend ensemble 20 % d'une population par cycle (`part_max_population` borne toujours le tout). La clé de dépôt n'y change rien : elle protège un jeu de qui se fait passer pour lui, pas le monde d'un jeu de plus. La piste : qu'un jeu neuf soit validé (à la main, comme son quota se relève) avant que ses lots comptent dans le monde d'Orvane ; d'ici là, un jeu neuf n'a que 500 lots par jour.
 
 ### La branche de publication
 

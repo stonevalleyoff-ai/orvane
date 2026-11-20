@@ -35,8 +35,9 @@ export interface OptionsDepot {
 export type ReponseDepot =
   /** Accepté ; deja : ce lot (le même id) était déjà entré, il n'est pas compté deux fois. */
   | { ok: true; deja?: true; id: string; essais: number }
-  /** Refusé. plusTard : le même lot, avec le même id, peut être renvoyé plus tard (le réseau, un quota du jour) ; sinon, il est refusé pour de bon. */
-  | { ok: false; erreur: string; id: string | null; essais?: number; plusTard: boolean };
+  /** Refusé. plusTard : gardez le lot, avec le même id, et renvoyez-le plus tard (le réseau, un quota du jour ; config : une clé ou une
+   *  adresse à réparer, à signaler). Sinon, le lot lui-même est refusé : mettez-le de côté, il ne doit pas bloquer les suivants. */
+  | { ok: false; erreur: string; id: string | null; essais?: number; plusTard: boolean; config?: true };
 
 /** Un id de lot au hasard (32 chiffres hexadécimaux). */
 export declare function nouvelId(): Promise<string>;
