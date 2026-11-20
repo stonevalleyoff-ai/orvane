@@ -41,5 +41,5 @@ jobs:
           git config user.name "orvane-etalon"; git config user.email "actions@users.noreply.github.com"
           if git fetch -q --depth=1 origin etalon 2>/dev/null; then git checkout -q -B etalon FETCH_HEAD; else git checkout -q --orphan etalon && git rm -rq --cached . && git clean -fdq -e "$RUNNER_TEMP"; fi
           mkdir -p etalon/europe && cp "$RUNNER_TEMP"/etalon/europe/*.json etalon/europe/
-          ls etalon/europe | grep -E '^[0-9]{4}-[0-9]{2}-[0-9]{2}(-loup)?\.json$' | sort -r | jq -R . | jq -s . > etalon/europe/index.json
+          ls etalon/europe | grep -E '^[0-9]{4}-[0-9]{2}-[0-9]{2}(-loup|-chacal)?\.json$' | sort -r | jq -R . | jq -s . > etalon/europe/index.json
           git add etalon && git commit -qm "L'étalon du $(date -u +%F)" && git push -q origin HEAD:etalon
