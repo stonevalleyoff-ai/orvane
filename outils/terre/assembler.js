@@ -63,6 +63,11 @@ const REGLES = {
   colonisation: .005         // une lignée fonde un lieu voisin où elle n'est pas de loin en loin : ~1,5 % par an et par voisin favorable
 };
 
+// (docs/53) --regles orvane : l'Europe avec les règles écologiques d'Orvane (sa ration, sa conversion, sa demi-satiété, et sans les règles
+// des mondes réels), pour voir ce que donnent les réglages d'Orvane devant la réalité. Le calendrier, la saison des naissances, les
+// migrations et la colonisation lente restent : ils tiennent au jour, non à l'écologie
+if (process.argv.includes('--regles') && process.argv[process.argv.indexOf('--regles') + 1] === 'orvane')
+  for (const k of ['besoin', 'conversion', 'demi_satiete', 'petites_proies', 'concurrence_masse', 'diapause', 'renouvellement', 'viande_part', 'domination', 'charognes']) delete REGLES[k];
 const U = Object.fromEntries(require('../../moteur/biomes-universels.json').map(b => [b.id, b]));
 const CORPS_OK = new Set(Object.keys(require('../../schemas/instantane.schema.json').properties.taxons.items.properties.plan.properties.corps.properties));
 const carte = lire(path.join(D, 'lieux.json')), vivant = lire(path.join(D, 'especes.json')), sources = lire(path.join(D, 'sources.json'), []);

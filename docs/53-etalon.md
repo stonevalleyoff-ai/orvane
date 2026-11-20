@@ -235,6 +235,31 @@ La théorie des invasions dit pourquoi (Fisher 1937 ; Skellam 1951 ; Andow et al
 
 Une modification du moteur peut aussi passer l'étalon à la main avant d'arriver dans Orvane. Il suffit de lancer l'action (« Run workflow », avec le nombre d'années) sur sa branche.
 
+## Ce que gagnerait Orvane (20 novembre 2026)
+
+**A. L'Europe avec les règles écologiques d'Orvane** (`assembler.js --regles orvane` : sa ration, sa conversion, sa demi-satiété, sans les règles des mondes réels ; recalée un jour et un an), deux années sur trois graines : **8 ✓, 0 ≈, 3 ✗**, contre 9 ✓, 1 ≈, 1 ✗ avec les règles réelles.
+
+| | règles d'Orvane | règles réelles |
+| --- | --- | --- |
+| espèces qui fondent ou s'emballent | 10 (les méduses ×0,06, les araignées ×0,25…) | 4, au bord |
+| grands carnivores | le loup −4 % par an, le lynx boréal −18 %, le lynx pardelle −40 % | le loup +7,5 %, le lynx boréal jusqu'à +1 % |
+| rendement des chasseurs | **21 %** à sang chaud, **130 %** à sang froid : de la chair de rien | 1,5 %, 10 % |
+| retour du loup | 3 à 11 loups en France en 2023 | ~600 |
+
+**B. Orvane avec les règles des mondes réels** : une copie de son état, trente cycles (dix ans) sans joueurs, sur trois graines (qui s'accordent).
+
+| | Orvane tel quel | + les règles réelles¹ | + les constantes réelles² |
+| --- | --- | --- | --- |
+| lignées à moins d'un facteur 2 en dix ans | 74 % | **76 %** | 47 % |
+| la diversité (Shannon) | ×0,95 | **×0,965** | ×0,90 |
+| carnivores / proies (0,130 au départ) | 0,073 | **0,090** | 0,058 |
+| petits par kilo mangé | **32 %** | 37 % | **4,7 %** |
+| Damuth (−0,75 dans la nature) | −0,65 | −0,63 | **−0,73** |
+
+¹ les petites proies, la concurrence et la domination selon la masse, la part de chair d'un omnivore (le repos d'hiver, le renouvellement, les charognes n'y font rien : ils veulent un calendrier, une natalité, une part de charogne). ² la ration, la conversion, la demi-satiété de l'Europe.
+
+**Ce que cela dit.** Les règles réelles sont un gain sans contrepartie : un monde un peu plus stable et plus divers, des carnivores qui tiennent mieux. Les constantes réelles corrigent un défaut d'Orvane — ses carnivores font naître 32 % de ce qu'ils mangent, dix fois une vraie bête à sang chaud : il crée de la chair de rien —, mais elles secouent le monde des joueurs, construit avec les anciennes : elles demanderaient une genèse nouvelle.
+
 ## Ce qui reste à faire pour qu'il étalonne vraiment Orvane
 
 **Les mêmes constantes.** L'Europe tourne avec des règles à elle (docs/52) :
