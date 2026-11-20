@@ -35,11 +35,13 @@ moteur/solo.js        un monde solo, dans le jeu : parti de l'instantané publi�
 moteur/genres.js      les profils de genre : horreur, cozy, collection, voxel, survie, stratégie, monde partagé (docs/41)
 moteur/biomes-universels.json  les 24 biomes neutres du monde d'Orvane : terre, eau douce, mer, sous-sol
 tampon/tampon.js      exposer() Orvane → jeu ; agreger() jeu → Orvane (dénormalisation, plafonds, lissage)
+tampon/bilan.js       le bilan de saison : ce que chaque jeu a ôté et rendu à chaque population, cumulé sur la saison, publié dans bilans/ (docs/4)
 tampon/directeur.js   le directeur de mise en scène : ce qu'un jeu devrait montrer au dernier cycle, selon son genre (docs/40)
 tampon/individus.js   les individus : une bête tirée de la population réelle (son génotype, ses valeurs, ses savoirs), deux bêtes croisées, la parenté, le génome relâché (docs/35, 36)
 tampon/morceaux.js    le monde par morceaux : découper l'instantané (l'index, chaque biome, chaque lignée), et lire seulement les biomes d'un jeu (docs/21)
 monde/index.html      l’observatoire : ce que vit un monde (espèces, biomes, lignées, chaîne alimentaire, journal), et une simulation locale
 simulateur/           le simulateur de joueurs : des joueurs fictifs face aux bêtes du monde publié, nuit après nuit, par le vrai tampon et la vraie mémoire (coeur.js : le calcul ; page.js, index.html : la page) (docs/50)
+monde/bilans.js       la vue Bilans de l'observatoire : chaque jeu, saison par saison, ce qu'il a ôté et rendu, la part de l'effectif, ce que les plafonds ont raboté (docs/4)
 monde/sante.js        la vue Santé de l'observatoire : le rapport de chaque semaine sur le monde publié, ses mesures et son récit (docs/51)
 outils/sante.js       les mesures du rapport de santé d'un monde publié, et ses alertes ; --indexer : l'index des rapports (docs/51)
 monde/silhouette.js   les silhouettes de l'observatoire : chaque lignée dessinée d'après son corps et sa façon de vivre (masse, déplacements, régime, heure), chaque forme à son dessin, les machines d'après leurs modules ; un jeu peut le reprendre
@@ -91,6 +93,7 @@ bancs/grammaire.js    le banc de la grammaire : qui peut dire quoi, où ça port
 bancs/formes.js       le banc des corps et des vies nouvelles : la colonie qui gagne, le mille-pattes, l'étoile, la pieuvre, la naïade
 bancs/esprit.js       le banc de l'esprit : qui apprend, une tradition, la perte, chasser ensemble, la curiosité
 bancs/memoire.js      le banc de la mémoire : le jour un, les équilibres, le caractère (les mêmes joueurs, des bêtes différentes), les plafonds du tampon, l'abus, ce qui voyage, deux styles de jeu et deux faunes
+bancs/bilan.js        le banc du bilan de saison : rien ne change au monde, les comptes recomptés à part (le moteur compris), les plafonds, la saison, le cycle de nuit
 bancs/sante.js        le banc de la santé : les mesures, leurs alertes, le récit gardé, l'index, la vue de l'observatoire
 bancs/simulateur.js   le banc du simulateur : chaque style de joueurs fait la faune attendue, et le simulateur donne ce que donne la vraie nuit
 bancs/individus.js    le banc des individus et de l'élevage : Mendel, les porteurs cachés, l'héritabilité, la parenté, les hybrides, l'élevage qui revient au monde

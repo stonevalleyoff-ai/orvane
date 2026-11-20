@@ -9,6 +9,7 @@ Orvane fait vivre un seul monde, le monde d'Orvane, et tous les jeux s'y branche
 3. **Traduire** : relier les terrains du jeu aux biomes d'Orvane, et faire de chaque lignée une créature. En TypeScript, `types/orvane.d.ts` donne chaque champ (docs/39). En **Unity** ou en **Godot**, un kit lit le monde, compte et dépose les lots à votre place ([kits/LISEZ-MOI.md](kits/LISEZ-MOI.md)).
 4. **Régler l'exposition** (facultatif) : dire à Orvane ce que le jeu sait montrer, avec la clé d'administration.
 5. **Renvoyer des pressions** : compter ce que font les joueurs et déposer des lots avec `orvane_deposer` et la clé du jeu. `node outils/verifier.js mon-lot.json` dit, avant le premier dépôt, si le lot sera accepté. Un jeu qui a un serveur peut y déposer, avec une clé de dépôt que lui seul connaît (chapitre 6).
+6. **Lire son bilan de saison** : à chaque saison, Orvane publie ce que chaque jeu a ôté et rendu à chaque population, et la part de l'effectif que cela représente (chapitre 8).
 
 ## Les adresses
 
@@ -19,6 +20,7 @@ Orvane fait vivre un seul monde, le monde d'Orvane, et tous les jeux s'y branche
 | le Supabase d'Orvane | `https://rospodujiyltmxitykwc.supabase.co` |
 | la clé publique du projet (en-tête `apikey`) | `sb_publishable_F98uYIaPrLTjhj3n7QiBOg_SOtFynn8` |
 | l'observatoire (voir le monde vivre) | `https://stonevalleyoff-ai.github.io/orvane/` |
+| le bilan de saison de chaque jeu (lecture) | `https://stonevalleyoff-ai.github.io/orvane/mondes/orvane/bilans/index.json` |
 
 La clé publique du projet peut figurer dans le code d'un jeu : elle n'ouvre que les fonctions ci-dessous, et aucune table n'est lisible directement.
 
@@ -270,6 +272,24 @@ curl -X POST https://rospodujiyltmxitykwc.supabase.co/rest/v1/rpc/orvane_exiger_
 
 Le monde `essai` garde les lots quatorze jours sans qu'aucun monde ne les lise : il dit si un dépôt passe, pas ce qu'il fait au monde. Pour le voir, rejouez vos lots sur une copie du monde d'aujourd'hui, chez vous, sans réseau : [docs/5](docs/5-profil-et-essais.md), « Rejouer ses lots ».
 
+## 8. Lire son bilan de saison
+
+Le tampon sait ce que chaque jeu a retiré à chaque population. À chaque saison (30 cycles dans le monde d'Orvane, alignés sur ses saisons), le cycle de nuit le publie, jeu par jeu : c'est la référence. Un jeu qui publie son propre bilan (Hors-Cordon s'y est engagé ; un jeu qui demande 20 000 lots par jour s'engage à le suivre) relaie celui-ci, ou s'y compare.
+
+- **Où** : `https://stonevalleyoff-ai.github.io/orvane/mondes/orvane/bilans/` : `index.json` (les saisons finies, la plus récente d'abord, et celle en cours), `en-cours.json` (refait à chaque cycle), et un fichier par saison finie (`an-0-ete.json`…), écrit une fois et jamais réécrit. Le format : `schemas/bilan.schema.json`. Dans l'Observatoire : la vue Bilans.
+- **Ce qu'il dit**, pour chaque jeu (son `id` et son nom public, ceux de `jeux.json`), lignée par lignée et biome par biome : ce que ses lots demandaient (`demande`), ce qui a été appliqué après tous les plafonds (`applique`), ce que chaque plafond a raboté (`rabote` : l'activité d'un compte, le plafond par compte, la part d'un compte, d'un jeu, le plafond de 5 % d'un jeu, la part d'une population), séparément pour ce qui est ôté (`ote` : prélèvements, captures, déplacements) et rendu (`rendu` : libérations, nourrissages, élevage). Et la part de l'effectif : sur la saison (`part`, rapportée à l'effectif moyen de la population aux cycles où le jeu l'a touchée) et la plus forte en un seul cycle (`part_max_cycle`, jamais plus que le plafond du jeu).
+- **En bêtes** : celles que le moteur retire ou ajoute (un adulte prélevé en compte 1,2 ; un nourrissage rend 0,2 bête). Chaque cycle compte ce que le tampon a retenu, plafonds compris, avant le lissage : ce qui est compté à la fin d'une saison pèse surtout au début de la suivante.
+- **Aucune donnée de joueur** : ni compte ni pseudonyme, seulement les jeux.
+
+```js
+const base = 'https://stonevalleyoff-ai.github.io/orvane/mondes/orvane/bilans/';
+const index = await (await fetch(base + 'index.json')).json();
+const bilan = await (await fetch(base + index.saisons[0].fichier)).json();   // la dernière saison finie
+const moi = bilan.jeux.find(j => j.id === 'mon-jeu');                       // absent : rien déposé cette saison
+```
+
+Le détail (la saison, l'effectif de référence, ce que le bilan ne dit pas, un exemple réel) : [docs/4](docs/4-renvoyer-des-pressions.md), « Le bilan de saison ».
+
 ## Réponses et erreurs
 
 | `erreur` | cause | que faire |
@@ -314,6 +334,7 @@ Le monde `essai` garde les lots quatorze jours sans qu'aucun monde ne les lise :
 - [ ] Un lot déposé répond `ok: true` ; sinon, il est gardé et renvoyé plus tard, avec le même `id`.
 - [ ] Un jeu qui dépose depuis son serveur garde sa clé de dépôt dans les secrets du serveur, et l'exige (`orvane_exiger_cle_depot`).
 - [ ] Le lendemain, `pressions_recues` monte dans `cycle` de l'instantané.
+- [ ] Le jeu trouve son `id` dans le bilan de la saison (`bilans/en-cours.json`), et ce qu'il y lit (`demande`) correspond à ce qu'il a compté.
 - [ ] Le jeu ignore les champs, les valeurs et les biomes qu'il ne connaît pas (docs/43).
 - [ ] Le traducteur passe le banc générique : `node outils/banc-traducteur.js mon-traducteur.js` (docs/39 ; le modèle : `traducteurs/exemple/traducteur.js`).
 
@@ -326,6 +347,7 @@ Orvane runs one shared ecosystem world that any game can plug into. **The full g
    For a solo or offline game, `moteur/solo.js` runs a private copy of the world inside the game, in real time or accelerated, and nothing goes back to the shared world (docs/19).
 3. **Translate**: map your terrains to Orvane biomes, and spawn each lineage where it lives, in proportion to its population. The reference translator is `traducteurs/stone-valley/`. A creature drawn from a lineage is a member of that population: report what happens to it. A creature that belongs to your game (a human, a monster, a boss), even if its looks come from a lineage, is not: report nothing for it. Lineages come in families (`animale`, `synthetique` for machines); keep only those your game can play with `Tampon.filtrer(inst, { familles: ['animale'] })`, and list them in each batch (`"familles": [...]`). By default a game plays animals only, so new kinds of life never reach it unasked.
 4. **Report** what players do as raw counts (encounters, kills, captures…) in batches. Use `orvane_deposer(p_cle, p_compte, p_lot)`, where `p_compte` is an opaque player id. A batch holds at most 500 events and 64 KB, and each player can send 48 batches a day. Give each batch a random `id` and keep it with the batch: a batch resent with the same `id` counts once (`{"ok": true, "deja": true}`). A game with a server can deposit from it, with a server-only deposit key (`orvane_cle_depot`, then `orvane_exiger_cle_depot`; client: `kits/serveur/depot.mjs`). The batch format is in `schemas/pression.schema.json`.
+5. **Read your season report**: every season, Orvane publishes what each game removed from and gave back to each population, and the share of the head count it represents (`mondes/orvane/bilans/index.json`, `schemas/bilan.schema.json`; no player data).
 
 Every RPC is `POST https://rospodujiyltmxitykwc.supabase.co/rest/v1/rpc/<function>`, with headers `apikey: sb_publishable_F98uYIaPrLTjhj3n7QiBOg_SOtFynn8` and `Content-Type: application/json`. The JSON body holds the `p_…` parameters. Every answer is `{"ok": true, …}` or `{"ok": false, "erreur": "…"}`, with HTTP 200 in both cases.
 
