@@ -5,8 +5,13 @@ extends RefCounted
 # Les pattes du côté lointain sont dessinées avant le corps, celles du côté proche après. On les retire du dessin : il reste le
 # corps (bas : ce qui est sous les pattes proches ; dessus : ce qui est entre elles ; tête : ce qui vient après, le cou et la
 # tête, qu'on peut faire bouger). Chaque patte garde ses points, ses épaisseurs, son côté et son pied, et ses morceaux vont dans
-# une seule image (un atlas), dessinés droits : la bête les tourne à chaque image. Tout est en pixels montrés, autour du point
-# où la bête touche le sol (le cadre 85, 86), et mis en cache par lignée et par taille.
+# une seule image (un atlas), dessinés droits : la bête les tourne à chaque image. Tout est en pixels montrés, autour du milieu du
+# bas du dessin, là où est son ombre (le cadre 85, 86 : le jeu y pose la bête ; ses pieds y sont, sauf quand une queue lourde ou
+# une trompe descend plus bas), et mis en cache par lignée et par taille.
+# Quand la planche a ses parties (docs/21), on y lit ce qu'est chaque élément du dessin : quelles <line> font chaque patte, quels
+# morceaux son pied, où est le corps (donc le côté de chaque patte) ; on ne devine plus rien. Une vieille planche, sans parties,
+# est lue comme avant, en cherchant les pattes dans le SVG. Les deux lectures donnent le même squelette : outils/squelettes.gd le
+# vérifie sur des mondes entiers.
 #   var sq := Squelette.lire(cle, Orvane._silhouette(id, biome), largeur)
 
 const MARGE := 3          # (pixels de l'image autour de chaque morceau : le filtrage ne mêle pas deux morceaux)
@@ -30,12 +35,15 @@ static func lire(cle: String, s: Dictionary, largeur: float) -> Dictionary:
 	var k := "%s|%d" % [cle, int(round(largeur * 4.0))]
 	if _cache.has(k):
 		return _cache[k]
-	var sq := _analyser(str(s.get("svg", "")), largeur)
+	var sq := analyser(s, largeur)
 	_cache[k] = sq
 	return sq
 
 
-static func _analyser(svg: String, largeur: float) -> Dictionary:
+# le squelette d'une planche, sans cache : lu dans ses parties quand elle les a, cherché dans son SVG sinon (avec_parties = false :
+# toujours dans le SVG, l'ancienne lecture). sq["lu"] dit d'où viennent ses pattes : "parties" ou "svg".
+static func analyser(s: Dictionary, largeur: float, avec_parties := true) -> Dictionary:
+	var svg := str(s.get("svg", ""))
 	if svg == "":
 		return {}
 	var e := largeur / 170.0          # pixels montrés par unité du cadre
@@ -60,13 +68,27 @@ static func _analyser(svg: String, largeur: float) -> Dictionary:
 	for i in els.size():
 		if els[i]["nom"] == "clipPath":
 			role[i] = "defs"
-	var chaines := _chaines(els)
+	# (les pattes, et le corps : la planche le dit dans ses parties ; sinon, on les cherche dans son dessin)
+	var corps_i := els.size()
+	var lu := "svg"
+	var lues = null
+	if avec_parties and typeof(s.get("parties")) == TYPE_DICTIONARY:
+		lues = _chaines_lues(s["parties"], els, tx, ty, k)
+	var chaines: Array
+	if lues != null:
+		chaines = lues
+		lu = "parties"
+		var co = s["parties"].get("corps")
+		var cs = co.get("svg", []) if typeof(co) == TYPE_DICTIONARY else []
+		if typeof(cs) == TYPE_ARRAY and not cs.is_empty():
+			corps_i = clampi(int(cs[0]), 0, els.size())
+	else:
+		chaines = _chaines(els)
 	for c in chaines:
 		for i in c["lignes"] + c["pied"]:
 			role[i] = "patte"
-	# (le corps : la première découpe après la première patte ; sans découpe, le premier dessin qui n'est pas une patte)
-	var corps_i := els.size()
-	if not chaines.is_empty():
+	# (le corps, lu dans le SVG : la première découpe après la première patte ; sans découpe, le premier dessin qui n'est pas une patte)
+	if lu == "svg" and not chaines.is_empty():
 		var p0: int = chaines[0]["lignes"][0]
 		for i in range(p0, els.size()):
 			if els[i]["nom"] == "clipPath":
@@ -104,9 +126,10 @@ static func _analyser(svg: String, largeur: float) -> Dictionary:
 	var sans_pattes := chaines.is_empty()
 	var corps := _calque(entete, defs + bas, ech, e, 0.16 if sans_pattes else 0.0)
 	if corps.is_empty():
-		return _entier(svg, ech, e)
+		# (des parties qui ne laissent pas de corps ne vont pas avec ce dessin : on le lit comme une vieille planche)
+		return analyser(s, largeur, false) if lu == "parties" else _entier(svg, ech, e)
 	var sq := {"corps": corps, "dessus": _calque(entete, defs + dessus, ech, e, 0.0), "tete": _calque(entete, defs + haut, ech, e, 0.0),
-		"pattes": [], "atlas": null, "sans_pattes": sans_pattes}
+		"pattes": [], "atlas": null, "sans_pattes": sans_pattes, "lu": lu}
 	var rc: Rect2 = corps["rect"]
 	sq["centre"] = rc.get_center()
 	sq["haut"] = rc.position.y
@@ -137,6 +160,50 @@ static func _analyser(svg: String, largeur: float) -> Dictionary:
 	return sq
 
 
+# ce qui distingue deux squelettes d'une même planche, lus à la même largeur ("" : le même) : les mêmes calques (le corps, le
+# dessus, la tête), les mêmes pattes (leur nombre, leur côté, leur rang, leur sens, leurs points, leurs morceaux dans l'atlas)
+static func ecart(a: Dictionary, b: Dictionary) -> String:
+	if a.is_empty() or b.is_empty():
+		return "" if a.is_empty() == b.is_empty() else "l'un se lit, l'autre non"
+	if a["sans_pattes"] != b["sans_pattes"] or a["pattes"].size() != b["pattes"].size():
+		return "pattes : %d contre %d" % [a["pattes"].size(), b["pattes"].size()]
+	for c in ["corps", "dessus", "tete"]:
+		if a[c].is_empty() != b[c].is_empty():
+			return "calque %s : présent d'un côté seulement" % c
+		if not a[c].is_empty() and (not a[c]["rect"].is_equal_approx(b[c]["rect"]) or a[c]["taille"] != b[c]["taille"]):
+			return "calque %s : %s contre %s" % [c, a[c]["rect"], b[c]["rect"]]
+	for c in ["haut", "ombre", "ombre_x", "jambe", "ventre"]:
+		if not is_equal_approx(float(a[c]), float(b[c])):
+			return "%s : %.3f contre %.3f" % [c, a[c], b[c]]
+	if not a["centre"].is_equal_approx(b["centre"]):
+		return "le centre du corps"
+	for i in a["pattes"].size():
+		var p: Dictionary = a["pattes"][i]
+		var q: Dictionary = b["pattes"][i]
+		for c in ["loin", "rang", "n_cote", "devant", "plie"]:
+			if p[c] != q[c]:
+				return "patte %d : %s (%s contre %s)" % [i, c, p[c], q[c]]
+		for c in ["l1", "l2", "portee", "ang_bas"]:
+			if not is_equal_approx(float(p[c]), float(q[c])):
+				return "patte %d : %s, %.3f contre %.3f" % [i, c, p[c], q[c]]
+		for c in ["pts", "rel"]:
+			if p[c].size() != q[c].size():
+				return "patte %d : %s" % [i, c]
+			for j in p[c].size():
+				if not p[c][j].is_equal_approx(q[c][j]):
+					return "patte %d : %s %d, %s contre %s" % [i, c, j, p[c][j], q[c][j]]
+		if p["cellules"].size() != q["cellules"].size() or p["pied"].is_empty() != q["pied"].is_empty():
+			return "patte %d : ses morceaux" % i
+		for j in p["cellules"].size():
+			if not p["cellules"][j]["region"].is_equal_approx(q["cellules"][j]["region"]) or not p["cellules"][j]["debut"].is_equal_approx(q["cellules"][j]["debut"]):
+				return "patte %d : son morceau %d" % [i, j]
+		if not p["pied"].is_empty() and (not p["pied"]["region"].is_equal_approx(q["pied"]["region"]) or not p["pied"]["ancre"].is_equal_approx(q["pied"]["ancre"])):
+			return "patte %d : son pied" % i
+	if (a["atlas"] == null) != (b["atlas"] == null) or (a["atlas"] != null and a["atlas"].get_size() != b["atlas"].get_size()):
+		return "l'atlas des pattes"
+	return ""
+
+
 # une planche dont on ne lit pas le groupe : son dessin entier, sans pattes à part
 static func _entier(svg: String, ech: float, e: float) -> Dictionary:
 	var img := Image.new()
@@ -146,7 +213,7 @@ static func _entier(svg: String, ech: float, e: float) -> Dictionary:
 	if corps.is_empty():
 		return {}
 	var rc: Rect2 = corps["rect"]
-	return {"corps": corps, "dessus": {}, "tete": {}, "pattes": [], "atlas": null, "sans_pattes": true, "centre": rc.get_center(),
+	return {"corps": corps, "dessus": {}, "tete": {}, "pattes": [], "atlas": null, "sans_pattes": true, "lu": "svg", "centre": rc.get_center(),
 		"haut": rc.position.y, "ombre": rc.size.x * 0.36, "ombre_x": rc.get_center().x, "jambe": maxf(2.0, rc.size.y * 0.45), "ventre": rc.end.y}
 
 
@@ -218,6 +285,50 @@ static func _chaines(els: Array) -> Array:
 			i = q
 		else:
 			i = j + 1
+	return out
+
+
+# les pattes lues dans les parties de la planche (docs/21) : chacune dit ses éléments dans le groupe du SVG (svg : ses <line>,
+# puis les morceaux de son pied), ses points et l'épaisseur de chaque segment dans le cadre de 170 × 90. Ses mesures sont ensuite
+# prises sur ces <line>, qu'on découpe de toute façon : on vérifie seulement que les parties disent les mêmes, au dixième près.
+# null : des parties qui ne vont pas avec ce dessin (on lit alors le SVG, comme pour une vieille planche)
+static func _chaines_lues(P: Dictionary, els: Array, tx: float, ty: float, k: float) -> Variant:
+	var out := []
+	var pattes = P.get("pattes", [])
+	if typeof(pattes) != TYPE_ARRAY:
+		return null
+	for p in pattes:
+		if typeof(p) != TYPE_DICTIONARY:
+			return null
+		var r = p.get("svg")
+		var pts = p.get("points")
+		var ep = p.get("epaisseurs")
+		if typeof(r) != TYPE_ARRAY or r.size() != 2 or typeof(pts) != TYPE_ARRAY or pts.size() < 2 or typeof(ep) != TYPE_ARRAY or ep.size() != pts.size() - 1:
+			return null
+		var n: int = pts.size() - 1
+		var i0 := int(r[0])
+		var i1 := int(r[1])
+		if i0 < 0 or i1 >= els.size() or i1 < i0 + n - 1:
+			return null
+		var lignes := []
+		for j in n:
+			var el: Dictionary = els[i0 + j]
+			var q0 = pts[j]
+			var q1 = pts[j + 1]
+			if el["nom"] != "line" or typeof(q0) != TYPE_ARRAY or q0.size() < 2 or typeof(q1) != TYPE_ARRAY or q1.size() < 2:
+				return null
+			var a: Dictionary = el["attr"]
+			# (un point des parties : celui de la <line>, posé par le groupe, au dixième ; son épaisseur de même)
+			var ecarts := [tx + k * float(a.get("x1", "0")) - float(q0[0]), ty + k * float(a.get("y1", "0")) - float(q0[1]),
+				tx + k * float(a.get("x2", "0")) - float(q1[0]), ty + k * float(a.get("y2", "0")) - float(q1[1]), k * float(a.get("stroke-width", "1")) - float(ep[j])]
+			for d in ecarts:
+				if absf(d) > 0.06:
+					return null
+			lignes.append(i0 + j)
+		for j in range(i0 + n, i1 + 1):
+			if not els[j]["nom"] in ["rect", "ellipse", "circle", "path"]:
+				return null
+		out.append({"lignes": lignes, "pied": range(i0 + n, i1 + 1)})
 	return out
 
 
