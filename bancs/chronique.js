@@ -6,7 +6,8 @@
 //  4. les noms : le premier nom valable l'emporte ; ni nom réservé d'avance, ni doublon, ni nom refusé par la modération ;
 //  5. le cycle de nuit : chronique/ par année, museum.json une ligne par spécimen, le nom commun dans l'instantané et ses morceaux ;
 //  6. les souches (docs/18) : ce que les événements disent de chacune (souche, nature), et le texte d'un instantané d'avant ces champs,
-//     la même chose ; une souche nouvelle, une mutante, une que porte un insecte, une lignée qu'elle gagne, son extinction.
+//     la même chose ; une souche nouvelle, une mutante, une que porte un insecte, une lignée qu'elle gagne, son extinction ; deux souches
+//     du même nom, départagées par le monde.
 //   node bancs/chronique.js
 'use strict';
 const fs = require('fs'), path = require('path'), os = require('os'), { execFileSync } = require('child_process');
@@ -121,7 +122,7 @@ console.log('6. Les souches');
     { type: 'epidemie', taxon: o2, biome: bio(o2), souche: 'souche-8', nature: 'mutation', detail: `la souche ${v2.nom} mute chez ${nom(o2)} : ${v2.nom} α, virulence 18 % par cycle (sa mère : ${Math.round(v2.virulence * 100)} %)` },
     { type: 'epidemie', taxon: o2, biome: bio(o2), souche: 'souche-9', nature: 'vecteur', detail: `la souche ${v2.nom} mute chez ${nom(o2)} : ${v2.nom} β, virulence 10 % par cycle (sa mère : ${Math.round(v2.virulence * 100)} %), portée par ${nom(ins.id)}` },
     { type: 'epidemie', taxon: n2.id, biome: bio(n2.id), souche: k2, nature: 'saut_hote', detail: `la souche ${v2.nom} passe à ${nom(n2.id)} (virulence ${Math.round(v2.virulence * 100)} % par cycle)` },
-    { type: 'remission', taxon: morte.origine, souche: k1, nature: 'extinction', detail: `la souche ${morte.nom} s'éteint, après ${B.cycle.n - morte.apparu} cycles et ${morte.hotes.length} lignée touchée` },
+    { type: 'remission', taxon: morte.origine, souche: k1, nature: 'extinction', nom: morte.nom, lieux: [bio(morte.origine)], hotes: [...morte.hotes], detail: `la souche ${morte.nom} s'éteint, après ${B.cycle.n - morte.apparu} cycles et ${morte.hotes.length} lignée touchée` },
     { type: 'remission', taxon: n2.id, biome: bio(n2.id), detail: 'l\'épidémie s\'éteint' }, { type: 'epidemie', taxon: n1.id, biome: bio(n1.id), detail: 'virulence 12 % par cycle, 6 cycles' }];
   const e0 = C.noter(C.vide(A), A, { ...A, evenements: [] }, { premier: true }).etat, r = C.noter(e0, A, B), E = r.entrees.filter(e => e.souche);
   const sorte = E.map(e => `${e.type}/${e.nature}`).join(', '), de = n => E.find(e => e.nature === n);
@@ -129,11 +130,25 @@ console.log('6. Les souches');
     && /mutante de/.test(de('mutation').texte) && /que porte/.test(de('vecteur').texte) && /gagne/.test(de('saut_hote').texte) && /s'éteint, après/.test(de('extinction').texte) && de('naissance').biome === bio(n1.id).split('~')[0],
     `cinq entrées, chacune avec sa souche et sa nature (${sorte}) ; les deux épidémies d'avant les souches sont laissées`);
   for (const e of E) console.log(`     ${e.titre} (${e.importance}) — ${e.texte}`);
-  const vieux = JSON.parse(JSON.stringify(B)); vieux.evenements.forEach(e => { delete e.souche; delete e.nature; }); const rv = C.noter(e0, A, vieux);
+  const vieux = JSON.parse(JSON.stringify(B)); vieux.evenements.forEach(e => { for (const k of ['souche', 'nature', 'nom', 'lieux', 'hotes']) delete e[k]; }); const rv = C.noter(e0, A, vieux);
   verif(JSON.stringify(rv.entrees) === JSON.stringify(r.entrees), 'un instantané d\'avant ces champs : relue sur le texte des événements, la chronique dit exactement la même chose');
   const p = C.noter(C.vide(A), A, B, { premier: true }), deux = C.noter(r.etat, B, { ...B, cycle: { ...B.cycle, n: B.cycle.n + 1 }, evenements: B.evenements.slice(0, 3) });
   verif(!p.entrees.some(e => e.souche) && !deux.entrees.length && r.etat.souches.includes('souche-7') && !r.etat.souches.includes(k1) && !('hotes' in r.etat),
     'le jour où elle s\'éveille, elle prend acte des souches sans les raconter ; une souche déjà née ne renaît pas ; une souche éteinte sort de ce qu\'elle garde');
+  // deux souches du même nom (la genèse 2026 en a cinq paires) : un instantané d'avant ces champs ne dit que le nom ; la chronique
+  // départage par le monde. Une seconde « Liraose » naît (souche-998) quand la première (souche-2) vit encore ; une Késarose saute
+  // chez une lignée, une autre s'éteint
+  const G = lireJ('mondes/genese-2026/instantane.json'), H = JSON.parse(JSON.stringify(G)), SH = H.monde.pathogenes.souches, ng = G.cycle.n + 1, nomG = id => G.taxons.find(t => t.id === id)?.nom || id;
+  const vit = G.taxons.filter(t => !t.eteint && t.plan.regime !== 'vegetal' && t.populations.length), [o998, gagnee] = vit.filter(t => !SH['souche-5'].hotes.includes(t.id) && !SH['souche-8'].hotes.includes(t.id));
+  H.cycle = { ...G.cycle, n: ng }; SH['souche-998'] = { nom: 'Liraose', virulence: .2, transmission: .971, origine: o998.id, apparu: ng, hotes: [o998.id], infectes: 30 };
+  const k5 = SH['souche-5']; k5.hotes = [...k5.hotes, gagnee.id]; const k8 = SH['souche-8']; delete SH['souche-8'];
+  H.evenements = [{ type: 'epidemie', taxon: o998.id, biome: o998.populations[0].biome, detail: `une souche nouvelle, Liraose, apparaît chez ${nomG(o998.id)} : virulence 20 % par cycle, contagion 0.971` },
+    { type: 'epidemie', taxon: gagnee.id, biome: gagnee.populations[0].biome, detail: `la souche Késarose passe à ${nomG(gagnee.id)} (virulence ${Math.round(k5.virulence * 100)} % par cycle)` },
+    { type: 'remission', taxon: k8.origine, detail: `la souche Késarose s'éteint, après ${ng - k8.apparu} cycles et ${k8.hotes.length} lignée touchée` }];
+  const eg = C.noter(C.vide(G), G, { ...G, evenements: [] }, { premier: true }).etat, rg = C.noter(eg, G, H), lus = H.evenements.map(e => C.natureDe(e, G, H));
+  const n998 = rg.entrees.find(e => e.souche === 'souche-998'), saut = rg.entrees.find(e => e.nature === 'saut_hote'), fin = rg.entrees.find(e => e.nature === 'extinction');
+  verif(eg.souches.includes('souche-2') && n998?.type === 'souche' && /^Liraose apparaît chez/.test(n998.texte) && saut?.souche === 'souche-5' && fin?.souche === 'souche-8' && lus.map(x => x.souche).join() === 'souche-998,souche-5,souche-8',
+    `deux souches du même nom, relues sur le texte : la seconde Liraose (souche-998) naît quand la première (souche-2) vit encore, et la chronique le dit ; la Késarose qui saute est souche-5, celle qui s'éteint souche-8`);
 }
 
 console.log(`\n${ok ? 'tout est vérifié' : 'ÉCHEC'} (${((Date.now() - t0) / 1000).toFixed(0)} s)`);

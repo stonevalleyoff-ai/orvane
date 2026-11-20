@@ -65,7 +65,7 @@ Une souche qui s'éteint n'est plus dans `monde.pathogenes.souches` : son évén
 
 - Une épidémie d'avant les souches (dans un monde qui ne les a pas, ou une population qui en garde une d'avant leur éveil) reste un `epidemie` ou un `remission` sans `souche` ni `nature`.
 - D'autres natures pourront venir : un jeu ignore celles qu'il ne connaît pas.
-- La chronique (docs/37) et le directeur (docs/40) les lisent. Pour un instantané d'avant ces champs, la chronique relit le texte, et retrouve la souche par son nom.
+- La chronique (docs/37) et le directeur (docs/40) les lisent. Pour un instantané d'avant ces champs, la chronique relit le texte, et retrouve la souche par son nom ; quand deux souches portent le même nom, par ce que le monde dit de l'événement (une souche née ce cycle chez cette lignée, une qui était là et ne l'est plus, une qui gagne cette lignée).
 - Le tampon (`Tampon.filtrer`) et les morceaux (`OrvaneMorceaux.lire`) gardent l'extinction d'une souche pour un jeu qui lit l'un de ses derniers lieux, même si sa lignée d'origine n'est plus listée ou vit ailleurs.
 
 ## L'infection par parcelle

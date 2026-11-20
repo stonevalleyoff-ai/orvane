@@ -52,9 +52,8 @@ const lire = (e, av, ap, F = fautes, N = natures) => { const S = ap.monde.pathog
   N[e.nature] = (N[e.nature] || 0) + 1;
   const bon = e.nature === 'extinction' ? e.type === 'remission' && !S[e.souche] && SA[e.souche] && e.nom === SA[e.souche].nom && JSON.stringify(e.hotes) === JSON.stringify(SA[e.souche].hotes) && e.lieux.length && JSON.stringify(e.lieux) === JSON.stringify(derniers(av, e.souche))
     : e.type === 'epidemie' && S[e.souche] && (e.nature !== 'saut_hote' || S[e.souche].hotes.includes(e.taxon)) && (e.nature !== 'naissance' || (S[e.souche].apparu === ap.cycle.n && S[e.souche].origine === e.taxon));
-  // (le texte ne dit que le nom de la souche : deux souches vivantes du même nom se confondent, c'est la limite du repli)
-  const nom = id => (S[id] || SA[id])?.nom, memeSouche = x && (x.souche === e.souche || (x.souche && nom(x.souche) === nom(e.souche)));
-  if (!bon || !Pa.NATURES.includes(e.nature) || x?.nature !== e.nature || !memeSouche) F.push(`${e.nature} ${e.souche} : ${e.detail}`); };
+  // (le texte seul, relu par la chronique, désigne la même souche, même quand une autre porte son nom)
+  if (!bon || !Pa.NATURES.includes(e.nature) || x?.nature !== e.nature || x?.souche !== e.souche) F.push(`${e.nature} ${e.souche} : ${e.detail}`); };
 for (let k = 0; k < CYCLES; k++) { const av = W; W = Orvane.cycle(W, {}); T = Orvane.cycle(T, {});
   for (const e of W.evenements) { if (/souche nouvelle/.test(e.detail || '')) nes.push(e); if (/la souche .* s'éteint/.test(e.detail || '')) eteintes.push(e);
     if (e.type === 'epidemie' || e.type === 'remission') lire(e, av, W); } }

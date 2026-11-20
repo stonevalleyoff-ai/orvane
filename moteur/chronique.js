@@ -110,18 +110,25 @@ function noter(etat0, avant, apres, opt = {}) {
   return { etat, entrees: E };
 }
 const fmt = v => v >= 10 ? String(Math.round(v)) : String(+v.toPrecision(2)).replace('.', ',');
-// ce qu'un événement dit d'une souche : { souche, nature }, lus sur ses champs (docs/18). Un instantané d'avant ces champs : relus
-// sur son texte, la souche retrouvée par son nom (nom : celui que dit le texte). null : ce n'est pas un événement de souche
-// (une épidémie d'avant les souches, docs/18)
+// ce qu'un événement dit d'une souche : { souche, nature, nom }, lus sur ses champs (docs/18). Un instantané d'avant ces champs : relus
+// sur son texte, la souche retrouvée par son nom (nom : celui que dit le texte) et, quand deux souches portent le même nom, par ce que
+// le monde dit de l'événement : une souche qui naît n'était pas là avant, est née ce cycle chez cette lignée ; une souche qui s'éteint
+// était là avant et ne l'est plus ; une souche qui saute gagne cette lignée. null : ce n'est pas un événement de souche (une épidémie
+// d'avant les souches, docs/18)
 const TEXTES = [['naissance', /^une souche nouvelle, (.+?), apparaît chez /], ['mutation', /^la souche .+? mute chez .+? : (.+?), virulence /],
   ['saut_hote', /^la souche (.+?) passe à /], ['extinction', /^la souche (.+?) s'éteint/]];
 function natureDe(e, avant, apres) {
   if (!e || (e.type !== 'epidemie' && e.type !== 'remission')) return null;
-  if (typeof e.souche === 'string' && typeof e.nature === 'string') return { souche: e.souche, nature: e.nature, nom: null };
+  if (typeof e.souche === 'string' && typeof e.nature === 'string') return { souche: e.souche, nature: e.nature, nom: typeof e.nom === 'string' ? e.nom : null };
   const d = String(e.detail || '');
   for (const [nature, re] of TEXTES) { const m = re.exec(d); if (!m) continue;
-    // (une souche éteinte n'est plus que dans le monde d'avant ; les autres, dans celui d'après)
-    const L = nature === 'extinction' ? [avant, apres] : [apres, avant], id = L.map(I => Object.entries(I?.monde?.pathogenes?.souches || {}).find(([, s]) => s?.nom === m[1])?.[0]).find(Boolean);
+    const SA = avant?.monde?.pathogenes?.souches || {}, SP = apres?.monde?.pathogenes?.souches || {}, n = apres?.cycle?.n;
+    const nommees = S => Object.entries(S).filter(([, s]) => s?.nom === m[1]).map(([id]) => id);
+    const bonnes = nature === 'extinction' ? nommees(SA).filter(id => !SP[id])
+      : nature === 'saut_hote' ? nommees(SP).filter(id => (SP[id].hotes || []).includes(e.taxon) && !(SA[id]?.hotes || []).includes(e.taxon))
+      : nommees(SP).filter(id => !SA[id] && SP[id].apparu === n && SP[id].origine === e.taxon);
+    // (sinon, le premier de ce nom : dans le monde d'avant pour une extinction, dans celui d'après pour le reste)
+    const id = bonnes[0] || (nature === 'extinction' ? [...nommees(SA), ...nommees(SP)] : [...nommees(SP), ...nommees(SA)])[0];
     return { souche: id || null, nature: nature === 'mutation' && /, portée par /.test(d) ? 'vecteur' : nature, nom: m[1] }; }
   return null;
 }

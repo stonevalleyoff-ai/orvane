@@ -39,7 +39,7 @@ Chaque entrée dit son cycle, sa date, son titre et sa phrase :
 
 Le jour où elle s'éveille, la chronique prend acte de ce qui existe (les souches, les zones hybrides, les records) sans le raconter.
 
-**Les souches** se lisent sur les événements du cycle, qui disent laquelle et ce qui lui arrive (`souche`, `nature`, docs/18). Pour un instantané d'avant ces champs, la chronique relit leur texte, et retrouve la souche par son nom : elle dit alors exactement la même chose (deux souches vivantes du même nom se confondraient). Une épidémie d'avant les souches reste du bruit.
+**Les souches** se lisent sur les événements du cycle, qui disent laquelle et ce qui lui arrive (`souche`, `nature`, docs/18). Pour un instantané d'avant ces champs, la chronique relit leur texte, et retrouve la souche par son nom : elle dit alors exactement la même chose. Quand deux souches portent le même nom (la genèse 2026 en a cinq paires), elle départage par le monde : une souche qui naît n'était pas là au cycle d'avant, est née ce cycle chez cette lignée ; une qui s'éteint y était et n'y est plus ; une qui saute gagne cette lignée. Sans cela, la naissance d'une seconde « Liraose » disparaissait, la chronique la prenant pour la première, déjà vue. Une épidémie d'avant les souches reste du bruit.
 
 ## Le muséum
 
