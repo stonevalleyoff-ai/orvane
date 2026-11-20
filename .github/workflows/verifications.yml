@@ -39,6 +39,7 @@ jobs:
           r=0
           for f in mondes/*/profil.json; do node outils/verifier.js "$f" --profil || r=1; done
           for f in mondes/*/instantane.json mondes/*/amorce.json; do [ -f "$f" ] && { node outils/verifier.js "$f" --instantane || r=1; }; done
+          for f in mondes/*/bilans/*.json; do [ -f "$f" ] && { node outils/verifier.js "$f" || r=1; }; done   # (les bilans de saison, docs/4 : d'ordinaire dans la publication seulement)
           exit $r
       - name: le contrat ne casse rien sans sa version majeure (outils/contrat.js, docs/43)
         env:

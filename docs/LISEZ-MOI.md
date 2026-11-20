@@ -9,7 +9,7 @@ Pour s'inscrire, recevoir ses clés et faire ses premiers appels au Supabase d'O
 | [1. Lire un instantané](1-lire-un-instantane.md) | comprendre le fichier qu'Orvane publie chaque nuit |
 | [2. Les correspondances](2-correspondances.md) | relier vos biomes, vos espèces, vos variantes à ceux d'Orvane |
 | [3. Traduire un phénotype](3-traduire-un-phenotype.md) | faire d'un corps biologique des statistiques de jeu : physique, mouvement, comportement, attaque, objets, apprivoisement |
-| [4. Renvoyer des pressions](4-renvoyer-des-pressions.md) | compter ce que font les joueurs, sans tricher ni compter deux fois |
+| [4. Renvoyer des pressions](4-renvoyer-des-pressions.md) | compter ce que font les joueurs, sans tricher ni compter deux fois ; le bilan de saison, jeu par jeu : ce que chacun a ôté et rendu à chaque population |
 | [5. Le profil et les essais](5-profil-et-essais.md) | régler le tampon pour votre jeu et tout vérifier hors ligne |
 | [6. L'exemple Stone Valley](6-exemple-stone-valley.md) | le traducteur complet, commenté |
 | [7. Les conduites](7-conduites.md) | ce que l'évolution fait faire aux bêtes : le vocabulaire abstrait, un phénotype par bête, trois règles pour les jouer, et ce qui vient ensuite |

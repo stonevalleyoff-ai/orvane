@@ -9,6 +9,7 @@ Orvane runs a single world, the world of Orvane, and every game plugs into it. A
 3. **Translate**: map the game's terrains to Orvane's biomes, and turn each lineage into a creature. In **Unity** or **Godot**, a kit reads the world, counts and sends the batches for you ([kits/LISEZ-MOI.md](kits/LISEZ-MOI.md)).
 4. **Set your exposure** (optional): tell Orvane what the game can show, with the admin key.
 5. **Report pressures**: count what players do and send batches with `orvane_deposer` and the game key. `node outils/verifier.js my-batch.json` tells, before the first deposit, whether the batch will be accepted; `types/orvane.d.ts` gives every field to a TypeScript translator (docs/39). A game that has a server can deposit from it, with a deposit key that only the server knows (section 6).
+6. **Read your season report**: every season, Orvane publishes what each game removed from and gave back to each population, and the share of the head count it represents (section 8).
 
 ## Addresses
 
@@ -19,6 +20,7 @@ Orvane runs a single world, the world of Orvane, and every game plugs into it. A
 | Orvane's Supabase | `https://rospodujiyltmxitykwc.supabase.co` |
 | the project's public key (`apikey` header) | `sb_publishable_F98uYIaPrLTjhj3n7QiBOg_SOtFynn8` |
 | the observatory (watch the world live) | `https://stonevalleyoff-ai.github.io/orvane/` |
+| each game's season report (read-only) | `https://stonevalleyoff-ai.github.io/orvane/mondes/orvane/bilans/index.json` |
 
 The project's public key may appear in a game's code. It only opens the functions below, and no table can be read directly.
 
@@ -288,6 +290,24 @@ curl -X POST https://rospodujiyltmxitykwc.supabase.co/rest/v1/rpc/orvane_exiger_
 
 The `essai` world keeps batches for fourteen days but no world reads them: it tells whether a deposit goes through, not what it does to the world. To see that, replay your batches on a copy of today's world, on your machine, without network: [docs/5](docs/5-profil-et-essais.md), "Rejouer ses lots" (in French; the commands are copy-paste).
 
+## 8. Read your season report
+
+The buffer knows what each game removed from each population. Every season (30 cycles in the world of Orvane, aligned on its seasons), the nightly cycle publishes it, game by game: this is the reference. A game that publishes its own report (Hors-Cordon has committed to it; a game asking for 20,000 batches a day commits to following it) relays this one, or compares itself to it.
+
+- **Where**: `https://stonevalleyoff-ai.github.io/orvane/mondes/orvane/bilans/`: `index.json` (finished seasons, most recent first, and the current one), `en-cours.json` (the current season, rewritten every cycle), and one file per finished season (`an-0-ete.json`…), written once and never rewritten. The format: `schemas/bilan.schema.json` (TypeScript: `Bilan`, `BilanIndex`). In the observatory: the Bilans view.
+- **What it says**, for each game (its `id` and public name, as in `jeux.json`), lineage by lineage and biome by biome: what its batches asked for (`demande`), what was applied after every cap (`applique`), and what each cap trimmed (`rabote`: `activite` a player's activity brought back to normal, `compte` the per-player cap, `part_compte` and `part_jeu` the share of one player or one game, `plafond_jeu` the 5% cap of a game, `population` the cap of a population), separately for what is removed (`ote`: kills, captures, moves) and given back (`rendu`: releases, feeding, bred animals). And the share of the head count: over the season (`part`, against the population's average head count over the cycles the game touched it) and the largest in a single cycle (`part_max_cycle`, never above the game's cap).
+- **In animals**: those the engine removes or adds (an adult kill counts 1.2; a feeding gives back 0.2 animal). Each cycle counts what the buffer kept, caps included, before smoothing: what is counted at the end of a season weighs mostly at the start of the next one.
+- **No player data**: no player id, no pseudonym, only games.
+
+```js
+const base = 'https://stonevalleyoff-ai.github.io/orvane/mondes/orvane/bilans/';
+const index = await (await fetch(base + 'index.json')).json();
+const report = await (await fetch(base + index.saisons[0].fichier)).json();   // the last finished season
+const mine = report.jeux.find(j => j.id === 'my-game');                     // missing: nothing deposited this season
+```
+
+The details (the season, the reference head count, what the report does not say, a real example): [docs/4](docs/4-renvoyer-des-pressions.md), « Le bilan de saison » (in French; field names in [docs/glossary.md](docs/glossary.md)).
+
 ## Answers and errors
 
 The `erreur` strings are in French:
@@ -334,4 +354,5 @@ The `erreur` strings are in French:
 - [ ] A sent batch answers `ok: true`; otherwise it is kept and sent again later, with the same `id`.
 - [ ] A game that deposits from its server keeps its deposit key in the server's secrets, and requires it (`orvane_exiger_cle_depot`).
 - [ ] The next day, `pressions_recues` rises in the instantané's `cycle`.
+- [ ] The game finds its `id` in the season report (`bilans/en-cours.json`), and what it reads there (`demande`) matches what it counted.
 - [ ] The translator passes the generic test bench: `node outils/banc-traducteur.js my-translator.js` (docs/39; the model: `traducteurs/exemple/traducteur.js`).

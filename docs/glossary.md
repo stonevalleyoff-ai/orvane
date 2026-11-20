@@ -213,6 +213,20 @@ Orvane's files use French field names. This page translates them all, object by 
 | `config` | configuration (`kits/serveur/depot.mjs`): a key or an address to fix; the batch is kept |
 | `lots_refuses`, `LotsRefuses` | refused batches (Godot, Unity kits): refused for good, set aside so they do not block the queue |
 
+## The season report (`bilans/`, `schemas/bilan.schema.json`, docs/4)
+
+| field | English | meaning |
+| --- | --- | --- |
+| `bilan` | report | what each game removed from and gave back to each population over a season |
+| `saison` | season | the world's season (`an` year, `nom` name, `de`…`a` its cycles); `tranche` a slice of 30 cycles in a world without a year |
+| `en_cours` | in progress | the season is not over: `en-cours.json` changes every cycle; a finished season's file never changes |
+| `compte` | counted | the cycles counted in this report (`de`, `a`, `cycles`) |
+| `ote`, `rendu` | removed, given back | kills, captures, moves; releases, feeding, bred animals |
+| `demande`, `applique` | asked, applied | what the game's batches asked for; what is left after every cap |
+| `rabote` | trimmed | what each cap took off: `activite` (a player's activity), `compte` (per-player cap), `part_compte`, `part_jeu` (share of one player, one game), `plafond_jeu` (a game's 5% cap), `population` (a population's cap) |
+| `part`, `part_max_cycle`, `cycle_max` | share, largest share in one cycle, that cycle | against `effectif_moyen`, the population's average head count over the cycles the game touched it; in one cycle, never above the game's `plafond` |
+| `lignees` | lineages | one line per population (a lineage in a biome) the game touched |
+
 ## Words of the world
 
 | French | English |

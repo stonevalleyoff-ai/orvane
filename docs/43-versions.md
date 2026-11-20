@@ -75,4 +75,4 @@ L'action `.github/workflows/version.yml` publie alors la version : l'étiquette 
 
 - **Le registre npm.** Publier le paquet sous le nom `orvane` demande un compte npm.
 - **Des types pour le moteur lui-même.** `types/orvane.d.ts` décrit le contrat (ce qu'on lit et écrit), pas encore les fonctions du moteur (`Orvane.cycle`, `Solo.creer`…).
-- **Les autres documents publiés.** La chronique, le muséum et les morceaux (`chronique/`, `museum.json`, `morceaux/`) n'ont pas encore de schéma : le garde-fou ne les voit pas.
+- **Les autres documents publiés.** La chronique, le muséum et les morceaux (`chronique/`, `museum.json`, `morceaux/`) n'ont pas encore de schéma : le garde-fou ne les voit pas. Le bilan de saison (`bilans/`, docs/4) en a un, avec son index (`schemas/bilan.schema.json`, `bilan-index.schema.json`) : le garde-fou les suit comme l'instantané, ce qu'Orvane écrit et que les jeux lisent.
