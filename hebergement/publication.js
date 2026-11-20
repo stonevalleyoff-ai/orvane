@@ -9,7 +9,7 @@
 //  - ce que le cycle écrit (etat.json, instantane.json, historique.json, tampon.json, flore.json, jeux.json, generation-0.json,
 //    chronique/, museum.json, morceaux/, bilans/, lots/traites/, noms/traites/) : il vient de la publication, sauf si `main` en porte
 //    un plus récent (son etat.json a un cycle plus avancé) ou un monde né à nouveau (un autre monde.ne). (Tout ce qui n'est ni écrit à
-//    la main ni un dépôt est pris pour écrit par le cycle : un fichier nouveau du cycle n'a rien à déclarer ici que cette liste.)
+//    la main ni un dépôt est pris pour écrit par le cycle : un fichier nouveau du cycle n'a qu'à être ajouté à cette liste.)
 // Pour faire renaître un monde : dans main, supprimer son état (etat.json, generation-0.json, instantane.json, historique.json,
 // tampon.json) et poser dans son profil monde.renaitre, une date ("2026-11-06") ; la passe suivante repart de main, une fois. Une
 // autre date, une autre renaissance.

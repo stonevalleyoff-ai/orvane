@@ -23,7 +23,6 @@ const TRANCHE = 30;                                         // un monde sans ann
 const SAISONS = ['hiver', 'printemps', 'été', 'automne'], SLUG = ['hiver', 'printemps', 'ete', 'automne'];
 const INTERDITS = new Set(['__proto__', 'constructor', 'prototype']);
 const sur = k => typeof k === 'string' && !INTERDITS.has(k);
-const dico = () => Object.create(null);
 const fini = x => typeof x === 'number' && Number.isFinite(x);
 const r3 = x => +(+x).toFixed(3), r6 = x => +(+x).toFixed(6);
 
@@ -44,7 +43,8 @@ function saison(n, annee) {
 
 // --- un cycle de plus ---
 // cycle : { orvane (la version du contrat), monde: { id, ne }, n (le cycle que le moteur vient de faire), date, annee, bilan (celui du
-//   tampon), jeux (jeux.json : id, nom), noms (lignée → nom), plafonds, memoire_cycles }. Rend { cumul, finies } : finies, les cumuls des saisons qui s'achèvent (zéro ou un).
+//   tampon), jeux (jeux.json : id, nom), noms (lignée → nom), plafonds, memoire_cycles }. Rend { cumul, finies } : finies, les cumuls
+//   des saisons qui s'achèvent (zéro ou un).
 function neuf(c, S) {
   return { orvane: c.orvane ?? null, monde: { id: c.monde?.id ?? null, ne: c.monde?.ne ?? null }, saison: S,
     compte: { de: c.n, a: c.n, cycles: 0, date_de: c.date ?? null, date_a: c.date ?? null }, plafonds: null, memoire_cycles: null, jeux: {}, noms: {} };
@@ -74,7 +74,6 @@ function noter(cumul, c) {
 }
 
 // --- le bilan publié ---
-const somme = (L, f) => L.reduce((s, x) => s + f(x), 0);
 function rabote(v) { const R = {}; for (let i = 1; i < N; i++) { const d = v[i - 1] - v[i]; if (d >= 5e-4) R[RABOTS[i - 1]] = r3(d); } return R; }
 function cote(v, e, avecMax, P) {
   const o = { demande: r3(v[0]), applique: r3(v[N - 1]), rabote: rabote(v), part: e > 0 ? r6(v[N - 1] / e) : null };
