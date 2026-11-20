@@ -59,7 +59,7 @@ namespace Orvane
                 r.SetRequestHeader("Content-Type", "application/json"); r.SetRequestHeader("apikey", b.ClePublique);
                 yield return r.SendWebRequest();
                 var rep = r.result == UnityEngine.Networking.UnityWebRequest.Result.Success ? Lire(r.downloadHandler.text) : Reponse.Echec(r.error);
-                if (rep.Ok) c.Depose();
+                if (rep.Ok) c.Depose(); else if (rep.Definitif) c.Refuse();   // (refusé pour de bon : mis de côté, il ne bloque pas les suivants)
                 fini?.Invoke(rep);
             }
         }
@@ -93,7 +93,7 @@ namespace Orvane
                 Reponse rep;
                 try { var r = await http.SendAsync(q); var t = await r.Content.ReadAsStringAsync(); rep = JsonConvert.DeserializeObject<Reponse>(t) ?? Reponse.Echec("réponse vide"); }
                 catch (Exception e) { rep = Reponse.Echec(e.Message); }
-                if (rep.Ok) c.Depose();
+                if (rep.Ok) c.Depose(); else if (rep.Definitif) c.Refuse();
                 return rep;
             }
         }

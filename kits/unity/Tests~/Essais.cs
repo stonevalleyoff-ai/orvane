@@ -78,6 +78,14 @@ static class Essais
                 "l'appel orvane_deposer : p_cle, p_compte, p_lot, en JSON valide ; chaque lot son id");
             var serveur = JObject.Parse(new Branchement { CleJeu = "orv_essai", CleDepot = "orvdep_essai" }.CorpsDepot("h:essai", "{\"evenements\":[]}"));
             Verif((string)serveur["p_cle_depot"] == "orvdep_essai", "sur un serveur (OrvaneHttp), la clé de dépôt part avec le lot (p_cle_depot)");
+            // un lot refusé pour de bon ne bloque pas la file ; un id nul se répare
+            var cr = new Compteur("essai-unity", I.Monde.Id); cr.Compter("a", "prairie", Actions.Rencontre); cr.Clore("h:1"); cr.Compter("b", "prairie", Actions.Rencontre); cr.Clore("h:1");
+            var premier = cr.Prochain(); var refus = new Reponse { Ok = false, Erreur = "id du lot déjà pris par un autre lot de ce jeu" }; var quota = new Reponse { Ok = false, Erreur = "quota du jeu atteint pour aujourd'hui" };
+            if (refus.Definitif) cr.Refuse(); var cr2 = new Compteur("essai-unity", I.Monde.Id); cr2.Charger(cr.Sauver());
+            var nul = new Compteur("essai-unity", I.Monde.Id); nul.Charger("{\"Lots\":[\"{\\\"orvane\\\":\\\"1.0\\\",\\\"id\\\":null,\\\"evenements\\\":[]}\"]}");
+            Verif(refus.Definitif && !quota.Definitif && cr.LotsEnAttente == 1 && cr.Prochain() != premier && cr.LotsRefuses.Count == 1 && cr.LotsRefuses[0] == premier && cr2.LotsRefuses.Count == 1 && cr2.LotsEnAttente == 1
+                  && ((string)JObject.Parse(nul.Prochain())["id"])?.Length == 32,
+                "un lot refusé pour de bon (« id du lot déjà pris ») sort de la file, gardé à part, et le suivant part ; un quota ne l'est pas ; un id nul se répare");
         }
         Console.WriteLine(echecs == 0 ? "\ntout passe" : $"\nÉCHEC : {echecs}");
         return echecs == 0 ? 0 : 1;

@@ -56,6 +56,7 @@ var instantane: Dictionary = {}
 
 var _evenements: Dictionary = {}
 var _en_attente: Array[String] = []
+var _refuses: Array[String] = []        # les lots refusés pour de bon (hors du contrat, un id déjà pris) : gardés à part, ils ne bloquent rien
 var _debut := ""
 var _depot_en_cours := false
 var _planches: Dictionary = {}
@@ -573,7 +574,34 @@ func _depose(resultat: int, code: int, _entetes: PackedStringArray, corps: Packe
 	if rep.get("ok", false):
 		_en_attente.pop_front()
 		_sauver()
+	elif refus_definitif(str(rep.get("erreur", ""))):
+		# le lot lui-même est refusé (le renvoyer n'y changerait rien) : il sort de la file, gardé à part (lots_refuses), et les
+		# suivants partent ; les autres refus (le réseau, un quota du jour, une clé) le laissent en tête de file, pour plus tard
+		_refuses.append(_en_attente.pop_front())
+		_sauver()
+		rep["mis_de_cote"] = true
 	lot_depose.emit(bool(rep.get("ok", false)), rep)
+
+
+# les refus d'Orvane qui tiennent au lot lui-même (hebergement/supabase.sql, orvane_deposer) : le renvoyer n'y changerait rien
+const REFUS_DEFINITIFS := ["lot mal formé", "lot trop gros", "événement mal formé", "id du lot"]
+
+
+func refus_definitif(erreur: String) -> bool:
+	for x in REFUS_DEFINITIFS:
+		if erreur.contains(x):
+			return true
+	return false
+
+
+# les lots mis de côté (en JSON), pour les montrer au développeur ou les corriger ; oublier_refuses() les efface
+func lots_refuses() -> Array[String]:
+	return _refuses.duplicate()
+
+
+func oublier_refuses() -> void:
+	_refuses.clear()
+	_sauver()
 
 
 # un jeu qui dépose depuis son serveur : le prochain lot en attente, en JSON, avec son id ("" s'il n'y en a pas), à envoyer au
@@ -583,12 +611,16 @@ func prochain_lot() -> String:
 	return "" if _en_attente.is_empty() else _en_attente[0]
 
 
-# le serveur du jeu a répondu ok (ou deja) pour ce lot : il quitte la file
-func oublier_lot(id: String) -> void:
+# le serveur du jeu a répondu ok (ou deja) pour ce lot : il quitte la file. refuse = true : Orvane l'a refusé pour de bon
+# (refus_definitif) ; il quitte la file aussi, mais il est gardé à part (lots_refuses), pour ne pas bloquer les suivants
+func oublier_lot(id: String, refuse: bool = false) -> void:
 	for i in _en_attente.size():
 		var l = JSON.parse_string(_en_attente[i])
 		if typeof(l) == TYPE_DICTIONARY and str(l.get("id", "")) == id:
+			var lot: String = _en_attente[i]
 			_en_attente.remove_at(i)
+			if refuse:
+				_refuses.append(lot)
 			_sauver()
 			return
 
@@ -601,7 +633,7 @@ func _nouvel_id() -> String:
 # un lot gardé par une version du kit qui ne donnait pas d'id en reçoit un, une fois : il le garde ensuite d'un essai à l'autre
 func _avec_id(texte: String) -> String:
 	var lot = JSON.parse_string(texte)
-	if typeof(lot) != TYPE_DICTIONARY or lot.has("id"):
+	if typeof(lot) != TYPE_DICTIONARY or (typeof(lot.get("id")) == TYPE_STRING and str(lot["id"]) != ""):
 		return texte
 	lot["id"] = _nouvel_id()
 	return JSON.stringify(lot)
@@ -620,7 +652,7 @@ func _sauver() -> void:
 	var f := FileAccess.open(SAUVEGARDE, FileAccess.WRITE)
 	if f == null:
 		return
-	f.store_string(JSON.stringify({"lots": _en_attente, "evenements": _evenements.values(), "debut": _debut}))
+	f.store_string(JSON.stringify({"lots": _en_attente, "refuses": _refuses, "evenements": _evenements.values(), "debut": _debut}))
 
 
 func _charger() -> void:
@@ -634,6 +666,8 @@ func _charger() -> void:
 		var avec := _avec_id(str(l))
 		sans_id = sans_id or avec != str(l)
 		_en_attente.append(avec)
+	for l in s.get("refuses", []):
+		_refuses.append(str(l))
 	for e in s.get("evenements", []):
 		if e.get("action") == "deplacement":
 			deplacer(str(e.get("taxon", "")), str(e.get("biome", "")), str(e.get("vers", "")), float(e.get("n", 0)))

@@ -221,6 +221,9 @@ namespace Orvane
         [JsonProperty("erreur")] public string Erreur;
         [JsonExtensionData] public IDictionary<string, JToken> Autres;
         public static Reponse Echec(string e) => new Reponse { Ok = false, Erreur = e };
+        /// <summary>Le lot lui-même est refusé (hors du contrat, un id déjà pris) : le renvoyer n'y changerait rien ; il se met de côté (Compteur.Refuse).
+        /// Les autres refus (le réseau, un quota du jour, une clé) se renvoient plus tard.</summary>
+        [JsonIgnore] public bool Definitif => !Ok && Erreur != null && new[] { "lot mal formé", "lot trop gros", "événement mal formé", "id du lot" }.Any(x => Erreur.Contains(x));
     }
 
     /// <summary>Les actions d'un lot (docs/4).</summary>
