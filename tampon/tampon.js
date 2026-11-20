@@ -12,13 +12,14 @@
 //      1. rapporter l'activité d'un compte à une activité normale (exposition_ref rencontres par cycle) ;
 //      2. dénormaliser : les prélèvements par phénotype sont redistribués selon les fréquences RÉELLES, à taux
 //         par tête constant (une variante montrée à 2 % mais réelle à 20 % voit ses pertes ×10) ;
-//      3. plafonner : par compte, part maximale d'un seul compte, d'un seul jeu, part maximale d'une population ;
-//         ce qui n'est pas un retrait est plafonné aussi : déplacements, libérations, habitat, milieu (voir plus bas) ;
+//      3. plafonner : par compte, part maximale d'un seul compte, d'un seul jeu, le plafond d'un jeu même seul
+//         (part_max_population_jeu), part maximale d'une population ; ce qui n'est pas un retrait est plafonné aussi :
+//         déplacements, libérations, habitat, milieu (voir plus bas) ;
 //      4. lisser sur memoire_cycles (moyenne mobile exponentielle, gardée dans « etat »).
 //      Les traits continus (docs/8) : le z moyen des bêtes retirées (événements « q »), pondéré et lissé de même.
 //      Un lot est une donnée, jamais une instruction : chaque événement est vérifié à l'entrée (une action connue, un n fini,
 //      positif et borné, une lignée et des lieux du monde) ; ce qui ne l'est pas est écarté et compté (rejetes), et un lot qui ne
-//      se lit pas n'arrête jamais le cycle.
+//      se lit pas n'arrête jamais le cycle. Un lot renvoyé avec le même id par le même jeu ne compte qu'une fois (doublons).
 //  - quantDe(taxon, biomes, ref) : Orvane → jeu, la loi d'où tirer chaque bête pour les traits continus.
 //  - sachantMere(e, dom, montre), exprimer(porte, cat) : l'hérédité côté jeu (docs/9), un petit qui ressemble à sa mère.
 (function (racine) {
@@ -186,7 +187,16 @@ function assainir(X) {
   if (E.taux_jeu != null) E.taux_jeu = Object.fromEntries(Object.entries(nombres(E.taux_jeu)).filter(([, v]) => v <= 1));
   for (const k of ['mode', 'non_rendus']) if (E[k] != null && typeof E[k] !== 'string') delete E[k];
   for (const k of ['reference_min', 'propagation_cycles']) if (E[k] != null && !(typeof E[k] === 'number' && Number.isFinite(E[k]))) delete E[k];
+  if (E.part_max_population_jeu != null && part01(E.part_max_population_jeu) == null) delete E.part_max_population_jeu;
   return E;
+}
+// Le plafond d'un jeu (docs/5) : la part d'une population qu'un seul jeu peut lui ôter en un cycle, même s'il est seul à la
+// montrer (plafonds.part_max_population_jeu, 0,05 dans le monde d'Orvane). Un jeu peut le baisser dans son exposition
+// (exposition.part_max_population_jeu), jamais le relever : c'est le plus bas des deux qui vaut. Sans l'un ni l'autre, rien.
+const part01 = x => typeof x === 'number' && Number.isFinite(x) && x >= 0 && x <= 1 ? x : null;
+function plafondJeu(plafonds, exposition) {
+  const a = part01(plafonds?.part_max_population_jeu), b = part01(exposition?.part_max_population_jeu);
+  return a == null ? b : b == null ? a : Math.min(a, b);
 }
 function vueJeu(profil, jeux, jeu) {
   const X = typeof jeu === 'string' && jeux && Object.prototype.hasOwnProperty.call(jeux, jeu) ? assainir(jeux[jeu]?.exposition) : null, E = X && Object.keys(X).length ? X : profil.exposition || NEUTRE;
@@ -272,16 +282,19 @@ function agreger(lots, inst, profil, etat = {}, gen0 = null, jeux = null) {
   // parCompte : compte → { t: taxon → biome → { retrait: {pheno|'*': n}, deplacement: [], rencontres, danger, aide }, b: biome → { habitat, milieu },
   //   v: taxon → biome → ce que la population a vécu de ce compte (docs/50 : tenu à part, pour ne rien changer au reste) }
   const Q = {};                // taxon → biome → trait → { s: Σ poids × z, w: Σ poids } : la valeur des bêtes retirées
-  let nombre = 0; const rejetes = { lots: 0, evenements: 0 };
+  let nombre = 0, doublons = 0; const rejetes = { lots: 0, evenements: 0 }, vus = new Set();
   for (const lot of Array.isArray(lots) ? lots : []) {
     try {
       if (!estObjet(lot)) { rejetes.lots++; continue; }
       if (lot.monde !== inst.monde?.id) continue;                                   // un lot d'un autre monde : pas pour celui-ci
       const compte = typeof lot.source?.compte === 'number' && Number.isFinite(lot.source.compte) ? String(lot.source.compte) : lot.source?.compte;
       if (!chaine(compte, 300) || !Array.isArray(lot.evenements)) { rejetes.lots++; continue; }
+      const jeu = chaine(lot.jeu, 120) ? lot.jeu : chaine(lot.source?.jeu, 120) ? lot.source.jeu : null;
+      // (docs/4) un lot renvoyé avec le même id par le même jeu ne compte qu'une fois : le serveur l'écarte déjà (orvane_deposer),
+      // le tampon aussi, par défense (un lot déposé à la main deux fois, une lecture qui en rendrait deux)
+      if (chaine(lot.id, 64)) { const k = (jeu ?? '') + '\u0000' + lot.id; if (vus.has(k)) { doublons++; continue; } vus.add(k); }
       // d'abord tout vérifier, puis compter : un lot ne s'applique jamais à moitié
       const E = []; for (const e of lot.evenements) { const v = valider(e, X); if (v) E.push(v); else rejetes.evenements++; }
-      const jeu = chaine(lot.jeu, 120) ? lot.jeu : chaine(lot.source?.jeu, 120) ? lot.source.jeu : null;
       const C = parCompte[compte] ??= { t: dico(), b: dico(), v: dico() }; if (!(compte in jeuDe)) jeuDe[compte] = jeu;
       // les familles que ce jeu joue : son exposition, et ce que dit le lot (lot.familles) ; animale seule sinon
       const vj = jeuDe[compte] ?? '', fams = new Set([...famillesDe((vues[vj] ??= vueJeu(profil, jeux, jeuDe[compte])).exposition), ...(Array.isArray(lot.familles) ? lot.familles.filter(f => FAMILLES.includes(f)) : [])]);
@@ -349,6 +362,11 @@ function agreger(lots, inst, profil, etat = {}, gen0 = null, jeux = null) {
   // somme des comptes, population par population, avec la part maximale d'un seul compte puis d'un seul jeu (plafondPart) : un
   // compte, un jeu de mille joueurs ne font pas seuls l'histoire d'une population que d'autres montrent
   const out = {}, pmax = PL.part_max_population, poidsDe = T => Object.values(T.retrait).reduce((a, x) => a + Math.abs(x), 0) + T.deplacement.reduce((a, d) => a + d.n, 0);
+  const oteT = T => Object.values(T.retrait).reduce((a, x) => a + Math.max(0, x), 0) + T.deplacement.reduce((a, d) => a + d.n, 0);
+  // (docs/5) le plafond de chaque jeu (plafondJeu) : un jeu sans plafond, ni du monde ni de lui, n'en a pas ; le monde qui n'en dit
+  // aucun tourne comme avant, au caractère près
+  const plafondDe = j => plafondJeu(PL, (vues[j] ??= vueJeu(profil, jeux, j || null)).exposition), parJeuT = dico();
+  const plafonne = part01(PL.part_max_population_jeu) != null || Object.keys(vues).some(j => plafondDe(j) != null);
   const paires = new Map(); for (const compte in parCompte) for (const [tid, Bs] of Object.entries(parCompte[compte].t)) for (const bid of Object.keys(Bs)) { const k = tid + '\u0000' + bid; if (!paires.has(k)) paires.set(k, [tid, bid]); }
   for (const [tid, bid] of paires.values()) {
     const contrib = []; for (const compte in parCompte) { const T = parCompte[compte].t[tid]?.[bid]; if (T) contrib.push([compte, T]); }
@@ -356,10 +374,23 @@ function agreger(lots, inst, profil, etat = {}, gen0 = null, jeux = null) {
     const fact = plafondPart(contrib.map(([c, T]) => [c, poidsDe(T)]), PL.part_max_compte, bas(PL.part_max_compte));
     if (PL.part_max_jeu != null) { const parJeu = dico(); for (const [c, T] of contrib) { const j = jeuDe[c] ?? ''; parJeu[j] = (parJeu[j] || 0) + poidsDe(T) * fact[c]; }
       const fj = plafondPart(Object.entries(parJeu), PL.part_max_jeu, bas(PL.part_max_jeu)); for (const [c] of contrib) fact[c] *= fj[jeuDe[c] ?? '']; }
+    // le plafond d'un jeu, même seul, après la règle des parts : ce qu'il ôte à la population (ce que la part compte comme retrait :
+    // prélèvements, captures, déplacements) au plus part_max_population_jeu de son effectif. Un jeu seul sur une population ne lui
+    // retire plus 20 % par cycle, jour après jour, mais 5 %. Ce qu'il lui rend (libérations, nourrissages, l'élevage) n'a pas de
+    // plafond de jeu : seulement part_max_population, comme avant (une réintroduction, un jeu qui soigne ne perdent rien)
+    let fO = fact;
+    if (plafonne) { const S = dico(); fO = dico();
+      for (const [c, T] of contrib) { const j = jeuDe[c] ?? ''; S[j] = (S[j] || 0) + oteT(T) * fact[c]; }
+      const kO = dico(); for (const j in S) { const cj = plafondDe(j), lim = cj == null ? Infinity : cj * eff; kO[j] = S[j] > lim ? lim / S[j] : 1; }
+      for (const [c] of contrib) fO[c] = fact[c] * kO[jeuDe[c] ?? ''];
+      // (moteur/parcelles.js) la part de chaque jeu dans ce qui est ôté à la population, et son plafond : le même plafond tient
+      // parcelle par parcelle, chaque jeu là où ses lots l'ont dit
+      const o = dico(); let tot = 0; for (const [c, T] of contrib) { const j = jeuDe[c] ?? '', v = oteT(T) * fO[c]; if (v > 0) { o[j] = (o[j] || 0) + v; tot += v; } }
+      if (tot > 0) { const P = (parJeuT[tid] ??= dico())[bid] = dico(); for (const j in o) P[j] = { part: o[j] / tot, plafond: plafondDe(j) }; } }
     const O = (out[tid] ??= {})[bid] ??= { retrait: {}, deplacement: [] };
     for (const [c, T] of contrib) {
-      for (const k in T.retrait) O.retrait[k] = (O.retrait[k] || 0) + T.retrait[k] * fact[c];
-      for (const d of T.deplacement) if (d.n * fact[c] > 0) O.deplacement.push({ vers: d.vers, n: d.n * fact[c] });
+      for (const k in T.retrait) O.retrait[k] = (O.retrait[k] || 0) + T.retrait[k] * (T.retrait[k] > 0 ? fO[c] : fact[c]);
+      for (const d of T.deplacement) if (d.n * fO[c] > 0) O.deplacement.push({ vers: d.vers, n: d.n * fO[c] });
       if (T.apport) { const K = O.apport ??= { n: 0, N: {}, A: {}, a: {}, na: {} }, f = cap != null && T.apport.n > cap ? cap / T.apport.n : 1;
         K.n += T.apport.n * f; for (const [x, v] of Object.entries(T.apport.N)) K.N[x] = (K.N[x] || 0) + v * f; for (const [x, v] of Object.entries(T.apport.A)) K.A[x] = (K.A[x] || 0) + v * f;
         for (const [x, v] of Object.entries(T.apport.a)) { K.a[x] = (K.a[x] || 0) + v * f; K.na[x] = (K.na[x] || 0) + T.apport.na[x] * f; } }
@@ -430,10 +461,12 @@ function agreger(lots, inst, profil, etat = {}, gen0 = null, jeux = null) {
     }
     if (Object.keys(L).length) { (lisseQ[tid] ??= {})[bid] = L; if (out[tid]?.[bid]) out[tid][bid].q = q; }
   }
-  // (part_max_population voyage avec les pressions : moteur/parcelles.js le réapplique par parcelle à ce que les jeux ont localisé)
-  return { pressions: { taxons: out, biomes, nombre, ...(pmax != null ? { part_max_population: pmax } : {}) }, etat: { lisse, lisseQ }, rejetes };
+  // (part_max_population voyage avec les pressions : moteur/parcelles.js le réapplique par parcelle à ce que les jeux ont localisé ;
+  // de même, « jeux » : par population, la part de chaque jeu dans ce qui lui est ôté ce cycle, et son plafond)
+  const J = dico(); for (const tid in parJeuT) for (const bid in parJeuT[tid]) if (out[tid]?.[bid]) (J[tid] ??= dico())[bid] = parJeuT[tid][bid];
+  return { pressions: { taxons: out, biomes, nombre, ...(pmax != null ? { part_max_population: pmax } : {}), ...(Object.keys(J).length ? { jeux: J } : {}) }, etat: { lisse, lisseQ }, rejetes, ...(doublons ? { doublons } : {}) };
 }
 
-const API = { regimeDe, vueJeu, assainir, valider, plafondPart, ACTIONS, VECUES, MOYENS, DISPOSITIFS, VECU, N_MAX, NEUTRE, FAMILLES, familleDe, famillesDe, filtrer, exposer, exposerRelatif, partsRelatif, nonRendus, referenceDe, signature, quantDe, sachantMere, exprimer, agreger, compression };
+const API = { regimeDe, vueJeu, assainir, valider, plafondPart, plafondJeu, ACTIONS, VECUES, MOYENS, DISPOSITIFS, VECU, N_MAX, NEUTRE, FAMILLES, familleDe, famillesDe, filtrer, exposer, exposerRelatif, partsRelatif, nonRendus, referenceDe, signature, quantDe, sachantMere, exprimer, agreger, compression };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else racine.OrvaneTampon = API;
 })(globalThis);

@@ -11,6 +11,7 @@
     "./schemas/*": "./schemas/*",
     "./types/*": "./types/*",
     "./outils/verifier.js": "./outils/verifier.js",
+    "./serveur": { "types": "./kits/serveur/depot.d.ts", "import": "./kits/serveur/depot.mjs", "require": "./kits/serveur/depot.cjs" },
     "./package.json": "./package.json"
   },
   "files": [
@@ -21,6 +22,7 @@
     "types/",
     "outils/verifier.js",
     "outils/types.js",
+    "kits/serveur/",
     "traducteurs/exemple/",
     "docs/",
     "BRANCHER-UN-JEU.md",

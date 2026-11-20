@@ -57,6 +57,7 @@ var instantane: Dictionary = {}
 
 var _evenements: Dictionary = {}
 var _en_attente: Array[String] = []
+var _refuses: Array[String] = []        # les lots refusés pour de bon (hors du contrat, un id déjà pris) : gardés à part, ils ne bloquent rien
 var _debut := ""
 var _depot_en_cours := false
 var _planches: Dictionary = {}
@@ -583,7 +584,8 @@ func clore(compte: String) -> void:
 		var source := {"jeu": jeu, "compte": compte}
 		if zone != "":
 			source["zone"] = zone
-		var lot := {"orvane": CONTRAT, "monde": monde, "familles": familles, "source": source, "periode": {"debut": _debut, "fin": fin}, "evenements": evenements}
+		# (l'id du lot : gardé avec lui dans la file, il revient tel quel à chaque essai ; Orvane ne compte qu'une fois un lot renvoyé)
+		var lot := {"orvane": CONTRAT, "monde": monde, "id": _nouvel_id(), "familles": familles, "source": source, "periode": {"debut": _debut, "fin": fin}, "evenements": evenements}
 		var cycle = instantane.get("cycle", {})
 		if typeof(cycle) == TYPE_DICTIONARY and cycle.has("n"):
 			lot["instantane"] = int(cycle["n"])
@@ -601,7 +603,12 @@ func oublier() -> void:
 	_sauver()
 
 
-# dépose le prochain lot en attente ; accepté, il est oublié ; refusé ou sans réseau, il reste pour la prochaine fois
+# dépose le prochain lot en attente ; accepté, il est oublié ; refusé ou sans réseau, il reste pour la prochaine fois. Chaque lot
+# porte son id : si la réponse se perd, le renvoyer ne le compte pas deux fois (Orvane répond { ok: true, deja: true }).
+# La clé du jeu (cle_jeu) est publique : elle peut être dans le client. La clé de DÉPÔT (orvane_cle_depot), elle, ne va JAMAIS dans
+# le client, ni dans ce kit, ni dans un export du jeu : quiconque l'extrairait déposerait au nom du jeu. Un jeu qui exige sa clé de
+# dépôt dépose depuis son serveur (kits/serveur/depot.mjs, BRANCHER-UN-JEU.md, « Déposer depuis un serveur ») : le jeu envoie à
+# SON serveur le lot que rend prochain_lot(), puis l'oublie (oublier_lot) quand le serveur répond ok, au lieu d'appeler deposer.
 func deposer(compte: String) -> void:
 	if _en_attente.is_empty() or _depot_en_cours:
 		return
@@ -631,7 +638,69 @@ func _depose(resultat: int, code: int, _entetes: PackedStringArray, corps: Packe
 	if rep.get("ok", false):
 		_en_attente.pop_front()
 		_sauver()
+	elif refus_definitif(str(rep.get("erreur", ""))):
+		# le lot lui-même est refusé (le renvoyer n'y changerait rien) : il sort de la file, gardé à part (lots_refuses), et les
+		# suivants partent ; les autres refus (le réseau, un quota du jour, une clé) le laissent en tête de file, pour plus tard
+		_refuses.append(_en_attente.pop_front())
+		_sauver()
+		rep["mis_de_cote"] = true
 	lot_depose.emit(bool(rep.get("ok", false)), rep)
+
+
+# les refus d'Orvane qui tiennent au lot lui-même (hebergement/supabase.sql, orvane_deposer) : le renvoyer n'y changerait rien
+const REFUS_DEFINITIFS := ["lot mal formé", "lot trop gros", "événement mal formé", "id du lot"]
+
+
+func refus_definitif(erreur: String) -> bool:
+	for x in REFUS_DEFINITIFS:
+		if erreur.contains(x):
+			return true
+	return false
+
+
+# les lots mis de côté (en JSON), pour les montrer au développeur ou les corriger ; oublier_refuses() les efface
+func lots_refuses() -> Array[String]:
+	return _refuses.duplicate()
+
+
+func oublier_refuses() -> void:
+	_refuses.clear()
+	_sauver()
+
+
+# un jeu qui dépose depuis son serveur : le prochain lot en attente, en JSON, avec son id ("" s'il n'y en a pas), à envoyer au
+# serveur du jeu, qui le dépose avec la clé de dépôt. Il reste en attente (et sur l'appareil) jusqu'à oublier_lot : renvoyé après
+# une coupure, il garde son id, et Orvane ne le compte qu'une fois.
+func prochain_lot() -> String:
+	return "" if _en_attente.is_empty() else _en_attente[0]
+
+
+# le serveur du jeu a répondu ok (ou deja) pour ce lot : il quitte la file. refuse = true : Orvane l'a refusé pour de bon
+# (refus_definitif) ; il quitte la file aussi, mais il est gardé à part (lots_refuses), pour ne pas bloquer les suivants
+func oublier_lot(id: String, refuse: bool = false) -> void:
+	for i in _en_attente.size():
+		var l = JSON.parse_string(_en_attente[i])
+		if typeof(l) == TYPE_DICTIONARY and str(l.get("id", "")) == id:
+			var lot: String = _en_attente[i]
+			_en_attente.remove_at(i)
+			if refuse:
+				_refuses.append(lot)
+			_sauver()
+			return
+
+
+# un id au hasard pour un lot : 32 chiffres hexadécimaux (128 bits, du générateur du système : deux joueurs n'auront pas le même)
+func _nouvel_id() -> String:
+	return Crypto.new().generate_random_bytes(16).hex_encode()
+
+
+# un lot gardé par une version du kit qui ne donnait pas d'id en reçoit un, une fois : il le garde ensuite d'un essai à l'autre
+func _avec_id(texte: String) -> String:
+	var lot = JSON.parse_string(texte)
+	if typeof(lot) != TYPE_DICTIONARY or (typeof(lot.get("id")) == TYPE_STRING and str(lot["id"]) != ""):
+		return texte
+	lot["id"] = _nouvel_id()
+	return JSON.stringify(lot)
 
 
 # --- garder ce qui n'est pas encore déposé ---
@@ -647,7 +716,7 @@ func _sauver() -> void:
 	var f := FileAccess.open(SAUVEGARDE, FileAccess.WRITE)
 	if f == null:
 		return
-	f.store_string(JSON.stringify({"lots": _en_attente, "evenements": _evenements.values(), "debut": _debut}))
+	f.store_string(JSON.stringify({"lots": _en_attente, "refuses": _refuses, "evenements": _evenements.values(), "debut": _debut}))
 
 
 func _charger() -> void:
@@ -656,8 +725,13 @@ func _charger() -> void:
 	var s = JSON.parse_string(FileAccess.get_file_as_string(SAUVEGARDE))
 	if typeof(s) != TYPE_DICTIONARY:
 		return
+	var sans_id := false
 	for l in s.get("lots", []):
-		_en_attente.append(str(l))
+		var avec := _avec_id(str(l))
+		sans_id = sans_id or avec != str(l)
+		_en_attente.append(avec)
+	for l in s.get("refuses", []):
+		_refuses.append(str(l))
 	for e in s.get("evenements", []):
 		if e.get("action") == "deplacement":
 			deplacer(str(e.get("taxon", "")), str(e.get("biome", "")), str(e.get("vers", "")), float(e.get("n", 0)))
@@ -666,6 +740,8 @@ func _charger() -> void:
 			_compter(str(e.get("taxon", "")), str(e.get("biome", "")), str(e.get("action", "")), float(e.get("n", 0)), str(e.get("phenotype", "")), str(e.get("parcelle", "")), str(e.get("age", "")), str(e.get("moyen", "")))
 	if s.get("debut", "") != "":
 		_debut = str(s["debut"])
+	if sans_id:
+		_sauver()                     # (l'id donné tient dès maintenant : fermé d'un coup, le jeu le retrouve)
 
 
 func _maintenant() -> String:

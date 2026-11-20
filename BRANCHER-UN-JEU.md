@@ -8,7 +8,7 @@ Orvane fait vivre un seul monde, le monde d'Orvane, et tous les jeux s'y branche
 2. **Lire le monde** : `instantane.json`, une fois par jour, depuis GitHub Pages. Aucune clé n'est nécessaire.
 3. **Traduire** : relier les terrains du jeu aux biomes d'Orvane, et faire de chaque lignée une créature. En TypeScript, `types/orvane.d.ts` donne chaque champ (docs/39). En **Unity** ou en **Godot**, un kit lit le monde, compte et dépose les lots à votre place ([kits/LISEZ-MOI.md](kits/LISEZ-MOI.md)).
 4. **Régler l'exposition** (facultatif) : dire à Orvane ce que le jeu sait montrer, avec la clé d'administration.
-5. **Renvoyer des pressions** : compter ce que font les joueurs et déposer des lots avec `orvane_deposer` et la clé du jeu. `node outils/verifier.js mon-lot.json` dit, avant le premier dépôt, si le lot sera accepté.
+5. **Renvoyer des pressions** : compter ce que font les joueurs et déposer des lots avec `orvane_deposer` et la clé du jeu. `node outils/verifier.js mon-lot.json` dit, avant le premier dépôt, si le lot sera accepté. Un jeu qui a un serveur peut y déposer, avec une clé de dépôt que lui seul connaît (chapitre 6).
 
 ## Les adresses
 
@@ -20,7 +20,7 @@ Orvane fait vivre un seul monde, le monde d'Orvane, et tous les jeux s'y branche
 | la clé publique du projet (en-tête `apikey`) | `sb_publishable_F98uYIaPrLTjhj3n7QiBOg_SOtFynn8` |
 | l'observatoire (voir le monde vivre) | `https://stonevalleyoff-ai.github.io/orvane/` |
 
-La clé publique du projet peut figurer dans le code d'un jeu : elle n'ouvre que les cinq fonctions ci-dessous, et aucune table n'est lisible directement.
+La clé publique du projet peut figurer dans le code d'un jeu : elle n'ouvre que les fonctions ci-dessous, et aucune table n'est lisible directement.
 
 Toutes les fonctions s'appellent de la même façon : `POST https://rospodujiyltmxitykwc.supabase.co/rest/v1/rpc/<fonction>`, avec les en-têtes `apikey: <clé publique du projet>` et `Content-Type: application/json`, et pour corps un objet JSON de paramètres `p_…`. La réponse est toujours un objet JSON avec `ok` : `{"ok": true, …}` ou `{"ok": false, "erreur": "…"}`. Le code HTTP est 200 dans les deux cas : **c'est `ok` qu'il faut lire**.
 
@@ -28,7 +28,9 @@ Toutes les fonctions s'appellent de la même façon : `POST https://rospodujiylt
 | --- | --- | --- |
 | `orvane_inscrire_jeu` | `p_nom` (2 à 60 caractères), `p_contact` (facultatif, 200 au plus) | inscrire un jeu, recevoir ses clés |
 | `orvane_regler_jeu` | `p_cle_admin`, `p_exposition` (objet, 32 Ko au plus ; `null` le laisse tel quel), `p_nom` (facultatif) | régler ce que le jeu montre, renommer le jeu |
-| `orvane_deposer` | `p_cle`, `p_compte`, `p_lot` | déposer un lot de pressions |
+| `orvane_deposer` | `p_cle`, `p_compte`, `p_lot`, `p_cle_depot` (facultatif) | déposer un lot de pressions ; un lot renvoyé avec le même `id` répond `{"ok": true, "deja": true}` |
+| `orvane_cle_depot` | `p_cle_admin` | créer ou renouveler la clé de dépôt du jeu, réservée à son serveur (chapitre 6) |
+| `orvane_exiger_cle_depot` | `p_cle_admin`, `p_exiger` (`true` ou `false`) | n'accepter que les dépôts qui portent la clé de dépôt |
 | `orvane_jeu` | `p_cle` | vérifier une clé : ce qu'Orvane sait du jeu |
 | `orvane_nommer` | `p_cle`, `p_compte`, `p_monde`, `p_taxon`, `p_nom` (2 à 40 lettres), `p_auteur` (facultatif) | un joueur propose le nom commun d'une lignée ; le premier valable l'emporte au cycle suivant (docs/37) |
 
@@ -52,6 +54,7 @@ curl -X POST https://rospodujiyltmxitykwc.supabase.co/rest/v1/rpc/orvane_inscrir
 | `jeu` | l'identifiant du jeu dans Orvane (`jeux.json`, les lots) | dans le code |
 | `cle` | la clé du jeu : elle signe les dépôts | dans le code du jeu, elle est publique |
 | `cle_admin` | la clé d'administration : elle règle le jeu | **jamais dans le jeu** ; dans un gestionnaire de mots de passe |
+| `cle_depot` (plus tard, si le jeu a un serveur : `orvane_cle_depot`) | la clé de dépôt : elle seule dépose, quand le jeu l'exige | **jamais dans le client** ; dans les secrets du serveur du jeu (chapitre 6) |
 
 Orvane ne garde que l'empreinte de la clé d'administration : perdue, elle ne se retrouve pas, et il faut inscrire le jeu à nouveau. Trente inscriptions par heure au plus, tous jeux confondus.
 
@@ -153,7 +156,7 @@ N'appelez jamais `orvane_regler_jeu` depuis le jeu publié : la clé d'administr
 Le jeu compte ce que font ses joueurs, sans rien conclure, et dépose ces comptes par lots :
 
 ```json
-{ "orvane": "1.0", "monde": "orvane", "instantane": 41,
+{ "orvane": "1.0", "monde": "orvane", "instantane": 41, "id": "5f0c9e1a7b2d4c3e8f6a1b2c3d4e5f60",
   "source": { "jeu": "mon-jeu", "compte": "h:9c1e44", "zone": "carte:3" },
   "periode": { "debut": "2026-10-29T18:02:11Z", "fin": "2026-10-29T19:40:03Z" },
   "evenements": [
@@ -162,6 +165,7 @@ Le jeu compte ce que font ses joueurs, sans rien conclure, et dépose ces compte
 ```
 
 - `instantane` est le `cycle.n` que le jeu utilisait. `taxon` est l'`id` de la lignée, `biome` un biome d'Orvane, déjà traduit.
+- `id` (facultatif, conseillé) : l'identifiant du lot, tiré au hasard quand le jeu clôt le lot (un UUID, 32 chiffres hexadécimaux), et gardé avec lui. Si la réponse d'un dépôt se perd, le jeu renvoie le même lot, avec le même `id` : Orvane ne le compte qu'une fois, répond `{"ok": true, "deja": true}` et ne décompte rien des quotas. De 1 à 64 lettres, chiffres ou `. _ : -` (pas au début) ; il est propre à chaque jeu. Les kits le font.
 - `action` vaut :
   - `rencontre` : la bête a été vue, une fois par bête ;
   - `prelevement` : la bête est morte du fait du joueur ;
@@ -186,10 +190,85 @@ if (rep.ok) oublierLeLot(); else garderPourPlusTard(rep.erreur);
 ```
 
 - `p_compte` est un identifiant opaque du joueur, par exemple un hachage de son identifiant de compte. Orvane n'en garde qu'un pseudonyme et ne s'en sert que pour les plafonds par joueur.
-- Gardez le lot en mémoire et dans le stockage local jusqu'à `ok: true`, puis envoyez-le à un moment naturel : une sauvegarde, une déconnexion, un changement de zone.
+- Gardez le lot en mémoire et dans le stockage local jusqu'à `ok: true`, avec son `id`, puis envoyez-le à un moment naturel : une sauvegarde, une déconnexion, un changement de zone. Sans réponse, renvoyez-le tel quel : `deja: true` dit qu'il était déjà entré.
 - Limites : 500 événements et 64 Ko par lot ; chaque événement au contrat (une action connue, `n` entre 0 et 10 000) ; 48 lots par joueur et par jour ; 500 lots par jour pour un jeu neuf, relevé par paliers sur demande (2 000, 5 000, 20 000 : la procédure et ce qu'elle demande en échange sont dans [hebergement/LISEZ-MOI.md](hebergement/LISEZ-MOI.md#relever-le-quota-dun-jeu) ; Stone Valley en a 20 000).
 
-La nuit suivante, le cycle lit les lots de tous les jeux et les rapporte à l'exposition de chacun. Il les plafonne : un joueur ne pèse pas plus qu'un autre (`par_compte_cycle`, `part_max_compte`), une population ne perd pas plus de 20 % de son effectif en un cycle (`part_max_population`), et quand **plusieurs** jeux pèsent sur une même population, la part d'un seul est ramenée à la moitié de la pression (`part_max_jeu`). Ce dernier plafond ne mord que sur ce qui pèse vraiment : chaque jeu garde le droit d'ôter jusqu'à 10 % de la population (0,5 × 20 %). **Un jeu seul sur une population n'a pas de plafond de jeu** : au-delà des plafonds par compte, il peut lui ôter jusqu'à 20 % par cycle (`plafondPart`, `tampon/tampon.js`, ne plafonne rien sous deux contributeurs). Un plafond par jeu valable même seul est en préparation (issue #32). Puis il les lisse et fait avancer le monde. L'effet se lit dans l'instantané du lendemain. Le détail est dans [docs/4](docs/4-renvoyer-des-pressions.md) et `schemas/pression.schema.json`.
+La nuit suivante, le cycle lit les lots de tous les jeux et les rapporte à l'exposition de chacun. Il les plafonne : un joueur ne pèse pas plus qu'un autre ; un jeu ne fait pas seul la pression sur une espèce que d'autres jeux montrent ; et, même seul, un jeu n'ôte pas plus de 5 % d'une population par cycle, compté avant le lissage. Dans un monde à parcelles, ce qu'il dit dans une parcelle ne lui prend pas plus de 5 % de ce que la lignée y compte : le reste va aux parcelles où elle vit (sauf ce que le lissage reporte des jours passés, posé selon les effectifs). Ce qu'il rend (libérations, nourrissages, élevage) n'a pas ce plafond. Un jeu peut le baisser dans son exposition, jamais le relever ([docs/5](docs/5-profil-et-essais.md), [docs/15](docs/15-parcelles.md)). Puis il les lisse et fait avancer le monde. L'effet se lit dans l'instantané du lendemain. Le détail est dans [docs/4](docs/4-renvoyer-des-pressions.md) et `schemas/pression.schema.json`.
+
+## 6. Déposer depuis un serveur
+
+La clé du jeu est publique : elle est dans le client, et qui la lit peut déposer au nom du jeu, en changeant de compte à chaque lot. Un jeu qui a un serveur (une fonction Supabase, un serveur Node) peut s'en garder : il dépose depuis ce serveur, avec une **clé de dépôt** que le client ne voit jamais, puis demande à Orvane de **l'exiger**. Les lots sans elle sont alors refusés. Rien ne change pour un jeu qui ne le fait pas.
+
+**1. Créer la clé de dépôt**, avec la clé d'administration (une fois ; la redemander la renouvelle, et l'ancienne ne vaut plus rien aussitôt) :
+
+```sh
+curl -X POST https://rospodujiyltmxitykwc.supabase.co/rest/v1/rpc/orvane_cle_depot \
+  -H "apikey: sb_publishable_F98uYIaPrLTjhj3n7QiBOg_SOtFynn8" -H "Content-Type: application/json" \
+  -d '{"p_cle_admin": "orvadm_…"}'
+```
+
+```json
+{ "ok": true, "jeu": "mon-jeu", "cle_depot": "orvdep_4b1f…", "exigee": false, "note": "…" }
+```
+
+Elle n'est montrée qu'une fois : Orvane n'en garde que l'empreinte. Rangez-la dans les secrets du serveur (pour une fonction Supabase : `supabase secrets set ORVANE_CLE_DEPOT=orvdep_…`), jamais dans le client, ni dans un dépôt de code.
+
+**2. Déposer depuis le serveur**, avec `kits/serveur/depot.mjs` : un petit client sans dépendance, qui ne se sert que de `fetch` (Node 18 ou plus, Deno). Il donne un `id` au lot s'il n'en a pas (et l'écrit dans le lot), et le renvoie de lui-même si le réseau ou Orvane flanche (quatre essais, une demi-seconde puis le double) : grâce à l'`id`, un renvoi n'est jamais compté deux fois.
+
+Une fonction Supabase (Deno), à qui le client du jeu envoie son lot :
+
+```ts
+// supabase/functions/orvane-depot/index.ts — depot.mjs (et depot.d.ts) copiés à côté, depuis kits/serveur/
+import { deposer } from './depot.mjs';
+
+// un identifiant opaque du joueur : un hachage, jamais son identifiant en clair
+const opaque = async (id: string) => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode('mon-jeu:' + id))),
+  (o) => o.toString(16).padStart(2, '0')).join('').slice(0, 32);
+
+Deno.serve(async (req) => {
+  const joueur = await joueurDeLaSession(req);    // à vous : le joueur que la session du jeu authentifie, pas un compte écrit par le client
+  if (!joueur) return new Response('non', { status: 401 });
+  const lot = await req.json();                   // le lot que le client a clos, avec son id
+  const r = await deposer({ cle: Deno.env.get('ORVANE_CLE_JEU')!, cleDepot: Deno.env.get('ORVANE_CLE_DEPOT')! }, await opaque(joueur.id), lot);
+  // r : { ok: true, id } · { ok: true, deja: true, id } · { ok: false, erreur, id, plusTard, config? }
+  if (r.ok) return Response.json({ ok: true, id: r.id });                            // le jeu oublie le lot (accepté, ou déjà là)
+  console.error('dépôt Orvane refusé :', r.erreur, r.config ? '(configuration à réparer : une clé)' : '');   // pour vous, pas pour le joueur
+  // plusTard : le jeu garde le lot et le renvoie plus tard, tel quel (le réseau, un quota, une clé renouvelée) ; sinon, il le met de côté
+  return Response.json({ ok: false, id: r.id, plusTard: r.plusTard }, { status: r.plusTard ? 503 : 422 });
+});
+```
+
+Un serveur Node :
+
+```js
+import { deposer } from 'orvane/serveur';          // npm install github:stonevalleyoff-ai/orvane#<version> ; en CommonJS : require('orvane/serveur')
+const options = { cle: process.env.ORVANE_CLE_JEU, cleDepot: process.env.ORVANE_CLE_DEPOT };
+const r = await deposer(options, compteOpaque, lot);
+if (r.ok) oublier(lot.id);                        // accepté, ou déjà là (r.deja)
+else if (r.plusTard) garderPourPlusTard(lot);     // le réseau, un quota du jour, une clé à réparer (r.config) : le même lot, le même id, plus tard
+else mettreDeCote(lot, r.erreur);                 // le lot lui-même (hors du contrat, un id déjà pris) : le renvoyer n'y changera rien
+if (r.config) signaler(r.erreur);                 // une clé de dépôt renouvelée, fausse, absente : à réparer, les lots attendent
+```
+
+Copier `depot.mjs` à côté de la fonction est plus sûr que de l'importer d'une adresse : le code qui tient la clé de dépôt ne change pas sans vous. Pour l'importer quand même, épinglez une version publiée, la première qui le porte ou une plus récente (`CHANGELOG.md`), jamais une branche : `https://cdn.jsdelivr.net/gh/stonevalleyoff-ai/orvane@<version>/kits/serveur/depot.mjs`.
+
+**3. L'exiger**, une fois que le serveur dépose :
+
+```sh
+curl -X POST https://rospodujiyltmxitykwc.supabase.co/rest/v1/rpc/orvane_exiger_cle_depot \
+  -H "apikey: sb_publishable_F98uYIaPrLTjhj3n7QiBOg_SOtFynn8" -H "Content-Type: application/json" \
+  -d '{"p_cle_admin": "orvadm_…", "p_exiger": true}'
+```
+
+`orvane_jeu` le dit ensuite (`cle_depot_exigee: true`). `p_exiger: false` revient en arrière. Une clé de dépôt fausse est refusée même quand elle n'est pas exigée.
+
+**Le client du jeu**, lui, compte et clôt ses lots comme avant, puis les envoie à son serveur au lieu de les déposer : avec le kit Godot, `Orvane.prochain_lot()` rend le prochain lot en attente (avec son `id`), et `Orvane.oublier_lot(id)` le retire quand le serveur a répondu `ok` (`oublier_lot(id, true)` quand il l'a refusé pour de bon : le lot est mis de côté, `lots_refuses()`) ; avec le kit Unity, `compteur.Prochain()`, puis `compteur.Depose()` ou `compteur.Refuse()`. Quand le serveur répond `plusTard`, le lot reste en tête de file. Un lot refusé pour de bon ne bloque jamais les suivants : en déposant eux-mêmes (`Orvane.deposer`, `OrvaneUnity.Deposer`), les kits le mettent de côté aussi. Le serveur ne fait confiance qu'à ce qu'il sait : le joueur de la session, pas un compte écrit dans le lot.
+
+**Renouveler la clé** (une fuite, un départ) : `orvane_cle_depot` donne une clé neuve, l'ancienne ne vaut plus rien. Le temps de mettre la neuve dans les secrets du serveur, ses dépôts sont refusés (`clé de dépôt invalide`) : le client répond `plusTard` et `config`, le serveur et le jeu gardent les lots, et les renvoient tels quels, avec leur `id`, une fois la neuve en place. Pour n'en refuser aucun, ne plus l'exiger le temps du changement, puis l'exiger de nouveau.
+
+## 7. Essayer ses lots sur une copie du monde
+
+Le monde `essai` garde les lots quatorze jours sans qu'aucun monde ne les lise : il dit si un dépôt passe, pas ce qu'il fait au monde. Pour le voir, rejouez vos lots sur une copie du monde d'aujourd'hui, chez vous, sans réseau : [docs/5](docs/5-profil-et-essais.md), « Rejouer ses lots ».
 
 ## Réponses et erreurs
 
@@ -209,12 +288,17 @@ La nuit suivante, le cycle lit les lots de tous les jeux et les rapporte à l'ex
 | `dix noms par jour et par joueur` | `orvane_nommer` | attendre demain |
 | `trop de dépôts aujourd'hui pour ce joueur` | 48 lots dans les 24 dernières heures | regrouper, garder le lot pour demain |
 | `quota du jeu atteint pour aujourd'hui` | le quota du jeu en 24 heures (500 pour un jeu neuf) | garder les lots pour demain ; un jeu qui a besoin de plus ouvre une demande de quota (une issue, modèle « Relever le quota d'un jeu ») |
+| `id du lot : 1 à 64 lettres, chiffres, points, tirets, deux-points` | un `id` vide, trop long, qui n'est pas une chaîne ou porte un autre signe | tirer l'`id` au hasard (un UUID, 32 chiffres hexadécimaux) |
+| `id du lot déjà pris par un autre lot de ce jeu` | le même `id` pour un autre lot (le même lot renvoyé, même par un autre compte, répond `deja`) | un `id` neuf pour chaque lot ; le même seulement pour renvoyer le même lot ; ce lot-là se met de côté |
+| `ce jeu ne dépose que depuis son serveur : clé de dépôt manquante` | le jeu exige sa clé de dépôt, le dépôt ne la porte pas | déposer depuis le serveur (chapitre 6) |
+| `clé de dépôt invalide` | une clé de dépôt fausse, ou remplacée | garder les lots ; mettre dans le serveur la clé du dernier `orvane_cle_depot`, puis les renvoyer |
+| `pas encore de clé de dépôt : la créer d'abord (orvane_cle_depot)` | `orvane_exiger_cle_depot` avant d'avoir une clé | `orvane_cle_depot` d'abord |
 
 ## Règles
 
-- La clé d'administration ne va jamais dans un jeu publié, ni dans un dépôt de code. Aucune clé de service Supabase ne sert à brancher un jeu.
+- La clé d'administration ne va jamais dans un jeu publié, ni dans un dépôt de code ; la clé de dépôt non plus, ni dans le client. Aucune clé de service Supabase ne sert à brancher un jeu.
 - Orvane ne reçoit que des comptes (« 14 tués, 31 croisés »), jamais des conclusions, et aucune donnée personnelle : `p_compte` est opaque.
-- Le monde appartient à tous les jeux : un jeu n'y pèse qu'en proportion de ses joueurs, et quand plusieurs jeux chassent une même population, la part d'un seul est ramenée à la moitié de la pression (section 5).
+- Le monde appartient à tous les jeux : un jeu n'y pèse qu'en proportion de ses joueurs ; même seul, il n'ôte pas plus de 5 % d'une population par cycle, et quand plusieurs jeux chassent une même population, la part d'un seul est ramenée à la moitié de la pression (section 5).
 - **Les versions.** Le contrat est versionné (`"orvane": "1.0"` dans chaque instantané). Tant que le premier chiffre ne change pas, rien ne casse : il suffit que le jeu **ignore ce qu'il ne connaît pas** (un champ, une valeur, un biome). Un changement qui casserait un jeu est annoncé à l'avance dans [CHANGELOG.md](CHANGELOG.md) (docs/43). En JavaScript, le moteur et le tampon s'installent à une version précise : `npm install github:stonevalleyoff-ai/orvane#v1.0.0`.
 - **La licence.** Orvane est sous [PolyForm Shield 1.0.0](https://polyformproject.org/licenses/shield/1.0.0) (`LICENSE`). Brancher un jeu, même commercial ou au code fermé, est permis, de même que copier dans le jeu `tampon/tampon.js`, les schémas ou un traducteur et les adapter. Joignez alors l'adresse de la licence et la ligne `Required Notice: Copyright StoneValley (https://github.com/stonevalleyoff-ai/orvane)`, par exemple en commentaire en tête du fichier copié. Ce qui n'est pas permis : se servir du code d'Orvane pour fournir un produit qui lui fait concurrence (un autre moteur d'écosystème, un autre monde partagé où brancher des jeux, une copie renommée).
 
@@ -227,7 +311,8 @@ La nuit suivante, le cycle lit les lots de tous les jeux et les rapporte à l'ex
 - [ ] Les lignées apparaissent selon leurs effectifs, et une lignée éteinte quitte le jeu.
 - [ ] Chaque événement est compté une seule fois, dans le biome d'Orvane où il a eu lieu, et seulement pour une créature qui est un membre de sa lignée (pas pour un humain, un monstre ou un boss du jeu).
 - [ ] Le jeu filtre les familles qu'il ne sait pas jouer (`Tampon.filtrer`) et dit dans ses lots celles qu'il joue.
-- [ ] Un lot déposé répond `ok: true` ; sinon, il est gardé et renvoyé plus tard.
+- [ ] Un lot déposé répond `ok: true` ; sinon, il est gardé et renvoyé plus tard, avec le même `id`.
+- [ ] Un jeu qui dépose depuis son serveur garde sa clé de dépôt dans les secrets du serveur, et l'exige (`orvane_exiger_cle_depot`).
 - [ ] Le lendemain, `pressions_recues` monte dans `cycle` de l'instantané.
 - [ ] Le jeu ignore les champs, les valeurs et les biomes qu'il ne connaît pas (docs/43).
 - [ ] Le traducteur passe le banc générique : `node outils/banc-traducteur.js mon-traducteur.js` (docs/39 ; le modèle : `traducteurs/exemple/traducteur.js`).
@@ -240,7 +325,7 @@ Orvane runs one shared ecosystem world that any game can plug into. **The full g
    A world may carry its own catalogue (`catalogue.monde`: extra biome axes, traits, organs, body forms); their definitions are in the snapshot, and `OrvaneCorps.etendre(inst.catalogue.monde)` lets `corps.js` draw them (docs/20).
    For a solo or offline game, `moteur/solo.js` runs a private copy of the world inside the game, in real time or accelerated, and nothing goes back to the shared world (docs/19).
 3. **Translate**: map your terrains to Orvane biomes, and spawn each lineage where it lives, in proportion to its population. The reference translator is `traducteurs/stone-valley/`. A creature drawn from a lineage is a member of that population: report what happens to it. A creature that belongs to your game (a human, a monster, a boss), even if its looks come from a lineage, is not: report nothing for it. Lineages come in families (`animale`, `synthetique` for machines); keep only those your game can play with `Tampon.filtrer(inst, { familles: ['animale'] })`, and list them in each batch (`"familles": [...]`). By default a game plays animals only, so new kinds of life never reach it unasked.
-4. **Report** what players do as raw counts (encounters, kills, captures…) in batches. Use `orvane_deposer(p_cle, p_compte, p_lot)`, where `p_compte` is an opaque player id. A batch holds at most 500 events and 64 KB, and each player can send 48 batches a day. The batch format is in `schemas/pression.schema.json`.
+4. **Report** what players do as raw counts (encounters, kills, captures…) in batches. Use `orvane_deposer(p_cle, p_compte, p_lot)`, where `p_compte` is an opaque player id. A batch holds at most 500 events and 64 KB, and each player can send 48 batches a day. Give each batch a random `id` and keep it with the batch: a batch resent with the same `id` counts once (`{"ok": true, "deja": true}`). A game with a server can deposit from it, with a server-only deposit key (`orvane_cle_depot`, then `orvane_exiger_cle_depot`; client: `kits/serveur/depot.mjs`). The batch format is in `schemas/pression.schema.json`.
 
 Every RPC is `POST https://rospodujiyltmxitykwc.supabase.co/rest/v1/rpc/<function>`, with headers `apikey: sb_publishable_F98uYIaPrLTjhj3n7QiBOg_SOtFynn8` and `Content-Type: application/json`. The JSON body holds the `p_…` parameters. Every answer is `{"ok": true, …}` or `{"ok": false, "erreur": "…"}`, with HTTP 200 in both cases.
 

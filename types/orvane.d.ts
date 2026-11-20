@@ -940,6 +940,8 @@ export interface Lot {
   orvane: string;
   /** Doit être l'id du monde de l'instantané lu. */
   monde: string;
+  /** Facultatif : l'identifiant du lot, donné par le jeu, au hasard (un UUID, 32 chiffres hexadécimaux). Le jeu le garde avec le lot tant qu'il n'est pas accepté : un lot renvoyé avec le même id (la réponse d'un dépôt s'est perdue) n'est compté qu'une fois, et orvane_deposer répond { ok: true, deja: true } sans rien consommer des quotas. 1 à 64 lettres, chiffres ou « . _ : - », pas au début ; propre à chaque jeu. */
+  id?: string;
   /** Les familles de lignées que ce jeu joue (animale seule si rien n'est dit, ni ici ni dans son exposition). Le tampon ne lit pas ses événements sur les autres : une nouveauté du monde (les machines, docs/16) ne compte pour un jeu que s'il la demande. */
   familles?: Array<"animale" | "synthetique" | "vegetale">;
   /** Numéro du cycle que le jeu utilisait quand ces événements ont eu lieu (sert à dénormaliser avec les bonnes fréquences). */
@@ -1140,6 +1142,8 @@ export interface Profil {
     traits_rendus?: string[];
     /** Effectif Orvane sous lequel le jeu cesse de faire apparaître le taxon (avant l'extinction réelle). */
     seuil_extinction_jeu?: number;
+    /** Sens jeu → Orvane, dit par le jeu (orvane_regler_jeu) : un plafond plus bas que celui du monde (influence.plafonds.part_max_population_jeu) pour ce que CE jeu ôte à une population en un cycle. C'est le plus bas des deux qui vaut : un jeu peut baisser son plafond, jamais le relever. 0 : le jeu lit le monde sans jamais rien lui ôter. */
+    part_max_population_jeu?: number;
     /** Un taxon éteint peut-il revenir par recolonisation d'un biome voisin ? */
     retour_apres_extinction?: boolean;
     /** compression : la fréquence réelle d'un phénotype passe par la compression (sur la cote). relatif : le jeu garde ses propres taux (taux_jeu) à la génération 0, et ne suit que l'ÉCART d'Orvane depuis elle — une variante deux fois plus répandue qu'à la génération 0 l'est deux fois plus dans le jeu (sur la cote). Le jour un, le jeu est exactement ce qu'il était. */
@@ -1192,6 +1196,8 @@ export interface Profil {
       part_max_population?: number;
       /** Part maximale de la pression totale d'un taxon venant d'un seul jeu, quand plusieurs jeux en montrent le taxon (comptée avant ce plafond, comme part_max_compte) : un jeu de mille joueurs ne fait pas seul l'histoire d'une espèce. */
       part_max_jeu?: number;
+      /** Le plafond d'un jeu, même seul : la part de l'effectif d'une population qu'un seul jeu peut lui ôter en un cycle (prélèvements, captures, déplacements). Ce qu'il lui rend (libérations, nourrissages, bêtes d'élevage) n'a pas de plafond de jeu : seulement part_max_population. Appliqué avant le lissage, après part_max_compte et part_max_jeu, avant part_max_population ; il tient aussi parcelle par parcelle (docs/15). Un jeu peut le baisser pour lui (exposition.part_max_population_jeu), jamais le relever. 0,05 dans le monde d'Orvane ; absent, pas de plafond par jeu. */
+      part_max_population_jeu?: number;
     };
     /** Les pressions sont lissées sur autant de cycles (une chasse ponctuelle pèse peu, une chasse soutenue pèse). */
     memoire_cycles?: number;

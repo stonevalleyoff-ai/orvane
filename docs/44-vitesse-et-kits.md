@@ -19,9 +19,10 @@ Où passe le temps qui reste : la dynamique de chaque population (44 %), la pous
 node outils/vitesse.js                                   # le monde d'Orvane, 5 cycles
 node outils/vitesse.js --monde mondes/genese-7/instantane.json --cycles 10
 node outils/vitesse.js --contre origin/main              # plus vite que main ? et le même monde ?
+node outils/vitesse.js --contre main --lots mes-lots/ --profil un-profil.json   # la même chaîne, avec des lots
 ```
 
-Contre une autre version du moteur, l'outil fait tourner les deux sur le même monde, et compare les temps et les empreintes de chaque instantané. Si le monde n'est plus le même, il le dit, et sort en erreur. C'est le garde-fou de toute optimisation à venir.
+Contre une autre version, l'outil fait tourner les deux sur le même monde, et compare les temps et les empreintes de chaque instantané. Ce qui tourne est la chaîne entière d'un cycle de nuit : le tampon (avec le `tampon.json`, le profil, la génération 0 et les jeux du monde), `Parcelles.repartir`, puis le moteur ; l'empreinte prend aussi la mémoire du tampon. Sans lots, c'est la preuve qu'un changement du tampon ou des parcelles ne touche pas au monde ; avec des lots (`--lots`, lus au premier cycle), qu'il ne change que ce qu'il doit (`--profil` : un autre profil, par exemple sans le plafond nouveau). `--moteur-seul` ne fait tourner que le moteur, comme avant. Si le monde n'est plus le même, il le dit, et sort en erreur. C'est le garde-fou de toute optimisation à venir. Il se lance à la main, avant de fusionner : les vérifications de GitHub ne récupèrent que la branche, pas `main`.
 
 ## Les kits
 

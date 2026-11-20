@@ -5,7 +5,7 @@
 //   node outils/verifier.js mon-profil.json --profil      un profil ou une exposition (schemas/profil.schema.json)
 // Le genre du fichier se devine (evenements : un lot ; taxons : un instantané ; influence ou exposition : un profil), ou se dit
 // (--lot, --instantane, --profil). Pour un lot, il dit aussi ce que le Supabase d'Orvane refusera (orvane_deposer) : la taille,
-// le nombre d'événements, une action inconnue, un n hors de 0 à 10 000. Sort en erreur (code 1) s'il trouve quelque chose.
+// le nombre d'événements, une action inconnue, un n hors de 0 à 10 000, un id mal formé. Sort en erreur (code 1) s'il trouve quelque chose.
 // Le validateur ne connaît que ce dont les schémas d'Orvane se servent (type, required, properties, additionalProperties, items,
 // enum, const, minimum, maximum, minItems, maxItems, pattern, anyOf, oneOf, $ref local). Zéro dépendance ; utilisable en module :
 //   const { verifier } = require('./outils/verifier.js'); verifier(objet, 'lot') → [erreurs]
@@ -40,6 +40,7 @@ function depot(lot) {
   const E = [], ev = Array.isArray(lot?.evenements) ? lot.evenements : [];
   if (Buffer.byteLength(JSON.stringify(lot)) > 65536) E.push('le lot dépasse 64 Ko : orvane_deposer le refusera (« lot trop gros »)');
   if (ev.length > 500) E.push(`${ev.length} événements : 500 au plus par lot`);
+  if (lot && lot.id !== undefined && !(typeof lot.id === 'string' && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$/.test(lot.id))) E.push('id : 1 à 64 lettres, chiffres ou « . _ : - », pas au début (orvane_deposer refuse le lot)');
   ev.forEach((e, i) => { const ou = `evenements[${i}]`;
     if (!e || typeof e !== 'object') return E.push(`${ou} : un événement est un objet`);
     if (!ACTIONS.includes(e.action)) E.push(`${ou} : action « ${e.action} » inconnue`);

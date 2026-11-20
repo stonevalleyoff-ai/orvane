@@ -38,13 +38,23 @@ Dans les deux cas, le bestiaire d'un jeu n'est pas un équilibre écologique : t
 - `compression` : le facteur appliqué à la *cote* d'un phénotype (f/(1−f)). 0,1 : 20 % → 2,4 %, 50 % → 9 %, 99 % → 91 %. Une variante rare reste rare, une variante qui a gagné l'emporte aussi à l'écran. Affinez par domaine, par trait, par biome.
 - `propagation_cycles` : un changement est étalé sur autant de cycles ; `inertie_max` borne la variation par cycle. Les bêtes déjà nées gardent leur phénotype.
 - `traits_rendus` : la liste de ce que votre jeu sait montrer (chapitre 2).
+- `part_max_population_jeu` (sens jeu → Orvane) : un jeu baisse pour lui le plafond d'un jeu (voir Influence, ci-dessous) ; il ne le relève jamais.
 - `seuil_extinction_jeu` et `seuil_extinction_part` : le jeu cesse de faire apparaître le taxon quand son effectif tombe sous le premier **et** sous cette part (un quart) de ce qu'il était à la génération 0 — avant l'extinction réelle, pour que la rareté se voie, sans rayer une espèce rare dès le départ.
 
 **Influence (jeu → Orvane).**
 - `poids` : un prélèvement vaut 1 individu retiré ; les autres actions sont relatives ; négatif = favorable.
 - `exposition_ref` : rencontres par compte et par cycle considérées comme une activité normale ; au-delà, la pression du compte est ramenée à ce niveau.
 - `pseudo_comptes` : le lissage de la dénormalisation (20 par défaut).
-- `plafonds` : `par_compte_cycle` (individus équivalents par taxon et par compte), `part_max_compte` (un seul compte ne pèse pas plus que cette part du total), `part_max_population` (un cycle ne retire pas plus que cette part d'une population : pas d'extinction en une nuit).
+- `plafonds` : `par_compte_cycle` (individus équivalents par taxon et par compte), `part_max_compte` (un seul compte ne pèse pas plus que cette part du total), `part_max_jeu` (un seul jeu ne pèse pas plus que cette part, quand plusieurs jeux montrent la lignée), `part_max_population_jeu` (le plafond d'un jeu, même seul, ci-dessous), `part_max_population` (un cycle ne retire pas plus que cette part d'une population, tous jeux confondus : pas d'extinction en une nuit).
+- **Le plafond d'un jeu** (`part_max_population_jeu`, 0,05 dans le monde d'Orvane). La règle des parts ne mord que lorsque plusieurs jeux montrent une lignée : un jeu seul pouvait retirer à une population jusqu'à `part_max_population` d'elle-même (20 %) chaque cycle, jour après jour. Désormais, par population et par cycle, un seul jeu ne lui ôte pas plus que cette part de son effectif :
+  - ce qui est ôté : les prélèvements, les captures, les déplacements vers un autre biome (tout ce qui a un poids positif, ce que la règle des parts compte comme retrait) ;
+  - ce qui est rendu n'a pas de plafond de jeu : les libérations, les nourrissages (un poids négatif) et les bêtes d'élevage (docs/36) restent sous le seul `part_max_population`, comme avant. Une réintroduction, un jeu qui soigne ne perdent rien : 2 000 jagra relâchés en toundra (13 000 bêtes) arrivent tous ;
+  - il vient après la part d'un compte et d'un jeu, et avant `part_max_population` : dix jeux qui prennent chacun 5 % d'une population ne lui retirent pas 50 %, mais 20 % ;
+  - il tient aussi parcelle par parcelle, là où les lots du jeu disent qu'il chasse (docs/15) ;
+  - il ne touche ni l'habitat ni le milieu (bornés à part : `part_max_habitat`, et 5 % du lieu par axe et par cycle dans le moteur), ni le contact qui rend méfiant (docs/12), ni ce que retient la mémoire (docs/50, qui a ses propres plafonds) ;
+  - il borne chaque cycle avant le lissage (`memoire_cycles`), comme les autres plafonds : ce que le lissage reporte des jours passés s'ajoute, si bien qu'un jeu qui chasse à son plafond jour après jour reste à 5 %, mais qu'une semaine de chasse arrêtée net pèse encore un peu les jours suivants.
+  Un jeu peut le **baisser** pour lui, dans son exposition (`exposition.part_max_population_jeu`, réglée par `orvane_regler_jeu`) : c'est le plus bas des deux qui vaut. Il ne peut pas le relever. À 0, le jeu ne retire plus rien au monde (ce qu'il rend compte toujours). Un monde dont le profil ne le donne pas n'a pas de plafond par jeu, et tourne comme avant.
+- **Ce que le plafond d'un jeu ne protège pas.** Il est compté par jeu inscrit, et l'inscription est libre : une même personne qui inscrit quatre jeux prend ensemble 20 % d'une population par cycle, comme avant (dix jeux aussi : `part_max_population` borne toujours le tout). Un jeu neuf n'a que 500 lots par jour ; la vraie parade serait qu'un jeu neuf soit validé avant que ses lots comptent (`hebergement/LISEZ-MOI.md`). Et dans un monde à parcelles, un jeu qui chasse à son plafond partout perd sa localisation : chaque parcelle étant pleine à 5 %, sa chasse finit répartie selon les effectifs (docs/15).
 - `memoire_cycles` : le lissage dans le temps.
 
 Réglage conseillé pour démarrer : les valeurs ci-dessus. Puis regardez, dans l'observatoire, ce que dix comptes qui chassent chaque soir font à une espèce en 40 cycles : si elle s'éteint, montez `part_max_population` vers 0,1 ou `memoire_cycles` vers 10 ; si rien ne bouge jamais, baissez `pseudo_comptes` ou montez `par_compte_cycle`.
@@ -56,6 +66,32 @@ node moteur/orvane.js amorce.json --cycles 40 --lot lot.json --profil profil.jso
 ```
 
 rejoue le même lot chaque nuit pour dix comptes et imprime effectifs et fréquences. L'**observatoire** (`monde/index.html`, onglet Pressions) fait la même chose avec des courbes, et l'onglet Taxons montre côte à côte la fréquence réelle et la fréquence **exposée** : c'est exactement ce que votre traducteur recevra.
+
+### Rejouer ses lots sur une copie du monde
+
+Le monde `essai` du Supabase garde les lots quatorze jours, mais aucun monde ne les lit : il dit si un dépôt passe, pas ce qu'il fait au monde. Pour le voir, rejouez vos lots sur une copie du monde d'Orvane tel qu'il est aujourd'hui, chez vous, sans réseau, par le vrai cycle de nuit (`hebergement/cycle.js` : le tampon, les plafonds, les parcelles, le moteur). Deux copies du même jour, l'une avec vos lots, l'autre sans (le témoin) : comme le monde est déterministe, elles ne diffèrent que par ce que vos lots y ont fait.
+
+```sh
+git fetch origin publication                          # le monde vivant est dans la branche publication (hebergement/LISEZ-MOI.md)
+mkdir -p mondes/.essai/lots
+for f in etat.json tampon.json jeux.json generation-0.json; do git show origin/publication:mondes/orvane/$f > mondes/.essai/$f; done
+cp mondes/orvane/profil.json mondes/.essai/           # le profil, lui, vient de main
+cp -r mondes/.essai mondes/.temoin                    # le témoin : la même copie, sans lots
+cp mes-lots/*.json mondes/.essai/lots/                # vos lots, un par fichier (node outils/verifier.js mon-lot.json avant)
+node hebergement/cycle.js .temoin --sans-reseau --cycles 5 --maintenant 2026-11-20T03:00:00Z
+node hebergement/cycle.js .essai --sans-reseau --cycles 5 --maintenant 2026-11-20T03:00:00Z
+node -e "const [a, b] = ['.temoin', '.essai'].map(m => require('./mondes/' + m + '/instantane.json'));
+  for (const t of b.taxons) for (const p of t.populations) { const q = a.taxons.find(x => x.id === t.id)?.populations.find(x => x.biome === p.biome);
+    if (q && Math.abs(q.effectif - p.effectif) >= 1) console.log(t.id, p.biome, Math.round(q.effectif), '→', Math.round(p.effectif), JSON.stringify(p.parcelles || {})); }"
+```
+
+- Les lots sont ceux que le jeu dépose, tels quels : `monde` vaut `orvane`, et `source.jeu` est l'identifiant de votre jeu. S'il est dans `jeux.json`, ses lots sont lus avec son exposition, comme la nuit ; sinon, tels quels.
+- Le cycle lit le dossier `lots/` au premier des cinq cycles, puis range les lots dans `lots/traites/` (pour rejouer, les remettre dans `lots/`). Le lissage (`memoire_cycles`, 5) étale leur poids : une chasse pèse un tiers le premier jour, puis le reste les jours suivants. Cinq cycles en montrent l'essentiel ; un cycle prend une vingtaine de secondes.
+- `--sans-reseau` : rien n'est lu en ligne. `--maintenant` : la même date pour les deux copies.
+- Un dossier qui commence par un point n'est jamais pris par l'action de la nuit (`mondes/*/`) : ne le commitez pas, effacez-le après (`rm -rf mondes/.essai mondes/.temoin`).
+- L'instantané d'une copie se lit comme celui du monde, avec la répartition par parcelle (`populations[].parcelles`) ; `tampon.json` montre ce que le tampon a gardé de vos lots (`lisse`), plafonds compris.
+
+Essayé le 19 novembre, sur le monde du cycle 59 (le lot : 40 rencontres et 25 jagra prises en `toundra~2`) : au premier cycle, `toundra~2` compte 8 jagra de moins (un tiers, le lissage), et rien ne change ailleurs. Cinq cycles plus tard, la toundra en compte 15 de moins que le témoin : 6 en `toundra~2`, 3 dans chacune des autres parcelles (ce que le lissage reporte sur les jours suivants n'a plus de parcelle : il se répartit selon les effectifs), et quelques bêtes de plus chez celles qui partagent sa place (`somene`, `musilnou` : 9 de plus).
 
 Pour le traducteur lui-même, écrivez un **banc** : un contexte Node où les globales de votre jeu sont des doublures, qui charge `tampon.js`, vos correspondances et votre traducteur, puis vérifie : les effectifs/poids appliqués, le tirage des variantes sur 100 000 naissances (≈ fréquences exposées), la reconnaissance du phénotype d'une bête tuée, la validité du lot contre le schéma, et le retour du lot dans `agreger()` + `cycle()`. `traducteurs/stone-valley/banc.js` est le modèle.
 

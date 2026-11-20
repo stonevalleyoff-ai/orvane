@@ -97,6 +97,20 @@ for patte in p.get("pattes", []):
 
 **Vérifié** : la syntaxe GDScript 4 (`gdtoolkit`, à chaque PR). **Pas encore vérifié** : le kit n'a pas tourné dans Godot lui-même. Le premier jeu Godot qui s'en sert, [Lisière](../jeux/lisiere/LISEZ-MOI.md), le dira : son essai sans écran (`outils/godot.sh --headless --path jeux/lisiere -- --essai`) fait tourner le kit dans Godot 4.3.
 
+## Un serveur (`kits/serveur/`)
+
+Un jeu qui a un serveur (une fonction Supabase en Deno, un serveur Node) peut y déposer ses lots, avec une **clé de dépôt** que le client ne voit jamais, et demander à Orvane de l'exiger (`BRANCHER-UN-JEU.md`, chapitre 6). `kits/serveur/depot.mjs` le fait, sans dépendance, avec `fetch` seulement :
+
+```js
+import { deposer } from './depot.mjs';             // Node : import … from 'orvane/serveur', ou require('orvane/serveur') (depot.cjs)
+const r = await deposer({ cle: 'orv_…', cleDepot: 'orvdep_…' }, compteOpaque, lot);
+// { ok: true, id } · { ok: true, deja: true, id } · { ok: false, erreur, id, plusTard }
+```
+
+Il donne un `id` au lot s'il n'en a pas, et le renvoie quand le réseau flanche : un renvoi n'est jamais compté deux fois. Les types sont dans `depot.d.ts`.
+
+**Chaque lot a son id**, dans les deux kits : tiré au hasard quand le lot est clos, gardé avec lui dans la file (et sur l'appareil), il revient tel quel à chaque essai. Un lot renvoyé après une réponse perdue répond `{ ok: true, deja: true }`, et le kit l'oublie. Un lot gardé par une version d'avant en reçoit un au lancement. Un jeu qui dépose depuis son serveur envoie à ce serveur, au lieu de déposer : en Godot, `Orvane.prochain_lot()` (le JSON du prochain lot, avec son `id`) puis `Orvane.oublier_lot(id)` quand le serveur a répondu ; en Unity, `compteur.Prochain()` puis `compteur.Depose()`. **Un lot refusé pour de bon** (hors du contrat, un `id` déjà pris : le renvoyer n'y changerait rien) ne bloque jamais la file : le kit le met de côté et passe au suivant (Godot : `lots_refuses()`, `oublier_lot(id, true)` pour un lot que le serveur du jeu a vu refuser, et `rep.mis_de_cote` dans `lot_depose` ; Unity : `Reponse.Definitif`, `compteur.Refuse()`, `compteur.LotsRefuses`). Les autres refus (le réseau, un quota du jour, une clé) le laissent en tête, pour plus tard. Sur un serveur en C#, `OrvaneHttp` dépose avec la clé de dépôt (`Branchement.CleDepot`) ; elle ne va **jamais** dans un jeu publié.
+
 ## Ce qui reste ouvert
 
 - **Faire tourner le moteur dans le jeu** (un monde solo dans Unity ou Godot, docs/19) : aujourd'hui, seulement en JavaScript. Un jeu Unity ou Godot lit le monde partagé et lui écrit, mais ne fait pas encore vivre sa propre copie.

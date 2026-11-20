@@ -278,6 +278,7 @@ const alleger = I => ({ cycle: I.cycle, taxons: I.taxons.map(t => ({ id: t.id, n
     const locaux = lotsLocaux().map(l => ({ monde: profil.monde?.id || monde, ...l })), lots = [...enLigne, ...locaux];
     const r = Tampon.agreger(lots, vue(etat), profil, tampon, gen0, expositions);
     if (r.rejetes && (r.rejetes.lots || r.rejetes.evenements)) console.log(`::warning title=${monde} · lots::${r.rejetes.lots || 0} lot(s) et ${r.rejetes.evenements || 0} événement(s) écartés (hors du contrat : schemas/pression.schema.json) ; le reste compte.`);
+    if (r.doublons) console.log(`${monde} : ${r.doublons} lot(s) renvoyé(s) avec le même id, comptés une fois`);   // (docs/4)
     const suivant = Orvane.cycle(etat, Parcelles.repartir(r.pressions, etat, Parcelles.localiser(lots, etat)), { duree_ms: ms });   // (docs/15) là où les jeux l'ont dit
     if (k === nCycles - 1) suivant.cycle.date = new Date(maintenant).toISOString();   // le dernier cycle est daté de son départ : les traducteurs s'y réfèrent
     if (k === 0 && arrivees.length) suivant.evenements = [...arrivees, ...(suivant.evenements || [])];   // les arrivées d'une fusion, au journal
