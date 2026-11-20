@@ -6,7 +6,7 @@
 // ni aux machines, ni aux plantes. Un hôte guéri est immunisé, et son immunité s'use. Par population, pour chaque souche : la
 // part des bêtes infectées et celle des immunisées (populations[].infection). Ce qui arrive à une souche est un événement
 // epidemie ou remission qui dit laquelle (souche) et quoi (nature : naissance, saut_hote, extinction ; mutation et vecteur
-// viennent de moteur/derives.js).
+// viennent de moteur/derives.js) ; une extinction dit aussi le nom de la souche, ses hôtes, et ses derniers lieux (lieux).
 // Le moteur (moteur/orvane.js) appelle ce fichier à quelques points de son cycle, dans un monde qui a ses souches
 // (monde.pathogenes) ; sans elles, rien ne change. Un jeu y trouve aussi de quoi lire les souches d'un instantané, sans toucher
 // au monde (plus bas) :
@@ -114,8 +114,11 @@ function preparer(ctx) {
       if (DV) ev.push(...DV.evenements);
       // les souches qui n'ont plus d'hôte s'éteignent ; celles qui vivent disent combien elles infectent
       const tot = {}; for (const L of Object.values(lieux)) for (const h of L) for (const [s, x] of Object.entries(h.pop.inf1 || {})) tot[s] = (tot[s] || 0) + x.i * h.N;
+      // (une souche éteinte sort de monde.pathogenes.souches : son événement dit son nom, ses hôtes, et les lieux où elle avait
+      // encore des malades au début du cycle, triés)
+      const ou = s => Object.keys(lieux).filter(bid => lieux[bid].some(h => (h.inf[s]?.i || 0) > 0)).sort();
       for (const [s, so] of Object.entries(S)) { so.infectes = Math.round(tot[s] || 0);
-        if (!(tot[s] >= REGLES.seuil) && so.apparu < n) { ev.push({ type: 'remission', taxon: so.origine, souche: s, nature: 'extinction', detail: `la souche ${so.nom} s'éteint, après ${n - so.apparu} cycles et ${(so.hotes || []).length} lignée${(so.hotes || []).length > 1 ? 's' : ''} touchée${(so.hotes || []).length > 1 ? 's' : ''}` }); delete S[s]; } }
+        if (!(tot[s] >= REGLES.seuil) && so.apparu < n) { ev.push({ type: 'remission', taxon: so.origine, souche: s, nature: 'extinction', nom: so.nom, lieux: ou(s), hotes: [...(so.hotes || [])], detail: `la souche ${so.nom} s'éteint, après ${n - so.apparu} cycles et ${(so.hotes || []).length} lignée${(so.hotes || []).length > 1 ? 's' : ''} touchée${(so.hotes || []).length > 1 ? 's' : ''}` }); delete S[s]; } }
       for (const L of Object.values(lieux)) for (const h of L) if (h.pop.inf1) for (const s of Object.keys(h.pop.inf1)) if (!S[s]) delete h.pop.inf1[s];
     },
     publier: (t, bid, pop, p) => { const I = pop.inf1 ?? pop.inf0; if (I && Object.keys(I).length) p.infection = I; },

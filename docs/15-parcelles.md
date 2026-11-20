@@ -18,9 +18,9 @@ Pour le moteur, une parcelle est un biome comme un autre (des axes, une capacit�
 
 Les jeux et le tampon voient le monde par biome, comme avant (`Parcelles.regrouper`) :
 - une population de biome additionne celles de ses parcelles. Le reste est une moyenne pondérée par l'effectif : les traits continus, les allèles, la méfiance, la satiété ;
-- chaque population dit en plus sa répartition (`populations[].parcelles`, l'effectif par parcelle) ;
+- chaque population dit en plus sa répartition (`populations[].parcelles`, l'effectif par parcelle) et, là où une souche circule, l'infection de chaque parcelle (`populations[].infection_par_parcelle`, docs/18) ;
 - l'instantané donne la liste des parcelles (`parcelles` : leur biome, leur capacité, leurs voisines) ;
-- les événements sont rapportés à leur biome, avec la parcelle dans `detail`.
+- les événements sont rapportés à leur biome, avec la parcelle où ils sont nés (`parcelle`, son identifiant, et son nom dans `detail`).
 
 Les pressions des jeux arrivent par biome. `Parcelles.repartir` les partage :
 - un retrait, des rencontres, selon l'effectif de la lignée dans chaque parcelle ;

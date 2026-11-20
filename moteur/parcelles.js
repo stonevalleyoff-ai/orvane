@@ -172,7 +172,10 @@ function regrouperBrut(inst) {
       return { ...ph, frequence_par_biome: Object.fromEntries(Object.keys(s).map(ty => [ty, +(s[ty] / w[ty]).toFixed(4)])) }; });
     return { ...t, populations, phenotypes };
   });
-  out.evenements = (inst.evenements || []).map(e => { const p = e.biome && parId.get(e.biome); return p && p.type ? { ...e, biome: p.type, detail: (e.detail ? e.detail + ' · ' : '') + 'parcelle ' + (p.nom || p.id) } : e; });
+  // (docs/15) un événement né dans une parcelle est rapporté à son biome ; il dit la parcelle (parcelle, et dans detail). Les derniers
+  // lieux d'une souche qui s'éteint (lieux, docs/18) deviennent les biomes de ces parcelles
+  out.evenements = (inst.evenements || []).map(e => { const p = e.biome && parId.get(e.biome), r = p && p.type ? { ...e, biome: p.type, parcelle: p.id, detail: (e.detail ? e.detail + ' · ' : '') + 'parcelle ' + (p.nom || p.id) } : e;
+    return Array.isArray(e.lieux) ? { ...r, lieux: [...new Set(e.lieux.map(l => typeDe(parId.get(l) || { id: l })))].sort() } : r; });
   out.monde = { ...inst.monde, parcelles: { par: P.par, graine: P.graine, nombre: inst.biomes.length } };
   if (inst.monde.mere) { const p = parId.get(inst.monde.mere.biome); out.monde.mere = { ...inst.monde.mere, biome: p ? typeDe(p) : inst.monde.mere.biome, parcelle: inst.monde.mere.biome }; }   // (docs/16)
   out.parcelles = inst.biomes.map(p => ({ id: p.id, type: typeDe(p), nom: p.nom, capacite: Math.round(p.capacite || 0), voisins: p.voisins || [], ...(p.meteo && typeof p.meteo === 'object' ? { meteo: p.meteo } : {}) }));   // (docs/45) le temps qu'il fait, parcelle par parcelle

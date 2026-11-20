@@ -1,7 +1,7 @@
 // Orvane — LE BANC DES SOUCHES ET DES SYMBIOSES (bancs/pathogenes.js, docs/18)
 //  1. le jour un : un monde sans souches tourne exactement comme le moteur sans moteur/pathogenes.js ;
 //  2. un monde à souches tient : des souches naissent, circulent, s'éteignent ; autant de lignées, autant de bêtes ; chaque
-//     événement de souche dit laquelle et ce qui lui arrive (souche, nature), et son texte la même chose ;
+//     événement de souche dit laquelle et ce qui lui arrive (souche, nature), et son texte la même chose (une extinction réelle : 5 bis) ;
 //  3. une souche passe d'une parcelle à l'autre, de proche en proche ; la vue par biome publie l'infection de chaque parcelle,
 //     dont celle du biome est la moyenne ; les aides de lecture (souches, souche, infection, infectes, foyers, evenements) ;
 //  4. elle prend chez les lignées proches, pas chez les lointaines ; jamais chez les machines ni les plantes ;
@@ -45,14 +45,16 @@ console.log('2. Un monde à souches');
 let W = Pa.eveiller(I0).inst, T = clone(I0); const nes = [], eteintes = [], natures = {}, fautes = [];
 // (docs/18) un événement de souche dit laquelle (souche) et ce qui lui arrive (nature) ; son texte seul (un instantané d'avant ces
 // champs, lu par la chronique) dit la même chose ; une épidémie d'avant les souches ne dit ni l'un ni l'autre
-const lire = (e, av, ap) => { const S = ap.monde.pathogenes.souches, x = Chronique.natureDe((({ souche, nature, ...r }) => r)(e), av, ap);
-  if (!e.souche) { if (e.nature || x) fautes.push(`sans souche : ${e.detail}`); return; }
-  natures[e.nature] = (natures[e.nature] || 0) + 1;
-  const bon = e.nature === 'extinction' ? e.type === 'remission' && !S[e.souche] && av.monde.pathogenes.souches[e.souche]
+// une extinction dit aussi le nom de la souche, ses hôtes, et les lieux où elle avait encore des malades au début du cycle (triés)
+const derniers = (av, s) => [...new Set(av.taxons.flatMap(t => t.populations.filter(p => (p.infection?.[s]?.i || 0) > 0).map(p => p.biome)))].sort();
+const lire = (e, av, ap, F = fautes, N = natures) => { const S = ap.monde.pathogenes.souches, SA = av.monde.pathogenes.souches, x = Chronique.natureDe((({ souche, nature, nom, lieux, hotes, ...r }) => r)(e), av, ap);
+  if (!e.souche) { if (e.nature || x) F.push(`sans souche : ${e.detail}`); return; }
+  N[e.nature] = (N[e.nature] || 0) + 1;
+  const bon = e.nature === 'extinction' ? e.type === 'remission' && !S[e.souche] && SA[e.souche] && e.nom === SA[e.souche].nom && JSON.stringify(e.hotes) === JSON.stringify(SA[e.souche].hotes) && e.lieux.length && JSON.stringify(e.lieux) === JSON.stringify(derniers(av, e.souche))
     : e.type === 'epidemie' && S[e.souche] && (e.nature !== 'saut_hote' || S[e.souche].hotes.includes(e.taxon)) && (e.nature !== 'naissance' || (S[e.souche].apparu === ap.cycle.n && S[e.souche].origine === e.taxon));
   // (le texte ne dit que le nom de la souche : deux souches vivantes du même nom se confondent, c'est la limite du repli)
-  const nom = id => (S[id] || av.monde.pathogenes.souches[id])?.nom, memeSouche = x && (x.souche === e.souche || (x.souche && nom(x.souche) === nom(e.souche)));
-  if (!bon || !Pa.NATURES.includes(e.nature) || x?.nature !== e.nature || !memeSouche) fautes.push(`${e.nature} ${e.souche} : ${e.detail}`); };
+  const nom = id => (S[id] || SA[id])?.nom, memeSouche = x && (x.souche === e.souche || (x.souche && nom(x.souche) === nom(e.souche)));
+  if (!bon || !Pa.NATURES.includes(e.nature) || x?.nature !== e.nature || !memeSouche) F.push(`${e.nature} ${e.souche} : ${e.detail}`); };
 for (let k = 0; k < CYCLES; k++) { const av = W; W = Orvane.cycle(W, {}); T = Orvane.cycle(T, {});
   for (const e of W.evenements) { if (/souche nouvelle/.test(e.detail || '')) nes.push(e); if (/la souche .* s'éteint/.test(e.detail || '')) eteintes.push(e);
     if (e.type === 'epidemie' || e.type === 'remission') lire(e, av, W); } }
@@ -60,7 +62,7 @@ for (let k = 0; k < CYCLES; k++) { const av = W; W = Orvane.cycle(W, {}); T = Or
   verif(nes.length >= 3 && Sx.length >= 2, `en ${CYCLES} cycles, ${nes.length} souches naissent dans des populations entassées, ${eteintes.length} s'éteignent ; ${Sx.length} circulent à la fin, sur ${hotes.join(', ')} lignées chacune (« ${nes[0]?.detail} »)`);
   verif(Math.abs(vivants(W).length / vivants(T).length - 1) < .06 && Math.abs(tot(W) / tot(T) - 1) < .1, `le monde tient : ${vivants(W).length} lignées et ${fx(tot(W) / 1e6, 1)} millions de bêtes, contre ${vivants(T).length} et ${fx(tot(T) / 1e6, 1)} millions avec les épidémies d'avant`);
   verif(!fautes.length && (natures.naissance || 0) === nes.length && (natures.extinction || 0) === eteintes.length && natures.saut_hote > 0,
-    `chaque événement de souche dit laquelle et ce qui lui arrive : ${Object.entries(natures).map(([k, v]) => `${v} ${k}`).join(', ')} ; son texte seul, la même chose` + (fautes.length ? ` ; ${fautes.length} fautes : ${fautes.slice(0, 2).join(' ; ')}` : ''));
+    `chaque événement de souche dit laquelle et ce qui lui arrive : ${Object.entries(natures).map(([k, v]) => `${v} ${k}`).join(', ')} ; son texte seul, la même chose (une extinction réelle : plus bas, 5 bis)` + (fautes.length ? ` ; ${fautes.length} fautes : ${fautes.slice(0, 2).join(' ; ')}` : ''));
 }
 
 console.log("3. D'une parcelle à l'autre");
@@ -108,11 +110,16 @@ console.log("5. L'immunité");
 console.log('5 bis. Une épidémie qui s\'éteint (REGLES.locale)');
 { // une petite population (150 bêtes) et une plus grande (600), seules de leur lignée : la même souche, avec et sans le seuil
   const tid = vivants(I0).filter(t => t.populations.length === 1 && t.populations[0].effectif >= 300).sort((a, b) => a.populations[0].effectif - b.populations[0].effectif)[0].id;
-  const essai = (N, k) => { const av = Pa.REGLES.locale; Pa.REGLES.locale = k;
+  const fin = {}, essai = (N, k) => { const av = Pa.REGLES.locale; Pa.REGLES.locale = k;
     try { let X = poser(I0, tid, I0.taxons.find(t => t.id === tid).populations[0].biome, .15, .1); const p0 = X.taxons.find(t => t.id === tid).populations[0], f = N / p0.effectif; p0.effectif = N; if (p0.N) p0.N = p0.N.map(x => x * f);
-      for (let c = 1; c <= 30; c++) { X = Orvane.cycle(X, {}); if (!X.monde.pathogenes.souches['souche-essai']) return c; } return 0; } finally { Pa.REGLES.locale = av; } };
+      for (let c = 1; c <= 30; c++) { const Y = X; X = Orvane.cycle(X, {}); if (!X.monde.pathogenes.souches['souche-essai']) { Object.assign(fin, { avant: Y, apres: X }); return c; } } return 0; } finally { Pa.REGLES.locale = av; } };
   const a = essai(150, 0), b = essai(150, Pa.REGLES.locale), c = essai(600, Pa.REGLES.locale);
   verif(!a && b > 0 && !c, `dans une population de 150 bêtes, sans le seuil, la souche ne s'éteint jamais (quelques malades pour toujours) ; avec lui (moins de ${Pa.REGLES.locale} malades), elle s'éteint au cycle ${b} ; dans une population de 600 bêtes, elle reste`);
+  // une extinction réelle : son événement dit la souche, sa nature, son nom, ses hôtes, ses derniers lieux ; son texte seul, la même chose
+  const E = fin.apres ? fin.apres.evenements.filter(e => e.souche === 'souche-essai') : [], F5 = [], N5 = {}; for (const e of E) lire(e, fin.avant, fin.apres, F5, N5);
+  const e5 = E[0], ici5 = I0.taxons.find(t => t.id === tid).populations[0].biome;
+  verif(E.length === 1 && N5.extinction === 1 && !F5.length && e5.type === 'remission' && e5.nom === 'Essaiose' && JSON.stringify(e5.lieux) === JSON.stringify([ici5]) && JSON.stringify(e5.hotes) === JSON.stringify([tid]),
+    `l'extinction, au cycle ${b} : remission, nature « ${e5?.nature} », souche ${e5?.souche}, « ${e5?.nom} », derniers lieux ${JSON.stringify(e5?.lieux)}, hôtes ${JSON.stringify(e5?.hotes)} ; son texte seul, la même chose` + (F5.length ? ` ; ${F5.join(' ; ')}` : ''));
 }
 
 console.log('6. Le compromis');

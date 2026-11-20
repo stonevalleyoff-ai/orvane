@@ -52,16 +52,21 @@ Chaque événement d'une souche dit laquelle (`souche`, sa clé dans `monde.path
 | `saut_hote` | `epidemie` | elle prend chez une lignée de plus (1 % de la population et 20 bêtes infectées) | la lignée gagnée, et le lieu | la souche |
 | `mutation` | `epidemie` | un mutant naît (les dérives, docs/29) | la lignée et le lieu où il naît | le mutant ; sa mère est son `parent` |
 | `vecteur` | `epidemie` | un mutant naît, porté par un insecte (docs/29) | la lignée et le lieu où il naît | le mutant ; l'insecte est son `vecteur` |
-| `extinction` | `remission` | il ne reste plus une bête infectée dans le monde | sa lignée d'origine ; pas de lieu | la souche, qui n'est plus dans `monde.pathogenes.souches` |
+| `extinction` | `remission` | il ne reste plus une bête infectée dans le monde | sa lignée d'origine ; pas de lieu, mais ses derniers lieux (`lieux`) | la souche, qui n'est plus dans `monde.pathogenes.souches` |
+
+Une souche qui s'éteint n'est plus dans `monde.pathogenes.souches` : son événement dit ce qu'un jeu en voudrait encore, sans relire le texte. `nom`, son nom ; `hotes`, les lignées où elle avait pris ; `lieux`, les biomes où elle avait encore des malades au début du cycle, triés (dans un monde à parcelles, les biomes de ces parcelles). Dans un monde à parcelles, un événement né dans une parcelle dit aussi laquelle (`parcelle`, docs/15) ; son `biome` est le biome dont elle est une part.
 
 ```json
-{ "type": "epidemie", "taxon": "grane", "biome": "foret", "souche": "souche-13", "nature": "vecteur",
+{ "type": "epidemie", "taxon": "grane", "biome": "foret", "souche": "souche-13", "nature": "vecteur", "parcelle": "foret~2",
   "detail": "la souche Vergoose mute chez Grane broutard de forêt : Vergoose α, virulence 13 % par cycle (sa mère : 13 %), portée par Kivine broutard de forêt · parcelle Forêt 2" }
+{ "type": "remission", "taxon": "orki", "souche": "souche-13", "nature": "extinction", "nom": "Calraose α", "lieux": ["banquise", "toundra"], "hotes": ["orki"],
+  "detail": "la souche Calraose α s'éteint, après 140 cycles et 1 lignée touchée" }
 ```
 
 - Une épidémie d'avant les souches (dans un monde qui ne les a pas, ou une population qui en garde une d'avant leur éveil) reste un `epidemie` ou un `remission` sans `souche` ni `nature`.
 - D'autres natures pourront venir : un jeu ignore celles qu'il ne connaît pas.
 - La chronique (docs/37) et le directeur (docs/40) les lisent. Pour un instantané d'avant ces champs, la chronique relit le texte, et retrouve la souche par son nom.
+- Le tampon (`Tampon.filtrer`) et les morceaux (`OrvaneMorceaux.lire`) gardent l'extinction d'une souche pour un jeu qui lit l'un de ses derniers lieux, même si sa lignée d'origine n'est plus listée ou vit ailleurs.
 
 ## L'infection par parcelle
 
@@ -80,7 +85,8 @@ Les missions se jouent à l'échelle de la parcelle (docs/15), et le moteur tien
 
 Goteose (`souche-3`) touche 14 % de la mangrove, mais de 7,5 % à 20,6 % selon la parcelle ; sa mutante Goteose α (`souche-6`, que porte un insecte) n'a de malades que dans la troisième.
 - **La valeur par biome ne change pas** : c'est toujours la moyenne des parcelles, pesée par leur effectif ; une parcelle où la souche n'est pas y compte pour zéro.
-- **Une parcelle absente** de `infection_par_parcelle` n'a ni malade ni immunisé. Le champ n'est là que si une souche circule dans au moins une parcelle.
+- **Une parcelle absente** de `infection_par_parcelle` n'a ni malade ni immunisé. Une parcelle y est dès que le moteur y tient une souche, même sans malade : des immunisés seulement (`{ "i": 0, "r": 0.05 }`), ou une souche qui vient d'arriver (`{ "i": 0, "r": 0 }` : moins de dix malades, comptés pour aucun, et pas encore d'immunisé). Le champ n'est là que si une parcelle au moins en a une.
+- **Un biome d'une seule parcelle** qui porte l'identifiant du biome (`ile-1`, une île née d'un volcan) n'a ni `parcelles` ni `infection_par_parcelle` : sa population est publiée telle quelle, et son `infection` est celle de sa seule parcelle.
 - **Le nombre de bêtes infectées** dans une parcelle : `i × parcelles[parcelle]`. C'est la borne « infectés × effectif » qu'un jeu qui joue à la parcelle respecte.
 - Les morceaux (docs/21) la portent avec le reste : `biomes/mangrove.json` la donne. Un monde sans parcelles n'en a pas.
 
@@ -139,7 +145,7 @@ Au cycle de nuit suivant, le monde reçoit ses souches, une fois pour toutes. Il
 - **La pollinisation.** Les cinq lignées de butineurs de la prairie tenues à 5 % de leur nombre pendant 30 cycles : les plantes à fleurs de la prairie y pèsent 97,6 % de ce qu'elles pèsent avec eux.
 
 Le banc vérifie aussi :
-- **les événements** : en 120 cycles, chaque naissance, chaque saut d'hôte et chaque extinction dit sa souche et sa nature, cohérentes avec le monde (une souche née ce cycle chez cette lignée, une lignée qui est bien son hôte, une souche qui n'est plus) ; leur texte seul, relu par la chronique, dit la même chose. Les mutations sont vérifiées dans `bancs/derives.js` ;
+- **les événements** : en 120 cycles, chaque naissance et chaque saut d'hôte dit sa souche et sa nature, cohérentes avec le monde (une souche née ce cycle chez cette lignée, une lignée qui est bien son hôte) ; leur texte seul, relu par la chronique, désigne la même souche. Une extinction réelle (point 5 bis : la souche s'éteint dans une population de 150 bêtes) dit sa souche, sa nature, son nom, ses hôtes et ses derniers lieux, et son texte seul la même chose. Les mutations sont vérifiées dans `bancs/derives.js` ;
 - **l'infection par parcelle** : dans la prairie à quatre parcelles, chaque parcelle publie l'infection que tient le moteur, et celle du biome en est la moyenne pesée par l'effectif ; les aides de lecture la rendent ;
 - le contrat et le cycle de nuit (le monde reçoit ses souches une fois).
 

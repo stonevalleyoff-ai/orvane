@@ -4,7 +4,8 @@
 //  3. dans un navigateur, le même résultat ; le cycle de nuit publie les morceaux et retire ceux d'une lignée éteinte ;
 //  4. les planches (monde/planches.js) : chaque bête de chaque biome dessinée, avec ses yeux, le même texte à chaque fois ;
 //  5. l'infection par parcelle (docs/18) : à côté de l'effectif de chaque parcelle, celle que tient le moteur ; celle du biome en est
-//     la moyenne ; les morceaux la portent, et la rendent.
+//     la moyenne ; les morceaux la portent, et la rendent ; un événement dit sa parcelle ; une souche qui s'éteint se lit là où elle
+//     avait ses derniers malades, même si sa lignée d'origine n'est plus listée (Tampon.filtrer, lire).
 //   node bancs/morceaux.js
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm'), { execFileSync } = require('child_process');
@@ -24,7 +25,7 @@ const attendu = B => { const R = B ? Tampon.filtrer(clone(I), { biomes: B }) : c
   R.taxons = R.taxons.filter(t => t.populations.length).map(t => { ids.add(t.id); t.populations.sort(o);
     for (const p of t.phenotypes) if (p.frequence_par_biome) p.frequence_par_biome = Object.fromEntries(Object.entries(p.frequence_par_biome).filter(([b]) => !B || B.includes(b)).sort(([a], [b]) => rang.get(a) - rang.get(b)));
     return t; });
-  R.evenements = (I.evenements || []).filter(e => e.type === 'eveil' || !e.taxon || ids.has(e.taxon) || rang.has(e.taxon));
+  R.evenements = (I.evenements || []).filter(e => e.type === 'eveil' || !e.taxon || ids.has(e.taxon) || rang.has(e.taxon) || (Array.isArray(e.lieux) && e.lieux.some(l => !B || B.includes(l))));
   R.precedent = { cycle: I.precedent.cycle, taxons: I.precedent.taxons.map(t => ({ ...t, populations: t.populations.filter(p => !B || B.includes(p.biome)).sort(o) })).filter(t => t.populations.length) };
   return R; };
 const pareil = (a, b) => ['orvane', 'monde', 'cycle', 'biomes', 'catalogue', 'taxons', 'evenements', 'precedent'].every(k => JSON.stringify(a[k]) === JSON.stringify(b[k]));
@@ -98,6 +99,17 @@ const pareil = (a, b) => ['orvane', 'monde', 'cycle', 'biomes', 'catalogue', 'ta
     const lu5 = await M.lire('x', { lecteur: async c => clone(D5[c]), biomes: [p5.biome] }), e5 = val(S, lu5, '$');
     verif(JSON.stringify(m5.infection_par_parcelle) === JSON.stringify(p5.infection_par_parcelle) && JSON.stringify(lu5.taxons.find(t => t.id === t5.id).populations[0]) === JSON.stringify(p5) && !e5.length,
       `le morceau biomes/${p5.biome}.json la porte (${t5.nom} : ${Object.entries(p5.infection_par_parcelle).map(([q, I]) => `${q} ${Object.values(I).map(x => (x.i * 100).toFixed(2) + ' %').join('/')}`).join(', ')}) ; lu, il la rend, au contrat` + (e5.length ? ' : ' + e5.slice(0, 2).join(' ; ') : ''));
+  }
+  { // un événement né dans une parcelle dit laquelle ; une souche qui s'éteint, chez une lignée oubliée du moteur, se lit à ses derniers lieux
+    const E = lireJ('mondes/orvane/etat.json'), V = Parcelles.regrouper(E), ty = new Map(E.biomes.map(b => [b.id, b.type || b.id]));
+    const nes = E.evenements.filter(e => e.biome && ty.get(e.biome) !== e.biome), vus = V.evenements.filter(e => e.parcelle);
+    verif(nes.length && vus.length === E.evenements.filter(e => e.biome && ty.has(e.biome)).length && vus.every(e => ty.get(e.parcelle) === e.biome),
+      `${vus.length} événements nés dans une parcelle la disent (parcelle), rapportés à son biome (« ${vus[0]?.biome} », parcelle « ${vus[0]?.parcelle} »)`);
+    const X = clone(I); X.evenements = [...X.evenements, { type: 'remission', taxon: 'lignee-oubliee', souche: 'souche-oubliee', nature: 'extinction', nom: 'Oubliose', lieux: ['prairie'], hotes: ['lignee-oubliee'], detail: 'la souche Oubliose s\'éteint' }];
+    const D6 = M.decouper(X), lu = async B => (await M.lire('x', { lecteur: async c => clone(D6[c]), biomes: B })).evenements.some(e => e.souche === 'souche-oubliee');
+    const f = B => Tampon.filtrer(X, { biomes: B }).evenements.some(e => e.souche === 'souche-oubliee');
+    verif(await lu(['prairie', 'foret']) && !(await lu(['foret'])) && f(['prairie']) && !f(['foret']) && Tampon.filtrer(X, { familles: ['animale'] }).evenements.some(e => e.souche === 'souche-oubliee'),
+      'une souche qui s\'éteint chez une lignée que le moteur a oubliée : un jeu qui lit la prairie, où elle avait ses derniers malades, la voit s\'éteindre (morceaux, Tampon.filtrer) ; un jeu qui ne lit que la forêt, non ; l\'instantané publié la garde');
   }
   console.log(`\n${ok ? 'tout passe' : 'ÉCHEC'}`); process.exit(ok ? 0 : 1);
 })();

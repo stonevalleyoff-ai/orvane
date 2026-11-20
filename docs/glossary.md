@@ -12,7 +12,7 @@ Orvane's files use French field names. This page translates them all, object by 
 | `biomes` | biomes | the places of the world (below) |
 | `catalogue` | catalogue | the knowledge the world has (`savoirs`: name, `geste` gesture, `outil` tool), the definitions of the traits carried (`traits`), continuous traits (`quantitatifs`), organs (`organes`), plant defences (`flore`), the world's own catalogue (`monde`) |
 | `taxons` | lineages | the living lineages (below) |
-| `evenements` | events | the cycle's journal: `type`, `taxon`, `biome`, `detail`; a strain event (`epidemie`, `remission`) also gives `souche` (which strain: a key of `monde.pathogenes.souches`) and `nature` (what happens to it: `naissance` birth, `saut_hote` host jump, `mutation`, `vecteur` a mutant carried by an insect, `extinction`) |
+| `evenements` | events | the cycle's journal: `type`, `taxon`, `biome`, `detail`; a strain event (`epidemie`, `remission`) also gives `souche` (which strain: a key of `monde.pathogenes.souches`) and `nature` (what happens to it: `naissance` birth, `saut_hote` host jump, `mutation`, `vecteur` a mutant carried by an insect, `extinction`); an extinction also gives `nom` (the strain's name, as it is no longer listed), `hotes` (the lineages it took hold in) and `lieux` (the biomes where it still had sick animals at the start of the cycle); in a world of plots, `parcelle` is the plot where the event happened (`biome` is then the plot's biome) |
 | `precedent` | previous | the previous cycle in light form, to spread a change over time |
 
 ### `monde` (world)

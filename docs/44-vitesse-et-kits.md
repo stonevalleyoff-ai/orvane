@@ -23,6 +23,8 @@ node outils/vitesse.js --contre origin/main              # plus vite que main ? 
 
 Contre une autre version du moteur, l'outil fait tourner les deux sur le même monde, et compare les temps et les empreintes de chaque instantané. Si le monde n'est plus le même, il le dit, et sort en erreur. C'est le garde-fou de toute optimisation à venir.
 
+À savoir : l'empreinte est celle de tout l'état, événements compris. Depuis que les événements de souche disent leur souche, leur nature et, pour une extinction, son nom, ses hôtes et ses derniers lieux (docs/18), `--contre` une version d'avant dit « le monde n'est plus le même » dès qu'une souche naît, saute, mute ou s'éteint : ce sont ces champs, pas les effectifs. Comparés sans eux, les états sont les mêmes, au caractère près (8 cycles du monde publié, 12 de la genèse 2026).
+
 ## Les kits
 
 `kits/LISEZ-MOI.md` dit comment les installer et s'en servir. En bref :

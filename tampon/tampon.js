@@ -168,7 +168,10 @@ function filtrer(inst, opt = {}) {
   const F = new Set(famillesDe(opt)), B = Array.isArray(opt.biomes) && opt.biomes.length ? new Set(opt.biomes) : null;
   const garde = t => F.has(familleDe(t)), dans = p => !B || B.has(p.biome);
   const taxons = inst.taxons.filter(garde).map(t => B ? { ...t, populations: t.populations.filter(dans) } : t), ids = new Set(taxons.map(t => t.id));
-  return { ...inst, taxons, evenements: (inst.evenements || []).filter(e => e.type === 'eveil' || !e.taxon || ids.has(e.taxon) || inst.biomes?.some(b => b.id === e.taxon)) };   // (un éveil, de la Mère ou de la flore, regarde tout le monde)
+  // (un éveil, de la Mère ou de la flore, regarde tout le monde ; une souche qui s'éteint, chacun de ses derniers lieux, même si sa
+  // lignée d'origine n'est plus listée, docs/18)
+  const lu = l => !B || B.has(l) || B.has(String(l).split('~')[0]);
+  return { ...inst, taxons, evenements: (inst.evenements || []).filter(e => e.type === 'eveil' || !e.taxon || ids.has(e.taxon) || inst.biomes?.some(b => b.id === e.taxon) || (Array.isArray(e.lieux) && e.lieux.some(lu))) };
 }
 // Chaque jeu montre le monde à sa façon : le tampon lit ses lots avec SON exposition (orvane_regler_jeu, hebergement/LISEZ-MOI.md). Un lot
 // sans jeu connu prend celle du profil du monde, sinon l'exposition neutre : tout est montré tel quel, rien n'est redressé.

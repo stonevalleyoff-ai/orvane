@@ -921,6 +921,14 @@ export interface Instantane {
     souche?: string;
     /** (docs/18, 29) Ce qui arrive à la souche : naissance (elle naît chez taxon, dans biome), saut_hote (elle prend chez une lignée de plus, taxon), mutation (un mutant naît chez taxon), vecteur (un mutant porté par un insecte, monde.pathogenes.souches[souche].vecteur), extinction (elle s'éteint dans le monde ; taxon : sa lignée d'origine). D'autres pourront venir : un jeu ignore celles qu'il ne connaît pas. */
     nature?: "naissance" | "saut_hote" | "mutation" | "vecteur" | "extinction";
+    /** (docs/18) Une souche qui s'éteint : son nom (elle n'est plus dans monde.pathogenes.souches). */
+    nom?: string;
+    /** (docs/18) Une souche qui s'éteint : les biomes où elle avait encore des malades au début du cycle, triés. */
+    lieux?: string[];
+    /** (docs/18) Une souche qui s'éteint : les lignées où elle avait pris. */
+    hotes?: string[];
+    /** (monde à parcelles, docs/15) La parcelle où l'événement est né ; biome est alors le biome dont elle est une part. */
+    parcelle?: string;
     detail?: string;
   }[];
   /** Le cycle d'avant, allégé (effectifs par biome, fréquences des phénotypes), joint à l'instantané publié : tous les traducteurs interpolent entre les deux de la même façon. */

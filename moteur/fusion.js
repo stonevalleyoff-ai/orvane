@@ -146,7 +146,7 @@ function relier(cible, source, opt = {}) {
   for (const [x, y] of ponts) { lier(x, y); const A = types.find(b => b.id === typeDe(x)), B = types.find(b => b.id === typeDe(y)); if (A && B && A !== B) lier(A, B); }
   // 3. ses lignées, sur leurs parcelles renommées
   const arrivent = [];
-  for (const t of S.taxons) { const pops = t.populations.map(p => { const q = { ...clone(p), biome: neuf.get(p.biome) || p.biome, effectif: +(p.effectif * part).toFixed(3) }; delete q.hybride; delete q.infection; return q; }).filter(p => p.effectif >= 1 && places.some(b => b.id === p.biome));
+  for (const t of S.taxons) { const pops = t.populations.map(p => { const q = { ...clone(p), biome: neuf.get(p.biome) || p.biome, effectif: +(p.effectif * part).toFixed(3) }; delete q.hybride; delete q.infection; delete q.infection_par_parcelle; return q; }).filter(p => p.effectif >= 1 && places.some(b => b.id === p.biome));
     if (pops.length) arrivent.push({ t, pops }); }
   const { ids, renommes, nomDe, parentArrive } = nommer(inst, source, arrivent, n);
   const evenements = [], nouveaux = [];
