@@ -123,10 +123,14 @@ func lire_lieux(biomes: Array) -> Dictionary:
 # l'index et des morceaux de biomes (lus en ligne, ou gardés dans le jeu) → l'instantané réduit à ces biomes, comme tampon/morceaux.js
 func assembler(index: Dictionary, morceaux: Dictionary) -> Dictionary:
 	var vus := {}
+	var lus := {}
+	var bids := {}
 	for b in index.get("biomes", []):
+		bids[str(b.get("id", ""))] = true
 		var m = morceaux.get(str(b.get("id", "")))
 		if typeof(m) != TYPE_DICTIONARY:
 			continue
+		lus[str(b.get("id", ""))] = true
 		for t in m.get("taxons", []):
 			var id := str(t.get("id", ""))
 			if not vus.has(id):
@@ -140,15 +144,35 @@ func assembler(index: Dictionary, morceaux: Dictionary) -> Dictionary:
 				if typeof(vu_ph[i].get("frequence_par_biome")) == TYPE_DICTIONARY and typeof(ph[i].get("frequence_par_biome")) == TYPE_DICTIONARY:
 					vu_ph[i]["frequence_par_biome"].merge(ph[i]["frequence_par_biome"], true)
 	var taxons := []
+	var ids := {}
 	for x in index.get("taxons", []):
 		var id := str(x.get("id", ""))
 		if vus.has(id):
 			taxons.append(vus[id])
+			ids[id] = true
+	# les événements : ceux des lignées lues, des lieux, les éveils ; une souche qui s'éteint, si l'un de ses derniers lieux est lu
+	# (docs/18) — la règle de tampon/morceaux.js
+	var evenements := []
+	for e in index.get("evenements", []):
+		if typeof(e) == TYPE_DICTIONARY and _evenement_lu(e, ids, bids, lus):
+			evenements.append(e)
 	var out := {"orvane": index.get("orvane", ""), "monde": index.get("monde", {}), "cycle": index.get("cycle", {}), "biomes": index.get("biomes", []),
-		"catalogue": index.get("catalogue", {}), "taxons": taxons, "evenements": index.get("evenements", [])}
+		"catalogue": index.get("catalogue", {}), "taxons": taxons, "evenements": evenements}
 	if typeof(index.get("parcelles")) == TYPE_ARRAY:
 		out["parcelles"] = index["parcelles"]     # (un monde à parcelles : leur biome, leur nom, leurs voisines, comme tampon/morceaux.js)
 	return out
+
+
+func _evenement_lu(e: Dictionary, ids: Dictionary, bids: Dictionary, lus: Dictionary) -> bool:
+	var t = e.get("taxon")
+	if str(e.get("type", "")) == "eveil" or typeof(t) == TYPE_NIL or str(t) == "" or ids.has(str(t)) or bids.has(str(t)):
+		return true
+	var L = e.get("lieux")
+	if typeof(L) == TYPE_ARRAY:
+		for l in L:
+			if lus.has(str(l)):
+				return true
+	return false
 
 
 # --- dessiner les bêtes : les planches (morceaux/silhouettes/<biome>.json, docs/21) ---
@@ -571,9 +595,11 @@ func foyers(souche_id: String, inst: Dictionary = {}) -> Array:
 	return out
 
 
-# ce qui est arrivé aux souches au dernier cycle : [{ type, nature, souche, taxon, biome, detail }] — nature : naissance (une souche
-# nouvelle), saut_hote (elle gagne une lignée, taxon), mutation (un mutant naît), vecteur (un mutant que porte un insecte), extinction
-# (elle s'éteint ; taxon : sa lignée d'origine). Une seule souche, si on la nomme. Un instantané d'avant ces champs n'en dit rien.
+# ce qui est arrivé aux souches au dernier cycle : [{ type, nature, souche, nom, taxon, biome, parcelle, lieux, hotes, detail }] —
+# nature : naissance (une souche nouvelle), saut_hote (elle gagne une lignée, taxon), mutation (un mutant naît), vecteur (un mutant que
+# porte un insecte), extinction (elle s'éteint ; taxon : sa lignée d'origine ; lieux : les biomes où elle avait encore des malades au
+# début du cycle ; hotes : les lignées où elle avait pris). nom : celui de la souche ; parcelle : où l'événement est né (un monde à
+# parcelles). Ce qui manque vaut null ([] pour lieux et hotes). Une seule souche, si on la nomme. Un instantané d'avant ces champs n'en dit rien.
 func evenements_souches(souche_id: String = "", inst: Dictionary = {}) -> Array:
 	var i := inst if not inst.is_empty() else instantane
 	var out := []
@@ -582,8 +608,27 @@ func evenements_souches(souche_id: String = "", inst: Dictionary = {}) -> Array:
 			continue
 		if souche_id != "" and e["souche"] != souche_id:
 			continue
-		out.append({"type": str(e.get("type", "")), "nature": str(e.get("nature", "")), "souche": e["souche"], "taxon": str(e.get("taxon", "")),
-			"biome": str(e.get("biome", "")), "detail": str(e.get("detail", ""))})
+		var nom = e.get("nom")
+		if typeof(nom) != TYPE_STRING:
+			var s := souche(str(e["souche"]), i)
+			nom = s["nom"] if typeof(s.get("nom")) == TYPE_STRING else null
+		out.append({"type": str(e.get("type", "")), "nature": _texte(e.get("nature")), "souche": e["souche"], "nom": nom, "taxon": _texte(e.get("taxon")),
+			"biome": _texte(e.get("biome")), "parcelle": _texte(e.get("parcelle")), "lieux": _textes(e.get("lieux")), "hotes": _textes(e.get("hotes")),
+			"detail": str(e.get("detail", ""))})
+	return out
+
+
+# un texte du contrat, ou null s'il n'y est pas ; une liste de textes, ou [] (ce que rendent moteur/pathogenes.js et le kit Unity)
+func _texte(x) -> Variant:
+	return x if typeof(x) == TYPE_STRING else null
+
+
+func _textes(x) -> Array:
+	var out := []
+	if typeof(x) == TYPE_ARRAY:
+		for y in x:
+			if typeof(y) == TYPE_STRING:
+				out.append(y)
 	return out
 
 

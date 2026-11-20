@@ -111,6 +111,9 @@ namespace Orvane
         /// d'une seule, si on la nomme. Un instantané d'avant ces champs n'en dit rien.</summary>
         public List<Evenement> EvenementsDeSouches(string souche = null) => Evenements.Where(e => e?.Souche != null && (souche == null || e.Souche == souche)).ToList();
 
+        /// <summary>Le nom de la souche d'un événement : celui que dit l'événement (une souche éteinte), sinon celui de la souche vivante ; null : aucun.</summary>
+        public string NomDe(Evenement e) => e?.Nom ?? Souche(e?.Souche)?.Nom;
+
         // où vit une lignée dans un lieu : les populations du biome ; ou celle dont le biome porte la parcelle, et son effectif là
         (List<Population> biome, Population parcelle, double effectif) Ici(Lignee t, string lieu)
         {
@@ -137,17 +140,23 @@ namespace Orvane
         [JsonProperty("genre")] public string Genre;
         [JsonExtensionData] public IDictionary<string, JToken> Autres;
 
-        /// <summary>Les souches du monde (docs/18) ; null : un monde sans souches. Instantane.Souches() les rend classées.</summary>
+        /// <summary>Les souches du monde (docs/18) ; null : un monde sans souches. Instantane.Souches() les rend classées. Lues une fois
+        /// (gardées pour cet instantané), chacune à la main : une souche illisible (un champ connu d'un autre type) est laissée de côté,
+        /// sans erreur.</summary>
         [JsonIgnore] public Pathogenes Pathogenes
         {
             get
             {
-                if (Autres == null || !Autres.TryGetValue("pathogenes", out var p) || !(p is JObject)) return null;
-                var P = p.ToObject<Pathogenes>(); if (P.Souches == null) P.Souches = new Dictionary<string, Souche>();
-                foreach (var kv in P.Souches) if (kv.Value != null) kv.Value.Id = kv.Key;
-                return P;
+                if (pathogenesLus) return pathogenes;
+                pathogenesLus = true;
+                if (Autres == null || !Autres.TryGetValue("pathogenes", out var p) || !(p is JObject o)) return pathogenes = null;
+                var P = new Pathogenes();
+                try { var d = o["depuis"]; if (d != null && d.Type != JTokenType.Null) P.Depuis = (int)(d.Value<double?>() ?? 0); } catch (Exception) { }
+                if (o["souches"] is JObject S) foreach (var x in S.Properties()) { var s = Souche.Lire(x.Name, x.Value); if (s != null) P.Souches[x.Name] = s; }
+                return pathogenes = P;
             }
         }
+        Pathogenes pathogenes; bool pathogenesLus;
     }
 
     /// <summary>Les souches d'un monde (monde.pathogenes, docs/18).</summary>
@@ -172,6 +181,27 @@ namespace Orvane
         [JsonProperty("parent")] public string Parent;                         // (docs/29) un mutant : la souche dont il est né
         [JsonProperty("vecteur")] public string Vecteur;                       // (docs/29) la lignée d'insectes qui la porte d'une lignée à l'autre
         [JsonExtensionData] public IDictionary<string, JToken> Autres;
+
+        /// <summary>Une souche lue à la main (monde.pathogenes.souches[id]) ; null si elle est illisible : pas un objet, ou un champ connu
+        /// d'un autre type (une virulence « forte »). Ce qu'elle porte d'inconnu reste dans Autres.</summary>
+        public static Souche Lire(string id, JToken t)
+        {
+            if (!(t is JObject o)) return null;
+            try
+            {
+                var s = new Souche { Id = id, Nom = Texte(o, "nom"), Virulence = Nombre(o, "virulence") ?? 0, Transmission = Nombre(o, "transmission") ?? 0, Origine = Texte(o, "origine"),
+                    Apparu = (int)(Nombre(o, "apparu") ?? 0), Infectes = Nombre(o, "infectes") ?? 0, Parent = Texte(o, "parent"), Vecteur = Texte(o, "vecteur"), Autres = new Dictionary<string, JToken>() };
+                var h = o["hotes"];
+                if (h is JArray a) s.Hotes = a.Select(x => x.Value<string>()).ToList();
+                else if (h != null && h.Type != JTokenType.Null) return null;
+                foreach (var p in o.Properties()) if (!Connus.Contains(p.Name)) s.Autres[p.Name] = p.Value;
+                return s;
+            }
+            catch (Exception) { return null; }
+        }
+        static readonly HashSet<string> Connus = new HashSet<string> { "nom", "virulence", "transmission", "origine", "apparu", "hotes", "infectes", "parent", "vecteur" };
+        static string Texte(JObject o, string k) { var v = o[k]; return v == null || v.Type == JTokenType.Null ? null : v.Value<string>(); }
+        static double? Nombre(JObject o, string k) { var v = o[k]; return v == null || v.Type == JTokenType.Null ? (double?)null : v.Value<double?>(); }
     }
 
     /// <summary>Ce qu'une souche fait d'une population (docs/18) : la part de ses bêtes infectées (I) et celle des immunisées (R), de 0 à 1.</summary>
@@ -329,7 +359,17 @@ namespace Orvane
         [JsonIgnore] public string Souche => Texte("souche");
         /// <summary>(docs/18) Ce qui lui arrive : Natures.Naissance, SautHote, Mutation, Vecteur, Extinction ; null : pas un événement de souche.</summary>
         [JsonIgnore] public string Nature => Texte("nature");
+        /// <summary>(docs/18) Le nom de la souche, que dit l'événement d'une souche qui s'éteint (elle n'est plus dans monde.pathogenes.souches) ;
+        /// pour les autres, Instantane.NomDe(evenement).</summary>
+        [JsonIgnore] public string Nom => Texte("nom");
+        /// <summary>(docs/15) Un monde à parcelles : la parcelle où l'événement est né (Biome est alors le biome dont elle est une part).</summary>
+        [JsonIgnore] public string Parcelle => Texte("parcelle");
+        /// <summary>(docs/18) Une souche qui s'éteint : les biomes où elle avait encore des malades au début du cycle ; vide sinon.</summary>
+        [JsonIgnore] public List<string> Lieux => Textes("lieux");
+        /// <summary>(docs/18) Une souche qui s'éteint : les lignées où elle avait pris ; vide sinon.</summary>
+        [JsonIgnore] public List<string> Hotes => Textes("hotes");
         string Texte(string cle) => Autres != null && Autres.TryGetValue(cle, out var v) && v != null && v.Type == JTokenType.String ? (string)v : null;
+        List<string> Textes(string cle) => Autres != null && Autres.TryGetValue(cle, out var v) && v is JArray a ? a.Where(x => x.Type == JTokenType.String).Select(x => (string)x).ToList() : new List<string>();
     }
 
     // --- ce que le jeu renvoie ---

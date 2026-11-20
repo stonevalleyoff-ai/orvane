@@ -66,7 +66,7 @@ Une souche qui s'éteint n'est plus dans `monde.pathogenes.souches` : son évén
 - Une épidémie d'avant les souches (dans un monde qui ne les a pas, ou une population qui en garde une d'avant leur éveil) reste un `epidemie` ou un `remission` sans `souche` ni `nature`.
 - D'autres natures pourront venir : un jeu ignore celles qu'il ne connaît pas.
 - La chronique (docs/37) et le directeur (docs/40) les lisent. Pour un instantané d'avant ces champs, la chronique relit le texte, et retrouve la souche par son nom ; quand deux souches portent le même nom, par ce que le monde dit de l'événement (une souche née ce cycle chez cette lignée, une qui était là et ne l'est plus, une qui gagne cette lignée).
-- Le tampon (`Tampon.filtrer`) et les morceaux (`OrvaneMorceaux.lire`) gardent l'extinction d'une souche pour un jeu qui lit l'un de ses derniers lieux, même si sa lignée d'origine n'est plus listée ou vit ailleurs.
+- Le tampon (`Tampon.filtrer`) et les morceaux (`OrvaneMorceaux.lire`, `Orvane.assembler` du kit Godot) gardent l'extinction d'une souche pour un jeu qui lit l'un de ses derniers lieux, même si sa lignée d'origine n'est plus listée ou vit ailleurs.
 
 ## L'infection par parcelle
 
@@ -104,6 +104,7 @@ Un jeu n'a pas à lire le JSON lui-même. Les mêmes aides, avec les mêmes rép
 | ce qui leur est arrivé au dernier cycle | `evenements(inst, souche)` | `evenements_souches(souche)` | `EvenementsDeSouches(souche)` |
 
 - `lieu` est un biome (`"mangrove"`) ou une parcelle (`"mangrove~3"`). Pour une parcelle, dans un instantané d'avant l'infection par parcelle, c'est celle de son biome.
+- Un événement de souche : `{ type, nature, souche, nom, taxon, biome, parcelle, lieux, hotes, detail }`. `nom` est celui de la souche (vivante, ou que dit son extinction) ; ce qui manque vaut `null`, et `[]` pour `lieux` et `hotes`. Dans le kit Unity, `Evenement.Nom`, `Parcelle`, `Lieux`, `Hotes`, et `inst.NomDe(evenement)`.
 - Un foyer : `{ taxon, biome, parcelle, effectif, i, r, infectes }`, une parcelle (ou un biome entier, dans un monde sans parcelles) où des bêtes vivantes sont infectées. Une parcelle d'immunisés seulement n'en est pas un.
 - Ce qui manque (une lignée, un lieu, une souche inconnus, un monde sans souches) donne une réponse vide, jamais une erreur.
 

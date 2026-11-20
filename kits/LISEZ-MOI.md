@@ -45,7 +45,7 @@ StartCoroutine(OrvaneUnity.Deposer(b, compteur, compteOpaque, rep => {
 - `compteOpaque` : un identifiant du joueur qu'Orvane ne peut pas relire, par exemple un hachage de son identifiant.
 - Un lot fait 500 événements au plus : `Clore` en fait autant qu'il faut, et `Deposer` les envoie un par un.
 - Les classes : `Instantane`, `Lignee`, `Plan`, `Population`, `Phenotype`, `Biome`, `Evenement`, `Lot`. Les détails (le corps, la vie en groupe, la migration) restent en `JObject`, à lire au besoin : `lignee.Plan.Corps["forme"]`.
-- **Les souches** (docs/18) : `inst.Souches()` les rend, les plus répandues d'abord (des `Souche` : `Nom`, `Virulence`, `Transmission`, `Origine`, `Hotes`, `Infectes`, `Parent`, `Vecteur`), `inst.Souche("souche-3")` une seule. `inst.Infection("pheva", "mangrove~3")` rend l'infection d'une lignée dans un biome ou une parcelle, par souche (`I` infectés, `R` immunisés, de 0 à 1), `inst.Infectes("pheva", "mangrove~3", "souche-3")` le nombre de bêtes infectées là, `inst.Foyers("souche-3")` où elle frappe, parcelle par parcelle (des `Foyer`), `inst.EvenementsDeSouches()` ce qui leur est arrivé au dernier cycle (`Evenement.Souche`, `Evenement.Nature` : `Natures.Naissance`, `SautHote`, `Mutation`, `Vecteur`, `Extinction`). Sur une population : `Infections`, `InfectionsParParcelle`, `Parcelles`.
+- **Les souches** (docs/18) : `inst.Souches()` les rend, les plus répandues d'abord (des `Souche` : `Nom`, `Virulence`, `Transmission`, `Origine`, `Hotes`, `Infectes`, `Parent`, `Vecteur`), `inst.Souche("souche-3")` une seule. `inst.Infection("pheva", "mangrove~3")` rend l'infection d'une lignée dans un biome ou une parcelle, par souche (`I` infectés, `R` immunisés, de 0 à 1), `inst.Infectes("pheva", "mangrove~3", "souche-3")` le nombre de bêtes infectées là, `inst.Foyers("souche-3")` où elle frappe, parcelle par parcelle (des `Foyer`), `inst.EvenementsDeSouches()` ce qui leur est arrivé au dernier cycle (`Evenement.Souche`, `Evenement.Nature` : `Natures.Naissance`, `SautHote`, `Mutation`, `Vecteur`, `Extinction` ; `Evenement.Parcelle`, et pour une extinction `Nom`, `Lieux`, `Hotes` ; `inst.NomDe(evenement)` le nom de sa souche). Une souche mal formée est laissée de côté, sans erreur ; les souches sont lues une fois par instantané. Sur une population : `Infections`, `InfectionsParParcelle`, `Parcelles`.
 
 ```csharp
 foreach (var f in inst.Foyers("souche-3").Take(3))
@@ -97,12 +97,12 @@ func _on_fin_de_partie() -> void:   # (ou un moment naturel : un retour au menu,
 for s in Orvane.souches():                          # les plus répandues d'abord
 	print(s.nom, " : ", s.infectes, " bêtes infectées, virulence ", s.virulence)
 var g := Orvane.souche("souche-3")                  # { id, nom, virulence, transmission, origine, apparu, hotes, infectes, parent, vecteur }
-var I := Orvane.infection("pheva", "mangrove~3")    # { "souche-3": { "i": 0.075, "r": 0.032 } } : dans un biome, ou une parcelle
+var I := Orvane.infection("pheva", "mangrove~3")    # au cycle 59 : { "souche-3": { "i": 0.07469, "r": 0.03224 }, "souche-6": { "i": 0.007501, "r": 0.002272 } }
 var n := Orvane.infectes("pheva", "mangrove~3", "souche-3")   # le nombre de bêtes infectées là
 for f in Orvane.foyers("souche-3"):                 # où elle frappe : { taxon, biome, parcelle, effectif, i, r, infectes }
 	print(f.taxon, " à ", f.parcelle, " : ", f.infectes)
 for e in Orvane.evenements_souches():               # naissance, saut_hote, mutation, vecteur, extinction
-	print(e.nature, " de ", e.souche, " chez ", e.taxon)
+	print(e.nature, " de ", e.nom, " chez ", e.taxon, " ", e.lieux)   # { type, nature, souche, nom, taxon, biome, parcelle, lieux, hotes, detail }
 ```
 
   `souches_eveillees()` dit si le monde a ses souches. Une parcelle, dans un instantané d'avant l'infection par parcelle, a l'infection de son biome ; un instantané d'avant les événements de souche n'en dit rien. Une lignée, un lieu ou une souche inconnus donnent une réponse vide. `lire_lieux` (et `assembler`) gardent aussi les parcelles du monde (`inst.parcelles`).

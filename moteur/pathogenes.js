@@ -15,7 +15,8 @@
 //   infection(inst, lignee, lieu)       → { souche: { i, r } } : les parts infectée et immunisée, dans un biome ou une parcelle
 //   infectes(inst, lignee, lieu, souche) → combien de bêtes infectées là (toutes souches, sans souche)
 //   foyers(inst, souche)                → où elle frappe : [{ taxon, biome, parcelle, effectif, i, r, infectes }], par parcelle
-//   evenements(inst, souche)            → ce qui est arrivé aux souches au dernier cycle : [{ type, nature, souche, taxon, biome, detail }]
+//   evenements(inst, souche)            → ce qui est arrivé aux souches au dernier cycle : [{ type, nature, souche, nom, taxon, biome,
+//                                          parcelle, lieux, hotes, detail }]
 // Déterministe. Node (require) ou navigateur (globalThis.OrvanePathogenes).
 'use strict';
 (function (racine) {
@@ -180,10 +181,14 @@ function foyers(inst, s) {
   const cle = f => `${f.taxon}|${f.biome}|${f.parcelle ?? ''}`;
   return F.sort((a, b) => b.infectes - a.infectes || (cle(a) < cle(b) ? -1 : cle(a) > cle(b) ? 1 : 0));
 }
-// ce qui est arrivé aux souches au dernier cycle (les événements qui disent leur souche) ; une seule, si on la nomme
+// ce qui est arrivé aux souches au dernier cycle (les événements qui disent leur souche) ; une seule, si on la nomme. nom : celui
+// de la souche (une souche éteinte le dit dans son événement) ; parcelle : où l'événement est né (un monde à parcelles) ; lieux,
+// hotes : ceux d'une souche qui s'éteint (où elle avait encore des malades au début du cycle ; les lignées où elle avait pris)
 function evenements(inst, s) {
+  const S = lesSouches(inst), liste = x => Array.isArray(x) ? x.filter(y => typeof y === 'string') : [];
   return (inst?.evenements || []).filter(e => e && typeof e.souche === 'string' && (s == null || e.souche === s))
-    .map(e => ({ type: e.type, nature: e.nature ?? null, souche: e.souche, taxon: e.taxon ?? null, biome: e.biome ?? null, detail: e.detail ?? '' }));
+    .map(e => ({ type: e.type, nature: typeof e.nature === 'string' ? e.nature : null, souche: e.souche, nom: typeof e.nom === 'string' ? e.nom : (propre(S, e.souche) && typeof S[e.souche]?.nom === 'string' ? S[e.souche].nom : null),
+      taxon: e.taxon ?? null, biome: e.biome ?? null, parcelle: typeof e.parcelle === 'string' ? e.parcelle : null, lieux: liste(e.lieux), hotes: liste(e.hotes), detail: e.detail ?? '' }));
 }
 
 const API = { REGLES, NATURES, eveiller, preparer, transmission, estHote, souches, souche, infection, infectes, foyers, evenements };
