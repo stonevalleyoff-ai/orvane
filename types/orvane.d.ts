@@ -4,6 +4,40 @@
 
 export type InstantaneUnite = number;
 
+/** (docs/52) Où est ce lieu sur la Terre, dans un monde réel (outils/terre/) : sa position, son pays, son fuseau horaire (l'heure locale d'un joueur qui le joue), son altitude, sa surface. */
+export type InstantaneLieuReel = {
+  lat?: number;
+  lon?: number;
+  /** La cellule H3 dont il est une part. */
+  h3?: string;
+  pays?: string;
+  region?: string;
+  /** Le fuseau horaire IANA (Europe/Paris). */
+  fuseau?: string;
+  altitude_m?: number;
+  relief_m?: number;
+  surface_km2?: number;
+  couvert_arbre?: number;
+  profondeur_m?: number;
+};
+
+/** (docs/52) La saison d'un lieu ce jour : la phase de SON année (0 : le cœur de son hiver), son nom, sa production du jour (1 en moyenne sur l'année). */
+export type InstantaneSaisonLieu = {
+  phase: InstantaneUnite;
+  nom: "hiver" | "printemps" | "été" | "automne";
+  production?: number;
+};
+
+/** (docs/52) Le soleil d'un lieu ce jour : la durée du jour (heures), le midi, le lever et le coucher en heure UTC (« HH:MM ») ; nuit_polaire ou soleil_de_minuit quand il ne se lève ou ne se couche pas. */
+export type InstantaneSoleil = {
+  jour_h?: number;
+  midi_utc?: string;
+  lever_utc?: string;
+  coucher_utc?: string;
+  nuit_polaire?: boolean;
+  soleil_de_minuit?: boolean;
+};
+
 /** Orvane — instantané (sortie du moteur) — L'état du vivant d'un monde à un cycle donné. Orvane ne connaît aucun jeu : tout est biologie abstraite. Le traducteur du jeu lit ce fichier et en fait des données jouables. */
 export interface Instantane {
   /** Version du contrat, MAJEUR.MINEUR : « 1.0 » depuis le 7 novembre 2026 (« 0.1 » avant ; docs/43). Même majeur, rien ne casse : un jeu ignore ce qu'il ne connaît pas. */
@@ -159,6 +193,15 @@ export interface Instantane {
     climat?: {
       [cle: string]: unknown;
     };
+    /** (docs/52) Le pas de temps d'un monde au jour : un cycle vaut « jours » jours ; le moteur met ses constantes à l'échelle (pas = jours / reference, 120 par défaut). Les durées d'un plan restent en cycles. */
+    temps?: {
+      jours?: number;
+      reference?: number;
+    };
+    /** (docs/52) Un monde au calendrier : chaque cycle a sa date, chaque lieu sa saison (celle de son climat ou de sa latitude), son soleil ; la lune passe. */
+    calendrier?: {
+      hemisphere?: "nord" | "sud";
+    };
     /** (docs/45) La météo : depuis quand chaque lieu a son temps du cycle. */
     meteo?: {
       depuis?: number;
@@ -201,6 +244,14 @@ export interface Instantane {
     date: string;
     /** Nombre d'événements de pression intégrés dans ce cycle. */
     pressions_recues?: number;
+    /** (docs/52) Dans un monde au calendrier : le jour que ce cycle a vécu (AAAA-MM-JJ, UTC). */
+    jour?: string;
+    /** (docs/52) La lune ce jour : sa phase (0 nouvelle, 0,5 pleine), la part éclairée, son nom. */
+    lune?: {
+      phase?: InstantaneUnite;
+      eclairee?: InstantaneUnite;
+      nom?: string;
+    };
     saison?: {
       phase: InstantaneUnite;
       nom: "hiver" | "printemps" | "été" | "automne";
@@ -236,6 +287,17 @@ export interface Instantane {
       humidite?: number;
       capacite?: number;
     };
+    lieu?: InstantaneLieuReel;
+    /** (docs/52) Les normales mensuelles d'un lieu réel (1991–2020) : 12 températures (°C ; la surface de la mer pour un lieu marin), 12 pluies (mm), 12 évapotranspirations (mm) ; sa saison en vient, jour après jour. */
+    normales?: {
+      t?: number[];
+      p?: number[];
+      etp?: number[];
+      rad?: number[];
+      npp?: number;
+    };
+    saison?: InstantaneSaisonLieu;
+    soleil?: InstantaneSoleil;
     /** Les axes tels qu’ils sont en cette saison (axes reste la valeur annuelle, stable : c’est elle qu’un traducteur fait correspondre). */
     axes_saison?: {
       [cle: string]: InstantaneUnite;
@@ -566,6 +628,24 @@ export interface Instantane {
     id: string;
     /** Nom donné par le moteur (ou gardé si le jeu en a proposé un). */
     nom?: string;
+    /** (docs/52) Dans un monde réel : l'espèce (ou le groupe) de la Terre que porte cette lignée. */
+    reel?: {
+      nom_scientifique?: string;
+      gbif?: number;
+      classe?: string;
+      ordre?: string;
+      famille?: string;
+      wikidata?: string;
+      estime?: boolean;
+    };
+    /** (docs/52) Une guilde : plusieurs espèces réelles semblables, simulées ensemble (especes dit lesquelles). */
+    guilde?: boolean;
+    /** (docs/52) Les espèces réelles d'une guilde, et leur part : ce qu'un jeu montre d'elle. */
+    especes?: {
+      nom_scientifique?: string;
+      nom?: string;
+      part?: InstantaneUnite;
+    }[];
     /** Le nom commun que lui a donné le premier joueur qui l'a décrite (docs/37). Le nom du moteur (nom) reste ; un jeu montre celui qu'il préfère. */
     nom_commun?: string;
     /** Qui a nommé la lignée (docs/37) : le nom public du joueur s'il l'a donné, son jeu, le cycle où le nom a été retenu, la date de la proposition. */
@@ -608,6 +688,25 @@ export interface Instantane {
       longevite: number;
       /** Âge de reproduction, en cycles. */
       maturite: number;
+      /** (docs/52) Dans un monde réel : les petits qui survivent à leur première année, par tête et par an. Avec elle, la croissance ne se déduit plus de la portée. */
+      natalite?: number;
+      /** (docs/52) Dans un monde réel : la part de la capacité d'un lieu que trouve l'espèce, rapportée à ce que sa bande de masse lui donnerait (1). Calée à l'assemblage, pour que ses effectifs comptés soient son équilibre. */
+      place?: number;
+      /** (docs/52, docs/53) Dans un monde réel : ce que l'espèce porte loin ses jeunes, rapporté à la règle du monde (1). Elle fonde d'autant plus vite un lieu voisin où elle n'est pas : le loup bien plus que le chevreuil. */
+      dispersion?: number;
+      /** (docs/53) Dans un monde réel : l'adresse d'un chasseur, rapportée à celle du moteur (1) : sa part des proies devant ses concurrents. Calée à l'assemblage. */
+      efficacite?: number;
+      /** (docs/52) Dans un monde réel : la part de charogne dans ce que mange la bête (EltonTraits) — le vautour 1, le milan 0,7, le glouton 0,4. Elle vit d'autant des morts du lieu, quand le monde le dit (regles.charognes). */
+      charogne?: number;
+      /** (docs/52) Dans un monde réel : ce que la bête brûle, rapporté à un mammifère de sa masse (1 ; un poisson, un reptile, un insecte ~0,15). Elle mange d'autant moins, et fait d'autant plus de petits de ce qu'elle mange. */
+      metabolisme?: number;
+      /** (docs/52) Un chasseur en meute : la taille du groupe qui chasse (le loup, ~6). La meute abat ce qu'une bête seule n'abattrait pas. */
+      meute?: number;
+      /** (docs/52) La saison de ses naissances, dans un monde au calendrier : le centre (la phase de l'année, 0 : le cœur de l'hiver) et la largeur de la fenêtre. */
+      naissances?: {
+        centre?: InstantaneUnite;
+        largeur?: number;
+      };
       /** Descendants par reproduction (moyenne). */
       portee?: number;
       /** 0 solitaire, 1 grégaire. */
@@ -919,6 +1018,13 @@ export interface Instantane {
       phenotypes?: unknown[];
     }[];
   };
+  /** (docs/52) D'où viennent les données d'un monde réel, et sous quelle licence : un jeu qui montre ce monde les crédite. */
+  attributions?: {
+    source?: string;
+    licence?: string;
+    url?: string;
+    usage?: string;
+  }[];
   /** Les parcelles du monde (docs/15), s'il en a : leur biome (type), leur capacité, leurs voisines. Les populations des taxons sont données par biome, avec leur répartition par parcelle. */
   parcelles?: {
     id: string;
@@ -931,6 +1037,9 @@ export interface Instantane {
     meteo?: {
       [cle: string]: unknown;
     };
+    lieu?: InstantaneLieuReel;
+    saison?: InstantaneSaisonLieu;
+    soleil?: InstantaneSoleil;
   }[];
 }
 
