@@ -3,5 +3,6 @@
  { "id": "sv-1", "nom": "Monde de Stone Valley", "jeu": "Stone Valley, jusqu’au monde d’Orvane (archivé)" },
  { "id": "genese-7", "nom": "Monde né d'Orvane", "jeu": "aucun : une genèse à observer (archivée)" },
  { "id": "genese-2026", "nom": "Le monde de la genèse 2026", "jeu": "aucun : une genèse à observer (3 000 cycles, 5 novembre 2026)", "fichiers": ["flore", "chronique", "genese"] },
+ { "id": "europe", "nom": "L'Europe", "jeu": "aucun : le premier monde réel, au jour (docs/52), l'étalon du moteur (docs/53)", "fichiers": ["flore", "chronique"] },
  { "id": "aube", "nom": "Aube", "jeu": "aucun : une genèse à l'écologie du monde réel, à observer (1 250 cycles, 20 novembre 2026)", "fichiers": ["flore", "chronique", "bilans"] }
 ]
