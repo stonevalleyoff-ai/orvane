@@ -18,7 +18,11 @@
 (function (racine) {
 'use strict';
 const VERSION = '1.0', STYLE = '[STYLE ORVANE]';
-const lireCorps = () => racine.OrvaneCorps || (typeof require === 'function' ? require('../moteur/corps.js') : null);
+// moteur/corps.js : celui du navigateur (globalThis.OrvaneCorps), ou celui de Node ; un « require » qui n'est pas celui de Node
+// (un chargeur AMD, un empaqueteur) peut échouer ou rendre autre chose : la fiche le dit, au lieu de planter plus loin
+const estCorps = C => !!C && typeof C.normaliser === 'function' && typeof C.etendre === 'function';
+const lireCorps = () => { if (estCorps(racine.OrvaneCorps)) return racine.OrvaneCorps;
+  try { const C = typeof require === 'function' ? require('../moteur/corps.js') : null; return estCorps(C) ? C : null; } catch (e) { return null; } };
 const NUM7 = ['long', 'haut', 'cou', 'tete', 'museau', 'oreilles', 'queue'];
 const RESUMES = ['cornes', 'crete', 'ailes', 'carapace', 'antennes'];   // les proportions d'avant, résumé de la liste des organes
 const BASES = ['quadrupede', 'hexapode', 'bipede', 'oiseau', 'serpent', 'segmente', 'radiaire', 'tentaculaire'];
@@ -31,14 +35,20 @@ const en = (v, d = 0) => String(+(+v || 0).toFixed(d));
 const pc = x => { const v = x * 100; return v > 0 && v < .1 ? 'moins de 0,1' + ESP + '%' : fr(v, v < 10 ? 1 : 0) + ESP + '%'; };
 const longueur = m => m >= 1 ? fr(m, 1) + ESP + 'm' : m >= .1 ? fr(m * 100) + ESP + 'cm' : m >= .01 ? fr(m * 100, 1) + ESP + 'cm' : fr(m * 1000, 1) + ESP + 'mm';
 const length = m => m >= 1 ? en(m, 1) + ' m' : m >= .1 ? en(m * 100) + ' cm' : m >= .01 ? en(m * 100, 1) + ' cm' : en(m * 1000, 1) + ' mm';
-const masse = kg => kg >= 1000 ? fr(kg / 1000, 1) + ESP + 't' : kg >= 10 ? fr(kg) + ESP + 'kg' : kg >= 1 ? fr(kg, 1) + ESP + 'kg' : kg >= .01 ? fr(kg * 1000) + ESP + 'g' : fr(kg * 1000, 1) + ESP + 'g';
-const weight = kg => kg >= 1000 ? en(kg / 1000, 1) + ' t' : kg >= 10 ? en(kg) + ' kg' : kg >= 1 ? en(kg, 1) + ' kg' : kg >= .01 ? en(kg * 1000) + ' g' : en(kg * 1000, 1) + ' g';
+const masse = kg => kg >= 1000 ? fr(kg / 1000, 1) + ESP + 't' : kg >= 10 ? fr(kg) + ESP + 'kg' : kg >= 1 ? fr(kg, 1) + ESP + 'kg' : kg >= .01 ? fr(kg * 1000) + ESP + 'g' : kg >= .001 ? fr(kg * 1000, 1) + ESP + 'g' : fr(kg * 1e6) + ESP + 'mg';
+const weight = kg => kg >= 1000 ? en(kg / 1000, 1) + ' t' : kg >= 10 ? en(kg) + ' kg' : kg >= 1 ? en(kg, 1) + ' kg' : kg >= .01 ? en(kg * 1000) + ' g' : kg >= .001 ? en(kg * 1000, 1) + ' g' : en(kg * 1e6) + ' mg';
 const Maj = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 const min1 = s => s ? s.charAt(0).toLowerCase() + s.slice(1) : s;
 
 // ——— les sources : une donnée (`champ: valeur`) ou une décision de la DA ———
-const val = v => Array.isArray(v) ? '[' + v.map(val).join(', ') + ']' : typeof v === 'string' ? JSON.stringify(v) : typeof v === 'number' ? String(+v.toFixed(4))
-  : v && typeof v === 'object' ? '{ ' + Object.entries(v).map(([k, x]) => k + ': ' + val(x)).join(', ') + ' }' : String(v);
+// (un objet se cite clés triées : la fiche ne dépend pas de l'ordre où l'instantané range ses clés)
+const net = x => x == null || !isFinite(x) ? null : +x.toPrecision(6);
+const val = v => Array.isArray(v) ? '[' + v.map(val).join(', ') + ']' : typeof v === 'string' ? JSON.stringify(v) : typeof v === 'number' ? String(Math.abs(v) >= 1e-3 || v === 0 ? +v.toFixed(4) : +v.toPrecision(4))
+  : v && typeof v === 'object' ? '{ ' + Object.keys(v).sort().map(k => k + ': ' + val(v[k])).join(', ') + ' }' : String(v);
+// une copie profonde, clés triées : ce que la fiche rend ne partage rien avec l'instantané
+const copie = v => Array.isArray(v) ? v.map(copie) : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map(k => [k, copie(v[k])])) : v;
+const parNom = ([a, x], [b, y]) => y - x || (a < b ? -1 : a > b ? 1 : 0);   // les plus grands d'abord ; à égalité, par le nom
+const dit = v => v == null ? 'non dit' : v;
 const ci = (champ, v) => '`' + champ + (v === undefined ? '' : ': ' + val(v)) + '`';
 const par = (...L) => '(' + L.filter(Boolean).join(', ') + ')';
 const interp = t => '*(interprété : ' + t + ')*';
@@ -75,6 +85,8 @@ const NUANCES = [[15, 'rosé', 'pinkish'], [70, null, null], [165, 'verdâtre', 
 function nomCouleur(c) {
   const [h, s, l] = hsl(c);
   if (l < .12 && s >= .1) return { fr: 'presque noir', en: 'near-black' };
+  if (l < .2 && s >= .2) { const [nf, ne] = palier(h, TEINTES)[2];   // très sombre : saturée ou non, elle n'est pas vive
+    return { fr: nf.includes('sombre') ? nf.replace('sombre', 'très sombre') : nf + ' très sombre', en: ne.startsWith('dark ') ? 'very ' + ne : 'very dark ' + ne }; }
   if (s < .1 || l < .07 || l > .95) { const G = palier(l, [[.12, 'noir', 'black'], [.3, 'gris anthracite', 'charcoal grey'], [.5, 'gris sombre', 'dark grey'], [.7, 'gris', 'grey'], [.88, 'gris clair', 'light grey'], [Infinity, 'blanc', 'white']]); return { fr: G[1], en: G[2] }; }
   if (s < .2) { const N = palier(h, NUANCES);
     if (!N[1]) { const G = palier(l, [[.3, 'brun-gris sombre', 'dark taupe'], [.55, 'gris-brun', 'taupe'], [.75, 'gris-brun clair', 'light taupe'], [Infinity, 'beige', 'beige']]); return { fr: G[1], en: G[2] }; }
@@ -131,8 +143,8 @@ const DETAILS = [
   { id: 'pelage-tempere', famille: 'pelage', quand: 'le reste', fr: 'poil court', en: 'short fur', pourquoi: 'Une niche tempérée ne pousse ni au long ni au ras.' },
   { id: 'pelage-carapace', famille: 'pelage', quand: 'une vivipare à carapace', fr: 'sur le dos, une carapace de plaques cornées, comme un tatou ; le poil reste au ventre, aux pattes et à la tête', en: 'armadillo-like dorsal shield of horny plates, fur on belly, legs and head', pourquoi: 'La carapace se pose sur un mammifère sans lui ôter son poil.' },
   { id: 'chitine-elytres', famille: 'chitine', quand: 'une carapace de plus de 0,3', fr: 'deux élytres, des étuis durs qui couvrent l\'abdomen, comme un scarabée', en: 'hard wing-cases (elytra) covering the abdomen, beetle-like', pourquoi: 'Chez un insecte, une carapace est une paire d\'élytres.' },
-  { id: 'chitine-bouclier', famille: 'chitine', quand: 'une carapace de 0,3 ou moins', fr: 'une plaque dorsale courte et durcie, qui ne couvre pas tout l\'abdomen', en: 'short hardened dorsal plate that leaves the abdomen visible', pourquoi: 'Trop petite pour des élytres, elle reste un bouclier.' },
-  { id: 'chitine-geant', famille: 'chitine', quand: 'une masse de 1 kg ou plus', fr: 'géant : une cuticule épaisse et mate, en plaques jointives, des articulations larges et des pattes épaisses, pour qu\'on sente son poids', en: 'giant arthropod with thick matte armored cuticle in overlapping plates, sturdy thick jointed legs, heavy realistic weight, not toy-like', pourquoi: 'Les plus lourds insectes de la Terre pèsent moins de 100 g : à 1 kg, dix fois plus, une cuticule fine et luisante ferait un jouet.' },
+  { id: 'chitine-bouclier', famille: 'chitine', quand: 'une carapace de 0,3 ou moins', fr: 'une plaque dorsale courte et durcie, qui ne couvre pas tout l\'abdomen', en: 'short hardened pronotum shield that leaves the abdomen visible', pourquoi: 'Trop petite pour des élytres, elle reste un bouclier.' },
+  { id: 'chitine-geant', famille: 'chitine', quand: 'une masse de 1 kg ou plus', fr: 'géant : une cuticule épaisse et mate, en plaques jointives, des articulations larges et des pattes épaisses, pour qu\'on sente son poids', en: 'giant arthropod with thick matte armored cuticle in overlapping plates, sturdy thick jointed legs, a real sense of weight, not toy-like', pourquoi: 'Les plus lourds insectes de la Terre pèsent moins de 100 g : à 1 kg, dix fois plus, une cuticule fine et luisante ferait un jouet.' },
   { id: 'chitine-colosse', famille: 'chitine', quand: 'une masse de 10 kg ou plus', fr: 'des pattes comme des piliers', en: 'pillar-like legs', pourquoi: 'À la masse d\'un chien, il faut des appuis de chien.' },
   { id: 'chitine-nageur', famille: 'chitine', quand: 'elle nage', fr: 'pattes arrière aplaties en rames', en: 'flattened oar-like hind legs for swimming', pourquoi: 'Un insecte nageur rame avec ses pattes arrière.' },
   { id: 'cuirasse-nageur', famille: 'cuirasse', quand: 'elle nage', fr: 'carapace basse, lisse et profilée, comme une tortue d\'eau ; peau écailleuse sur la tête et les pattes', en: 'low smooth streamlined shell like a freshwater turtle, scaly skin on head and legs', pourquoi: 'L\'eau use et profile : un nageur porte sa carapace basse.' },
@@ -165,16 +177,21 @@ function modeDe(p) { const c = p.corps || {}, loco = p.locomotion || [];
 // ce que la famille lit d'une lignée : son plan visuel. Deux lignées au même plan visuel ont la même famille.
 function cleDe(t, I, C) {
   const p = t.plan || {};
-  if (p.regime === 'synthetique') return { machine: true };
+  if (p.regime === 'synthetique' && !p.corps) return { machine: true };
   const c = C.normaliser(p.corps), loco = p.locomotion || [], F = I?.catalogue?.monde?.formes || {};
   let plan = c.forme;
   if (!BASES.includes(plan)) plan = BASES.includes(F[plan]?.repli) ? F[plan].repli : c.pattes === 0 ? 'serpent' : c.pattes === 2 ? 'bipede' : c.pattes === 4 ? 'quadrupede' : 'hexapode';   // une forme du monde : son repli
-  return { plan, allure: C.allure(c, p), reproduction: p.reproduction || modeDe(p), carapace: c.organes.some(o => o.type === 'carapace'), nage: loco.includes('nage') };
+  const k = { plan, allure: C.allure(c, p), reproduction: p.reproduction || modeDe(p), carapace: c.organes.some(o => o.type === 'carapace'), nage: loco.includes('nage') };
+  return p.regime === 'synthetique' ? { machine: true, ...k } : k;   // (une machine qui a un corps : machine, au corps décrit comme les autres)
 }
 function familleAvec(t, I, C) { const k = cleDe(t, I, C), R = REGLES.find(r => r.si(k)); return { id: R.famille, regle: R.id, cle: k }; }
-function avecCorps(I, f) { const C = lireCorps(); if (!C) throw new Error('OrvaneFiche : moteur/corps.js manque (dans un navigateur, chargez-le avant monde/fiche.js)');
+function avecCorps(I, f) { const C = lireCorps(); if (!C) throw new Error('OrvaneFiche : moteur/corps.js manque (dans un navigateur, chargez-le avant monde/fiche.js ; ailleurs, posez globalThis.OrvaneCorps)');
   const avant = C.etendre(I?.catalogue?.monde || null); try { return f(C); } finally { C.etendre(avant); } }
-function famille(t, I) { if (!t?.plan) throw new Error('OrvaneFiche.famille : une lignée de l\'instantané (taxon.plan) est attendue'); return avecCorps(I, C => familleAvec(t, I, C)); }
+function verifier(t, quoi) {
+  if (!t || !t.plan) throw new Error('OrvaneFiche.' + quoi + ' : une lignée de l\'instantané (taxon.plan) est attendue');
+  if (t.plan.regime === 'vegetal') throw new Error('OrvaneFiche.' + quoi + ' : « ' + t.id + ' » est une plante ; les plantes ont leur dessin dans monde/herbier.js');
+}
+function famille(t, I) { verifier(t, 'famille'); return avecCorps(I, C => familleAvec(t, I, C)); }
 
 // ——— le vocabulaire ———
 // les proportions : [seuil, en français, en anglais] ; la valeur 0 a sa phrase (ZERO)
@@ -189,7 +206,7 @@ const PALIERS = {
   bec:      [[.2, 'très court', 'very short beak'], [.4, 'court', 'short beak'], [.6, 'moyen', 'medium beak'], [.8, 'long', 'long beak'], [Infinity, 'très long', 'very long beak']],
   caudale:  [[.1, 'minuscule', 'tiny tail fin'], [.3, 'petite', 'small tail fin'], [.55, 'moyenne', 'medium tail fin'], [.8, 'haute', 'large tail fin'], [Infinity, 'très haute', 'very large tail fin']],
 };
-const ZERO = { cou: ['pas de cou : la tête posée sur les épaules', 'no neck, head set directly on the shoulders', 'neck'], museau: ['aucun museau : la face plate', 'flat face without snout', 'snout, muzzle'],
+const ZERO = { cou: ['pas de cou : la tête posée sur les épaules', 'neckless, head set directly on the shoulders', 'neck'], museau: ['aucun museau : la face plate', 'flat snoutless face', 'snout, muzzle'],
   oreilles: ['aucune oreille visible', 'earless head', 'ears, ear flaps'], queue: ['pas de queue', 'tailless', 'tail'] };
 const MOT = { long: 'corps', haut: 'pattes', cou: 'cou', tete: 'tête', museau: 'museau', oreilles: 'oreilles', queue: 'queue', bec: 'bec' };
 // ce qui compte, forme par forme (les planches ne dessinent pas le reste : un insecte n'a ni oreilles ni museau)
@@ -224,7 +241,7 @@ const ORG_EN = {
   cornes:     { n: ['horn', 'horns'], f: { recourbees: ['', 'curving back in a crescent'], droites: ['straight', 'pointing up and forward'], ramifiees: ['branched antler-like', ''] }, neg: 'horns, antlers', autre: { recourbees: 'curved horns', droites: 'straight horns', ramifiees: 'antlers' } },
   defenses:   { n: ['tusk', 'tusks'], f: { recourbees: ['upward-curving', ''], droites: ['straight', 'pointing forward'] }, neg: 'tusks', autre: { recourbees: 'curved tusks', droites: 'straight tusks' } },
   crete:      { n: ['crest', 'crests'], f: { lisse: ['smooth rounded', ''], dentelee: ['serrated', ''] }, neg: 'crest', autre: { lisse: 'smooth crest', dentelee: 'serrated crest' } },
-  collerette: { n: ['neck frill', 'neck frills'], f: { lisse: ['smooth', 'behind the head'], frangee: ['fringed', 'behind the head'] }, neg: 'neck frill', autre: { lisse: 'smooth frill', frangee: 'fringed frill' } },
+  collerette: { n: ['head frill', 'head frills'], f: { lisse: ['smooth', 'behind the head'], frangee: ['fringed', 'behind the head'] }, neg: 'head frill, neck frill', autre: { lisse: 'smooth frill', frangee: 'fringed frill' } },
   antennes:   { n: ['antenna', 'antennae'], f: { fines: ['thin', ''], plumeuses: ['feathery', ''] }, neg: 'antennae', autre: { fines: 'thin antennae', plumeuses: 'feathery antennae' } },
   trompe:     { n: ['trunk', 'trunks'], f: { courte: ['short', ''], longue: ['long', ''] }, neg: 'trunk, proboscis', autre: { courte: 'short trunk', longue: 'long trunk' } },
   ailes:      { n: ['wing', 'wings'], f: { plumes: ['feathered', ''], membranes: ['membranous skin', ''] }, neg: 'wings', autre: { plumes: 'feathered wings', membranes: 'membranous bat wings' } },
@@ -234,37 +251,47 @@ const ORG_EN = {
   epines:     { n: ['spine', 'spines'], f: { fines: ['thin', ''], massives: ['massive', ''] }, neg: 'spines, quills', autre: { fines: 'thin spines', massives: 'massive spikes' } },
   massue:     { n: ['tail club', 'tail clubs'], f: { ronde: ['round', ''], cloutee: ['spiked', ''] }, neg: 'tail club', autre: { ronde: 'round club', cloutee: 'spiked club' } },
   aiguillon:  { n: ['stinger', 'stingers'], f: { droit: ['straight', ''], courbe: ['curved', 'arched over the back like a scorpion'] }, neg: 'stinger', autre: { droit: 'straight stinger', courbe: 'curved scorpion stinger' } },
-  panache:    { n: ['tuft', 'tufts'], f: { touffe: ['fluffy', ''], eventail: ['fan-shaped', 'plume'] }, neg: 'tail tuft, plume', autre: { touffe: 'fluffy tuft', eventail: 'fan-shaped plume' } },
+  panache:    { n: ['tuft', 'tufts'], f: { touffe: ['', ''], eventail: ['', ''] }, neg: 'tail tuft, plume', autre: { touffe: 'tail tuft', eventail: 'fan-shaped plume' } },   // (sa matière suit la famille : MATIERE)
   pinces:     { n: ['pincer', 'pincers'], f: { fines: ['slender', ''], massives: ['massive', ''] }, neg: 'pincers, crab claws', autre: { fines: 'slender pincers', massives: 'massive claws' } },
   mains:      { n: ['grasping hand', 'grasping hands'], f: { agiles: ['dexterous', ''], puissantes: ['powerful', ''] }, neg: 'hands, fingers', autre: { agiles: 'dexterous hands', puissantes: 'powerful hands' } },
 };
 const PLACE_FR = { tete: 'à la tête', dos: 'sur le dos', queue: 'au bout de la queue', flancs: 'sur les flancs', avant: 'à l\'avant' };
 const PLACE_EN = { tete: 'on the head', dos: 'along the back', queue: 'at the tail tip', flancs: 'on the flanks', avant: 'at the front' };
 const TAILLE_ORG = [[.3, 'de petite taille', 'small '], [.55, 'de taille moyenne', ''], [.75, 'de grande taille', 'large '], [Infinity, 'de très grande taille', 'huge ']];
-// la fonction d'un organe (catalogue.organes) : comment elle se montre
-const FONCTIONS = { combat: 'une arme : dure, nette, usée aux pointes', parade: 'un ornement : net et contrasté, il se voit de loin', avertissement: 'un signal : il se déploie, vif et contrasté',
-  perception: 'un sens : fin et mobile', recolte: 'un outil : souple, qui va chercher la nourriture', vol: 'il porte la bête en l\'air : grand et déployable', nage: 'il la propulse dans l\'eau : souple et fin',
-  protection: 'une défense passive : épaisse, dure, mate', defense: 'une défense : des pointes dures et acérées', venin: 'une arme à venin : pointue, sombre', saisie: 'il saisit : articulé et fort' };
+// la fonction d'un organe (catalogue.organes) : comment elle se montre (des noms, qui s'accordent avec tout organe)
+const FONCTIONS = { combat: 'une arme : dure, nette, usée aux pointes', parade: 'un ornement : net et contrasté, qui se voit de loin', avertissement: 'un signal : déployé, vif et contrasté',
+  perception: 'un sens : fin et mobile', recolte: 'un outil : souple, qui va chercher la nourriture', vol: 'de quoi voler : de grandes surfaces, déployables', nage: 'de quoi nager : une rame souple et fine',
+  protection: 'une défense passive : épaisse, dure, mate', defense: 'une défense : des pointes dures et acérées', venin: 'une arme à venin : pointue, sombre', saisie: 'une prise : articulée et forte' };
+// la matière d'un panache, selon la famille : [en touffe, en éventail] en français, puis en anglais
+const MATIERE = { pelage: ['de poils', 'de poils raides', 'fluffy tuft of fur', 'fan of stiff hairs'], plumage: ['de plumes', 'de plumes', 'tuft of feathers', 'fan of feathers'],
+  chitine: ['de soies', 'de soies raides', 'tuft of bristles', 'fan of stiff bristles'], ecailles: ['d\'écailles effilées', 'd\'écailles effilées', 'tuft of fringed scales', 'fan of fringed scales'],
+  cuirasse: ['d\'écailles effilées', 'd\'écailles effilées', 'tuft of fringed scales', 'fan of fringed scales'], 'peau-nue': ['de filaments de peau', 'de filaments de peau', 'tuft of skin filaments', 'fan of skin filaments'],
+  gelee: ['de filaments', 'de filaments', 'tuft of filaments', 'fan of filaments'], machine: ['de câbles', 'de câbles', 'tuft of cables', 'fan of cables'] };
 // ce que l'organe prend comme teinte (les planches) : l'ivoire, la robe, le sombre, l'accent
 const TEINTE_ORG = { cornes: 'os', defenses: 'os', epines: 'os', crete: 'accent', collerette: 'accent', panache: 'accent', plaques: 'accent', carapace: 'sombre', nageoires: 'sombre',
   antennes: 'sombre', ailes: 'sombre', pinces: 'sombre', massue: 'sombre', aiguillon: 'sombre', mains: 'robe', trompe: 'robe' };
 const MOTIFS = { rayures: ['rayures', 'en travers du dos et des flancs', 'stripes', 'across back and flanks', 'spots'], taches: ['taches', 'sur le dos et les flancs', 'spots', 'on back and flanks', 'stripes'],
   bandes: ['une bande', 'le long des flancs', 'band', 'along the flanks', 'spots'], masque: ['un masque', 'sur les yeux', 'mask', 'across the eyes', ''], uni: ['', '', '', '', 'stripes, spots'] };
 // ce qu'un trait du catalogue change à l'aspect, en anglais (pour les variantes ; un trait que la table ne connaît pas garde son présage)
-const VUE_EN = { albinisme: 'albino variant: white coat, pale pinkish eyes', melanisme: 'melanistic variant: all-black coat', 'robe-doree': 'golden coat variant', camouflage: 'cryptic coloring that matches the ground',
-  gigantisme: 'giant variant, 1.3 times longer and 1.8 times heavier', nanisme: 'dwarf variant, smaller and lighter', 'pattes-longues': 'long hind legs', palmes: 'webbed feet',
+const VUE_EN = { albinisme: 'albino variant: white {robe}, pale pinkish eyes', melanisme: 'melanistic variant: all-black {robe}', 'robe-doree': 'golden {robe} variant', camouflage: 'cryptic coloring that matches the ground',
+  gigantisme: 'giant variant, 1.3 times longer and 1.8 times heavier', nanisme: 'dwarf variant, smaller and lighter', 'pattes-longues': 'longer hind legs', palmes: 'webbed feet',
   'membrane-planante': 'gliding skin membrane between the legs', 'queue-prehensile': 'prehensile curling tail', 'crocs-allonges': 'long protruding fangs', vibrisses: 'long whiskers',
   'peau-epaisse': 'thick tough hide', carapace: 'bony plates on the back', 'glande-irritante': 'glistening warty skin', 'jet-glandulaire': 'swollen throat gland',
   'coloration-aposematique': 'bright yellow warning stripes', 'yeux-nocturnes': 'large reflective night eyes' };
 // ce que montre un trait, selon le corps : des moustaches sont des soies chez un insecte, des barbillons chez un poisson ; des pattes
-// longues ne sont rien sans pattes
+// longues ne sont rien sans pattes ; un détail ne vaut que pour les familles où il a un sens (pas de pieds palmés chez un insecte,
+// pas de moustaches chez une méduse, pas de crocs chez un oiseau)
 function vueEn(x, fam, al) {
-  const sansPattes = al === 'serpent' || al === 'poisson' || al === 'radiaire' || al === 'tentaculaire';
-  if (x === 'vibrisses') return fam === 'chitine' ? 'long sensory bristles on the head' : al === 'poisson' ? 'barbels around the mouth' : fam === 'plumage' ? 'bristles around the beak' : al === 'serpent' ? 'sensory bristles on the snout' : VUE_EN[x];
-  if (sansPattes && ['pattes-longues', 'palmes', 'membrane-planante'].includes(x)) return '';
-  if (x === 'queue-prehensile' && (fam === 'chitine' || al === 'poisson' || al === 'radiaire' || al === 'tentaculaire')) return '';
-  if (x === 'crocs-allonges' && fam === 'chitine') return 'oversized mandibles';
-  return VUE_EN[x] || '';
+  const sansPattes = al === 'serpent' || al === 'poisson' || al === 'radiaire' || al === 'tentaculaire', mou = fam === 'gelee', robe = fam === 'pelage' ? 'coat' : fam === 'plumage' ? 'plumage' : 'body';
+  if (x === 'vibrisses') return mou ? '' : fam === 'chitine' ? 'long sensory bristles on the head' : al === 'poisson' ? 'barbels around the mouth' : fam === 'plumage' ? 'bristles around the beak' : al === 'serpent' ? 'sensory bristles on the snout' : VUE_EN[x];
+  if ((sansPattes || mou) && ['pattes-longues', 'palmes', 'membrane-planante'].includes(x)) return '';
+  if (fam === 'chitine' && ['palmes', 'membrane-planante', 'glande-irritante', 'jet-glandulaire'].includes(x)) return '';
+  if (fam === 'plumage' && ['membrane-planante', 'crocs-allonges', 'queue-prehensile'].includes(x)) return '';
+  if (x === 'queue-prehensile' && (fam === 'chitine' || mou || al === 'poisson')) return '';
+  if (x === 'crocs-allonges') return fam === 'chitine' ? 'oversized mandibles' : mou ? '' : VUE_EN[x];
+  if (x === 'peau-epaisse') return fam === 'chitine' ? 'extra-thick cuticle' : fam === 'ecailles' || fam === 'cuirasse' ? 'thick heavy scales' : fam === 'plumage' || mou ? '' : VUE_EN[x];
+  if (x === 'carapace' && (mou || fam === 'plumage')) return '';
+  return (VUE_EN[x] || '').replace('{robe}', robe);
 }
 const ROBES = ['albinisme', 'melanisme', 'robe-doree', 'camouflage'];
 // le nom d'un trait du catalogue, en mots (un trait inventé par le monde garde son nom, ou son identifiant)
@@ -275,19 +302,23 @@ const NOMS_TRAITS = { gigantisme: 'gigantisme', nanisme: 'nanisme', 'queue-prehe
   crepuscularite: 'crépuscularité', batisseur: 'bâtisseur', eusocialite: 'eusocialité', metamorphose: 'métamorphose', oophage: 'oophagie' };
 const nomTrait = (x, CT) => NOMS_TRAITS[x] || CT?.[x]?.nom || x.replace(/-/g, ' ');
 // les façons de se déplacer : le verbe, ce qu'elle donne au corps (interprété), en anglais ; puis ce qui change pour un corps sans
-// pattes et pour un insecte
+// pattes, un bipède, un insecte. Ce qu'une façon de se déplacer donne aux pattes ne contredit jamais leur longueur (haut) : une
+// coureuse aux pattes courtes trottine, elle n'a pas de « longues pattes de course » (locoDe)
 const LOCO = {
   reptation: ['**rampe**', 'le ventre près du sol, les pattes écartées sur les côtés, comme un scinque', 'crawling belly-low like a skink'],
   marche: ['marche', '', ''], course: ['court', 'une coureuse : la foulée longue', 'built for running, long stride'],
   saut: ['saute', 'une sauteuse : les pattes arrière puissantes', 'powerful jumping hind legs'], fouissage: ['fouit', 'une fouisseuse : des griffes fortes aux pattes avant', 'strong digging claws on the forelimbs'],
   grimpe: ['grimpe', 'une grimpeuse : des doigts qui agrippent', 'gripping climbing toes'], nage: ['nage', '', 'a strong swimmer'], vol: ['vole', '', 'able to fly'] };
+const LOCO_COURT = { course: ['court', 'une coureuse aux pattes courtes : elle trottine vite', 'a quick scurrying runner on short legs'] };
 const LOCO_SERPENT = { reptation: ['ondule au sol', 'elle glisse en S, sans pattes', 'slithering in S-curves'], fouissage: ['fouit', 'elle s\'enfonce la tête la première', 'burrowing head first'],
   grimpe: ['grimpe', 'elle s\'enroule aux branches', 'climbing coiled around branches'], nage: ['nage', 'elle nage en ondulant', 'swimming with sinuous undulations'],
   saut: ['bondit', 'elle se détend comme un ressort', 'launching itself like a spring'], course: ['file', 'elle ondule très vite', 'fast slithering'], marche: ['avance', '', ''], vol: ['plane', 'elle plane, le corps aplati', 'gliding with a flattened body'] };
-const LOCO_DEBOUT = { reptation: ['rampe', 'pour ramper, elle se couche, le ventre au sol ; debout le reste du temps', ''], saut: ['saute', 'une sauteuse : de longues pattes arrière, comme une gerboise', 'long powerful hind legs for hopping'] };
-const LOCO_INSECTE = { reptation: ['**rampe**', 'le corps plaqué au sol', 'crawling low to the ground'], course: ['court', 'des pattes longues et fines', 'long slender running legs'],
-  saut: ['saute', 'des pattes arrière longues et épaisses, comme un criquet', 'long thick jumping hind legs like a grasshopper'], fouissage: ['fouit', 'des pattes avant larges, en pelle', 'broad shovel-like forelegs'],
+const LOCO_DEBOUT = { reptation: ['rampe', 'pour ramper, elle se couche, le ventre au sol ; debout le reste du temps', ''], saut: ['saute', 'une sauteuse : des pattes arrière puissantes, comme une gerboise', 'powerful hind legs for hopping'],
+  fouissage: ['fouit', 'une fouisseuse : des griffes fortes au bout de ses petits bras', 'strong digging claws on its small arms'], grimpe: ['grimpe', 'une grimpeuse : des doigts qui agrippent, aux bras et aux pieds', 'gripping hands and feet for climbing'] };
+const LOCO_INSECTE = { reptation: ['**rampe**', 'le corps plaqué au sol', 'crawling low to the ground'], course: ['court', 'des pattes fines et vives', 'slender quick running legs'],
+  saut: ['saute', 'des pattes arrière épaisses et puissantes, comme un criquet', 'thick powerful jumping hind legs like a grasshopper'], fouissage: ['fouit', 'des pattes avant larges, en pelle', 'broad shovel-like forelegs'],
   grimpe: ['grimpe', 'des pattes crochues', 'hooked climbing legs'] };
+const LOCO_GEANT = { course: ['court', 'des pattes de course épaisses, qui portent son poids', 'sturdy running legs'], saut: ['saute', 'des pattes arrière épaisses et puissantes', 'thick powerful jumping hind legs'] };
 
 // les traits d'une lignée : la part des bêtes qui les montrent (phenotypes) et la fréquence de l'allèle (populations, pondérée par l'effectif)
 function traitsDe(t) {
@@ -299,8 +330,7 @@ function traitsDe(t) {
 
 // ——— la fiche ———
 function ecrire(t, I, options = {}) {
-  if (!t || !t.plan) throw new Error('OrvaneFiche.ecrire : une lignée de l\'instantané (taxon.plan) est attendue');
-  if (t.plan.regime === 'vegetal') throw new Error('OrvaneFiche.ecrire : « ' + t.id + ' » est une plante ; les plantes ont leur dessin dans monde/herbier.js');
+  verifier(t, 'ecrire');
   I = I || {};
   return avecCorps(I, C => rediger(t, I, options, C));
 }
@@ -318,6 +348,11 @@ function rediger(t, I, opt, C) {
   // l'heure que vit la plupart des bêtes : celle du plan, sauf si plus de la moitié portent un trait qui la fixe (yeux nocturnes, crépuscularité)
   const heureT = majeurs.filter(x => CT[x]?.fixe?.activite && CT[x].fixe.activite !== p.activite).sort((a, b) => T[b].part - T[a].part || (a < b ? -1 : 1))[0], heure = heureT ? CT[heureT].fixe.activite : p.activite;
   const heureSrc = heureT ? `${ci('activite', p.activite ?? null)}, mais ${pc(T[heureT].part)} des bêtes portent le trait ${nomTrait(heureT, CT)}, ${ci('catalogue.traits.' + heureT + '.fixe.activite', heure)}` : ci('activite', p.activite ?? null);
+  // la taille que montrent la plupart des bêtes : le plan, sous les écarts des traits que portent plus de la moitié d'entre elles ;
+  // c'est elle que montrent le prompt et les seuils de la DA (un géant, une carrure)
+  const m = p.masse_kg, L_ = p.taille_m, ecT = majeurs.reduce((a, x) => a * (CT[x]?.ecarts?.taille_m ?? 1), 1), ecM = majeurs.reduce((a, x) => a * (CT[x]?.ecarts?.masse_kg ?? 1), 1);
+  const Lv = Number.isFinite(L_) ? L_ * ecT : null, mv = Number.isFinite(m) ? m * ecM : null, vu = ecT !== 1 || ecM !== 1;
+  const masseVue = Number.isFinite(mv) ? mv : 0, srcMasse = ci('masse_kg', m ?? null) + (vu && Number.isFinite(mv) ? `, ${masse(mv)} pour la plupart des bêtes` : '');
   const S = [];   // les sections : { n, titre, phrases }
   const section = (titre, phrases) => S.push({ n: S.length + 1, titre, phrases: phrases.filter(Boolean) });
   const I_ = [];  // les interdits : { fr, en, groupe }
@@ -326,12 +361,17 @@ function rediger(t, I, opt, C) {
   // une valeur du corps telle que l'instantané la donne ; absente, celle que lui donne moteur/corps.js ; hors bornes, la valeur bornée
   const champ = k2 => brut[k2] === undefined ? '`' + k2 + '` absent : ' + val(c[k2]) + ' par défaut' : Number.isFinite(brut[k2]) && Math.abs(brut[k2] - c[k2]) > .006 ? ci(k2, brut[k2]) + ', borné à ' + val(c[k2]) : ci(k2, brut[k2]);
   const mOrg = c ? c.organes : [], has = ty => mOrg.find(o => o.type === ty);
+  // les organes tels que l'instantané les donne : une liste, ou (un corps d'avant) des proportions dont moteur/corps.js déduit les organes
+  const deduit = !!c && !Array.isArray(brut.organes);
+  const brutO = o => deduit ? null : brut.organes.find(x => x && x.type === o.type && (x.place === undefined || x.place === o.place)) || null;
+  const champO = (o, f) => { const r = brutO(o); if (!r || r[f] === undefined) return '`' + f + '` absent : ' + val(o[f]) + ' par défaut';
+    return typeof r[f] === 'number' && Math.abs(r[f] - o[f]) > .006 ? ci(f, r[f]) + ', borné à ' + val(o[f]) : r[f] !== o[f] && typeof r[f] !== 'number' ? ci(f, r[f]) + ', lu comme ' + val(o[f]) : ci(f, r[f]); };
   let machinePal = [];
 
   // couleurs (les données, et les teintes de la DA)
   const K = c ? c.couleurs : null, couleur = (rgb, role, src) => ({ role, rgb, hex: hex(rgb), ...nomCouleur(rgb), source: src });
   const pal = K ? { robe: couleur(K.robe, 'robe', 'couleurs.robe'), sombre: couleur(K.sombre, 'sombre', 'couleurs.sombre'), ventre: couleur(K.ventre, 'ventre', 'couleurs.ventre'), oeil: couleur(K.oeil, 'oeil', 'couleurs.oeil'),
-    accent: couleur(C.tourner(K.robe, 150), 'accent', 'interprété : la robe tournée de 150° (règle parade-accent)'), os: { ...couleur(OS, 'ivoire', 'interprété : l\'ivoire des planches'), fr: 'ivoire', en: 'ivory' } } : null;
+    accent: couleur(C.tourner(K.robe, 150), 'accent', 'interprété : la robe tournée de 150° (règle parade-accent)'), os: { ...couleur(OS.slice(), 'ivoire', 'interprété : l\'ivoire des planches'), fr: 'ivoire', en: 'ivory' } } : null;
 
   // —— 1. Identité ——
   { const L = [], n0 = I.cycle?.n, gen = I.monde?.genese?.cycles;
@@ -354,14 +394,14 @@ function rediger(t, I, opt, C) {
   if (!machine) { const T0 = niche?.temperature ?? .5, rampe = loco.includes('reptation') || loco.includes('fouissage'), ca = has('carapace');
     const ajoute = (id, frx, enx) => { const d = det(fam, id); teg.push({ id, fr: frx || d.fr, en: enx || d.en, pourquoi: d.pourquoi }); };
     if (fam === 'pelage') { ajoute(k.nage ? 'pelage-nageur' : T0 < .3 ? (rampe ? 'pelage-froid-ras' : 'pelage-froid') : T0 >= .7 ? 'pelage-chaud' : 'pelage-tempere'); if (ca) ajoute('pelage-carapace'); }
-    if (fam === 'chitine') { if (ca) ajoute(ca.taille > .3 ? 'chitine-elytres' : 'chitine-bouclier'); if ((p.masse_kg || 0) >= 1) ajoute('chitine-geant'); if ((p.masse_kg || 0) >= 10) ajoute('chitine-colosse'); if (k.nage) ajoute('chitine-nageur'); }
+    if (fam === 'chitine') { if (ca) ajoute(ca.taille > .3 ? 'chitine-elytres' : 'chitine-bouclier'); if (masseVue >= 1) ajoute('chitine-geant'); if (masseVue >= 10) ajoute('chitine-colosse'); if (k.nage) ajoute('chitine-nageur'); }
     if (fam === 'cuirasse') ajoute(k.nage ? 'cuirasse-nageur' : 'cuirasse-terre');
     if (fam === 'ecailles') ajoute(al === 'poisson' ? 'ecailles-poisson' : al === 'serpent' ? 'ecailles-serpent' : 'ecailles-lezard');
     if (fam === 'plumage') ajoute(k.nage ? 'plumage-nageur' : T0 < .3 ? 'plumage-froid' : 'plumage-lisse');
     if (fam === 'peau-nue') ajoute('peau-nue');
     if (fam === 'gelee') ajoute(k.plan === 'tentaculaire' ? 'gelee-pieuvre' : loco.includes('nage') ? 'gelee-meduse' : 'gelee-etoile');
     if (fam === 'machine') ajoute('machine'); }
-  { const L = [], cles = [k.machine ? ci('regime', 'synthetique') : ci('forme', c.forme), !k.machine && k.allure !== c.forme && ci('allure', k.allure),
+  { const L = [], cles = [k.machine ? ci('regime', 'synthetique') : champ('forme'), !k.machine && k.allure !== c.forme && ci('allure', k.allure),
       !k.machine && ['pelage', 'cuirasse', 'peau-nue', 'ecailles-lezard'].includes(R.id) && (p.reproduction ? ci('reproduction', p.reproduction) : '`reproduction` absente : ' + k.reproduction + ', déduite comme le fait moteur/ponte.js'),
       !k.machine && ['cuirasse', 'peau-nue', 'ecailles-lezard', 'pelage'].includes(R.id) && (k.carapace ? 'un organe `carapace`' : 'aucun organe `carapace`'),
       !k.machine && ['peau-nue', 'ecailles-lezard', 'cuirasse', 'ecailles-poisson'].includes(R.id) && ci('locomotion', loco)].filter(Boolean);
@@ -371,43 +411,55 @@ function rediger(t, I, opt, C) {
         'pelage-froid': ci('niche.temperature', niche?.temperature ?? null), 'pelage-chaud': ci('niche.temperature', niche?.temperature ?? null),
         'pelage-tempere': niche ? ci('niche.temperature', niche.temperature) : '`niche` absente', 'pelage-nageur': ci('locomotion', loco), 'pelage-carapace': ci('reproduction', k.reproduction) + ', un organe `carapace`',
         'plumage-froid': ci('niche.temperature', niche?.temperature ?? null), 'plumage-nageur': ci('locomotion', loco), 'plumage-lisse': niche ? ci('niche.temperature', niche.temperature) : '`niche` absente',
-        'chitine-geant': ci('masse_kg', p.masse_kg), 'chitine-colosse': ci('masse_kg', p.masse_kg), 'chitine-elytres': ci('carapace', c.carapace), 'chitine-bouclier': ci('carapace', c.carapace),
+        'chitine-geant': srcMasse, 'chitine-colosse': srcMasse, 'chitine-elytres': ci('carapace', c?.carapace), 'chitine-bouclier': ci('carapace', c?.carapace),
         'cuirasse-nageur': ci('locomotion', loco), 'cuirasse-terre': ci('locomotion', loco), 'chitine-nageur': ci('locomotion', loco), 'peau-nue': ci('locomotion', loco),
         'ecailles-poisson': ci('locomotion', loco), 'ecailles-serpent': ci('forme', c.forme), 'ecailles-lezard': ci('forme', c.forme), 'gelee-meduse': ci('locomotion', loco), 'gelee-etoile': ci('locomotion', loco), 'gelee-pieuvre': ci('forme', c.forme) }[d.id];
       L.push(`${Maj(d.fr)} ${regle(d.id, min1(d.pourquoi.replace(/\.$/, '')) + (why ? ' — ' + why : ''))}.`); }
     if (machine) L.push(`${Maj(det('machine', 'machine').fr)} ${regle('machine', 'le dessin des machines des planches, dans monde/silhouette.js')}.`);
-    for (const x of majeurs.filter(x => ['peau-epaisse', 'carapace', 'glande-irritante'].includes(x))) L.push(`${Maj({ 'peau-epaisse': 'un cuir épais', carapace: 'des plaques osseuses sur le dos', 'glande-irritante': 'une peau luisante, grumeleuse' }[x])} : ${pc(T[x].part)} des bêtes le montrent ${par('`phenotypes`', ci('catalogue.traits.' + x + '.organe', CT[x]?.organe ?? x))}.`);
+    const PEAUX = { 'peau-epaisse': fam === 'chitine' ? 'une cuticule plus épaisse' : fam === 'ecailles' || fam === 'cuirasse' ? 'des écailles épaisses' : 'un cuir épais', carapace: 'des plaques osseuses sur le dos', 'glande-irritante': 'une peau luisante, grumeleuse' };
+    for (const x of majeurs.filter(x => PEAUX[x] && vueEn(x, fam, al))) L.push(`${Maj(PEAUX[x])} : ${pc(T[x].part)} des bêtes ${par('`phenotypes`', ci('catalogue.traits.' + x + '.organe', CT[x]?.organe ?? x))}.`);
     L.push(`Table des familles, version ${VERSION} ${par(ci('OrvaneFiche.VERSION', VERSION))}.`);
     section('Famille visuelle et tégument', L);
-    pro.peau.push(...teg.map(d => d.en), ...majeurs.filter(x => ['peau-epaisse', 'carapace', 'glande-irritante'].includes(x)).map(x => VUE_EN[x])); }
+    pro.peau.push(...teg.map(d => d.en), ...majeurs.filter(x => PEAUX[x]).map(x => vueEn(x, fam, al)).filter(Boolean)); }
 
   // —— 3. Silhouette ——
-  const m = p.masse_kg, L_ = p.taille_m, kc = Number.isFinite(m) && Number.isFinite(L_) && L_ > 0 ? m / L_ ** 3 : null, CR = CARRURES[al] || CARRURES.quadrupede, car = kc != null ? palier(kc, CR[2]) : null;
-  // la taille que montrent la plupart des bêtes : le plan, sous les écarts des traits que portent plus de la moitié d'entre elles
-  const ecT = majeurs.reduce((a, x) => a * (CT[x]?.ecarts?.taille_m ?? 1), 1), ecM = majeurs.reduce((a, x) => a * (CT[x]?.ecarts?.masse_kg ?? 1), 1);
-  const Lv = Number.isFinite(L_) ? L_ * ecT : L_, mv = Number.isFinite(m) ? m * ecM : m;
+  // (la carrure se lit sur la taille que montrent la plupart des bêtes ; un géant ne se dit pas « léger »)
+  const kc = Number.isFinite(mv) && Number.isFinite(Lv) && Lv > 0 ? mv / Lv ** 3 : null, CR = CARRURES[al] || CARRURES.quadrupede, car = kc != null ? palier(kc, CR[2]) : null;
+  const geant = teg.some(d => d.id === 'chitine-geant');
+  // une queue à 0 qui porte un organe (un panache, une massue) : un moignon, qui le porte (les planches ne dessinent ni l'une ni l'autre)
+  const queueOrgs = mOrg.filter(o => o.place === 'queue'), moignon = !!c && utiles.includes('queue') && al !== 'poisson' && c.queue < .06 && queueOrgs.length > 0;
+  // un bipède : debout, ou le corps tendu sur une queue qui fait contrepoids ; deux petits bras, comme sur les planches (monde/silhouette.js)
+  const bipDebout = al === 'bipede' && (!!has('mains') || c.queue < .3 || (c.posture >= .95 && c.queue < .45));
   if (machine) {
-    const M = p.modules || {};
+    const M = p.modules || {}, connue = Number.isFinite(L_) && Number.isFinite(m);
     section('Silhouette', [`Une machine de ${I.monde?.mere?.nom || 'la Mère'} ${par(ci('regime', 'synthetique'), '`corps` absent')} : un châssis arrondi, posé sur quatre pattes articulées, deux de chaque côté ${regle('machine', 'le dessin des machines des planches')}.`,
-      Number.isFinite(L_) && Number.isFinite(m) ? `${longueur(L_)} de long ${par(ci('taille_m', L_))} pour ${masse(m)} ${par(ci('masse_kg', m))}.` : null,
+      connue ? `${longueur(L_)} de long ${par(ci('taille_m', L_))} pour ${masse(m)} ${par(ci('masse_kg', m))}.`
+        : `Sa taille n'est pas connue ${par(Number.isFinite(L_) ? ci('taille_m', L_) : '`taille_m` absente', Number.isFinite(m) ? ci('masse_kg', m) : '`masse_kg` absente')} : la fiche n'en invente pas.`,
       `Le châssis est ${(M.blindage || 0) > .2 ? 'haut et blindé' : 'bas et léger'} ${par(ci('modules.blindage', M.blindage ?? 0))} *(interprété : un blindage de plus de 0,2 hausse et assombrit le châssis, comme sur les planches)*.`]);
-    pro.avant.push(`a ${palier(L_ || 1, TAILLES_EN)[1]} four-legged robotic machine, ${length(L_ || 1)} long, ${weight(m || 1)}`, `${(M.blindage || 0) > .2 ? 'tall armored' : 'low, light'} rounded metal chassis on four articulated legs`);
+    pro.avant.push(`a ${Number.isFinite(L_) ? palier(L_, TAILLES_EN)[1] + ' ' : ''}four-legged robotic machine${Number.isFinite(L_) ? ', ' + length(L_) + ' long' : ' of unknown size'}${Number.isFinite(m) ? ', ' + weight(m) : ''}`,
+      `${(M.blindage || 0) > .2 ? 'tall armored' : 'low, light'} rounded metal chassis on four articulated legs`);
   } else {
     const L = [], dec = C.decrire(c, p), nomA = NOMS_ALLURE[al] || [c.forme, c.forme];
     const pattesFr = al === 'radiaire' || al === 'tentaculaire' ? `${fr(c.pattes)} bras` : al === 'segmente' ? `${fr(c.pattes)} pattes, une paire par anneau (${fr(Math.round(c.pattes / 2))} anneaux)` : c.pattes ? `${nombreFr(c.pattes, 1)} pattes` : 'sans pattes';
-    L.push(`**${Maj(nomA[0])}**, ${pattesFr} ${par(ci('forme', brut.forme ?? c.forme) + (brut.forme && brut.forme !== c.forme ? ', une forme que ce monde ne déclare pas : lue comme ' + (brut.repli === c.forme ? 'son repli, ' + ci('repli', brut.repli) : 'un ' + val(c.forme) + ', comme le fait moteur/corps.js') : ''), champ('pattes'), al === 'poisson' && 'lu comme un poisson par `OrvaneCorps.allure` : il ne fait que nager')}.`
+    const formeSrc = brut.forme === undefined ? champ('forme') : ci('forme', brut.forme) + (brut.forme !== c.forme ? ', une forme que ce monde ne déclare pas : lue comme ' + (brut.repli === c.forme ? 'son repli, ' + ci('repli', brut.repli) : 'un ' + val(c.forme) + ', comme le fait moteur/corps.js') : '');
+    L.push(`**${Maj(nomA[0])}**, ${pattesFr} ${par(formeSrc, champ('pattes'), al === 'poisson' && 'lu comme un poisson par `OrvaneCorps.allure` : il ne fait que nager', p.regime === 'synthetique' && ci('regime', 'synthetique') + ' : une machine')}.`
       + (al === 'quadrupede' || al === 'bipede' ? ` En un mot : « ${dec} » ${par('`OrvaneCorps.decrire`')}.` : ''));
-    const ordinaire = car && car[1].includes('ordinaire'), leger = car && !ordinaire && /fine|légère/.test(car[1]);
-    if (kc != null && (al === 'radiaire' || al === 'tentaculaire')) L.push(`${longueur(L_)} de long ${par(ci('taille_m', L_))} pour ${masse(m)} ${par(ci('masse_kg', m))} : une bête au corps mou ${interp('sans squelette, la masse pour la longueur ne dit pas de carrure')}${repere(fam, al, c, p, car) ? ', ' + repere(fam, al, c, p, car) + ' ' + interp('un repère terrestre, pour l\'œil') : ''}.`);
-    else if (kc != null) L.push(`${longueur(L_)} de long ${par(ci('taille_m', L_))} pour ${masse(m)}${leger ? ' seulement' : ''} ${par(ci('masse_kg', m))} : une bête ${ordinaire ? car[1] : '**' + car[1] + '**'} ${interp(`d'après la masse pour la longueur : ${fr(kc, kc < 10 ? 2 : 0)}${ESP}kg/m³, quand ${nomA[0] === 'oiseau' ? 'un oiseau' : 'un ' + nomA[0]} de proportions ordinaires est entre ${fr(CR[0])} et ${fr(CR[1])}`)}${repere(fam, al, c, p, car) ? ', ' + repere(fam, al, c, p, car) + ' ' + interp('un repère terrestre, pour l\'œil') : ''}.`);
+    const ordinaire = car && car[1].includes('ordinaire'), leger = car && !ordinaire && !geant && /fine|légère/.test(car[1]);
+    const taille = Number.isFinite(L_) && Number.isFinite(m) ? `${longueur(L_)} de long ${par(ci('taille_m', L_))} pour ${masse(m)}${leger ? ' seulement' : ''} ${par(ci('masse_kg', m))}` : null;
+    const rep = repere(fam, al, c, p, car), repTxt = rep ? ', ' + rep + ' ' + interp('un repère terrestre, pour l\'œil') : '';
+    if (taille && (al === 'radiaire' || al === 'tentaculaire')) L.push(`${taille} : une bête au corps mou ${interp('sans squelette, la masse pour la longueur ne dit pas de carrure')}${repTxt}.`);
+    else if (taille && kc != null) L.push(`${taille} : une bête ${ordinaire ? car[1] : '**' + car[1] + '**'} ${interp(`d'après la masse pour la longueur${vu ? ' de la plupart des bêtes' : ''} : ${fr(kc, kc < 10 ? 2 : 0)}${ESP}kg/m³, quand ${nomA[0] === 'oiseau' ? 'un oiseau' : 'un ' + nomA[0]} de proportions ordinaires est entre ${fr(CR[0])} et ${fr(CR[1])}`)}${repTxt}.`);
+    else L.push(`Sa taille n'est pas connue ${par(Number.isFinite(L_) ? ci('taille_m', L_) : '`taille_m` absente', Number.isFinite(m) ? ci('masse_kg', m) : '`masse_kg` absente')} : la fiche n'en invente pas${repTxt}.`);
     // les proportions
-    const props = [];
+    const props = [], nomsQ = queueOrgs.map(o => (CO[o.type]?.mot || [o.type, o.type + 's'])[o.nombre > 1 ? 1 : 0]);
     for (const k2 of NUM7) { if (k2 === 'tete' || k2 === 'museau' || k2 === 'oreilles') continue; if (!utiles.includes(k2)) continue; const v = c[k2];
       if (k2 === 'haut' && !c.pattes) continue;
+      if (k2 === 'queue' && moignon) { props.push(`queue **réduite à un moignon**, qui porte ${liste(nomsQ)} ${par(champ(k2))} ${interp('la queue est à 0, mais un organe s\'y porte')}`); continue; }
+      if (k2 === 'queue' && al === 'poisson') { props.push(v === 0 ? `nageoire de queue **minuscule**, au bout d'un corps sans pédoncule allongé ${par(champ(k2))} ${interp('un poisson garde sa nageoire de queue')}`
+        : `nageoire de queue ${v <= .2 || v >= .8 ? '**' + palier(v, PALIERS.caudale)[1] + '**' : palier(v, PALIERS.caudale)[1]} ${par(champ(k2))}`); continue; }
       if (v === 0 && ZERO[k2]) { props.push(`**${ZERO[k2][0]}** ${par(champ(k2))}`); continue; }
-      const P = palier(v, PALIERS[k2]), gras = v <= .2 || v >= .8, w = gras ? '**' + P[1] + '**' : P[1];
+      const P = palier(v, PALIERS[k2]), gras = v <= .2 || v >= .8, mot = al === 'radiaire' && k2 === 'long' ? P[1].replace(/(trapu|allongé)$/, '$1s') : P[1], w = gras ? '**' + mot + '**' : mot;
       props.push(k2 === 'long' ? `${al === 'radiaire' ? 'bras' : 'corps'} ${w} ${par(champ(k2))}` : k2 === 'haut' ? `pattes ${w}${loco.includes('reptation') && v < .35 ? ', écartées' : ''} ${par(champ(k2))}` : k2 === 'cou' ? `cou ${w} ${par(champ(k2))}`
-        : al === 'poisson' ? `nageoire de queue ${gras ? '**' + palier(v, PALIERS.caudale)[1] + '**' : palier(v, PALIERS.caudale)[1]} ${par(champ(k2))}`
         : `queue ${w}${leger && v < .55 ? ' et fine' : ''} ${par(champ(k2))}${leger && v < .55 ? ' ' + interp('une bête légère') : ''}`); }
     if (props.length) L.push(Maj(props.join(', ')) + '.');
     const sansObjet = ['long', 'haut', 'cou', 'queue'].filter(k2 => !utiles.includes(k2) || (k2 === 'haut' && !c.pattes));   // (le museau et les oreilles : à la tête)
@@ -415,18 +467,21 @@ function rediger(t, I, opt, C) {
     const pos = c.posture;
     const posSrc = brut.posture === undefined ? '`posture` absente : ' + val(pos) + ', la valeur d\'un ' + nomA[0] + ' dans moteur/corps.js' : champ('posture');
     const eauLibre = al === 'poisson' || ((al === 'radiaire' || al === 'tentaculaire') && loco.includes('nage'));
-    L.push(pos >= .9 ? `Debout ${par(posSrc)}.` : pos >= .4 ? `Se dresse sur ses pattes arrière ${par(posSrc)}.`
+    if (al === 'bipede') L.push(`${bipDebout ? 'Debout, le tronc dressé' : 'Sur deux pattes, le corps tendu à l\'horizontale, la queue en contrepoids'}, avec deux petits bras devant ${par(posSrc, champ('queue'), has('mains') && 'un organe `mains`')} ${interp('comme sur les planches : un bipède porte deux bras ; debout s\'il a des mains ou une queue courte')}.`);
+    else L.push(pos >= .9 ? `Debout ${par(posSrc)}.` : pos >= .4 ? `Se dresse sur ses pattes arrière ${par(posSrc)}.`
       : `${eauLibre ? 'En pleine eau, le corps à l\'horizontale' : al === 'quadrupede' ? 'À quatre pattes' : al === 'radiaire' || al === 'tentaculaire' ? 'Posé au fond' : 'Au ras du sol'} ${par(posSrc)}.`);
-    for (const x of majeurs.filter(x => CT[x]?.ecarts && (CT[x].ecarts.taille_m || CT[x].ecarts.masse_kg))) L.push(`${pc(T[x].part)} des bêtes portent le trait ${nomTrait(x, CT)} ${par('`phenotypes`', ci('catalogue.traits.' + x + '.ecarts', { taille_m: CT[x].ecarts.taille_m ?? 1, masse_kg: CT[x].ecarts.masse_kg ?? 1 }))} : la plupart sont ${(CT[x].ecarts.taille_m ?? 1) * (CT[x].ecarts.masse_kg ?? 1) > 1 ? 'plus grandes' : 'plus petites'} que le plan${Number.isFinite(Lv) && Number.isFinite(mv) ? `, environ ${longueur(Lv)} pour ${masse(mv)} ${interp('le plan sous les écarts de ses traits majoritaires : la taille du prompt')}` : ''}.`);
+    for (const x of majeurs.filter(x => CT[x]?.ecarts && (CT[x].ecarts.taille_m || CT[x].ecarts.masse_kg))) L.push(`${pc(T[x].part)} des bêtes portent le trait ${nomTrait(x, CT)} ${par('`phenotypes`', ci('catalogue.traits.' + x + '.ecarts', CT[x].ecarts))} : la plupart sont ${(CT[x].ecarts.taille_m ?? 1) * (CT[x].ecarts.masse_kg ?? 1) > 1 ? 'plus grandes' : 'plus petites'} que le plan${Number.isFinite(Lv) && Number.isFinite(mv) ? `, environ ${longueur(Lv)} pour ${masse(mv)} ${interp('le plan sous les écarts de ses traits majoritaires : la taille du prompt')}` : ''}.`);
     if (p.stades) L.push(`Une part de la lignée se métamorphose ${par(ci('stades.part', p.stades.part ?? null))} : cette fiche montre ${p.stades.adulte?.nom ? 'l\'adulte (' + p.stades.adulte.nom + ')' : 'l\'adulte'} ; la larve${p.stades.larve?.nom ? ' (' + p.stades.larve.nom + ')' : ''} est une autre bête à dessiner ${par(ci('stades.larve.forme', p.stades.larve?.forme ?? null), ci('stades.larve.locomotion', p.stades.larve?.locomotion ?? []))}.`);
     section('Silhouette', L);
     // le prompt : la taille, la carrure, le corps, les pattes
     const nomEn = al === 'hexapode' ? (c.pattes === 6 ? 'six-legged arthropod' : `${nombreEn(c.pattes)}-legged arthropod`) : al === 'segmente' ? `segmented creature with ${c.pattes} legs` : al === 'radiaire' || al === 'tentaculaire' ? `${nomA[1]} with ${c.pattes} arms` : nomA[1];
     const bas = (al === 'quadrupede' || al === 'bipede') && c.haut < .2 ? 'low-slung ' : (al === 'quadrupede' || al === 'bipede' || al === 'oiseau') && c.haut >= .75 ? 'long-legged ' : '';
-    pro.avant.push(`a ${palier(Lv || .5, TAILLES_EN)[1]} ${bas}${nomEn}${/creature/.test(nomEn) ? '' : ' creature'}` + (kc != null ? `, ${length(Lv)} long${car[3] ? ' and ' + car[3] : ''} (${weight(mv)})` : ''));
-    if (utiles.includes('long')) pro.corps.push([car?.[2], al === 'poisson' && c.long > .85 ? 'eel-like elongated body' : al === 'radiaire' ? palier(c.long, PALIERS.long)[2].replace(/body$/, 'arms') : palier(c.long, PALIERS.long)[2]].filter(Boolean).join(' '));
-    if (c.pattes && utiles.includes('haut')) pro.corps.push(palier(c.haut, PALIERS.haut)[2] + (loco.includes('reptation') && c.haut < .35 && al !== 'hexapode' ? ' splayed close to the ground' : ''));
-    if (al === 'serpent' || al === 'poisson') pro.corps.push('no legs');
+    const poids = car?.[3] && !geant ? ' and ' + car[3] : '';
+    pro.avant.push(`a ${Number.isFinite(Lv) ? palier(Lv, TAILLES_EN)[1] + ' ' : ''}${bas}${p.regime === 'synthetique' ? 'robotic ' : ''}${nomEn}${/creature/.test(nomEn) ? '' : ' creature'}` + (Number.isFinite(Lv) && Number.isFinite(mv) ? `, ${length(Lv)} long${poids} (${weight(mv)})` : ', of unknown size'));
+    if (utiles.includes('long')) pro.corps.push([geant && /slender|thin/.test(car?.[2] || '') ? '' : car?.[2], al === 'poisson' && c.long > .85 ? 'eel-like elongated body' : al === 'radiaire' ? palier(c.long, PALIERS.long)[2].replace(/body$/, 'arms') : palier(c.long, PALIERS.long)[2]].filter(Boolean).join(' '));
+    if (c.pattes && utiles.includes('haut')) pro.corps.push(palier(c.haut, PALIERS.haut)[2] + (loco.includes('reptation') && c.haut < .35 && al !== 'hexapode' && al !== 'bipede' ? ' splayed close to the ground' : ''));
+    if (al === 'bipede') pro.corps.push(bipDebout ? 'standing upright, with two small arms' : 'bipedal, body held horizontal with the tail as a counterweight, two small forelimbs');
+    if (al === 'poisson') pro.corps.push('legless');
   }
 
   // —— 4. Tête ——
@@ -439,14 +494,14 @@ function rediger(t, I, opt, C) {
       // (la « tête » d'une méduse est sa cloche, celle d'une étoile sa partie centrale, celle d'une pieuvre son manteau)
       const nomTete = al === 'radiaire' ? (loco.includes('nage') ? ['cloche', 'bell'] : ['partie centrale', 'central disc']) : al === 'tentaculaire' ? ['tête', 'mantle'] : ['tête', 'head'];
       const te = palier(c.tete, PALIERS.tete); parts.push(`${nomTete[0]} **${te[1]}** ${par(champ('tete'))}`.replace(/\*\*(moyenne|petite|grosse)\*\*/, '$1'));
-      const bouche = boucheDe(al, reg, D, loco), regimeSrc = ci('regime', reg ?? null) + (Object.keys(D).length ? ', ' + liste(Object.entries(D).sort((a, b) => b[1] - a[1]).map(([x, v]) => pc(v) + ' ' + (voyelle(x) ? 'd\'' : 'de ') + x)) : '');
+      const bouche = boucheDe(al, reg, D, loco), regimeSrc = ci('regime', reg ?? null) + (Object.keys(D).length ? ', ' + liste(Object.entries(D).sort(parNom).map(([x, v]) => pc(v) + ' ' + (voyelle(x) ? 'd\'' : 'de ') + x)) : '');
       if (al === 'oiseau') { const b = palier(c.museau, PALIERS.bec); parts.push(`bec ${b[1]} ${par(champ('museau'))}, ${bouche[0]} ${interp(regimeSrc + (loco.includes('nage') ? ', ' + ci('locomotion', loco) : ''))}`); }
       else if (utiles.includes('museau')) parts.push(c.museau === 0 ? `**${ZERO.museau[0]}** ${par(champ('museau'))}` : `museau ${palier(c.museau, PALIERS.museau)[1]} ${par(champ('museau'))}`);
-      if (utiles.includes('oreilles')) { const e = c.oreilles, forme = reg === 'herbivore' || reg === 'filtreur' ? ['en feuille, couchées en arrière', 'leaf-shaped ears laid back'] : ['dressées et pointues', 'pointed upright ears'];
+      if (utiles.includes('oreilles')) { const e = c.oreilles, forme = reg === 'herbivore' || reg === 'filtreur' ? ['en feuille, couchées en arrière', 'leaf-shaped ears laid back'] : ['dressées et pointues', 'pricked pointed ears'];
         parts.push(e === 0 ? `**${ZERO.oreilles[0]}** ${par(champ('oreilles'))}` : `oreilles ${palier(e, PALIERS.oreilles)[1]}${e >= .12 ? ', ' + forme[0] : ''} ${par(champ('oreilles'))}${e >= .12 ? ' ' + interp('la forme des planches : ' + (reg === 'herbivore' || reg === 'filtreur' ? 'un brouteur' : 'un chasseur')) : ''}`);
         if (e > 0) pro.tete.push(palier(e, PALIERS.oreilles)[2].replace(/ears$/, '') + (e >= .12 ? forme[1] : 'ears')); }
       const yeux = nuit ? ['grands, qui accrochent la lumière', 'large reflective eyes'] : crep ? ['assez grands', 'fairly large eyes'] : ['de taille moyenne', 'medium-sized eyes'];
-      parts.push(`yeux ${yeux[0]} ${interp((nuit ? 'une bête de nuit' : crep ? 'une bête du crépuscule' : 'une bête de jour') + ', ' + heureSrc + ((T['yeux-nocturnes']?.part || 0) >= .5 && heureT !== 'yeux-nocturnes' ? `, ${pc(T['yeux-nocturnes'].part)} des bêtes portent le trait yeux nocturnes` : ''))}`);
+      parts.push(`yeux ${yeux[0]} ${interp((nuit ? 'une bête de nuit' : crep ? 'une bête du crépuscule' : heure === 'continue' ? 'active de jour comme de nuit' : heure === 'diurne' ? 'une bête de jour' : 'son heure n\'est pas dite') + ', ' + heureSrc + ((T['yeux-nocturnes']?.part || 0) >= .5 && heureT !== 'yeux-nocturnes' ? `, ${pc(T['yeux-nocturnes'].part)} des bêtes portent le trait yeux nocturnes` : ''))}`);
       if (al !== 'oiseau') parts.push(`${bouche[0]} ${interp(regimeSrc)}`);
       L.push(Maj(parts.join(', ')) + '.');
       if (c.motif === 'masque') L.push(`Un masque sombre sur les yeux ${par(ci('motif', 'masque'))}.`);
@@ -464,7 +519,7 @@ function rediger(t, I, opt, C) {
   // —— 5. Organes (ou modules) ——
   const accentUtile = mOrg.some(o => TEINTE_ORG[o.type] === 'accent'), osUtile = mOrg.some(o => TEINTE_ORG[o.type] === 'os');
   if (machine) {
-    const M = p.modules || {}, L = [], MOD = { panneau: [.2, 'un panneau solaire incliné sur le dos, bleu sombre `#2C4A6B`, cerclé de clair', 'a tilted dark blue solar panel on its back'],
+    const M = p.modules || {}, L = [], pn = nomCouleur([44, 74, 107]), MOD = { panneau: [.2, `un panneau solaire incliné sur le dos, ${pn.fr} \`#2C4A6B\`, cerclé de clair`, `a tilted ${pn.en} solar panel on its back`],
       thermique: [.3, 'des ailettes de refroidissement sur le flanc', 'cooling fins on the flank'], batterie: [.3, 'un bloc de batterie, de la couleur d\'accent', 'a battery block in the accent color'],
       foreuse: [.3, 'une foreuse conique rayée, à l\'avant', 'a ridged conical drill at the front'], recycleur: [.3, 'une trémie à l\'arrière', 'a scrap hopper at the rear'],
       pince: [.3, 'un bras articulé terminé par une pince, à l\'avant', 'an articulated pincer arm at the front'], blindage: [.2, 'des plaques de blindage, en bandes verticales', 'vertical armor plating'],
@@ -478,24 +533,27 @@ function rediger(t, I, opt, C) {
     section('Organes', L);
   } else {
     const L = [], inconnus = (Array.isArray(brut.organes) ? brut.organes : []).filter(o => !CO[o?.type] && !C.organe(o)).map(o => o?.type);
-    L.push(mOrg.length ? `${Maj(nombreFr(mOrg.length, 0))} organe${mOrg.length > 1 ? 's' : ''} ${par(Array.isArray(brut.organes) ? '`organes`' : '`organes` absente : déduite des proportions de 0,2 et plus, comme le fait moteur/corps.js')} :`
-      : `Aucun organe ${par(Array.isArray(brut.organes) ? ci('organes', []) : '`organes` absente, et aucune proportion d\'organe à 0,2 ou plus')}.`);
+    L.push(mOrg.length ? `${Maj(nombreFr(mOrg.length, 0))} organe${mOrg.length > 1 ? 's' : ''} ${par(deduit ? '`organes` absente : déduite des proportions de 0,2 et plus, comme le fait moteur/corps.js' : '`organes`')} :`
+      : `Aucun organe ${par(deduit ? '`organes` absente, et aucune proportion d\'organe à 0,2 ou plus' : ci('organes', []))}.`);
     for (const o of mOrg) {
       const Tc = CO[o.type] || {}, fem = Tc.fem ?? 1, plur = o.nombre > 1, mot = (Tc.mot || [o.type, o.type + 's'])[plur ? 1 : 0], fs = formeFr(o.forme, fem, plur), tl = palier(o.taille, TAILLE_ORG);
-      const place = (al === 'hexapode' || al === 'segmente') && o.place === 'queue' ? 'au bout de l\'abdomen' : o.type === 'epines' && o.place === 'queue' ? 'sur la queue' : PLACE_FR[o.place] || o.place, teinte = TEINTE_ORG[o.type], col = teinte && pal[teinte === 'os' ? 'os' : teinte];
-      const fx = Tc.fonction ? FONCTIONS[Tc.fonction] : null, cond = Tc.conduite;
+      const place = (al === 'hexapode' || al === 'segmente') && o.place === 'queue' ? 'au bout de l\'abdomen' : o.type === 'epines' && o.place === 'queue' ? 'sur la queue' : moignon && o.place === 'queue' ? 'au bout du moignon de queue' : PLACE_FR[o.place] || o.place, teinte = TEINTE_ORG[o.type], col = teinte && pal[teinte === 'os' ? 'os' : teinte];
+      const fx = Tc.fonction ? FONCTIONS[Tc.fonction] : null, cond = Tc.conduite, Mt = MATIERE[fam] || MATIERE.gelee;
       let comment = '';
       if (o.type === 'defenses') comment = o.forme === 'droites' ? 'Elles pointent droit vers l\'avant depuis le museau' : 'Elles se recourbent vers le haut depuis le museau';
       else if (o.type === 'cornes') comment = { recourbees: 'Elles se recourbent vers l\'arrière, en croissant', droites: 'Elles montent droit, vers le haut et l\'avant', ramifiees: 'Elles se ramifient comme des bois' }[o.forme] || '';
-      else if (o.type === 'panache') comment = o.forme === 'touffe' ? `Une boule ${matiere(fam)} nette et contrastée` : `Un éventail ${matiere(fam)} raides, déployé`;
+      else if (o.type === 'panache') comment = o.forme === 'touffe' ? `Une boule ${Mt[0]} nette et contrastée` : `Un éventail ${Mt[1]}, déployé`;
       else if (o.type === 'carapace' && fam === 'chitine') comment = o.taille > .3 ? 'Ce sont des élytres, deux étuis durs qui couvrent l\'abdomen' : 'Un bouclier court sur le thorax, sans élytres couvrantes';
       else if (o.type === 'carapace' && fam === 'cuirasse') comment = k.nage ? `${o.forme === 'bombee' ? 'Bombée, mais basse' : 'Basse'}, lisse et profilée, comme une tortue d'eau (règle \`cuirasse-nageur\`)` : `${o.forme === 'segmentee' ? 'En anneaux articulés' : 'Haute, en plaques jointives'}, comme une tortue terrestre ou un pangolin (règle \`cuirasse-terre\`)`;
       else if (o.type === 'carapace' && fam === 'pelage') comment = 'Un bouclier de plaques cornées, comme un tatou : le poil reste au ventre, aux pattes et à la tête (règle `pelage-carapace`)';
       else if (o.type === 'aiguillon') comment = o.forme === 'courbe' ? 'Il se relève au-dessus du dos, comme chez un scorpion' : 'Il prolonge l\'abdomen, droit, comme chez une guêpe';
       else if (o.type === 'ailes') comment = o.forme === 'plumes' ? (fam === 'plumage' ? 'Des ailes d\'oiseau' : 'Des ailes de plumes sur un corps ' + (fam === 'pelage' ? 'à poil' : 'sans plumes') + ' : les plumes ne couvrent que les ailes') : 'Des ailes de peau tendue sur de longs doigts, comme une chauve-souris';
       else if (o.type === 'nageoires') comment = o.forme === 'voiles' ? 'Des voiles hautes, bien plus grandes que des nageoires ordinaires' : 'Plus grandes que des nageoires ordinaires';
-      else if (o.type === 'mains') comment = 'Des doigts qui saisissent, au bout des pattes avant';
-      L.push(`- **${Maj(nombreFr(o.nombre, fem))} ${mot}${fs ? ' ' + fs : ''}**, ${place}, ${tl[1]} ${par('`' + o.type + '`', ci('nombre', o.nombre), ci('forme', o.forme), ci('place', o.place), ci('taille', o.taille), RESUMES.includes(o.type) && 'en résumé ' + ci(o.type, c[o.type]))}.`
+      else if (o.type === 'mains') comment = al === 'bipede' ? 'Des doigts qui saisissent, au bout des bras' : 'Des doigts qui saisissent, au bout des pattes avant';
+      // ce que dit l'instantané de cet organe, champ par champ ; un organe déduit d'une proportion n'a que sa taille : le reste est par défaut
+      const sources = deduit ? ['`' + o.type + '`', ci(o.type, brut[o.type]) + ' : un organe déduit de la proportion d\'avant', `nombre, forme et place par défaut (moteur/corps.js) : ${o.nombre}, ${val(o.forme)}, ${val(o.place)}`]
+        : ['`' + o.type + '`', ...['nombre', 'forme', 'place', 'taille'].map(f => champO(o, f)), RESUMES.includes(o.type) && 'en résumé ' + ci(o.type, c[o.type])];
+      L.push(`- **${Maj(nombreFr(o.nombre, fem))} ${mot}${fs ? ' ' + fs : ''}**, ${place}, ${tl[1]} ${par(...sources)}.`
         + (Tc.fonction ? ` Fonction : ${Tc.fonction} ${par(ci('catalogue.organes.' + o.type + '.fonction', Tc.fonction))}${cond?.presage ? `, conduite \`${cond.type}\` : « ${cond.presage} » ${par('`conduite.presage`')}` : ''}.` : '')
         + (comment || col ? ` ${comment}${col ? `${comment ? ' ; teinte ' : 'Teinte '}${col.fr} \`${col.hex}\`` : ''} ${teinte === 'accent' ? regle('parade-accent', 'la teinte d\'accent des planches, la robe tournée de 150°') : interp('comme sur les planches')}.` : '')
         + (fx && o.type !== 'panache' ? ` ${Maj(fx)} ${interp('ce que sa fonction lui donne à voir')}.` : ''));
@@ -534,18 +592,20 @@ function rediger(t, I, opt, C) {
 
   // —— 7. Posture et mouvement ——
   { const L = [], v = p.vitesse_rel, ms = Number.isFinite(v) && Number.isFinite(L_) ? v * L_ : null, ser = al === 'serpent' || al === 'poisson';
-    const lo = l => (ser && LOCO_SERPENT[l]) || ((al === 'hexapode' || al === 'segmente') && LOCO_INSECTE[l]) || ((al === 'bipede' || al === 'oiseau') && LOCO_DEBOUT[l]) || LOCO[l] || [l, '', ''];
+    const court = !!c && c.pattes > 0 && c.haut < .35;   // (des pattes courtes : pas de « longue foulée »)
+    const lo = l => (ser && LOCO_SERPENT[l]) || (geant && LOCO_GEANT[l]) || ((al === 'hexapode' || al === 'segmente') && LOCO_INSECTE[l]) || ((al === 'bipede' || al === 'oiseau') && LOCO_DEBOUT[l]) || (court && LOCO_COURT[l]) || LOCO[l] || [l, '', ''];
     const verbes = loco.map(l => lo(l)[0]), details = machine ? [] : loco.map(l => lo(l)[1]).filter(Boolean);
     if (!loco.length) L.push(`Elle ne se déplace pas ${par(ci('locomotion', []))}.`);
     else if (loco.length === 1 && details.length === 1) L.push(`Elle ${verbes[0]} ${par(ci('locomotion', loco))} : ${details[0]} ${interp('ce que cette façon de se déplacer donne au corps')}.`);
     else { L.push(`Elle ${liste(verbes)} ${par(ci('locomotion', loco))}.`); if (details.length) L.push(`${Maj(details.join(' ; '))} ${interp('ce que chaque façon de se déplacer donne au corps')}.`); }
-    const vitesse = x => x >= 1 ? fr(x, 1) + ESP + 'm/s' : fr(x * 100, x >= .1 ? 0 : 1) + ESP + 'cm/s';
+    const vitesse = x => x >= 1 ? fr(x, 1) + ESP + 'm/s' : x >= .01 ? fr(x * 100, x >= .1 ? 0 : 1) + ESP + 'cm/s' : fr(x * 1000, 1) + ESP + 'mm/s';
     if (ms != null) L.push(`Vitesse de pointe : environ ${fr(v, 1)} longueurs par seconde ${par(ci('vitesse_rel', v))}, soit environ ${vitesse(ms)} ${par('× ' + ci('taille_m', L_))}.`);
     const lents = majeurs.filter(x => CT[x]?.ecarts?.vitesse_rel || CT[x]?.ecarts?.longevite);
     for (const x of lents) { const e = CT[x].ecarts;
       L.push(`${Maj(nomTrait(x, CT))}, que montrent ${pc(T[x].part)} des bêtes ${par('`phenotypes`')} : ${[e.vitesse_rel && '×' + fr(e.vitesse_rel, 2) + ' sur la vitesse', e.longevite && '×' + fr(e.longevite, 2) + ' sur la longévité', e.maturite && '×' + fr(e.maturite, 2) + ' sur la maturité'].filter(Boolean).join(', ')} ${par(ci('catalogue.traits.' + x + '.ecarts', e))}${CT[x].conduite?.presage ? ` ; « ${CT[x].conduite.presage} » ${par('`conduite.presage`')}` : ''}${x === 'metabolisme-lent' ? ' ' + interp('une bête lente et économe') : ''}.`); }
     const kv = lents.reduce((a, x) => a * (CT[x].ecarts.vitesse_rel ?? 1), 1);
-    if (ms != null && kv !== 1) L.push(`Pour la plupart des bêtes, la vitesse de pointe est donc d'environ ${vitesse(ms * kv)} ${par(ci('vitesse_rel', v) + ' × ' + fr(kv, 3) + ', le produit de ces écarts')}.`);
+    // (la plupart des bêtes : leur vitesse en longueurs, sous ces écarts, fois leur longueur à elles, Lv)
+    if (ms != null && (kv !== 1 || vu) && Number.isFinite(Lv)) L.push(`Pour la plupart des bêtes, la vitesse de pointe est donc d'environ ${vitesse(v * kv * Lv)} ${par(ci('vitesse_rel', v) + (kv !== 1 ? ' × ' + fr(kv, 3) + ', le produit de ces écarts,' : '') + ' × ' + longueur(Lv) + ', leur longueur')}.`);
     section('Posture et mouvement', L);
     const lp = loco.map(l => lo(l)[2]).filter(Boolean);
     if (!machine && lp.length) pro.corps.push(...lp);
@@ -553,23 +613,24 @@ function rediger(t, I, opt, C) {
 
   // —— 8. Comportement ——
   { const L = [], so = p.sociabilite, te = p.temperament, D = p.diete || {}, arme = mOrg.find(o => CO[o.type]?.fonction === 'combat' || CO[o.type]?.fonction === 'venin');
-    const act = { diurne: 'Diurne', nocturne: 'Nocturne', crepusculaire: 'Crépusculaire', continue: 'Active jour et nuit' }[p.activite] || 'Activité inconnue';
+    const act = { diurne: 'Diurne', nocturne: 'Nocturne', crepusculaire: 'Crépusculaire', continue: 'Active de jour comme de nuit' }[p.activite] || 'Son heure n\'est pas dite';
     const soc = so == null ? '' : palier(so, [[.15, 'solitaire'], [.35, 'plutôt solitaire'], [.6, 'en petits groupes lâches'], [.8, 'grégaire'], [Infinity, 'très grégaire']])[1];
     const actVue = { diurne: 'diurnes', nocturne: 'nocturnes', crepusculaire: 'crépusculaires' }[heure];
     L.push(`${act} ${par(ci('activite', p.activite ?? null))}${heureT && heure !== p.activite ? `, mais la plupart des bêtes sont ${actVue || heure} : ${pc(T[heureT].part)} portent le trait ${nomTrait(heureT, CT)} ${par('`phenotypes`', ci('catalogue.traits.' + heureT + '.fixe.activite', heure))}` : ''}${soc ? `, ${soc} ${par(ci('sociabilite', so))}` : ''}.`);
     if (te != null) { const tp = palier(te, [[.2, 'Elle fuit presque toujours'], [.4, 'Elle fuit plus souvent qu\'elle ne riposte'], [.6, 'Elle fuit ou fait front, selon'], [.8, 'Elle **riposte plus souvent qu\'elle ne fuit**'], [Infinity, 'Elle **riposte presque toujours**']])[1];
       L.push(`${tp} ${par(ci('temperament', te))}${te >= .6 && arme ? `, ${(CO[arme.type]?.mot || [arme.type, arme.type])[arme.nombre > 1 ? 1 : 0]} en avant ${interp('son organe de ' + CO[arme.type].fonction + (CO[arme.type].conduite ? ', conduite `' + CO[arme.type].conduite.type + '`' : ''))}` : ''}.`); }
-    if (Object.keys(D).length) { const dom = Object.entries(D).sort((a, b) => b[1] - a[1]), v0 = dom[0][0];
+    if (Object.keys(D).length) { const dom = Object.entries(D).sort(parNom), v0 = dom[0][0];
       const verbe = { feuilles: 'une brouteuse de feuilles', graines: 'une mangeuse de graines', fruits: 'une mangeuse de fruits', nectar: 'une butineuse', insectes: 'une mangeuse d\'insectes', viande: 'une chasseuse', sang: 'une buveuse de sang' }[v0] || 'une mangeuse de ' + v0;
       L.push(`Elle se nourrit de ${liste(dom.map(([x, q]) => pc(q) + ' ' + (voyelle(x) ? 'd\'' : 'de ') + x))} ${par(ci('diete', D))} : ${v0 === 'feuilles' && niche && niche.couvert < .2 ? 'une brouteuse de végétation basse' : verbe} ${interp(v0 === 'feuilles' && niche && niche.couvert < .2 ? 'sans couvert, ' + ci('niche.couvert', niche.couvert) + ', l\'herbe est rase' : 'sa part la plus grande')}.`); }
     else if (p.regime && !machine) L.push(`Régime ${p.regime} ${par(ci('regime', p.regime))}.`);
     if (!machine) L.push(`${Maj(k.reproduction)} ${par(p.reproduction ? ci('reproduction', p.reproduction) : '`reproduction` absente : déduite comme le fait moteur/ponte.js')}${p.portee != null ? `, ${fr(p.portee)} ${k.reproduction === 'ovipare' ? 'œufs' : 'petits'} par portée ${par(ci('portee', p.portee))}` : ''}${p.maturite != null ? `, maturité à ${fr(p.maturite, 1)} cycle${p.maturite >= 2 ? 's' : ''} ${par(ci('maturite', p.maturite))}` : ''}${p.longevite != null ? `, vit environ ${fr(p.longevite)} cycles ${par(ci('longevite', p.longevite))}` : ''} *(les durées sont en cycles du monde ; ${I.monde?.annee ? 'une année en compte ' + fr(I.monde.annee) + ', `monde.annee`' : 'docs/19'})*.`);
-    else L.push(`Elle ${p.role === 'regulateur' ? 'régule les espèces qui débordent' : p.role === 'foreuse' ? 'fore le minerai' : p.role === 'recycleur' ? 'recycle la ferraille' : p.role === 'capteur' ? 'capte la lumière et la chaleur' : 'sert la Mère'} ${par(ci('role', p.role ?? null))} ; elle dure ${fr(p.longevite ?? 0)} cycles ${par(ci('longevite', p.longevite ?? null))}.`);
+    else L.push(`Elle ${p.role === 'regulateur' ? 'régule les espèces qui débordent' : p.role === 'foreuse' ? 'fore le minerai' : p.role === 'recycleur' ? 'recycle la ferraille' : p.role === 'capteur' ? 'capte la lumière et la chaleur' : 'sert la Mère'} ${par(ci('role', p.role ?? null))}${p.longevite != null ? ` ; elle dure ${fr(p.longevite)} cycles ${par(ci('longevite', p.longevite))}` : ''}.`);
     if (p.perception != null && Math.abs(p.perception - .5) > .1) L.push(`Des sens ${p.perception > .5 ? 'aiguisés' : 'émoussés'} ${par(ci('perception', p.perception))}.`);
     // (les robes majoritaires vont aux couleurs, les tailles à la silhouette, les vitesses au mouvement, les peaux au tégument, l'heure en tête)
     const visibles = majeurs.filter(x => !(CT[x]?.ecarts?.vitesse_rel || CT[x]?.ecarts?.longevite) && !['peau-epaisse', 'carapace', 'glande-irritante', ...ROBES].includes(x) && !(CT[x]?.ecarts?.taille_m || CT[x]?.ecarts?.masse_kg) && x !== heureT);
     for (const x of visibles) L.push(`${Maj(nomTrait(x, CT))} : ${pc(T[x].part)} des bêtes ${par('`phenotypes`')}${CT[x]?.conduite?.presage ? ` — « ${CT[x].conduite.presage} » ${par('`catalogue.traits.' + x + '.conduite.presage`')}` : CT[x]?.effet ? ` — ${CT[x].effet} ${par('`catalogue.traits.' + x + '.effet`')}` : ''}.`);
-    if (p.castes) L.push(`Elle vit en colonie ${par(ci('castes.part', p.castes.part ?? null))} : ${Object.entries(p.castes).filter(([x, v]) => v && typeof v === 'object').map(([x, v]) => x + (v.masse_rel ? ` (×${fr(v.masse_rel, 1)} en masse${v.ailes ? ', ailée' : ''}${v.organe ? ', ' + v.organe : ''})` : '')).join(', ')} ; la reine et les soldats sont d'autres silhouettes ${interp('docs/33')}.`);
+    const ORDRE_CASTES = ['reine', 'ouvrieres', 'soldats'], rangC = x => { const i = ORDRE_CASTES.indexOf(x); return i < 0 ? 9 : i; };
+    if (p.castes) L.push(`Elle vit en colonie ${par(ci('castes.part', p.castes.part ?? null))} : ${Object.entries(p.castes).filter(([x, v]) => v && typeof v === 'object').sort(([a], [b]) => rangC(a) - rangC(b) || (a < b ? -1 : 1)).map(([x, v]) => ({ ouvrieres: 'ouvrières' }[x] || x) + (v.masse_rel ? ` (×${fr(v.masse_rel, 1)} en masse${v.ailes ? ', ailée' : ''}${v.organe ? ', ' + v.organe : ''})` : '')).join(', ')} ; la reine et les soldats sont d'autres silhouettes ${interp('docs/33')}.`);
     if (t.caractere) L.push(`Caractère : ${[['hardiesse', 'hardie', 'craintive'], ['combativite', 'combative', 'fuyarde'], ['opportunisme', 'opportuniste', 'difficile']].filter(([x]) => t.caractere[x] != null).map(([x, a, b]) => (t.caractere[x] >= .5 ? a : b) + ' ' + par(ci('caractere.' + x, t.caractere[x]))).join(', ')}.`);
     section('Comportement', L);
     for (const x of visibles) if (vueEn(x, fam, al)) pro.plus.push(vueEn(x, fam, al)); }
@@ -630,6 +691,9 @@ function rediger(t, I, opt, C) {
       const Fp = familleAvec(parent, I, C), cp = parent.plan.corps && parent.plan.regime !== 'synthetique' ? C.normaliser(parent.plan.corps) : null;
       parente.famille_parent = Fp.id; parente.meme_famille = Fp.id === fam;
       L.push(`Lignée mère : ${art.le(nomP)}**${nomP}** ${par(ci('parent', t.parent))}${parent.eteint != null ? `, éteinte au cycle ${fr(parent.eteint)} ${par(ci('eteint', parent.eteint))}` : ''} : ${Fp.id === fam ? `même famille visuelle, \`${fam}\`` : `**famille changée**, \`${Fp.id}\` → \`${fam}\`, parce que son plan a changé (${planChange(Fp.cle, k).join(', ')})`} ${regle(R.id)}.`);
+      // (la famille ne lit que la lignée elle-même : une fille peut changer de peau sans changer de forme ; la fiche le dit, et dit quoi garder)
+      if (Fp.id !== fam) { const tp = FAMILLES[Fp.id].tegument[0], memeForme = cp && c && cp.forme === c.forme;
+        L.push(`La peau change : ${teg[0]?.fr || FAMILLES[fam].tegument[0]}, au lieu ${voyelle(tp) ? 'd\'' : 'de '}${tp} ${regle(R.id, R.quand)}${memeForme ? ` ; la forme du corps est la même ${par(ci('forme', c.forme))} : pour l'air de famille, garder sa silhouette, ses couleurs et son motif, et ne changer que la peau ${interp('la famille se lit sur la lignée seule, pas sur sa mère')}` : ''}.`); }
       if (cp && c) {
         const cle = o => o.type + '@' + o.place, A = new Map(cp.organes.map(o => [cle(o), o])), B = new Map(c.organes.map(o => [cle(o), o])), nv = [], pr = [], ch = [], gd = [];
         const nomO = o => (CO[o.type]?.mot || [o.type, o.type])[o.nombre > 1 ? 1 : 0];
@@ -644,13 +708,15 @@ function rediger(t, I, opt, C) {
         if (pr.length) L.push(`${pr.map(o => `${Maj(pasDe((CO[o.type]?.mot || [o.type, o.type])[o.nombre > 1 ? 1 : 0]).replace(/^Pas/, 'Plus'))} : ${(CO[o.type]?.fem ?? 1) ? 'perdue' : 'perdu'}${o.nombre > 1 ? 's' : ''} depuis sa mère ${par('`' + o.type + '` : ' + fr(o.taille, 2) + ' → absent')}`).join(' ; ')}.`);
         const mv = [], gardeP = [];
         for (const k2 of NUM7.filter(x => utiles.includes(x))) { const a = cp[k2], b = c[k2], d = b - a;
+          const APPARAIT = { oreilles: ['des oreilles apparaissent', 'les oreilles disparaissent'], queue: ['une queue apparaît', 'la queue disparaît'], cou: ['un cou apparaît', 'le cou disparaît'], museau: ['un museau apparaît', 'le museau disparaît'] };
+          if (APPARAIT[k2] && Math.abs(d) >= .05 && (a === 0 || b === 0)) { mv.push([Math.abs(d), `${APPARAIT[k2][a === 0 ? 0 : 1]} (\`${k2}\` : ${fr(a, 2)} → ${fr(b, 2)})`]); continue; }
           if (Math.abs(d) >= .05) { const ad = Math.abs(d) < .15 ? 'un peu ' : Math.abs(d) >= .3 ? 'nettement ' : '';
             const mot = { long: d > 0 ? 'corps ' + ad + 'plus long' : 'corps ' + ad + 'moins long', haut: d > 0 ? 'pattes ' + ad + 'plus hautes' : 'pattes ' + ad + 'plus courtes', cou: d > 0 ? 'cou ' + ad + 'plus long' : 'cou ' + ad + 'plus court',
               tete: d > 0 ? 'tête ' + ad + 'plus grosse' : 'tête ' + ad + 'plus petite', museau: d > 0 ? 'museau ' + ad + 'plus long' : 'museau ' + ad + 'plus court', oreilles: d > 0 ? 'oreilles ' + ad + 'plus grandes' : 'oreilles ' + ad + 'plus petites',
               queue: d > 0 ? 'queue ' + ad + 'allongée' : 'queue ' + ad + 'raccourcie' }[k2];
             mv.push([Math.abs(d), `${mot} (\`${k2}\` : ${fr(a, 2)} → ${fr(b, 2)})`]); }
           else if (b <= .2 || b >= .7) gardeP.push(b === 0 && a === 0 && ZERO[k2] ? `toujours sans ${k2} (\`${k2}: 0\`)` : `${k2 === 'haut' || k2 === 'oreilles' ? 'mêmes' : 'même'} ${MOT[k2]} ${palier(b, PALIERS[k2])[1].split(',')[0]} (\`${k2}\` : ${fr(a, 2)} → ${fr(b, 2)})`); }
-        mv.sort((x, y) => y[0] - x[0]);
+        mv.sort((x, y) => y[0] - x[0] || (x[1] < y[1] ? -1 : 1));
         parente.proportions = mv.map(x => x[1]);
         if (mv.length) L.push(`${Maj(mv.map(x => x[1]).join(', '))}.`);
         if (c.forme !== cp.forme || c.pattes !== cp.pattes) L.push(`Le plan a changé : ${val(cp.forme)} à ${cp.pattes} pattes → ${val(c.forme)} à ${c.pattes} pattes ${par(ci('forme', c.forme), ci('pattes', c.pattes))}.`);
@@ -667,9 +733,9 @@ function rediger(t, I, opt, C) {
         parente.gardes_proportions = gardeP;
         const lg = loco.filter(l => !(parent.plan.locomotion || []).includes(l)), lp = (parent.plan.locomotion || []).filter(l => !loco.includes(l));
         if (lg.length || lp.length) L.push(`Ses déplacements : ${[lg.length && 'gagné ' + liste(lg), lp.length && 'perdu ' + liste(lp)].filter(Boolean).join(', ')} ${par(ci('locomotion', loco))}.`);
-        if (parent.plan.regime !== p.regime) L.push(`Son régime : ${parent.plan.regime} → ${p.regime} ${par(ci('regime', p.regime))}.`);
-        if (parent.plan.activite !== p.activite) L.push(`Son heure : ${parent.plan.activite} → ${p.activite} ${par(ci('activite', p.activite))}.`);
-        if (niche && parent.plan.niche) { const Dn = ['temperature', 'humidite', 'altitude', 'lumiere', 'couvert'].map(x => [x, (niche[x] ?? .5) - (parent.plan.niche[x] ?? .5)]).filter(([, d]) => Math.abs(d) >= .2).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+        if (parent.plan.regime !== p.regime) L.push(`Son régime : ${dit(parent.plan.regime)} → ${dit(p.regime)} ${par(ci('regime', p.regime ?? null))}.`);
+        if (parent.plan.activite !== p.activite) L.push(`Son heure : ${dit(parent.plan.activite)} → ${dit(p.activite)} ${par(ci('activite', p.activite ?? null))}.`);
+        if (niche && parent.plan.niche) { const Dn = ['temperature', 'humidite', 'altitude', 'lumiere', 'couvert'].map(x => [x, (niche[x] ?? .5) - (parent.plan.niche[x] ?? .5)]).filter(([, d]) => Math.abs(d) >= .2).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]) || (a[0] < b[0] ? -1 : 1));
           const lp0 = [...(parent.populations || [])].filter(x => x.effectif > 0).sort((a, b) => b.effectif - a.effectif || (a.biome < b.biome ? -1 : 1))[0]?.biome;
           if (Dn.length) L.push(`Son milieu a bougé ${par(...Dn.map(([x]) => `\`niche.${x}\` : ${fr(parent.plan.niche[x], 2)} → ${fr(niche[x], 2)}`))}${lp0 && pops[0] && lp0 !== pops[0].biome ? ` : son lieu principal passe de ${nomBiome(lp0)} à ${nomBiome(pops[0].biome)} ${par('`populations`')}` : ''}.`); }
         const dist = C.distance(cp, c); parente.distance = dist;
@@ -682,7 +748,10 @@ function rediger(t, I, opt, C) {
 
   // —— 12. Interdits ——
   if (!machine) {
-    for (const k2 of ['oreilles', 'queue', 'cou', 'museau']) if (utiles.includes(k2) && c[k2] === 0) interdit('zero', `${pasDe(k2 === 'oreilles' ? 'oreilles' : k2)} ${par(champ(k2))}`, ZERO[k2][2]);
+    for (const k2 of ['oreilles', 'queue', 'cou', 'museau']) if (utiles.includes(k2) && c[k2] === 0) {
+      if (k2 === 'queue' && al === 'poisson') interdit('zero', `pas de pédoncule allongé, la nageoire de queue reste ${par(champ(k2))}`, 'long tail stalk');   // (un poisson garde sa nageoire de queue)
+      else if (k2 === 'queue' && moignon) interdit('zero', `pas de longue queue, seulement un moignon qui porte ses organes ${par(champ(k2))}`, 'long tail');
+      else interdit('zero', `${pasDe(k2 === 'oreilles' ? 'oreilles' : k2)} ${par(champ(k2))}`, ZERO[k2][2]); }
     // ce qu'un corps de cette forme n'a pas, quoi que disent ses proportions (un insecte n'a pas d'oreilles ; un serpent est tout en queue)
     const SANS = { oreilles: ['oreilles', 'ears', ['oiseau', 'hexapode', 'serpent', 'poisson', 'segmente', 'radiaire', 'tentaculaire']], queue: ['queue de mammifère', 'mammal tail', ['hexapode', 'segmente', 'radiaire', 'tentaculaire']],
       cou: ['cou de mammifère', 'mammal neck', ['hexapode', 'segmente', 'poisson', 'radiaire', 'tentaculaire']], museau: ['museau', 'snout', ['hexapode', 'segmente']] };
@@ -694,9 +763,12 @@ function rediger(t, I, opt, C) {
     const ordre = ['cornes', 'crete', 'ailes', 'carapace', 'antennes', 'collerette', 'trompe', 'plaques', 'epines', 'pinces', 'mains', 'massue', 'aiguillon', 'panache', 'nageoires', 'defenses'];
     const types = [...ordre.filter(x => CO[x]), ...Object.keys(CO).filter(x => !ordre.includes(x)).sort()];
     for (const ty of types) if (!has(ty)) { const Tc = CO[ty] || {}, mot = (Tc.mot || [ty, ty + 's'])[(Tc.nombre?.[1] ?? 2) > 1 ? 1 : 0];
-      const enx = al === 'poisson' && ty === 'nageoires' ? 'oversized fins, sail fins' : fam === 'plumage' && ty === 'ailes' ? '' : ORG_EN[ty]?.neg ?? ty;
+      // (le mot anglais ne doit pas interdire ce que le prompt dit : des élytres sont des ailes, les nageoires d'un poisson restent)
+      const elytres = fam === 'chitine' && (has('carapace')?.taille || 0) > .3;
+      const enx = al === 'poisson' && ty === 'nageoires' ? 'oversized fins, sail fins' : fam === 'plumage' && ty === 'ailes' ? '' : elytres && ty === 'ailes' ? 'membranous flight wings' : ORG_EN[ty]?.neg ?? ty;
       interdit('organes', `${pasDe(al === 'poisson' && ty === 'nageoires' ? 'grandes nageoires ni de voiles (seulement les nageoires ordinaires d\'un poisson)' : mot)} ${par(RESUMES.includes(ty) ? ci(ty, c[ty]) : 'aucun organe `' + ty + '`')}`, enx); }
-    for (const o of mOrg) { const Tc = CO[o.type] || {}, fem = Tc.fem ?? 1, pl = o.nombre > 1; for (const f of Tc.formes || []) if (f !== o.forme) interdit('formes', `${pasDe((Tc.mot || [o.type, o.type])[pl ? 1 : 0] + ' ' + formeFr(f, fem, pl))} ${par('`' + o.type + '`', ci('forme', o.forme))}`, ORG_EN[o.type]?.autre?.[f] || ''); }
+    for (const o of mOrg) { const Tc = CO[o.type] || {}, fem = Tc.fem ?? 1, pl = o.nombre > 1, srcF = deduit ? 'forme par défaut (moteur/corps.js) : ' + val(o.forme) : champO(o, 'forme');
+      for (const f of Tc.formes || []) if (f !== o.forme) interdit('formes', `${pasDe((Tc.mot || [o.type, o.type])[pl ? 1 : 0] + ' ' + formeFr(f, fem, pl))} ${par('`' + o.type + '`', srcF)}`, ORG_EN[o.type]?.autre?.[f] || ''); }
     const P = (k2, cond, frx, enx) => { if (utiles.includes(k2) && cond(c[k2])) interdit('proportions', `${frx} ${par(champ(k2))}`, enx); };
     if (c.pattes) { P('haut', v => v < .35, 'pas de longues pattes', 'long legs'); P('haut', v => v > .65, 'pas de pattes courtes', 'short stubby legs'); }
     P('queue', v => v > 0 && v < .3, 'pas de longue queue', 'long tail'); P('queue', v => v >= .7, 'pas de queue courte', 'short tail');
@@ -707,11 +779,12 @@ function rediger(t, I, opt, C) {
     P('long', v => v >= .7, 'pas de corps court et ramassé', 'short compact body'); P('long', v => v <= .3, 'pas de corps allongé', 'elongated body');
     if (c.posture < .3 && (al === 'quadrupede' || al === 'hexapode' || al === 'segmente')) interdit('posture', `pas debout, pas dressée sur ses pattes arrière ${par(brut.posture === undefined ? '`posture` absente : 0' : ci('posture', c.posture), loco.includes('reptation') && ci('locomotion', loco))}`, 'standing tall, upright, bipedal');
     if (c.posture >= .9 && al === 'bipede') interdit('posture', `pas à quatre pattes ${par(champ('posture'))}`, 'on all fours');
-    if (al === 'quadrupede' || al === 'hexapode' || al === 'bipede') interdit('posture', `exactement ${nombreFr(c.pattes, 1)} pattes, pas une de plus ${par(champ('pattes'))}`, al === 'hexapode' ? 'four legs, extra legs' : 'extra legs, extra limbs');
+    if (al === 'quadrupede' || al === 'hexapode') interdit('posture', `exactement ${nombreFr(c.pattes, 1)} pattes, pas une de plus ${par(champ('pattes'))}`, al === 'hexapode' ? 'four legs, extra legs' : 'extra legs, extra limbs');
+    if (al === 'bipede') interdit('posture', `exactement deux pattes, et deux petits bras ${par(champ('pattes'))} ${interp('comme sur les planches')}`, 'extra legs');
     for (const [frx, enx] of FAMILLES[fam].autres) { const plumesAiles = frx === 'de plumes' && has('ailes')?.forme === 'plumes';
       if (frx === 'de pinces de crabe' && has('pinces')) continue;   // (des pinces que le plan porte ne s'interdisent pas)
       interdit('tegument', `${plumesAiles ? 'pas de plumes sur le corps, seulement aux ailes' : 'pas ' + frx} ${regle(R.id)}`, plumesAiles ? 'feathered body' : enx); }
-    const Mo = MOTIFS[c.motif] || MOTIFS.uni; if (Mo[4]) interdit('motif', `${c.motif === 'uni' ? 'pas de rayures ni de taches' : Mo[4] === 'spots' ? 'pas de taches' : 'pas de rayures'} ${par(ci('motif', c.motif))}`, Mo[4]);
+    const Mo = MOTIFS[c.motif] || MOTIFS.uni, apo = (T['coloration-aposematique']?.part || 0) >= .5; if (Mo[4] && !apo) interdit('motif', `${c.motif === 'uni' ? 'pas de rayures ni de taches' : Mo[4] === 'spots' ? 'pas de taches' : 'pas de rayures'} ${par(ci('motif', c.motif))}`, Mo[4]);
   } else {
     for (const [frx, enx] of FAMILLES.machine.autres) interdit('tegument', `pas ${frx} ${regle('machine')}`, enx);
     interdit('tegument', `pas de visage ni de bouche ${regle('machine', 'un capteur, pas une tête')}`, 'face, mouth, teeth');
@@ -728,15 +801,15 @@ function rediger(t, I, opt, C) {
   let corpsEn, peauEn;
   if (machine) { corpsEn = [pro.avant.join(', '), pro.corps.join(', ')].filter(Boolean).join(', ') + '.'; peauEn = ''; }
   else {
-    const queueOrg = pro.queueOrg, q = al === 'poisson' ? Maj(palier(c.queue, PALIERS.caudale)[2]) + (queueOrg.length ? ' with ' + list(queueOrg) : '') : utiles.includes('queue') ? (c.queue === 0 ? 'Tailless' : Maj(palier(c.queue, PALIERS.queue)[2].replace(/ tail$/, '') + (car && /slender|thin/.test(car[2]) && c.queue < .55 ? ' thin' : '') + ' tail') + (queueOrg.length ? ' ending in ' + list(queueOrg) : '')) : queueOrg.length ? Maj(list(queueOrg)) : '';
+    const queueOrg = pro.queueOrg, q = al === 'poisson' ? Maj(palier(c.queue, PALIERS.caudale)[2]) + (queueOrg.length ? ' with ' + list(queueOrg) : '') : moignon ? 'A stub tail carrying ' + list(queueOrg) : utiles.includes('queue') ? (c.queue === 0 ? 'Tailless' : Maj(palier(c.queue, PALIERS.queue)[2].replace(/ tail$/, '') + (car && /slender|thin/.test(car[2]) && c.queue < .55 ? ' thin' : '') + ' tail') + (queueOrg.length ? ' ending in ' + list(queueOrg) : '')) : queueOrg.length ? Maj(list(queueOrg)) : '';
     corpsEn = [pro.avant.join(', ') + (pro.corps.length ? ', ' + pro.corps.join(', ') : '') + '.', pro.tete.length ? Maj(pro.tete.join(', ')) + '.' : '', pro.organes.length ? Maj(list(pro.organes)) + '.' : '', q ? q + '.' : '', pro.plus.length ? Maj(pro.plus.join(', ')) + '.' : ''].filter(Boolean).join(' ');
     peauEn = Maj([pro.peau.join(', '), pro.couleurs.join(', ')].filter(Boolean).join(', ')) + '.';
   }
   if (machine) { peauEn = Maj([pro.organes.join(', '), pro.tete.join(', '), pro.couleurs.join(', ')].filter(Boolean).join(', ')) + '.'; }
   const prompt_2d = `${style}, ${min1(corpsEn)} ${peauEn} ${fin2d}`.replace(/\s+/g, ' ').trim();
   const pose = machine ? 'neutral standing pose, all four legs visible' : al === 'poisson' ? 'neutral swimming pose, fins spread, mouth closed' : al === 'serpent' ? 'loose S-shaped pose, body not coiled over itself, mouth closed'
-    : al === 'gelee' || al === 'radiaire' || al === 'tentaculaire' ? 'neutral pose, arms spread apart' : al === 'oiseau' ? 'neutral standing pose, wings folded, legs visible' : loco.includes('reptation') && c.haut < .35 ? `neutral crawling pose, belly low, ${c.pattes === 2 ? 'both' : 'all ' + nombreEn(c.pattes)} legs visible and clearly separated from the body, mouth closed` : `neutral standing pose, ${c.pattes === 2 ? 'both' : 'all ' + nombreEn(c.pattes)} legs visible and clearly separated from the body, mouth closed`;
-  const prompt_3d = `${style}, 3D model of a single creature for a game, ${min1(corpsEn)} ${peauEn} ${Maj(pose)}, symmetrical, whole body in frame, centered, plain light grey background, soft even studio lighting, no cast shadows, no ground plane, clean silhouette for image-to-3D. Real scale: ${Number.isFinite(Lv) ? en(Lv, 2) + ' m long' : 'unknown length'}, ${Number.isFinite(mv) ? en(mv, mv < 1 ? 3 : 1) + ' kg' : 'unknown weight'}.`.replace(/\s+/g, ' ').replace(/\. \./g, '.').trim();
+    : al === 'gelee' || al === 'radiaire' || al === 'tentaculaire' ? 'neutral pose, arms spread apart' : al === 'oiseau' ? 'neutral standing pose, wings folded, legs visible' : al === 'bipede' ? 'neutral standing pose, both legs and both small arms visible and clearly separated from the body, mouth closed' : loco.includes('reptation') && c.haut < .35 ? `neutral crawling pose, belly low, ${c.pattes === 2 ? 'both' : 'all ' + nombreEn(c.pattes)} legs visible and clearly separated from the body, mouth closed` : `neutral standing pose, ${c.pattes === 2 ? 'both' : 'all ' + nombreEn(c.pattes)} legs visible and clearly separated from the body, mouth closed`;
+  const prompt_3d = `${style}, 3D model of a single creature for a game, ${min1(corpsEn)} ${peauEn} ${Maj(pose)}, symmetrical, whole body in frame, centered, plain light grey background, soft even studio lighting, no cast shadows, no ground plane, clean silhouette for image-to-3D. True size: ${Number.isFinite(Lv) ? length(Lv) + ' long' : 'unknown length'}, ${Number.isFinite(mv) ? weight(mv) : 'unknown weight'}.`.replace(/\s+/g, ' ').replace(/\. \./g, '.').trim();
   const negatif = [...new Set(I_.map(x => x.en).filter(Boolean).flatMap(x => x.split(/,\s*/)))].join(', ');
   const palette = machine ? machinePal.map(x => ({ role: x.role, hex: x.hex, fr: x.fr, en: x.en, source: x.source }))
     : [pal.robe, pal.sombre, pal.ventre, pal.oeil, ...(accentUtile ? [pal.accent] : []), ...(osUtile ? [pal.os] : [])].map(x => ({ role: x.role, hex: x.hex, fr: x.fr, en: x.en, source: x.source }));
@@ -760,18 +833,18 @@ function rediger(t, I, opt, C) {
     table: VERSION, id: t.id, nom: t.nom, nom_commun: t.nom_commun ?? null, monde: I.monde?.id ?? null, cycle: I.cycle?.n ?? null,
     famille: { id: fam, regle: R.id, quand: R.quand, pourquoi: R.pourquoi, tegument: { fr: FAMILLES[fam].tegument[0], en: FAMILLES[fam].tegument[1] }, details: teg.map(d => ({ id: d.id, fr: d.fr, en: d.en })), cle: k },
     identite: { parent: t.parent ?? null, parent_nom: parent ? nomT(parent) : null, parent_present: !!parent, apparu: t.apparu ?? null, genese: Number.isFinite(t.apparu) && !t.origine && (t.apparu < 0 || (Number.isFinite(I.cycle?.n) && t.apparu > I.cycle.n)),
-      origine: t.origine ?? null, statut: t.statut ?? null, eteint: t.eteint ?? null, effectif: N, biomes: pops.map(x => ({ id: x.biome, nom: biomes[x.biome]?.nom || x.biome, effectif: x.effectif })) },
-    silhouette: machine ? { machine: true, taille_m: L_ ?? null, masse_kg: m ?? null, modules: p.modules || {} } : { forme: c.forme, allure: al, pattes: c.pattes, posture: c.posture, taille_m: L_ ?? null, masse_kg: m ?? null,
+      origine: copie(t.origine ?? null), statut: t.statut ?? null, eteint: t.eteint ?? null, effectif: N, biomes: pops.map(x => ({ id: x.biome, nom: biomes[x.biome]?.nom || x.biome, effectif: x.effectif })) },
+    silhouette: machine ? { machine: true, taille_m: L_ ?? null, masse_kg: m ?? null, taille_vue_m: net(Lv), masse_vue_kg: net(mv), modules: copie(p.modules || {}) } : { forme: c.forme, allure: al, pattes: c.pattes, posture: c.posture, taille_m: L_ ?? null, masse_kg: m ?? null, taille_vue_m: net(Lv), masse_vue_kg: net(mv),
       carrure: kc != null ? { indice: +kc.toFixed(3), fr: car[1], en: car[2] || 'ordinary build' } : null, decrire: C.decrire(c, p),
       proportions: Object.fromEntries(NUM7.map(k2 => [k2, { valeur: c[k2], utile: utiles.includes(k2) && !(k2 === 'haut' && !c.pattes), absente: brut[k2] === undefined, fr: c[k2] === 0 && ZERO[k2] ? ZERO[k2][0] : palier(c[k2], PALIERS[k2])[1], en: c[k2] === 0 && ZERO[k2] ? ZERO[k2][1] : palier(c[k2], PALIERS[k2])[2] }])),
       resumes: Object.fromEntries(RESUMES.map(r => [r, c[r]])) },
-    organes: machine ? [] : mOrg.map(o => ({ ...o, fonction: CO[o.type]?.fonction ?? null, conduite: CO[o.type]?.conduite ?? null, en: organeEn(o, fam, TEINTE_ORG[o.type] === 'accent' ? pal.accent : null, k.nage), teinte: TEINTE_ORG[o.type] ? (pal[TEINTE_ORG[o.type]] || pal.os).hex : null })),
+    organes: machine ? [] : mOrg.map(o => ({ ...o, fonction: CO[o.type]?.fonction ?? null, conduite: copie(CO[o.type]?.conduite ?? null), en: organeEn(o, fam, TEINTE_ORG[o.type] === 'accent' ? pal.accent : null, k.nage), teinte: TEINTE_ORG[o.type] ? (pal[TEINTE_ORG[o.type]] || pal.os).hex : null })),
     couleurs: machine ? Object.fromEntries(machinePal.map(x => [x.role, { hex: x.hex, rgb: x.rgb, fr: x.fr, en: x.en, source: x.source }])) : { ...Object.fromEntries(['robe', 'sombre', 'ventre', 'oeil'].map(r => [r, { hex: pal[r].hex, rgb: pal[r].rgb, fr: pal[r].fr, en: pal[r].en, absente: !brut.couleurs?.[r] }])),
       accent: { hex: pal.accent.hex, rgb: pal.accent.rgb, fr: pal.accent.fr, en: pal.accent.en, interprete: true }, motif: c.motif },
-    mouvement: { locomotion: loco, vitesse_rel: p.vitesse_rel ?? null, vitesse_ms: Number.isFinite(p.vitesse_rel) && Number.isFinite(L_) ? +(p.vitesse_rel * L_).toFixed(3) : null },
-    comportement: { activite: p.activite ?? null, sociabilite: p.sociabilite ?? null, temperament: p.temperament ?? null, perception: p.perception ?? null, regime: p.regime ?? null, diete: p.diete ?? null,
-      reproduction: machine ? null : k.reproduction, portee: p.portee ?? null, maturite: p.maturite ?? null, longevite: p.longevite ?? null, traits_majoritaires: majeurs.map(x => ({ trait: x, part: +T[x].part.toFixed(4) })), caractere: t.caractere ?? null },
-    milieu: { niche: niche, tolerance: p.tolerance ?? null, eau: p.eau ?? null, principal: pops[0] ? { biome: pops[0].biome, part: +(pops[0].effectif / N).toFixed(4) } : null, decor: { fr: decor.map(d => d[0]), en: decor.map(d => d[1]) }, lumiere: { fr: lumiere.map(d => d[0]), en: lumiere.map(d => d[1]) } },
+    mouvement: { locomotion: copie(loco), vitesse_rel: p.vitesse_rel ?? null, vitesse_ms: Number.isFinite(p.vitesse_rel) && Number.isFinite(L_) ? +(p.vitesse_rel * L_).toFixed(3) : null },
+    comportement: { activite: p.activite ?? null, sociabilite: p.sociabilite ?? null, temperament: p.temperament ?? null, perception: p.perception ?? null, regime: p.regime ?? null, diete: copie(p.diete ?? null),
+      reproduction: machine ? null : k.reproduction, portee: p.portee ?? null, maturite: p.maturite ?? null, longevite: p.longevite ?? null, traits_majoritaires: majeurs.map(x => ({ trait: x, part: +T[x].part.toFixed(4) })), caractere: copie(t.caractere ?? null) },
+    milieu: { niche: copie(niche), tolerance: p.tolerance ?? null, eau: p.eau ?? null, principal: pops[0] ? { biome: pops[0].biome, part: +(pops[0].effectif / N).toFixed(4) } : null, decor: { fr: decor.map(d => d[0]), en: decor.map(d => d[1]) }, lumiere: { fr: lumiere.map(d => d[0]), en: lumiere.map(d => d[1]) } },
     variations: variantes, parente, interdits: I_.map(x => ({ groupe: x.groupe, fr: x.fr, en: x.en })), sections: S.map(s0 => ({ n: s0.n, titre: s0.titre, phrases: s0.phrases })),
   };
   return { famille: fam, humain, ia: { prompt_2d, prompt_3d, negatif, palette, decor: decorEn, variantes: variantes.filter(v => v.en).map(v => ({ trait: v.trait, part: v.part, allele: v.allele, en: v.en })), style }, champs };
@@ -785,11 +858,9 @@ function planChange(a, b) { const L = [];
   if (a.nage !== b.nage) L.push(b.nage ? 'elle s\'est mise à nager' : 'elle ne nage plus');
   return L.length ? L : ['rien'];
 }
-// la matière d'un panache, selon la famille
-function matiere(fam) { return { pelage: 'de poils', plumage: 'de plumes', chitine: 'de soies', ecailles: 'd\'écailles effilées', cuirasse: 'd\'écailles effilées', 'peau-nue': 'de filaments de peau', gelee: 'de filaments' }[fam] || 'de filaments'; }
 // la bouche, d'après le régime et la forme
 function boucheDe(al, reg, D, loco = []) {
-  const top = Object.entries(D || {}).sort((a, b) => b[1] - a[1])[0]?.[0];
+  const top = Object.entries(D || {}).sort(parNom)[0]?.[0];
   // (un oiseau : le bec des planches ; le mot anglais remplace « beak » dans « long beak »)
   if (al === 'oiseau') return reg === 'carnivore' ? ['crochu, un bec de rapace', 'hooked raptor beak'] : (D.fruits || 0) >= .4 ? ['épais, un bec de mangeur de fruits', 'thick fruit-eater\'s beak']
     : loco.includes('nage') ? ['en poignard, un bec de pêcheur', 'dagger-like fishing beak'] : ['conique, un bec de mangeur de graines', 'conical seed-eater\'s beak'];
@@ -797,6 +868,7 @@ function boucheDe(al, reg, D, loco = []) {
   if (al === 'serpent') return reg === 'carnivore' ? ['tête en triangle, langue fourchue', 'triangular head, forked tongue'] : ['tête ovale, bouche petite', 'rounded head, small mouth'];
   if (al === 'poisson') return reg === 'carnivore' ? ['grande bouche dentée', 'large toothed mouth'] : reg === 'filtreur' ? ['bouche béante de filtreur', 'wide gaping filter-feeding mouth'] : ['petite bouche de brouteur', 'small grazing mouth'];
   if (al === 'radiaire' || al === 'tentaculaire') return ['bouche cachée sous le corps', ''];
+  if (!reg && !top) return ['une bouche ordinaire (le régime n\'est pas dit)', ''];
   if (reg === 'carnivore') return top === 'insectes' ? ['museau fin de mangeur d\'insectes, petites dents', 'fine insect-eater\'s muzzle'] : ['gueule de chasseur, crocs', 'predator\'s jaws with fangs'];
   if (reg === 'filtreur') return ['bec plat et large de filtreur', 'flat wide filter-feeding bill'];
   if (reg === 'omnivore') return ['bouche d\'omnivore, dents mixtes', 'omnivore\'s mouth'];
@@ -808,9 +880,9 @@ function organeEn(o, fam, accent, nage) {
   if (!E) return `${nombreEn(o.nombre)} ${o.type} organ${o.nombre > 1 ? 's' : ''} (${o.forme}) ${PLACE_EN[o.place] || ''}`.trim();
   const [av, ap] = E.f[o.forme] || ['', ''], s = palier(o.taille, TAILLE_ORG)[2];
   let nom = E.n[o.nombre > 1 ? 1 : 0];
-  if (o.type === 'carapace' && fam === 'chitine') nom = o.taille > .3 ? (o.nombre > 1 ? 'hard elytra' : 'pair of hard elytra') : 'short dorsal plate';
-  if (o.type === 'panache' && o.forme === 'eventail') nom = 'fan-shaped plume';
-  const avant = o.type === 'panache' && o.forme === 'eventail' ? '' : o.type === 'carapace' && fam === 'cuirasse' && nage && o.forme === 'bombee' ? 'low-domed smooth streamlined' : av;   // (règle cuirasse-nageur)
+  if (o.type === 'carapace' && fam === 'chitine') nom = o.taille > .3 ? (o.nombre > 1 ? 'hard elytra' : 'pair of hard elytra') : 'short pronotum shield';
+  if (o.type === 'panache') nom = (MATIERE[fam] || MATIERE.gelee)[o.forme === 'eventail' ? 3 : 2];   // (sa matière suit la famille : du poil, des plumes, des soies, des écailles)
+  const avant = o.type === 'panache' ? '' : o.type === 'carapace' && fam === 'cuirasse' && nage && o.forme === 'bombee' ? 'low-domed smooth streamlined' : av;   // (règle cuirasse-nageur)
   const place = o.place === 'tete' && ['cornes', 'defenses', 'antennes', 'trompe', 'collerette'].includes(o.type) || o.place === 'queue' || o.place === 'flancs' && o.type === 'ailes' ? '' : PLACE_EN[o.place];
   return [nombreEn(o.nombre), s.trim(), avant, nom, ap, place, accent ? `in contrasting ${accent.en} ${accent.hex}` : ''].filter(Boolean).join(' ');
 }
@@ -830,6 +902,9 @@ function repere(fam, al, c, p, car) {
   return null;
 }
 
+// la table ne se modifie pas d'un jeu à l'autre : elle est gelée (une version nouvelle de la table, c'est un changement de ce fichier)
+const geler = o => { if (o && typeof o === 'object' && !Object.isFrozen(o)) { Object.freeze(o); for (const v of Object.values(o)) geler(v); } return o; };
+geler(FAMILLES); geler(REGLES); geler(DETAILS);
 const API = { VERSION, STYLE, FAMILLES, REGLES, DETAILS, ecrire, famille, table, nomCouleur, hex, modeDe };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else racine.OrvaneFiche = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
