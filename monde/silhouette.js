@@ -529,6 +529,134 @@ function parties(T, yeux) {
 // sortie (facultatif) : un objet qui reçoit où sont les yeux dans le dessin, pour qu'un jeu les fasse briller dans la nuit :
 //   sortie.yeux = [[x, y, r], …] (dans le cadre de 170 × 90), sortie.sol = true quand la bête tient debout sur le bas du cadre ;
 //   sortie.parties : le corps, la tête, chaque patte, la queue, les organes, les yeux, dans le même cadre (docs/21)
+// --- les variantes (docs/54) : à l'intérieur d'une forme, le dessin d'après ce que la bête porte et fait — ses organes, ses pattes, ses
+// déplacements, son régime. Rien n'est ajouté au contrat : un escargot est un « serpent » à coquille qui rampe, une araignée un « hexapode »
+// à huit pattes sans antennes, une chauve-souris un « quadrupède » ailé qui vole. Les créatures inventées en profitent de même
+function variante(c, plan) {
+  const o = t => c.organes.some(x => x.type === t), loco = plan?.locomotion || [], m = plan?.masse_kg || 1, seul = l => loco.length > 0 && loco.every(x => x === l);
+  if (c.forme === 'serpent' && o('carapace') && m < .5 && !seul('nage')) return plan?.regime === 'filtreur' ? 'bivalve' : 'gasteropode';
+  if (c.forme === 'hexapode') {
+    if (o('pinces') || (c.pattes >= 8 && o('carapace'))) return 'crustace';
+    if (c.pattes === 8 && !o('antennes')) return 'araignee';
+    if (o('ailes') && o('trompe')) return 'papillon';
+    if (o('ailes') && o('aiguillon')) return 'abeille';
+    if (m < 1e-5 && seul('nage')) return 'plancton'; }
+  if (c.forme === 'quadrupede') {
+    if (o('ailes') && loco.includes('vol')) return 'chauvesouris';
+    if (o('nageoires') && o('carapace')) return 'tortue-marine';
+    if (o('nageoires') && !loco.includes('marche') && !loco.includes('course')) return 'phoque';
+    if (loco.includes('saut') && loco.includes('nage') && m < 2 && !o('carapace')) return 'grenouille'; }
+  return null;
+}
+const spirale = (cx, cy, r, tours = 2.2) => { let d = ''; const N = 48; for (let i = 0; i <= N; i++) { const k = i / N, a = k * tours * 2 * Math.PI, rr = r * (1 - k * .92); d += (i ? 'L' : 'M') + n1(cx + rr * Math.cos(a)) + ' ' + n1(cy + rr * Math.sin(a)); } return d; };
+const fin = (T, nom, ic, boite, sol = true) => { T.P.dessin = nom; T.P.corps = partie(T, ic, { centre: [(boite[0][0] + boite[1][0]) / 2, (boite[0][1] + boite[1][1]) / 2], boite }); return cadrer(T, sol); };
+function gasteropode(T, c, X) {
+  const { u } = X, L = u * .42, h = u * .1, ic = T.E.length;
+  chemin(T, `M${n1(-L)} 0 Q${n1(-L * .3)} ${n1(-h * 1.5)} ${n1(L * .55)} ${n1(-h * 1.2)} Q${n1(L * .95)} ${n1(-h * 1.8)} ${n1(L)} ${n1(-h * .5)} Q${n1(L * .8)} 0 ${n1(L * .3)} 0Z`, X.ventre, [[-L, -h * 1.8], [L, 0]]);
+  for (const k of [0, 1]) { const x2 = L * (1.02 + k * .12), y2 = -h * (3 - k * .4); trait(T, `M${n1(L * .82)} ${n1(-h * 1.3)} Q${n1(L * (.9 + k * .1))} ${n1(-h * 2.3)} ${n1(x2)} ${n1(y2)}`, X.sombre, 1.6, []); ellipse(T, x2, y2, 1.8, 1.8, X.sombre); }
+  if (c.organes.some(o => o.type === 'carapace')) { const r = u * .2, cx = -u * .06, cy = -h * 1.05 - r * .8; ellipse(T, cx, cy, r, r * .93, X.robe, [[cx - r, cy - r], [cx + r, cy + r]]); trait(T, spirale(cx, cy, r * .88), X.sombre, 1.8, [], ' opacity=".8"'); }
+  return fin(T, 'gasteropode', ic, [[-L, -u * .62], [L * 1.15, 0]]);
+}
+function bivalve(T, c, X) {
+  const { u } = X, w = u * .3, h = u * .24, ic = T.E.length;
+  chemin(T, `M${n1(-w)} ${n1(-h * .35)} Q${n1(-w * .9)} ${n1(-h * 1.15)} 0 ${n1(-h * 1.2)} Q${n1(w * .95)} ${n1(-h * 1.1)} ${n1(w)} ${n1(-h * .3)} Q${n1(w * .5)} 0 0 0 Q${n1(-w * .6)} 0 ${n1(-w)} ${n1(-h * .35)}Z`, X.robe, [[-w, -h * 1.2], [w, 0]]);
+  for (let i = 0; i < 7; i++) { const a = Math.PI * (.12 + .76 * i / 6), x = -Math.cos(a) * w * .95, y = -h * .05 - Math.sin(a) * h * 1.1; trait(T, `M0 ${n1(-h * .05)} L${n1(x)} ${n1(y)}`, X.sombre, 1.2, [], ' opacity=".55"'); }
+  trait(T, `M${n1(-w * .95)} ${n1(-h * .38)} Q0 ${n1(-h * .62)} ${n1(w * .97)} ${n1(-h * .32)}`, X.ventre, 1.6, []);
+  return fin(T, 'bivalve', ic, [[-w, -h * 1.2], [w, 0]]);
+}
+function araignee(T, c, X) {
+  const { u } = X, ra = u * .17, rc = u * .11, ya = -u * .2, ic = T.E.length;
+  for (let i = 0; i < 4; i++) { const x0 = u * (.02 + i * .035), kx = u * (-.3 + i * .2), ky = -u * .38 + Math.abs(i - 1.5) * u * .04, fx = u * (-.42 + i * .3);
+    trait(T, `M${n1(x0)} ${n1(ya)} L${n1(kx)} ${n1(ky)} L${n1(fx)} 0`, X.sombre, 2.2, [[kx, ky], [fx, 0]]); }
+  ellipse(T, -ra * .9, ya - ra * .1, ra * 1.15, ra, X.robe, [[-ra * 2, ya - ra], [0, ya + ra]]); ellipse(T, rc * .9, ya, rc, rc * .85, X.sombre);
+  for (let i = 0; i < 4; i++) ellipse(T, rc * (1.3 + (i % 2) * .25), ya - rc * (.4 + (i > 1) * .25), 1.3, 1.3, '#111');
+  trait(T, `M${n1(rc * 1.7)} ${n1(ya + rc * .2)} q${n1(rc * .5)} ${n1(rc * .3)} ${n1(rc * .6)} ${n1(rc * .9)}`, X.sombre, 1.8, []);
+  return fin(T, 'araignee', ic, [[-u * .45, -u * .42], [u * .25, 0]]);
+}
+function crustace(T, c, X) {
+  const { u } = X, pinces = c.organes.some(o => o.type === 'pinces'), ic = T.E.length, y = -u * .12;
+  if (!pinces) {   // un gammare : un corps courbé, en anneaux
+    for (let i = 0; i < 8; i++) { const a = Math.PI * (.95 - i * .1), r = u * .3, x = Math.cos(a) * r, yy = y - Math.sin(a) * r * .55 + r * .4; ellipse(T, x, yy - u * .1, u * .055, u * .07, i % 2 ? X.robe : X.sombre); }
+    trait(T, `M${n1(u * .28)} ${n1(-u * .2)} q${n1(u * .15)} ${n1(-u * .15)} ${n1(u * .3)} ${n1(-u * .1)}`, X.sombre, 1.5, []);
+    for (let i = 0; i < 5; i++) trait(T, `M${n1(-u * .2 + i * u * .1)} ${n1(-u * .04)} l${n1(-u * .03)} ${n1(u * .04)}`, X.sombre, 1.5, []);
+    return fin(T, 'gammare', ic, [[-u * .35, -u * .45], [u * .6, 0]]); }
+  for (let i = 0; i < 4; i++) trait(T, `M${n1(u * (-.02 + i * .07))} ${n1(y)} l${n1(-u * .03)} ${n1(u * .07)} l${n1(-u * .02)} ${n1(u * .05)}`, X.sombre, 1.6, []);
+  for (let i = 0; i < 5; i++) ellipse(T, -u * (.12 + i * .085), y - u * .005 * i, u * (.06 - i * .005), u * (.055 - i * .006), i % 2 ? X.robe : X.sombre);
+  chemin(T, `M${n1(-u * .5)} ${n1(y - u * .05)} l${n1(-u * .08)} ${n1(-u * .04)} l${n1(u * .02)} ${n1(u * .1)} l${n1(u * .06)} ${n1(-u * .02)}Z`, X.sombre, []);
+  ellipse(T, u * .06, y - u * .01, u * .13, u * .075, X.robe, [[-u * .07, y - u * .08], [u * .19, y + u * .06]]);
+  for (const k of [0, 1]) { const yk = y - u * (.02 + k * .05); trait(T, `M${n1(u * .16)} ${n1(yk)} L${n1(u * .3)} ${n1(yk - u * .05)}`, X.robe, 3, []);
+    chemin(T, `M${n1(u * .3)} ${n1(yk - u * .05)} q${n1(u * .12)} ${n1(-u * .06)} ${n1(u * .16)} ${n1(u * .01)} q${n1(-u * .08)} 0 ${n1(-u * .1)} ${n1(u * .05)}Z`, X.robe, [[u * .46, yk]]); }
+  for (const k of [0, 1]) trait(T, `M${n1(u * .17)} ${n1(y - u * .06)} q${n1(u * .2)} ${n1(-u * (.18 + k * .06))} ${n1(u * .42)} ${n1(-u * (.1 - k * .05))}`, X.sombre, 1, []);
+  ellipse(T, u * .16, y - u * .06, 1.6, 1.6, '#111');
+  return fin(T, 'ecrevisse', ic, [[-u * .6, -u * .35], [u * .6, 0]]);
+}
+function papillon(T, c, X) {
+  const { u } = X, ic = T.E.length, y = -u * .12;
+  chemin(T, `M0 ${n1(y)} L${n1(-u * .12)} ${n1(y - u * .55)} Q${n1(u * .2)} ${n1(y - u * .6)} ${n1(u * .16)} ${n1(y - u * .2)}Z`, X.robe, [[-u * .12, y - u * .6], [u * .2, y]]);
+  chemin(T, `M0 ${n1(y)} Q${n1(-u * .3)} ${n1(y - u * .2)} ${n1(-u * .22)} ${n1(y - u * .02)} Q${n1(-u * .12)} ${n1(y + u * .06)} 0 ${n1(y)}Z`, X.robe, [[-u * .3, y - u * .2]], ' opacity=".9"');
+  ellipse(T, -u * .02, y - u * .38, u * .05, u * .05, X.accent); ellipse(T, -u * .19, y - u * .07, u * .035, u * .035, X.accent);
+  trait(T, `M${n1(-u * .12)} ${n1(y - u * .55)} Q${n1(u * .2)} ${n1(y - u * .6)} ${n1(u * .16)} ${n1(y - u * .2)}`, X.sombre, 1.5, []);
+  ellipse(T, u * .04, y + u * .01, u * .1, u * .022, X.sombre); ellipse(T, u * .15, y - u * .005, u * .025, u * .025, X.sombre);
+  for (const k of [0, 1]) { const x2 = u * (.27 + k * .03), y2 = y - u * (.17 - k * .04); trait(T, `M${n1(u * .16)} ${n1(y - u * .02)} L${n1(x2)} ${n1(y2)}`, X.sombre, 1, []); ellipse(T, x2, y2, 1.6, 1.6, X.sombre); }
+  for (let i = 0; i < 3; i++) trait(T, `M${n1(u * (.0 + i * .05))} ${n1(y + u * .015)} l${n1(-u * .02)} ${n1(-y - u * .015)}`, X.sombre, 1, []);
+  return fin(T, 'papillon', ic, [[-u * .3, y - u * .6], [u * .3, 0]]);
+}
+function abeille(T, c, X) {
+  const { u } = X, ic = T.E.length, y = -u * .14;
+  chemin(T, `M${n1(-u * .05)} ${n1(y - u * .05)} Q${n1(-u * .1)} ${n1(y - u * .32)} ${n1(u * .1)} ${n1(y - u * .25)} Q${n1(u * .08)} ${n1(y - u * .1)} ${n1(-u * .05)} ${n1(y - u * .05)}Z`, '#f4f6f2', [[-u * .1, y - u * .32]], ' opacity=".75" stroke="#999" stroke-width=".8"');
+  const ra = u * .14; ellipse(T, -ra * .9, y, ra, ra * .8, X.robe, [[-ra * 2, y - ra], [0, y + ra]]);
+  for (let i = 0; i < 3; i++) chemin(T, `M${n1(-ra * (1.6 - i * .45))} ${n1(y - ra * .7)} l${n1(ra * .15)} 0 l0 ${n1(ra * 1.45)} l${n1(-ra * .15)} 0Z`, X.sombre, [], ' opacity=".85"');
+  ellipse(T, u * .06, y - u * .01, u * .085, u * .075, X.sombre); ellipse(T, u * .17, y + u * .005, u * .05, u * .05, X.sombre);
+  for (let i = 0; i < 3; i++) trait(T, `M${n1(u * (.02 + i * .04))} ${n1(y + u * .05)} l${n1(-u * .04)} ${n1(-y - u * .05)}`, X.sombre, 1.3, []);
+  trait(T, `M${n1(u * .19)} ${n1(y - u * .03)} q${n1(u * .05)} ${n1(-u * .1)} ${n1(u * .1)} ${n1(-u * .1)}`, X.sombre, 1.2, []);
+  return fin(T, 'abeille', ic, [[-u * .3, y - u * .32], [u * .3, 0]]);
+}
+function plancton(T, c, X) {
+  const { u } = X, ic = T.E.length, y = -u * .2;
+  chemin(T, `M${n1(u * .16)} ${n1(y)} Q${n1(u * .1)} ${n1(y - u * .12)} ${n1(-u * .05)} ${n1(y - u * .05)} Q${n1(-u * .2)} ${n1(y)} ${n1(-u * .05)} ${n1(y + u * .05)} Q${n1(u * .1)} ${n1(y + u * .1)} ${n1(u * .16)} ${n1(y)}Z`, X.robe, [[-u * .2, y - u * .12], [u * .16, y + u * .1]], ' opacity=".85"');
+  trait(T, `M${n1(-u * .17)} ${n1(y)} l${n1(-u * .12)} ${n1(-u * .04)} M${n1(-u * .17)} ${n1(y)} l${n1(-u * .12)} ${n1(u * .04)}`, X.sombre, 1, []);
+  for (const k of [-1, 1]) trait(T, `M${n1(u * .14)} ${n1(y - u * .03)} Q${n1(u * .3)} ${n1(y - u * .05 + k * u * .12)} ${n1(u * .42)} ${n1(y + k * u * .2)}`, X.sombre, 1, []);
+  ellipse(T, u * .1, y - u * .02, 2, 2, '#c22');
+  return fin(T, 'plancton', ic, [[-u * .3, y - u * .22], [u * .42, y + u * .22]], false);
+}
+function chauvesouris(T, c, X) {
+  const { u } = X, ic = T.E.length, y = -u * .3, W = u * .48;
+  for (const s of [-1, 1]) { chemin(T, `M0 ${n1(y - u * .02)} L${n1(s * W * .45)} ${n1(y - u * .14)} L${n1(s * W)} ${n1(y - u * .06)} L${n1(s * W * .82)} ${n1(y + u * .06)} Q${n1(s * W * .7)} ${n1(y + u * .02)} ${n1(s * W * .6)} ${n1(y + u * .1)} Q${n1(s * W * .45)} ${n1(y + u * .04)} ${n1(s * W * .35)} ${n1(y + u * .12)} Q${n1(s * W * .2)} ${n1(y + u * .06)} 0 ${n1(y + u * .1)}Z`, X.sombre, [[s * W, y - u * .14]]);
+    for (const k of [.6, .82, 1]) trait(T, `M${n1(s * W * .45)} ${n1(y - u * .14)} L${n1(s * W * k * (k === 1 ? 1 : .95))} ${n1(y + (k === 1 ? -u * .06 : u * .06))}`, X.robe, 1, [], ' opacity=".6"'); }
+  ellipse(T, 0, y + u * .02, u * .07, u * .1, X.robe);
+  chemin(T, `M${n1(-u * .05)} ${n1(y - u * .08)} l${n1(-u * .02)} ${n1(-u * .09)} l${n1(u * .05)} ${n1(u * .06)}Z M${n1(u * .05)} ${n1(y - u * .08)} l${n1(u * .02)} ${n1(-u * .09)} l${n1(-u * .05)} ${n1(u * .06)}Z`, X.robe, []);
+  ellipse(T, 0, y - u * .07, u * .05, u * .045, X.robe); oeil(T, -u * .018, y - u * .075, 1.4, X); oeil(T, u * .018, y - u * .075, 1.4, X);
+  return fin(T, 'chauve-souris', ic, [[-W, y - u * .17], [W, y + u * .14]], false);
+}
+function grenouille(T, c, X) {
+  const { u } = X, ic = T.E.length;
+  chemin(T, `M${n1(-u * .28)} ${n1(-u * .04)} Q${n1(-u * .3)} ${n1(-u * .3)} ${n1(u * .02)} ${n1(-u * .3)} Q${n1(u * .22)} ${n1(-u * .3)} ${n1(u * .27)} ${n1(-u * .12)} Q${n1(u * .2)} ${n1(-u * .02)} ${n1(-u * .02)} ${n1(-u * .04)}Z`, X.robe, [[-u * .3, -u * .3], [u * .27, 0]]);
+  chemin(T, `M${n1(-u * .02)} ${n1(-u * .06)} Q${n1(u * .15)} ${n1(-u * .04)} ${n1(u * .25)} ${n1(-u * .12)}`, X.ventre, [], ' stroke="none" opacity=".9"');
+  ellipse(T, -u * .16, -u * .1, u * .13, u * .09, X.robe); trait(T, `M${n1(-u * .07)} ${n1(-u * .04)} L${n1(-u * .02)} 0 L${n1(u * .06)} 0`, X.sombre, 2.2, []);
+  trait(T, `M${n1(u * .12)} ${n1(-u * .08)} L${n1(u * .15)} 0 l${n1(u * .04)} 0`, X.sombre, 2, []);
+  ellipse(T, u * .14, -u * .3, u * .04, u * .04, X.robe); oeil(T, u * .15, -u * .31, u * .028, X);
+  return fin(T, 'grenouille', ic, [[-u * .3, -u * .36], [u * .28, 0]]);
+}
+function phoque(T, c, X) {
+  const { u } = X, ic = T.E.length, L = u * .5;
+  chemin(T, `M${n1(-L)} ${n1(-u * .04)} Q${n1(-L * .5)} ${n1(-u * .24)} ${n1(L * .45)} ${n1(-u * .22)} Q${n1(L * .78)} ${n1(-u * .3)} ${n1(L * .92)} ${n1(-u * .24)} Q${n1(L * 1.02)} ${n1(-u * .19)} ${n1(L * .88)} ${n1(-u * .16)} Q${n1(L * .6)} ${n1(-u * .02)} ${n1(L * .3)} 0 L${n1(-L * .55)} 0Z`, X.robe, [[-L, -u * .3], [L, 0]]);
+  chemin(T, `M${n1(-L * .4)} ${n1(-u * .02)} Q${n1(L * .1)} ${n1(-u * .06)} ${n1(L * .5)} ${n1(-u * .08)}`, X.ventre, [], ' opacity=".7"');
+  chemin(T, `M${n1(-L)} ${n1(-u * .04)} l${n1(-u * .1)} ${n1(-u * .06)} l${n1(u * .02)} ${n1(u * .1)}Z`, X.sombre, []);
+  chemin(T, `M${n1(L * .3)} ${n1(-u * .1)} q${n1(u * .02)} ${n1(u * .1)} ${n1(-u * .08)} ${n1(u * .1)}Z`, X.sombre, []);
+  oeil(T, L * .8, -u * .23, u * .022, X); for (let i = 0; i < 3; i++) trait(T, `M${n1(L * .95)} ${n1(-u * .2)} l${n1(u * .07)} ${n1((i - 1) * u * .025)}`, X.sombre, .7, []);
+  return fin(T, 'phoque', ic, [[-L - u * .1, -u * .3], [L * 1.05, 0]]);
+}
+function tortueMarine(T, c, X) {
+  const { u } = X, ic = T.E.length, y = -u * .18;
+  chemin(T, `M${n1(u * .2)} ${n1(y - u * .02)} q${n1(u * .2)} ${n1(-u * .02)} ${n1(u * .26)} ${n1(u * .16)} q${n1(-u * .14)} ${n1(-u * .06)} ${n1(-u * .28)} ${n1(-u * .08)}Z`, X.sombre, [[u * .46, y + u * .14]]);
+  chemin(T, `M${n1(-u * .22)} ${n1(y + u * .04)} l${n1(-u * .12)} ${n1(u * .06)} l${n1(u * .1)} ${n1(u * .01)}Z`, X.sombre, [[-u * .34, y + u * .1]]);
+  chemin(T, `M${n1(-u * .3)} ${n1(y + u * .04)} Q${n1(-u * .28)} ${n1(y - u * .2)} 0 ${n1(y - u * .2)} Q${n1(u * .26)} ${n1(y - u * .19)} ${n1(u * .28)} ${n1(y + u * .03)}Z`, X.robe, [[-u * .3, y - u * .2], [u * .28, y + u * .05]]);
+  for (let i = 0; i < 3; i++) trait(T, `M${n1(-u * .18 + i * u * .14)} ${n1(y - u * .17)} l0 ${n1(u * .18)}`, X.sombre, 1, [], ' opacity=".5"');
+  ellipse(T, u * .34, y - u * .01, u * .07, u * .055, X.ventre, [[u * .41, y - u * .07]]); oeil(T, u * .36, y - u * .025, u * .015, X);
+  return fin(T, 'tortue-marine', ic, [[-u * .36, y - u * .2], [u * .46, y + u * .16]], false);
+}
+const VARIANTES = { gasteropode, bivalve, araignee, crustace, papillon, abeille, plancton, chauvesouris, grenouille, phoque, 'tortue-marine': tortueMarine };
+
 function dessiner(corps, plan = {}, traits = [], sortie = null) {
   const T = Toile(), svg = dessin(T, corps, plan, traits);
   if (sortie) { const C = T.cadre || { k: 1, tx: 0, ty: 0, sol: false }; sortie.yeux = T.Y.map(([x, y, r]) => [n1(C.tx + C.k * x), n1(C.ty + C.k * y), n1(C.k * r)]); sortie.sol = !!C.sol;
@@ -539,6 +667,7 @@ function dessin(T, corps, plan, traits) {
   if (plan?.regime === 'synthetique' && !corps) return machine(T, plan, {});
   const Co = racine.OrvaneCorps, c = Co.normaliser(corps), X = contexte(c, plan || {}, traits || []), al = Co.allure ? Co.allure(c, plan) : c.forme;
   if (al === 'poisson') return poisson(T, c, X);
+  const va = variante(c, plan || {}); if (va && VARIANTES[va]) return VARIANTES[va](T, c, X);
   switch (c.forme) {
     case 'oiseau': return oiseau(T, c, X);
     case 'bipede': return bipede(T, c, X);
