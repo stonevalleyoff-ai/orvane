@@ -2,8 +2,9 @@
 // Le moteur oublie : un cycle n'a que ses événements, un taxon éteint ne reste listé que dix cycles. Ce fichier garde
 // l'histoire du monde, sans jamais toucher à la simulation (rien de ce qu'il fait ne change un effectif) :
 //  - la chronique : un journal durable de ce qui compte (les naissances et les extinctions de lignées, les catastrophes, les
-//    souches nouvelles, les traits inventés, les lieux qui changent de nature, les âges du climat, les éveils, les fusions,
-//    les records, les noms donnés par les joueurs), chaque entrée datée, rangée par année du monde, avec son importance (1 à 3) ;
+//    souches nouvelles, leurs mutations, leurs sauts d'une lignée à l'autre et leurs extinctions, les traits inventés, les lieux
+//    qui changent de nature, les âges du climat, les éveils, les fusions, les records, les noms donnés par les joueurs), chaque
+//    entrée datée, rangée par année du monde, avec son importance (1 à 3) ;
 //  - le muséum : un spécimen type par lignée, décrit le jour où le monde la voit pour la première fois (son plan, sa silhouette,
 //    ses traits, une bête tirée de la population réelle), gardé après son extinction, avec sa cause : l'arbre de la vie entier ;
 //  - les noms : le premier joueur qui décrit une lignée lui donne son nom commun (docs/37). Le nom du moteur reste.
@@ -29,7 +30,7 @@ const REGLES = {
 // l'importance d'une entrée : 3, ce qu'un jeu devrait annoncer ; 2, ce qu'un carnet raconte ; 1, ce qu'un registre garde
 const TITRES = {
   naissance: 'Une lignée naît', extinction: 'Une lignée s\'éteint', catastrophe: 'Catastrophe', souche: 'Une maladie nouvelle',
-  epidemie: 'Épidémie', invention: 'Le monde invente', nature: 'Un lieu change de nature', climat: 'Le climat', eveil: 'Éveil',
+  epidemie: 'Épidémie', remission: 'Une maladie s\'éteint', invention: 'Le monde invente', nature: 'Un lieu change de nature', climat: 'Le climat', eveil: 'Éveil',
   arrivee: 'Des lignées arrivent', conception: 'La Mère conçoit', record: 'Record', hybridation: 'Une zone hybride',
   savoir: 'Un savoir', mefiance: 'Méfiance', nom: 'Une lignée reçoit un nom'
 };
@@ -46,9 +47,9 @@ const annee = (n, inst) => Math.floor(Math.max(0, n || 0) / (inst?.monde?.annee 
 
 // --- la chronique ---
 // etat : ce que la chronique a déjà vu ({ souches, hybrides, records }) ; avant, apres : deux instantanés successifs (la vue par biome)
-function vide(inst) { return { orvane: '0.1', monde: { id: inst?.monde?.id, ne: inst?.monde?.ne || null }, depuis: inst?.cycle?.n ?? 0, souches: [], hotes: {}, hybrides: [], records: {}, compte: {} }; }
+function vide(inst) { return { orvane: '0.1', monde: { id: inst?.monde?.id, ne: inst?.monde?.ne || null }, depuis: inst?.cycle?.n ?? 0, souches: [], hybrides: [], records: {}, compte: {} }; }
 function noter(etat0, avant, apres, opt = {}) {
-  const etat = { hotes: {}, ...JSON.parse(JSON.stringify(etat0 || vide(apres))) }, n = apres.cycle?.n ?? 0, date = apres.cycle?.date || null, E = [];
+  const etat = { souches: [], ...JSON.parse(JSON.stringify(etat0 || vide(apres))) }, n = apres.cycle?.n ?? 0, date = apres.cycle?.date || null, E = [];
   const ajouter = (type, imp, texte, plus = {}) => { E.push({ n, date, type, importance: imp, titre: TITRES[type] || type, texte, ...plus }); etat.compte[type] = (etat.compte[type] || 0) + 1; };
   const vivA = new Map((avant?.taxons || []).filter(t => !t.eteint).map(t => [t.id, t]));
   if (opt.premier) for (const t of apres.taxons || []) for (const p of t.populations || []) if (p.hybride?.avec) { const cle = [t.id, p.hybride.avec].sort().join('×'); if (!etat.hybrides.includes(cle)) etat.hybrides.push(cle); }
@@ -77,14 +78,27 @@ function noter(etat0, avant, apres, opt = {}) {
   const apresId = new Map(apres.taxons.map(t => [t.id, t]));
   for (const [id, t] of vivA) { const x = apresId.get(id); if (x && !x.eteint) continue;
     const c = cause(t, apres); ajouter('extinction', famille(t) === 'animale' ? 3 : 2, `${t.nom || id} s'éteint après ${Math.max(0, n - (t.apparu || 0))} cycles${c ? ` : ${c}` : ''}`, { taxon: id, famille: famille(t) }); }
-  // les souches nouvelles (docs/18)
-  // (le jour où la chronique s'éveille, opt.premier : elle prend acte de ce qui existe sans le raconter)
-  for (const [id, s] of Object.entries(apres.monde?.pathogenes?.souches || {})) if (!etat.souches.includes(id)) { etat.souches.push(id);
-    if (!opt.premier) ajouter('souche', 2, `${s.nom} apparaît chez ${nomDe(apres, s.origine)} (virulence ${Math.round((s.virulence || 0) * 100)} %)`, { taxon: s.origine }); }
-  // une souche qui gagne une lignée qu'elle n'avait jamais touchée (docs/18 : seulement des lignées apparentées)
-  for (const [id, s] of Object.entries(apres.monde?.pathogenes?.souches || {})) { const vus = (etat.hotes[id] ||= [s.origine].filter(Boolean));
-    for (const h of s.hotes || []) if (!vus.includes(h)) { vus.push(h); if (!opt.premier && h !== s.origine) ajouter('epidemie', 1, `${s.nom} gagne ${nomDe(apres, h)}`, { taxon: h }); } }
-  for (const id of Object.keys(etat.hotes)) if (!apres.monde?.pathogenes?.souches?.[id]) delete etat.hotes[id];   // une souche disparue n'a plus d'hôtes à suivre
+  // les souches (docs/18, 29) : ce que les événements du cycle disent de chacune (souche, nature) ; une souche nouvelle, une mutante,
+  // une portée par un insecte, une lignée qu'elle gagne, son extinction. (Le jour où la chronique s'éveille, opt.premier : elle prend
+  // acte des souches qui vivent sans les raconter ; etat.souches : celles qu'elle a déjà vues naître, et qui vivent encore)
+  const SA = avant?.monde?.pathogenes?.souches || {}, SP = apres.monde?.pathogenes?.souches || {}, so = id => (id && (SP[id] || SA[id])) || null;
+  const pc = v => Math.round((v || 0) * 100);
+  if (!opt.premier) for (const e of apres.evenements || []) {
+    const x = natureDe(e, avant, apres); if (!x) continue;
+    const s = so(x.souche), nom = s?.nom || x.nom, tx = nomDe(apres, e.taxon), brut = String(e.detail || '').split(' · ')[0];
+    const plus = { taxon: e.taxon, ...(e.biome ? { biome: typeDe(e.biome) } : {}), ...(x.souche ? { souche: x.souche } : {}), nature: x.nature };
+    if (x.nature === 'naissance' || x.nature === 'mutation' || x.nature === 'vecteur') {
+      if (x.souche && etat.souches.includes(x.souche)) continue; if (x.souche) etat.souches.push(x.souche);
+      const mere = so(s?.parent), vec = s?.vecteur ? nomDe(apres, s.vecteur) : null;
+      ajouter('souche', 2, !s ? brut : x.nature === 'naissance' ? `${nom} apparaît chez ${tx} (virulence ${pc(s.virulence)} %)`
+        : `${nom} apparaît chez ${tx} : une mutante${mere ? ` de ${mere.nom}` : ''}${vec ? `, que porte ${vec} d'une lignée à l'autre` : ''} (virulence ${pc(s.virulence)} %${mere ? `, sa mère : ${pc(mere.virulence)} %` : ''})`, plus);
+    }
+    else if (x.nature === 'saut_hote') ajouter('epidemie', 1, nom ? `${nom} gagne ${tx}` : brut, plus);
+    else if (x.nature === 'extinction') { const k = (s?.hotes || []).length;
+      ajouter('remission', 2, s ? `${nom} s'éteint, après ${Math.max(0, n - (s.apparu ?? n))} cycles chez ${k} lignée${k > 1 ? 's' : ''}` : brut, plus); }
+  }
+  etat.souches = [...new Set([...etat.souches.filter(id => SP[id]), ...(opt.premier ? Object.keys(SP) : [])])];
+  delete etat.hotes;   // (ce que la chronique gardait des hôtes de chaque souche : les événements le disent désormais)
   // les records : la plus lourde et la plus légère des bêtes du monde (pas les plantes, pas les machines)
   const animaux = apres.taxons.filter(t => !t.eteint && famille(t) === 'animale' && effectif(t) > 0);
   if (animaux.length) {
@@ -96,6 +110,28 @@ function noter(etat0, avant, apres, opt = {}) {
   return { etat, entrees: E };
 }
 const fmt = v => v >= 10 ? String(Math.round(v)) : String(+v.toPrecision(2)).replace('.', ',');
+// ce qu'un événement dit d'une souche : { souche, nature, nom }, lus sur ses champs (docs/18). Un instantané d'avant ces champs : relus
+// sur son texte, la souche retrouvée par son nom (nom : celui que dit le texte) et, quand deux souches portent le même nom, par ce que
+// le monde dit de l'événement : une souche qui naît n'était pas là avant, est née ce cycle chez cette lignée ; une souche qui s'éteint
+// était là avant et ne l'est plus ; une souche qui saute gagne cette lignée. null : ce n'est pas un événement de souche (une épidémie
+// d'avant les souches, docs/18)
+const TEXTES = [['naissance', /^une souche nouvelle, (.+?), apparaît chez /], ['mutation', /^la souche .+? mute chez .+? : (.+?), virulence /],
+  ['saut_hote', /^la souche (.+?) passe à /], ['extinction', /^la souche (.+?) s'éteint/]];
+function natureDe(e, avant, apres) {
+  if (!e || (e.type !== 'epidemie' && e.type !== 'remission')) return null;
+  if (typeof e.souche === 'string' && typeof e.nature === 'string') return { souche: e.souche, nature: e.nature, nom: typeof e.nom === 'string' ? e.nom : null };
+  const d = String(e.detail || '');
+  for (const [nature, re] of TEXTES) { const m = re.exec(d); if (!m) continue;
+    const SA = avant?.monde?.pathogenes?.souches || {}, SP = apres?.monde?.pathogenes?.souches || {}, n = apres?.cycle?.n;
+    const nommees = S => Object.entries(S).filter(([, s]) => s?.nom === m[1]).map(([id]) => id);
+    const bonnes = nature === 'extinction' ? nommees(SA).filter(id => !SP[id])
+      : nature === 'saut_hote' ? nommees(SP).filter(id => (SP[id].hotes || []).includes(e.taxon) && !(SA[id]?.hotes || []).includes(e.taxon))
+      : nommees(SP).filter(id => !SA[id] && SP[id].apparu === n && SP[id].origine === e.taxon);
+    // (sinon, le premier de ce nom : dans le monde d'avant pour une extinction, dans celui d'après pour le reste)
+    const id = bonnes[0] || (nature === 'extinction' ? [...nommees(SA), ...nommees(SP)] : [...nommees(SP), ...nommees(SA)])[0];
+    return { souche: id || null, nature: nature === 'mutation' && /, portée par /.test(d) ? 'vecteur' : nature, nom: m[1] }; }
+  return null;
+}
 // la cause d'une extinction, lue dans sa dernière population : les joueurs, ses prédateurs, une maladie, ou le déclin
 function cause(t, apres) {
   const P = (t.populations || []).filter(p => p.effectif > 0), W = P.reduce((s, p) => s + p.effectif, 0) || 1, moy = k => P.reduce((s, p) => s + (p[k] || 0) * p.effectif, 0) / W;
@@ -190,6 +226,6 @@ function dedoublonner(inst, museum) {
 // un fichier qui change un peu chaque nuit : une ligne par spécimen ou par entrée, pour que git n'en garde que la différence
 function ecrire(o, cle) { const { [cle]: liste, ...reste } = o, L = Array.isArray(liste) ? liste.map(x => JSON.stringify(x)) : Object.entries(liste || {}).map(([k, x]) => `${JSON.stringify(k)}:${JSON.stringify(x)}`);
   const tete = JSON.stringify(reste).slice(0, -1); return `${tete}${tete.length > 1 ? ',' : ''}${JSON.stringify(cle)}:${Array.isArray(liste) ? '[' : '{'}\n${L.join(',\n')}\n${Array.isArray(liste) ? ']' : '}'}}\n`; }
-const API = { REGLES, ecrire, dedoublonner, vide, noter, decrire, fossiliser, nommer, publier, valable, annee, cause, specimen };
+const API = { REGLES, ecrire, dedoublonner, vide, noter, natureDe, decrire, fossiliser, nommer, publier, valable, annee, cause, specimen };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else racine.OrvaneChronique = API;
 })(globalThis);

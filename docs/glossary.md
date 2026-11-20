@@ -12,7 +12,7 @@ Orvane's files use French field names. This page translates them all, object by 
 | `biomes` | biomes | the places of the world (below) |
 | `catalogue` | catalogue | the knowledge the world has (`savoirs`: name, `geste` gesture, `outil` tool), the definitions of the traits carried (`traits`), continuous traits (`quantitatifs`), organs (`organes`), plant defences (`flore`), the world's own catalogue (`monde`) |
 | `taxons` | lineages | the living lineages (below) |
-| `evenements` | events | the cycle's journal: `type`, `taxon`, `biome`, `detail` |
+| `evenements` | events | the cycle's journal: `type`, `taxon`, `biome`, `detail`; a strain event (`epidemie`, `remission`) also gives `souche` (which strain: a key of `monde.pathogenes.souches`) and `nature` (what happens to it: `naissance` birth, `saut_hote` host jump, `mutation`, `vecteur` a mutant carried by an insect, `extinction`); an extinction also gives `nom` (the strain's name, as it is no longer listed), `hotes` (the lineages it took hold in) and `lieux` (the biomes where it still had sick animals at the start of the cycle); in a world of plots, `parcelle` is the plot where the event happened (`biome` is then the plot's biome) |
 | `precedent` | previous | the previous cycle in light form, to spread a change over time |
 
 ### `monde` (world)
@@ -126,6 +126,7 @@ Orvane's files use French field names. This page translates them all, object by 
 | `groupe` | group (docs/38) | how its animals live: `forme` (`solitaire` alone, `famille` family, `troupeau` herd, `bande` band, `meute` pack, `banc` school, `volee` flock, `essaim` swarm, `colonie` colony), `taille` (`min`, `typ` usual, `max`), `hierarchie` (`egalitaire`, `dominance`, `despotique`, `castes`), `meneur` leader, `sentinelles` sentinels, `chasse` (`ensemble` together, `encercle` encircling), `avec` (mixed herds) |
 | `migration` | migration (docs/38) | a seasonal migration: `vers` the wintering place, `part` the share that leaves, `depart`/`retour` phases of the year, `etat` (`au depart` leaving, `partie` away, `au retour` coming back, `au pays` at home); the animals stay counted here |
 | `infection` | infection | per strain: `i` infected share, `r` immune share |
+| `infection_par_parcelle` | infection per plot | in a world of plots, the same for each plot of the biome where a strain circulates (`infection` is their mean, weighted by head count); an absent plot has neither sick nor immune animals |
 | `energie`, `posture`, `regulation` | energy, posture, regulation | a machine: what it captures over what it spends; `neutre` neutral, `defensive`, `fuyante` fleeing, `hostile`; among animals, the share of deaths caused by machines |
 | `potentiel`, `frequences`, `reference`, `pollinisation` | potential, frequencies, reference, pollination | a plant |
 | `port`, `caracteres`, `rendement`, `appetence`, `vent` | habit, characters, yield, palatability, wind | a plant of the rich flora (docs/48): what it is mechanically (a `palmier` palm is an `arbre` tree), the inherited characters it carries, what it yields per part, how much grazers eat of it, whether wind pollinates it |

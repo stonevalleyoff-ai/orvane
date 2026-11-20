@@ -72,7 +72,7 @@ function fusionner(cible, source0, opt = {}) {
   const arrivent = [];
   for (const t of source.taxons) {
     if (t.eteint != null || t.plan?.regime === 'vegetal' || t.plan?.regime === 'synthetique') continue;
-    const pops = t.populations.filter(p => choisis.has(p.biome)).map(p => { const q = { ...clone(p), effectif: Math.round(p.effectif * part) }; delete q.hybride; delete q.infection; delete q.parcelles; return q; }).filter(p => p.effectif >= 1).flatMap(etaler).filter(p => p.effectif >= 1);   // (une zone hybride de la source n'a plus de sens ici)
+    const pops = t.populations.filter(p => choisis.has(p.biome)).map(p => { const q = { ...clone(p), effectif: Math.round(p.effectif * part) }; delete q.hybride; delete q.infection; delete q.parcelles; delete q.infection_par_parcelle; return q; }).filter(p => p.effectif >= 1).flatMap(etaler).filter(p => p.effectif >= 1);   // (une zone hybride de la source n'a plus de sens ici)
     if (pops.length) arrivent.push({ t, pops });
   }
   if (!arrivent.length) return rien('aucune lignée de la source ne vit dans ces biomes');
@@ -146,7 +146,7 @@ function relier(cible, source, opt = {}) {
   for (const [x, y] of ponts) { lier(x, y); const A = types.find(b => b.id === typeDe(x)), B = types.find(b => b.id === typeDe(y)); if (A && B && A !== B) lier(A, B); }
   // 3. ses lignées, sur leurs parcelles renommées
   const arrivent = [];
-  for (const t of S.taxons) { const pops = t.populations.map(p => { const q = { ...clone(p), biome: neuf.get(p.biome) || p.biome, effectif: +(p.effectif * part).toFixed(3) }; delete q.hybride; delete q.infection; return q; }).filter(p => p.effectif >= 1 && places.some(b => b.id === p.biome));
+  for (const t of S.taxons) { const pops = t.populations.map(p => { const q = { ...clone(p), biome: neuf.get(p.biome) || p.biome, effectif: +(p.effectif * part).toFixed(3) }; delete q.hybride; delete q.infection; delete q.infection_par_parcelle; return q; }).filter(p => p.effectif >= 1 && places.some(b => b.id === p.biome));
     if (pops.length) arrivent.push({ t, pops }); }
   const { ids, renommes, nomDe, parentArrive } = nommer(inst, source, arrivent, n);
   const evenements = [], nouveaux = [];

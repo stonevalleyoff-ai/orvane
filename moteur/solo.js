@@ -30,7 +30,7 @@ function creer(source, opt = {}) {
   etat.monde = { ...etat.monde, id, nom: opt.nom || `${source.monde?.nom || id} (solo)`, ne: new Date(maintenant).toISOString(), solo: { depuis: source.monde?.id || null, cycle: source.cycle?.n ?? 0 } };
   if (opt.graine != null) etat.monde.graine = opt.graine;
   // un instantané publié est par biome : ce qu'il garde des parcelles n'est qu'un décompte, que le monde solo n'a pas à porter
-  if (!etat.monde.parcelles?.types) { delete etat.monde.parcelles; delete etat.parcelles; if (etat.monde.mere) delete etat.monde.mere.parcelle; etat.taxons.forEach(t => t.populations.forEach(p => delete p.parcelles)); }
+  if (!etat.monde.parcelles?.types) { delete etat.monde.parcelles; delete etat.parcelles; if (etat.monde.mere) delete etat.monde.mere.parcelle; etat.taxons.forEach(t => t.populations.forEach(p => { delete p.parcelles; delete p.infection_par_parcelle; })); }
   // (docs/17) les plantes sont publiées à part : avec flore.json (opt.flore), le monde solo a sa flore ; sans, il tourne sans elle
   if (opt.flore?.taxons?.length) { const ids = new Set(etat.taxons.map(t => t.id)); etat.taxons.push(...clone(opt.flore.taxons).filter(t => !ids.has(t.id))); etat.catalogue = { ...etat.catalogue, flore: opt.flore.catalogue?.flore || etat.catalogue?.flore }; }
   else if (!etat.taxons.some(t => t.plan?.regime === 'vegetal')) { delete etat.monde.flore; etat.taxons.forEach(t => t.populations.forEach(p => { delete p.nourriture; delete p.recouvrement; })); }

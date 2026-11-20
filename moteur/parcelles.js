@@ -9,7 +9,8 @@
 //     parcelles, des capacités un peu inégales, des axes un peu variés ; les parcelles d'un biome en chaîne, et quelques
 //     passages vers les parcelles des biomes voisins) ; les effectifs sont répartis selon la place et la convenance ;
 //   - regrouper(inst) : la vue par biome, celle que lisent les jeux et le tampon : le contrat ne change pas (chaque
-//     population dit en plus comment elle se répartit, « parcelles ») ;
+//     population dit en plus comment elle se répartit, « parcelles », et son infection dans chaque parcelle,
+//     « infection_par_parcelle ») ;
 //   - repartir(pressions, inst, loc) : les pressions des jeux, données par biome, réparties entre les parcelles (là où les lots
 //     l'ont dit : localiser(lots, inst)), sous les plafonds d'une population et de chaque jeu.
 // Déterministe : même monde, même graine, mêmes parcelles. Node (require) ou navigateur (globalThis.OrvaneParcelles).
@@ -148,7 +149,7 @@ function regrouperBrut(inst) {
     for (const p of t.populations) { const ty = typeDe(parId.get(p.biome) || { id: p.biome }); if (!groupes.has(ty)) groupes.set(ty, []); groupes.get(ty).push(p); }
     const populations = [...groupes].map(([ty, L]) => {
       if (L.length === 1 && L[0].biome === ty) return L[0];
-      const eff = L.map(p => p.effectif), poidsL = eff.map(e => Math.max(e, 1e-9)), m = moyenne(L.map(p => { const { biome, effectif, depuis, parcelles, hivernants, ...r } = p; return r; }), poidsL);
+      const eff = L.map(p => p.effectif), poidsL = eff.map(e => Math.max(e, 1e-9)), m = moyenne(L.map(p => { const { biome, effectif, depuis, parcelles, hivernants, infection_par_parcelle, ...r } = p; return r; }), poidsL);
       completer(m, L, poidsL);
       // (docs/50) la mémoire du biome : une parcelle qui n'a rien appris compte pour neutre (et non pour absente) ; le mot qui
       // la résume se relit sur la population entière. La méfiance et l'habituation y sont alors pesées de même (ailleurs, une
@@ -160,7 +161,11 @@ function regrouperBrut(inst) {
         L.forEach((p, i) => { for (const [de, h] of Object.entries(p.hivernants || {})) { const ty = typeDe(parId.get(de) || { id: de }); if (ty !== typeDe(parId.get(p.biome) || { id: p.biome })) H[ty] = (H[ty] || 0) + h * eff[i]; } });
         const h = Object.fromEntries(Object.keys(H).sort().map(k => [k, +(H[k] / T).toFixed(4)]).filter(([, v]) => v >= 1e-4)); if (Object.keys(h).length) m.hivernants = h; }
       if (m.maladie?.reste != null) m.maladie.reste = Math.round(m.maladie.reste);   // (un nombre de cycles reste entier)
-      return { biome: ty, effectif: +eff.reduce((s, x) => s + x, 0).toFixed(2), ...m, depuis: Math.min(...L.map(p => p.depuis ?? 0)), parcelles: Object.fromEntries(L.map(p => [p.biome, Math.round(p.effectif)])) };
+      // (docs/18) l'infection de chaque parcelle, telle que le moteur la tient : celle du biome (plus haut) en est la moyenne, pesée
+      // par l'effectif ; une parcelle qui n'y est pas n'a ni malade ni immunisé
+      const inf = L.filter(p => p.infection && typeof p.infection === 'object' && Object.keys(p.infection).length);
+      return { biome: ty, effectif: +eff.reduce((s, x) => s + x, 0).toFixed(2), ...m, depuis: Math.min(...L.map(p => p.depuis ?? 0)), parcelles: Object.fromEntries(L.map(p => [p.biome, Math.round(p.effectif)])),
+        ...(inf.length ? { infection_par_parcelle: Object.fromEntries(inf.map(p => [p.biome, clone(p.infection)])) } : {}) };
     });
     const effPar = new Map(t.populations.map(p => [p.biome, p.effectif]));
     const phenotypes = (t.phenotypes || []).map(ph => { if (!ph.frequence_par_biome) return ph; const s = {}, w = {};
@@ -168,7 +173,10 @@ function regrouperBrut(inst) {
       return { ...ph, frequence_par_biome: Object.fromEntries(Object.keys(s).map(ty => [ty, +(s[ty] / w[ty]).toFixed(4)])) }; });
     return { ...t, populations, phenotypes };
   });
-  out.evenements = (inst.evenements || []).map(e => { const p = e.biome && parId.get(e.biome); return p && p.type ? { ...e, biome: p.type, detail: (e.detail ? e.detail + ' · ' : '') + 'parcelle ' + (p.nom || p.id) } : e; });
+  // (docs/15) un événement né dans une parcelle est rapporté à son biome ; il dit la parcelle (parcelle, et dans detail). Les derniers
+  // lieux d'une souche qui s'éteint (lieux, docs/18) deviennent les biomes de ces parcelles
+  out.evenements = (inst.evenements || []).map(e => { const p = e.biome && parId.get(e.biome), r = p && p.type ? { ...e, biome: p.type, parcelle: p.id, detail: (e.detail ? e.detail + ' · ' : '') + 'parcelle ' + (p.nom || p.id) } : e;
+    return Array.isArray(e.lieux) ? { ...r, lieux: [...new Set(e.lieux.map(l => typeDe(parId.get(l) || { id: l })))].sort() } : r; });
   out.monde = { ...inst.monde, parcelles: { par: P.par, graine: P.graine, nombre: inst.biomes.length } };
   if (inst.monde.mere) { const p = parId.get(inst.monde.mere.biome); out.monde.mere = { ...inst.monde.mere, biome: p ? typeDe(p) : inst.monde.mere.biome, parcelle: inst.monde.mere.biome }; }   // (docs/16)
   out.parcelles = inst.biomes.map(p => ({ id: p.id, type: typeDe(p), nom: p.nom, capacite: Math.round(p.capacite || 0), voisins: p.voisins || [], ...(p.meteo && typeof p.meteo === 'object' ? { meteo: p.meteo } : {}) }));   // (docs/45) le temps qu'il fait, parcelle par parcelle

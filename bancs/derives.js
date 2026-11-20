@@ -3,12 +3,14 @@
 //  2. les régimes : un pas à la fois, aux taux dits ; un carnivore neuf gagne en audace ; dans le monde, des lignées filles changent de régime ;
 //  3. les plantes : la part défendue d'une population devient une lignée à elle ; la nourriture des brouteurs reste continue ;
 //  4. les souches : un mutant, adapté à l'hôte où il naît ; un mutant porté par un insecte passe à une lignée sans parenté, l'insecte n'en tombe pas malade ;
+//     leurs événements disent la souche et ce qui lui arrive (mutation, vecteur), et leur texte, lu par la chronique, la même chose ;
 //  5. le contrat, le cycle de nuit.
 //   node bancs/derives.js
 'use strict';
 const fs = require('fs'), path = require('path'), crypto = require('crypto'), vm = require('vm'), { execFileSync } = require('child_process');
 const racine = p => path.join(__dirname, '..', p);
 const Orvane = require(racine('moteur/orvane.js')), D = require(racine('moteur/derives.js')), Fl = require(racine('moteur/flore.js')), Pa = require(racine('moteur/pathogenes.js')), Tampon = require(racine('tampon/tampon.js'));
+const Chronique = require(racine('moteur/chronique.js'));
 const lireJ = f => JSON.parse(fs.readFileSync(racine(f), 'utf8'));
 let ok = true; const verif = (c, m) => { ok = ok && !!c; console.log((c ? '  ✓ ' : '  ✗ ') + m); };
 const empreinte = I => crypto.createHash('sha256').update(JSON.stringify(I)).digest('hex').slice(0, 16);
@@ -80,6 +82,11 @@ let XS;
   verif(mut && mut[1].origine === hote.id && mut[1].virulence !== .1 && !mut[1].vecteur, `la souche Banc (10 % de virulence), chez ${hote.nom} : ${M1.evenements.find(e => /mute/.test(e.detail))?.detail}`);
   const M2 = avec({ souches: { chance: 1, vecteur: 1 } }, () => Orvane.cycle(X0, {})), mv = Object.entries(M2.monde.pathogenes.souches).find(([, s]) => s.parent === 'souche-900' && s.vecteur);
   verif(mv?.[1].vecteur === vec.id, `née là où vit ${vec.nom}, elle peut être portée par lui : ${M2.evenements.find(e => /portée par/.test(e.detail))?.detail}`);
+  // (docs/18) l'événement dit la souche (le mutant) et ce qui lui arrive ; son texte seul (un instantané d'avant ces champs) dit la même chose
+  const em = M1.evenements.find(e => /mute/.test(e.detail)), ev2 = M2.evenements.find(e => /portée par/.test(e.detail)), sansChamps = e => { const { souche, nature, ...r } = e; return r; };
+  const lu1 = Chronique.natureDe(sansChamps(em), X0, M1), lu2 = Chronique.natureDe(sansChamps(ev2), X0, M2);
+  verif(em?.type === 'epidemie' && em.nature === 'mutation' && em.souche === mut[0] && ev2?.nature === 'vecteur' && ev2.souche === mv[0] && lu1.nature === 'mutation' && lu1.souche === mut[0] && lu2.nature === 'vecteur' && lu2.souche === mv[0],
+    `les événements le disent : epidemie, nature « ${em?.nature} », souche ${em?.souche} (le mutant) ; « ${ev2?.nature} » pour celui que porte l'insecte ; leur texte seul, la même chose`);
   // 15 cycles : la souche portée par l'insecte passe à des lignées sans parenté ; sa mère, non ; l'insecte n'en tombe pas malade
   let Y = M2; muet(() => { for (let k = 0; k < 15; k++) Y = Orvane.cycle(Y, {}); }); XS = Y;
   const Sy = Y.monde.pathogenes.souches, sv = Sy[mv[0]], sm = Sy['souche-900'], T = new Map(Y.taxons.map(x => [x.id, x]));

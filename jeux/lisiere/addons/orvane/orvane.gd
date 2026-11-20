@@ -18,6 +18,10 @@
 #                                                        # attrait, traque, neophobie, agressivite, attitude } (absente : neutre)
 #   var moi = Orvane.individu(d, randfn(0.0, 1.0))      # … et ce qu'en a retenu une de ses bêtes : plus hardie, elle ose plus
 #   var c = Orvane.caractere("dunvi")                   # le caractère de la lignée : { hardiesse, combativite, opportunisme }
+#   for s in Orvane.souches(): print(s.nom, " : ", s.infectes, " bêtes infectées")   # les souches vivantes (docs/18)
+#   var I = Orvane.infection("pheva", "mangrove~2")     # { "souche-3": { "i": 0.157, "r": 0.0996 } }, dans un biome ou une parcelle
+#   for f in Orvane.foyers("souche-3"): print(f.parcelle, " : ", f.infectes)   # où elle frappe, parcelle par parcelle
+#   for e in Orvane.evenements_souches(): print(e.nature, " ", e.souche)       # ce qui leur est arrivé au dernier cycle
 #   Orvane.garder()                                      # à chaque sauvegarde du jeu : ce qui est compté se garde, sans clore
 #   Orvane.clore(compte_opaque)                          # à un moment naturel : une sauvegarde, une fin de partie
 #   Orvane.deposer(compte_opaque)                        # dépose le prochain lot ; un lot refusé reste en attente
@@ -121,10 +125,14 @@ func lire_lieux(biomes: Array) -> Dictionary:
 # l'index et des morceaux de biomes (lus en ligne, ou gardés dans le jeu) → l'instantané réduit à ces biomes, comme tampon/morceaux.js
 func assembler(index: Dictionary, morceaux: Dictionary) -> Dictionary:
 	var vus := {}
+	var lus := {}
+	var bids := {}
 	for b in index.get("biomes", []):
+		bids[str(b.get("id", ""))] = true
 		var m = morceaux.get(str(b.get("id", "")))
 		if typeof(m) != TYPE_DICTIONARY:
 			continue
+		lus[str(b.get("id", ""))] = true
 		for t in m.get("taxons", []):
 			var id := str(t.get("id", ""))
 			if not vus.has(id):
@@ -138,12 +146,35 @@ func assembler(index: Dictionary, morceaux: Dictionary) -> Dictionary:
 				if typeof(vu_ph[i].get("frequence_par_biome")) == TYPE_DICTIONARY and typeof(ph[i].get("frequence_par_biome")) == TYPE_DICTIONARY:
 					vu_ph[i]["frequence_par_biome"].merge(ph[i]["frequence_par_biome"], true)
 	var taxons := []
+	var ids := {}
 	for x in index.get("taxons", []):
 		var id := str(x.get("id", ""))
 		if vus.has(id):
 			taxons.append(vus[id])
-	return {"orvane": index.get("orvane", ""), "monde": index.get("monde", {}), "cycle": index.get("cycle", {}), "biomes": index.get("biomes", []),
-		"catalogue": index.get("catalogue", {}), "taxons": taxons, "evenements": index.get("evenements", [])}
+			ids[id] = true
+	# les événements : ceux des lignées lues, des lieux, les éveils ; une souche qui s'éteint, si l'un de ses derniers lieux est lu
+	# (docs/18) — la règle de tampon/morceaux.js
+	var evenements := []
+	for e in index.get("evenements", []):
+		if typeof(e) == TYPE_DICTIONARY and _evenement_lu(e, ids, bids, lus):
+			evenements.append(e)
+	var out := {"orvane": index.get("orvane", ""), "monde": index.get("monde", {}), "cycle": index.get("cycle", {}), "biomes": index.get("biomes", []),
+		"catalogue": index.get("catalogue", {}), "taxons": taxons, "evenements": evenements}
+	if typeof(index.get("parcelles")) == TYPE_ARRAY:
+		out["parcelles"] = index["parcelles"]     # (un monde à parcelles : leur biome, leur nom, leurs voisines, comme tampon/morceaux.js)
+	return out
+
+
+func _evenement_lu(e: Dictionary, ids: Dictionary, bids: Dictionary, lus: Dictionary) -> bool:
+	var t = e.get("taxon")
+	if str(e.get("type", "")) == "eveil" or typeof(t) == TYPE_NIL or str(t) == "" or ids.has(str(t)) or bids.has(str(t)):
+		return true
+	var L = e.get("lieux")
+	if typeof(L) == TYPE_ARRAY:
+		for l in L:
+			if lus.has(str(l)):
+				return true
+	return false
 
 
 # --- dessiner les bêtes : les planches (morceaux/silhouettes/<biome>.json, docs/21) ---
@@ -510,6 +541,231 @@ func caractere(lignee) -> Dictionary:
 
 func _nombre(x, defaut: float) -> float:
 	return float(x) if (typeof(x) == TYPE_FLOAT or typeof(x) == TYPE_INT) and is_finite(float(x)) else defaut
+
+
+# --- les souches : les maladies du monde, où elles frappent, ce qui leur arrive (docs/18) ---
+# Une lecture de l'instantané, comme moteur/pathogenes.js (souches, souche, infection, infectes, foyers, evenements) : les mêmes
+# réponses. lignee : une lignée (un taxon de l'instantané) ou son identifiant ; lieu : un biome (« mangrove »), ou une parcelle
+# (« mangrove~2 ») dans un monde à parcelles. Ce qui manque (une lignée, un lieu, une souche inconnus, un monde sans souches) donne
+# une réponse vide, jamais une erreur.
+
+# le monde lu a-t-il ses souches ? (instantane.monde.pathogenes)
+func souches_eveillees(inst: Dictionary = {}) -> bool:
+	var i := inst if not inst.is_empty() else instantane
+	var m = i.get("monde", {})
+	return typeof(m) == TYPE_DICTIONARY and typeof(m.get("pathogenes")) == TYPE_DICTIONARY
+
+
+# les souches vivantes, les plus répandues d'abord (à égalité, la plus ancienne) : [{ id, nom, virulence, transmission, origine,
+# apparu, hotes, infectes }], et parent (un mutant : la souche dont il est né), vecteur (la lignée d'insectes qui la porte) s'il y en a.
+# virulence : la part des infectés qui meurent chaque cycle ; infectes : combien de bêtes elle infecte dans le monde
+func souches(inst: Dictionary = {}) -> Array:
+	var out := []
+	var S := _souches_de(inst)
+	for id in S:
+		if typeof(S[id]) == TYPE_DICTIONARY:
+			var x: Dictionary = S[id].duplicate(true)
+			x["id"] = str(id)
+			out.append(x)
+	out.sort_custom(_avant_souche)
+	return out
+
+
+# une souche par son identifiant (une clé de monde.pathogenes.souches) : { id, nom, virulence, transmission, origine, apparu, hotes,
+# infectes, parent, vecteur } ; {} : inconnue, ou éteinte (son extinction est dans evenements_souches(), au cycle où elle a lieu)
+func souche(id: String, inst: Dictionary = {}) -> Dictionary:
+	var S := _souches_de(inst)
+	if not S.has(id) or typeof(S[id]) != TYPE_DICTIONARY:
+		return {}
+	var x: Dictionary = S[id].duplicate(true)
+	x["id"] = id
+	return x
+
+
+# l'infection d'une lignée dans un lieu, par souche : { "souche-3": { "i": 0.157, "r": 0.0996 } } — i : la part des bêtes infectées,
+# r : celle des immunisées, de 0 à 1. {} : aucune souche là. Une parcelle : son infection à elle (populations[].infection_par_parcelle) ;
+# dans un instantané d'avant l'infection par parcelle, celle de son biome. Plusieurs populations dans le lieu : leur moyenne, pesée par l'effectif.
+func infection(lignee, lieu: String, inst: Dictionary = {}) -> Dictionary:
+	var x := _ici(_lignee_de(lignee, inst), lieu)
+	if x.is_empty():
+		return {}
+	if x.has("population"):
+		var p: Dictionary = x["population"]
+		var ip = p.get("infection_par_parcelle")
+		return _parts(ip.get(lieu) if typeof(ip) == TYPE_DICTIONARY else p.get("infection"))
+	var P: Array = x["populations"]
+	if P.size() == 1:
+		return _parts(P[0].get("infection"))
+	var poids := []
+	var total := 0.0
+	for p in P:
+		var w := maxf(_nombre(p.get("effectif"), 0.0), 1e-9)
+		poids.append(w)
+		total += w
+	var out := {}
+	for k in P.size():
+		var I := _parts(P[k].get("infection"))
+		for s in I:
+			if not out.has(s):
+				out[s] = {"i": 0.0, "r": 0.0}
+			out[s]["i"] += float(I[s]["i"]) * float(poids[k]) / total
+			out[s]["r"] += float(I[s]["r"]) * float(poids[k]) / total
+	return out
+
+
+# combien de bêtes d'une lignée sont infectées dans un lieu (un biome ou une parcelle) : par une souche, ou par toutes (souche "")
+func infectes(lignee, lieu: String, souche_id: String = "", inst: Dictionary = {}) -> float:
+	var t = _lignee_de(lignee, inst)
+	var x := _ici(t, lieu)
+	if x.is_empty():
+		return 0.0
+	var n := 0.0
+	if x.has("population"):
+		n = float(x["effectif"])
+	else:
+		for p in x["populations"]:
+			n += _nombre(p.get("effectif"), 0.0)
+	var part := 0.0
+	var I := infection(t, lieu, inst)
+	for s in I:
+		if souche_id == "" or s == souche_id:
+			part += float(I[s]["i"])
+	return n * part
+
+
+# où une souche frappe : chaque parcelle (chaque biome, dans un monde sans parcelles ou un instantané d'avant) où des bêtes vivantes
+# l'ont, les plus touchées d'abord : [{ taxon, biome, parcelle ("" : le biome entier), effectif, i, r, infectes }]
+func foyers(souche_id: String, inst: Dictionary = {}) -> Array:
+	var out := []
+	for t in vivantes(inst):
+		for p in t.get("populations", []):
+			if typeof(p) != TYPE_DICTIONARY or typeof(p.get("infection")) != TYPE_DICTIONARY or not p["infection"].has(souche_id):
+				continue
+			var ip = p.get("infection_par_parcelle")
+			var pc = p.get("parcelles")
+			var lieux := []
+			if typeof(ip) == TYPE_DICTIONARY:
+				for q in ip:
+					lieux.append([str(q), ip[q], _nombre(pc.get(q) if typeof(pc) == TYPE_DICTIONARY else null, 0.0)])
+			else:
+				lieux.append(["", p["infection"], _nombre(p.get("effectif"), 0.0)])
+			for l in lieux:
+				var I := _parts(l[1])
+				if not I.has(souche_id) or float(I[souche_id]["i"]) <= 0.0:
+					continue
+				var y: Dictionary = I[souche_id]
+				out.append({"taxon": str(t.get("id", "")), "biome": str(p.get("biome", "")), "parcelle": l[0], "effectif": float(l[2]),
+					"i": y["i"], "r": y["r"], "infectes": float(y["i"]) * float(l[2])})
+	out.sort_custom(_avant_foyer)
+	return out
+
+
+# ce qui est arrivé aux souches au dernier cycle : [{ type, nature, souche, nom, taxon, biome, parcelle, lieux, hotes, detail }] —
+# nature : naissance (une souche nouvelle), saut_hote (elle gagne une lignée, taxon), mutation (un mutant naît), vecteur (un mutant que
+# porte un insecte), extinction (elle s'éteint ; taxon : sa lignée d'origine ; lieux : les biomes où elle avait encore des malades au
+# début du cycle ; hotes : les lignées où elle avait pris). nom : celui de la souche ; parcelle : où l'événement est né (un monde à
+# parcelles). Ce qui manque vaut null ([] pour lieux et hotes). Une seule souche, si on la nomme. Un instantané d'avant ces champs n'en dit rien.
+func evenements_souches(souche_id: String = "", inst: Dictionary = {}) -> Array:
+	var i := inst if not inst.is_empty() else instantane
+	var out := []
+	for e in i.get("evenements", []):
+		if typeof(e) != TYPE_DICTIONARY or typeof(e.get("souche")) != TYPE_STRING:
+			continue
+		if souche_id != "" and e["souche"] != souche_id:
+			continue
+		var nom = e.get("nom")
+		if typeof(nom) != TYPE_STRING:
+			var s := souche(str(e["souche"]), i)
+			nom = s["nom"] if typeof(s.get("nom")) == TYPE_STRING else null
+		out.append({"type": str(e.get("type", "")), "nature": _texte(e.get("nature")), "souche": e["souche"], "nom": nom, "taxon": _texte(e.get("taxon")),
+			"biome": _texte(e.get("biome")), "parcelle": _texte(e.get("parcelle")), "lieux": _textes(e.get("lieux")), "hotes": _textes(e.get("hotes")),
+			"detail": str(e.get("detail", ""))})
+	return out
+
+
+# un texte du contrat, ou null s'il n'y est pas ; une liste de textes, ou [] (ce que rendent moteur/pathogenes.js et le kit Unity)
+func _texte(x) -> Variant:
+	return x if typeof(x) == TYPE_STRING else null
+
+
+func _textes(x) -> Array:
+	var out := []
+	if typeof(x) == TYPE_ARRAY:
+		for y in x:
+			if typeof(y) == TYPE_STRING:
+				out.append(y)
+	return out
+
+
+func _souches_de(inst: Dictionary) -> Dictionary:
+	var i := inst if not inst.is_empty() else instantane
+	var m = i.get("monde", {})
+	if typeof(m) != TYPE_DICTIONARY or typeof(m.get("pathogenes")) != TYPE_DICTIONARY:
+		return {}
+	var S = m["pathogenes"].get("souches", {})
+	return S if typeof(S) == TYPE_DICTIONARY else {}
+
+
+func _lignee_de(lignee, inst: Dictionary) -> Variant:
+	if typeof(lignee) == TYPE_DICTIONARY:
+		return lignee
+	var i := inst if not inst.is_empty() else instantane
+	for x in i.get("taxons", []):
+		if typeof(x) == TYPE_DICTIONARY and str(x.get("id", "")) == str(lignee):
+			return x
+	return null
+
+
+# où vit une lignée dans un lieu : { populations: [celles du biome] }, ou { population, effectif } pour une parcelle ({} : nulle part)
+func _ici(t, lieu: String) -> Dictionary:
+	if typeof(t) != TYPE_DICTIONARY:
+		return {}
+	var P := []
+	for p in t.get("populations", []):
+		if typeof(p) == TYPE_DICTIONARY and str(p.get("biome", "")) == lieu:
+			P.append(p)
+	if not P.is_empty():
+		return {"populations": P}
+	for p in t.get("populations", []):
+		if typeof(p) != TYPE_DICTIONARY:
+			continue
+		var ip = p.get("infection_par_parcelle")
+		var pc = p.get("parcelles")
+		if (typeof(ip) == TYPE_DICTIONARY and ip.has(lieu)) or (typeof(pc) == TYPE_DICTIONARY and pc.has(lieu)):
+			return {"population": p, "effectif": _nombre(pc.get(lieu) if typeof(pc) == TYPE_DICTIONARY else null, 0.0)}
+	return {}
+
+
+# une infection telle que le contrat la publie, recopiée : { souche: { i, r } }, chaque part entre 0 et 1
+func _parts(I) -> Dictionary:
+	var out := {}
+	if typeof(I) != TYPE_DICTIONARY:
+		return out
+	for s in I:
+		var x = I[s]
+		if typeof(x) == TYPE_DICTIONARY:
+			out[str(s)] = {"i": clampf(_nombre(x.get("i"), 0.0), 0.0, 1.0), "r": clampf(_nombre(x.get("r"), 0.0), 0.0, 1.0)}
+		elif typeof(x) == TYPE_FLOAT or typeof(x) == TYPE_INT:
+			out[str(s)] = {"i": clampf(_nombre(x, 0.0), 0.0, 1.0), "r": 0.0}
+	return out
+
+
+func _avant_souche(a: Dictionary, b: Dictionary) -> bool:
+	var ia := _nombre(a.get("infectes"), 0.0)
+	var ib := _nombre(b.get("infectes"), 0.0)
+	if ia != ib:
+		return ia > ib
+	var pa := _nombre(a.get("apparu"), 0.0)
+	var pb := _nombre(b.get("apparu"), 0.0)
+	if pa != pb:
+		return pa < pb
+	return str(a.get("id", "")) < str(b.get("id", ""))
+
+
+func _avant_foyer(a: Dictionary, b: Dictionary) -> bool:
+	if float(a["infectes"]) != float(b["infectes"]):
+		return float(a["infectes"]) > float(b["infectes"])
+	return "%s|%s|%s" % [a["taxon"], a["biome"], a["parcelle"]] < "%s|%s|%s" % [b["taxon"], b["biome"], b["parcelle"]]
 
 
 # --- compter ce que font les joueurs (docs/4) ---

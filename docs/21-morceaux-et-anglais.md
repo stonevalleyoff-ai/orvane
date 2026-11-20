@@ -14,6 +14,14 @@
 
 Les morceaux sont refaits à chaque cycle : ceux d'une lignée éteinte disparaissent.
 
+**À l'échelle de la parcelle.** Dans un monde à parcelles (docs/15), chaque population d'un morceau de biome dit son effectif dans chacune de ses parcelles (`parcelles`) et, à côté, l'infection de chacune, souche par souche (`infection_par_parcelle`, docs/18) : de quoi jouer une mission à la parcelle sans lire `etat.json`. L'infection du biome (`infection`) reste la moyenne des parcelles, pesée par l'effectif.
+
+```json
+{ "biome": "mangrove", "effectif": 162155, "parcelles": { "mangrove~1": 35833, "mangrove~3": 55122, … },
+  "infection": { "souche-3": { "i": 0.1391413, "r": 0.1043975 } },
+  "infection_par_parcelle": { "mangrove~1": { "souche-3": { "i": 0.2061, "r": 0.2263 } }, "mangrove~3": { "souche-3": { "i": 0.07469, "r": 0.03224 } }, … } }
+```
+
 **Le lire.** `tampon/morceaux.js`, à copier dans le jeu (Node ou navigateur) :
 
 ```js
@@ -109,6 +117,7 @@ Une partie absente : le dessin ne l'a pas (pas de cou, pas de queue). Les partie
 - **Le fichier d'une lignée** la donne entière.
 - **Dans un navigateur**, le résultat est le même.
 - **Le cycle de nuit** publie les morceaux à côté de `instantane.json`, et retire ceux d'une lignée qui n'est plus. Il publie aussi une planche par biome.
+- **L'infection par parcelle.** Dans l'état du monde d'Orvane (cycle 44), chaque population infectée publie l'infection que le moteur tient pour chacune de ses parcelles, à côté de son effectif ; celle du biome en est la moyenne pesée par l'effectif. Le morceau du biome la porte, et `lire` la rend, au contrat.
 - **Les planches** : chaque bête de chaque biome a son dessin (1 528 dessins pour le monde d'Orvane), un SVG de 170 × 90 qui dit où sont ses yeux ; deux dessins d'une même planche ne partagent aucune découpe ; dessinées deux fois, les planches sont les mêmes, au caractère près.
 
 ```
