@@ -9,8 +9,10 @@
 //     parcelles, des capacités un peu inégales, des axes un peu variés ; les parcelles d'un biome en chaîne, et quelques
 //     passages vers les parcelles des biomes voisins) ; les effectifs sont répartis selon la place et la convenance ;
 //   - regrouper(inst) : la vue par biome, celle que lisent les jeux et le tampon : le contrat ne change pas (chaque
-//     population dit en plus comment elle se répartit, « parcelles ») ;
-//   - repartir(pressions, inst) : les pressions des jeux, données par biome, réparties entre les parcelles.
+//     population dit en plus comment elle se répartit, « parcelles », et son infection dans chaque parcelle,
+//     « infection_par_parcelle ») ;
+//   - repartir(pressions, inst, loc) : les pressions des jeux, données par biome, réparties entre les parcelles (là où les lots
+//     l'ont dit : localiser(lots, inst)), sous les plafonds d'une population et de chaque jeu.
 // Déterministe : même monde, même graine, mêmes parcelles. Node (require) ou navigateur (globalThis.OrvaneParcelles).
 //   node moteur/parcelles.js <monde.json> [--par 4] [--graine 1] [--sortie parcelles.json]
 'use strict';
@@ -147,7 +149,7 @@ function regrouperBrut(inst) {
     for (const p of t.populations) { const ty = typeDe(parId.get(p.biome) || { id: p.biome }); if (!groupes.has(ty)) groupes.set(ty, []); groupes.get(ty).push(p); }
     const populations = [...groupes].map(([ty, L]) => {
       if (L.length === 1 && L[0].biome === ty) return L[0];
-      const eff = L.map(p => p.effectif), poidsL = eff.map(e => Math.max(e, 1e-9)), m = moyenne(L.map(p => { const { biome, effectif, depuis, parcelles, hivernants, ...r } = p; return r; }), poidsL);
+      const eff = L.map(p => p.effectif), poidsL = eff.map(e => Math.max(e, 1e-9)), m = moyenne(L.map(p => { const { biome, effectif, depuis, parcelles, hivernants, infection_par_parcelle, ...r } = p; return r; }), poidsL);
       completer(m, L, poidsL);
       // (docs/50) la mémoire du biome : une parcelle qui n'a rien appris compte pour neutre (et non pour absente) ; le mot qui
       // la résume se relit sur la population entière. La méfiance et l'habituation y sont alors pesées de même (ailleurs, une
@@ -159,7 +161,11 @@ function regrouperBrut(inst) {
         L.forEach((p, i) => { for (const [de, h] of Object.entries(p.hivernants || {})) { const ty = typeDe(parId.get(de) || { id: de }); if (ty !== typeDe(parId.get(p.biome) || { id: p.biome })) H[ty] = (H[ty] || 0) + h * eff[i]; } });
         const h = Object.fromEntries(Object.keys(H).sort().map(k => [k, +(H[k] / T).toFixed(4)]).filter(([, v]) => v >= 1e-4)); if (Object.keys(h).length) m.hivernants = h; }
       if (m.maladie?.reste != null) m.maladie.reste = Math.round(m.maladie.reste);   // (un nombre de cycles reste entier)
-      return { biome: ty, effectif: +eff.reduce((s, x) => s + x, 0).toFixed(2), ...m, depuis: Math.min(...L.map(p => p.depuis ?? 0)), parcelles: Object.fromEntries(L.map(p => [p.biome, Math.round(p.effectif)])) };
+      // (docs/18) l'infection de chaque parcelle, telle que le moteur la tient : celle du biome (plus haut) en est la moyenne, pesée
+      // par l'effectif ; une parcelle qui n'y est pas n'a ni malade ni immunisé
+      const inf = L.filter(p => p.infection && typeof p.infection === 'object' && Object.keys(p.infection).length);
+      return { biome: ty, effectif: +eff.reduce((s, x) => s + x, 0).toFixed(2), ...m, depuis: Math.min(...L.map(p => p.depuis ?? 0)), parcelles: Object.fromEntries(L.map(p => [p.biome, Math.round(p.effectif)])),
+        ...(inf.length ? { infection_par_parcelle: Object.fromEntries(inf.map(p => [p.biome, clone(p.infection)])) } : {}) };
     });
     const effPar = new Map(t.populations.map(p => [p.biome, p.effectif]));
     const phenotypes = (t.phenotypes || []).map(ph => { if (!ph.frequence_par_biome) return ph; const s = {}, w = {};
@@ -167,7 +173,10 @@ function regrouperBrut(inst) {
       return { ...ph, frequence_par_biome: Object.fromEntries(Object.keys(s).map(ty => [ty, +(s[ty] / w[ty]).toFixed(4)])) }; });
     return { ...t, populations, phenotypes };
   });
-  out.evenements = (inst.evenements || []).map(e => { const p = e.biome && parId.get(e.biome); return p && p.type ? { ...e, biome: p.type, detail: (e.detail ? e.detail + ' · ' : '') + 'parcelle ' + (p.nom || p.id) } : e; });
+  // (docs/15) un événement né dans une parcelle est rapporté à son biome ; il dit la parcelle (parcelle, et dans detail). Les derniers
+  // lieux d'une souche qui s'éteint (lieux, docs/18) deviennent les biomes de ces parcelles
+  out.evenements = (inst.evenements || []).map(e => { const p = e.biome && parId.get(e.biome), r = p && p.type ? { ...e, biome: p.type, parcelle: p.id, detail: (e.detail ? e.detail + ' · ' : '') + 'parcelle ' + (p.nom || p.id) } : e;
+    return Array.isArray(e.lieux) ? { ...r, lieux: [...new Set(e.lieux.map(l => typeDe(parId.get(l) || { id: l })))].sort() } : r; });
   out.monde = { ...inst.monde, parcelles: { par: P.par, graine: P.graine, nombre: inst.biomes.length } };
   if (inst.monde.mere) { const p = parId.get(inst.monde.mere.biome); out.monde.mere = { ...inst.monde.mere, biome: p ? typeDe(p) : inst.monde.mere.biome, parcelle: inst.monde.mere.biome }; }   // (docs/16)
   out.parcelles = inst.biomes.map(p => ({ id: p.id, type: typeDe(p), nom: p.nom, capacite: Math.round(p.capacite || 0), voisins: p.voisins || [], ...(p.meteo && typeof p.meteo === 'object' ? { meteo: p.meteo } : {}),
@@ -180,7 +189,9 @@ function regrouperBrut(inst) {
 // grande parcelle du biome d'arrivée ; une perte d'habitat, selon la capacité des parcelles. Quand le jeu a dit où ses
 // joueurs étaient (« parcelle » sur ses événements : localiser), la part localisée de la pression va là, au prorata de ce qui y a
 // été compté, le reste selon les effectifs ; puis aucune parcelle ne perd plus que part_max_population d'elle-même, et ce
-// qu'elle ne peut pas perdre (rien, si la lignée n'y vit pas) est pris dans les autres parcelles du biome (plafonner).
+// qu'elle ne peut pas perdre (rien, si la lignée n'y vit pas) est pris dans les autres parcelles du biome (plafonner). Dans un
+// monde où chaque jeu a son plafond (part_max_population_jeu), chaque jeu est posé là où ses propres lots l'ont dit, sous son
+// plafond, parcelle par parcelle (pressions.jeux, voir plus bas).
 // Seules les quantités se partagent (n, N, retraits, habitat, milieu) : les fréquences d'allèles et les valeurs génétiques d'un
 // apport, le z des retirés (q), les chaînes restent ce qu'elles sont ; ce que les bêtes ont vécu des joueurs (contact) n'est pas
 // partagé : chaque parcelle le vit entier, et sa méfiance est celle qu'aurait eue le biome (docs/12, docs/15) ; de même ce que
@@ -208,11 +219,18 @@ const propre = (o, k) => typeof k === 'string' && k !== '__proto__' && k !== 'co
 // parcelle ne peut prendre (la lignée n'est nulle part dans le biome) se perd, comme avant.
 const oteDe = x => Object.values(x.retrait || {}).reduce((s, r) => s + Math.max(0, r), 0) + (x.deplacement || []).reduce((s, d) => s + d.n, 0);
 function plafonner(parts, effs, effDe, pmax, O, vers) {
-  const lim = pid => (pmax ?? 1) * effDe(pid), mR = Object.create(null), mD = [], pleines = new Set(), neuves = new Set();
-  const vide = [...parts.keys()].some(pid => !(effDe(pid) > 0));   // (une parcelle dite où la lignée n'est pas)
-  const prendre = pid => { let x = parts.get(pid);
-    if (!x) { x = { retrait: {}, deplacement: (Array.isArray(O.deplacement) ? O.deplacement : []).map(d => ({ ...d, vers: vers(d.vers), n: 0 })) }; if (O.q != null) x.q = O.q; parts.set(pid, x); neuves.add(pid); }
-    return x; };
+  const neuves = new Set(), vide = [...parts.keys()].some(pid => !(effDe(pid) > 0));   // (une parcelle dite où la lignée n'est pas)
+  reporter(parts, effs, effDe, pmax, O, vers, neuves); finir(parts, effs, O, vers, neuves, vide);
+}
+// une parcelle de plus dans le partage (le report y pose des bêtes) : neuve, elle est nettoyée à la fin (finir)
+function prendre(parts, pid, O, vers, neuves) {
+  let x = parts.get(pid);
+  if (!x) { x = { retrait: {}, deplacement: (Array.isArray(O.deplacement) ? O.deplacement : []).map(d => ({ ...d, vers: vers(d.vers), n: 0 })) }; if (O.q != null) x.q = O.q; parts.set(pid, x); neuves.add(pid); }
+  return x;
+}
+// aucune parcelle n'ôte plus que pmax de ce que la lignée y compte ; le reste va aux parcelles où elle vit, selon leur effectif
+function reporter(parts, effs, effDe, pmax, O, vers, neuves) {
+  const lim = pid => (pmax ?? 1) * effDe(pid), mR = Object.create(null), mD = [], pleines = new Set();
   for (const [pid, x] of parts) { const ote = oteDe(x), L = lim(pid); if (!(ote > L)) continue;
     const g = ote > 0 ? L / ote : 0; pleines.add(pid);
     for (const k in x.retrait || {}) if (x.retrait[k] > 0) { const v = +(x.retrait[k] * g).toFixed(4); mR[k] = (mR[k] || 0) + x.retrait[k] - v; x.retrait[k] = v; }
@@ -228,13 +246,49 @@ function plafonner(parts, effs, effDe, pmax, O, vers) {
       for (const [pid, e] of libres) { let a = reste * e / W; const m = Math.max(0, lim(pid) - charge.get(pid)); if (a >= m) { a = m; pleines.add(pid); plein = true; }
         charge.set(pid, charge.get(pid) + a); recu.set(pid, (recu.get(pid) || 0) + a); donne += a; }
       reste -= donne; if (!plein) break; }
-    for (const [pid, a] of recu) { if (!(a > 0)) continue; const h = a / S, x = prendre(pid);
+    for (const [pid, a] of recu) { if (!(a > 0)) continue; const h = a / S, x = prendre(parts, pid, O, vers, neuves);
       for (const k in mR) (x.retrait ??= {})[k] = +((x.retrait[k] || 0) + mR[k] * h).toFixed(4);
       for (const [i, m] of mD.entries()) if (m > 0 && x.deplacement?.[i]) x.deplacement[i].n = +(x.deplacement[i].n + m * h).toFixed(4); } }
+}
+function finir(parts, effs, O, vers, neuves, vide) {
   // ce que les bêtes ont vécu des joueurs, dit là où la lignée n'est pas : chaque parcelle où elle vit le vit entier
-  if (vide) for (const k of ['contact', 'vecu']) if (O[k] != null) for (const [pid, e] of effs) if (e > 0) { const x = prendre(pid); if (x[k] == null) x[k] = O[k]; }
-  for (const pid of neuves) { const x = parts.get(pid); x.deplacement = x.deplacement.filter(d => d.n > 0);
-    if (!x.deplacement.length) delete x.deplacement; if (!Object.keys(x.retrait).length) delete x.retrait; }
+  if (vide) for (const k of ['contact', 'vecu']) if (O[k] != null) for (const [pid, e] of effs) if (e > 0) { const x = prendre(parts, pid, O, vers, neuves); if (x[k] == null) x[k] = O[k]; }
+  for (const pid of neuves) { const x = parts.get(pid); if (!x) continue; x.deplacement = (x.deplacement || []).filter(d => d.n > 0);
+    if (!x.deplacement.length) delete x.deplacement; if (x.retrait && !Object.keys(x.retrait).length) delete x.retrait; }
+}
+// (docs/15) le plafond d'un jeu tient aussi par parcelle (tampon/tampon.js, part_max_population_jeu) : la pression d'une population
+// se partage entre les jeux qui l'ont faite (pressions.jeux : la part de chacun dans ce qui est ôté, et son plafond), chaque part
+// est posée là où les lots de SON jeu l'ont dite (un jeu ne déplace pas la chasse d'un autre), et ne prend pas à une parcelle plus
+// que le plafond du jeu de ce que la lignée y compte. Ce qui dépasse va, comme plus haut, aux parcelles où la lignée vit, chacune
+// sous le même plafond. Puis la pression de tous les jeux, ensemble, ne prend à aucune parcelle plus que part_max_population.
+// Un monde sans plafond par jeu partage comme avant, au caractère près.
+const QTE_BRUTES = k => k !== 'q' && k !== 'contact' && k !== 'vecu';
+function tranche(O, s) {   // la part s d'une pression, sans arrondi (les parts sont arrondies une fois, au partage)
+  const brut = (o, prof = 0) => typeof o === 'number' ? (Number.isFinite(o) ? o * s : 0) : o == null || typeof o !== 'object' || prof > 6 ? o
+    : Array.isArray(o) ? o.map(x => brut(x, prof + 1)) : Object.fromEntries(Object.entries(o).map(([k, v]) => [k, k === 'vers' ? v : brut(v, prof + 1)]));
+  const r = {}; for (const [k, v] of Object.entries(O || {})) r[k] = !QTE_BRUTES(k) ? v : k === 'apport' && v && typeof v === 'object' ? { ...v, ...(v.n != null ? { n: brut(v.n) } : {}), ...(v.N != null ? { N: brut(v.N) } : {}) } : brut(v);
+  return r;
+}
+// ajoute les parts d'un jeu à celles de tous (les déplacements gardent l'ordre de la pression : ils s'additionnent rang par rang)
+function fondre(tous, parts) {
+  const somme = (a, b) => +((a || 0) + (b || 0)).toFixed(4);
+  for (const [pid, x] of parts) { const y = tous.get(pid); if (!y) { tous.set(pid, x); continue; }
+    for (const [k, v] of Object.entries(x)) {
+      if (k === 'retrait') { y.retrait ??= {}; for (const [c, n] of Object.entries(v || {})) y.retrait[c] = somme(y.retrait[c], n); }
+      else if (k === 'deplacement') { y.deplacement ??= []; (v || []).forEach((d, i) => { if (y.deplacement[i]) y.deplacement[i].n = somme(y.deplacement[i].n, d.n); else y.deplacement[i] = { ...d }; }); }
+      else if (k === 'apport' && v && typeof v === 'object') { if (!y.apport) { y.apport = v; continue; } y.apport = { ...y.apport, n: somme(y.apport.n, v.n), N: { ...(y.apport.N || {}) } };
+        for (const [c, n] of Object.entries(v.N || {})) y.apport.N[c] = somme(y.apport.N[c], n); }
+      else if (QTE_BRUTES(k) && typeof v === 'number') y[k] = somme(y[k], v);
+      else if (y[k] == null) y[k] = v; } }
+}
+// les jeux d'une population, d'après le tampon : [[jeu, part, plafond]], s'il en est un qui a un plafond (sinon : null)
+function jeuxDe(pressions, tid, ty) {
+  const P = propre(pressions?.jeux, tid) && propre(pressions.jeux[tid], ty) ? pressions.jeux[tid][ty] : null; if (!P || typeof P !== 'object') return null;
+  const L = []; for (const j of Object.keys(P)) { const x = P[j], s = x && typeof x === 'object' ? x.part : null, c = x?.plafond;
+    if (j === '__proto__' || !(typeof s === 'number' && Number.isFinite(s) && s > 0)) continue;
+    L.push([j, s, typeof c === 'number' && Number.isFinite(c) && c >= 0 && c <= 1 ? c : null]); }
+  const S = L.reduce((a, x) => a + x[1], 0); if (!L.length || !L.some(x => x[2] != null)) return null;
+  return L.map(([j, s, c]) => [j, L.length === 1 ? 1 : s / S, c]);
 }
 function repartir(pressions, inst, loc) {
   if (!estParcellaire(inst) || !pressions) return pressions;
@@ -246,17 +300,34 @@ function repartir(pressions, inst, loc) {
     for (const [ty, O] of Object.entries(Bs || {})) {
       const effs = (propre(parType, ty) ? parType[ty] : []).map(p => [p.id, t.populations.find(q => q.biome === p.id)?.effectif || 0]), We = effs.reduce((s, [, e]) => s + e, 0);
       const ici = propre(loc?.taxons, tid) && propre(loc.taxons[tid], ty) ? loc.taxons[tid][ty] : null, Ln = ici ? Object.values(ici).reduce((s, x) => s + x, 0) : 0;
-      const tot = Math.max(Ln, loc?.totaux?.[tid]?.[ty] || 0), sLoc = Ln > 0 && tot > 0 ? Math.min(1, Ln / tot) : 0;   // la part localisée de ce qui a été compté
-      const w = new Map();
-      if (We > 0) { for (const [pid, e] of effs) if (e > 0) w.set(pid, (1 - sLoc) * e / We); }
-      else if (sLoc < 1) w.set(propre(parType, ty) ? plusGrande(ty) : ty, 1 - sLoc);   // (personne ici : la plus grande parcelle)
-      if (Ln > 0) for (const [pid, x] of Object.entries(ici)) w.set(pid, (w.get(pid) || 0) + sLoc * x / Ln);
-      const vers = v => propre(parType, v) ? plusGrande(v) : v, parts = new Map();
-      for (const [pid, f] of w) { if (!(f > 0)) continue; const x = {};
-        for (const [k, v] of Object.entries(O || {})) x[k] = k === 'deplacement' ? (Array.isArray(v) ? v : []).map(d => ({ ...d, vers: vers(d.vers), n: +((d.n || 0) * f).toFixed(4) })) : partager(k, v, f);
-        parts.set(pid, x); }
-      // (ce qu'un jeu a localisé ne vide pas une parcelle, et ne se perd pas là où la lignée n'est pas)
-      if (Ln > 0) plafonner(parts, effs, pid => t.populations.find(q => q.biome === pid)?.effectif || 0, pmax, O || {}, vers);
+      // les poids des parcelles : la part localisée de ce qui a été compté (L sur tot) va là où elle a été dite, le reste selon les effectifs
+      const poids = (ici, Ln, tot) => { const sLoc = Ln > 0 && tot > 0 ? Math.min(1, Ln / tot) : 0, w = new Map();
+        if (We > 0) { for (const [pid, e] of effs) if (e > 0) w.set(pid, (1 - sLoc) * e / We); }
+        else if (sLoc < 1) w.set(propre(parType, ty) ? plusGrande(ty) : ty, 1 - sLoc);   // (personne ici : la plus grande parcelle)
+        if (Ln > 0) for (const [pid, x] of Object.entries(ici)) w.set(pid, (w.get(pid) || 0) + sLoc * x / Ln);
+        return w; };
+      const vers = v => propre(parType, v) ? plusGrande(v) : v, effDe = pid => t.populations.find(q => q.biome === pid)?.effectif || 0;
+      const partage = (Ox, w) => { const parts = new Map();
+        for (const [pid, f] of w) { if (!(f > 0)) continue; const x = {};
+          for (const [k, v] of Object.entries(Ox || {})) x[k] = k === 'deplacement' ? (Array.isArray(v) ? v : []).map(d => ({ ...d, vers: vers(d.vers), n: +((d.n || 0) * f).toFixed(4) })) : partager(k, v, f);
+          parts.set(pid, x); }
+        return parts; };
+      const J = Ln > 0 ? jeuxDe(pressions, tid, ty) : null, LJ = J && propre(loc?.jeux, tid) && propre(loc.jeux[tid], ty) ? loc.jeux[tid][ty] : null;
+      let parts;
+      if (J && LJ) {
+        // (docs/15) chaque jeu sa part, là où SES lots l'ont dite, sous son plafond ; puis tous ensemble, sous part_max_population
+        const neuves = new Set(); let vide = false; parts = new Map();
+        for (const [j, s, cj] of J) { const Lj = propre(LJ, j) ? LJ[j] : null, Ljn = Lj ? Object.values(Lj.p).reduce((a, x) => a + x, 0) : 0, Oj = s === 1 ? (O || {}) : tranche(O, s);
+          const pj = partage(Oj, poids(Lj?.p, Ljn, Lj ? Math.max(Ljn, Lj.t) : 0)); vide ||= [...pj.keys()].some(pid => !(effDe(pid) > 0));
+          // (une part que le lissage a gardée des cycles passés peut dépasser le plafond du jeu : elle se pose alors selon les effectifs, sans se perdre)
+          if (cj != null && Ljn > 0) reporter(pj, effs, effDe, Math.max(cj, We > 0 ? oteDe(Oj) / We : 0), Oj, vers, neuves);
+          fondre(parts, pj); }
+        reporter(parts, effs, effDe, pmax, O || {}, vers, neuves); finir(parts, effs, O || {}, vers, neuves, vide);
+      } else {
+        parts = partage(O, poids(ici, Ln, Math.max(Ln, loc?.totaux?.[tid]?.[ty] || 0)));
+        // (ce qu'un jeu a localisé ne vide pas une parcelle, et ne se perd pas là où la lignée n'est pas)
+        if (Ln > 0) plafonner(parts, effs, effDe, pmax, O || {}, vers);
+      }
       for (const [pid, x] of parts) (taxons[tid] ??= {})[pid] = x;
     }
   }
@@ -275,21 +346,29 @@ function repartir(pressions, inst, loc) {
 // --- localiser : ce que les lots des jeux disent des parcelles (un événement peut porter « parcelle », une parcelle du biome de
 // l'événement) : par taxon et par biome, combien a été compté dans chaque parcelle, et combien en tout (localisé ou non) ; de même
 // pour l'habitat. Seuls les retraits (prélèvements, captures, déplacements) se localisent : une rencontre ne déplace pas la chasse
-// des autres. Un événement mal formé ne compte pas (le tampon l'écarte aussi) ---
+// des autres. Un événement mal formé ne compte pas (le tampon l'écarte aussi). Les retraits se comptent aussi jeu par jeu (« jeux » :
+// taxon → biome → jeu → { t : en tout, p : par parcelle }), pour que chaque jeu soit posé là où ses lots l'ont dit (repartir). Comme
+// dans le tampon, un lot d'un autre monde ne compte pas, ni un lot renvoyé avec le même id par le même jeu ---
 const LIEU = new Set(['habitat_perdu', 'habitat_gagne', 'defrichage', 'reboisement', 'assechement', 'irrigation', 'construction', 'transformation']);
 const RETRAIT = new Set(['prelevement', 'capture', 'deplacement']);
+const nom = (x, max) => typeof x === 'string' && x.length > 0 && x.length <= max && x !== '__proto__' && x !== 'constructor' && x !== 'prototype';
+const jeuDuLot = lot => nom(lot.jeu, 120) ? lot.jeu : nom(lot.source?.jeu, 120) ? lot.source.jeu : '';   // (comme le tampon le lit)
 function localiser(lots, inst) {
   if (!estParcellaire(inst)) return null;
   const type = new Map(inst.biomes.map(b => [b.id, typeDe(b)])), types = new Set(type.values()), ids = new Set(inst.taxons.map(t => t.id));
-  const loc = { taxons: Object.create(null), biomes: Object.create(null), totaux: Object.create(null), totauxB: Object.create(null) }; let n = 0;
+  const loc = { taxons: Object.create(null), biomes: Object.create(null), totaux: Object.create(null), totauxB: Object.create(null), jeux: Object.create(null) }; let n = 0;
+  const vus = new Set(), monde = inst.monde?.id;
   const ajouter = (D, a, b, c, x) => { const A = D[a] ??= Object.create(null); if (c == null) A[b] = (A[b] || 0) + x; else { const B = A[b] ??= Object.create(null); B[c] = (B[c] || 0) + x; } };
   for (const lot of Array.isArray(lots) ? lots : []) { if (!lot || !Array.isArray(lot.evenements)) continue;
+    if (typeof lot.monde === 'string' && monde != null && lot.monde !== monde) continue;
+    const j = jeuDuLot(lot); if (nom(lot.id, 64)) { const k = j + '\u0000' + lot.id; if (vus.has(k)) continue; vus.add(k); }
     for (const e of lot.evenements) {
       if (!e || typeof e !== 'object' || typeof e.biome !== 'string' || !types.has(e.biome) || !(typeof e.n === 'number' && Number.isFinite(e.n) && e.n > 0 && e.n <= 1e4)) continue;
       const lieu = LIEU.has(e.action), ok = typeof e.parcelle === 'string' && type.get(e.parcelle) === e.biome;
       if (lieu) { ajouter(loc.totauxB, e.biome, '_', null, e.n); if (ok) { ajouter(loc.biomes, e.biome, e.parcelle, null, e.n); n++; } continue; }
       if (!RETRAIT.has(e.action) || typeof e.taxon !== 'string' || !ids.has(e.taxon)) continue;
-      ajouter(loc.totaux, e.taxon, e.biome, null, e.n); if (ok) { ajouter(loc.taxons, e.taxon, e.biome, e.parcelle, e.n); n++; }
+      const J = ((loc.jeux[e.taxon] ??= Object.create(null))[e.biome] ??= Object.create(null))[j] ??= { t: 0, p: Object.create(null) }; J.t += e.n;
+      ajouter(loc.totaux, e.taxon, e.biome, null, e.n); if (ok) { ajouter(loc.taxons, e.taxon, e.biome, e.parcelle, e.n); J.p[e.parcelle] = (J.p[e.parcelle] || 0) + e.n; n++; }
     } }
   for (const ty in loc.totauxB) loc.totauxB[ty] = loc.totauxB[ty]._;
   return n ? loc : null;

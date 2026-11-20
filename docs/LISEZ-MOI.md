@@ -9,7 +9,7 @@ Pour s'inscrire, recevoir ses clés et faire ses premiers appels au Supabase d'O
 | [1. Lire un instantané](1-lire-un-instantane.md) | comprendre le fichier qu'Orvane publie chaque nuit |
 | [2. Les correspondances](2-correspondances.md) | relier vos biomes, vos espèces, vos variantes à ceux d'Orvane |
 | [3. Traduire un phénotype](3-traduire-un-phenotype.md) | faire d'un corps biologique des statistiques de jeu : physique, mouvement, comportement, attaque, objets, apprivoisement |
-| [4. Renvoyer des pressions](4-renvoyer-des-pressions.md) | compter ce que font les joueurs, sans tricher ni compter deux fois |
+| [4. Renvoyer des pressions](4-renvoyer-des-pressions.md) | compter ce que font les joueurs, sans tricher ni compter deux fois ; le bilan de saison, jeu par jeu : ce que chacun a ôté et rendu à chaque population |
 | [5. Le profil et les essais](5-profil-et-essais.md) | régler le tampon pour votre jeu et tout vérifier hors ligne |
 | [6. L'exemple Stone Valley](6-exemple-stone-valley.md) | le traducteur complet, commenté |
 | [7. Les conduites](7-conduites.md) | ce que l'évolution fait faire aux bêtes : le vocabulaire abstrait, un phénotype par bête, trois règles pour les jouer, et ce qui vient ensuite |
@@ -59,6 +59,7 @@ Pour s'inscrire, recevoir ses clés et faire ses premiers appels au Supabase d'O
 | [51. La santé du moteur](51-sante.md) | le rapport de chaque semaine sur le monde publié : ce qu'il porte, ce que les joueurs lui font et ce qu'il en fait, ce que les bêtes en retiennent, ses souches, ses cycles ; des mesures (`outils/sante.js`), des alertes aux règles dites, un récit écrit chaque lundi ; la vue Santé de l'Observatoire, la branche `sante` |
 | [52. La Terre](52-la-terre.md) | un monde réel, au jour : un cycle est un jour, l'année a ses 365 jours, chaque lieu sa saison (celle de son climat), son soleil, son fuseau ; la lune ; le pas de temps qui fait vivre un cerf quinze ans ; la natalité, la meute, la saison des naissances ; ce que publie un monde réel ; fabriquer l'Europe (`outils/terre/`) ; les licences |
 | [53. L'étalon](53-etalon.md) | l'Europe note le moteur : chaque dimanche, trois années sans joueurs, et des tests dont la réalité sait la réponse sans que l'assemblage les ait calés (la stabilité, les naissances du chevreuil et du cerf, le départ et le retour des cigognes, le nombre de carnivores par dix tonnes de proies, la loi de Damuth) ; ce qui reste à faire pour qu'il étalonne les réglages d'Orvane |
+| [54. La fiche de créature](54-fiche-de-creature.md) | chaque lignée décrite en entier pour la DA 2D et 3D (`monde/fiche.js`) : sa famille visuelle (pelage, plumage, chitine, écailles, cuirasse, peau-nue, gelée, machine), treize sections où chaque phrase dit sa source, ce qu'elle n'a pas (les interdits), ce qui a changé depuis sa mère ; les prompts 2D et 3D, le négatif, la palette, en anglais |
 
 ## En une page
 

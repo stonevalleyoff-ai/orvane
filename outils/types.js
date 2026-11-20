@@ -1,13 +1,14 @@
 // Orvane — LES TYPES DU CONTRAT (outils/types.js) — docs/39
-// Écrit types/orvane.d.ts d'après les trois schémas du contrat (schemas/*.schema.json) : l'instantané, le lot de pressions, le
-// profil. Un traducteur écrit en TypeScript (ou en JavaScript avec // @ts-check) y trouve chaque champ, son type et sa description.
+// Écrit types/orvane.d.ts d'après les schémas du contrat (schemas/*.schema.json) : l'instantané, le lot de pressions, le profil, et
+// le bilan de saison avec son index (docs/4). Un traducteur écrit en TypeScript (ou en JavaScript avec // @ts-check) y trouve chaque
+// champ, son type et sa description.
 // Les types suivent les schémas : on ne les écrit jamais à la main, on relance ce fichier quand un schéma change.
 //   node outils/types.js            (écrit types/orvane.d.ts)
 //   node outils/types.js --verifier (sort en erreur si types/orvane.d.ts n'est plus à jour)
 'use strict';
 const fs = require('fs'), path = require('path');
 const racine = p => path.join(__dirname, '..', p);
-const SCHEMAS = [['Instantane', 'instantane'], ['Lot', 'pression'], ['Profil', 'profil']];
+const SCHEMAS = [['Instantane', 'instantane'], ['Lot', 'pression'], ['Profil', 'profil'], ['Bilan', 'bilan'], ['BilanIndex', 'bilan-index']];
 const ident = k => /^[A-Za-z_$][\w$]*$/.test(k) ? k : JSON.stringify(k);
 const nomType = s => s.replace(/(^|[_\-\s])(\w)/g, (_, a, b) => b.toUpperCase()).replace(/[^\w]/g, '');
 const doc = (d, ind) => d ? `${ind}/** ${String(d).replace(/\*\//g, '* /').replace(/\s+/g, ' ').trim()} */\n` : '';
@@ -38,7 +39,7 @@ function versTs(s, ind, defs, prefixe) {
   }).join(' | ');
 }
 let sortie = `// Orvane — les types du contrat. Fichier ÉCRIT par outils/types.js d'après schemas/*.schema.json : ne pas le modifier à la main.
-// Un traducteur TypeScript : import type { Instantane, Lot, Profil } from './orvane';  — en JavaScript : /** @type {import('./orvane').Instantane} */
+// Un traducteur TypeScript : import type { Instantane, Lot, Profil, Bilan } from './orvane';  — en JavaScript : /** @type {import('./orvane').Instantane} */
 // Chaque champ porte la description de son schéma. Les noms restent ceux du contrat (en français) ; docs/glossary.md les traduit.
 
 `;

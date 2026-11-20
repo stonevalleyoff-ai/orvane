@@ -1,5 +1,5 @@
 // Orvane — les types du contrat. Fichier ÉCRIT par outils/types.js d'après schemas/*.schema.json : ne pas le modifier à la main.
-// Un traducteur TypeScript : import type { Instantane, Lot, Profil } from './orvane';  — en JavaScript : /** @type {import('./orvane').Instantane} */
+// Un traducteur TypeScript : import type { Instantane, Lot, Profil, Bilan } from './orvane';  — en JavaScript : /** @type {import('./orvane').Instantane} */
 // Chaque champ porte la description de son schéma. Les noms restent ceux du contrat (en français) ; docs/glossary.md les traduit.
 
 export type InstantaneUnite = number;
@@ -923,6 +923,15 @@ export interface Instantane {
           r?: number;
         };
       };
+      /** (monde à parcelles, docs/15, 18) L'infection de la population dans chacune des parcelles de son biome où une souche circule, au même format que infection : { parcelle: { souche: { i, r } } }. infection en est la moyenne, pesée par l'effectif de chaque parcelle (parcelles). Une parcelle absente n'a ni malade ni immunisé. */
+      infection_par_parcelle?: {
+        [cle: string]: {
+          [cle: string]: {
+            i?: number;
+            r?: number;
+          };
+        };
+      };
       /** (docs/47) Une plante qu'une catastrophe vient de toucher, dans un monde à la succession éveillée : laquelle (type : incendie, crue, secheresse), à quel cycle, et la part de ses pieds qu'elle y a perdue. Elle le dit douze cycles. */
       sinistre?: {
         type?: string;
@@ -1007,6 +1016,18 @@ export interface Instantane {
     type: "apparition" | "extinction" | "separation" | "migration" | "effondrement" | "explosion" | "nouveau_trait" | "epidemie" | "remission" | "catastrophe" | "hybridation" | "mefiance" | "eveil" | "conception" | "transfert" | "transformation" | "invention" | "nature" | "climat" | "meteo" | "savoir" | "memoire";
     taxon: string;
     biome?: string;
+    /** (docs/18) Un événement de souche (epidemie, remission) : l'identifiant de la souche (une clé de monde.pathogenes.souches). Pour une mutation, celle du mutant ; sa mère est son parent. Une souche éteinte n'est plus dans monde.pathogenes.souches. */
+    souche?: string;
+    /** (docs/18, 29) Ce qui arrive à la souche : naissance (elle naît chez taxon, dans biome), saut_hote (elle prend chez une lignée de plus, taxon), mutation (un mutant naît chez taxon), vecteur (un mutant porté par un insecte, monde.pathogenes.souches[souche].vecteur), extinction (elle s'éteint dans le monde ; taxon : sa lignée d'origine). D'autres pourront venir : un jeu ignore celles qu'il ne connaît pas. */
+    nature?: "naissance" | "saut_hote" | "mutation" | "vecteur" | "extinction";
+    /** (docs/18) Une souche qui s'éteint : son nom (elle n'est plus dans monde.pathogenes.souches). */
+    nom?: string;
+    /** (docs/18) Une souche qui s'éteint : les biomes où elle avait encore des malades au début du cycle, triés. */
+    lieux?: string[];
+    /** (docs/18) Une souche qui s'éteint : les lignées où elle avait pris. */
+    hotes?: string[];
+    /** (monde à parcelles, docs/15) La parcelle où l'événement est né ; biome est alors le biome dont elle est une part. */
+    parcelle?: string;
     detail?: string;
   }[];
   /** Le cycle d'avant, allégé (effectifs par biome, fréquences des phénotypes), joint à l'instantané publié : tous les traducteurs interpolent entre les deux de la même façon. */
@@ -1049,6 +1070,8 @@ export interface Lot {
   orvane: string;
   /** Doit être l'id du monde de l'instantané lu. */
   monde: string;
+  /** Facultatif : l'identifiant du lot, donné par le jeu, au hasard (un UUID, 32 chiffres hexadécimaux). Le jeu le garde avec le lot tant qu'il n'est pas accepté : un lot renvoyé avec le même id (la réponse d'un dépôt s'est perdue) n'est compté qu'une fois, et orvane_deposer répond { ok: true, deja: true } sans rien consommer des quotas. 1 à 64 lettres, chiffres ou « . _ : - », pas au début ; propre à chaque jeu. */
+  id?: string;
   /** Les familles de lignées que ce jeu joue (animale seule si rien n'est dit, ni ici ni dans son exposition). Le tampon ne lit pas ses événements sur les autres : une nouveauté du monde (les machines, docs/16) ne compte pour un jeu que s'il la demande. */
   familles?: Array<"animale" | "synthetique" | "vegetale">;
   /** Numéro du cycle que le jeu utilisait quand ces événements ont eu lieu (sert à dénormaliser avec les bonnes fréquences). */
@@ -1249,6 +1272,8 @@ export interface Profil {
     traits_rendus?: string[];
     /** Effectif Orvane sous lequel le jeu cesse de faire apparaître le taxon (avant l'extinction réelle). */
     seuil_extinction_jeu?: number;
+    /** Sens jeu → Orvane, dit par le jeu (orvane_regler_jeu) : un plafond plus bas que celui du monde (influence.plafonds.part_max_population_jeu) pour ce que CE jeu ôte à une population en un cycle. C'est le plus bas des deux qui vaut : un jeu peut baisser son plafond, jamais le relever. 0 : le jeu lit le monde sans jamais rien lui ôter. */
+    part_max_population_jeu?: number;
     /** Un taxon éteint peut-il revenir par recolonisation d'un biome voisin ? */
     retour_apres_extinction?: boolean;
     /** compression : la fréquence réelle d'un phénotype passe par la compression (sur la cote). relatif : le jeu garde ses propres taux (taux_jeu) à la génération 0, et ne suit que l'ÉCART d'Orvane depuis elle — une variante deux fois plus répandue qu'à la génération 0 l'est deux fois plus dans le jeu (sur la cote). Le jour un, le jeu est exactement ce qu'il était. */
@@ -1301,12 +1326,176 @@ export interface Profil {
       part_max_population?: number;
       /** Part maximale de la pression totale d'un taxon venant d'un seul jeu, quand plusieurs jeux en montrent le taxon (comptée avant ce plafond, comme part_max_compte) : un jeu de mille joueurs ne fait pas seul l'histoire d'une espèce. */
       part_max_jeu?: number;
+      /** Le plafond d'un jeu, même seul : la part de l'effectif d'une population qu'un seul jeu peut lui ôter en un cycle (prélèvements, captures, déplacements). Ce qu'il lui rend (libérations, nourrissages, bêtes d'élevage) n'a pas de plafond de jeu : seulement part_max_population. Appliqué avant le lissage, après part_max_compte et part_max_jeu, avant part_max_population ; il tient aussi parcelle par parcelle (docs/15). Un jeu peut le baisser pour lui (exposition.part_max_population_jeu), jamais le relever. 0,05 dans le monde d'Orvane ; absent, pas de plafond par jeu. */
+      part_max_population_jeu?: number;
     };
     /** Les pressions sont lissées sur autant de cycles (une chasse ponctuelle pèse peu, une chasse soutenue pèse). */
     memoire_cycles?: number;
     /** Lissage de la dénormalisation : autant de prélèvements fictifs répartis selon les fréquences exposées sont ajoutés aux comptes observés, pour qu’une seule bête rare tuée ne vaille pas une persécution (20 par défaut). */
     pseudo_comptes?: number;
   };
+}
+
+/** Un nombre de bêtes, au millième. */
+export type BilanBete = number;
+
+/** Ce que chaque étape a ôté à la demande, dans l'ordre où le tampon les applique (docs/4, docs/5). Une étape qui n'a rien raboté n'est pas dite. */
+export type BilanRabote = {
+  /** L'activité d'un compte ramenée à une activité normale (influence.exposition_ref rencontres par cycle). */
+  activite?: BilanBete;
+  /** Le plafond par compte (plafonds.par_compte_cycle, par lignée et par cycle). */
+  compte?: BilanBete;
+  /** La part maximale d'un seul compte dans une population (plafonds.part_max_compte). */
+  part_compte?: BilanBete;
+  /** La part maximale d'un seul jeu, quand plusieurs jeux montrent la population (plafonds.part_max_jeu). */
+  part_jeu?: BilanBete;
+  /** Le plafond d'un jeu, même seul (plafonds.part_max_population_jeu, ou celui, plus bas, de son exposition) : ce qu'il ôte seulement. */
+  plafond_jeu?: BilanBete;
+  /** La part maximale d'une population, tous jeux confondus (plafonds.part_max_population). */
+  population?: BilanBete;
+};
+
+export type BilanTotal = {
+  /** Ce que les lots du jeu demandaient : ses comptes pesés (poids, âge) et rapportés aux fréquences réelles (son exposition), avant tout plafond. */
+  demande: BilanBete;
+  /** Ce qu'il en reste après tous les plafonds : ce que le jeu ajoute à la pression du monde. */
+  applique: BilanBete;
+  rabote: BilanRabote;
+};
+
+export type BilanCote = {
+  demande: BilanBete;
+  applique: BilanBete;
+  rabote: BilanRabote;
+  /** applique rapporté à effectif_moyen : la part de l'effectif que le jeu a ôtée (ou rendue) sur la saison. Peut dépasser 1 : les naissances remplacent ce qui est pris. */
+  part: number | null;
+  /** (ôté seulement) La part la plus forte ôtée en un seul cycle, rapportée à l'effectif de ce cycle : jamais plus que le plafond du jeu. */
+  part_max_cycle?: number;
+  /** (ôté seulement) Le cycle de cette part la plus forte. */
+  cycle_max?: number | null;
+};
+
+/** Une population (une lignée dans un biome, toutes ses parcelles) que le jeu a touchée. */
+export type BilanLignee = {
+  /** L'id de la lignée (taxons[].id de l'instantané). */
+  taxon: string;
+  /** Son nom (taxons[].nom). */
+  nom?: string | null;
+  /** Le biome (celui de l'instantané : par biome, même dans un monde à parcelles). */
+  biome: string;
+  /** Les cycles de la saison où le jeu l'a touchée. */
+  cycles: number;
+  /** L'effectif de la population au début de chacun de ces cycles (celui sur lequel les plafonds se comptent), en moyenne. */
+  effectif_moyen: number;
+  /** Ce qui est ôté : prélèvements, captures, déplacements vers un autre biome. */
+  ote: BilanCote;
+  /** Ce qui est rendu : libérations, nourrissages, bêtes d'élevage relâchées (docs/36). */
+  rendu: BilanCote;
+};
+
+export type BilanJeu = {
+  /** L'id du jeu (jeux.json). */
+  id: string;
+  /** Son nom public (jeux.json) ; null pour un jeu qui n'y figure pas. */
+  nom: string | null;
+  /** Son plafond par population et par cycle (le plus bas de celui du monde et de son exposition) ; null s'il n'en a pas. */
+  plafond: number | null;
+  /** Les lots lus pendant la saison (un lot renvoyé compte une fois). */
+  lots: number;
+  /** Les événements comptés. */
+  evenements: number;
+  /** Les cycles où au moins un de ses lots a été lu. */
+  cycles: number;
+  /** Tout ce qu'il a ôté, toutes lignées confondues. */
+  ote: BilanTotal;
+  /** Tout ce qu'il a rendu. */
+  rendu: BilanTotal;
+  /** La part la plus forte qu'il a ôtée à une population en un cycle, et où. */
+  part_max_cycle?: {
+    part?: number;
+    cycle?: number | null;
+    taxon?: string;
+    biome?: string;
+  } | null;
+  /** Population par population, la part de l'effectif ôtée la plus forte d'abord. */
+  lignees: BilanLignee[];
+};
+
+/** Orvane — bilan de saison (publié par le cycle) — Ce que chaque jeu a ôté et rendu à chaque population pendant une saison, et la part de l'effectif que cela représente (docs/4). Publié par le cycle de nuit dans mondes/<id>/bilans/ : <saison>.json pour une saison finie (écrit une fois, jamais réécrit), en-cours.json pour la saison en cours (refait à chaque cycle) ; l'index est bilans/index.json (bilan-index.schema.json). En bêtes : celles que le moteur retire ou ajoute (un adulte prélevé en compte 1,2, un jeune 0,8, un œuf 0,3 ; un nourrissage rend 0,2 bête). Chaque nombre est compté au cycle où les lots sont lus, plafonds compris, avant le lissage (memoire_cycles), qui étale ensuite ce poids sur les cycles suivants sans rien y ajouter. Aucune donnée de joueur : ni compte, ni pseudonyme ; seulement chaque jeu. */
+export interface Bilan {
+  /** Version du contrat, MAJEUR.MINEUR (« 1.0 » ; docs/43). */
+  orvane: string | null;
+  monde: {
+    /** L'id du monde. */
+    id: string | null;
+    /** La naissance du monde (monde.ne de l'instantané). Un monde né à nouveau repart de bilans neufs : ceux de l'autre monde ne sont plus publiés. */
+    ne: string | null;
+  };
+  /** La saison. Un monde qui a une année (monde.annee) : ses saisons, telles que le moteur les nomme (cycle.saison.nom de l'instantané) ; dans le monde d'Orvane (120 cycles), quatre saisons de 30 cycles, et l'hiver, centré sur le début de l'année, commence 15 cycles avant elle. Un monde sans année : des tranches de 30 cycles, comptées depuis le cycle 0. */
+  saison: {
+    /** « an-<année>-<saison> » (an-0-ete, an-1-hiver…), ou « tranche-<k> » dans un monde sans année. C'est aussi le nom du fichier d'une saison finie (bilans/<id>.json). */
+    id: string;
+    /** L'année du monde (celle que l'hiver ouvre). */
+    an: number | null;
+    nom: "hiver" | "printemps" | "été" | "automne" | null;
+    /** Le premier cycle de la saison. */
+    de: number;
+    /** Son dernier cycle. */
+    a: number;
+  };
+  /** Vrai : la saison n'est pas finie, ce bilan change à chaque cycle (en-cours.json). Faux : la saison est finie, ce bilan ne change plus. */
+  en_cours: boolean;
+  /** Les cycles comptés dans ce bilan. Moins que la saison quand le bilan a commencé en cours de saison (le premier cycle publié avec lui), ou pour la saison en cours. */
+  compte: {
+    de: number;
+    a: number;
+    cycles: number;
+    date_de?: string | null;
+    date_a?: string | null;
+  };
+  /** Les plafonds du monde au dernier cycle compté (profil.influence.plafonds, docs/5). */
+  plafonds?: {
+    [cle: string]: number;
+  } | null;
+  /** Le lissage du monde (profil.influence.memoire_cycles). */
+  memoire_cycles?: number | null;
+  /** Chaque jeu dont un lot a été lu pendant la saison, par id (« » : des lots sans jeu, déposés à la main, en dernier). Un jeu suspendu depuis garde ce qu'il a fait, et son nom. */
+  jeux: BilanJeu[];
+}
+
+export type BilanIndexEntree = {
+  /** L'id de la saison (an-0-ete, tranche-3…). */
+  id: string;
+  an: number | null;
+  nom: string | null;
+  /** Le premier cycle de la saison. */
+  de: number;
+  /** Son dernier cycle. */
+  a: number;
+  /** Les cycles comptés dans le bilan. */
+  compte: {
+    de: number;
+    a: number;
+    cycles: number;
+  };
+  /** Le fichier du bilan, dans bilans/ (en-cours.json pour la saison en cours). */
+  fichier: string;
+  /** Les ids des jeux qu'il porte. */
+  jeux: string[];
+};
+
+/** Orvane — index des bilans de saison (publié par le cycle) — mondes/<id>/bilans/index.json : chaque bilan de saison fini du monde, le plus récent d'abord, et celui de la saison en cours (bilan.schema.json, docs/4). Refait à chaque cycle. */
+export interface BilanIndex {
+  /** Version du contrat, MAJEUR.MINEUR (docs/43). */
+  orvane: string | null;
+  monde: {
+    id?: string | null;
+    ne?: string | null;
+  } | null;
+  /** Les saisons finies, la plus récente d'abord : leur bilan ne change plus. */
+  saisons: BilanIndexEntree[];
+  /** La saison en cours (en-cours.json). */
+  en_cours: BilanIndexEntree | null;
 }
 
 /** Une lignée de l'instantané. */

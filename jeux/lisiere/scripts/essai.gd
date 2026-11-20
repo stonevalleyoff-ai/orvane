@@ -7,6 +7,8 @@ extends Node
 #   outils/godot.sh --headless --path jeux/lisiere -- --essai --en-ligne   (sur le monde publié)
 # Il sort avec le code 0 si tout passe, 1 sinon.
 
+const Squelette := preload("res://scripts/squelette.gd")
+
 var jeu
 var ok := true
 var n := 0
@@ -89,6 +91,35 @@ func _lancer() -> void:
 	var dessinees := betes.filter(func(b): return b.sprite != null).size()
 	verif(betes.size() > 0, "des bêtes viennent, le jour : %d" % betes.size())
 	verif(dessinees > 0 and dessinees == betes.size(), "chacune est dessinée d'après sa planche (%d sur %d)" % [dessinees, betes.size()])
+	# (docs/21) ses pattes, son pied, son corps sont lus dans les parties de sa planche quand elle les a, et non plus cherchés dans
+	# le SVG ; une planche d'avant les parties est lue dans son SVG, comme avant. Les deux lectures donnent le même squelette. Le kit
+	# rend les parties dans l'image (Orvane.parties), et {} pour une planche qui ne les a pas
+	var planche: Dictionary = Orvane._planches.get("foret", {})
+	var avec := 0
+	var bien_lues := 0
+	var ecarts := []
+	for id in planche:
+		var s: Dictionary = planche[id]
+		var a := Squelette.analyser(s, 60.0)
+		var structuree: bool = typeof(s.get("parties")) == TYPE_DICTIONARY
+		avec += 1 if structuree else 0
+		bien_lues += 1 if a.get("lu", "") == ("parties" if structuree else "svg") else 0
+		var m := Squelette.ecart(a, Squelette.analyser(s, 60.0, false))
+		if m != "":
+			ecarts.append("%s : %s" % [id, m])
+	var venues := betes.filter(func(b): return b._sq.get("lu", "") == ("parties" if typeof(Orvane._silhouette(b.id, "foret").get("parties")) == TYPE_DICTIONARY else "svg")).size()
+	verif(planche.size() > 0 and bien_lues == planche.size() and venues == betes.size() and ecarts.is_empty(), "%d bêtes de la forêt sur %d ont leurs parties ; chacune est lue dans ses parties si elle les a, dans son SVG sinon (dont les %d venues), et les deux lectures donnent le même squelette%s" % [avec, planche.size(), venues, (" ; sauf : " + ", ".join(PackedStringArray(ecarts.slice(0, 3)))) if not ecarts.is_empty() else ""])
+	var une = betes[0] if betes.size() > 0 else null
+	var image: Dictionary = Orvane.parties(une.id, "foret", 96.0) if une != null else {}
+	var cadre: Dictionary = Orvane.parties(une.id, "foret") if une != null else {}
+	if une != null and typeof(Orvane._silhouette(une.id, "foret").get("parties")) == TYPE_DICTIONARY:
+		var bien: bool = not image.is_empty() and typeof(image.get("boite")) == TYPE_RECT2 and image["pattes"].size() == cadre["pattes"].size()
+		for i in image.get("pattes", []).size():
+			var q = image["pattes"][i]["points"]
+			bien = bien and typeof(q) == TYPE_PACKED_VECTOR2_ARRAY and q.size() >= 2 and q[0].is_equal_approx(cadre["pattes"][i]["points"][0] * 96.0 / 170.0)
+		verif(bien, "le kit rend ses parties dans l'image de 96 pixels (Orvane.parties) : %s, %s, %d pattes" % [str(une.nom), str(image.get("dessin", "?")), image.get("pattes", []).size()])
+	else:
+		verif(une != null and image.is_empty() and cadre.is_empty(), "sa planche n'a pas de parties : le kit n'en rend pas (Orvane.parties : {})")
 
 	print("2. Les gestes")
 	var j = jeu.joueur

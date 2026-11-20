@@ -25,6 +25,8 @@ Les plafonds :
 - **un joueur** ne compte pas plus de `par_compte_cycle` bêtes par cycle (30) ;
 - **une population** ne reçoit pas plus de `part_max_population` d'elle-même (20 %).
 
+Le plafond d'un jeu (`part_max_population_jeu`, docs/5) ne vaut pas pour l'élevage : il ne borne que ce qui est ôté. Une réintroduction n'est pas rabotée à 5 %.
+
 Un apport n'est pas lissé. Ce sont des bêtes, pas une pression : elles arrivent une fois.
 
 Un monde où personne ne relâche rien ne change en rien.
@@ -32,7 +34,7 @@ Un monde où personne ne relâche rien ne change en rien.
 ## Ce que le banc vérifie
 
 `bancs/individus.js`, section 7, sur le monde d'Orvane :
-- **Ce qui revient.** Trois joueurs relâchent chacun 30 Ysdun albinos nés en élevage, grands (taille génétique 3), dans la grotte (1 774 bêtes). L'allèle de l'albinisme y passe de 1,9 % à 6,7 %, la taille moyenne de 0,96 à 1,05. C'est ce que donne le mélange.
+- **Ce qui revient.** Trois joueurs relâchent chacun 30 Ysdun albinos nés en élevage, grands (taille génétique 3), dans la grotte (1 753 bêtes). L'allèle de l'albinisme y passe de 2 % à 6,7 %, la taille moyenne de 0,96 à 1,06. C'est ce que donne le mélange.
 - **Les plafonds.** Un seul joueur qui en relâche mille n'en compte que 30. Une libération sans génome reste un apport de bêtes au phénotype dit, comme avant.
 - **Le contrat.** Le lot connaît le génome (`schemas/pression.schema.json`).
 

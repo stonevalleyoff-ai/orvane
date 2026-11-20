@@ -36,15 +36,19 @@ moteur/solo.js        un monde solo, dans le jeu : parti de l'instantané publi�
 moteur/genres.js      les profils de genre : horreur, cozy, collection, voxel, survie, stratégie, monde partagé (docs/41)
 moteur/biomes-universels.json  les 24 biomes neutres du monde d'Orvane : terre, eau douce, mer, sous-sol
 tampon/tampon.js      exposer() Orvane → jeu ; agreger() jeu → Orvane (dénormalisation, plafonds, lissage)
+tampon/bilan.js       le bilan de saison : ce que chaque jeu a ôté et rendu à chaque population, cumulé sur la saison, publié dans bilans/ (docs/4)
 tampon/directeur.js   le directeur de mise en scène : ce qu'un jeu devrait montrer au dernier cycle, selon son genre (docs/40)
 tampon/individus.js   les individus : une bête tirée de la population réelle (son génotype, ses valeurs, ses savoirs), deux bêtes croisées, la parenté, le génome relâché (docs/35, 36)
 tampon/morceaux.js    le monde par morceaux : découper l'instantané (l'index, chaque biome, chaque lignée), et lire seulement les biomes d'un jeu (docs/21)
 monde/index.html      l’observatoire : ce que vit un monde (espèces, biomes, lignées, chaîne alimentaire, journal), et une simulation locale
 simulateur/           le simulateur de joueurs : des joueurs fictifs face aux bêtes du monde publié, nuit après nuit, par le vrai tampon et la vraie mémoire (coeur.js : le calcul ; page.js, index.html : la page) (docs/50)
+monde/bilans.js       la vue Bilans de l'observatoire : chaque jeu, saison par saison, ce qu'il a ôté et rendu, la part de l'effectif, ce que les plafonds ont raboté (docs/4)
 monde/sante.js        la vue Santé de l'observatoire : le rapport de chaque semaine sur le monde publié, ses mesures et son récit (docs/51)
 outils/sante.js       les mesures du rapport de santé d'un monde publié, et ses alertes ; --indexer : l'index des rapports (docs/51)
 monde/silhouette.js   les silhouettes de l'observatoire : chaque lignée dessinée d'après son corps et sa façon de vivre (masse, déplacements, régime, heure), chaque forme à son dessin, les machines d'après leurs modules ; un jeu peut le reprendre
 monde/herbier.js      l'herbier : chaque plante dessinée d'après sa forme, son stade, son feuillage, ce qu'elle a subi ; publié à chaque cycle dans morceaux/herbier/ (docs/49)
+monde/fiche.js        la fiche de créature : chaque lignée décrite pour la DA 2D et 3D, sa famille visuelle, ses interdits, sa parenté, ses prompts ; dans le paquet (docs/54)
+outils/fiches.js      toutes les fiches de créature d'un instantané dans un dossier : Markdown, JSON, un index (docs/54)
 BRANCHER-UN-JEU.md    brancher un jeu, pas à pas : s'inscrire, lire le monde, traduire, régler l'exposition, déposer des lots, les erreurs
 CONNECT-A-GAME.md     le même guide, en anglais ; docs/glossary.md : chaque champ, traduit en anglais
 inscription/          la page d'inscription : inscrire un jeu et recevoir ses clés, régler son exposition, vérifier une clé
@@ -82,6 +86,7 @@ bancs/dietes.js       le banc des régimes en spectre : le mangeur de fruits qui
 bancs/climat.js       le banc du climat : un âge glaciaire, un pont de terre, une île qui se peuple
 bancs/phenologie.js   le banc des saisons des plantes : une forêt nue, en fleurs, en fruits ; les butineurs et les mangeurs de fruits au fil de l'année
 bancs/herbier.js      le banc de l'herbier : chaque forme de plante dessinée, ses stades, la planche d'un biome
+bancs/fiche.js        le banc de la fiche de créature : les 243 lignées, la même fiche deux fois, la table des familles, les interdits, le Kaume point par point, les cas limites
 bancs/diversite.js    le banc de la flore riche : de 54 à 257 lignées de plantes ; qui mange quoi ; le feu qui trie les caractères ; la place qui se dispute
 bancs/succession.js   le banc de la succession : une forêt brûlée, l'herbe, les buissons, puis les arbres ; le couvert qui tombe et revient
 bancs/meteo.js        le banc de la météo : des fronts qui passent, une sécheresse qui s'installe, la vie qui suit le temps
@@ -91,6 +96,7 @@ bancs/grammaire.js    le banc de la grammaire : qui peut dire quoi, où ça port
 bancs/formes.js       le banc des corps et des vies nouvelles : la colonie qui gagne, le mille-pattes, l'étoile, la pieuvre, la naïade
 bancs/esprit.js       le banc de l'esprit : qui apprend, une tradition, la perte, chasser ensemble, la curiosité
 bancs/memoire.js      le banc de la mémoire : le jour un, les équilibres, le caractère (les mêmes joueurs, des bêtes différentes), les plafonds du tampon, l'abus, ce qui voyage, deux styles de jeu et deux faunes
+bancs/bilan.js        le banc du bilan de saison : rien ne change au monde, les comptes recomptés à part (le moteur compris), les plafonds, la saison, le cycle de nuit
 bancs/sante.js        le banc de la santé : les mesures, leurs alertes, le récit gardé, l'index, la vue de l'observatoire
 bancs/simulateur.js   le banc du simulateur : chaque style de joueurs fait la faune attendue, et le simulateur donne ce que donne la vraie nuit
 bancs/individus.js    le banc des individus et de l'élevage : Mendel, les porteurs cachés, l'héritabilité, la parenté, les hybrides, l'élevage qui revient au monde
@@ -109,13 +115,13 @@ hebergement/rythme.js le rythme d'un monde hébergé : quand ses cycles sont dus
 hebergement/veille.js la veille : un monde qui ne tourne plus, un site qui montre un vieux cycle (action .github/workflows/veille.yml, qui ouvre une issue)
 hebergement/declencheur.sql  le cycle à l'heure : le Supabase d'Orvane lance l'action GitHub chaque heure (pg_cron, pg_net), un jeton limité dans son coffre (docs/19)
 hebergement/supabase.sql  le Supabase d'Orvane : les jeux s'y inscrivent, y déposent les pressions de leurs joueurs et y proposent des noms
-mondes/orvane/        le monde d'Orvane, où tous les jeux se branchent : né de la genèse universelle, Stone Valley y joue depuis le 29 octobre 2026
+mondes/orvane/        le monde d'Orvane, où tous les jeux se branchent : né de la genèse universelle, Stone Valley y joue depuis le 29 octobre 2026 ; sur main, l'état y est une copie figée au cycle 44 : le monde vivant est sur la branche publication (mondes/orvane/LISEZ-MOI.md)
 mondes/marin/         la mer d'Orvane : une genèse sur les seuls biomes d'eau (vingt ancêtres, 29 lignées), versée dans le monde d'Orvane par une fusion (profil.monde.fusions)
 mondes/eaux-douces/   les eaux douces : une genèse sur dix lieux d'eau (dont le torrent, l'étang, le delta, les sources chaudes), 60 lignées, reliée au monde d'Orvane par trois ponts (docs/42)
 mondes/sv-1/          le premier monde de Stone Valley (sa faune), archivé
 mondes/genese-7/      un monde né de la genèse (graine 7, 3 000 cycles) : 97 lignées que personne n'a dessinées, archivé
 mondes/genese-2026/   la genèse de l'équilibrage (graine 2026, les 24 biomes universels, 3 000 cycles, 5 novembre 2026), puis 175 cycles avec tous les mécanismes éveillés : 136 lignées (36 poissons, une méduse, une pieuvre, des mille-pattes), 81 plantes, 12 plans de machines ; figée ; genese.json garde les mesures de la genèse, que l'observatoire trace (docs/13)
-docs/                 le mode d'emploi : brancher son jeu, écrire son traducteur, jouer les conduites, tirer les traits continus, l'hérédité, les hybrides, les organes, la méfiance, la stabilité, la fusion, les parcelles, la vie synthétique, la flore, les souches et les symbioses, le temps, les catalogues ouverts, le monde par morceaux, le milieu transformé, la fusion par ponts, les corps assemblés, la ponte, les cycles de vie, les traits inventés, les lieux qui changent de nature, les dérives, les régimes en spectre, le climat, la grammaire, les corps et les vies nouvelles, l'esprit, les individus, l'élevage, la chronique et les noms, la vie en groupe, le kit du traducteur (39 chapitres)
+docs/                 le mode d'emploi : brancher son jeu, écrire son traducteur, jouer les conduites, tirer les traits continus, l'hérédité, les hybrides, les organes, la méfiance, la stabilité, la fusion, les parcelles, la vie synthétique, la flore, les souches et les symbioses, le temps, les catalogues ouverts, le monde par morceaux, le milieu transformé, la fusion par ponts, les corps assemblés, la ponte, les cycles de vie, les traits inventés, les lieux qui changent de nature, les dérives, les régimes en spectre, le climat, la grammaire, les corps et les vies nouvelles, l'esprit, les individus, l'élevage, la chronique et les noms, la vie en groupe, le kit du traducteur, le directeur, les genres, les eaux douces, les versions, la vitesse et les kits, la météo, les saisons des plantes, la succession, la flore riche, l'herbier, la mémoire, la santé du moteur, la Terre, l'étalon, la fiche de créature (54 chapitres)
 ```
 
 ## Essayer

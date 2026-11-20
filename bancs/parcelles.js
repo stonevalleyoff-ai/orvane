@@ -3,7 +3,7 @@
 //  1. le découpage : rien ne se perd, une petite population n'est pas émiettée, les parcelles d'un biome se suivent en
 //     boucle, des passages seulement vers les biomes voisins, un aller-retour exact vers la vue par biome, le contrat ;
 //  2. les pressions des jeux, données par biome, réparties entre les parcelles sans rien perdre, même dites dans une parcelle où
-//     la lignée n'est pas ;
+//     la lignée n'est pas ; chaque jeu là où ses lots l'ont dit, sous son plafond (part_max_population_jeu) ;
 //  3. le monde tourne : autant de lignées, autant de bêtes, pas plus de sursauts qu'avec les biomes ;
 //  4. le premier critère de la phase 2 : une espèce introduite sur une parcelle gagne ses voisines de proche en proche ;
 //  5. le second : un défrichage sur une parcelle en chasse les bêtes vers les parcelles voisines ;
@@ -90,7 +90,17 @@ verif(Math.abs(ret(RL.taxons[tP.id][laP]) - attendu) < .01 && Math.abs(cles.redu
   verif(oteA(RV[vide]) === 0 && Math.abs(tot(RV) - tot(R0)) < 1e-3 * n0 && LA.every(p => Math.abs(oteA(RV[p.biome]) - oteA(R0[p.biome])) < 1e-3) && LA.every(p => RV[p.biome]?.q?.taille === 1.2 && RV[p.biome]?.contact?.rencontres === 40 && RV[p.biome]?.vecu?.prises === 3)
     && Object.keys(RP).filter(k => RP[k].contact || RP[k].vecu).join() === peu.biome
     && Math.abs(tot(RP) - tot(R0)) < 1e-3 * n0 && Math.abs(oteA(RP[peu.biome]) - pmaxA * peu.effectif) < 1e-3 && sousPlafond(RV) && sousPlafond(RP),
-    `${tA.id} vit dans ${LA.length} des ${parType[bA].length} parcelles de ${bA} : sa chasse et son déplacement dits en ${vide}, où elle n'est pas, sont pris dans les siennes selon leurs effectifs (${fx(tot(RV), 1)} bêtes, comme sans parcelle : ${fx(tot(R0), 1)}), qui vivent chacune le contact et le vécu entiers ; dits en ${peu.biome}, qui n'en a que ${fx(peu.effectif, 0)}, elle y perd ${fx(pmaxA * 100, 0)} % d'elle-même et le reste ailleurs (${fx(tot(RP), 1)} en tout), et le contact y reste`); }
+    `${tA.id} vit dans ${LA.length} des ${parType[bA].length} parcelles de ${bA} : sa chasse et son déplacement dits en ${vide}, où elle n'est pas, sont pris dans les siennes selon leurs effectifs (${fx(tot(RV), 1)} bêtes, comme sans parcelle : ${fx(tot(R0), 1)}), qui vivent chacune le contact et le vécu entiers ; dits en ${peu.biome}, qui n'en a que ${fx(peu.effectif, 0)}, elle y perd ${fx(pmaxA * 100, 0)} % d'elle-même et le reste ailleurs (${fx(tot(RP), 1)} en tout), et le contact y reste`);
+  // (docs/15) le plafond d'un jeu (tampon/tampon.js, part_max_population_jeu) : deux jeux, chacun posé là où SES lots l'ont dit, sous
+  // son plafond, parcelle par parcelle ; rien ne se perd, ni les bêtes ôtées, ni l'élevage, ni ce que la lignée vit des joueurs
+  const cj = .05, OA = prA.taxons[tA.id][bA], prJ = { ...prA, taxons: { [tA.id]: { [bA]: { ...OA, retrait: { '*': +(cj * WA).toFixed(3) }, deplacement: [{ vers: bP, n: +(.01 * WA).toFixed(3) }], apport: { n: 20, N: { base: 20 }, alleles: { albinisme: .5 }, a: {} } } } },
+    jeux: { [tA.id]: { [bA]: { 'jeu-a': { part: .6, plafond: cj }, 'jeu-b': { part: .4, plafond: cj } } } } };
+  const lotsJ = [{ jeu: 'jeu-a', evenements: [{ taxon: tA.id, biome: bA, action: 'prelevement', n: 3, parcelle: peu.biome }] }, { jeu: 'jeu-b', evenements: [{ taxon: tA.id, biome: bA, action: 'prelevement', n: 3, parcelle: vide }] }];
+  const RJ = Parcelles.repartir(prJ, D, Parcelles.localiser(lotsJ, D)).taxons[tA.id], vivent = LA.map(p => p.biome), dep = R => Object.values(R).reduce((s, x) => s + (x.deplacement || []).reduce((a, d) => a + d.n, 0), 0);
+  verif(oteA(RJ[vide]) === 0 && Math.abs(tot(RJ) - (cj + .01) * WA) < 1e-3 * n0 && Math.abs(dep(RJ) - .01 * WA) < 1e-3 * n0 && oteA(RJ[peu.biome]) <= 2 * cj * peu.effectif + 1e-3 && sousPlafond(RJ)
+    && Math.abs(Object.values(RJ).reduce((s, x) => s + (x.apport?.n || 0), 0) - 20) < 1e-2 && Object.values(RJ).every(x => !x.apport || x.apport.alleles.albinisme === .5)
+    && vivent.every(k => RJ[k]?.contact?.rencontres === 40 && RJ[k]?.vecu?.prises === 3 && RJ[k]?.q?.taille === 1.2),
+    `deux jeux, chacun son plafond de ${fx(cj * 100, 0)} % : A dit ${peu.biome}, B ${vide} ; ${peu.biome} perd ${fx(oteA(RJ[peu.biome]), 1)} (au plus ${fx(cj * 100, 0)} % d'elle-même par jeu), ${vide} rien, le reste ailleurs : ${fx(tot(RJ), 1)} bêtes en tout, l'élevage entier, le contact et le vécu dans chaque parcelle où la lignée vit`); }
 
 console.log(`\n3. Le monde tourne : ${CYCLES} cycles, par parcelles et par biomes`);
 const tourner = (I, n, pressions) => { let J = I, sauts = 0, mesures = 0, prev = null, sep = 0; const t0 = Date.now();

@@ -45,6 +45,12 @@ StartCoroutine(OrvaneUnity.Deposer(b, compteur, compteOpaque, rep => {
 - `compteOpaque` : un identifiant du joueur qu'Orvane ne peut pas relire, par exemple un hachage de son identifiant.
 - Un lot fait 500 événements au plus : `Clore` en fait autant qu'il faut, et `Deposer` les envoie un par un.
 - Les classes : `Instantane`, `Lignee`, `Plan`, `Population`, `Phenotype`, `Biome`, `Evenement`, `Lot`. Les détails (le corps, la vie en groupe, la migration) restent en `JObject`, à lire au besoin : `lignee.Plan.Corps["forme"]`.
+- **Les souches** (docs/18) : `inst.Souches()` les rend, les plus répandues d'abord (des `Souche` : `Nom`, `Virulence`, `Transmission`, `Origine`, `Hotes`, `Infectes`, `Parent`, `Vecteur`), `inst.Souche("souche-3")` une seule. `inst.Infection("pheva", "mangrove~3")` rend l'infection d'une lignée dans un biome ou une parcelle, par souche (`I` infectés, `R` immunisés, de 0 à 1), `inst.Infectes("pheva", "mangrove~3", "souche-3")` le nombre de bêtes infectées là, `inst.Foyers("souche-3")` où elle frappe, parcelle par parcelle (des `Foyer`), `inst.EvenementsDeSouches()` ce qui leur est arrivé au dernier cycle (`Evenement.Souche`, `Evenement.Nature` : `Natures.Naissance`, `SautHote`, `Mutation`, `Vecteur`, `Extinction` ; `Evenement.Parcelle`, et pour une extinction `Nom`, `Lieux`, `Hotes` ; `inst.NomDe(evenement)` le nom de sa souche). Une souche mal formée est laissée de côté, sans erreur ; les souches sont lues une fois par instantané. Sur une population : `Infections`, `InfectionsParParcelle`, `Parcelles`.
+
+```csharp
+foreach (var f in inst.Foyers("souche-3").Take(3))
+    Debug.Log($"{f.Taxon} à {f.Parcelle} : {f.Infectes:0} bêtes infectées ({f.I:P1})");
+```
 
 **Hors de Unity** (un serveur de jeu, un outil), le même code avec `HttpClient` : `await new OrvaneHttp(b).LireAsync()`, `await new OrvaneHttp(b).DeposerAsync(compteur, compte)`.
 
@@ -83,13 +89,51 @@ func _on_fin_de_partie() -> void:   # (ou un moment naturel : un retour au menu,
 - Les aides : `vivantes()`, `dans(biome)`, `effectif(lignee, biome)`, `majeur()`, `identite()`.
 - **Seulement les lieux qu'on joue** (le monde par morceaux, docs/21) : `var inst = await Orvane.lire_lieux(["foret"])` lit l'index du monde et ces biomes, et rend l'instantané réduit à ces biomes, au même contrat : quelques centaines de Ko au lieu de plusieurs Mo. `Orvane.assembler(index, morceaux)` fait de même avec des morceaux gardés dans le jeu (pour jouer hors ligne).
 - **Dessiner les bêtes sans moteur de dessin** : `await Orvane.lire_silhouettes("foret")` lit la planche du lieu (chaque bête dessinée de profil, et ses yeux) ; `Orvane.texture("dunvi", 96.0)` rend l'image d'une lignée à 96 pixels de large (`Image.load_svg_from_string`), `Orvane.yeux("dunvi")` où sont ses yeux dans le cadre de 170 × 90. Une planche gardée dans le jeu : `Orvane.ajouter_planche(biome, silhouettes)`.
+- **Les animer** : `Orvane.parties("dunvi", "foret", 96.0)` rend les parties du corps de la lignée (docs/21), dans l'image de 96 pixels : son `corps`, sa `tete` (son `centre`, son `museau`, son `pivot`), son `cou`, sa `queue`, ses `pattes` (chacune de la hanche au pied : ses `points` en `PackedVector2Array`, ses `epaisseurs`, son `cote`, `loin` ou `pres`, son `pied`), ses `bras`, ses `organes` (leur `attache`), ses `yeux`, son `contact` au sol (la ligne de ses pieds), le `bas` de son dessin (son ombre) et sa `boite` (un `Rect2`). Sans largeur, dans le cadre de 170 × 90. Chaque partie dit aussi ses éléments dans le SVG (`svg`), pour qui découpe le dessin, comme Lisière (`jeux/lisiere/scripts/squelette.gd`). Une planche d'avant les parties : `{}`.
+
+```gdscript
+var p := Orvane.parties("dunvi", "foret", 96.0)
+for patte in p.get("pattes", []):
+	var hanche: Vector2 = patte.points[0]
+	var pied: Vector2 = patte.points[-1]          # posé au sol
+	print(patte.cote, " ", patte.pied, " : ", hanche, " → ", pied)
+```
 - **Dessiner les plantes, lire le temps qu'il fait** (l'herbier, docs/49) : `await Orvane.lire_herbier("foret")` lit les plantes du lieu, dessinées dans leur stade du cycle ; `Orvane.plantes("foret")` les rend, les plus lourdes d'abord (leur forme, leur port, leur hauteur, leur part) ; `Orvane.texture_plante(id, 96.0, "foret")` rend l'image d'une plante à 96 pixels de large, le pied à 144/150 de sa hauteur ; `Orvane.meteo("foret")` rend le temps du lieu (`temps`, `vent`, `neige`, `secheresse`…), `Orvane.temps("foret")` son nom. Hors ligne : `Orvane.ajouter_herbier(biome, herbier)`.
 - `Orvane.lire_json(url)` lit n'importe quel document du monde ; `Orvane.oublier()` efface ce qui a été compté et pas encore clos (une partie d'essai, un jeu qui n'envoie rien).
+- **Les souches** (docs/18) : quelles souches vivent, où elles frappent, parcelle par parcelle, et ce qui leur est arrivé au dernier cycle, sans lire le JSON soi-même :
 
-**Vérifié** : la syntaxe GDScript 4 (`gdtoolkit`, à chaque PR). **Pas encore vérifié** : le kit n'a pas tourné dans Godot lui-même. Le premier jeu Godot qui s'en sert, [Lisière](../jeux/lisiere/LISEZ-MOI.md), le dira : son essai sans écran (`outils/godot.sh --headless --path jeux/lisiere -- --essai`) fait tourner le kit dans Godot 4.3.
+```gdscript
+for s in Orvane.souches():                          # les plus répandues d'abord
+	print(s.nom, " : ", s.infectes, " bêtes infectées, virulence ", s.virulence)
+var g := Orvane.souche("souche-3")                  # { id, nom, virulence, transmission, origine, apparu, hotes, infectes, parent, vecteur }
+var I := Orvane.infection("pheva", "mangrove~3")    # au cycle 59 : { "souche-3": { "i": 0.07469, "r": 0.03224 }, "souche-6": { "i": 0.007501, "r": 0.002272 } }
+var n := Orvane.infectes("pheva", "mangrove~3", "souche-3")   # le nombre de bêtes infectées là
+for f in Orvane.foyers("souche-3"):                 # où elle frappe : { taxon, biome, parcelle, effectif, i, r, infectes }
+	print(f.taxon, " à ", f.parcelle, " : ", f.infectes)
+for e in Orvane.evenements_souches():               # naissance, saut_hote, mutation, vecteur, extinction
+	print(e.nature, " de ", e.nom, " chez ", e.taxon, " ", e.lieux)   # { type, nature, souche, nom, taxon, biome, parcelle, lieux, hotes, detail }
+```
+
+  `souches_eveillees()` dit si le monde a ses souches. Une parcelle, dans un instantané d'avant l'infection par parcelle, a l'infection de son biome ; un instantané d'avant les événements de souche n'en dit rien. Une lignée, un lieu ou une souche inconnus donnent une réponse vide. `lire_lieux` (et `assembler`) gardent aussi les parcelles du monde (`inst.parcelles`).
+
+**Vérifié** : la syntaxe GDScript 4 (`gdtoolkit`, à chaque PR). Le kit tourne dans Godot 4.3 avec le premier jeu qui s'en sert, [Lisière](../jeux/lisiere/LISEZ-MOI.md) : son essai sans écran (`outils/godot.sh --headless --path jeux/lisiere -- --essai`). Les aides des souches ont tourné une fois dans Godot 4.3, sans écran, sur le monde publié du cycle 59 et sur ce monde quelques cycles plus loin, au format d'aujourd'hui : sur 960 questions, les mêmes réponses que `moteur/pathogenes.js` et que le kit Unity. **Pas encore vérifié** : un banc du kit lui-même dans Godot, à chaque PR.
+
+## Un serveur (`kits/serveur/`)
+
+Un jeu qui a un serveur (une fonction Supabase en Deno, un serveur Node) peut y déposer ses lots, avec une **clé de dépôt** que le client ne voit jamais, et demander à Orvane de l'exiger (`BRANCHER-UN-JEU.md`, chapitre 6). `kits/serveur/depot.mjs` le fait, sans dépendance, avec `fetch` seulement :
+
+```js
+import { deposer } from './depot.mjs';             // Node : import … from 'orvane/serveur', ou require('orvane/serveur') (depot.cjs)
+const r = await deposer({ cle: 'orv_…', cleDepot: 'orvdep_…' }, compteOpaque, lot);
+// { ok: true, id } · { ok: true, deja: true, id } · { ok: false, erreur, id, plusTard }
+```
+
+Il donne un `id` au lot s'il n'en a pas, et le renvoie quand le réseau flanche : un renvoi n'est jamais compté deux fois. Les types sont dans `depot.d.ts`.
+
+**Chaque lot a son id**, dans les deux kits : tiré au hasard quand le lot est clos, gardé avec lui dans la file (et sur l'appareil), il revient tel quel à chaque essai. Un lot renvoyé après une réponse perdue répond `{ ok: true, deja: true }`, et le kit l'oublie. Un lot gardé par une version d'avant en reçoit un au lancement. Un jeu qui dépose depuis son serveur envoie à ce serveur, au lieu de déposer : en Godot, `Orvane.prochain_lot()` (le JSON du prochain lot, avec son `id`) puis `Orvane.oublier_lot(id)` quand le serveur a répondu ; en Unity, `compteur.Prochain()` puis `compteur.Depose()`. **Un lot refusé pour de bon** (hors du contrat, un `id` déjà pris : le renvoyer n'y changerait rien) ne bloque jamais la file : le kit le met de côté et passe au suivant (Godot : `lots_refuses()`, `oublier_lot(id, true)` pour un lot que le serveur du jeu a vu refuser, et `rep.mis_de_cote` dans `lot_depose` ; Unity : `Reponse.Definitif`, `compteur.Refuse()`, `compteur.LotsRefuses`). Les autres refus (le réseau, un quota du jour, une clé) le laissent en tête, pour plus tard. Sur un serveur en C#, `OrvaneHttp` dépose avec la clé de dépôt (`Branchement.CleDepot`) ; elle ne va **jamais** dans un jeu publié.
 
 ## Ce qui reste ouvert
 
 - **Faire tourner le moteur dans le jeu** (un monde solo dans Unity ou Godot, docs/19) : aujourd'hui, seulement en JavaScript. Un jeu Unity ou Godot lit le monde partagé et lui écrit, mais ne fait pas encore vivre sa propre copie.
 - **Le kit Godot dans Godot** : un banc qui le fasse tourner dans le moteur, sans fenêtre.
-- **Les morceaux** (`morceaux/`, ne lire que ses biomes) : en JavaScript seulement (`tampon/morceaux.js`).
+- **Les morceaux dans le kit Unity** (`morceaux/`, ne lire que ses biomes) : le kit Godot les lit (`lire_lieux`, `assembler`, plus haut) comme le JavaScript (`tampon/morceaux.js`) ; le kit Unity lit encore l'instantané entier.

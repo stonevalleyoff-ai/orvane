@@ -18,13 +18,17 @@ namespace Orvane
         public string SupabaseUrl = "https://rospodujiyltmxitykwc.supabase.co";
         public string ClePublique = "sb_publishable_F98uYIaPrLTjhj3n7QiBOg_SOtFynn8";   // la clé publique du Supabase d'Orvane
         public string CleJeu;                                                            // la clé du jeu (orv_…), reçue à l'inscription
+        // la clé de dépôt (orvdep_…, orvane_cle_depot) : seulement sur le serveur du jeu (OrvaneHttp), JAMAIS dans un jeu publié —
+        // quiconque l'extrairait déposerait au nom du jeu. Laissée nulle, rien ne change
+        public string CleDepot;
 
         public string Instantane => MondeUrl.TrimEnd('/') + "/instantane.json";
         public string Generation0 => MondeUrl.TrimEnd('/') + "/generation-0.json";
         public string Depot => SupabaseUrl.TrimEnd('/') + "/rest/v1/rpc/orvane_deposer";
-        /// <summary>Le corps de l'appel orvane_deposer : la clé du jeu, le compte opaque du joueur, le lot.</summary>
+        /// <summary>Le corps de l'appel orvane_deposer : la clé du jeu, le compte opaque du joueur, le lot (et la clé de dépôt, sur un serveur).</summary>
         public string CorpsDepot(string compte, string lotJson) =>
-            "{\"p_cle\":" + JsonConvert.ToString(CleJeu ?? "") + ",\"p_compte\":" + JsonConvert.ToString(compte ?? "") + ",\"p_lot\":" + lotJson + "}";
+            "{\"p_cle\":" + JsonConvert.ToString(CleJeu ?? "") + ",\"p_compte\":" + JsonConvert.ToString(compte ?? "") + ",\"p_lot\":" + lotJson
+            + (string.IsNullOrEmpty(CleDepot) ? "" : ",\"p_cle_depot\":" + JsonConvert.ToString(CleDepot)) + "}";
     }
 
 #if UNITY_5_3_OR_NEWER
@@ -55,7 +59,7 @@ namespace Orvane
                 r.SetRequestHeader("Content-Type", "application/json"); r.SetRequestHeader("apikey", b.ClePublique);
                 yield return r.SendWebRequest();
                 var rep = r.result == UnityEngine.Networking.UnityWebRequest.Result.Success ? Lire(r.downloadHandler.text) : Reponse.Echec(r.error);
-                if (rep.Ok) c.Depose();
+                if (rep.Ok) c.Depose(); else if (rep.Definitif) c.Refuse();   // (refusé pour de bon : mis de côté, il ne bloque pas les suivants)
                 fini?.Invoke(rep);
             }
         }
@@ -89,7 +93,7 @@ namespace Orvane
                 Reponse rep;
                 try { var r = await http.SendAsync(q); var t = await r.Content.ReadAsStringAsync(); rep = JsonConvert.DeserializeObject<Reponse>(t) ?? Reponse.Echec("réponse vide"); }
                 catch (Exception e) { rep = Reponse.Echec(e.Message); }
-                if (rep.Ok) c.Depose();
+                if (rep.Ok) c.Depose(); else if (rep.Definitif) c.Refuse();
                 return rep;
             }
         }

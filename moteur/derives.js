@@ -97,7 +97,7 @@ function souches(ctx) {
         const id = 'souche-' + (P.prochain++), m = { nom: `${racineNom} ${GREC[k % GREC.length]}${k >= GREC.length ? Math.floor(k / GREC.length) + 1 : ''}`, virulence: v, transmission: +(.3 + 1.5 * Math.sqrt(v)).toFixed(3), origine: h.t.id, apparu: n, hotes: [h.t.id], parent: s };
         const vec = vecteurs[bid]; if (vec && vec.t.id !== h.t.id && R() < Q.vecteur) m.vecteur = vec.t.id;
         S[id] = m; const i = x.i * Q.part; out[id] = { i: +i.toPrecision(4), r: 0 }; x.i = +(x.i - i).toPrecision(4);
-        ev.push({ type: 'epidemie', taxon: h.t.id, biome: bid, detail: `la souche ${so.nom} mute chez ${h.t.nom || h.t.id} : ${m.nom}, virulence ${Math.round(v * 100)} % par cycle (sa mère : ${Math.round(so.virulence * 100)} %)${m.vecteur ? `, portée par ${Tmap.get(m.vecteur)?.nom || m.vecteur}` : ''}` });
+        ev.push({ type: 'epidemie', taxon: h.t.id, biome: bid, souche: id, nature: m.vecteur ? 'vecteur' : 'mutation', detail: `la souche ${so.nom} mute chez ${h.t.nom || h.t.id} : ${m.nom}, virulence ${Math.round(v * 100)} % par cycle (sa mère : ${Math.round(so.virulence * 100)} %)${m.vecteur ? `, portée par ${Tmap.get(m.vecteur)?.nom || m.vecteur}` : ''}` });
         break; }
     },
     evenements: ev

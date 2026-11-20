@@ -2,7 +2,9 @@
 // instantane.json fait plus d'un mégaoctet. À chaque cycle, le monde est aussi publié par morceaux, dans mondes/<id>/morceaux/ :
 //   index.json            le monde, le cycle, les biomes, le catalogue, le journal, et une ligne par lignée (son nom, sa famille,
 //                         son régime, sa masse, son effectif, ses biomes) : quelques dizaines de kilo-octets
-//   biomes/<biome>.json   les lignées qui y vivent, avec leurs seules populations de ce biome (et le cycle d'avant, pour interpoler)
+//   biomes/<biome>.json   les lignées qui y vivent, avec leurs seules populations de ce biome (et le cycle d'avant, pour interpoler) ;
+//                         dans un monde à parcelles, chacune dit son effectif et son infection parcelle par parcelle (parcelles,
+//                         infection_par_parcelle : moteur/parcelles.js, docs/15, 18)
 //   lignees/<id>.json     une lignée entière, avec toutes ses populations
 // Un jeu lit l'index, puis les biomes qu'il joue :
 //   const inst = await OrvaneMorceaux.lire('https://…/mondes/orvane/', { biomes: ['foret', 'prairie'] });
@@ -42,9 +44,10 @@ function assembler(index, parBiome) {
   }
   const taxons = index.taxons.map(x => vus.get(x.id)).filter(Boolean);
   for (const t of taxons) { t.populations.sort(ordre); for (const p of t.phenotypes) if (p.frequence_par_biome) p.frequence_par_biome = Object.fromEntries(Object.entries(p.frequence_par_biome).sort(([a], [b]) => (rang.get(a) ?? 1e9) - (rang.get(b) ?? 1e9))); }
-  const ids = new Set(taxons.map(t => t.id)), bids = new Set(index.biomes.map(b => b.id));
+  // les événements : ceux des lignées lues, des lieux, les éveils ; une souche qui s'éteint, si l'un de ses derniers lieux est lu (docs/18)
+  const ids = new Set(taxons.map(t => t.id)), bids = new Set(index.biomes.map(b => b.id)), lus = new Set(Object.values(parBiome).map(M => M.biome?.id));
   const out = { orvane: index.orvane, monde: index.monde, cycle: index.cycle, biomes: index.biomes, ...(index.parcelles ? { parcelles: index.parcelles } : {}), catalogue: index.catalogue, taxons,
-    evenements: (index.evenements || []).filter(e => e.type === 'eveil' || !e.taxon || ids.has(e.taxon) || bids.has(e.taxon)) };
+    evenements: (index.evenements || []).filter(e => e.type === 'eveil' || !e.taxon || ids.has(e.taxon) || bids.has(e.taxon) || (Array.isArray(e.lieux) && e.lieux.some(l => lus.has(l)))) };
   if (index.precedent) out.precedent = { cycle: index.precedent.cycle, taxons: (index.precedent.ids || []).map(id => prec.get(id)).filter(Boolean).map(t => ({ ...t, populations: t.populations.sort(ordre) })) };
   return out;
 }

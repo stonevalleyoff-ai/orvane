@@ -12,7 +12,7 @@ Orvane's files use French field names. This page translates them all, object by 
 | `biomes` | biomes | the places of the world (below) |
 | `catalogue` | catalogue | the knowledge the world has (`savoirs`: name, `geste` gesture, `outil` tool), the definitions of the traits carried (`traits`), continuous traits (`quantitatifs`), organs (`organes`), plant defences (`flore`), the world's own catalogue (`monde`) |
 | `taxons` | lineages | the living lineages (below) |
-| `evenements` | events | the cycle's journal: `type`, `taxon`, `biome`, `detail` |
+| `evenements` | events | the cycle's journal: `type`, `taxon`, `biome`, `detail`; a strain event (`epidemie`, `remission`) also gives `souche` (which strain: a key of `monde.pathogenes.souches`) and `nature` (what happens to it: `naissance` birth, `saut_hote` host jump, `mutation`, `vecteur` a mutant carried by an insect, `extinction`); an extinction also gives `nom` (the strain's name, as it is no longer listed), `hotes` (the lineages it took hold in) and `lieux` (the biomes where it still had sick animals at the start of the cycle); in a world of plots, `parcelle` is the plot where the event happened (`biome` is then the plot's biome) |
 | `precedent` | previous | the previous cycle in light form, to spread a change over time |
 
 ### `monde` (world)
@@ -126,6 +126,7 @@ Orvane's files use French field names. This page translates them all, object by 
 | `groupe` | group (docs/38) | how its animals live: `forme` (`solitaire` alone, `famille` family, `troupeau` herd, `bande` band, `meute` pack, `banc` school, `volee` flock, `essaim` swarm, `colonie` colony), `taille` (`min`, `typ` usual, `max`), `hierarchie` (`egalitaire`, `dominance`, `despotique`, `castes`), `meneur` leader, `sentinelles` sentinels, `chasse` (`ensemble` together, `encercle` encircling), `avec` (mixed herds) |
 | `migration` | migration (docs/38) | a seasonal migration: `vers` the wintering place, `part` the share that leaves, `depart`/`retour` phases of the year, `etat` (`au depart` leaving, `partie` away, `au retour` coming back, `au pays` at home); the animals stay counted here |
 | `infection` | infection | per strain: `i` infected share, `r` immune share |
+| `infection_par_parcelle` | infection per plot | in a world of plots, the same for each plot of the biome where a strain circulates (`infection` is their mean, weighted by head count); an absent plot has neither sick nor immune animals |
 | `energie`, `posture`, `regulation` | energy, posture, regulation | a machine: what it captures over what it spends; `neutre` neutral, `defensive`, `fuyante` fleeing, `hostile`; among animals, the share of deaths caused by machines |
 | `potentiel`, `frequences`, `reference`, `pollinisation` | potential, frequencies, reference, pollination | a plant |
 | `port`, `caracteres`, `rendement`, `appetence`, `vent` | habit, characters, yield, palatability, wind | a plant of the rich flora (docs/48): what it is mechanically (a `palmier` palm is an `arbre` tree), the inherited characters it carries, what it yields per part, how much grazers eat of it, whether wind pollinates it |
@@ -170,6 +171,7 @@ Orvane's files use French field names. This page translates them all, object by 
 | --- | --- | --- |
 | `lot` | batch | what a game sends |
 | `monde`, `instantane` | world, snapshot | the world, and the `cycle.n` the game was using |
+| `id` | id | optional: the batch's random id, kept with it until accepted; a batch resent with the same `id` counts once, and `orvane_deposer` answers `deja` (already) |
 | `familles` | families | the families the game plays |
 | `source` | source | `jeu` game, `compte` opaque player id, `zone` area |
 | `periode` | period | `debut` start, `fin` end |
@@ -186,8 +188,44 @@ Orvane's files use French field names. This page translates them all, object by 
 | `propagation_cycles`, `inertie_max` | spreading, max inertia | a change is spread over this many cycles, at most this much per cycle |
 | `traits_rendus` | rendered traits | what the game can draw; the others are merged into the base variant |
 | `seuil_extinction_jeu`, `retour_apres_extinction` | game extinction threshold, return after extinction | |
+| `part_max_population_jeu` | max share of a population per game | (game → Orvane) a game lowers for itself the per-game cap of the world's profile, never raises it |
 | `mode`, `taux_jeu`, `reference_min`, `non_rendus` | mode, game rates, min reference, not rendered | the relative mode: the game keeps its own rates and follows Orvane's changes |
 | `quantitatifs`, `mefiance`, `bestiaire` | continuous traits, wariness, bestiary | what the game shows of them |
+
+## The caps (`influence.plafonds`, in `schemas/profil.schema.json`)
+
+| field | English | meaning |
+| --- | --- | --- |
+| `par_compte_cycle` | per account per cycle | what one account can remove from a lineage in one cycle |
+| `part_max_compte`, `part_max_jeu` | max share of an account, of a game | of the total pressure on a population |
+| `part_max_population_jeu` | max share of a population per game | what a single game removes from a population in one cycle, even when it is alone (5 % in the world of Orvane), also plot by plot; what it gives back has no per-game cap |
+| `part_max_population` | max share of a population | what all games together remove from a population in one cycle |
+
+## Deposits (`hebergement/supabase.sql`)
+
+| French | English |
+| --- | --- |
+| `cle` | game key (public, in the client) |
+| `cle_admin` | admin key (secret) |
+| `cle_depot` | deposit key (secret, on the game's server only: `orvane_cle_depot`; `orvane_exiger_cle_depot` requires it) |
+| `deja` | already: the batch with this `id` was already in, it is not counted twice |
+| `plusTard` | later (`kits/serveur/depot.mjs`): keep the batch, with the same `id`, and send it again later |
+| `config` | configuration (`kits/serveur/depot.mjs`): a key or an address to fix; the batch is kept |
+| `lots_refuses`, `LotsRefuses` | refused batches (Godot, Unity kits): refused for good, set aside so they do not block the queue |
+
+## The season report (`bilans/`, `schemas/bilan.schema.json`, docs/4)
+
+| field | English | meaning |
+| --- | --- | --- |
+| `bilan` | report | what each game removed from and gave back to each population over a season |
+| `saison` | season | the world's season (`an` year, `nom` name, `de`…`a` its cycles); `tranche` a slice of 30 cycles in a world without a year |
+| `en_cours` | in progress | the season is not over: `en-cours.json` changes every cycle; a finished season's file never changes |
+| `compte` | counted | the cycles counted in this report (`de`, `a`, `cycles`) |
+| `ote`, `rendu` | removed, given back | kills, captures, moves; releases, feeding, bred animals |
+| `demande`, `applique` | asked, applied | what the game's batches asked for; what is left after every cap |
+| `rabote` | trimmed | what each cap took off: `activite` (a player's activity), `compte` (per-player cap), `part_compte`, `part_jeu` (share of one player, one game), `plafond_jeu` (a game's 5% cap), `population` (a population's cap) |
+| `part`, `part_max_cycle`, `cycle_max` | share, largest share in one cycle, that cycle | against `effectif_moyen`, the population's average head count over the cycles the game touched it; in one cycle, never above the game's `plafond` |
+| `lignees` | lineages | one line per population (a lineage in a biome) the game touched |
 
 ## Words of the world
 

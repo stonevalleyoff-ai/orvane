@@ -11,7 +11,8 @@
      Ce que vit un monde Orvane : ses espèces, ses biomes, ses lignées, ce qui s'est passé cette nuit ; et une simulation
      locale (le moteur tourne dans le navigateur, le monde publié n'est jamais touché). Sans dépendance externe :
      le moteur et le tampon sont chargés depuis ../moteur et ../tampon. Les mondes : ../mondes/liste.json.
-     Adresse partageable : ?monde=<id>&vue=<vue>&espece=<id> (et &rapport=AAAA-MM-JJ pour un rapport de santé d'avant, docs/51). -->
+     Adresse partageable : ?monde=<id>&vue=<vue>&espece=<id> (et &rapport=AAAA-MM-JJ pour un rapport de santé d'avant, docs/51 ;
+     &saison=<id> pour le bilan d'une saison finie, docs/4). -->
 <link rel="stylesheet" href="../assets/observatoire.css">
 <link rel="icon" href="../assets/embleme.svg" type="image/svg+xml">
 </head>
@@ -21,7 +22,7 @@
 <header class="atlas-masthead"><div class="atlas-wrap"><a class="atlas-brand" href="../" aria-label="Orvane, accueil"><svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M20 35V19M20 26C8 27 4 18 5 7c11 0 17 6 15 19ZM20 21C19 11 26 5 35 5c1 10-4 17-15 16Z" stroke="currentColor" stroke-width="1.5"/><path d="m11 14 9 12M28 12l-8 9" stroke="currentColor" stroke-width="1.3"/></svg><span>orvane<small>MOTEUR DU VIVANT</small></span></a><div class="atlas-links"><a href="../">Le projet</a><a href="https://github.com/stonevalleyoff-ai/orvane/blob/main/BRANCHER-UN-JEU.md">Documentation <span aria-hidden="true">↗</span></a><a class="atlas-connect" href="../inscription/">Brancher un jeu <span aria-hidden="true">→</span></a></div></div></header>
 <section class="atlas-cover" aria-labelledby="atlasTitre"><img class="atlas-cover-image" src="../assets/vallee.webp" srcset="../assets/vallee-900.webp 900w, ../assets/vallee.webp 1536w" sizes="100vw" width="1536" height="1024" alt="" fetchpriority="high"><div class="atlas-wrap"><div class="atlas-cover-copy"><p class="atlas-kicker">ORVANE / ATLAS DU VIVANT</p><h1 id="atlasTitre">L’Observatoire<span class="atlas-title-dot">.</span></h1><p id="atlasDescription">Explorer les espèces. Lire les équilibres. Voir le monde évoluer.</p></div><div class="atlas-cover-note"><span id="atlasMode">LECTURE DU MONDE</span><small>Illustration d’univers</small></div></div></section>
 <div class="tete"><div class="atlas-toolbar"><div class="ligne1"><label class="monde"><span class="world-label">MONDE OBSERVÉ</span><span class="select-wrap"><span class="world-symbol" aria-hidden="true">◎</span><select id="choixMonde" aria-label="Monde affiché"></select></span></label><div class="cycle-wrap"><span class="cycle-label">DERNIER ÉTAT</span><span class="cycle" id="etatCycle" role="status" aria-live="polite"></span></div></div>
-<nav id="nav" aria-label="Vues de l’Observatoire"><button data-v="vue"><span class="nav-symbol" aria-hidden="true">◉</span>Vue d’ensemble</button><button data-v="especes"><span class="nav-symbol" aria-hidden="true">❧</span>Espèces</button><button data-v="lignees"><span class="nav-symbol" aria-hidden="true">⑂</span>Lignées</button><button data-v="chaine"><span class="nav-symbol" aria-hidden="true">⌘</span>Chaîne alimentaire</button><button data-v="journal"><span class="nav-symbol" aria-hidden="true">≡</span>Journal</button><button data-v="sante"><span class="nav-symbol" aria-hidden="true">∿</span>Santé</button><button data-v="simuler"><span class="nav-symbol" aria-hidden="true">▷</span>Simuler</button></nav></div></div>
+<nav id="nav" aria-label="Vues de l’Observatoire"><button data-v="vue"><span class="nav-symbol" aria-hidden="true">◉</span>Vue d’ensemble</button><button data-v="especes"><span class="nav-symbol" aria-hidden="true">❧</span>Espèces</button><button data-v="lignees"><span class="nav-symbol" aria-hidden="true">⑂</span>Lignées</button><button data-v="chaine"><span class="nav-symbol" aria-hidden="true">⌘</span>Chaîne alimentaire</button><button data-v="journal"><span class="nav-symbol" aria-hidden="true">≡</span>Journal</button><button data-v="bilans"><span class="nav-symbol" aria-hidden="true">⚖</span>Bilans</button><button data-v="sante"><span class="nav-symbol" aria-hidden="true">∿</span>Santé</button><button data-v="simuler"><span class="nav-symbol" aria-hidden="true">▷</span>Simuler</button></nav></div></div>
 <div id="bandeau" role="status" aria-live="polite"></div>
 <main id="contenu"><p class="vide">Chargement du monde…</p></main>
 <footer class="atlas-footer"><div class="atlas-wrap"><a href="../">← Retour à Orvane</a><p>Le vivant se construit, cycle après cycle.</p><a href="../inscription/">Brancher votre jeu ↗</a></div></footer>
@@ -60,6 +61,7 @@
 <script src="../tampon/individus.js"></script>
 <script src="../moteur/collectif.js"></script>
 <script src="../moteur/chronique.js"></script>
+<script src="bilans.js"></script>
 <script src="sante.js"></script>
 <script>
 'use strict';
@@ -106,6 +108,7 @@ const bandeau = (html, cls = '') => { $('#bandeau').innerHTML = html ? `<p class
 function adresse() {
   const q = new URLSearchParams(); if (E.source?.id) q.set('monde', E.source.id); if (E.vue !== 'vue') q.set('vue', E.vue); if (E.vue === 'especes' && E.espece) q.set('espece', E.espece);
   if (E.vue === 'sante' && typeof SANTE !== 'undefined' && SANTE.choisi && SANTE.choisi !== SANTE.index?.rapports?.[0]?.fichier) q.set('rapport', SANTE.choisi.replace(/\.json$/, ''));   // (docs/51) un rapport d'avant se partage
+  if (E.vue === 'bilans' && typeof BILANS !== 'undefined' && BILANS.choisi && BILANS.choisi !== 'en-cours.json') q.set('saison', BILANS.choisi.replace(/\.json$/, ''));   // (docs/4) le bilan d'une saison finie aussi
   history.replaceState(null, '', '?' + q.toString());
 }
 
@@ -165,7 +168,7 @@ function entete() {
   const I = inst(); if (!I) return; const s = I.cycle.saison, local = E.H.length - E.publies;
   document.body.dataset.vue = E.vue;
   $('#atlasMode').textContent = local > 0 ? 'SIMULATION LOCALE · +' + local + ' CYCLE' + (local > 1 ? 'S' : '') : E.source?.publie ? 'MONDE PUBLIÉ · DONNÉES OBSERVÉES' : 'EXPÉRIENCE LOCALE';
-  const descriptions = { vue: 'Explorer les espèces. Lire les équilibres. Voir le monde évoluer.', especes: 'Le registre du vivant : silhouettes, populations et héritages.', lignees: 'Les histoires se séparent. Les parentés restent.', chaine: 'Chaque espèce trouve sa place dans le réseau du vivant.', journal: 'La mémoire du monde, d’un cycle au suivant.', sante: 'Le bilan de chaque semaine : la santé du moteur et du monde.', simuler: 'Explorez les possibles dans une expérience locale.' };
+  const descriptions = { vue: 'Explorer les espèces. Lire les équilibres. Voir le monde évoluer.', especes: 'Le registre du vivant : silhouettes, populations et héritages.', lignees: 'Les histoires se séparent. Les parentés restent.', chaine: 'Chaque espèce trouve sa place dans le réseau du vivant.', journal: 'La mémoire du monde, d’un cycle au suivant.', bilans: 'Ce que chaque jeu prend au monde et lui rend, saison après saison.', sante: 'Le bilan de chaque semaine : la santé du moteur et du monde.', simuler: 'Explorez les possibles dans une expérience locale.' };
   $('#atlasDescription').textContent = descriptions[E.vue] || descriptions.vue;
   $('#etatCycle').innerHTML = `cycle <b>${I.cycle.n}</b>${s ? ` · ${s.nom}` : ''}${local > 0 ? `<br><span class="ambre">+${local} simulé${local > 1 ? 's' : ''}</span>` : ''}`;
   $$('#nav button').forEach(b => { if (b.dataset.v === E.vue) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
@@ -176,7 +179,7 @@ document.addEventListener('click', e => { const b = e.target.closest('[data-esp]
 
 function rendre() {
   if (!E.H.length) return; entete(); adresse();
-  const V = { vue: vueEnsemble, especes: vueEspeces, lignees: vueLignees, chaine: vueChaine, journal: vueJournal, simuler: vueSimuler, sante: typeof vueSante === 'function' ? vueSante : null }[E.vue] || vueEnsemble;   // (docs/51) la santé : monde/sante.js
+  const V = { vue: vueEnsemble, especes: vueEspeces, lignees: vueLignees, chaine: vueChaine, journal: vueJournal, simuler: vueSimuler, sante: typeof vueSante === 'function' ? vueSante : null, bilans: typeof vueBilans === 'function' ? vueBilans : null }[E.vue] || vueEnsemble;   // (docs/51) la santé : monde/sante.js ; (docs/4) les bilans : monde/bilans.js
   V();
 }
 addEventListener('resize', (() => { let t, w0 = innerWidth; return () => { clearTimeout(t); t = setTimeout(() => { if (innerWidth === w0) return; w0 = innerWidth; if (E.vue !== 'simuler') rendre(); }, 150); }; })());
@@ -576,7 +579,7 @@ function vueJournal() {
 }
 // (docs/37) la chronique : ce que le monde retient (chronique/index.json), une année entière à la demande, le muséum et ses disparues
 const MOTS_C = { naissance: ['naissance', 'naissances'], extinction: ['extinction', 'extinctions'], catastrophe: ['catastrophe', 'catastrophes'], souche: ['maladie nouvelle', 'maladies nouvelles'],
-  epidemie: ['saut de maladie', 'sauts de maladie'], invention: ['invention', 'inventions'], nature: ['lieu changé', 'lieux changés'], climat: ['changement du climat', 'changements du climat'], meteo: ['coup de temps', 'coups de temps'], eveil: ['éveil', 'éveils'],
+  epidemie: ['saut de maladie', 'sauts de maladie'], remission: ['maladie éteinte', 'maladies éteintes'], invention: ['invention', 'inventions'], nature: ['lieu changé', 'lieux changés'], climat: ['changement du climat', 'changements du climat'], meteo: ['coup de temps', 'coups de temps'], eveil: ['éveil', 'éveils'],
   arrivee: ['arrivée d\'un monde', 'arrivées de mondes'], conception: ['plan de la Mère', 'plans de la Mère'], record: ['record', 'records'], hybridation: ['zone hybride', 'zones hybrides'], savoir: ['savoir', 'savoirs'],
   mefiance: ['méfiance', 'méfiances'], nom: ['lignée nommée', 'lignées nommées'] };
 function entreeC(e) { const t = e.taxon && inst().taxons.find(z => z.id === e.taxon);
@@ -679,6 +682,7 @@ async function simuler(n) {
   const q = new URLSearchParams(location.search);
   if (q.get('vue')) E.vue = q.get('vue'); if (q.get('espece')) { E.espece = q.get('espece'); E.ouverte = true; }
   if (/^\d{4}-\d{2}-\d{2}$/.test(q.get('rapport') || '') && typeof SANTE !== 'undefined') SANTE.voulu = q.get('rapport') + '.json';
+  if (/^[a-z0-9-]{1,60}$/.test(q.get('saison') || '') && typeof BILANS !== 'undefined') BILANS.voulu = q.get('saison') + '.json';
   listeMondes().then(() => { const id = q.get('monde') || E.mondes[0]?.id; if (id) monde(id); else exemple(); });
 })();
 </script>

@@ -2,9 +2,11 @@
 // Ce qui se vérifie sans Godot, à chaque PR :
 //  1. le projet : chaque fichier qu'il nomme (res://…) existe ; la scène de départ, l'autoload du kit ;
 //  2. le kit : la copie du jeu (jeux/lisiere/addons/orvane/) est celle du kit (kits/godot/addons/orvane/), au caractère près ;
-//  3. le monde gardé dans le jeu (donnees/) : chaque lieu a son morceau et sa planche, le jeu le propose, chaque bête du jeu son dessin, et chaque
-//     lieu son herbier (ses plantes dessinées) et de quoi jouer (des proies le jour, des chasseurs la nuit), selon les règles de scripts/donnees.gd.
-// Ce que seul Godot vérifie (que le jeu tourne) : outils/godot.sh --headless --path jeux/lisiere -- --essai
+//  3. le monde gardé dans le jeu (donnees/) : chaque lieu a son morceau et sa planche, le jeu le propose, chaque bête du jeu son dessin et ses
+//     parties (docs/21), et chaque lieu son herbier (ses plantes dessinées) et de quoi jouer (des proies le jour, des chasseurs la nuit), selon
+//     les règles de scripts/donnees.gd.
+// Ce que seul Godot vérifie (que le jeu tourne) : outils/godot.sh --headless --path jeux/lisiere -- --essai ; que ses bêtes lues dans leurs
+// parties ou dans leur SVG ont le même squelette : outils/godot.sh --headless --path jeux/lisiere --script res://outils/squelettes.gd
 //   node bancs/lisiere.js
 'use strict';
 const fs = require('fs'), path = require('path');
@@ -49,13 +51,15 @@ const faune = (M, b) => { const F = { proies_jour: [], chasseurs_nuit: [], chass
     if (ch) { F.chasseurs.push(t); if (act !== 'diurne') F.chasseurs_nuit.push(t); } else if (act !== 'nocturne') F.proies_jour.push(t); }
   if (!F.chasseurs_nuit.length) F.chasseurs_nuit = F.chasseurs.filter(t => t.plan.masse_kg >= 1);
   return F; };
-const bilan = [], sansDessin = [];
+const bilan = [], sansDessin = [], sansParties = [];
 for (const b of lieux) {
   const M = lireJ(`donnees/biomes/${b}.json`), P = lireJ(`donnees/silhouettes/${b}.json`), F = faune(M, b);
-  for (const t of [...F.proies_jour, ...F.chasseurs]) { const s = P.silhouettes[t.id]; if (!s || !s.svg.startsWith('<svg') || !s.yeux.length) sansDessin.push(`${b}/${t.id}`); }
+  for (const t of [...F.proies_jour, ...F.chasseurs]) { const s = P.silhouettes[t.id]; if (!s || !s.svg.startsWith('<svg') || !s.yeux.length) sansDessin.push(`${b}/${t.id}`);
+    else if (!Array.isArray(s.parties?.pattes) || !s.parties.corps || s.parties.pattes.some(p => !Array.isArray(p.svg) || !(p.points?.length >= 2) || p.epaisseurs?.length !== p.points.length - 1)) sansParties.push(`${b}/${t.id}`); }
   bilan.push({ b, proies: F.proies_jour.length, nuit: F.chasseurs_nuit.length });
 }
 verif(!sansDessin.length, 'chaque bête que le jeu fait venir a son dessin et ses yeux' + (sansDessin.length ? ` ; sans : ${sansDessin.slice(0, 6).join(', ')}` : ''));
+verif(!sansParties.length, 'et ses parties (docs/21) : le jeu y lit ses pattes, son pied, son corps, sans les chercher dans le SVG (scripts/squelette.gd)' + (sansParties.length ? ` ; sans : ${sansParties.slice(0, 6).join(', ')}` : ''));
 verif(bilan.every(x => x.proies >= 3 && x.nuit >= 1), 'chaque lieu se joue : ' + bilan.map(x => `${x.b} ${x.proies} proies, ${x.nuit} chasseurs de nuit`).join(' ; '));
 // (docs/49) l'herbier de chaque lieu : ses plantes dessinées, de quoi faire ses arbres, ses buissons et ses touffes
 const PORTS = { arbre: ['arbre'], buisson: ['buisson'], touffe: ['herbe', 'roseau', 'succulente', 'lichen', 'champignon'] }, herbiers = lieux.map(b => { const f = path.join(JEU, 'donnees/herbier', b + '.json'); return [b, fs.existsSync(f) ? lireJ(`donnees/herbier/${b}.json`) : null]; });

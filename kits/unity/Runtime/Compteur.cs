@@ -19,6 +19,7 @@ namespace Orvane
         public List<string> Familles = new List<string> { "animale" };
         readonly Dictionary<string, EvenementLot> evenements = new Dictionary<string, EvenementLot>();
         readonly List<string> enAttente = new List<string>();   // les lots faits, pas encore déposés (en JSON)
+        readonly List<string> refuses = new List<string>();     // les lots refusés pour de bon (hors du contrat, un id déjà pris) : à part, ils ne bloquent rien
         DateTime debut = DateTime.UtcNow;
 
         public Compteur(string jeu, string monde = "orvane") { Jeu = jeu; Monde = monde; }
@@ -43,6 +44,9 @@ namespace Orvane
 
         public int EnCours => evenements.Count;
         public int LotsEnAttente => enAttente.Count;
+        /// <summary>Les lots mis de côté (en JSON) : Orvane les a refusés pour de bon (Reponse.Definitif). OublierRefuses() les efface.</summary>
+        public IReadOnlyList<string> LotsRefuses => refuses;
+        public void OublierRefuses() => refuses.Clear();
 
         /// <summary>Clôt ce qui a été compté en lots (pour ce joueur) et les met en attente de dépôt.</summary>
         public void Clore(string compte)
@@ -51,7 +55,8 @@ namespace Orvane
             var fin = DateTime.UtcNow; var tous = evenements.Values.ToList();
             for (int i = 0; i < tous.Count; i += MaxEvenements)
             {
-                var lot = new Lot { Monde = Monde, Instantane = Instantane, Familles = Familles?.ToList(),
+                // (l'id du lot : gardé avec lui dans la file, il revient tel quel à chaque essai ; Orvane ne compte qu'une fois un lot renvoyé)
+                var lot = new Lot { Monde = Monde, Id = Guid.NewGuid().ToString("N"), Instantane = Instantane, Familles = Familles?.ToList(),
                     Source = new Source { Jeu = Jeu, Compte = compte, Zone = Zone },
                     Periode = new Periode { Debut = Iso(debut), Fin = Iso(fin) },
                     Evenements = tous.Skip(i).Take(MaxEvenements).Select(e => { e.N = Math.Min(10000, Math.Round(e.N, 3)); return e; }).ToList() };
@@ -64,19 +69,33 @@ namespace Orvane
         public string Prochain() => enAttente.Count > 0 ? enAttente[0] : null;
         /// <summary>Orvane a répondu ok : le lot est oublié.</summary>
         public void Depose() { if (enAttente.Count > 0) enAttente.RemoveAt(0); }
+        /// <summary>Orvane a refusé le lot pour de bon (Reponse.Definitif : le renvoyer n'y changerait rien) : il sort de la file, gardé à part, et les suivants partent.</summary>
+        public void Refuse() { if (enAttente.Count > 0) { refuses.Add(enAttente[0]); enAttente.RemoveAt(0); } }
 
         /// <summary>Les lots en attente et ce qui est compté, en texte : à garder avec la sauvegarde du jeu.</summary>
-        public string Sauver() => JsonConvert.SerializeObject(new Sauvegarde { Lots = enAttente.ToList(), Evenements = evenements.Values.ToList(), Debut = Iso(debut) });
+        public string Sauver() => JsonConvert.SerializeObject(new Sauvegarde { Lots = enAttente.ToList(), Refuses = refuses.ToList(), Evenements = evenements.Values.ToList(), Debut = Iso(debut) });
         public void Charger(string texte)
         {
             if (string.IsNullOrEmpty(texte)) return; var s = JsonConvert.DeserializeObject<Sauvegarde>(texte); if (s == null) return;
-            enAttente.AddRange(s.Lots ?? new List<string>());
+            enAttente.AddRange((s.Lots ?? new List<string>()).Select(AvecId));
+            refuses.AddRange(s.Refuses ?? new List<string>());
             foreach (var e in s.Evenements ?? new List<EvenementLot>())
                 if (e.Action == Actions.Deplacement) Deplacer(e.Taxon, e.Biome, e.Vers, e.N); else Compter(e.Taxon, e.Biome, e.Action, e.N, e.Phenotype, e.Parcelle, e.Age, e.Moyen);
             if (DateTime.TryParse(s.Debut, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal, out var d) && d < debut) debut = d;
         }
 
+        // un lot gardé par une version du kit qui ne donnait pas d'id en reçoit un, une fois (Sauver le garde ensuite avec lui)
+        static string AvecId(string json)
+        {
+            try
+            {
+                var o = Newtonsoft.Json.Linq.JObject.Load(new JsonTextReader(new System.IO.StringReader(json)) { DateParseHandling = DateParseHandling.None });   // (les dates restent telles quelles)
+                if (o["id"] is Newtonsoft.Json.Linq.JValue v && v.Type == Newtonsoft.Json.Linq.JTokenType.String && (string)v != "") return json;   // (un id nul ou vide se répare aussi)
+                o["id"] = Guid.NewGuid().ToString("N"); return o.ToString(Formatting.None);
+            }
+            catch (JsonException) { return json; }
+        }
         static string Iso(DateTime t) => t.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
-        class Sauvegarde { public List<string> Lots; public List<EvenementLot> Evenements; public string Debut; }
+        class Sauvegarde { public List<string> Lots; public List<string> Refuses; public List<EvenementLot> Evenements; public string Debut; }
     }
 }

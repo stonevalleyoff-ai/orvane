@@ -2,10 +2,11 @@
 // À chaque cycle, chaque lignée d'un biome dessinée, comme sur une planche de naturaliste : pour qu'un jeu, dans n'importe quel
 // moteur, montre les bêtes d'Orvane sans refaire leur dessin. Godot lit un SVG (Image.load_svg_from_string), un navigateur aussi.
 //   morceaux/silhouettes/<biome>.json : { orvane, monde, cycle, biome, cadre: [170, 90],
-//     silhouettes: { <lignée>: { svg, yeux: [[x, y, r], …], sol, phenotype } } }
+//     silhouettes: { <lignée>: { svg, yeux: [[x, y, r], …], sol, phenotype, parties } } }
 // Chaque bête est dessinée de profil, la tête à droite, sous sa variante la plus fréquente dans ce biome (monde/silhouette.js),
 // et remplit son cadre : sa taille vraie est dans son plan (masse_kg, taille_m). Ses yeux sont dans le même cadre, pour les faire
-// briller la nuit ; sol : elle tient debout sur le bas du cadre (sinon, elle nage ou flotte au milieu).
+// briller la nuit ; sol : elle tient debout sur le bas du cadre (sinon, elle nage ou flotte au milieu). Ses parties (le corps,
+// la tête, chaque patte de la hanche au pied, la queue, les organes, les yeux), dans le même cadre, pour l'animer sans lire le SVG.
 // Les plantes n'y sont pas (elles sont dans flore.json) ; une lignée sans corps ni modules non plus.
 //   Planches.planches(morceaux) → { 'silhouettes/<biome>.json': … }, morceaux : ce que rend tampon/morceaux.js (decouper)
 //   Planches.planche(M) → la planche d'un morceau de biome (biomes/<biome>.json)
@@ -34,7 +35,7 @@ function planche(M, catalogue) {
       const ph = dominant(t, b), o = {};
       try {
         const svg = nommer(S.dessiner(p.corps, p, ph?.traits || [], o), t.id);
-        silhouettes[t.id] = { svg, yeux: o.yeux || [], sol: !!o.sol, ...(ph?.id ? { phenotype: ph.id } : {}) };
+        silhouettes[t.id] = { svg, yeux: o.yeux || [], sol: !!o.sol, ...(ph?.id ? { phenotype: ph.id } : {}), ...(o.parties ? { parties: o.parties } : {}) };
       } catch (e) { /* une forme que le dessin ne connaît pas encore : la lignée n'a pas de planche, le jeu fait sans */ }
     }
   } finally { if (avant !== undefined) Co.etendre(avant); }

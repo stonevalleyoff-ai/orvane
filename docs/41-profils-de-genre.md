@@ -19,13 +19,15 @@ Un **profil de genre** est ce réglage, tout prêt. `moteur/genres.js` en donne 
 | genre | sa promesse | ce qu'il règle |
 | --- | --- | --- |
 | `neutre` | le moteur tel qu'il est | rien |
-| `horreur` | une évolution rapide, peu de variantes mais très marquées, des corps qui dérangent, des maladies | traits neufs × 2,7 ; 8 phénotypes au plus par lignée ; une silhouette qui dérive 1,8 fois plus, des formes nouvelles et des organes plus fréquents ; maladies × 2 ; séparations moitié moins ; un cycle toutes les 10 minutes |
-| `cozy` | des extinctions rares et lentes, des catastrophes douces, des maladies bénignes, un monde qui se répare | catastrophes 4 fois plus rares et deux fois moins meurtrières ; maladies 3 fois plus rares et moins virulentes ; l'habitat se refait 3 fois plus vite ; nourrir et relâcher aident davantage |
+| `horreur` | une évolution rapide, peu de variantes mais très marquées, des corps qui dérangent, des maladies | traits neufs × 2,7 ; 8 phénotypes au plus par lignée ; une silhouette qui dérive 1,8 fois plus, des formes nouvelles et des organes plus fréquents ; maladies × 2 (sans souches, voir plus bas) ; séparations moitié moins ; un cycle toutes les 10 minutes |
+| `cozy` | des extinctions rares et lentes, des catastrophes douces, des maladies bénignes, un monde qui se répare | catastrophes 4 fois plus rares et deux fois moins meurtrières ; maladies 3 fois plus rares et moins virulentes (sans souches) ; l'habitat se refait 3 fois plus vite ; nourrir et relâcher aident davantage |
 | `collection` | beaucoup de lignées, une spéciation rapide, des formes rares | séparations × 3, dès 20 cycles d'installation ; traits neufs × 1,7 ; formes nouvelles et organes plus fréquents |
 | `voxel` | un monde en parcelles que les constructions transforment | un cycle par session de jeu ; les parcelles, le milieu et la flore à éveiller |
-| `survie` | une chasse qui raréfie et rend méfiant ; le joueur, un prédateur parmi d'autres | une chasse pèse deux fois plus, jusqu'à la moitié d'une population par cycle ; la méfiance dure et monte plus vite ; maladies × 1,3 |
+| `survie` | une chasse qui raréfie et rend méfiant ; le joueur, un prédateur parmi d'autres | une chasse pèse deux fois plus, jusqu'à la moitié d'une population par cycle ; la méfiance dure et monte plus vite ; maladies × 1,3 (sans souches) |
 | `strategie` | le temps accéléré : le joueur règle le milieu et voit la sélection répondre | douze cycles par heure |
-| `mmo` | un monde pour tous, des événements de serveur | catastrophes × 2 ; maladies × 1,7 ; un compte ne pèse pas plus de 5 % de la pression |
+| `mmo` | un monde pour tous, des événements de serveur | catastrophes × 2 ; maladies × 1,7 (sans souches) ; un compte ne pèse pas plus de 5 % de la pression |
+
+**Les maladies ne se règlent pas encore dans un monde à souches.** Le réglage `maladie` d'un genre (sa chance, sa virulence) ne joue que sur l'ancien système d'épidémies, une maladie par population (`monde.regles.maladie`, docs/13). Dès qu'un monde a ses souches (`monde.pathogenes`, docs/18), ce système est coupé (`moteur/orvane.js`, `if (!SP)`) : les épidémies sont celles des souches, et leurs règles (naissance, guérison, contagion, mutation) sont des constantes du moteur (`REGLES` dans `moteur/pathogenes.js`), qu'aucun genre ni aucun monde ne règle. Or l'horreur, la survie et le mmo conseillent justement d'éveiller les souches (`mecanismes`). Dans un tel monde, « maladies × 2 », « × 1,3 », « × 1,7 » et le cozy « 3 fois plus rares » ne changent donc rien. Des règles de souches propres à chaque monde, que les genres régleront, sont prévues (issue #35, point 4.1).
 
 ## S'en servir
 

@@ -13,7 +13,7 @@ Un journal durable de ce qui compte, rangé par année du monde :
 | `naissance` | une lignée se sépare (une forme nouvelle, un régime qui change : 3) | 2 ou 3 |
 | `extinction` | une lignée s'éteint, avec sa cause | 3 (une machine ou une plante : 2) |
 | `catastrophe` | un incendie, une crue, une sécheresse | 2 |
-| `souche`, `epidemie` | une maladie nouvelle ; une souche qui gagne une lignée qu'elle n'avait jamais touchée | 2, 1 |
+| `souche`, `epidemie`, `remission` | une maladie nouvelle (une souche qui naît, une mutante, une que porte un insecte) ; une souche qui gagne une lignée qu'elle n'avait jamais touchée ; une souche qui s'éteint. Chacune dit sa souche et sa nature (`souche`, `nature`, docs/18) | 2, 1, 2 |
 | `invention` | un trait inventé, une phrase de la grammaire | 2 |
 | `nature`, `climat` | un lieu qui change de nature ; un âge du climat, un pont de terre, une île | 2 ou 3 |
 | `eveil`, `arrivee` | un mécanisme qui s'éveille ; les lignées d'un autre monde qui arrivent par une fusion | 2, 3 |
@@ -38,6 +38,8 @@ Chaque entrée dit son cycle, sa date, son titre et sa phrase :
 - `<an>.json` : toutes les entrées d'une année du monde (`monde.annee` cycles ; 120 pour le monde d'Orvane). Seul le fichier de l'année en cours change chaque nuit, une ligne par entrée.
 
 Le jour où elle s'éveille, la chronique prend acte de ce qui existe (les souches, les zones hybrides, les records) sans le raconter.
+
+**Les souches** se lisent sur les événements du cycle, qui disent laquelle et ce qui lui arrive (`souche`, `nature`, docs/18). Pour un instantané d'avant ces champs, la chronique relit leur texte, et retrouve la souche par son nom : elle dit alors exactement la même chose. Quand deux souches portent le même nom (la genèse 2026 en a cinq paires), elle départage par le monde : une souche qui naît n'était pas là au cycle d'avant, est née ce cycle chez cette lignée ; une qui s'éteint y était et n'y est plus ; une qui saute gagne cette lignée. Sans cela, la naissance d'une seconde « Liraose » disparaissait, la chronique la prenant pour la première, déjà vue. Une épidémie d'avant les souches reste du bruit.
 
 ## Le muséum
 

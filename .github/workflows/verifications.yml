@@ -39,6 +39,7 @@ jobs:
           r=0
           for f in mondes/*/profil.json; do node outils/verifier.js "$f" --profil || r=1; done
           for f in mondes/*/instantane.json mondes/*/amorce.json; do [ -f "$f" ] && { node outils/verifier.js "$f" --instantane || r=1; }; done
+          for f in mondes/*/bilans/*.json; do [ -f "$f" ] && { node outils/verifier.js "$f" || r=1; }; done   # (les bilans de saison, docs/4 : d'ordinaire dans la publication seulement)
           exit $r
       - name: le contrat ne casse rien sans sa version majeure (outils/contrat.js, docs/43)
         env:
@@ -55,6 +56,9 @@ jobs:
           mkdir -p "$RUNNER_TEMP/jeu" && cd "$RUNNER_TEMP/jeu" && npm init -y > /dev/null
           npm install --no-audit --no-fund "$RUNNER_TEMP"/orvane-*.tgz
           node -e "const o = require('orvane'); if (!o.Orvane.cycle || !o.Tampon.agreger || o.CONTRAT !== o.version.split('.').slice(0, 2).join('.')) process.exit(1); console.log('orvane', o.version, '· contrat', o.CONTRAT)"
+          node -e "const f = require('orvane/monde/fiche.js'); if (f !== require('orvane').Fiche || typeof f.ecrire !== 'function') process.exit(1); console.log('la fiche de créature se charge')"
+          node -e "const s = require('orvane/serveur'); if (typeof s.deposer !== 'function') process.exit(1); console.log('le client de dépôt des serveurs se charge (CommonJS)')"
+          node --input-type=module -e "import { deposer } from 'orvane/serveur'; if (typeof deposer !== 'function') process.exit(1); console.log('le client de dépôt des serveurs se charge (module)')"
   kits:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -72,7 +76,7 @@ jobs:
         run: |
           pip install -q "gdtoolkit==4.*"
           gdparse kits/godot/addons/orvane/orvane.gd kits/godot/addons/orvane/plugin.gd > /dev/null && echo "le kit Godot se lit"
-          gdparse jeux/lisiere/scripts/*.gd > /dev/null && echo "les scripts de Lisière se lisent"
+          gdparse jeux/lisiere/scripts/*.gd jeux/lisiere/outils/*.gd > /dev/null && echo "les scripts de Lisière et ses outils se lisent"
   bancs:
     runs-on: ubuntu-latest
     timeout-minutes: 330

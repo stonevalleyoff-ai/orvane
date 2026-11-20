@@ -6,8 +6,10 @@
 //   etat.json          l'instantané courant, complet (le moteur repart de là)
 //   instantane.json    le même, publié : c'est ce que les traducteurs lisent (GitHub Pages sert avec CORS *)
 //   historique.json    les derniers cycles (365, ou profil.monde.historique), allégés (effectifs, fréquences, événements) : pour l'observatoire
-//   tampon.json        la mémoire du tampon (lissage) et la dernière ligne lue (dernier_id)
+//   tampon.json        la mémoire du tampon (lissage), la dernière ligne lue (dernier_id), et le cumul du bilan de la saison (bilan)
 //   jeux.json          les jeux branchés sur le monde et leur exposition (publié : chaque traducteur y lit la sienne)
+//   bilans/            le bilan de chaque saison, jeu par jeu (docs/4, tampon/bilan.js) : <saison>.json pour chaque saison finie
+//                      (écrit une fois, jamais réécrit), en-cours.json (la saison en cours, refait à chaque cycle) et index.json
 //   morceaux/          le même monde par morceaux : index.json, biomes/<id>.json, lignees/<id>.json, et les planches,
 //                      silhouettes/<id>.json : chaque lignée de chaque biome dessinée (docs/21) ; herbier/<id>.json : chaque plante (docs/49)
 //   lots/              (facultatif) des lots déposés à la main ; lus en plus de Supabase, puis déplacés dans lots/traites/
@@ -29,7 +31,7 @@
 'use strict';
 const fs = require('fs'), path = require('path');
 const Genres = require('../moteur/genres.js');
-const Orvane = require('../moteur/orvane.js'), Tampon = require('../tampon/tampon.js'), Morceaux = require('../tampon/morceaux.js'), Milieu = require('../moteur/milieu.js'), Ponte = require('../moteur/ponte.js'), Stades = require('../moteur/stades.js'), Invention = require('../moteur/invention.js'), Natures = require('../moteur/natures.js'), Derives = require('../moteur/derives.js'), Dietes = require('../moteur/dietes.js'), Climat = require('../moteur/climat.js'), Meteo = require('../moteur/meteo.js'), Phenologie = require('../moteur/phenologie.js'), Succession = require('../moteur/succession.js'), Diversite = require('../moteur/diversite.js'), Grammaire = require('../moteur/grammaire.js'), Castes = require('../moteur/castes.js'), Formes = require('../moteur/formes.js'), Esprit = require('../moteur/esprit.js'), Memoire = require('../moteur/memoire.js'), Fusion = require('../moteur/fusion.js'), Parcelles = require('../moteur/parcelles.js'), Synthetique = require('../moteur/synthetique.js'), Flore = require('../moteur/flore.js'), Pathogenes = require('../moteur/pathogenes.js'), Chronique = require('../moteur/chronique.js'), Collectif = require('../moteur/collectif.js');
+const Orvane = require('../moteur/orvane.js'), Tampon = require('../tampon/tampon.js'), Bilan = require('../tampon/bilan.js'), Morceaux = require('../tampon/morceaux.js'), Milieu = require('../moteur/milieu.js'), Ponte = require('../moteur/ponte.js'), Stades = require('../moteur/stades.js'), Invention = require('../moteur/invention.js'), Natures = require('../moteur/natures.js'), Derives = require('../moteur/derives.js'), Dietes = require('../moteur/dietes.js'), Climat = require('../moteur/climat.js'), Meteo = require('../moteur/meteo.js'), Phenologie = require('../moteur/phenologie.js'), Succession = require('../moteur/succession.js'), Diversite = require('../moteur/diversite.js'), Grammaire = require('../moteur/grammaire.js'), Castes = require('../moteur/castes.js'), Formes = require('../moteur/formes.js'), Esprit = require('../moteur/esprit.js'), Memoire = require('../moteur/memoire.js'), Fusion = require('../moteur/fusion.js'), Parcelles = require('../moteur/parcelles.js'), Synthetique = require('../moteur/synthetique.js'), Flore = require('../moteur/flore.js'), Pathogenes = require('../moteur/pathogenes.js'), Chronique = require('../moteur/chronique.js'), Collectif = require('../moteur/collectif.js');
 const a = process.argv.slice(2), monde = a.find(x => !x.startsWith('--')) || 'sv-1', sansReseau = a.includes('--sans-reseau');
 const arg = (k, defaut) => { const i = a.indexOf(k); return i >= 0 && a[i + 1] != null ? +a[i + 1] : defaut; };
 let nCycles = arg('--cycles', 1) || 1;
@@ -266,6 +268,8 @@ const alleger = I => ({ cycle: I.cycle, taxons: I.taxons.map(t => ({ id: t.id, n
   const { annees: annees0 = [], derniers: derniers0 = [], ...chron0 } = lire('chronique/index.json', null) || Chronique.noter(Chronique.vide(Vavant), Vavant, { ...Vavant, evenements: [] }, { premier: true }).etat;
   let chron = chron0, museum = lire('museum.json', null) || Chronique.decrire(null, Vavant).museum;
   const ms = periodeDe(profil.monde?.cycle);
+  // (docs/4) le bilan de saison : le cumul de la saison en cours, gardé dans tampon.json ; les saisons qui s'achèvent pendant ce passage
+  let bilan = tampon.bilan || null; const finies = [];
   for (let k = 0; k < nCycles; k++) {
     // une lecture qui échoue n'arrête pas le monde : il tourne sans les lots en ligne (ils restent dans Supabase et seront lus
     // la fois suivante, dernier_id n'avance pas), et l'action le signale en clair
@@ -276,11 +280,17 @@ const alleger = I => ({ cycle: I.cycle, taxons: I.taxons.map(t => ({ id: t.id, n
         : /\b40[13]\b/.test(m) ? 'Supabase refuse la lecture : vérifiez la clé publique et l\'URL dans profil.monde.pressions' : m;
       console.log(`::error title=${monde} · lecture des pressions::${pourquoi}. Le cycle tourne sans les lots en ligne ; ils seront lus la prochaine fois.`); }
     const locaux = lotsLocaux().map(l => ({ monde: profil.monde?.id || monde, ...l })), lots = [...enLigne, ...locaux];
-    const r = Tampon.agreger(lots, vue(etat), profil, tampon, gen0, expositions);
+    const V = vue(etat), r = Tampon.agreger(lots, V, profil, tampon, gen0, expositions, { bilan: true });   // (le bilan : jeu par jeu, rien ne change aux pressions)
     if (r.rejetes && (r.rejetes.lots || r.rejetes.evenements)) console.log(`::warning title=${monde} · lots::${r.rejetes.lots || 0} lot(s) et ${r.rejetes.evenements || 0} événement(s) écartés (hors du contrat : schemas/pression.schema.json) ; le reste compte.`);
+    if (r.doublons) console.log(`${monde} : ${r.doublons} lot(s) renvoyé(s) avec le même id, comptés une fois`);   // (docs/4)
     const suivant = Orvane.cycle(etat, Parcelles.repartir(r.pressions, etat, Parcelles.localiser(lots, etat)), { duree_ms: ms });   // (docs/15) là où les jeux l'ont dit
     if (k === nCycles - 1) suivant.cycle.date = new Date(maintenant).toISOString();   // le dernier cycle est daté de son départ : les traducteurs s'y réfèrent
     if (k === 0 && arrivees.length) suivant.evenements = [...arrivees, ...(suivant.evenements || [])];   // les arrivées d'une fusion, au journal
+    // (docs/4) ce cycle dans le bilan de sa saison : chaque jeu, ce qu'il a ôté et rendu à chaque population, plafonds compris
+    const rb = Bilan.noter(bilan, { orvane: Orvane.CONTRAT, monde: { id: etat.monde.id ?? null, ne: etat.monde.ne ?? null }, n: suivant.cycle.n, date: suivant.cycle.date, annee: etat.monde.annee,
+      bilan: r.bilan, jeux, noms: Object.fromEntries(Object.keys(r.bilan || {}).flatMap(j => Object.keys(r.bilan[j].taxons)).map(tid => [tid, V.taxons.find(t => t.id === tid)?.nom ?? null])),
+      plafonds: profil.influence?.plafonds || null, memoire_cycles: profil.influence?.memoire_cycles ?? null });
+    bilan = rb.cumul; finies.push(...rb.finies);
     tampon.lisse = r.etat.lisse; tampon.lisseQ = r.etat.lisseQ; if (enLigne.length) { tampon.dernier_id = enLigne[enLigne.length - 1]._id; tampon.derniere_lecture = enLigne[enLigne.length - 1]._recu; }
     // (docs/37) une lignée neuve qui reprend l'identifiant d'une lignée éteinte (oubliée du moteur, gardée au muséum) en prend un à elle
     const ren = Chronique.dedoublonner(suivant, museum); if (ren.renommees.length) console.log(`identifiants : ${ren.renommees.map(x => `${x.de} → ${x.vers}`).join(', ')}`);
@@ -332,6 +342,23 @@ const alleger = I => ({ cycle: I.cycle, taxons: I.taxons.map(t => ({ id: t.id, n
   // (docs/49) l'herbier : chaque plante de chaque biome dessinée (morceaux/herbier/<biome>.json), avec le temps qu'il y fait
   try { if (F) { const Herbier = require('../monde/herbier.js'); fs.mkdirSync(f('morceaux/herbier'), { recursive: true }); for (const [c, o] of Object.entries(Herbier.planches(F, P.biomes, { orvane: P.orvane, monde: P.monde, cycle: P.cycle }))) ecrire('morceaux/' + c, o, true); } }
   catch (e) { console.error('herbier non dessiné :', e.message); }
+  // (docs/4) les bilans de saison : chaque saison finie une fois pour toutes (bilans/<saison>.json, jamais réécrit), la saison en cours
+  // (en-cours.json) et l'index ; ceux d'un autre monde (un monde né à nouveau) s'en vont
+  if (bilan) { fs.mkdirSync(f('bilans'), { recursive: true });
+    const finis = [];
+    for (const n of fs.readdirSync(f('bilans')).sort()) { if (!n.endsWith('.json') || n === 'index.json' || n === 'en-cours.json') continue;
+      let B = null; try { B = JSON.parse(fs.readFileSync(f('bilans/' + n), 'utf8')); } catch (e) { }
+      if (!B?.saison || B.monde?.ne !== bilan.monde.ne || B.monde?.id !== bilan.monde.id) { fs.rmSync(f('bilans/' + n), { force: true }); continue; }
+      finis.push({ bilan: B, fichier: n }); }
+    for (const C of finies) { const B = Bilan.publier(C, false);
+      // (une saison déjà écrite ne l'est pas deux fois ; une autre saison du même nom — l'année du monde a changé de durée — prend son premier cycle)
+      if (finis.some(x => x.bilan.saison.id === B.saison.id && x.bilan.compte.de === B.compte.de)) continue;
+      const id = finis.some(x => x.fichier === `${B.saison.id}.json`) ? `${B.saison.id}-${B.compte.de}` : B.saison.id;
+      if (finis.some(x => x.fichier === `${id}.json`)) continue;
+      ecrire(`bilans/${id}.json`, B); finis.push({ bilan: B, fichier: `${id}.json` });
+      console.log(`bilan de saison : ${B.saison.nom ? `${B.saison.nom} de l'an ${B.saison.an}` : B.saison.id} (cycles ${B.compte.de} à ${B.compte.a}), ${B.jeux.length} jeu${B.jeux.length > 1 ? 'x' : ''} → bilans/${id}.json`); }
+    const enCours = Bilan.publier(bilan, true); ecrire('bilans/en-cours.json', enCours); ecrire('bilans/index.json', Bilan.indexer(finis, enCours));
+    tampon.bilan = bilan; }
   ecrire('historique.json', historique, true); ecrire('tampon.json', tampon);
   console.log(`→ ${path.relative(process.cwd(), f('instantane.json'))}`);
   if (lectureEchouee) process.exitCode = 2;          // le monde est publié, mais l'action se marque en échec pour qu'on le voie

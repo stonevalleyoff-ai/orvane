@@ -8,6 +8,12 @@ Trois objets suffisent à brancher un jeu. Orvane ne connaît aucun jeu ; le jeu
 | **pression** | jeu → Orvane | le traducteur, par lot (à la sauvegarde, à la déconnexion…) | `pression.schema.json` |
 | **profil** | réglage du tampon | Orvane, un par monde (l'influence) ; l'auteur du jeu, une fois (son exposition, par `orvane_regler_jeu`) | `profil.schema.json` |
 
+Un quatrième, facultatif, dit ce que les trois premiers ont fait au monde :
+
+| objet | sens | qui l'écrit | fichier |
+| --- | --- | --- | --- |
+| **bilan de saison** | Orvane → jeux | le cycle de nuit : un par saison finie, et la saison en cours (`mondes/<id>/bilans/`, docs/4) | `bilan.schema.json`, et son index `bilan-index.schema.json` |
+
 ## Ce que le jeu lit dans un instantané
 
 - **biomes** : décrits par cinq axes de 0 à 1 et un milieu, jamais par un nom. Le traducteur fait correspondre ses biomes aux axes (le plus proche gagne).
