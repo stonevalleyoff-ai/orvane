@@ -4,8 +4,9 @@
 // sans elle, la vérification échoue. Elle vérifie aussi que la version est la même partout (package.json, le moteur, le journal).
 //   node outils/contrat.js [--base origin/main]
 // Ce qui casse dépend du sens :
-//  - ce qu'Orvane écrit et que les jeux lisent (l'instantané) : un champ retiré, un champ qui n'est plus toujours là, un type
-//    nouveau pour un champ connu. Ajouter un champ, une valeur, élargir une borne ne casse rien : un jeu ignore ce qu'il ne connaît pas ;
+//  - ce qu'Orvane écrit et que les jeux lisent (l'instantané, le bilan de saison et son index) : un champ retiré, un champ qui n'est
+//    plus toujours là, un type nouveau pour un champ connu. Ajouter un champ, une valeur, élargir une borne ne casse rien : un jeu
+//    ignore ce qu'il ne connaît pas ;
 //  - ce que les jeux écrivent et qu'Orvane lit (les lots, les profils) : un champ exigé de plus, un champ ou une valeur qu'Orvane
 //    n'accepte plus, un type, une borne, un motif plus étroits. Accepter davantage ne casse rien.
 // Sortie : 0 si tout va, 1 si un changement cassant n'a pas sa version majeure (ou si la version n'est pas la même partout).
@@ -14,7 +15,7 @@ const fs = require('fs'), path = require('path'), { execFileSync } = require('ch
 const racine = path.join(__dirname, '..');
 const a = process.argv.slice(2), arg = (k, d) => { const i = a.indexOf(k); return i >= 0 && a[i + 1] != null ? a[i + 1] : d; };
 const base = arg('--base', 'origin/main');
-const SCHEMAS = { instantane: 'sortie', pression: 'entree', profil: 'entree' };
+const SCHEMAS = { instantane: 'sortie', pression: 'entree', profil: 'entree', bilan: 'sortie', 'bilan-index': 'sortie' };   // (le bilan de saison et son index : docs/4)
 
 const git = (...x) => { try { return execFileSync('git', x, { cwd: racine, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }); } catch (e) { return null; } };
 const avant = f => { const t = git('show', `${base}:${f}`); try { return t == null ? null : JSON.parse(t); } catch (e) { return null; } };

@@ -3,16 +3,20 @@
 //   node outils/verifier.js mon-lot.json                 un lot de pressions (schemas/pression.schema.json)
 //   node outils/verifier.js mondes/orvane/instantane.json un instantané (schemas/instantane.schema.json)
 //   node outils/verifier.js mon-profil.json --profil      un profil ou une exposition (schemas/profil.schema.json)
-// Le genre du fichier se devine (evenements : un lot ; taxons : un instantané ; influence ou exposition : un profil), ou se dit
-// (--lot, --instantane, --profil). Pour un lot, il dit aussi ce que le Supabase d'Orvane refusera (orvane_deposer) : la taille,
-// le nombre d'événements, une action inconnue, un n hors de 0 à 10 000, un id mal formé. Sort en erreur (code 1) s'il trouve quelque chose.
+//   node outils/verifier.js mondes/orvane/bilans/en-cours.json   un bilan de saison (schemas/bilan.schema.json, docs/4) ; index.json : l'index
+// Le genre du fichier se devine (evenements : un lot ; taxons : un instantané ; saison et jeux : un bilan ; saisons : l'index des
+// bilans ; influence ou exposition : un profil), ou se dit (--lot, --instantane, --profil, --bilan, --bilans). Pour un lot, il dit
+// aussi ce que le Supabase d'Orvane refusera (orvane_deposer) : la taille, le nombre d'événements, une action inconnue, un n hors de
+// 0 à 10 000, un id mal formé. Pour un bilan, que ses comptes tiennent : la demande, moins ce que chaque plafond a raboté, est ce qui
+// est appliqué ; un jeu est la somme de ses lignées ; aucun jeu n'ôte en un cycle plus que son plafond. Sort en erreur (code 1) s'il
+// trouve quelque chose.
 // Le validateur ne connaît que ce dont les schémas d'Orvane se servent (type, required, properties, additionalProperties, items,
 // enum, const, minimum, maximum, minItems, maxItems, pattern, anyOf, oneOf, $ref local). Zéro dépendance ; utilisable en module :
 //   const { verifier } = require('./outils/verifier.js'); verifier(objet, 'lot') → [erreurs]
 'use strict';
 const fs = require('fs'), path = require('path');
 const racine = p => path.join(__dirname, '..', p);
-const SCHEMAS = { lot: 'pression', instantane: 'instantane', profil: 'profil' };
+const SCHEMAS = { lot: 'pression', instantane: 'instantane', profil: 'profil', bilan: 'bilan', bilans: 'bilan-index' };
 const typeDe = v => v === null ? 'null' : Array.isArray(v) ? 'array' : typeof v;
 function valider(s, v, ou, racineS, E) {
   if (!s || typeof s !== 'object' || E.length > 200) return;
@@ -48,20 +52,34 @@ function depot(lot) {
     for (const k of ['taxon', 'biome', 'vers', 'parcelle', 'phenotype']) if (e[k] != null && (typeof e[k] !== 'string' || /^(__proto__|constructor|prototype)$/.test(e[k]))) E.push(`${ou}.${k} : une chaîne, et pas un nom réservé`); });
   return E;
 }
-function genre(o) { return o?.taxons ? 'instantane' : o?.evenements ? 'lot' : o?.influence || o?.exposition ? 'profil' : null; }
+// (docs/4) ce qu'un bilan de saison doit tenir, en plus du schéma : ses comptes, au millième près (chaque nombre est arrondi au millième)
+function comptes(B) {
+  const E = [], RAB = ['activite', 'compte', 'part_compte', 'part_jeu', 'plafond_jeu', 'population'], tol = n => 1e-3 * (n + 1) + 1e-9;
+  const tient = (x, ou) => { if (!x || typeof x.demande !== 'number') return; const r = RAB.reduce((s, k) => s + (x.rabote?.[k] || 0), 0);
+    if (x.applique > x.demande + 1e-9) E.push(`${ou} : plus d'appliqué (${x.applique}) que de demandé (${x.demande})`);
+    if (Math.abs(x.demande - r - x.applique) > tol(2 * RAB.length)) E.push(`${ou} : demandé ${x.demande}, raboté ${+r.toFixed(3)}, appliqué ${x.applique} : le compte n'y est pas`); };
+  (Array.isArray(B?.jeux) ? B.jeux : []).forEach((j, i) => { const L = Array.isArray(j?.lignees) ? j.lignees : [], ou = `$.jeux[${i}] (${j?.id})`;
+    for (const c of ['ote', 'rendu']) { tient(j[c], `${ou}.${c}`);
+      for (const k of ['demande', 'applique']) { const s = L.reduce((a, x) => a + (x?.[c]?.[k] || 0), 0); if (j[c] && Math.abs(s - j[c][k]) > tol(L.length)) E.push(`${ou}.${c}.${k} : ${j[c][k]}, ses lignées : ${+s.toFixed(3)}`); } }
+    L.forEach((x, n) => { for (const c of ['ote', 'rendu']) tient(x?.[c], `${ou}.lignees[${n}].${c}`);
+      if (typeof j.plafond === 'number' && x?.ote?.part_max_cycle > j.plafond + 1e-6) E.push(`${ou}.lignees[${n}] : ${x.taxon} en ${x.biome}, ${x.ote.part_max_cycle} ôté en un cycle, au-delà du plafond du jeu (${j.plafond})`); }); });
+  return E;
+}
+function genre(o) { return o?.taxons ? 'instantane' : o?.evenements ? 'lot' : Array.isArray(o?.saisons) ? 'bilans' : o?.saison && Array.isArray(o?.jeux) ? 'bilan' : o?.influence || o?.exposition ? 'profil' : null; }
 function verifier(o, g = genre(o)) {
-  if (!SCHEMAS[g]) return [`je ne sais pas ce qu'est ce fichier : --lot, --instantane ou --profil`];
+  if (!SCHEMAS[g]) return [`je ne sais pas ce qu'est ce fichier : --lot, --instantane, --profil, --bilan ou --bilans`];
   const S = JSON.parse(fs.readFileSync(racine(`schemas/${SCHEMAS[g]}.schema.json`), 'utf8')), E = [];
-  valider(S, o, '$', S, E); if (g === 'lot') E.push(...depot(o));
+  valider(S, o, '$', S, E); if (g === 'lot') E.push(...depot(o)); if (g === 'bilan') E.push(...comptes(o));
   // (une lignée éteinte reste listée 10 cycles, sans population ; une lignée vivante en a au moins une)
   if (g === 'instantane' && Array.isArray(o.taxons)) o.taxons.forEach((t, i) => { if (t && !t.eteint && Array.isArray(t.populations) && !t.populations.length) E.push(`$.taxons[${i}].populations : une lignée vivante (${t.id}) vit au moins quelque part`); });
   return E;
 }
 if (require.main === module) {
-  const a = process.argv.slice(2), f = a.find(x => !x.startsWith('--')); if (!f) { console.log('node outils/verifier.js <fichier.json> [--lot|--instantane|--profil]'); process.exit(2); }
+  const a = process.argv.slice(2), f = a.find(x => !x.startsWith('--')); if (!f) { console.log('node outils/verifier.js <fichier.json> [--lot|--instantane|--profil|--bilan|--bilans]'); process.exit(2); }
   let o; try { o = JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { console.error(`${f} ne se lit pas : ${e.message}`); process.exit(1); }
-  const g = ['lot', 'instantane', 'profil'].find(x => a.includes('--' + x)) || genre(o), E = verifier(o, g);
-  if (!E.length) { console.log(`✓ ${f} : ${g === 'lot' ? 'un lot' : g === 'instantane' ? 'un instantané' : 'un profil'} conforme au contrat${g === 'lot' ? ', qu\'orvane_deposer acceptera' : ''}`); process.exit(0); }
+  const g = ['lot', 'instantane', 'profil', 'bilans', 'bilan'].find(x => a.includes('--' + x)) || genre(o), E = verifier(o, g);
+  const quoi = { lot: 'un lot', instantane: 'un instantané', profil: 'un profil', bilan: 'un bilan de saison', bilans: "l'index des bilans" }[g] || g;
+  if (!E.length) { console.log(`✓ ${f} : ${quoi} conforme au contrat${g === 'lot' ? ', qu\'orvane_deposer acceptera' : g === 'bilan' ? ', ses comptes tiennent' : ''}`); process.exit(0); }
   console.log(`✗ ${f} (${g}) : ${E.length} problème${E.length > 1 ? 's' : ''}`); for (const e of E.slice(0, 50)) console.log('  ' + e); if (E.length > 50) console.log(`  … et ${E.length - 50} autres`); process.exit(1);
 }
-module.exports = { verifier, valider, depot, genre };
+module.exports = { verifier, valider, depot, comptes, genre };
