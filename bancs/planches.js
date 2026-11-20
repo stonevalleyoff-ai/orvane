@@ -122,7 +122,9 @@ function regle(dessin, plan, cat) {
   const avant = Co.etendre(cat), c = Co.normaliser(plan.corps); Co.etendre(avant); const p = c.pattes;
   const R = { quadrupede: { pattes: 4 }, bipede: { pattes: 2, bras: 2 }, oiseau: { pattes: 2 }, insecte: { pattes: 2 * borne(Math.round((p || 6) / 2), 2, 5) },
     'mille-pattes': { pattes: 2 * borne(Math.round((p || 24) / 2), 6, 16) }, serpent: { pattes: 0 }, poisson: { pattes: 0 }, pieuvre: { pattes: 0, bras: borne(p || 8, 4, 10) },
-    meduse: { pattes: 0, bras: borne(p || 5, 4, 8) }, etoile: { pattes: 0, bras: borne(p || 5, 4, 8) }, machine: { pattes: 4 } }[dessin] || { pattes: p };
+    meduse: { pattes: 0, bras: borne(p || 5, 4, 8) }, etoile: { pattes: 0, bras: borne(p || 5, 4, 8) }, machine: { pattes: 4 },
+    // (docs/21) les variantes : leurs pattes, leurs nageoires, leurs ailes sont dessinées, mais pas encore publiées en parties articulées
+    ...Object.fromEntries(['gasteropode', 'bivalve', 'araignee', 'ecrevisse', 'gammare', 'papillon', 'abeille', 'plancton', 'chauve-souris', 'grenouille', 'phoque', 'tortue-marine'].map(d => [d, { pattes: 0 }])) }[dessin] || { pattes: p };
   const rayonne = ['pieuvre', 'meduse', 'etoile'].includes(dessin);
   return { ...R, plan: dessin === 'machine' ? 4 : p, dessinees: rayonne ? R.bras : R.pattes };
 }
