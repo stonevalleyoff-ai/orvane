@@ -55,6 +55,9 @@ jobs:
           mkdir -p "$RUNNER_TEMP/jeu" && cd "$RUNNER_TEMP/jeu" && npm init -y > /dev/null
           npm install --no-audit --no-fund "$RUNNER_TEMP"/orvane-*.tgz
           node -e "const o = require('orvane'); if (!o.Orvane.cycle || !o.Tampon.agreger || o.CONTRAT !== o.version.split('.').slice(0, 2).join('.')) process.exit(1); console.log('orvane', o.version, '· contrat', o.CONTRAT)"
+          node -e "const f = require('orvane/monde/fiche.js'); if (f !== require('orvane').Fiche || typeof f.ecrire !== 'function') process.exit(1); console.log('la fiche de créature se charge')"
+          node -e "const s = require('orvane/serveur'); if (typeof s.deposer !== 'function') process.exit(1); console.log('le client de dépôt des serveurs se charge (CommonJS)')"
+          node --input-type=module -e "import { deposer } from 'orvane/serveur'; if (typeof deposer !== 'function') process.exit(1); console.log('le client de dépôt des serveurs se charge (module)')"
   kits:
     runs-on: ubuntu-latest
     timeout-minutes: 15

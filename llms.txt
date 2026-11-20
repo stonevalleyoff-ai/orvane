@@ -27,7 +27,7 @@ Points essentiels :
 
 ## Écrire un traducteur
 
-- [Le mode d'emploi](https://raw.githubusercontent.com/stonevalleyoff-ai/orvane/main/docs/LISEZ-MOI.md) : 39 chapitres
+- [Le mode d'emploi](https://raw.githubusercontent.com/stonevalleyoff-ai/orvane/main/docs/LISEZ-MOI.md) : 52 chapitres
 - [Lire un instantané](https://raw.githubusercontent.com/stonevalleyoff-ai/orvane/main/docs/1-lire-un-instantane.md)
 - [Renvoyer des pressions](https://raw.githubusercontent.com/stonevalleyoff-ai/orvane/main/docs/4-renvoyer-des-pressions.md)
 - [L'exemple Stone Valley](https://raw.githubusercontent.com/stonevalleyoff-ai/orvane/main/docs/6-exemple-stone-valley.md)
@@ -35,6 +35,7 @@ Points essentiels :
 
 - [Le temps](https://raw.githubusercontent.com/stonevalleyoff-ai/orvane/main/docs/19-le-temps.md) : un monde à son rythme (`monde.cycle`), et un monde solo dans le jeu (`moteur/solo.js`), en temps réel ou en accéléré, pour un jeu solo ou hors ligne
 - [Les catalogues ouverts](https://raw.githubusercontent.com/stonevalleyoff-ai/orvane/main/docs/20-catalogues-ouverts.md) : un monde peut porter ses propres axes, traits, organes et formes de corps (`catalogue.monde`) ; un traducteur les lit dans l'instantané et étend `corps.js` avec (`OrvaneCorps.etendre`)
+- [La fiche de créature](https://raw.githubusercontent.com/stonevalleyoff-ai/orvane/main/docs/52-fiche-de-creature.md) : chaque lignée décrite pour la DA 2D et 3D (`monde/fiche.js`, `require('orvane').Fiche`) : sa famille visuelle, ce qu'elle a et ce qu'elle n'a pas, chaque phrase avec sa source ; des prompts en anglais (2D, 3D, négatif, palette)
 
 ## Optional
 

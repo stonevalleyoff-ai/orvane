@@ -9,7 +9,7 @@ N'importe quel jeu peut s'y brancher. Il lit le monde et en fait ses créatures,
 - **Voir le monde vivre** : [l'observatoire](https://stonevalleyoff-ai.github.io/orvane/monde/?monde=orvane), [la démo](https://stonevalleyoff-ai.github.io/orvane/demo/) : un jeu minuscule branché sur le monde, et [le simulateur](https://stonevalleyoff-ai.github.io/orvane/simulateur/) : des joueurs fictifs, et ce que les bêtes en retiennent
 - **Pour les studios** : [ce qu'Orvane apporte à un jeu](https://stonevalleyoff-ai.github.io/orvane/studios/), et [se brancher en une heure](EN-UNE-HEURE.md)
 - **Brancher un jeu** : [le guide pas à pas](BRANCHER-UN-JEU.md) et [la page d'inscription](https://stonevalleyoff-ai.github.io/orvane/inscription/) ; in English: [CONNECT-A-GAME.md](CONNECT-A-GAME.md) and [the field glossary](docs/glossary.md)
-- **Écrire son traducteur** : [le mode d'emploi en 39 chapitres](docs/LISEZ-MOI.md)
+- **Écrire son traducteur** : [le mode d'emploi en 52 chapitres](docs/LISEZ-MOI.md)
 - **Le fonctionnement, fichier par fichier** : [LISEZ-MOI.md](LISEZ-MOI.md) et [l'hébergement](hebergement/LISEZ-MOI.md)
 
 ## Comment ça marche
