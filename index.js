@@ -19,7 +19,7 @@ module.exports = {
   Memoire: require('./moteur/memoire.js'),                   // ce que les bêtes apprennent des joueurs : lire une population, son attitude (docs/50)
   Pathogenes: require('./moteur/pathogenes.js'),             // les souches : lesquelles vivent, où elles frappent (par parcelle), ce qui leur arrive (docs/18)
   Corps: require('./moteur/corps.js'),                       // la silhouette d'une lignée (docs/11, 33)
-  Fiche: require('./monde/fiche.js'),                        // la fiche de créature d'une lignée, pour la DA 2D et 3D (docs/52)
+  Fiche: require('./monde/fiche.js'),                        // la fiche de créature d'une lignée, pour la DA 2D et 3D (docs/54)
   Individus: require('./tampon/individus.js'),               // une bête tirée de sa population (docs/35)
   Morceaux: require('./tampon/morceaux.js'),                 // un instantané en morceaux, pour le lire en partie (docs/19)
   Directeur: require('./tampon/directeur.js'),               // ce qu'un jeu de ce genre devrait montrer (docs/40)

@@ -1,4 +1,4 @@
-// Orvane — LA FICHE DE CRÉATURE (monde/fiche.js) — docs/52
+// Orvane — LA FICHE DE CRÉATURE (monde/fiche.js) — docs/54
 // Une lignée décrite en entier, pour qu'un dessinateur, un modeleur 3D ou une IA d'image la rendent fidèlement : ce qu'elle a, et
 // surtout ce qu'elle n'a pas ; ses couleurs, sa taille vraie, sa façon de bouger, son milieu, ses variantes, ce qui la distingue de
 // sa mère. Tout vient de l'instantané, et chaque phrase dit d'où elle vient : une donnée (le champ et sa valeur, entre parenthèses)
@@ -109,7 +109,7 @@ const FAMILLES = {
   machine:    { tegument: ['panneaux et métal', 'metal panels'], lecture: 'une machine de la Mère', autres: [['de chair', 'flesh'], ['de poil', 'fur'], ['d\'yeux vivants', 'organic eyes']] },
 };
 const QB = k => k.plan === 'quadrupede' || k.plan === 'bipede';
-// Les règles, dans l'ordre : la première qui convient choisit. Chacune dit pourquoi, en une phrase (docs/52 : les cas ambigus de l'issue 39).
+// Les règles, dans l'ordre : la première qui convient choisit. Chacune dit pourquoi, en une phrase (docs/54 : les cas ambigus de l'issue 39).
 const REGLES = [
   { id: 'machine', famille: 'machine', quand: 'régime synthétique : une machine de la Mère, avec ou sans corps', cas: 'clair',
     pourquoi: 'Une machine n\'a pas de peau : son aspect vient de ses modules (docs/16), comme sur les planches.', si: k => k.machine },
@@ -822,7 +822,7 @@ function rediger(t, I, opt, C) {
 
   // —— la fiche en Markdown ——
   const tete = `### ${t.nom_commun ? t.nom_commun + ' — ' : ''}${t.nom || t.id} (\`${t.id}\`)`;
-  const chapeau = `*Fiche de créature d'Orvane (monde/fiche.js, docs/52), tirée de l'instantané${I.cycle?.n != null ? ' du cycle ' + fr(I.cycle.n) : ''}${I.monde?.id ? ' du monde `' + I.monde.id + '`' : ''} ; table des familles ${VERSION}. Entre parenthèses, en \`code\` : la donnée et sa valeur. En italique, « interprété » ou « règle » : une décision de la direction artistique.*`;
+  const chapeau = `*Fiche de créature d'Orvane (monde/fiche.js, docs/54), tirée de l'instantané${I.cycle?.n != null ? ' du cycle ' + fr(I.cycle.n) : ''}${I.monde?.id ? ' du monde `' + I.monde.id + '`' : ''} ; table des familles ${VERSION}. Entre parenthèses, en \`code\` : la donnée et sa valeur. En italique, « interprété » ou « règle » : une décision de la direction artistique.*`;
   const md = [tete, '', chapeau, ''];
   for (const s0 of S) { const puces = s0.phrases.filter(x => x.startsWith('- ')), autres = s0.phrases.filter(x => !x.startsWith('- '));
     if (s0.titre === 'Prompts') { md.push(`**${s0.titre}.**`, '', ...s0.phrases.flatMap(x => [x, ''])); continue; }

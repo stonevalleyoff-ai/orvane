@@ -1,4 +1,4 @@
-// Orvane — LE BANC DE LA FICHE DE CRÉATURE (bancs/fiche.js, docs/52)
+// Orvane — LE BANC DE LA FICHE DE CRÉATURE (bancs/fiche.js, docs/54)
 // Sur trois mondes publiés (Orvane au cycle 44, la genèse 2026, la genèse 7) :
 //  1. chaque lignée a sa fiche, sans erreur ni trou (undefined, NaN), en treize sections, et chaque phrase (chaque proposition qui
 //     finit par un point) dit sa source : une donnée, ou une règle de DA ; les valeurs citées sont celles de l'instantané ;

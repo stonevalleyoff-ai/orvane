@@ -24,6 +24,7 @@ moteur/phenologie.js  les saisons des plantes : le feuillage caduc ou persistant
 moteur/diversite.js   la flore riche : quarante-sept formes de plantes, douze caractères hérités, la radiation, la concurrence pour la place, la colonisation, les extinctions (docs/48)
 moteur/succession.js  les plantes sous le feu : les catastrophes et le sec leur prennent des pieds, l'herbe puis les buissons reprennent la place des arbres, le couvert suit les arbres (docs/47)
 moteur/meteo.js       la météo : le temps du cycle dans chaque lieu, parcelle par parcelle (la pluie, la neige, le gel, les orages, les canicules) (docs/45)
+moteur/calendrier.js  le calendrier d'un monde réel : un cycle est un jour, la saison de chaque lieu tirée de son climat, le soleil, la lune, le pas de temps (docs/52)
 moteur/grammaire.js   la grammaire des effets et des conduites : une lueur qui attire, une décharge qui foudroie, un musc qui repousse (docs/32)
 moteur/castes.js      les castes : des colonies, une reine, des ouvrières, des soldats (docs/33)
 moteur/formes.js      les formes nouvelles : le corps segmenté, rayonné, à tentacules (docs/33)
@@ -46,8 +47,8 @@ monde/sante.js        la vue Santé de l'observatoire : le rapport de chaque sem
 outils/sante.js       les mesures du rapport de santé d'un monde publié, et ses alertes ; --indexer : l'index des rapports (docs/51)
 monde/silhouette.js   les silhouettes de l'observatoire : chaque lignée dessinée d'après son corps et sa façon de vivre (masse, déplacements, régime, heure), chaque forme à son dessin, les machines d'après leurs modules ; un jeu peut le reprendre
 monde/herbier.js      l'herbier : chaque plante dessinée d'après sa forme, son stade, son feuillage, ce qu'elle a subi ; publié à chaque cycle dans morceaux/herbier/ (docs/49)
-monde/fiche.js        la fiche de créature : chaque lignée décrite pour la DA 2D et 3D, sa famille visuelle, ses interdits, sa parenté, ses prompts ; dans le paquet (docs/52)
-outils/fiches.js      toutes les fiches de créature d'un instantané dans un dossier : Markdown, JSON, un index (docs/52)
+monde/fiche.js        la fiche de créature : chaque lignée décrite pour la DA 2D et 3D, sa famille visuelle, ses interdits, sa parenté, ses prompts ; dans le paquet (docs/54)
+outils/fiches.js      toutes les fiches de créature d'un instantané dans un dossier : Markdown, JSON, un index (docs/54)
 BRANCHER-UN-JEU.md    brancher un jeu, pas à pas : s'inscrire, lire le monde, traduire, régler l'exposition, déposer des lots, les erreurs
 CONNECT-A-GAME.md     le même guide, en anglais ; docs/glossary.md : chaque champ, traduit en anglais
 inscription/          la page d'inscription : inscrire un jeu et recevoir ses clés, régler son exposition, vérifier une clé
@@ -89,6 +90,8 @@ bancs/fiche.js        le banc de la fiche de créature : les 243 lignées, la m�
 bancs/diversite.js    le banc de la flore riche : de 54 à 257 lignées de plantes ; qui mange quoi ; le feu qui trie les caractères ; la place qui se dispute
 bancs/succession.js   le banc de la succession : une forêt brûlée, l'herbe, les buissons, puis les arbres ; le couvert qui tombe et revient
 bancs/meteo.js        le banc de la météo : des fronts qui passent, une sécheresse qui s'installe, la vie qui suit le temps
+bancs/terre.js        le banc de la Terre : le soleil, la lune, les saisons des deux hémisphères, un pas de 1 au bit près, un cerf qui vit quinze ans, un monde réel au jour
+outils/etalon.js      l'étalon : l'Europe vit trois années sans joueurs, et le moteur est noté sur ce que la réalité connaît (docs/53) ; chaque dimanche (.github/workflows/etalon.yml), sur la branche etalon
 bancs/grammaire.js    le banc de la grammaire : qui peut dire quoi, où ça porte, des phrases variées, la sélection
 bancs/formes.js       le banc des corps et des vies nouvelles : la colonie qui gagne, le mille-pattes, l'étoile, la pieuvre, la naïade
 bancs/esprit.js       le banc de l'esprit : qui apprend, une tradition, la perte, chasser ensemble, la curiosité
@@ -118,7 +121,7 @@ mondes/eaux-douces/   les eaux douces : une genèse sur dix lieux d'eau (dont le
 mondes/sv-1/          le premier monde de Stone Valley (sa faune), archivé
 mondes/genese-7/      un monde né de la genèse (graine 7, 3 000 cycles) : 97 lignées que personne n'a dessinées, archivé
 mondes/genese-2026/   la genèse de l'équilibrage (graine 2026, les 24 biomes universels, 3 000 cycles, 5 novembre 2026), puis 175 cycles avec tous les mécanismes éveillés : 136 lignées (36 poissons, une méduse, une pieuvre, des mille-pattes), 81 plantes, 12 plans de machines ; figée ; genese.json garde les mesures de la genèse, que l'observatoire trace (docs/13)
-docs/                 le mode d'emploi : brancher son jeu, écrire son traducteur, jouer les conduites, tirer les traits continus, l'hérédité, les hybrides, les organes, la méfiance, la stabilité, la fusion, les parcelles, la vie synthétique, la flore, les souches et les symbioses, le temps, les catalogues ouverts, le monde par morceaux, le milieu transformé, la fusion par ponts, les corps assemblés, la ponte, les cycles de vie, les traits inventés, les lieux qui changent de nature, les dérives, les régimes en spectre, le climat, la grammaire, les corps et les vies nouvelles, l'esprit, les individus, l'élevage, la chronique et les noms, la vie en groupe, le kit du traducteur, le directeur, les genres, les eaux douces, les versions, la vitesse et les kits, la météo, les saisons des plantes, la succession, la flore riche, l'herbier, la mémoire, la santé du moteur, la fiche de créature (52 chapitres)
+docs/                 le mode d'emploi : brancher son jeu, écrire son traducteur, jouer les conduites, tirer les traits continus, l'hérédité, les hybrides, les organes, la méfiance, la stabilité, la fusion, les parcelles, la vie synthétique, la flore, les souches et les symbioses, le temps, les catalogues ouverts, le monde par morceaux, le milieu transformé, la fusion par ponts, les corps assemblés, la ponte, les cycles de vie, les traits inventés, les lieux qui changent de nature, les dérives, les régimes en spectre, le climat, la grammaire, les corps et les vies nouvelles, l'esprit, les individus, l'élevage, la chronique et les noms, la vie en groupe, le kit du traducteur, le directeur, les genres, les eaux douces, les versions, la vitesse et les kits, la météo, les saisons des plantes, la succession, la flore riche, l'herbier, la mémoire, la santé du moteur, la Terre, l'étalon, la fiche de créature (54 chapitres)
 ```
 
 ## Essayer

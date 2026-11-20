@@ -1,0 +1,273 @@
+// Orvane — L'ÉTALON (outils/etalon.js) — docs/53
+// Le monde d'Orvane est inventé : rien ne dit si ses lynx mangent trop, si ses hivers usent assez. L'Europe (mondes/europe/, docs/52)
+// tourne sur le même moteur, avec de vraies espèces et un vrai climat : là, la réalité sait la réponse. L'étalon fait vivre l'Europe
+// plusieurs années, sans joueurs, et note le moteur sur ce que la réalité connaît ET que l'assemblage n'a pas calé :
+//  1. la stabilité : chaque espèce garde son ordre de grandeur d'une année sur l'autre (la moyenne de sa dernière année, rapportée à
+//     celle d'avant : deux moyennes sur toutes les saisons ; la première année est celle du calage, docs/53), et aucune ne s'éteint ;
+//  2. les saisons : le jour de l'année où naissent la plupart des faons (le chevreuil, le cerf) ; le jour où les cigognes partent
+//     hiverner et celui où elles reviennent ;
+//  3. les prédateurs : combien de carnivores vivent de dix tonnes de proies. Carbone et Gittleman (2002, Science 295) le mesurent sur
+//     25 espèces : 89,1 × masse^−1,05 bêtes par 10 000 kg de proies (un loup de 30 kg : 2,5). Pour chaque carnivore, ses proies sont
+//     les oiseaux et les mammifères que le moteur lui laisse manger, dans les lieux où il vit ;
+//  et un garde-fou, que l'assemblage a posé et que le moteur ne doit pas défaire : la loi de Damuth (la densité des mammifères suit
+//  leur masse^−0,75).
+// Chaque test a sa cible, sa tolérance, sa source : il passe (✓), il est limite (≈, au plus deux fois la tolérance) ou il échoue (✗).
+// Un échec est un renseignement, pas une panne : il dit ce que le moteur ne sait pas encore faire.
+//   node outils/etalon.js [--monde europe] [--ans 3] [--sortie etalon/europe/AAAA-MM-JJ.json] [--date AAAA-MM-JJ]
+// L'amorce du monde (mondes/<monde>/amorce.json) est le point de départ, toujours le même : deux lancements donnent le même rapport.
+// Une année d'Europe prend ~25 minutes sur un ordinateur. Node, sans dépendance.
+'use strict';
+const fs = require('fs'), path = require('path');
+const Orvane = require('../moteur/orvane.js');
+const a = process.argv.slice(2), arg = (k, d) => { const i = a.indexOf(k); return i >= 0 && a[i + 1] != null ? a[i + 1] : d; };
+const MONDE = arg('--monde', 'europe'), ANS = Math.max(1, +arg('--ans', 3)), racine = p => path.join(__dirname, '..', p);
+const somme = L => L.reduce((s, x) => s + x, 0), r = (x, d = 3) => +Number(x).toFixed(d), clamp = (v, x, y) => Math.min(y, Math.max(x, v));
+const doy = j => { const d = new Date(j + 'T12:00:00Z'); return Math.round((d - Date.UTC(d.getUTCFullYear(), 0, 1)) / 864e5) + 1; };
+const dateDe = n => new Date(Date.UTC(2027, 0, 1) + (n - 1) * 864e5).toISOString().slice(5, 10).split('-').reverse().join('/');
+const classe = t => t.reel?.classe ?? String(t.reel?.groupe || '').split(' ')[0];
+
+// --- plusieurs histoires (--graines K) : le hasard du moteur (les catastrophes, la fondation d'un lieu, les mutations) vient de la graine du
+// monde ; une autre graine, une autre histoire aussi plausible. Chaque graine tourne dans son processus, sur son cœur (le moteur est au bit
+// près pour une graine donnée) ; un test passe s'il passe pour toutes, il est limite si elles ne s'accordent pas. Le rapport garde chacune
+const GRAINES = Math.max(1, +arg('--graines', 1));
+if (GRAINES > 1) {
+  const { spawn } = require('child_process'), os = require('os'), f0 = arg('--amorce', path.join(__dirname, '..', 'mondes', MONDE, 'amorce.json'));
+  const g0 = +arg('--graine', JSON.parse(fs.readFileSync(f0, 'utf8')).monde.graine >>> 0), seeds = Array.from({ length: GRAINES }, (_, i) => (g0 + i * 7919) >>> 0);
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'etalon-')), sans = []; for (let i = 0; i < a.length; i++) { if (['--graines', '--graine', '--sortie'].includes(a[i])) { i++; continue; } sans.push(a[i]); }
+  const par = Math.max(1, Math.min(GRAINES, os.cpus().length - 1, +arg('--paralleles', 3))), fins = [];
+  const lancer = (g, i) => new Promise(ok => { const out = path.join(tmp, `g${i}.json`), c = spawn(process.execPath, [...process.execArgv, __filename, ...sans, '--graine', String(g), '--sortie', out], { stdio: ['ignore', 'ignore', 'pipe'] });
+    c.stderr.on('data', d => process.stderr.write(String(d).split('\n').filter(Boolean).map(l => `[graine ${g}] ${l}`).join('\n') + '\n')); c.on('close', () => ok(fs.existsSync(out) ? JSON.parse(fs.readFileSync(out, 'utf8')) : null)); });
+  (async () => { const R = new Array(GRAINES); let next = 0;
+    await Promise.all(Array.from({ length: par }, async () => { while (next < GRAINES) { const i = next++; R[i] = await lancer(seeds[i], i); } }));
+    const bons = R.filter(Boolean); if (!bons.length) { console.error('aucune graine n\'a fini'); process.exit(1); }
+    const etat = L => L.every(e => e === 'ok') ? 'ok' : L.every(e => e === 'echec') ? 'echec' : 'limite';
+    const tests = bons[0].tests.map(t0 => { const L = bons.map(b => b.tests.find(t => t.id === t0.id)).filter(Boolean);
+      return { ...t0, valeur: L.map(t => t.valeur), valeur_dite: L.map(t => t.valeur_dite ?? t.valeur).join(' | '), etat: etat(L.map(t => t.etat)), detail: undefined }; });
+    const comptes = { ok: 0, limite: 0, echec: 0 }; for (const t of tests) comptes[t.etat]++;
+    const rapport = { ...bons[0], graines: seeds.map((g, i) => ({ graine: g, ...(R[i] ? { comptes: R[i].comptes, tests: R[i].tests, ...(R[i].serie ? { serie: R[i].serie } : {}) } : { echec: 'n\'a pas fini' }) })), comptes, tests, serie: undefined };
+    const S = { ok: '✓', limite: '≈', echec: '✗' };
+    console.log(`L'étalon${bons[0].experience ? ` (${bons[0].experience})` : ''} sur ${GRAINES} graines (${seeds.join(', ')}) : ${comptes.ok} ✓, ${comptes.limite} ≈, ${comptes.echec} ✗`);
+    for (const t of tests) console.log(`  ${S[t.etat]} ${t.nom} : ${t.valeur_dite} — cible ${t.cible}`);
+    const so = arg('--sortie'); if (so) { fs.mkdirSync(path.dirname(path.resolve(so)), { recursive: true }); fs.writeFileSync(so, JSON.stringify(rapport, null, 1)); console.log('→', so); }
+    fs.rmSync(tmp, { recursive: true, force: true }); })();
+  return;
+}
+
+// --- les cibles (la réalité) ---
+const CIBLES = {
+  stabilite: { part: .9, facteur: 2, source: "un monde sans joueurs, au même climat, garde ses espèces : chacune à moins d'un facteur 2 de sa première année" },
+  naissances: {
+    chevreuil: { de: 130, a: 175, source: 'les chevrillards naissent de mi-mai à mi-juin (Andersen et al., The European Roe Deer, 1998)' },
+    'cerf-elaphe': { de: 140, a: 185, source: 'les faons du cerf élaphe naissent de fin mai à juin (Clutton-Brock et al., Red Deer, 1982)' }
+  },
+  cigogne: { depart: { de: 215, a: 255, source: 'les cigognes blanches quittent l’Europe de début août à début septembre' },
+    retour: { de: 45, a: 100, source: 'elles reviennent de mi-février à début avril' } },
+  carnivores: { a: 89.1, b: -1.05, tolerance: Math.log10(3), source: 'Carbone & Gittleman 2002, Science 295 : 89,1 × M^−1,05 carnivores par 10 000 kg de proies' },
+  damuth: { pente: -.75, tolerance: .15, source: 'Damuth 1981 : la densité des mammifères ∝ masse^−0,75' },
+  rendement: { chaud: { de: .005, a: .05 }, froid: { de: .05, a: .4 }, source: "Humphreys 1979 (J. Anim. Ecol. 48) : une bête à sang chaud fait de sa chair 1 à 3 % de ce qu'elle assimile, une à sang froid de 10 à 40 % ; le reste part en chaleur (Lindeman 1942). Plus serait créer de la chair de rien" },
+  diversite: { min: .9, source: "un monde sans joueurs, au même climat, ne s'appauvrit pas en silence : l'entropie de Shannon des parts de biomasse de chaque lieu garde au moins 90 % de ce qu'elle était" }
+};
+const note = (ecart, tol) => ecart <= tol ? 'ok' : ecart <= 2 * tol ? 'limite' : 'echec';
+
+// --- les mesures d'un état ---
+// la diversité de chaque lieu : l'entropie de Shannon des parts de biomasse de ses bêtes (−Σ p ln p), en moyenne sur les lieux
+function shannon(I) { const L = new Map(); for (const t of I.taxons) { if (t.plan.regime === 'vegetal') continue; const m = t.plan.masse_kg || 1;
+    for (const p of t.populations) if (p.effectif > 0) (L.get(p.biome) || L.set(p.biome, []).get(p.biome)).push(p.effectif * m); }
+  let H = 0; for (const B of L.values()) { const S = somme(B); for (const b of B) { const q = b / S; if (q > 0) H -= q * Math.log(q); } } return L.size ? H / L.size : 0; }
+// les carnivores (mammifères carnivores d'au moins 0,5 kg) : leur nombre par 10 000 kg des proies que le moteur leur laisse (les vertébrés :
+// les mammifères, les oiseaux, les poissons, les reptiles, les amphibiens), là où ils vivent. Le loup, l'ours, les lynx sont à part : en Europe,
+// ce sont les hommes qui les tiennent sous ce que leurs proies nourriraient ; dans un monde sans joueurs, ils doivent remonter vers la loi
+const VERTEBRES = new Set(['Mammalia', 'Aves', 'Actinopterygii', 'Elasmobranchii', 'Squamata', 'Testudines', 'Amphibia']), TENUS = new Set(['loup', 'lynx-boreal', 'lynx-pardelle', 'ours-brun', 'glouton']);
+function carnivores(I) {
+  const T = I.taxons.filter(t => !t.eteint && t.populations.length), parLieu = new Map();
+  for (const t of T) for (const p of t.populations) (parLieu.get(p.biome) || parLieu.set(p.biome, []).get(p.biome)).push([t, p.effectif]);
+  const out = [];
+  for (const c of T) { if (classe(c) !== 'Mammalia' || c.plan.regime !== 'carnivore' || (c.plan.masse_kg || 0) < .5 || c.guilde) continue;
+    let N = 0, B = 0;
+    for (const p of c.populations) { const ici = parLieu.get(p.biome) || []; let b = 0;
+      for (const [q, n] of ici) if (q !== c && VERTEBRES.has(classe(q)) && q.plan.regime !== 'vegetal' && Orvane.appetence(c.plan, q.plan) > 0) b += n * (q.plan.masse_kg || 1);
+      if (b > 0) { N += p.effectif; B += b; } }
+    if (!(B > 0) || !(N > 0)) continue;
+    const obs = N / (B / 1e4), att = CIBLES.carnivores.a * Math.pow(c.plan.masse_kg, CIBLES.carnivores.b);
+    out.push({ id: c.id, nom: c.nom, masse_kg: c.plan.masse_kg, effectif: Math.round(N), proies_t: Math.round(B / 1e3), par_10t: r(obs, 3), attendu: r(att, 3), ecart_log10: r(Math.log10(obs / att), 3), ...(TENUS.has(c.id) ? { tenu_par_les_hommes: true } : {}) }); }
+  return out.sort((x, y) => x.ecart_log10 - y.ecart_log10);
+}
+// la pente densité ~ masse des mammifères (sur la surface des lieux où chacun vit)
+function damuth(I) {
+  const S = new Map(I.biomes.map(b => [b.id, b.lieu?.surface_km2 || 0])), P = [];
+  for (const t of I.taxons) { if (t.eteint || classe(t) !== 'Mammalia' || t.guilde) continue; const N = somme(t.populations.map(p => p.effectif)), A = somme(t.populations.map(p => S.get(p.biome) || 0));
+    if (N > 0 && A > 0) P.push([Math.log10(t.plan.masse_kg), Math.log10(N / A)]); }
+  const n = P.length, mx = somme(P.map(p => p[0])) / n, my = somme(P.map(p => p[1])) / n;
+  return { pente: r(somme(P.map(p => (p[0] - mx) * (p[1] - my))) / somme(P.map(p => (p[0] - mx) ** 2)), 3), especes: n };
+}
+
+const f = arg('--amorce') ? path.resolve(arg('--amorce')) : racine(`mondes/${MONDE}/amorce.json`);   // (--amorce : une autre amorce, pour un essai) if (!fs.existsSync(f)) { console.error(`pas d'amorce : ${f}`); process.exit(1); }
+// --- une expérience : le retour du loup en France (--experience loup) ---
+// Un morceau de l'Europe (la France, l'Italie, la Suisse, Monaco), en 1992 : plus un loup en France ni en Suisse, l'Italie à ~30 % de ses loups
+// d'aujourd'hui (ils étaient ~400 vers 1990, ~3 300 en 2021). Avec le loup, ses grandes proies (les ongulés, les lièvres, le lapin, la
+// marmotte, le castor) ; ni les autres carnivores ni les plantes, pour aller vite (une année en une trentaine de secondes). Ce que la réalité
+// a vu (l'Office français de la biodiversité) : le premier loup dans le Mercantour en 1992, une centaine vers 2008, ~1 100 en 2023.
+if (arg('--experience') === 'loup') {
+  const A = JSON.parse(fs.readFileSync(f, 'utf8')); if (arg('--graine') != null) A.monde.graine = +arg('--graine') >>> 0;   // (une autre histoire : --graines)
+  const PAYS = new Set(['FR', 'IT', 'CH', 'MC']), GARDE = new Set(['loup', 'cerf-elaphe', 'chevreuil', 'daim', 'sanglier', 'chamois', 'isard', 'bouquetin-alpes', 'mouflon', 'lievre-europe', 'lievre-variable', 'lapin', 'marmotte', 'castor']);
+  const B = A.biomes.filter(b => PAYS.has(b.lieu?.pays)), ids = new Set(B.map(b => b.id)), pays = new Map(B.map(b => [b.id, b.lieu.pays]));
+  for (const b of B) b.voisins = b.voisins.filter(v => ids.has(v));
+  const T = A.taxons.filter(t => GARDE.has(t.id)).map(t => ({ ...t, populations: t.populations.filter(p => ids.has(p.biome)) })).filter(t => t.populations.length);
+  const loup = T.find(t => t.id === 'loup'); loup.populations = loup.populations.filter(p => pays.get(p.biome) === 'IT').map(p => ({ ...p, effectif: +(p.effectif * .3).toFixed(4) }));
+  let E = { ...A, monde: { ...A.monde, flore: undefined, phenologie: undefined, parcelles: { ...A.monde.parcelles, types: A.monde.parcelles.types.filter(ty => B.some(b => b.type === ty.id)) } }, biomes: B, taxons: T, cycle: { ...A.cycle, date: '1992-01-01T03:17:00.000Z' } };
+  // les proies à leur équilibre dans ce morceau d'Europe : sans les plantes ni les autres bêtes, la place que l'assemblage leur a calée dans
+  // l'Europe entière ne leur convient plus (chaque recalage de l'Europe changeait le loup de France du simple au quadruple). Comme
+  // l'assemblage, un jour de moteur, quatre fois : la place de chaque brouteur pour que ses naissances égalent ses morts et les siens mangés.
+  // Le loup n'est pas touché
+  for (let pass = 0; pass < 4; pass++) { const brut = [], X = new Map(), J = Orvane.cycle(E, {}, { duree_ms: 864e5, trace: x => brut.push(x) }), PRO = new Map(J.biomes.map(b => [b.id, b.saison?.production ?? 1]));
+    for (const x of brut) { const o = X.get(x.taxon) || X.set(x.taxon, { N: 0, conv: 0, pred: 0, ps: 0 }).get(x.taxon); o.N += x.N; o.conv += x.conv * x.N; o.pred += x.mortsPred; o.ps += x.sat * x.N * (PRO.get(x.biome) ?? 1); }
+    for (const t of E.taxons) { const o = X.get(t.id); if (t.id === 'loup' || !o || !(o.N > 0) || !['herbivore', 'omnivore'].includes(t.plan.regime)) continue;
+      const m = 365.25 / Math.max(2, t.plan.longevite), p = o.pred / o.N * 365.25, cible = clamp(1 - (m + p) / Math.max(1e-9, t.plan.natalite * o.conv / o.N), .2, .97), sa = o.ps / o.N;
+      if (sa > 1e-6) t.plan = { ...t.plan, place: +clamp((t.plan.place ?? 1) * sa / cible, .0005, 100).toPrecision(4) }; } }
+  const ANSX = +arg('--ans', 31), REEL = { 1992: 2, 2000: 35, 2005: 60, 2010: 190, 2015: 300, 2018: 430, 2020: 580, 2023: 1100 }, serie = [], t1 = Date.now();
+  const enFrance = I => { const w = I.taxons.find(t => t.id === 'loup'); return w ? somme(w.populations.filter(p => pays.get(p.biome) === 'FR').map(p => p.effectif)) : 0; };
+  const lieuxFR = I => (I.taxons.find(t => t.id === 'loup')?.populations || []).filter(p => pays.get(p.biome) === 'FR').length;
+  serie.push({ an: 1992, france: 0, lieux: 0, italie: Math.round(somme(loup.populations.map(p => p.effectif))) });
+  for (let y = 0; y < ANSX; y++) { for (let k = 0; k < 365; k++) E = Orvane.cycle(E, {}, { duree_ms: 864e5 });
+    const w = E.taxons.find(t => t.id === 'loup'); serie.push({ an: 1993 + y, france: Math.round(enFrance(E)), lieux: lieuxFR(E), italie: Math.round(somme((w?.populations || []).filter(p => pays.get(p.biome) === 'IT').map(p => p.effectif))) });
+    process.stderr.write(`le loup : ${1993 + y}, ${serie[serie.length - 1].france} en France (${serie[serie.length - 1].lieux} lieux), ${serie[serie.length - 1].italie} en Italie (${((Date.now() - t1) / (y + 1) / 1000).toFixed(0)} s par an)\n`); }
+  const premier = serie.find(x => x.france >= 2)?.an ?? null, cent = serie.find(x => x.france >= 100)?.an ?? null, fin = serie[serie.length - 1];
+  const tests = [
+    { id: 'loup-arrivee', nom: 'Le loup arrive en France', valeur: premier, cible: 'au plus tard en 1995 (le premier en 1992)', etat: premier != null && premier <= 1995 ? 'ok' : premier != null && premier <= 2000 ? 'limite' : 'echec' },
+    { id: 'loup-cent', nom: 'Cent loups en France', valeur: cent, cible: 'vers 2008 (± 6 ans)', etat: cent != null && Math.abs(cent - 2008) <= 6 ? 'ok' : cent != null && Math.abs(cent - 2008) <= 12 ? 'limite' : 'echec' },
+    { id: 'loup-2023', nom: `Les loups de France en ${fin.an}`, valeur: fin.france, cible: `~${REEL[2023]} (à moins d'un facteur 3)`, etat: fin.france > 0 && Math.abs(Math.log10(fin.france / REEL[2023])) <= Math.log10(3) ? 'ok' : fin.france > 0 && Math.abs(Math.log10(fin.france / REEL[2023])) <= Math.log10(9) ? 'limite' : 'echec' }];
+  const rapport = { etalon: 1, experience: 'loup', monde: MONDE, date: arg('--date', new Date().toISOString().slice(0, 10)), ans: ANSX, lieux: B.length, reel: REEL, serie, tests };
+  const S = { ok: '✓', limite: '≈', echec: '✗' }; console.log(`Le retour du loup (France, Italie, Suisse ; ${ANSX} ans) :`); for (const t of tests) console.log(`  ${S[t.etat]} ${t.nom} : ${t.valeur ?? 'jamais'} — cible ${t.cible}`);
+  const so = arg('--sortie'); if (so) { fs.mkdirSync(path.dirname(path.resolve(so)), { recursive: true }); fs.writeFileSync(so, JSON.stringify(rapport, null, 1)); console.log('→', so); }
+  process.exit(0);
+}
+// --- une expérience : la vague du chacal doré (--experience chacal) ---
+// Une validation que rien n'a réglée : la dispersion a été posée d'après le loup ; le chacal doit la confirmer. Vers 1980, il ne vit plus en
+// Europe que dans les Balkans (la Bulgarie, la Grèce, la Thrace, la côte dalmate) ; il gagne ensuite l'Europe centrale puis l'ouest. Ce que
+// la réalité a vu, les premières observations par pays (Arnold et al. 2012, Mammal Review 42 ; Trouwborst et al. 2015, Biodivers. Conserv. 24) :
+// l'Italie 1984, l'Autriche 1987, la Slovaquie 1989, l'Allemagne 1997, la Tchéquie 2006, la Suisse 2011, la Pologne et le Danemark 2015,
+// les Pays-Bas 2016, la France 2017. Une première observation est souvent un jeune de passage, loin devant le front : le moteur, qui compte
+// une lignée installée (au moins deux bêtes dans le pays), doit arriver un peu plus tard. Avec le chacal, ses proies et le renard, son
+// concurrent, mis à leur équilibre comme pour le loup ; ni les plantes ni les autres bêtes
+if (arg('--experience') === 'chacal') {
+  const A = JSON.parse(fs.readFileSync(f, 'utf8')); if (arg('--graine') != null) A.monde.graine = +arg('--graine') >>> 0;
+  const REELC = { IT: 1984, AT: 1987, SK: 1989, DE: 1997, CZ: 2006, CH: 2011, PL: 2015, DK: 2015, NL: 2016, FR: 2017 }, DEPART = new Set(['BG', 'GR', 'TR', 'HR']);
+  const PAYS = new Set([...DEPART, ...Object.keys(REELC), 'RO', 'RS', 'BA', 'ME', 'HU', 'BE']);
+  const GARDE = new Set(['chacal-dore', 'renard-roux', 'lievre-europe', 'lapin', 'campagnol-champs', 'campagnol-terrestre', 'campagnol-roussatre', 'mulot-sylvestre', 'mulot-collier', 'souris-grise', 'rat-noir', 'surmulot', 'faisan', 'perdrix-grise', 'perdrix-rouge', 'caille', 'hamster-commun', 'spermophile']);
+  const B = A.biomes.filter(b => PAYS.has(b.lieu?.pays)), ids = new Set(B.map(b => b.id)), pays = new Map(B.map(b => [b.id, b.lieu.pays]));
+  for (const b of B) b.voisins = b.voisins.filter(v => ids.has(v));
+  const T = A.taxons.filter(t => GARDE.has(t.id)).map(t => ({ ...t, populations: t.populations.filter(p => ids.has(p.biome)) })).filter(t => t.populations.length);
+  const ch = T.find(t => t.id === 'chacal-dore'); ch.populations = ch.populations.filter(p => DEPART.has(pays.get(p.biome)));
+  let E = { ...A, monde: { ...A.monde, flore: undefined, phenologie: undefined, parcelles: { ...A.monde.parcelles, types: A.monde.parcelles.types.filter(ty => B.some(b => b.type === ty.id)) } }, biomes: B, taxons: T, cycle: { ...A.cycle, date: '1980-01-01T03:17:00.000Z' } };
+  for (let pass = 0; pass < 4; pass++) { const brut = [], X = new Map(), J = Orvane.cycle(E, {}, { duree_ms: 864e5, trace: x => brut.push(x) }), PRO = new Map(J.biomes.map(b => [b.id, b.saison?.production ?? 1]));   // (les proies et le renard à leur équilibre)
+    for (const x of brut) { const o = X.get(x.taxon) || X.set(x.taxon, { N: 0, conv: 0, pred: 0, ps: 0 }).get(x.taxon); o.N += x.N; o.conv += x.conv * x.N; o.pred += x.mortsPred; o.ps += x.sat * x.N * (PRO.get(x.biome) ?? 1); }
+    for (const t of E.taxons) { const o = X.get(t.id); if (t.id === 'chacal-dore' || !o || !(o.N > 0) || !['herbivore', 'omnivore'].includes(t.plan.regime)) continue;
+      const m = 365.25 / Math.max(2, t.plan.longevite), p = o.pred / o.N * 365.25, cible = clamp(1 - (m + p) / Math.max(1e-9, t.plan.natalite * o.conv / o.N), .2, .97), sa = o.ps / o.N;
+      if (sa > 1e-6) t.plan = { ...t.plan, place: +clamp((t.plan.place ?? 1) * sa / cible, .0005, 100).toPrecision(4) }; } }
+  const ANSX = +arg('--ans', 44), arrivee = {}, serie = [], t1 = Date.now(), parPays = I => { const w = I.taxons.find(t => t.id === 'chacal-dore'), o = {}; for (const p of w?.populations || []) { const c = pays.get(p.biome); o[c] = (o[c] || 0) + p.effectif; } return o; };
+  for (let y = 0; y < ANSX; y++) { for (let k = 0; k < 365; k++) E = Orvane.cycle(E, {}, { duree_ms: 864e5 });
+    const o = parPays(E), an = 1981 + y; for (const c of Object.keys(REELC)) if (arrivee[c] == null && (o[c] || 0) >= 2) arrivee[c] = an;
+    serie.push({ an, ...Object.fromEntries(Object.entries(o).map(([c, n]) => [c, Math.round(n)])) });
+    process.stderr.write(`le chacal : ${an}, ${Object.keys(REELC).filter(c => arrivee[c]).map(c => c + ' ' + arrivee[c]).join(', ') || 'encore dans les Balkans'} (${((Date.now() - t1) / (y + 1) / 1000).toFixed(0)} s par an)\n`); }
+  const fin = 1980 + ANSX, ecarts = Object.entries(REELC).map(([c, r0]) => ({ pays: c, reel: r0, simule: arrivee[c] ?? null, ecart: (arrivee[c] ?? fin + 1) - r0 }));
+  // (un pays jamais atteint est un écart sans fin : sans cela, la France, attendue en 2017, ne coûtait que sept ans à un chacal resté dans les Balkans)
+  const med = (() => { const v = ecarts.map(e => e.simule == null ? Infinity : Math.abs(e.ecart)).sort((x, y) => x - y); return v[v.length >> 1]; })(), atteints = ecarts.filter(e => e.simule != null).length;
+  const tests = [{ id: 'chacal-vague', nom: 'La vague du chacal doré', valeur: med, valeur_dite: `écart médian ${Number.isFinite(med) ? med + ' ans' : 'sans fin (la plupart des pays jamais atteints)'} ; ${atteints}/${ecarts.length} pays atteints en ${fin} — ${ecarts.map(e => `${e.pays} ${e.simule ?? '—'} (${e.reel})`).join(', ')}`,
+    cible: "au moins 8 pays sur 10 atteints, à moins de 8 ans des premières observations en médiane (une première observation est souvent un jeune de passage)", etat: med <= 8 && atteints >= 8 ? 'ok' : med <= 16 && atteints >= 5 ? 'limite' : 'echec' }];
+  const rapport = { etalon: 1, experience: 'chacal', monde: MONDE, date: arg('--date', new Date().toISOString().slice(0, 10)), ans: ANSX, lieux: B.length, reel: REELC, ecarts, serie, tests };
+  const S = { ok: '✓', limite: '≈', echec: '✗' }; console.log(`La vague du chacal doré (${B.length} lieux ; ${ANSX} ans depuis 1980) :`); for (const t of tests) console.log(`  ${S[t.etat]} ${t.nom} : ${t.valeur_dite} — cible ${t.cible}`);
+  const so = arg('--sortie'); if (so) { fs.mkdirSync(path.dirname(path.resolve(so)), { recursive: true }); fs.writeFileSync(so, JSON.stringify(rapport, null, 1)); console.log('→', so); }
+  process.exit(0);
+}
+// --- la vie de l'Europe, sans joueurs ---
+let I = JSON.parse(fs.readFileSync(f, 'utf8')); if (arg('--graine') != null) I.monde.graine = +arg('--graine') >>> 0;   // (une autre histoire : --graines)
+const animaux = I.taxons.filter(t => t.plan.regime !== 'vegetal'), ids = animaux.map(t => t.id), JOURS = +arg('--jours', 365 * ANS), parAn = new Array(ANS).fill(0);   // (--jours : un essai plus court)
+const moyennes = Array.from({ length: ANS }, () => new Map(ids.map(id => [id, 0]))), nais = {}, cigogne = { depart: [], retour: [] }, extinctions = [];
+for (const id of Object.keys(CIBLES.naissances)) nais[id] = new Array(367).fill(0);
+const car0 = carnivores(I), dam0 = damuth(I), sha0 = shannon(I), t0 = Date.now();
+// (garde-fou : le second principe) ce que les chasseurs font naître de chair, rapporté à ce qu'ils mangent (leur ration) : les vrais
+// carnivores (un omnivore naît de ses plantes, un buveur de sang ne tue pas), à part les bêtes à sang chaud et à sang froid
+const REND = { chaud: { prod: 0, mange: 0 }, froid: { prod: 0, mange: 0 } };
+const CH = new Map(animaux.filter(t => t.plan.regime === 'carnivore' && !(t.plan.diete?.sang > 0)).map(t => [t.id, { m: t.plan.masse_kg || 1, g: (t.plan.metabolisme ?? 1) < 1 ? REND.froid : REND.chaud }]));
+for (let k = 0; k < JOURS; k++) {
+  const an = Math.min(ANS - 1, Math.floor(k / 365)), parJour = {}; parAn[an]++;
+  I = Orvane.cycle(I, {}, { duree_ms: 864e5, trace: x => { if (nais[x.taxon]) parJour[x.taxon] = (parJour[x.taxon] || 0) + x.nais;
+    if (an === ANS - 1) { const c = CH.get(x.taxon); if (c) { c.g.prod += (x.nais || 0) * c.m; c.g.mange += x.ration || 0; } } } });   // (le rendement des chasseurs, la dernière année)
+  const j = doy(I.cycle.jour);
+  for (const [id, v] of Object.entries(parJour)) nais[id][j] += v;
+  const M = moyennes[an]; for (const t of I.taxons) if (M.has(t.id)) M.set(t.id, M.get(t.id) + somme(t.populations.map(p => p.effectif)));
+  for (const e of I.evenements) {
+    if (e.type === 'extinction' && !e.biome) extinctions.push({ taxon: e.taxon, jour: I.cycle.jour });
+    if (e.type === 'migration' && e.taxon === 'cigogne-blanche' && /migration d'automne/.test(e.detail || '')) cigogne.depart.push(j);
+    if (e.type === 'migration' && e.taxon === 'cigogne-blanche' && /migration de printemps/.test(e.detail || '')) cigogne.retour.push(j); }
+  if ((k + 1) % 30 === 0) process.stderr.write(`étalon : ${I.cycle.jour} (${k + 1}/${JOURS} jours, ${((Date.now() - t0) / (k + 1) / 1000).toFixed(1)} s par jour)\n`);
+}
+
+for (let y = 0; y < ANS; y++) for (const [id, v] of moyennes[y]) moyennes[y].set(id, parAn[y] ? v / parAn[y] : 0);
+// --- les tests ---
+const tests = [];
+{ // 1. la stabilité
+  const C = CIBLES.stabilite, L = [];
+  // (la dernière année contre l'avant-dernière : l'assemblage cale l'Europe sur sa première année, docs/53 ; ce qui suit, il ne l'a pas vu)
+  const y0 = ANS >= 2 ? ANS - 2 : 0;
+  for (const t of animaux) { const m0 = moyennes[y0].get(t.id), m1 = moyennes[ANS - 1].get(t.id); if (!(m0 > 0)) continue; L.push({ id: t.id, nom: t.nom, rapport: r(m1 / m0, 3) }); }
+  const dans = L.filter(x => x.rapport >= 1 / C.facteur && x.rapport <= C.facteur).length / (L.length || 1);
+  L.sort((x, y) => Math.abs(Math.log(y.rapport)) - Math.abs(Math.log(x.rapport)));
+  tests.push({ id: 'stabilite', nom: 'La stabilité', valeur: r(dans, 3), cible: `≥ ${C.part} des espèces à moins d'un facteur ${C.facteur} de leur année d'avant${ANS === 1 ? ' (sur une année : la première contre elle-même, le test ne dit rien ; il faut --ans 2 au moins)' : ''}`,
+    etat: ANS === 1 ? 'limite' : dans >= C.part && !extinctions.length ? 'ok' : dans >= C.part - .1 ? 'limite' : 'echec',
+    detail: { especes: L.length, extinctions, plus_loin: L.slice(0, 12) }, source: C.source });
+  // (docs/53) la stabilité tolère une espèce sur dix loin d'elle-même : celles-là, on les nomme. Aucune ne doit fondre de moitié ou doubler
+  // d'une année sur l'autre, dans un monde sans joueurs, au même climat
+  const hors = L.filter(x => x.rapport < 1 / C.facteur || x.rapport > C.facteur);
+  tests.push({ id: 'hors', nom: 'Aucune espèce ne fond ni ne s\'emballe', valeur: hors.length, valeur_dite: hors.length ? `${hors.length} : ${hors.slice(0, 8).map(x => `${x.id} ×${x.rapport}`).join(', ')}` : 'aucune',
+    cible: `aucune espèce sous ×${(1 / C.facteur).toFixed(1)} ni au-dessus de ×${C.facteur} de son année d'avant`, etat: ANS === 1 ? 'limite' : hors.length === 0 ? 'ok' : hors.length <= 5 ? 'limite' : 'echec', detail: { hors }, source: C.source });
+}
+{ // 2. les saisons
+  for (const [id, C] of Object.entries(CIBLES.naissances)) { const v = nais[id]; if (!v || !somme(v)) continue;
+    // le jour médian des naissances (sur l'année tournante qui part du cœur de l'hiver, pour ne pas couper la saison)
+    const tot = somme(v); let acc = 0, med = null; for (let j = 1; j <= 366; j++) { acc += v[j]; if (acc >= tot / 2) { med = j; break; } }
+    const centre = (C.de + C.a) / 2, ecart = Math.max(0, Math.abs(med - centre) - (C.a - C.de) / 2);
+    tests.push({ id: `naissances-${id}`, nom: `Les naissances : ${id}`, valeur: med, valeur_dite: dateDe(med), cible: `du ${dateDe(C.de)} au ${dateDe(C.a)}`, etat: note(ecart, 15), detail: { par_mois: Array.from({ length: 12 }, (_, m) => Math.round(somme(v.slice(1 + Math.round(m * 30.5), 1 + Math.round((m + 1) * 30.5))))) }, source: C.source }); }
+  for (const sens of ['depart', 'retour']) { const C = CIBLES.cigogne[sens], L = cigogne[sens];
+    if (!L.length) { tests.push({ id: `cigogne-${sens}`, nom: `Les cigognes : ${sens === 'depart' ? 'le départ' : 'le retour'}`, valeur: null, cible: `du ${dateDe(C.de)} au ${dateDe(C.a)}`, etat: 'echec', detail: { pourquoi: 'les cigognes ne migrent pas (aucune migration annoncée)' }, source: C.source }); continue; }
+    const j = L[0], centre = (C.de + C.a) / 2, ecart = Math.max(0, Math.abs(j - centre) - (C.a - C.de) / 2);
+    tests.push({ id: `cigogne-${sens}`, nom: `Les cigognes : ${sens === 'depart' ? 'le départ' : 'le retour'}`, valeur: j, valeur_dite: dateDe(j), cible: `du ${dateDe(C.de)} au ${dateDe(C.a)}`, etat: note(ecart, 15), detail: { jours: L.slice(0, ANS) }, source: C.source }); }
+}
+{ // 3. les prédateurs
+  const C = CIBLES.carnivores, car1 = carnivores(I), med = L => { const v = L.filter(x => !x.tenu_par_les_hommes).map(x => Math.abs(x.ecart_log10)).sort((x, y) => x - y); return v.length ? v[v.length >> 1] : null; };
+  const m1 = med(car1), m0 = med(car0);
+  // (les grands carnivores, que les hommes tiennent : sans joueurs, leur écart à la loi doit se réduire — on dit de combien)
+  const grands = car1.filter(x => x.tenu_par_les_hommes).map(x => { const d = car0.find(y => y.id === x.id); return { id: x.id, depart: d ? r(Math.pow(10, d.ecart_log10), 3) : null, fin: r(Math.pow(10, x.ecart_log10), 3) }; });
+  tests.push({ id: 'carnivores', nom: 'Les prédateurs : combien de carnivores vivent de dix tonnes de proies', valeur: m1 == null ? null : r(Math.pow(10, m1), 2), valeur_dite: m1 == null ? '-' : `écart médian ×${Math.pow(10, m1).toFixed(1)} (au départ ×${Math.pow(10, m0).toFixed(1)})`,
+    cible: `à moins d'un facteur ${Math.pow(10, C.tolerance).toFixed(0)} de la loi (hors loup, ours, lynx, glouton)`, etat: m1 == null ? 'echec' : note(m1, C.tolerance), detail: { grands_carnivores: grands, fin: car1, depart: car0 }, source: C.source + ". Les grands carnivores d'Europe sont tenus sous la loi par les hommes : ils sont dits à part (grands_carnivores), et doivent remonter vers elle dans un monde sans joueurs" });
+}
+{ // (docs/53) les grands carnivores : en Europe, les hommes les tiennent sous ce que leurs proies nourriraient ; dans un monde sans joueurs,
+  // rien ne les tient bas : chacun doit croître, d'au moins 2 % par an (le loup remonte en vrai de 5 à 10 % par an, là où on le laisse).
+  // (Leur écart à la loi des prédateurs le dirait aussi, mais il bouge avec leurs proies : on le donne, sans le noter)
+  const c = tests.find(t => t.id === 'carnivores'), G = [];
+  for (const id of ['loup', 'lynx-boreal', 'lynx-pardelle', 'ours-brun', 'glouton']) { const m0 = moyennes[0].get(id), m1 = moyennes[ANS - 1].get(id); if (!(m0 > 0)) continue;
+    const parAn = Math.pow(m1 / m0, 1 / Math.max(1, ANS - 1)); G.push({ id, par_an: r(parAn, 3), loi: c?.detail?.grands_carnivores?.find(x => x.id === id) || null }); }
+  const croissent = G.filter(x => x.par_an >= 1.02).length;
+  tests.push({ id: 'grands-carnivores', nom: 'Les grands carnivores remontent (sans joueurs, rien ne les tient bas)', valeur: G.length ? r(croissent / G.length, 2) : null,
+    valeur_dite: G.map(x => `${x.id} ${x.par_an >= 1 ? '+' : ''}${((x.par_an - 1) * 100).toFixed(1)} %/an`).join(', ') || '-', cible: 'chacun croît d\'au moins 2 % par an',
+    etat: ANS === 1 || !G.length ? 'limite' : croissent === G.length ? 'ok' : croissent >= G.length / 2 ? 'limite' : 'echec', detail: { grands: G }, source: 'le loup remonte de 5 à 10 % par an en Europe, là où on le laisse (LCIE)' });
+}
+{ // le garde-fou
+  const C = CIBLES.damuth, d1 = damuth(I);
+  { const C = CIBLES.rendement, v = {}, E = [];
+    for (const g of ['chaud', 'froid']) { const o = REND[g], rd = o.mange > 0 ? o.prod / o.mange : null, c = C[g]; v[g] = rd == null ? null : r(rd, 4);
+      E.push(rd == null ? 'echec' : rd >= c.de && rd <= c.a ? 'ok' : rd >= c.de / 2 && rd <= c.a * 2 ? 'limite' : 'echec'); }
+    const pc = x => x == null ? '—' : `${(x * 100).toFixed(1)} %`;
+    tests.push({ id: 'rendement', nom: 'Garde-fou : le rendement des chasseurs', garde_fou: true, valeur: v, valeur_dite: `à sang chaud ${pc(v.chaud)}, à sang froid ${pc(v.froid)} de ce qu'ils mangent devient des petits`,
+      cible: `de ${C.chaud.de * 100} à ${C.chaud.a * 100} % (sang chaud), de ${C.froid.de * 100} à ${C.froid.a * 100} % (sang froid)`, etat: E.includes('echec') ? 'echec' : E.includes('limite') ? 'limite' : 'ok', source: C.source }); }
+  { const h1 = shannon(I), q = sha0 > 0 ? h1 / sha0 : 1, C = CIBLES.diversite;
+    tests.push({ id: 'diversite', nom: 'Garde-fou : la diversité des lieux', garde_fou: true, valeur: r(q, 3), valeur_dite: `Shannon ${r(h1, 3)} (au départ ${r(sha0, 3)}) : ×${q.toFixed(2)}`, cible: `au moins ×${C.min}`, etat: q >= C.min ? 'ok' : q >= 2 * C.min - 1 ? 'limite' : 'echec', source: C.source }); }
+  tests.push({ id: 'damuth', nom: 'Garde-fou : la loi de Damuth', garde_fou: true, valeur: d1.pente, valeur_dite: `pente ${d1.pente} (au départ ${dam0.pente}, ${d1.especes} espèces)`, cible: `${C.pente} ± ${C.tolerance}`, etat: note(Math.abs(d1.pente - C.pente), C.tolerance), detail: { depart: dam0, fin: d1 }, source: C.source + " (l'assemblage l'a posée : le moteur ne doit pas la défaire)" });
+}
+const comptes = { ok: 0, limite: 0, echec: 0 }; for (const t of tests) comptes[t.etat]++;
+const rapport = { etalon: 1, monde: MONDE, date: arg('--date', new Date().toISOString().slice(0, 10)), ans: ANS, depart: JSON.parse(fs.readFileSync(f, 'utf8')).cycle.date.slice(0, 10), fin: I.cycle.jour,
+  duree_s: Math.round((Date.now() - t0) / 1000), comptes, tests };
+const S = { ok: '✓', limite: '≈', echec: '✗' };
+console.log(`L'étalon (${MONDE}, ${ANS} an${ANS > 1 ? 's' : ''}, ${rapport.depart} → ${rapport.fin}) : ${comptes.ok} ✓, ${comptes.limite} ≈, ${comptes.echec} ✗`);
+for (const t of tests) console.log(`  ${S[t.etat]} ${t.nom} : ${t.valeur_dite ?? t.valeur} — cible ${t.cible}`);
+const sortie = arg('--sortie'); if (sortie) { fs.mkdirSync(path.dirname(path.resolve(sortie)), { recursive: true }); fs.writeFileSync(sortie, JSON.stringify(rapport, null, 1)); console.log('→', sortie); }

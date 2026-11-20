@@ -1,4 +1,4 @@
-// Orvane — LES FICHES DE CRÉATURES (outils/fiches.js) — docs/52
+// Orvane — LES FICHES DE CRÉATURES (outils/fiches.js) — docs/54
 // Écrit la fiche de chaque lignée d'un instantané dans un dossier (monde/fiche.js) : <id>.md, la fiche pour un dessinateur, en
 // français ; <id>.json, la fiche entière (famille, humain, ia, champs) ; index.json, pour chaque lignée son nom, sa famille, sa règle,
 // sa mère, son prompt 2D et ses fichiers, et les comptes par famille. De quoi préparer la génération des modèles 2D et 3D, ou relire

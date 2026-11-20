@@ -1,4 +1,4 @@
-# 52. La fiche de créature : chaque lignée décrite pour la DA 2D et 3D
+# 54. La fiche de créature : chaque lignée décrite pour la DA 2D et 3D
 
 Orvane aura une direction artistique à lui : pour chaque lignée, un modèle 2D et un modèle 3D, fidèles à ce qu'elle est. Un essai a été fait le 18 novembre sur le Kaume, avec des modèles ouverts (une IA d'image, puis une IA qui fait de la 3D). Le résultat était bon dans l'ensemble, mais l'IA a ajouté ce que les données ne lui disaient pas d'éviter : des oreilles (le Kaume n'en a pas), des défenses courbes (elles sont droites), des pattes trop hautes (il rampe), une robe gris rosé (elle est mauve). La description, écrite à la main, était trop courte, et ne disait pas ce que la bête **n'a pas**.
 

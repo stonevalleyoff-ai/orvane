@@ -70,6 +70,9 @@ function verifier(o, g = genre(o)) {
   if (!SCHEMAS[g]) return [`je ne sais pas ce qu'est ce fichier : --lot, --instantane, --profil, --bilan ou --bilans`];
   const S = JSON.parse(fs.readFileSync(racine(`schemas/${SCHEMAS[g]}.schema.json`), 'utf8')), E = [];
   valider(S, o, '$', S, E); if (g === 'lot') E.push(...depot(o)); if (g === 'bilan') E.push(...comptes(o));
+  // (docs/17, docs/52) une plante ne se déplace pas : une lignée végétale a une locomotion vide. Les jeux ne la voient jamais parmi les
+  // lignées — elle n'est publiée que dans flore.json —, mais un monde réel la sème dans son amorce (mondes/europe)
+  if (g === 'instantane' && Array.isArray(o.taxons)) for (let k = E.length - 1; k >= 0; k--) { const m = /^\$\.taxons\[(\d+)\]\.plan\.locomotion : au moins 1 éléments$/.exec(E[k]); if (m && o.taxons[+m[1]]?.plan?.regime === 'vegetal') E.splice(k, 1); }
   // (une lignée éteinte reste listée 10 cycles, sans population ; une lignée vivante en a au moins une)
   if (g === 'instantane' && Array.isArray(o.taxons)) o.taxons.forEach((t, i) => { if (t && !t.eteint && Array.isArray(t.populations) && !t.populations.length) E.push(`$.taxons[${i}].populations : une lignée vivante (${t.id}) vit au moins quelque part`); });
   return E;
