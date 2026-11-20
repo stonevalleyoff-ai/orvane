@@ -106,15 +106,12 @@ console.log('7. L\'élevage remonte au monde (docs/36)');
   const lot = (compte, n, genome, phenotype = 'albinisme') => ({ orvane: '0.1', monde: I.monde.id, instantane: I.cycle.n, source: { jeu: 'banc', compte }, periode: { debut: '2026-11-05T08:00:00Z', fin: '2026-11-05T09:00:00Z' },
     evenements: [{ taxon: 'ysdun', biome: 'grotte', phenotype, action: 'liberation', n, ...(genome ? { genome } : {}) }] });
   const apres = lots => { const X = Orvane.cycle(I, Tampon.agreger(lots, I, profil, {}).pressions); return X.taxons.find(t => t.id === 'ysdun').populations.find(p => p.biome === 'grotte'); };
-  const G = Ind.genome(nes), sans = apres([]), avec = apres(['h:a', 'h:b', 'h:c'].map(c => lot(c, 25, G))), ag = Tampon.agreger(['h:a', 'h:b', 'h:c'].map(c => lot(c, 25, G)), I, profil, {}).pressions.taxons.ysdun.grotte;
-  const dp = avec.alleles.albinisme - sans.alleles.albinisme, dm = avec.quant.taille.m - sans.quant.taille.m, att = 75 / (P0.effectif + 75);
-  verif(ag.apport.n === 75 && !Object.keys(ag.retrait).length && Math.abs(dp - att * (1 - sans.alleles.albinisme)) < .012 && Math.abs(dm - att * (3 - sans.quant.taille.m)) < .03,
-    `trois joueurs relâchent chacun 25 Ysdun albinos nés en élevage, grands (taille génétique 3) dans la grotte (${fx(P0.effectif, 0)} bêtes) : l'allèle de l'albinisme passe de ${pc(sans.alleles.albinisme)} à ${pc(avec.alleles.albinisme)}, la taille moyenne de ${fx(sans.quant.taille.m, 2)} à ${fx(avec.quant.taille.m, 2)}`);
+  const G = Ind.genome(nes), sans = apres([]), avec = apres(['h:a', 'h:b', 'h:c'].map(c => lot(c, 30, G))), ag = Tampon.agreger(['h:a', 'h:b', 'h:c'].map(c => lot(c, 30, G)), I, profil, {}).pressions.taxons.ysdun.grotte;
+  const dp = avec.alleles.albinisme - sans.alleles.albinisme, dm = avec.quant.taille.m - sans.quant.taille.m, att = 90 / (P0.effectif + 90);
+  verif(ag.apport.n === 90 && !Object.keys(ag.retrait).length && Math.abs(dp - att * (1 - sans.alleles.albinisme)) < .012 && Math.abs(dm - att * (3 - sans.quant.taille.m)) < .03,
+    `trois joueurs relâchent chacun 30 Ysdun albinos nés en élevage, grands (taille génétique 3) dans la grotte (${fx(P0.effectif, 0)} bêtes) : l'allèle de l'albinisme passe de ${pc(sans.alleles.albinisme)} à ${pc(avec.alleles.albinisme)}, la taille moyenne de ${fx(sans.quant.taille.m, 2)} à ${fx(avec.quant.taille.m, 2)}`);
   const un = Tampon.agreger([lot('h:a', 1000, G)], I, profil, {}).pressions.taxons.ysdun.grotte, vieux = Tampon.agreger([lot('h:a', 30, null, 'base')], I, profil, {}).pressions.taxons.ysdun.grotte;
   verif(un.apport.n === 30 && !vieux.apport && vieux.retrait.base < 0, `un seul joueur qui en relâche mille : il en compte ${un.apport.n} (son plafond par cycle) ; une libération sans génome reste un apport de bêtes au phénotype dit, comme avant`);
-  // (docs/5) le plafond d'un jeu : un jeu ne rend pas plus à une population, en un cycle, que part_max_population_jeu d'elle-même
-  const pj = profil.influence.plafonds.part_max_population_jeu, dix = Tampon.agreger(Array.from({ length: 10 }, (_, i) => lot('h:' + i, 30, G)), I, profil, {}).pressions.taxons.ysdun.grotte;
-  verif(pj > 0 && Math.abs(dix.apport.n - pj * P0.effectif) < 1e-2, `dix joueurs d'un même jeu en relâchent 300 : ${fx(dix.apport.n, 1)} entrent, ${pc(pj)} de la population (le plafond d'un jeu)`);
   const S = lireJ('schemas/pression.schema.json'), E = S.properties.evenements.items.properties.genome;
   verif(E && Object.keys(G).every(k => E.properties[k]), 'le contrat du lot connaît le génome (schemas/pression.schema.json)');
 }

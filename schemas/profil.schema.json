@@ -316,7 +316,7 @@
           "type": "number",
           "minimum": 0,
           "maximum": 1,
-          "description": "Sens jeu → Orvane, dit par le jeu (orvane_regler_jeu) : un plafond plus bas que celui du monde (influence.plafonds.part_max_population_jeu) pour ce que CE jeu ôte ou rend à une population en un cycle. C'est le plus bas des deux qui vaut : un jeu peut baisser son plafond, jamais le relever. 0 : le jeu lit le monde sans jamais rien lui ôter."
+          "description": "Sens jeu → Orvane, dit par le jeu (orvane_regler_jeu) : un plafond plus bas que celui du monde (influence.plafonds.part_max_population_jeu) pour ce que CE jeu ôte à une population en un cycle. C'est le plus bas des deux qui vaut : un jeu peut baisser son plafond, jamais le relever. 0 : le jeu lit le monde sans jamais rien lui ôter."
         },
         "retour_apres_extinction": {
           "type": "boolean",
@@ -472,7 +472,7 @@
               "type": "number",
               "minimum": 0,
               "maximum": 1,
-              "description": "Le plafond d'un jeu, même seul : la part de l'effectif d'une population qu'un seul jeu peut lui ôter en un cycle (prélèvements, captures, déplacements), et autant pour ce qu'il lui rend (libérations, nourrissages, bêtes d'élevage). Appliqué après part_max_compte et part_max_jeu, avant part_max_population ; il tient aussi parcelle par parcelle (docs/15). Un jeu peut le baisser pour lui (exposition.part_max_population_jeu), jamais le relever. 0,05 dans le monde d'Orvane ; absent, pas de plafond par jeu."
+              "description": "Le plafond d'un jeu, même seul : la part de l'effectif d'une population qu'un seul jeu peut lui ôter en un cycle (prélèvements, captures, déplacements). Ce qu'il lui rend (libérations, nourrissages, bêtes d'élevage) n'a pas de plafond de jeu : seulement part_max_population. Appliqué avant le lissage, après part_max_compte et part_max_jeu, avant part_max_population ; il tient aussi parcelle par parcelle (docs/15). Un jeu peut le baisser pour lui (exposition.part_max_population_jeu), jamais le relever. 0,05 dans le monde d'Orvane ; absent, pas de plafond par jeu."
             }
           }
         },

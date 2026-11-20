@@ -190,8 +190,8 @@ function assainir(X) {
   if (E.part_max_population_jeu != null && part01(E.part_max_population_jeu) == null) delete E.part_max_population_jeu;
   return E;
 }
-// Le plafond d'un jeu (docs/5) : la part d'une population qu'un seul jeu peut lui ôter, et lui rendre, en un cycle, même s'il est
-// seul à la montrer (plafonds.part_max_population_jeu, 0,05 dans le monde d'Orvane). Un jeu peut le baisser dans son exposition
+// Le plafond d'un jeu (docs/5) : la part d'une population qu'un seul jeu peut lui ôter en un cycle, même s'il est seul à la
+// montrer (plafonds.part_max_population_jeu, 0,05 dans le monde d'Orvane). Un jeu peut le baisser dans son exposition
 // (exposition.part_max_population_jeu), jamais le relever : c'est le plus bas des deux qui vaut. Sans l'un ni l'autre, rien.
 const part01 = x => typeof x === 'number' && Number.isFinite(x) && x >= 0 && x <= 1 ? x : null;
 function plafondJeu(plafonds, exposition) {
@@ -362,7 +362,7 @@ function agreger(lots, inst, profil, etat = {}, gen0 = null, jeux = null) {
   // somme des comptes, population par population, avec la part maximale d'un seul compte puis d'un seul jeu (plafondPart) : un
   // compte, un jeu de mille joueurs ne font pas seuls l'histoire d'une population que d'autres montrent
   const out = {}, pmax = PL.part_max_population, poidsDe = T => Object.values(T.retrait).reduce((a, x) => a + Math.abs(x), 0) + T.deplacement.reduce((a, d) => a + d.n, 0);
-  const oteT = T => Object.values(T.retrait).reduce((a, x) => a + Math.max(0, x), 0) + T.deplacement.reduce((a, d) => a + d.n, 0), renduT = T => Object.values(T.retrait).reduce((a, x) => a + Math.max(0, -x), 0);
+  const oteT = T => Object.values(T.retrait).reduce((a, x) => a + Math.max(0, x), 0) + T.deplacement.reduce((a, d) => a + d.n, 0);
   // (docs/5) le plafond de chaque jeu (plafondJeu) : un jeu sans plafond, ni du monde ni de lui, n'en a pas ; le monde qui n'en dit
   // aucun tourne comme avant, au caractère près
   const plafondDe = j => plafondJeu(PL, (vues[j] ??= vueJeu(profil, jeux, j || null)).exposition), parJeuT = dico();
@@ -374,26 +374,24 @@ function agreger(lots, inst, profil, etat = {}, gen0 = null, jeux = null) {
     const fact = plafondPart(contrib.map(([c, T]) => [c, poidsDe(T)]), PL.part_max_compte, bas(PL.part_max_compte));
     if (PL.part_max_jeu != null) { const parJeu = dico(); for (const [c, T] of contrib) { const j = jeuDe[c] ?? ''; parJeu[j] = (parJeu[j] || 0) + poidsDe(T) * fact[c]; }
       const fj = plafondPart(Object.entries(parJeu), PL.part_max_jeu, bas(PL.part_max_jeu)); for (const [c] of contrib) fact[c] *= fj[jeuDe[c] ?? '']; }
-    // le plafond d'un jeu, même seul, après la règle des parts : ce qu'il ôte à la population (prélèvements, captures, déplacements)
-    // et ce qu'il lui rend (libérations, nourrissages ; l'élevage plus bas), chacun au plus part_max_population_jeu de son effectif.
-    // Un jeu seul sur une population ne lui retire plus 20 % par cycle, jour après jour, mais 5 %
-    let fO = fact, fR = fact; const kA = dico();
-    if (plafonne) { const S = dico(); fO = dico(); fR = dico();
-      for (const [c, T] of contrib) { const j = jeuDe[c] ?? '', x = S[j] ??= { o: 0, r: 0, a: 0 }; x.o += oteT(T) * fact[c]; x.r += renduT(T) * fact[c];
-        if (T.apport) x.a += cap != null && T.apport.n > cap ? cap : T.apport.n; }
-      const kO = dico(), kR = dico();
-      for (const j in S) { const cj = plafondDe(j), lim = cj == null ? Infinity : cj * eff, x = S[j];
-        kO[j] = x.o > lim ? lim / x.o : 1; kR[j] = x.r > lim ? lim / x.r : 1; kA[j] = cj != null && x.a > Math.max(2, lim) ? Math.max(2, lim) / x.a : 1; }   // (l'élevage : deux bêtes au moins, comme plus bas)
-      for (const [c] of contrib) { const j = jeuDe[c] ?? ''; fO[c] = fact[c] * kO[j]; fR[c] = fact[c] * kR[j]; }
+    // le plafond d'un jeu, même seul, après la règle des parts : ce qu'il ôte à la population (ce que la part compte comme retrait :
+    // prélèvements, captures, déplacements) au plus part_max_population_jeu de son effectif. Un jeu seul sur une population ne lui
+    // retire plus 20 % par cycle, jour après jour, mais 5 %. Ce qu'il lui rend (libérations, nourrissages, l'élevage) n'a pas de
+    // plafond de jeu : seulement part_max_population, comme avant (une réintroduction, un jeu qui soigne ne perdent rien)
+    let fO = fact;
+    if (plafonne) { const S = dico(); fO = dico();
+      for (const [c, T] of contrib) { const j = jeuDe[c] ?? ''; S[j] = (S[j] || 0) + oteT(T) * fact[c]; }
+      const kO = dico(); for (const j in S) { const cj = plafondDe(j), lim = cj == null ? Infinity : cj * eff; kO[j] = S[j] > lim ? lim / S[j] : 1; }
+      for (const [c] of contrib) fO[c] = fact[c] * kO[jeuDe[c] ?? ''];
       // (moteur/parcelles.js) la part de chaque jeu dans ce qui est ôté à la population, et son plafond : le même plafond tient
       // parcelle par parcelle, chaque jeu là où ses lots l'ont dit
       const o = dico(); let tot = 0; for (const [c, T] of contrib) { const j = jeuDe[c] ?? '', v = oteT(T) * fO[c]; if (v > 0) { o[j] = (o[j] || 0) + v; tot += v; } }
       if (tot > 0) { const P = (parJeuT[tid] ??= dico())[bid] = dico(); for (const j in o) P[j] = { part: o[j] / tot, plafond: plafondDe(j) }; } }
     const O = (out[tid] ??= {})[bid] ??= { retrait: {}, deplacement: [] };
     for (const [c, T] of contrib) {
-      for (const k in T.retrait) O.retrait[k] = (O.retrait[k] || 0) + T.retrait[k] * (T.retrait[k] > 0 ? fO[c] : fR[c]);
+      for (const k in T.retrait) O.retrait[k] = (O.retrait[k] || 0) + T.retrait[k] * (T.retrait[k] > 0 ? fO[c] : fact[c]);
       for (const d of T.deplacement) if (d.n * fO[c] > 0) O.deplacement.push({ vers: d.vers, n: d.n * fO[c] });
-      if (T.apport) { const K = O.apport ??= { n: 0, N: {}, A: {}, a: {}, na: {} }, f = (cap != null && T.apport.n > cap ? cap / T.apport.n : 1) * (kA[jeuDe[c] ?? ''] ?? 1);
+      if (T.apport) { const K = O.apport ??= { n: 0, N: {}, A: {}, a: {}, na: {} }, f = cap != null && T.apport.n > cap ? cap / T.apport.n : 1;
         K.n += T.apport.n * f; for (const [x, v] of Object.entries(T.apport.N)) K.N[x] = (K.N[x] || 0) + v * f; for (const [x, v] of Object.entries(T.apport.A)) K.A[x] = (K.A[x] || 0) + v * f;
         for (const [x, v] of Object.entries(T.apport.a)) { K.a[x] = (K.a[x] || 0) + v * f; K.na[x] = (K.na[x] || 0) + T.apport.na[x] * f; } }
       if (T.contact && (T.contact.rencontres || T.contact.danger || T.contact.aide)) { const K = O.contact ??= { rencontres: 0, danger: 0, aide: 0 };

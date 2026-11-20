@@ -1142,7 +1142,7 @@ export interface Profil {
     traits_rendus?: string[];
     /** Effectif Orvane sous lequel le jeu cesse de faire apparaître le taxon (avant l'extinction réelle). */
     seuil_extinction_jeu?: number;
-    /** Sens jeu → Orvane, dit par le jeu (orvane_regler_jeu) : un plafond plus bas que celui du monde (influence.plafonds.part_max_population_jeu) pour ce que CE jeu ôte ou rend à une population en un cycle. C'est le plus bas des deux qui vaut : un jeu peut baisser son plafond, jamais le relever. 0 : le jeu lit le monde sans jamais rien lui ôter. */
+    /** Sens jeu → Orvane, dit par le jeu (orvane_regler_jeu) : un plafond plus bas que celui du monde (influence.plafonds.part_max_population_jeu) pour ce que CE jeu ôte à une population en un cycle. C'est le plus bas des deux qui vaut : un jeu peut baisser son plafond, jamais le relever. 0 : le jeu lit le monde sans jamais rien lui ôter. */
     part_max_population_jeu?: number;
     /** Un taxon éteint peut-il revenir par recolonisation d'un biome voisin ? */
     retour_apres_extinction?: boolean;
@@ -1196,7 +1196,7 @@ export interface Profil {
       part_max_population?: number;
       /** Part maximale de la pression totale d'un taxon venant d'un seul jeu, quand plusieurs jeux en montrent le taxon (comptée avant ce plafond, comme part_max_compte) : un jeu de mille joueurs ne fait pas seul l'histoire d'une espèce. */
       part_max_jeu?: number;
-      /** Le plafond d'un jeu, même seul : la part de l'effectif d'une population qu'un seul jeu peut lui ôter en un cycle (prélèvements, captures, déplacements), et autant pour ce qu'il lui rend (libérations, nourrissages, bêtes d'élevage). Appliqué après part_max_compte et part_max_jeu, avant part_max_population ; il tient aussi parcelle par parcelle (docs/15). Un jeu peut le baisser pour lui (exposition.part_max_population_jeu), jamais le relever. 0,05 dans le monde d'Orvane ; absent, pas de plafond par jeu. */
+      /** Le plafond d'un jeu, même seul : la part de l'effectif d'une population qu'un seul jeu peut lui ôter en un cycle (prélèvements, captures, déplacements). Ce qu'il lui rend (libérations, nourrissages, bêtes d'élevage) n'a pas de plafond de jeu : seulement part_max_population. Appliqué avant le lissage, après part_max_compte et part_max_jeu, avant part_max_population ; il tient aussi parcelle par parcelle (docs/15). Un jeu peut le baisser pour lui (exposition.part_max_population_jeu), jamais le relever. 0,05 dans le monde d'Orvane ; absent, pas de plafond par jeu. */
       part_max_population_jeu?: number;
     };
     /** Les pressions sont lissées sur autant de cycles (une chasse ponctuelle pèse peu, une chasse soutenue pèse). */

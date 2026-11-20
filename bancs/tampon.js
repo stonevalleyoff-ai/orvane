@@ -12,9 +12,11 @@
 //     d'un monde découpé après son éveil ;
 //  8. le jour un : un monde sans lots tourne exactement comme avant ;
 //  9. le plafond d'un jeu, même seul (part_max_population_jeu, 5 %) : un jeu qui le baisse, un jeu qui voudrait le relever, ce qu'il
-//     rend, plusieurs jeux, une petite population, et parcelle par parcelle (un jeu ne déplace pas la chasse d'un autre) ;
-//  10. les renvois : un lot renvoyé avec le même id n'est compté qu'une fois.
-// (§1 à §8 lisent les lots avec les plafonds d'avant, sans celui d'un jeu, pour vérifier chacun pour lui-même ; §9 et §10, avec ceux
+//     rend (qui n'a pas de plafond de jeu), plusieurs jeux, une petite population, et parcelle par parcelle (un jeu ne déplace pas la
+//     chasse d'un autre) ;
+//  10. les renvois : un lot renvoyé avec le même id n'est compté qu'une fois ;
+//  11. les pièges des sections 1 à 5, de nouveau, avec les plafonds du monde d'Orvane tels qu'ils sont.
+// (§1 à §8 lisent les lots avec les plafonds d'avant, sans celui d'un jeu, pour vérifier chacun pour lui-même ; §9 à §11, avec ceux
 // du monde d'Orvane tels qu'ils sont)
 //   node bancs/tampon.js
 'use strict';
@@ -148,9 +150,11 @@ console.log('9. Le plafond d\'un jeu, même seul');
   const bas = J(agrJ(chasseurs(200), expo(.02))), haut = J(agrJ(chasseurs(200), expo(.5))), faux = [-1, 2, 'x', null, 1e400 * 0].map(x => ote(J(agrJ(chasseurs(200), expo(x)))));
   verif(Math.abs(ote(bas) - .02 * effJ) < 1e-6 && Math.abs(ote(haut) - lim) < 1e-6 && faux.every(x => Math.abs(x - lim) < 1e-6) && Tampon.plafondJeu({ part_max_population_jeu: .05 }, { part_max_population_jeu: .3 }) === .05 && Tampon.plafondJeu({}, { part_max_population_jeu: .3 }) === .3,
     `un jeu qui le baisse (2 %, dans son exposition) n'en prend que ${fx(ote(bas), 0)} ; qui voudrait le relever (50 %), ou dit n'importe quoi (−1, 2, « x »), reste à ${fx(ote(haut), 0)}`);
-  const rend = J(agrJ(chasseurs(200, 'stone-valley', {}, 'liberation'))), elev = J(agrJ(Array.from({ length: 200 }, (_, i) => lot('e' + i, [{ taxon: 'jagra', biome: 'toundra', action: 'liberation', n: 13, genome: { n: 13, alleles: { albinisme: 1 }, a: {} } }]))));
-  verif(Math.abs(rendu(rend) - lim) < 1e-6 && Math.abs(elev.apport.n - lim) < 1e-2,
-    `ce qu'il rend aussi : 200 joueurs relâchent 2 622 jagra, ${fx(rendu(rend), 0)} arrivent ; 2 600 bêtes d'élevage, ${fx(elev.apport.n, 0)} (${pc(PJ)}, pas ${pc(pmax)})`);
+  // ce qu'un jeu rend n'a pas de plafond de jeu : une réintroduction, un jeu qui soigne ne perdent rien (seul part_max_population borne)
+  const rend = J(agrJ(chasseurs(200, 'stone-valley', {}, 'liberation'))), elev = J(agrJ(Array.from({ length: 200 }, (_, i) => lot('e' + i, [{ taxon: 'jagra', biome: 'toundra', action: 'liberation', n: 10, genome: { n: 10, alleles: { albinisme: 1 }, a: {} } }]))));
+  const lesDeux = J(agrJ([...chasseurs(200), ...chasseurs(200, 'stone-valley', {}, 'liberation').map((l, i) => ({ ...l, source: { ...l.source, compte: 'r' + i } }))]));
+  verif(Math.abs(rendu(rend) - 2622) < 1e-6 && Math.abs(elev.apport.n - 2000) < 1e-2 && Math.abs(lesDeux.retrait['*'] - (lim - 2622)) < 1e-6,
+    `ce qu'il rend n'a pas de plafond de jeu : 200 joueurs relâchent 2 622 jagra, ${fx(rendu(rend), 0)} arrivent ; 2 000 bêtes d'élevage, ${fx(elev.apport.n, 0)} entrent (au plus ${pc(pmax)} de la population, comme avant) ; un jeu qui en chasse 2 622 et en relâche autant : sa chasse est ramenée à ${fx(lim, 0)}, pas ce qu'il relâche (${fx(-lesDeux.retrait['*'], 0)} bêtes de plus, net)`);
   const deux = J(agrJ([...chasseurs(200, 'jeu-a'), ...chasseurs(200, 'jeu-b')])), dix = J(agrJ(Array.from({ length: 10 }, (_, k) => chasseurs(60, 'jeu-' + k)).flat()));
   verif(Math.abs(ote(deux) - 2 * lim) < 1e-6 && ote(dix) <= pmax * effJ + 1e-6 && ote(dix) > .9 * pmax * effJ,
     `deux jeux qui chassent autant : ${pc(PJ)} chacun (${fx(ote(deux), 0)} en tout) ; dix jeux : ${fx(ote(dix), 0)}, jamais plus que ${pc(pmax)} de la population, tous jeux confondus`);
@@ -179,6 +183,26 @@ console.log('10. Les renvois');
     'le même id venu d\'un autre jeu est un autre lot ; deux lots sans id comptent deux fois, comme avant');
   const P = l => ({ ...l, evenements: l.evenements.map(e => ({ ...e, parcelle: 'toundra~2' })) }), l1 = Parcelles.localiser([P(L)], E), l2 = Parcelles.localiser([P(L), P(L)], E);
   verif(JSON.stringify(l1) === JSON.stringify(l2), 'les parcelles non plus ne le comptent pas deux fois (localiser)'); }
+
+console.log('11. Les mêmes pièges, avec les plafonds du monde d\'Orvane');
+{ const agrJ = (lots, jeux = null, X = I) => Tampon.agreger(lots, X, profilJ, {}, null, jeux), lim = PJ * effJ;
+  const pires = [null, 'x', [], { monde: 'orvane', evenements: [null] }, lot('a', [null, 7, { action: 'prelevement' }]), lot('c', [{ taxon: '__proto__', biome: 'maladie', action: 'prelevement', n: 1 }, { taxon: 'jagra', biome: '__proto__', action: 'prelevement', n: 1 }]),
+    lot('e', [{ taxon: 'jagra', biome: 'toundra', action: 'prelevement', n: 3, phenotype: 'nanisme' }], 'malin'), { ...lot('__proto__', [chasse('jagra', 'toundra', 1)]), jeu: '__proto__', id: '__proto__' }];
+  let r0 = null, err = null; try { r0 = agrJ(pires, { malin: { exposition: { part_max_population_jeu: 'x', compression: 'x' } } }); const loc = Parcelles.localiser(pires, E); Parcelles.repartir(r0.pressions, E, loc); } catch (e) { err = e; }
+  verif(!err && r0 && Object.getOwnPropertyNames(Object.prototype).join() === proto0 && ({}).toundra === undefined, `les lots piégés, un plafond de jeu qui n'est pas un nombre : rien ne plante, rien ne touche Object.prototype${err ? ' — ' + err.message : ''}`);
+  const a = agrJ([lot('h', [chasse('jagra', 'toundra', 5)]), lot('x', [chasse('jagra', 'toundra', JSON.parse('{"n":1e400}').n)])]);
+  verif(fini(a) && Math.abs(ote(a.pressions.taxons.jagra.toundra) - 5) < 1e-6, 'n = 1e400 est écarté, la chasse honnête (5) reste 5');
+  const N = 1500, dep = agrJ(Array.from({ length: N }, (_, i) => lot('d' + i, [{ taxon: 'jagra', biome: 'toundra', action: 'deplacement', vers: 'banquise', n: 1e4 }]))).pressions.taxons.jagra.toundra;
+  const lib = agrJ(Array.from({ length: N }, (_, i) => lot('l' + i, [{ taxon: 'jagra', biome: 'toundra', action: 'liberation', n: 1e4 }]))).pressions.taxons.jagra.toundra;
+  const cap = I.biomes.find(b => b.id === 'prairie').capacite, hab = agrJ(Array.from({ length: N }, (_, i) => lot('b' + i, [{ biome: 'prairie', action: 'habitat_perdu', n: 1e4 }]))).pressions.biomes.prairie;
+  verif(Math.abs(ote(dep) - lim) < 1e-6 && rendu(lib) <= pmax * effJ + 1e-6 && rendu(lib) > lim && Math.abs(hab.habitat) <= .02 * cap + 1e-6,
+    `${N} comptes d'un jeu : ils emportent ${fx(ote(dep), 0)} jagra (${pc(PJ)}), en relâchent ${fx(rendu(lib), 0)} (${pc(pmax)}, sans plafond de jeu), ôtent ${fx(-hab.habitat, 0)} de capacité à la prairie (2 %)`);
+  const grand = Array.from({ length: N }, (_, i) => lot('g' + i, [chasse('jagra', 'toundra', 30)], 'jeu-a')), petit = lot('p', [chasse('jagra', 'toundra', 1)], 'jeu-b');
+  const deux = agrJ([...grand, petit]).pressions.taxons.jagra.toundra, honnete = agrJ([lot('a1', [chasse('jagra', 'toundra', 25)], 'jeu-a'), lot('a2', [chasse('jagra', 'toundra', 25)], 'jeu-a'), petit]).pressions.taxons.jagra.toundra;
+  verif(Math.abs(ote(deux) - (lim + 1)) < 1e-6 && Math.abs(ote(honnete) - 51) < 1e-6, `un jeu de ${N} comptes face à un petit : ${fx(ote(deux), 0)} jagra (${pc(PJ)} du grand, la bête du petit) ; deux joueurs et un : rien n'est rogné (51)`);
+  const tous = Array.from({ length: 200 }, (_, i) => lot('t' + i, [chasse('jagra', 'toundra', 13.11, { parcelle: 'toundra~2' })])), M = Parcelles.repartir(agrJ(tous).pressions, E, Parcelles.localiser(tous, E)).taxons.jagra;
+  const somme = Object.values(M).reduce((x, y) => x + ote(y), 0);
+  verif(ote(M['toundra~2']) <= PJ * effDe('jagra', 'toundra~2', E) + 1e-3 && Math.abs(somme - lim) < 1e-2, `200 chasseurs tous en toundra~2 : elle perd ${fx(ote(M['toundra~2']), 0)} bêtes (${pc(PJ)} d'elle-même), ${fx(somme, 0)} en tout`); }
 
 function pc(x) { return fx(100 * (x || 0), 1) + ' %'; }
 console.log(`\n${ok ? 'tout est vérifié' : 'ÉCHEC'} (${((Date.now() - t0) / 1000).toFixed(0)} s)`);

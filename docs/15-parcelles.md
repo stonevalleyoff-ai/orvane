@@ -45,10 +45,12 @@ Une chasse dite dans une parcelle où la lignée n'est pas revient ainsi exactem
 **Le plafond d'un jeu tient aussi par parcelle.** Le tampon borne ce qu'un seul jeu ôte à une population en un cycle (`part_max_population_jeu`, 5 % dans le monde d'Orvane, docs/5). Sans rien de plus, un jeu qui dit toute sa chasse dans une petite parcelle y prendrait ses 5 % du biome entier, soit bien plus que 5 % de la parcelle. Dans un monde qui donne ce plafond, le partage se fait donc jeu par jeu :
 - le tampon dit, pour chaque population, la part de chaque jeu dans ce qui lui est ôté, et son plafond (`pressions.jeux`) ;
 - la part de chaque jeu est posée là où **ses** lots l'ont dite (`Parcelles.localiser` compte aussi jeu par jeu) : un jeu ne déplace plus la chasse d'un autre. Avant, un jeu qui disait une parcelle y entraînait aussi la chasse des jeux qui n'en disaient aucune ;
-- aucune parcelle ne perd, du fait d'un seul jeu, plus que son plafond de ce que la lignée y compte. Le reste va aux parcelles où la lignée vit, selon leur effectif, chacune sous le même plafond ;
+- aucune parcelle ne perd, du fait d'un seul jeu, plus que son plafond de ce que la lignée y compte. Le reste va aux parcelles où la lignée vit, selon leur effectif, chacune sous le même plafond. Une exception : quand ce que le lissage garde des jours passés fait dépasser au jeu son plafond sur le biome, ce surplus se pose selon les effectifs (chaque parcelle en prend alors la même part, un peu plus que 5 %) plutôt que de se perdre ;
 - puis, tous jeux ensemble, aucune parcelle ne perd plus que `part_max_population` d'elle-même, comme plus haut.
 
-Ce qu'un jeu rend (libérations, nourrissages, bêtes d'élevage) suit sa chasse, comme avant : le tampon le borne au même plafond, sur le biome. Un monde qui ne donne pas de plafond par jeu partage comme avant, au caractère près. `bancs/tampon.js` (§9) et `bancs/parcelles.js` (§2) le vérifient.
+**La localisation tient mal au plafond.** Une parcelle ne prend à un jeu que 5 % de ce que la lignée y compte : un jeu qui chasse peu y pose toute sa chasse, mais un jeu qui chasse à son plafond (5 % du biome) remplit toutes les parcelles à 5 %, et sa chasse finit répartie selon les effectifs, comme s'il n'avait rien dit. C'est voulu (aucune parcelle ne se vide par un seul jeu), mais un jeu qui joue à la parcelle, comme Hors-Cordon, ne voit sa chasse rester là où il la dit que tant qu'elle reste sous son plafond.
+
+Ce qui est rendu (libérations, nourrissages, bêtes d'élevage) n'a pas de plafond de jeu. Dans les parcelles, il suit la localisation de la chasse des jeux, au prorata de ce que chacun ôte (avant : celle de tous les jeux ensemble) ; sans chasse localisée, les effectifs. Un monde qui ne donne pas de plafond par jeu partage comme avant, au caractère près. `bancs/tampon.js` (§9) et `bancs/parcelles.js` (§2) le vérifient.
 
 Une fusion (docs/14) dans un monde à parcelles répartit les arrivées entre les parcelles de leurs biomes.
 
