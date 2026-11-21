@@ -1,0 +1,173 @@
+{
+ "lisse": {
+  "orkifir": {
+   "prairie": {
+    "*": 0.367
+   },
+   "foret": {
+    "*": 0.099
+   }
+  },
+  "soel": {
+   "prairie": {
+    "*": 0.513
+   }
+  },
+  "dunvi": {
+   "prairie": {
+    "*": 0.066
+   }
+  },
+  "lokigra": {
+   "prairie": {
+    "*": 0.519
+   }
+  },
+  "tormuvi": {
+   "prairie": {
+    "*": 0.297
+   }
+  },
+  "elgra": {
+   "prairie": {
+    "*": 0.099
+   }
+  },
+  "umedun": {
+   "prairie": {
+    "*": 0.085
+   }
+  },
+  "orvi": {
+   "prairie": {
+    "*": 0.148
+   },
+   "steppe": {
+    "*": 0.148
+   }
+  },
+  "umeouro": {
+   "prairie": {
+    "*": 0.148
+   }
+  },
+  "losilme": {
+   "prairie": {
+    "*": 0.148
+   }
+  },
+  "eltael": {
+   "steppe": {
+    "*": 0.099
+   }
+  },
+  "dunouro": {
+   "prairie": {
+    "*": 0.148
+   }
+  },
+  "noufir": {
+   "prairie": {
+    "*": 0.226
+   },
+   "foret": {
+    "*": 0.099
+   }
+  },
+  "muphene": {
+   "prairie": {
+    "*": 0.539
+   },
+   "desert-froid": {
+    "*": 0.079
+   }
+  },
+  "belgrane": {
+   "prairie": {
+    "*": 0.066
+   }
+  },
+  "linan": {
+   "prairie": {
+    "*": 0.148
+   }
+  },
+  "lomuel": {
+   "prairie": {
+    "*": 0.148
+   }
+  },
+  "jadunou": {
+   "prairie": {
+    "*": 0.523
+   },
+   "foret": {
+    "*": 0.099
+   }
+  },
+  "ouysbel": {
+   "steppe": {
+    "*": 0.099
+   }
+  },
+  "belfir": {
+   "prairie": {
+    "*": 0.148
+   }
+  },
+  "silka": {
+   "prairie": {
+    "*": 0.148
+   }
+  },
+  "silvamu": {
+   "prairie": {
+    "*": 0.148
+   }
+  },
+  "nourendun": {
+   "foret": {
+    "*": 0.198
+   }
+  },
+  "duntismu": {
+   "riviere": {
+    "*": 0.059
+   }
+  }
+ },
+ "dernier_id": 74,
+ "lisseQ": {},
+ "derniere_lecture": "2026-11-19T20:46:55.245511+00:00",
+ "bilan": {
+  "orvane": "1.0",
+  "monde": {
+   "id": "orvane",
+   "ne": "2026-10-29T15:30:11.656Z"
+  },
+  "saison": {
+   "id": "an-0-ete",
+   "an": 0,
+   "nom": "été",
+   "de": 45,
+   "a": 74
+  },
+  "compte": {
+   "de": 61,
+   "a": 61,
+   "cycles": 1,
+   "date_de": "2026-11-21T03:06:17.169Z",
+   "date_a": "2026-11-21T03:06:17.169Z"
+  },
+  "plafonds": {
+   "par_compte_cycle": 30,
+   "part_max_compte": 0.15,
+   "part_max_jeu": 0.5,
+   "part_max_population": 0.2,
+   "part_max_population_jeu": 0.05
+  },
+  "memoire_cycles": 5,
+  "jeux": {},
+  "noms": {}
+ }
+}

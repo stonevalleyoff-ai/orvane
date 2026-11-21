@@ -1,0 +1,15 @@
+{
+ "orvane_sante": 1,
+ "monde": "orvane",
+ "rapports": [
+  {
+   "fichier": "2026-11-17.json",
+   "date": "2026-11-17",
+   "cycle": 57,
+   "titre": "Des prédateurs affamés, des joueurs qui pèsent peu",
+   "resume": "Dix-sept cycles depuis la naissance du monde, trois continents versés, un été qui monte vers son sommet. Les joueurs ont envoyé 345 événements en tout : assez pour que quelques bêtes de la prairie s'en souviennent, beaucoup trop peu pour peser sur les effectifs. La dynamique qui domine le monde ne vient pas d'eux : les carnivores arrivés avec la genèse 7 ont perdu la moitié de leurs bêtes depuis la fusion, alors que leurs proies ont triplé.",
+   "alertes": 2,
+   "a_surveiller": 3
+  }
+ ]
+}

@@ -1,0 +1,105 @@
+# 5. Le profil et les essais
+
+## Amorcer le monde
+
+Le monde d'Orvane est déjà là, et tous les jeux s'y branchent (`hebergement/LISEZ-MOI.md`) : ce chapitre sert à faire **un autre monde**, pour essayer son jeu à part ou pour une autre histoire. Avant le premier cycle, il lui faut une **amorce** : un instantané de génération 0. Deux façons :
+
+- **depuis votre bestiaire** : un script qui lit vos espèces et en fait des taxons (`traducteurs/stone-valley/generer-generation-0.js` est l'exemple : masse depuis la taille, régime, longévité et maturité depuis vos valeurs, niche depuis vos biomes, populations proportionnelles à votre densité). Les variantes rares de votre jeu étaient des *taux par naissance* : posez-les comme des fréquences installées réalistes (0,4 % par robe, 0,1 % par forme) et laissez le profil les rendre rares à l'écran ;
+- **à la main** : un bestiaire d'auteur, écrit directement dans le format de l'instantané ;
+- **par la genèse** : `node moteur/genese.js <biomes.json> --cycles 3000` crée la vie à partir d'ancêtres très simples — des lignées que personne n'a dessinées, nommées par le moteur. C'est la voie d'un jeu qui assemble ses créatures par morceaux (chapitre 2).
+
+Dans les deux cas, le bestiaire d'un jeu n'est pas un équilibre écologique : trop de prédateurs, des herbivores de même taille qui se gênent. Donnez au profil un **rodage** (`monde.rodage`, 400 cycles est un bon départ) : au premier cycle, le monde tourne seul autant de fois, et c'est l'équilibre atteint qui est publié comme génération 0 — le jeu ne voit rien changer le premier jour. Vérifiez avant que ce rodage ne tue personne (`node moteur/orvane.js amorce.json --cycles 400`) : une espèce qui s'éteint seule a une niche, une masse ou une longévité mal posée, ou un prédateur sans proie à sa taille.
+
+## Le profil (`profil.json`)
+
+```json
+{ "orvane": "1.0", "jeu": "stone-valley",
+  "monde": { "id": "sv-1", "graine": 7340021, "cycle": "24h", "amorce": "traducteurs/stone-valley/generation-0.json", "rodage": 400, "annee": 120 },
+  "exposition": {
+    "compression": { "defaut": 0.1, "par_domaine": { "morphologie": 0.1 }, "par_trait": { "gigantisme": 0.1 } },
+    "propagation_cycles": 3, "inertie_max": 0.05,
+    "traits_rendus": ["albinisme", "melanisme", "robe-doree", "gigantisme", "nanisme"],
+    "seuil_extinction_jeu": 40, "retour_apres_extinction": true },
+  "influence": {
+    "poids": { "prelevement": 1, "capture": 1, "liberation": -1, "nourrissage": -0.2, "deplacement": 1, "habitat_perdu": 1, "habitat_gagne": -1 },
+    "denormaliser": true, "exposition_ref": 60, "pseudo_comptes": 20,
+    "plafonds": { "par_compte_cycle": 30, "part_max_compte": 0.15, "part_max_population": 0.2 },
+    "memoire_cycles": 5 } }
+```
+
+**Le monde.** `cycle` : la durée réelle d'un cycle (24h ; de dix minutes à une semaine, docs/19) ; `heure` : l'heure de cycle, en UTC (03:00) ; `milieu: true` : le milieu transformé par les bêtes et les joueurs (docs/22) ; `ponte: true` : pondre ou mettre bas (docs/25) ; `stades: true` : les cycles de vie (docs/26) ; `invention: true` : un monde qui invente ses traits (docs/27) ; `natures: true` : des lieux qui changent de nature (docs/28) ; `derives: true` : des régimes, des plantes et des souches qui dérivent (docs/29) ; `dietes: true` : des régimes en spectre (docs/30) ; `climat: true` : le climat et la géologie lente (docs/31) ; `grammaire: true` : la grammaire des effets et des conduites (docs/32) ; `castes: true`, `formes: true` : les colonies et les formes nouvelles (docs/33) ; `esprit: true` : l'esprit, les savoirs (docs/34) ; `catalogue` : le catalogue propre du monde, ses axes, ses traits, ses organes, ses formes de corps (docs/20) ; `rattrapage` : combien de cycles dus il rattrape d'un coup (3) ; `annee` : la durée de l'année en cycles (120 : quatre saisons de trente jours) — 0 pour un monde sans saison ; `rodage` : voir ci-dessus ; `historique` : combien de cycles garder dans `historique.json` (365 par défaut) ; `nocturne: false` : le cycle nocturne passe ce monde.
+
+**Exposition (Orvane → jeu).**
+- `mode` : `compression` (par défaut) ou `relatif`. En mode relatif, `taux_jeu` donne, par trait rendu, la chance qu'avait une naissance de le porter avant Orvane ; le jeu garde ces taux à la génération 0 et ne suit que l'écart du monde depuis elle, sur la cote (`cote jeu = cote taux_jeu × cote aujourd'hui / cote génération 0`). Une combinaison absente de la génération 0 garde le taux du jeu jusqu'à ce qu'Orvane l'installe au-delà de `reference_min`. C'est le mode qui garantit qu'un jeu existant ne change pas le jour où il se branche — Stone Valley l'utilise.
+- `quantitatifs` : `rendus`, les traits continus que le jeu sait jouer ; `variation` (0 à 1), la part de la variation individuelle montrée — 0 : seul l'écart de la population depuis la génération 0 se voit, le jour un ne change rien ; 1 : toute la variation naturelle (chapitre 8).
+- `mefiance` : `rendue` (le jeu montre-t-il la méfiance et l'habituation ?), `fuite` et `habitude`, les facteurs de la distance de fuite à méfiance 1 et à habituation 1 (2,2 et 0,5 par défaut ; chapitre 12).
+- `bestiaire` : `jeu` (par défaut), la faune du jeu suivie par Orvane ; `orvane`, pour un monde né de la genèse, où la faune du jeu que le monde ne connaît pas cède sa place aux lignées (dans Stone Valley : autant de bêtes, régime par régime).
+- `non_rendus` (mode relatif) : `reel` (par défaut) — les traits non rendus gardent leur fréquence réelle, tirés à part de l'allure : le jeu peut les faire agir (chapitre 7) et rapporter le phénotype exact ; `base` — ils se fondent dans le plan de base.
+- `compression` : le facteur appliqué à la *cote* d'un phénotype (f/(1−f)). 0,1 : 20 % → 2,4 %, 50 % → 9 %, 99 % → 91 %. Une variante rare reste rare, une variante qui a gagné l'emporte aussi à l'écran. Affinez par domaine, par trait, par biome.
+- `propagation_cycles` : un changement est étalé sur autant de cycles ; `inertie_max` borne la variation par cycle. Les bêtes déjà nées gardent leur phénotype.
+- `traits_rendus` : la liste de ce que votre jeu sait montrer (chapitre 2).
+- `part_max_population_jeu` (sens jeu → Orvane) : un jeu baisse pour lui le plafond d'un jeu (voir Influence, ci-dessous) ; il ne le relève jamais.
+- `seuil_extinction_jeu` et `seuil_extinction_part` : le jeu cesse de faire apparaître le taxon quand son effectif tombe sous le premier **et** sous cette part (un quart) de ce qu'il était à la génération 0 — avant l'extinction réelle, pour que la rareté se voie, sans rayer une espèce rare dès le départ.
+
+**Influence (jeu → Orvane).**
+- `poids` : un prélèvement vaut 1 individu retiré ; les autres actions sont relatives ; négatif = favorable.
+- `exposition_ref` : rencontres par compte et par cycle considérées comme une activité normale ; au-delà, la pression du compte est ramenée à ce niveau.
+- `pseudo_comptes` : le lissage de la dénormalisation (20 par défaut).
+- `plafonds` : `par_compte_cycle` (individus équivalents par taxon et par compte), `part_max_compte` (un seul compte ne pèse pas plus que cette part du total), `part_max_jeu` (un seul jeu ne pèse pas plus que cette part, quand plusieurs jeux montrent la lignée), `part_max_population_jeu` (le plafond d'un jeu, même seul, ci-dessous), `part_max_population` (un cycle ne retire pas plus que cette part d'une population, tous jeux confondus : pas d'extinction en une nuit).
+- **Le plafond d'un jeu** (`part_max_population_jeu`, 0,05 dans le monde d'Orvane). La règle des parts ne mord que lorsque plusieurs jeux montrent une lignée : un jeu seul pouvait retirer à une population jusqu'à `part_max_population` d'elle-même (20 %) chaque cycle, jour après jour. Désormais, par population et par cycle, un seul jeu ne lui ôte pas plus que cette part de son effectif :
+  - ce qui est ôté : les prélèvements, les captures, les déplacements vers un autre biome (tout ce qui a un poids positif, ce que la règle des parts compte comme retrait) ;
+  - ce qui est rendu n'a pas de plafond de jeu : les libérations, les nourrissages (un poids négatif) et les bêtes d'élevage (docs/36) restent sous le seul `part_max_population`, comme avant. Une réintroduction, un jeu qui soigne ne perdent rien : 2 000 jagra relâchés en toundra (13 000 bêtes) arrivent tous ;
+  - il vient après la part d'un compte et d'un jeu, et avant `part_max_population` : dix jeux qui prennent chacun 5 % d'une population ne lui retirent pas 50 %, mais 20 % ;
+  - il tient aussi parcelle par parcelle, là où les lots du jeu disent qu'il chasse (docs/15) ;
+  - il ne touche ni l'habitat ni le milieu (bornés à part : `part_max_habitat`, et 5 % du lieu par axe et par cycle dans le moteur), ni le contact qui rend méfiant (docs/12), ni ce que retient la mémoire (docs/50, qui a ses propres plafonds) ;
+  - il borne chaque cycle avant le lissage (`memoire_cycles`), comme les autres plafonds : ce que le lissage reporte des jours passés s'ajoute, si bien qu'un jeu qui chasse à son plafond jour après jour reste à 5 %, mais qu'une semaine de chasse arrêtée net pèse encore un peu les jours suivants.
+  Un jeu peut le **baisser** pour lui, dans son exposition (`exposition.part_max_population_jeu`, réglée par `orvane_regler_jeu`) : c'est le plus bas des deux qui vaut. Il ne peut pas le relever. À 0, le jeu ne retire plus rien au monde (ce qu'il rend compte toujours). Un monde dont le profil ne le donne pas n'a pas de plafond par jeu, et tourne comme avant.
+- **Ce que le plafond d'un jeu ne protège pas.** Il est compté par jeu inscrit, et l'inscription est libre : une même personne qui inscrit quatre jeux prend ensemble 20 % d'une population par cycle, comme avant (dix jeux aussi : `part_max_population` borne toujours le tout). Un jeu neuf n'a que 500 lots par jour ; la vraie parade serait qu'un jeu neuf soit validé avant que ses lots comptent (`hebergement/LISEZ-MOI.md`). Et dans un monde à parcelles, un jeu qui chasse à son plafond partout perd sa localisation : chaque parcelle étant pleine à 5 %, sa chasse finit répartie selon les effectifs (docs/15).
+- `memoire_cycles` : le lissage dans le temps.
+
+Réglage conseillé pour démarrer : les valeurs ci-dessus. Puis regardez, dans l'observatoire, ce que dix comptes qui chassent chaque soir font à une espèce en 40 cycles : si elle s'éteint, montez `part_max_population` vers 0,1 ou `memoire_cycles` vers 10 ; si rien ne bouge jamais, baissez `pseudo_comptes` ou montez `par_compte_cycle`.
+
+## Essayer hors ligne
+
+```
+node moteur/orvane.js amorce.json --cycles 40 --lot lot.json --profil profil.json --comptes 10
+```
+
+rejoue le même lot chaque nuit pour dix comptes et imprime effectifs et fréquences. L'**observatoire** (`monde/index.html`, onglet Pressions) fait la même chose avec des courbes, et l'onglet Taxons montre côte à côte la fréquence réelle et la fréquence **exposée** : c'est exactement ce que votre traducteur recevra.
+
+### Rejouer ses lots sur une copie du monde
+
+Le monde `essai` du Supabase garde les lots quatorze jours, mais aucun monde ne les lit : il dit si un dépôt passe, pas ce qu'il fait au monde. Pour le voir, rejouez vos lots sur une copie du monde d'Orvane tel qu'il est aujourd'hui, chez vous, sans réseau, par le vrai cycle de nuit (`hebergement/cycle.js` : le tampon, les plafonds, les parcelles, le moteur). Deux copies du même jour, l'une avec vos lots, l'autre sans (le témoin) : comme le monde est déterministe, elles ne diffèrent que par ce que vos lots y ont fait.
+
+```sh
+git fetch origin publication                          # le monde vivant est dans la branche publication (hebergement/LISEZ-MOI.md)
+mkdir -p mondes/.essai/lots
+for f in etat.json tampon.json jeux.json generation-0.json; do git show origin/publication:mondes/orvane/$f > mondes/.essai/$f; done
+cp mondes/orvane/profil.json mondes/.essai/           # le profil, lui, vient de main
+cp -r mondes/.essai mondes/.temoin                    # le témoin : la même copie, sans lots
+cp mes-lots/*.json mondes/.essai/lots/                # vos lots, un par fichier (node outils/verifier.js mon-lot.json avant)
+node hebergement/cycle.js .temoin --sans-reseau --cycles 5 --maintenant 2026-11-20T03:00:00Z
+node hebergement/cycle.js .essai --sans-reseau --cycles 5 --maintenant 2026-11-20T03:00:00Z
+node -e "const [a, b] = ['.temoin', '.essai'].map(m => require('./mondes/' + m + '/instantane.json'));
+  for (const t of b.taxons) for (const p of t.populations) { const q = a.taxons.find(x => x.id === t.id)?.populations.find(x => x.biome === p.biome);
+    if (q && Math.abs(q.effectif - p.effectif) >= 1) console.log(t.id, p.biome, Math.round(q.effectif), '→', Math.round(p.effectif), JSON.stringify(p.parcelles || {})); }"
+```
+
+- Les lots sont ceux que le jeu dépose, tels quels : `monde` vaut `orvane`, et `source.jeu` est l'identifiant de votre jeu. S'il est dans `jeux.json`, ses lots sont lus avec son exposition, comme la nuit ; sinon, tels quels.
+- Le cycle lit le dossier `lots/` au premier des cinq cycles, puis range les lots dans `lots/traites/` (pour rejouer, les remettre dans `lots/`). Le lissage (`memoire_cycles`, 5) étale leur poids : une chasse pèse un tiers le premier jour, puis le reste les jours suivants. Cinq cycles en montrent l'essentiel ; un cycle prend une vingtaine de secondes.
+- `--sans-reseau` : rien n'est lu en ligne. `--maintenant` : la même date pour les deux copies.
+- Un dossier qui commence par un point n'est jamais pris par l'action de la nuit (`mondes/*/`) : ne le commitez pas, effacez-le après (`rm -rf mondes/.essai mondes/.temoin`).
+- L'instantané d'une copie se lit comme celui du monde, avec la répartition par parcelle (`populations[].parcelles`) ; `tampon.json` montre ce que le tampon a gardé de vos lots (`lisse`), plafonds compris.
+- La copie publie aussi son bilan de saison (`mondes/.essai/bilans/en-cours.json`, docs/4, « Le bilan de saison ») : votre jeu y a son entrée, lignée par lignée, avec ce que vos lots demandaient, ce qui leur a été appliqué, ce que chaque plafond en a raboté et la part de l'effectif. Le cumul de la saison vient de `tampon.json` : la copie continue la saison du monde publié, les autres jeux y gardent la leur. Faites tourner la copie jusqu'à la fin de la saison (`cycle.saison` de l'instantané ; le dossier lit ses lots au premier cycle de chaque passage) : elle écrit le bilan de la saison finie (`bilans/an-0-ete.json`…), comme la nuit. `node outils/verifier.js mondes/.essai/bilans/en-cours.json` le vérifie.
+
+Essayé le 19 novembre, sur le monde du cycle 59 (le lot : 40 rencontres et 25 jagra prises en `toundra~2`) : au premier cycle, `toundra~2` compte 8 jagra de moins (un tiers, le lissage), et rien ne change ailleurs. Cinq cycles plus tard, la toundra en compte 15 de moins que le témoin : 6 en `toundra~2`, 3 dans chacune des autres parcelles (ce que le lissage reporte sur les jours suivants n'a plus de parcelle : il se répartit selon les effectifs), et quelques bêtes de plus chez celles qui partagent sa place (`somene`, `musilnou` : 9 de plus).
+
+Essayé le 20 novembre, sur le monde du cycle 60 (en plein été), pour le bilan de saison : seize cycles, des lots de deux jeux à presque chaque cycle (Lisière, quatre joueurs honnêtes en toundra ; un jeu d'essai de soixante joueurs qui demande un quart des renbello de la steppe chaque nuit), dont un rattrapage de trois cycles. Au cycle 75, l'été s'achève : `bilans/an-0-ete.json` est écrit (cycles 61 à 74). Lisière y a ôté 297,6 bêtes, tout ce qu'il demandait ; le jeu d'essai, 3 933 renbello sur 18 000 demandés, 5 % de la population par cycle au plus (le reste, raboté par son plafond). `bilans/en-cours.json` compte l'automne. Le monde est le même, au caractère près, que celui qu'aurait fait le cycle d'avant le bilan (les 1 372 fichiers qu'il écrit).
+
+Pour le traducteur lui-même, écrivez un **banc** : un contexte Node où les globales de votre jeu sont des doublures, qui charge `tampon.js`, vos correspondances et votre traducteur, puis vérifie : les effectifs/poids appliqués, le tirage des variantes sur 100 000 naissances (≈ fréquences exposées), la reconnaissance du phénotype d'une bête tuée, la validité du lot contre le schéma, et le retour du lot dans `agreger()` + `cycle()`. `traducteurs/stone-valley/banc.js` est le modèle.
+
+Pour le moteur, `node bancs/stabilite.js` fait tourner le monde mille cycles, sans joueurs puis avec dix joueurs qui chassent chaque soir, et vérifie qu'il ne s'emballe ni ne s'effondre, que le jour un est neutre, que la sélection répond comme elle le doit et que tout est déterministe (chapitre 13). `--monde` le lance sur votre monde, `--court` en deux minutes.
+
+## Vérifier en ligne
+
+Le premier cycle publié doit être **identique à l'amorce** côté jeu (rien ne change à l'écran) : c'est le test que le branchement ne casse rien. Les changements viennent ensuite, avec les lots des joueurs, et l'observatoire (`monde/?monde=<id>`) les montre nuit après nuit.

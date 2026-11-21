@@ -1,0 +1,22 @@
+{
+ "orvane": "1.0",
+ "monde": {
+  "id": "aube",
+  "ne": "2026-11-20T10:58:20.087Z"
+ },
+ "saisons": [],
+ "en_cours": {
+  "id": "an-0-printemps",
+  "an": 0,
+  "nom": "printemps",
+  "de": 15,
+  "a": 44,
+  "compte": {
+   "de": 31,
+   "a": 32,
+   "cycles": 2
+  },
+  "fichier": "en-cours.json",
+  "jeux": []
+ }
+}

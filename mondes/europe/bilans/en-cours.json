@@ -1,0 +1,30 @@
+{
+ "orvane": "1.0",
+ "monde": {
+  "id": "europe",
+  "ne": "2026-11-20T13:39:53.027Z"
+ },
+ "saison": {
+  "id": "an-0-hiver",
+  "an": 0,
+  "nom": "hiver",
+  "de": 0,
+  "a": 45
+ },
+ "en_cours": true,
+ "compte": {
+  "de": 1,
+  "a": 2,
+  "cycles": 2,
+  "date_de": "2026-11-20T13:39:52.983Z",
+  "date_a": "2026-11-21T03:06:09.174Z"
+ },
+ "plafonds": {
+  "par_compte_cycle": 30,
+  "part_max_compte": 0.15,
+  "part_max_jeu": 0.5,
+  "part_max_population": 0.2
+ },
+ "memoire_cycles": 5,
+ "jeux": []
+}

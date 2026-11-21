@@ -1,0 +1,324 @@
+{
+ "souches": [],
+ "orvane": "0.1",
+ "monde": {
+  "id": "aube",
+  "ne": "2026-11-20T10:58:20.087Z"
+ },
+ "depuis": 30,
+ "hybrides": [
+  "firtis×nousil",
+  "mevi×pheneva",
+  "belanphe×belanphe.toundra",
+  "janou×janou.mangrove",
+  "renou×renou.mer-froide",
+  "phemutor×phemutor.taiga",
+  "losoka×losoka.foret",
+  "viorgra×viorgra.foret",
+  "renou.mer-froide×renou.toundra"
+ ],
+ "records": {
+  "lourd": {
+   "id": "roren",
+   "nom": "Roren chapardeur de jungle",
+   "masse_kg": 80.12,
+   "n": 30
+  },
+  "leger": {
+   "id": "vays",
+   "nom": "Vays brouteur de marais",
+   "masse_kg": 0.009,
+   "n": 30
+  }
+ },
+ "compte": {
+  "eveil": 21,
+  "savoir": 2,
+  "naissance": 6
+ },
+ "annees": [
+  {
+   "an": 0,
+   "de": 31,
+   "a": 32,
+   "entrees": 29
+  }
+ ],
+ "derniers": [
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "La Mère s'éveille (Volcan 2) : elle assemble Vigie et Ferrailleur · parcelle Volcan 2",
+   "taxon": "vigie"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "la flore s'éveille : 54 lignées de plantes, des herbes aux arbres, avec leurs défenses (toxines, épines)",
+   "taxon": "flore-banquise-lichen"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "le monde devient inventif : ses lignées peuvent inventer des traits que personne n'a décrits",
+   "taxon": "kiva"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "les cycles de vie s'éveillent : 39 lignées pourraient vivre deux vies, une larve puis un adulte, si la métamorphose leur vient",
+   "taxon": "kiva"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "les lignées pondent ou mettent bas : 95 pondeuses, 15 vivipares ; des mangeurs d'œufs peuvent naître",
+   "taxon": "kiva"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "le milieu s'éveille : les brouteurs, les fouisseurs, les bâtisseurs et les joueurs le transforment désormais",
+   "taxon": "banquise~1"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "les lieux peuvent changer de nature : 24 types de lieux, et ceux que le monde inventera",
+   "taxon": "banquise~1"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "les dérives s'éveillent : les régimes changent à la séparation, les plantes se séparent, les souches mutent, les insectes les portent",
+   "taxon": "kiva"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "les régimes deviennent des spectres : 65 lignées mangent désormais des feuilles, des fruits, des graines, du nectar, des insectes, de la viande ou du sang, en parts qui leur sont propres",
+   "taxon": "kiva"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "le climat s'éveille : le monde se réchauffera et se refroidira de lui-même, la mer montera et baissera, des volcans feront des îles",
+   "taxon": "banquise~1"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "la météo s'éveille : 88 lieux ont désormais leur temps, la pluie, la neige, le gel, les orages, les canicules",
+   "taxon": "banquise~1"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "les plantes prennent les saisons : 11 lignées d'arbres et de buissons perdront leurs feuilles l'hiver, les fleurs viendront au printemps, les fruits à la fin de l'été, les graines à l'automne",
+   "taxon": "flore-banquise-lichen"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "la flore se diversifie : 207 lignées nouvelles, de 45 formes (graminée à grains, plante en coussin, lichen des rennes, lichen en croûte, arbuste à baies, bruyère…) ; 261 lignées de plantes en tout, qui se disputeront la place, se sépareront, gagneront les lieux voisins et s'éteindront",
+   "taxon": "flore-banquise-cereale"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "les plantes subissent et transforment : le feu, la crue et le sec leur prennent des pieds, l'herbe puis les buissons reprennent la place des arbres disparus, et le couvert d'un lieu suit ses arbres (1044 populations de plantes)",
+   "taxon": "flore-banquise-lichen"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "le monde a désormais une grammaire : ses lignées peuvent luire, foudroyer, empester, appeler, entendre dans le noir",
+   "taxon": "kiva"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "les castes s'éveillent : 5 lignées de petits hexapodes grégaires pourraient vivre en colonie, si l'eusocialité leur vient",
+   "taxon": "kiva"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "des formes nouvelles peuvent naître : un corps segmenté, un corps rayonné, un corps à tentacules",
+   "taxon": "kiva"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "l'esprit s'éveille : 58 lignées pourraient apprendre, transmettre, se servir d'outils",
+   "taxon": "kiva"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "la mémoire s'éveille : 110 lignées retiennent désormais ce que les joueurs leur font",
+   "taxon": "kiva"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "la vie en groupe se voit : 14 troupeaux, 18 meutes, 28 bancs, 50 volées ; 49 populations migrent avec les saisons",
+   "taxon": "kiva"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "les maladies ont désormais leurs souches : chacune sa virulence, sa contagion, ses hôtes",
+   "taxon": "kiva"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Lobel picoreur de côte, à Côte 2, une bête invente : un cri pour chaque prédateur · parcelle Côte 2",
+   "taxon": "lobel",
+   "biome": "cote"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "naissance",
+   "importance": 3,
+   "titre": "Une lignée naît",
+   "texte": "Lini haute herbe (Maquis 3) : lignée de plantes issue de flore-maquis-mousse : Lini haute herbe (Maquis 3) (une autre forme, haute herbe), 2,878 m · parcelle Maquis 3",
+   "taxon": "flore-maquis-mousse-hautes-herbes",
+   "biome": "maquis",
+   "famille": "vegetale"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "naissance",
+   "importance": 3,
+   "titre": "Une lignée naît",
+   "texte": "Alni lichen en croûte (Sommets 1) : lignée de plantes issue de flore-sommets-lichen-rennes : Alni lichen en croûte (Sommets 1) (une autre forme, lichen en croûte, elle est « pousse vite »), 0,007 m · parcelle Sommets 1",
+   "taxon": "flore-sommets-lichen-rennes-lichen-croute",
+   "biome": "sommets",
+   "famille": "vegetale"
+  },
+  {
+   "n": 32,
+   "date": "2026-11-21T03:05:22.055Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Oumé chapardeur de savane, à Prairie 3, une bête invente : un cri pour chaque prédateur · parcelle Prairie 3",
+   "taxon": "oume",
+   "biome": "prairie"
+  },
+  {
+   "n": 32,
+   "date": "2026-11-21T03:05:22.055Z",
+   "type": "naissance",
+   "importance": 2,
+   "titre": "Une lignée naît",
+   "texte": "Sorta bruyère (Toundra 2) : lignée de plantes issue de flore-toundra-bruyere : Sorta bruyère (Toundra 2) (elle est « fécondée par le vent »), 0,424 m · parcelle Toundra 2",
+   "taxon": "flore-toundra-bruyere-v",
+   "biome": "toundra",
+   "famille": "vegetale"
+  },
+  {
+   "n": 32,
+   "date": "2026-11-21T03:05:22.055Z",
+   "type": "naissance",
+   "importance": 3,
+   "titre": "Une lignée naît",
+   "texte": "Vinou mousse (Taïga 1) : lignée de plantes issue de flore-taiga-fougere : Vinou mousse (Taïga 1) (une autre forme, mousse, elle est « mellifère »), 0,051 m · parcelle Taïga 1",
+   "taxon": "flore-taiga-fougere-mousse",
+   "biome": "taiga",
+   "famille": "vegetale"
+  },
+  {
+   "n": 32,
+   "date": "2026-11-21T03:05:22.055Z",
+   "type": "naissance",
+   "importance": 2,
+   "titre": "Une lignée naît",
+   "texte": "Belmi fougère arborescente (Mangrove 3) : lignée de plantes issue de flore-mangrove-fougere-arbre : Belmi fougère arborescente (Mangrove 3) (elle est « géante »), 8,549 m · parcelle Mangrove 3",
+   "taxon": "flore-mangrove-fougere-arbre-v",
+   "biome": "mangrove",
+   "famille": "vegetale"
+  },
+  {
+   "n": 32,
+   "date": "2026-11-21T03:05:22.055Z",
+   "type": "naissance",
+   "importance": 2,
+   "titre": "Une lignée naît",
+   "texte": "Lunemi jonc (Côte 2) : lignée de plantes issue de flore-cote-jonc-2 : Lunemi jonc (Côte 2) (elle est « fécondée par le vent »), 1,488 m · parcelle Côte 2",
+   "taxon": "flore-cote-jonc-2-v",
+   "biome": "cote",
+   "famille": "vegetale"
+  }
+ ]
+}

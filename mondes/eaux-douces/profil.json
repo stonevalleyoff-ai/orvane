@@ -1,0 +1,54 @@
+{
+  "orvane": "0.1",
+  "jeu": "(aucun : les eaux douces d'Orvane, un monde né de la genèse pour être relié au monde d'Orvane par des ponts, docs/42)",
+  "monde": {
+    "id": "eaux-douces",
+    "graine": 31,
+    "cycle": "24h",
+    "annee": 120,
+    "amorce": "mondes/eaux-douces/amorce.json",
+    "nocturne": false
+  },
+  "exposition": {
+    "compression": {
+      "defaut": 0.3
+    },
+    "propagation_cycles": 3,
+    "traits_rendus": [
+      "nanisme",
+      "metabolisme-lent",
+      "peau-epaisse",
+      "vibrisses",
+      "pattes-longues",
+      "ponte-abondante",
+      "queue-prehensile",
+      "robe-doree",
+      "estomac-large",
+      "albinisme",
+      "soins-parentaux",
+      "melanisme",
+      "palmes",
+      "glande-irritante",
+      "crocs-allonges",
+      "camouflage",
+      "crepuscularite",
+      "yeux-nocturnes",
+      "membrane-planante",
+      "gregarisme",
+      "gigantisme"
+    ],
+    "seuil_extinction_jeu": 20
+  },
+  "influence": {
+    "poids": {
+      "prelevement": 1,
+      "capture": 1
+    },
+    "plafonds": {
+      "par_compte_cycle": 30,
+      "part_max_compte": 0.15,
+      "part_max_population": 0.2
+    },
+    "memoire_cycles": 5
+  }
+}

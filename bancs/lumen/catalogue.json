@@ -1,0 +1,24 @@
+{
+ "nom": "Lumen",
+ "axes": { "magie": { "nom": "magie", "effet": "la sève de cristal qui imprègne l'air, le sol et l'eau : 0 = aucune, 1 = saturé" } },
+ "traits": {
+  "peau-de-cristal": { "domaine": "defense", "organe": "écailles de cristal", "cout": 0.15, "effet": "des écailles de cristal : les crocs glissent, les épines ne piquent plus",
+                       "ecarts": { "vitesse_rel": 0.9 }, "vulnerabilite": 0.7, "attrait": 1.2, "flore": { "epineux": 0.7 },
+                       "conduite": { "type": "defense-contact", "presage": "les écailles s'irisent et se hérissent" } },
+  "souffle-de-braise": { "domaine": "offense", "organe": "glande à braise", "cout": 0.2, "effet": "crache une gerbe de braises à trois longueurs de corps", "chasse": 1.3,
+                       "conduite": { "type": "riposte-distance", "effet": "brulure", "portee": 3, "recharge": 8, "presage": "la gorge rougeoie" } },
+  "luminescence":    { "domaine": "social", "organe": "photophores", "cout": 0.05, "effet": "brille dans le noir : attire les partenaires, et les chasseurs", "attrait": 1.6, "vulnerabilite": 1.25 },
+  "mangeur-de-spores": { "domaine": "metabolisme", "organe": "estomac à spores", "cout": 0.08, "effet": "digère les plantes toxiques des marais", "flore": { "toxique": 0.8 } },
+  "voile-de-brume":  { "domaine": "locomotion", "organe": "voiles membraneuses", "cout": 0.12, "effet": "plane d'une branche de cristal à l'autre", "vulnerabilite": 0.85, "flore": { "haut": true },
+                       "conduite": { "type": "vol-plane", "presage": "déploie ses voiles" } }
+ },
+ "organes": {
+  "cristaux":   { "places": ["dos", "tete"], "nombre": [1, 6], "formes": ["pointus", "en-grappe"], "fonction": "defense", "mot": ["cristal", "cristaux"], "fem": 0, "poids": 1.5 },
+  "tentacules": { "places": ["tete", "avant"], "nombre": [2, 8], "formes": ["lisses", "a-ventouses"], "fonction": "saisie", "mot": ["tentacule", "tentacules"], "fem": 0, "poids": 1,
+                  "conduite": { "type": "saisie", "nom": "à tentacules", "presage": "les tentacules se déroulent" } }
+ },
+ "formes": {
+  "radiaire":  { "nom": "radiaire", "pattes": 5, "depuis": ["hexapode", "quadrupede"], "chance": 0.5 },
+  "meduseen":  { "nom": "méduséen", "pattes": 0, "depuis": ["serpent", "oiseau"], "chance": 0.4 }
+ }
+}

@@ -1,0 +1,36 @@
+{
+ "lisse": {},
+ "dernier_id": 0,
+ "lisseQ": {},
+ "bilan": {
+  "orvane": "1.0",
+  "monde": {
+   "id": "aube",
+   "ne": "2026-11-20T10:58:20.087Z"
+  },
+  "saison": {
+   "id": "an-0-printemps",
+   "an": 0,
+   "nom": "printemps",
+   "de": 15,
+   "a": 44
+  },
+  "compte": {
+   "de": 31,
+   "a": 32,
+   "cycles": 2,
+   "date_de": "2026-11-20T10:48:52.654Z",
+   "date_a": "2026-11-21T03:05:22.055Z"
+  },
+  "plafonds": {
+   "par_compte_cycle": 30,
+   "part_max_compte": 0.15,
+   "part_max_jeu": 0.5,
+   "part_max_population": 0.2,
+   "part_max_population_jeu": 0.05
+  },
+  "memoire_cycles": 5,
+  "jeux": {},
+  "noms": {}
+ }
+}
