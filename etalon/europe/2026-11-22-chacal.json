@@ -1,0 +1,739 @@
+{
+ "etalon": 1,
+ "experience": "chacal",
+ "monde": "europe",
+ "date": "2026-11-22",
+ "ans": 44,
+ "lieux": 223,
+ "reel": {
+  "IT": 1984,
+  "AT": 1987,
+  "SK": 1989,
+  "DE": 1997,
+  "CZ": 2006,
+  "CH": 2011,
+  "PL": 2015,
+  "DK": 2015,
+  "NL": 2016,
+  "FR": 2017
+ },
+ "ecarts": [
+  {
+   "pays": "IT",
+   "reel": 1984,
+   "simule": null,
+   "ecart": 41
+  },
+  {
+   "pays": "AT",
+   "reel": 1987,
+   "simule": 1982,
+   "ecart": -5
+  },
+  {
+   "pays": "SK",
+   "reel": 1989,
+   "simule": null,
+   "ecart": 36
+  },
+  {
+   "pays": "DE",
+   "reel": 1997,
+   "simule": null,
+   "ecart": 28
+  },
+  {
+   "pays": "CZ",
+   "reel": 2006,
+   "simule": null,
+   "ecart": 19
+  },
+  {
+   "pays": "CH",
+   "reel": 2011,
+   "simule": null,
+   "ecart": 14
+  },
+  {
+   "pays": "PL",
+   "reel": 2015,
+   "simule": null,
+   "ecart": 10
+  },
+  {
+   "pays": "DK",
+   "reel": 2015,
+   "simule": null,
+   "ecart": 10
+  },
+  {
+   "pays": "NL",
+   "reel": 2016,
+   "simule": null,
+   "ecart": 9
+  },
+  {
+   "pays": "FR",
+   "reel": 2017,
+   "simule": null,
+   "ecart": 8
+  }
+ ],
+ "tests": [
+  {
+   "id": "chacal-vague",
+   "nom": "La vague du chacal doré",
+   "valeur": [
+    null,
+    null,
+    null
+   ],
+   "valeur_dite": "écart médian sans fin (la plupart des pays jamais atteints) ; 1/10 pays atteints en 2024 — IT — (1984), AT 1982 (1987), SK — (1989), DE — (1997), CZ — (2006), CH — (2011), PL — (2015), DK — (2015), NL — (2016), FR — (2017) | écart médian sans fin (la plupart des pays jamais atteints) ; 0/10 pays atteints en 2024 — IT — (1984), AT — (1987), SK — (1989), DE — (1997), CZ — (2006), CH — (2011), PL — (2015), DK — (2015), NL — (2016), FR — (2017) | écart médian sans fin (la plupart des pays jamais atteints) ; 0/10 pays atteints en 2024 — IT — (1984), AT — (1987), SK — (1989), DE — (1997), CZ — (2006), CH — (2011), PL — (2015), DK — (2015), NL — (2016), FR — (2017)",
+   "cible": "au moins 8 pays sur 10 atteints, à moins de 8 ans des premières observations en médiane (une première observation est souvent un jeune de passage)",
+   "etat": "echec"
+  }
+ ],
+ "graines": [
+  {
+   "graine": 1,
+   "tests": [
+    {
+     "id": "chacal-vague",
+     "nom": "La vague du chacal doré",
+     "valeur": null,
+     "valeur_dite": "écart médian sans fin (la plupart des pays jamais atteints) ; 1/10 pays atteints en 2024 — IT — (1984), AT 1982 (1987), SK — (1989), DE — (1997), CZ — (2006), CH — (2011), PL — (2015), DK — (2015), NL — (2016), FR — (2017)",
+     "cible": "au moins 8 pays sur 10 atteints, à moins de 8 ans des premières observations en médiane (une première observation est souvent un jeune de passage)",
+     "etat": "echec"
+    }
+   ],
+   "serie": [
+    {
+     "an": 1981,
+     "HR": 1189,
+     "BG": 3823,
+     "TR": 2290,
+     "GR": 865,
+     "RO": 89
+    },
+    {
+     "an": 1982,
+     "HR": 714,
+     "BG": 2158,
+     "TR": 1210,
+     "GR": 535,
+     "RO": 151,
+     "AT": 12
+    },
+    {
+     "an": 1983,
+     "HR": 407,
+     "BG": 1183,
+     "TR": 620,
+     "GR": 336,
+     "RO": 138,
+     "AT": 21,
+     "RS": 20
+    },
+    {
+     "an": 1984,
+     "HR": 224,
+     "BG": 625,
+     "TR": 319,
+     "GR": 207,
+     "RO": 114,
+     "AT": 21,
+     "RS": 32
+    },
+    {
+     "an": 1985,
+     "HR": 121,
+     "BG": 319,
+     "TR": 165,
+     "GR": 152,
+     "RO": 84,
+     "AT": 16,
+     "RS": 28
+    },
+    {
+     "an": 1986,
+     "HR": 65,
+     "BG": 161,
+     "TR": 85,
+     "GR": 132,
+     "RO": 56,
+     "AT": 12,
+     "RS": 21
+    },
+    {
+     "an": 1987,
+     "HR": 34,
+     "BG": 81,
+     "TR": 44,
+     "GR": 89,
+     "RO": 36,
+     "AT": 8,
+     "RS": 14
+    },
+    {
+     "an": 1988,
+     "HR": 16,
+     "BG": 41,
+     "TR": 23,
+     "GR": 54,
+     "RO": 22,
+     "AT": 5,
+     "RS": 9
+    },
+    {
+     "an": 1989,
+     "HR": 8,
+     "BG": 21,
+     "TR": 12,
+     "GR": 32,
+     "RO": 13,
+     "AT": 3,
+     "RS": 5
+    },
+    {
+     "an": 1990,
+     "HR": 4,
+     "BG": 11,
+     "TR": 6,
+     "GR": 17,
+     "RO": 8,
+     "RS": 3
+    },
+    {
+     "an": 1991,
+     "HR": 2,
+     "BG": 6,
+     "TR": 3,
+     "GR": 9,
+     "RO": 3
+    },
+    {
+     "an": 1992,
+     "BG": 3,
+     "GR": 2
+    },
+    {
+     "an": 1993
+    },
+    {
+     "an": 1994
+    },
+    {
+     "an": 1995
+    },
+    {
+     "an": 1996
+    },
+    {
+     "an": 1997
+    },
+    {
+     "an": 1998
+    },
+    {
+     "an": 1999
+    },
+    {
+     "an": 2000
+    },
+    {
+     "an": 2001
+    },
+    {
+     "an": 2002
+    },
+    {
+     "an": 2003
+    },
+    {
+     "an": 2004
+    },
+    {
+     "an": 2005
+    },
+    {
+     "an": 2006
+    },
+    {
+     "an": 2007
+    },
+    {
+     "an": 2008
+    },
+    {
+     "an": 2009
+    },
+    {
+     "an": 2010
+    },
+    {
+     "an": 2011
+    },
+    {
+     "an": 2012
+    },
+    {
+     "an": 2013
+    },
+    {
+     "an": 2014
+    },
+    {
+     "an": 2015
+    },
+    {
+     "an": 2016
+    },
+    {
+     "an": 2017
+    },
+    {
+     "an": 2018
+    },
+    {
+     "an": 2019
+    },
+    {
+     "an": 2020
+    },
+    {
+     "an": 2021
+    },
+    {
+     "an": 2022
+    },
+    {
+     "an": 2023
+    },
+    {
+     "an": 2024
+    }
+   ]
+  },
+  {
+   "graine": 7920,
+   "tests": [
+    {
+     "id": "chacal-vague",
+     "nom": "La vague du chacal doré",
+     "valeur": null,
+     "valeur_dite": "écart médian sans fin (la plupart des pays jamais atteints) ; 0/10 pays atteints en 2024 — IT — (1984), AT — (1987), SK — (1989), DE — (1997), CZ — (2006), CH — (2011), PL — (2015), DK — (2015), NL — (2016), FR — (2017)",
+     "cible": "au moins 8 pays sur 10 atteints, à moins de 8 ans des premières observations en médiane (une première observation est souvent un jeune de passage)",
+     "etat": "echec"
+    }
+   ],
+   "serie": [
+    {
+     "an": 1981,
+     "HR": 1189,
+     "BG": 3860,
+     "TR": 2343,
+     "GR": 856
+    },
+    {
+     "an": 1982,
+     "HR": 727,
+     "BG": 2215,
+     "TR": 1312,
+     "GR": 523
+    },
+    {
+     "an": 1983,
+     "HR": 437,
+     "BG": 1228,
+     "TR": 737,
+     "GR": 352
+    },
+    {
+     "an": 1984,
+     "HR": 256,
+     "BG": 672,
+     "TR": 388,
+     "GR": 235
+    },
+    {
+     "an": 1985,
+     "HR": 144,
+     "BG": 364,
+     "TR": 205,
+     "GR": 134
+    },
+    {
+     "an": 1986,
+     "HR": 82,
+     "BG": 191,
+     "TR": 107,
+     "GR": 70,
+     "RO": 5
+    },
+    {
+     "an": 1987,
+     "HR": 42,
+     "BG": 101,
+     "TR": 58,
+     "GR": 36,
+     "RO": 5,
+     "HU": 4
+    },
+    {
+     "an": 1988,
+     "HR": 22,
+     "BG": 53,
+     "TR": 31,
+     "GR": 19,
+     "RO": 4,
+     "HU": 3
+    },
+    {
+     "an": 1989,
+     "HR": 10,
+     "BG": 28,
+     "TR": 17,
+     "GR": 12,
+     "RO": 3,
+     "HU": 2
+    },
+    {
+     "an": 1990,
+     "HR": 6,
+     "BG": 15,
+     "TR": 9,
+     "GR": 7
+    },
+    {
+     "an": 1991,
+     "HR": 3,
+     "BG": 8,
+     "TR": 5,
+     "GR": 3
+    },
+    {
+     "an": 1992,
+     "BG": 4,
+     "TR": 3
+    },
+    {
+     "an": 1993,
+     "BG": 2
+    },
+    {
+     "an": 1994
+    },
+    {
+     "an": 1995
+    },
+    {
+     "an": 1996
+    },
+    {
+     "an": 1997
+    },
+    {
+     "an": 1998
+    },
+    {
+     "an": 1999
+    },
+    {
+     "an": 2000
+    },
+    {
+     "an": 2001
+    },
+    {
+     "an": 2002
+    },
+    {
+     "an": 2003
+    },
+    {
+     "an": 2004
+    },
+    {
+     "an": 2005
+    },
+    {
+     "an": 2006
+    },
+    {
+     "an": 2007
+    },
+    {
+     "an": 2008
+    },
+    {
+     "an": 2009
+    },
+    {
+     "an": 2010
+    },
+    {
+     "an": 2011
+    },
+    {
+     "an": 2012
+    },
+    {
+     "an": 2013
+    },
+    {
+     "an": 2014
+    },
+    {
+     "an": 2015
+    },
+    {
+     "an": 2016
+    },
+    {
+     "an": 2017
+    },
+    {
+     "an": 2018
+    },
+    {
+     "an": 2019
+    },
+    {
+     "an": 2020
+    },
+    {
+     "an": 2021
+    },
+    {
+     "an": 2022
+    },
+    {
+     "an": 2023
+    },
+    {
+     "an": 2024
+    }
+   ]
+  },
+  {
+   "graine": 15839,
+   "tests": [
+    {
+     "id": "chacal-vague",
+     "nom": "La vague du chacal doré",
+     "valeur": null,
+     "valeur_dite": "écart médian sans fin (la plupart des pays jamais atteints) ; 0/10 pays atteints en 2024 — IT — (1984), AT — (1987), SK — (1989), DE — (1997), CZ — (2006), CH — (2011), PL — (2015), DK — (2015), NL — (2016), FR — (2017)",
+     "cible": "au moins 8 pays sur 10 atteints, à moins de 8 ans des premières observations en médiane (une première observation est souvent un jeune de passage)",
+     "etat": "echec"
+    }
+   ],
+   "serie": [
+    {
+     "an": 1981,
+     "HR": 1189,
+     "BG": 3863,
+     "TR": 2343,
+     "GR": 852
+    },
+    {
+     "an": 1982,
+     "HR": 712,
+     "BG": 2181,
+     "TR": 1307,
+     "GR": 504,
+     "RS": 33,
+     "RO": 4
+    },
+    {
+     "an": 1983,
+     "HR": 412,
+     "BG": 1156,
+     "TR": 702,
+     "GR": 317,
+     "RS": 57,
+     "RO": 60
+    },
+    {
+     "an": 1984,
+     "HR": 234,
+     "BG": 601,
+     "TR": 380,
+     "GR": 218,
+     "RS": 52,
+     "RO": 62
+    },
+    {
+     "an": 1985,
+     "HR": 131,
+     "BG": 310,
+     "TR": 208,
+     "GR": 158,
+     "RS": 40,
+     "RO": 49
+    },
+    {
+     "an": 1986,
+     "HR": 72,
+     "BG": 155,
+     "TR": 114,
+     "GR": 100,
+     "RS": 28,
+     "RO": 39
+    },
+    {
+     "an": 1987,
+     "HR": 36,
+     "BG": 79,
+     "TR": 54,
+     "GR": 55,
+     "RS": 18,
+     "RO": 27,
+     "HU": 4
+    },
+    {
+     "an": 1988,
+     "HR": 19,
+     "BG": 40,
+     "TR": 26,
+     "GR": 28,
+     "RS": 11,
+     "RO": 17,
+     "HU": 3
+    },
+    {
+     "an": 1989,
+     "HR": 10,
+     "BG": 21,
+     "TR": 12,
+     "GR": 17,
+     "RS": 6,
+     "RO": 11,
+     "HU": 2
+    },
+    {
+     "an": 1990,
+     "HR": 5,
+     "BG": 11,
+     "TR": 6,
+     "GR": 10,
+     "RS": 4,
+     "RO": 5
+    },
+    {
+     "an": 1991,
+     "HR": 3,
+     "BG": 6,
+     "TR": 3,
+     "GR": 4,
+     "RS": 2,
+     "RO": 3
+    },
+    {
+     "an": 1992,
+     "BG": 3
+    },
+    {
+     "an": 1993
+    },
+    {
+     "an": 1994
+    },
+    {
+     "an": 1995
+    },
+    {
+     "an": 1996
+    },
+    {
+     "an": 1997
+    },
+    {
+     "an": 1998
+    },
+    {
+     "an": 1999
+    },
+    {
+     "an": 2000
+    },
+    {
+     "an": 2001
+    },
+    {
+     "an": 2002
+    },
+    {
+     "an": 2003
+    },
+    {
+     "an": 2004
+    },
+    {
+     "an": 2005
+    },
+    {
+     "an": 2006
+    },
+    {
+     "an": 2007
+    },
+    {
+     "an": 2008
+    },
+    {
+     "an": 2009
+    },
+    {
+     "an": 2010
+    },
+    {
+     "an": 2011
+    },
+    {
+     "an": 2012
+    },
+    {
+     "an": 2013
+    },
+    {
+     "an": 2014
+    },
+    {
+     "an": 2015
+    },
+    {
+     "an": 2016
+    },
+    {
+     "an": 2017
+    },
+    {
+     "an": 2018
+    },
+    {
+     "an": 2019
+    },
+    {
+     "an": 2020
+    },
+    {
+     "an": 2021
+    },
+    {
+     "an": 2022
+    },
+    {
+     "an": 2023
+    },
+    {
+     "an": 2024
+    }
+   ]
+  }
+ ],
+ "comptes": {
+  "ok": 0,
+  "limite": 0,
+  "echec": 1
+ }
+}

@@ -1,0 +1,2022 @@
+{
+ "etalon": 1,
+ "monde": "europe",
+ "date": "2026-11-22",
+ "ans": 3,
+ "depart": "2026-11-17",
+ "fin": "2029-11-16",
+ "duree_s": 5616,
+ "comptes": {
+  "ok": 7,
+  "limite": 1,
+  "echec": 1
+ },
+ "tests": [
+  {
+   "id": "stabilite",
+   "nom": "La stabilité",
+   "valeur": [
+    0.995,
+    0.995,
+    0.995
+   ],
+   "cible": "≥ 0.9 des espèces à moins d'un facteur 2 de leur année d'avant",
+   "etat": "ok",
+   "source": "un monde sans joueurs, au même climat, garde ses espèces : chacune à moins d'un facteur 2 de sa première année",
+   "valeur_dite": "0.995 | 0.995 | 0.995"
+  },
+  {
+   "id": "hors",
+   "nom": "Aucune espèce ne fond ni ne s'emballe",
+   "valeur": [
+    1,
+    1,
+    1
+   ],
+   "valeur_dite": "1 : abeilles-bourdons ×2.176 | 1 : abeilles-bourdons ×2.198 | 1 : abeilles-bourdons ×2.194",
+   "cible": "aucune espèce sous ×0.5 ni au-dessus de ×2 de son année d'avant",
+   "etat": "limite",
+   "source": "un monde sans joueurs, au même climat, garde ses espèces : chacune à moins d'un facteur 2 de sa première année"
+  },
+  {
+   "id": "cigogne-depart",
+   "nom": "Les cigognes : le départ",
+   "valeur": [
+    237,
+    237,
+    237
+   ],
+   "valeur_dite": "25/08 | 25/08 | 25/08",
+   "cible": "du 03/08 au 12/09",
+   "etat": "ok",
+   "source": "les cigognes blanches quittent l’Europe de début août à début septembre"
+  },
+  {
+   "id": "cigogne-retour",
+   "nom": "Les cigognes : le retour",
+   "valeur": [
+    67,
+    67,
+    67
+   ],
+   "valeur_dite": "08/03 | 08/03 | 08/03",
+   "cible": "du 14/02 au 10/04",
+   "etat": "ok",
+   "source": "elles reviennent de mi-février à début avril"
+  },
+  {
+   "id": "carnivores",
+   "nom": "Les prédateurs : combien de carnivores vivent de dix tonnes de proies",
+   "valeur": [
+    1.9,
+    1.91,
+    1.7
+   ],
+   "valeur_dite": "écart médian ×1.9 (au départ ×2.0) | écart médian ×1.9 (au départ ×2.0) | écart médian ×1.7 (au départ ×2.0)",
+   "cible": "à moins d'un facteur 3 de la loi (hors loup, ours, lynx, glouton)",
+   "etat": "ok",
+   "source": "Carbone & Gittleman 2002, Science 295 : 89,1 × M^−1,05 carnivores par 10 000 kg de proies. Les grands carnivores d'Europe sont tenus sous la loi par les hommes : ils sont dits à part (grands_carnivores), et doivent remonter vers elle dans un monde sans joueurs"
+  },
+  {
+   "id": "grands-carnivores",
+   "nom": "Les grands carnivores remontent (sans joueurs, rien ne les tient bas)",
+   "valeur": [
+    0.4,
+    0.4,
+    0.4
+   ],
+   "valeur_dite": "loup +7.7 %/an, lynx-boreal +1.9 %/an, lynx-pardelle -4.1 %/an, ours-brun +4.8 %/an, glouton -4.3 %/an | loup +7.8 %/an, lynx-boreal +1.6 %/an, lynx-pardelle -4.2 %/an, ours-brun +5.3 %/an, glouton -4.1 %/an | loup +7.6 %/an, lynx-boreal +0.5 %/an, lynx-pardelle -4.0 %/an, ours-brun +5.1 %/an, glouton -4.3 %/an",
+   "cible": "chacun croît d'au moins 2 % par an",
+   "etat": "echec",
+   "source": "le loup remonte de 5 à 10 % par an en Europe, là où on le laisse (LCIE)"
+  },
+  {
+   "id": "rendement",
+   "nom": "Garde-fou : le rendement des chasseurs",
+   "garde_fou": true,
+   "valeur": [
+    {
+     "chaud": 0.0153,
+     "froid": 0.1055
+    },
+    {
+     "chaud": 0.0153,
+     "froid": 0.1054
+    },
+    {
+     "chaud": 0.0153,
+     "froid": 0.1055
+    }
+   ],
+   "valeur_dite": "à sang chaud 1.5 %, à sang froid 10.5 % de ce qu'ils mangent devient des petits | à sang chaud 1.5 %, à sang froid 10.5 % de ce qu'ils mangent devient des petits | à sang chaud 1.5 %, à sang froid 10.5 % de ce qu'ils mangent devient des petits",
+   "cible": "de 0.5 à 5 % (sang chaud), de 5 à 40 % (sang froid)",
+   "etat": "ok",
+   "source": "Humphreys 1979 (J. Anim. Ecol. 48) : une bête à sang chaud fait de sa chair 1 à 3 % de ce qu'elle assimile, une à sang froid de 10 à 40 % ; le reste part en chaleur (Lindeman 1942). Plus serait créer de la chair de rien"
+  },
+  {
+   "id": "diversite",
+   "nom": "Garde-fou : la diversité des lieux",
+   "garde_fou": true,
+   "valeur": [
+    0.955,
+    0.964,
+    0.957
+   ],
+   "valeur_dite": "Shannon 1.305 (au départ 1.366) : ×0.96 | Shannon 1.316 (au départ 1.366) : ×0.96 | Shannon 1.307 (au départ 1.366) : ×0.96",
+   "cible": "au moins ×0.9",
+   "etat": "ok",
+   "source": "un monde sans joueurs, au même climat, ne s'appauvrit pas en silence : l'entropie de Shannon des parts de biomasse de chaque lieu garde au moins 90 % de ce qu'elle était"
+  },
+  {
+   "id": "damuth",
+   "nom": "Garde-fou : la loi de Damuth",
+   "garde_fou": true,
+   "valeur": [
+    -0.706,
+    -0.704,
+    -0.706
+   ],
+   "valeur_dite": "pente -0.706 (au départ -0.697, 69 espèces) | pente -0.704 (au départ -0.697, 69 espèces) | pente -0.706 (au départ -0.697, 69 espèces)",
+   "cible": "-0.75 ± 0.15",
+   "etat": "ok",
+   "source": "Damuth 1981 : la densité des mammifères ∝ masse^−0,75 (l'assemblage l'a posée : le moteur ne doit pas la défaire)"
+  }
+ ],
+ "graines": [
+  {
+   "graine": 1,
+   "comptes": {
+    "ok": 7,
+    "limite": 1,
+    "echec": 1
+   },
+   "tests": [
+    {
+     "id": "stabilite",
+     "nom": "La stabilité",
+     "valeur": 0.995,
+     "cible": "≥ 0.9 des espèces à moins d'un facteur 2 de leur année d'avant",
+     "etat": "ok",
+     "detail": {
+      "especes": 201,
+      "extinctions": [],
+      "plus_loin": [
+       {
+        "id": "abeilles-bourdons",
+        "nom": "Abeilles et bourdons",
+        "rapport": 2.176
+       },
+       {
+        "id": "scolytes",
+        "nom": "Scolytes",
+        "rapport": 1.904
+       },
+       {
+        "id": "colvert",
+        "nom": "Canard colvert",
+        "rapport": 1.832
+       },
+       {
+        "id": "sarcelle",
+        "nom": "Sarcelle d'hiver",
+        "rapport": 1.776
+       },
+       {
+        "id": "foulque",
+        "nom": "Foulque macroule",
+        "rapport": 1.753
+       },
+       {
+        "id": "cygne-tubercule",
+        "nom": "Cygne tuberculé",
+        "rapport": 1.608
+       },
+       {
+        "id": "renard-polaire",
+        "nom": "Renard polaire",
+        "rapport": 1.594
+       },
+       {
+        "id": "coucou",
+        "nom": "Coucou gris",
+        "rapport": 1.586
+       },
+       {
+        "id": "carabes",
+        "nom": "Carabes et coléoptères prédateurs du sol",
+        "rapport": 0.637
+       },
+       {
+        "id": "ombre",
+        "nom": "Ombre commun",
+        "rapport": 0.644
+       },
+       {
+        "id": "fuligule-morillon",
+        "nom": "Fuligule morillon",
+        "rapport": 1.518
+       },
+       {
+        "id": "meduses",
+        "nom": "Méduses",
+        "rapport": 0.668
+       }
+      ]
+     },
+     "source": "un monde sans joueurs, au même climat, garde ses espèces : chacune à moins d'un facteur 2 de sa première année"
+    },
+    {
+     "id": "hors",
+     "nom": "Aucune espèce ne fond ni ne s'emballe",
+     "valeur": 1,
+     "valeur_dite": "1 : abeilles-bourdons ×2.176",
+     "cible": "aucune espèce sous ×0.5 ni au-dessus de ×2 de son année d'avant",
+     "etat": "limite",
+     "detail": {
+      "hors": [
+       {
+        "id": "abeilles-bourdons",
+        "nom": "Abeilles et bourdons",
+        "rapport": 2.176
+       }
+      ]
+     },
+     "source": "un monde sans joueurs, au même climat, garde ses espèces : chacune à moins d'un facteur 2 de sa première année"
+    },
+    {
+     "id": "cigogne-depart",
+     "nom": "Les cigognes : le départ",
+     "valeur": 237,
+     "valeur_dite": "25/08",
+     "cible": "du 03/08 au 12/09",
+     "etat": "ok",
+     "detail": {
+      "jours": [
+       237,
+       239,
+       240
+      ]
+     },
+     "source": "les cigognes blanches quittent l’Europe de début août à début septembre"
+    },
+    {
+     "id": "cigogne-retour",
+     "nom": "Les cigognes : le retour",
+     "valeur": 67,
+     "valeur_dite": "08/03",
+     "cible": "du 14/02 au 10/04",
+     "etat": "ok",
+     "detail": {
+      "jours": [
+       67,
+       68,
+       69
+      ]
+     },
+     "source": "elles reviennent de mi-février à début avril"
+    },
+    {
+     "id": "carnivores",
+     "nom": "Les prédateurs : combien de carnivores vivent de dix tonnes de proies",
+     "valeur": 1.9,
+     "valeur_dite": "écart médian ×1.9 (au départ ×2.0)",
+     "cible": "à moins d'un facteur 3 de la loi (hors loup, ours, lynx, glouton)",
+     "etat": "ok",
+     "detail": {
+      "grands_carnivores": [
+       {
+        "id": "loup",
+        "depart": 0.042,
+        "fin": 0.036
+       },
+       {
+        "id": "lynx-boreal",
+        "depart": 0.161,
+        "fin": 0.155
+       },
+       {
+        "id": "lynx-pardelle",
+        "depart": 0.832,
+        "fin": 0.195
+       }
+      ],
+      "fin": [
+       {
+        "id": "vison-amerique",
+        "nom": "Vison d'Amérique",
+        "masse_kg": 0.9,
+        "effectif": 16141,
+        "proies_t": 920343,
+        "par_10t": 0.175,
+        "attendu": 99.523,
+        "ecart_log10": -2.754
+       },
+       {
+        "id": "loutre",
+        "nom": "Loutre d'Europe",
+        "masse_kg": 7.809,
+        "effectif": 67568,
+        "proies_t": 2921021,
+        "par_10t": 0.231,
+        "attendu": 10.296,
+        "ecart_log10": -1.648
+       },
+       {
+        "id": "loup",
+        "nom": "Loup gris",
+        "masse_kg": 29.191,
+        "effectif": 38797,
+        "proies_t": 4201427,
+        "par_10t": 0.092,
+        "attendu": 2.578,
+        "ecart_log10": -1.446,
+        "tenu_par_les_hommes": true
+       },
+       {
+        "id": "lynx-boreal",
+        "nom": "Lynx boréal",
+        "masse_kg": 21.15,
+        "effectif": 12459,
+        "proies_t": 221941,
+        "par_10t": 0.561,
+        "attendu": 3.617,
+        "ecart_log10": -0.809,
+        "tenu_par_les_hommes": true
+       },
+       {
+        "id": "lynx-pardelle",
+        "nom": "Lynx pardelle",
+        "masse_kg": 10.225,
+        "effectif": 1556,
+        "proies_t": 10283,
+        "par_10t": 1.513,
+        "attendu": 7.758,
+        "ecart_log10": -0.71,
+        "tenu_par_les_hommes": true
+       },
+       {
+        "id": "renard-polaire",
+        "nom": "Renard polaire",
+        "masse_kg": 3.6,
+        "effectif": 13015,
+        "proies_t": 28478,
+        "par_10t": 4.57,
+        "attendu": 23.215,
+        "ecart_log10": -0.706
+       },
+       {
+        "id": "putois",
+        "nom": "Putois d'Europe",
+        "masse_kg": 0.809,
+        "effectif": 1163490,
+        "proies_t": 465360,
+        "par_10t": 25.002,
+        "attendu": 111.309,
+        "ecart_log10": -0.649
+       },
+       {
+        "id": "chat-forestier",
+        "nom": "Chat forestier",
+        "masse_kg": 5.037,
+        "effectif": 126211,
+        "proies_t": 107866,
+        "par_10t": 11.701,
+        "attendu": 16.315,
+        "ecart_log10": -0.144
+       },
+       {
+        "id": "grand-dauphin",
+        "nom": "Grand dauphin",
+        "masse_kg": 230,
+        "effectif": 24572,
+        "proies_t": 1099094,
+        "par_10t": 0.224,
+        "attendu": 0.295,
+        "ecart_log10": -0.121
+       },
+       {
+        "id": "genette",
+        "nom": "Genette commune",
+        "masse_kg": 1.867,
+        "effectif": 118572,
+        "proies_t": 32684,
+        "par_10t": 36.278,
+        "attendu": 46.257,
+        "ecart_log10": -0.106
+       },
+       {
+        "id": "phoque-veau-marin",
+        "nom": "Phoque veau-marin",
+        "masse_kg": 94.283,
+        "effectif": 206808,
+        "proies_t": 2673824,
+        "par_10t": 0.773,
+        "attendu": 0.753,
+        "ecart_log10": 0.012
+       },
+       {
+        "id": "phoque-moine",
+        "nom": "Phoque moine de Méditerranée",
+        "masse_kg": 284.941,
+        "effectif": 96,
+        "proies_t": 3624,
+        "par_10t": 0.266,
+        "attendu": 0.236,
+        "ecart_log10": 0.052
+       },
+       {
+        "id": "marsouin",
+        "nom": "Marsouin commun",
+        "masse_kg": 52.731,
+        "effectif": 501566,
+        "proies_t": 2857005,
+        "par_10t": 1.756,
+        "attendu": 1.386,
+        "ecart_log10": 0.103
+       },
+       {
+        "id": "phoque-gris",
+        "nom": "Phoque gris",
+        "masse_kg": 197.57,
+        "effectif": 133011,
+        "proies_t": 3005760,
+        "par_10t": 0.443,
+        "attendu": 0.346,
+        "ecart_log10": 0.107
+       },
+       {
+        "id": "chacal-dore",
+        "nom": "Chacal doré",
+        "masse_kg": 11,
+        "effectif": 354841,
+        "proies_t": 259627,
+        "par_10t": 13.667,
+        "attendu": 7.185,
+        "ecart_log10": 0.279
+       },
+       {
+        "id": "orque",
+        "nom": "Orque",
+        "masse_kg": 4300,
+        "effectif": 483,
+        "proies_t": 183855,
+        "par_10t": 0.026,
+        "attendu": 0.014,
+        "ecart_log10": 0.285
+       },
+       {
+        "id": "herisson",
+        "nom": "Hérisson d'Europe",
+        "masse_kg": 0.778,
+        "effectif": 8745531,
+        "proies_t": 366922,
+        "par_10t": 238.348,
+        "attendu": 115.971,
+        "ecart_log10": 0.313
+       },
+       {
+        "id": "dauphin-commun",
+        "nom": "Dauphin commun",
+        "masse_kg": 77.818,
+        "effectif": 537552,
+        "proies_t": 1078444,
+        "par_10t": 4.985,
+        "attendu": 0.921,
+        "ecart_log10": 0.733
+       }
+      ],
+      "depart": [
+       {
+        "id": "vison-amerique",
+        "nom": "Vison d'Amérique",
+        "masse_kg": 0.9,
+        "effectif": 27644,
+        "proies_t": 1217756,
+        "par_10t": 0.227,
+        "attendu": 99.523,
+        "ecart_log10": -2.642
+       },
+       {
+        "id": "loutre",
+        "nom": "Loutre d'Europe",
+        "masse_kg": 7.809,
+        "effectif": 62749,
+        "proies_t": 3597891,
+        "par_10t": 0.174,
+        "attendu": 10.296,
+        "ecart_log10": -1.771
+       },
+       {
+        "id": "loup",
+        "nom": "Loup gris",
+        "masse_kg": 29.191,
+        "effectif": 31053,
+        "proies_t": 2872601,
+        "par_10t": 0.108,
+        "attendu": 2.578,
+        "ecart_log10": -1.378,
+        "tenu_par_les_hommes": true
+       },
+       {
+        "id": "lynx-boreal",
+        "nom": "Lynx boréal",
+        "masse_kg": 21.15,
+        "effectif": 11926,
+        "proies_t": 204920,
+        "par_10t": 0.582,
+        "attendu": 3.617,
+        "ecart_log10": -0.793,
+        "tenu_par_les_hommes": true
+       },
+       {
+        "id": "putois",
+        "nom": "Putois d'Europe",
+        "masse_kg": 0.809,
+        "effectif": 1008375,
+        "proies_t": 445675,
+        "par_10t": 22.626,
+        "attendu": 111.309,
+        "ecart_log10": -0.692
+       },
+       {
+        "id": "genette",
+        "nom": "Genette commune",
+        "masse_kg": 1.867,
+        "effectif": 86323,
+        "proies_t": 29546,
+        "par_10t": 29.217,
+        "attendu": 46.257,
+        "ecart_log10": -0.2
+       },
+       {
+        "id": "grand-dauphin",
+        "nom": "Grand dauphin",
+        "masse_kg": 230,
+        "effectif": 25380,
+        "proies_t": 1103489,
+        "par_10t": 0.23,
+        "attendu": 0.295,
+        "ecart_log10": -0.108
+       },
+       {
+        "id": "lynx-pardelle",
+        "nom": "Lynx pardelle",
+        "masse_kg": 10.225,
+        "effectif": 1788,
+        "proies_t": 2774,
+        "par_10t": 6.446,
+        "attendu": 7.758,
+        "ecart_log10": -0.08,
+        "tenu_par_les_hommes": true
+       },
+       {
+        "id": "chat-forestier",
+        "nom": "Chat forestier",
+        "masse_kg": 5.037,
+        "effectif": 105244,
+        "proies_t": 77512,
+        "par_10t": 13.578,
+        "attendu": 16.315,
+        "ecart_log10": -0.08
+       },
+       {
+        "id": "renard-polaire",
+        "nom": "Renard polaire",
+        "masse_kg": 3.6,
+        "effectif": 3113,
+        "proies_t": 1535,
+        "par_10t": 20.279,
+        "attendu": 23.215,
+        "ecart_log10": -0.059
+       },
+       {
+        "id": "orque",
+        "nom": "Orque",
+        "masse_kg": 4300,
+        "effectif": 382,
+        "proies_t": 207051,
+        "par_10t": 0.018,
+        "attendu": 0.014,
+        "ecart_log10": 0.131
+       },
+       {
+        "id": "marsouin",
+        "nom": "Marsouin commun",
+        "masse_kg": 52.731,
+        "effectif": 576474,
+        "proies_t": 2734777,
+        "par_10t": 2.108,
+        "attendu": 1.386,
+        "ecart_log10": 0.182
+       },
+       {
+        "id": "chacal-dore",
+        "nom": "Chacal doré",
+        "masse_kg": 11,
+        "effectif": 229898,
+        "proies_t": 171713,
+        "par_10t": 13.388,
+        "attendu": 7.185,
+        "ecart_log10": 0.27
+       },
+       {
+        "id": "herisson",
+        "nom": "Hérisson d'Europe",
+        "masse_kg": 0.778,
+        "effectif": 8677859,
+        "proies_t": 374158,
+        "par_10t": 231.93,
+        "attendu": 115.971,
+        "ecart_log10": 0.301
+       },
+       {
+        "id": "phoque-moine",
+        "nom": "Phoque moine de Méditerranée",
+        "masse_kg": 284.941,
+        "effectif": 117,
+        "proies_t": 2315,
+        "par_10t": 0.506,
+        "attendu": 0.236,
+        "ecart_log10": 0.331
+       },
+       {
+        "id": "phoque-veau-marin",
+        "nom": "Phoque veau-marin",
+        "masse_kg": 94.283,
+        "effectif": 254657,
+        "proies_t": 1002846,
+        "par_10t": 2.539,
+        "attendu": 0.753,
+        "ecart_log10": 0.528
+       },
+       {
+        "id": "phoque-gris",
+        "nom": "Phoque gris",
+        "masse_kg": 197.57,
+        "effectif": 152359,
+        "proies_t": 955125,
+        "par_10t": 1.595,
+        "attendu": 0.346,
+        "ecart_log10": 0.663
+       },
+       {
+        "id": "dauphin-commun",
+        "nom": "Dauphin commun",
+        "masse_kg": 77.818,
+        "effectif": 535812,
+        "proies_t": 1156349,
+        "par_10t": 4.634,
+        "attendu": 0.921,
+        "ecart_log10": 0.702
+       }
+      ]
+     },
+     "source": "Carbone & Gittleman 2002, Science 295 : 89,1 × M^−1,05 carnivores par 10 000 kg de proies. Les grands carnivores d'Europe sont tenus sous la loi par les hommes : ils sont dits à part (grands_carnivores), et doivent remonter vers elle dans un monde sans joueurs"
+    },
+    {
+     "id": "grands-carnivores",
+     "nom": "Les grands carnivores remontent (sans joueurs, rien ne les tient bas)",
+     "valeur": 0.4,
+     "valeur_dite": "loup +7.7 %/an, lynx-boreal +1.9 %/an, lynx-pardelle -4.1 %/an, ours-brun +4.8 %/an, glouton -4.3 %/an",
+     "cible": "chacun croît d'au moins 2 % par an",
+     "etat": "echec",
+     "detail": {
+      "grands": [
+       {
+        "id": "loup",
+        "par_an": 1.077,
+        "loi": {
+         "id": "loup",
+         "depart": 0.042,
+         "fin": 0.036
+        }
+       },
+       {
+        "id": "lynx-boreal",
+        "par_an": 1.019,
+        "loi": {
+         "id": "lynx-boreal",
+         "depart": 0.161,
+         "fin": 0.155
+        }
+       },
+       {
+        "id": "lynx-pardelle",
+        "par_an": 0.959,
+        "loi": {
+         "id": "lynx-pardelle",
+         "depart": 0.832,
+         "fin": 0.195
+        }
+       },
+       {
+        "id": "ours-brun",
+        "par_an": 1.048,
+        "loi": null
+       },
+       {
+        "id": "glouton",
+        "par_an": 0.957,
+        "loi": null
+       }
+      ]
+     },
+     "source": "le loup remonte de 5 à 10 % par an en Europe, là où on le laisse (LCIE)"
+    },
+    {
+     "id": "rendement",
+     "nom": "Garde-fou : le rendement des chasseurs",
+     "garde_fou": true,
+     "valeur": {
+      "chaud": 0.0153,
+      "froid": 0.1055
+     },
+     "valeur_dite": "à sang chaud 1.5 %, à sang froid 10.5 % de ce qu'ils mangent devient des petits",
+     "cible": "de 0.5 à 5 % (sang chaud), de 5 à 40 % (sang froid)",
+     "etat": "ok",
+     "source": "Humphreys 1979 (J. Anim. Ecol. 48) : une bête à sang chaud fait de sa chair 1 à 3 % de ce qu'elle assimile, une à sang froid de 10 à 40 % ; le reste part en chaleur (Lindeman 1942). Plus serait créer de la chair de rien"
+    },
+    {
+     "id": "diversite",
+     "nom": "Garde-fou : la diversité des lieux",
+     "garde_fou": true,
+     "valeur": 0.955,
+     "valeur_dite": "Shannon 1.305 (au départ 1.366) : ×0.96",
+     "cible": "au moins ×0.9",
+     "etat": "ok",
+     "source": "un monde sans joueurs, au même climat, ne s'appauvrit pas en silence : l'entropie de Shannon des parts de biomasse de chaque lieu garde au moins 90 % de ce qu'elle était"
+    },
+    {
+     "id": "damuth",
+     "nom": "Garde-fou : la loi de Damuth",
+     "garde_fou": true,
+     "valeur": -0.706,
+     "valeur_dite": "pente -0.706 (au départ -0.697, 69 espèces)",
+     "cible": "-0.75 ± 0.15",
+     "etat": "ok",
+     "detail": {
+      "depart": {
+       "pente": -0.697,
+       "especes": 69
+      },
+      "fin": {
+       "pente": -0.706,
+       "especes": 69
+      }
+     },
+     "source": "Damuth 1981 : la densité des mammifères ∝ masse^−0,75 (l'assemblage l'a posée : le moteur ne doit pas la défaire)"
+    }
+   ]
+  },
+  {
+   "graine": 7920,
+   "comptes": {
+    "ok": 7,
+    "limite": 1,
+    "echec": 1
+   },
+   "tests": [
+    {
+     "id": "stabilite",
+     "nom": "La stabilité",
+     "valeur": 0.995,
+     "cible": "≥ 0.9 des espèces à moins d'un facteur 2 de leur année d'avant",
+     "etat": "ok",
+     "detail": {
+      "especes": 201,
+      "extinctions": [],
+      "plus_loin": [
+       {
+        "id": "abeilles-bourdons",
+        "nom": "Abeilles et bourdons",
+        "rapport": 2.198
+       },
+       {
+        "id": "scolytes",
+        "nom": "Scolytes",
+        "rapport": 1.903
+       },
+       {
+        "id": "colvert",
+        "nom": "Canard colvert",
+        "rapport": 1.82
+       },
+       {
+        "id": "sarcelle",
+        "nom": "Sarcelle d'hiver",
+        "rapport": 1.769
+       },
+       {
+        "id": "foulque",
+        "nom": "Foulque macroule",
+        "rapport": 1.734
+       },
+       {
+        "id": "renard-polaire",
+        "nom": "Renard polaire",
+        "rapport": 1.608
+       },
+       {
+        "id": "cygne-tubercule",
+        "nom": "Cygne tuberculé",
+        "rapport": 1.595
+       },
+       {
+        "id": "coucou",
+        "nom": "Coucou gris",
+        "rapport": 1.585
+       },
+       {
+        "id": "carabes",
+        "nom": "Carabes et coléoptères prédateurs du sol",
+        "rapport": 0.639
+       },
+       {
+        "id": "ombre",
+        "nom": "Ombre commun",
+        "rapport": 0.645
+       },
+       {
+        "id": "fuligule-morillon",
+        "nom": "Fuligule morillon",
+        "rapport": 1.517
+       },
+       {
+        "id": "meduses",
+        "nom": "Méduses",
+        "rapport": 0.668
+       }
+      ]
+     },
+     "source": "un monde sans joueurs, au même climat, garde ses espèces : chacune à moins d'un facteur 2 de sa première année"
+    },
+    {
+     "id": "hors",
+     "nom": "Aucune espèce ne fond ni ne s'emballe",
+     "valeur": 1,
+     "valeur_dite": "1 : abeilles-bourdons ×2.198",
+     "cible": "aucune espèce sous ×0.5 ni au-dessus de ×2 de son année d'avant",
+     "etat": "limite",
+     "detail": {
+      "hors": [
+       {
+        "id": "abeilles-bourdons",
+        "nom": "Abeilles et bourdons",
+        "rapport": 2.198
+       }
+      ]
+     },
+     "source": "un monde sans joueurs, au même climat, garde ses espèces : chacune à moins d'un facteur 2 de sa première année"
+    },
+    {
+     "id": "cigogne-depart",
+     "nom": "Les cigognes : le départ",
+     "valeur": 237,
+     "valeur_dite": "25/08",
+     "cible": "du 03/08 au 12/09",
+     "etat": "ok",
+     "detail": {
+      "jours": [
+       237,
+       239,
+       240
+      ]
+     },
+     "source": "les cigognes blanches quittent l’Europe de début août à début septembre"
+    },
+    {
+     "id": "cigogne-retour",
+     "nom": "Les cigognes : le retour",
+     "valeur": 67,
+     "valeur_dite": "08/03",
+     "cible": "du 14/02 au 10/04",
+     "etat": "ok",
+     "detail": {
+      "jours": [
+       67,
+       68,
+       69
+      ]
+     },
+     "source": "elles reviennent de mi-février à début avril"
+    },
+    {
+     "id": "carnivores",
+     "nom": "Les prédateurs : combien de carnivores vivent de dix tonnes de proies",
+     "valeur": 1.91,
+     "valeur_dite": "écart médian ×1.9 (au départ ×2.0)",
+     "cible": "à moins d'un facteur 3 de la loi (hors loup, ours, lynx, glouton)",
+     "etat": "ok",
+     "detail": {
+      "grands_carnivores": [
+       {
+        "id": "loup",
+        "depart": 0.042,
+        "fin": 0.036
+       },
+       {
+        "id": "lynx-boreal",
+        "depart": 0.161,
+        "fin": 0.146
+       },
+       {
+        "id": "lynx-pardelle",
+        "depart": 0.832,
+        "fin": 0.355
+       }
+      ],
+      "fin": [
+       {
+        "id": "vison-amerique",
+        "nom": "Vison d'Amérique",
+        "masse_kg": 0.9,
+        "effectif": 16075,
+        "proies_t": 910000,
+        "par_10t": 0.177,
+        "attendu": 99.523,
+        "ecart_log10": -2.751
+       },
+       {
+        "id": "loutre",
+        "nom": "Loutre d'Europe",
+        "masse_kg": 7.809,
+        "effectif": 68002,
+        "proies_t": 3032467,
+        "par_10t": 0.224,
+        "attendu": 10.296,
+        "ecart_log10": -1.662
+       },
+       {
+        "id": "loup",
+        "nom": "Loup gris",
+        "masse_kg": 29.191,
+        "effectif": 38958,
+        "proies_t": 4247169,
+        "par_10t": 0.092,
+        "attendu": 2.578,
+        "ecart_log10": -1.449,
+        "tenu_par_les_hommes": true
+       },
+       {
+        "id": "lynx-boreal",
+        "nom": "Lynx boréal",
+        "masse_kg": 21.15,
+        "effectif": 12247,
+        "proies_t": 231691,
+        "par_10t": 0.529,
+        "attendu": 3.617,
+        "ecart_log10": -0.835,
+        "tenu_par_les_hommes": true
+       },
+       {
+        "id": "putois",
+        "nom": "Putois d'Europe",
+        "masse_kg": 0.809,
+        "effectif": 1162925,
+        "proies_t": 393776,
+        "par_10t": 29.533,
+        "attendu": 111.309,
+        "ecart_log10": -0.576
+       },
+       {
+        "id": "lynx-pardelle",
+        "nom": "Lynx pardelle",
+        "masse_kg": 10.225,
+        "effectif": 1536,
+        "proies_t": 5576,
+        "par_10t": 2.756,
+        "attendu": 7.758,
+        "ecart_log10": -0.45,
+        "tenu_par_les_hommes": true
+       },
+       {
+        "id": "genette",
+        "nom": "Genette commune",
+        "masse_kg": 1.867,
+        "effectif": 117909,
+        "proies_t": 49473,
+        "par_10t": 23.833,
+        "attendu": 46.257,
+        "ecart_log10": -0.288
+       },
+       {
+        "id": "grand-dauphin",
+        "nom": "Grand dauphin",
+        "masse_kg": 230,
+        "effectif": 24573,
+        "proies_t": 1057816,
+        "par_10t": 0.232,
+        "attendu": 0.295,
+        "ecart_log10": -0.104
+       },
+       {
+        "id": "chat-forestier",
+        "nom": "Chat forestier",
+        "masse_kg": 5.037,
+        "effectif": 128365,
+        "proies_t": 91829,
+        "par_10t": 13.979,
+        "attendu": 16.315,
+        "ecart_log10": -0.067
+       },
+       {
+        "id": "phoque-moine",
+        "nom": "Phoque moine de Méditerranée",
+        "masse_kg": 284.941,
+        "effectif": 93,
+        "proies_t": 4183,
+        "par_10t": 0.222,
+        "attendu": 0.236,
+        "ecart_log10": -0.026
+       },
+       {
+        "id": "phoque-veau-marin",
+        "nom": "Phoque veau-marin",
+        "masse_kg": 94.283,
+        "effectif": 206757,
+        "proies_t": 2666694,
+        "par_10t": 0.775,
+        "attendu": 0.753,
+        "ecart_log10": 0.013
+       },
+       {
+        "id": "marsouin",
+        "nom": "Marsouin commun",
+        "masse_kg": 52.731,
+        "effectif": 501728,
+        "proies_t": 3062694,
+        "par_10t": 1.638,
+        "attendu": 1.386,
+        "ecart_log10": 0.073
+       },
+       {
+        "id": "phoque-gris",
+        "nom": "Phoque gris",
+        "masse_kg": 197.57,
+        "effectif": 132891,
+        "proies_t": 2939030,
+        "par_10t": 0.452,
+        "attendu": 0.346,
+        "ecart_log10": 0.116
+       },
+       {
+        "id": "renard-polaire",
+        "nom": "Renard polaire",
+        "masse_kg": 3.6,
+        "effectif": 13226,
+        "proies_t": 3368,
+        "par_10t": 39.272,
+        "attendu": 23.215,
+        "ecart_log10": 0.228
+       },
+       {
+        "id": "orque",
+        "nom": "Orque",
+        "masse_kg": 4300,
+        "effectif": 482,
+        "proies_t": 184684,
+        "par_10t": 0.026,
+        "attendu": 0.014,
+        "ecart_log10": 0.282
+       },
+       {
+        "id": "chacal-dore",
+        "nom": "Chacal doré",
+        "masse_kg": 11,
+        "effectif": 353664,
+        "proies_t": 237843,
+        "par_10t": 14.87,
+        "attendu": 7.185,
+        "ecart_log10": 0.316
+       },
+       {
+        "id": "herisson",
+        "nom": "Hérisson d'Europe",
+        "masse_kg": 0.778,
+        "effectif": 8744397,
+        "proies_t": 347326,
+        "par_10t": 251.764,
+        "attendu": 115.971,
+        "ecart_log10": 0.337
+       },
+       {
+        "id": "dauphin-commun",
+        "nom": "Dauphin commun",
+        "masse_kg": 77.818,
+        "effectif": 537473,
+        "proies_t": 1116817,
+        "par_10t": 4.813,
+        "attendu": 0.921,
+        "ecart_log10": 0.718
+       }
+      ],
+      "depart": [
+       {
+        "id": "vison-amerique",
+        "nom": "Vison d'Amérique",
+        "masse_kg": 0.9,
+        "effectif": 27644,
+        "proies_t": 1217756,
+        "par_10t": 0.227,
+        "attendu": 99.523,
+        "ecart_log10": -2.642
+       },
+       {
+        "id": "loutre",
+        "nom": "Loutre d'Europe",
+        "masse_kg": 7.809,
+        "effectif": 62749,
+        "proies_t": 3597891,
+        "par_10t": 0.174,
+        "attendu": 10.296,
+        "ecart_log10": -1.771
+       },
+       {
+        "id": "loup",
+        "nom": "Loup gris",
+        "masse_kg": 29.191,
+        "effectif": 31053,
+        "proies_t": 2872601,
+        "par_10t": 0.108,
+        "attendu": 2.578,
+        "ecart_log10": -1.378,
+        "tenu_par_les_hommes": true
+       },
+       {
+        "id": "lynx-boreal",
+        "nom": "Lynx boréal",
+        "masse_kg": 21.15,
+        "effectif": 11926,
+        "proies_t": 204920,
+        "par_10t": 0.582,
+        "attendu": 3.617,
+        "ecart_log10": -0.793,
+        "tenu_par_les_hommes": true
+       },
+       {
+        "id": "putois",
+        "nom": "Putois d'Europe",
+        "masse_kg": 0.809,
+        "effectif": 1008375,
+        "proies_t": 445675,
+        "par_10t": 22.626,
+        "attendu": 111.309,
+        "ecart_log10": -0.692
+       },
+       {
+        "id": "genette",
+        "nom": "Genette commune",
+        "masse_kg": 1.867,
+        "effectif": 86323,
+        "proies_t": 29546,
+        "par_10t": 29.217,
+        "attendu": 46.257,
+        "ecart_log10": -0.2
+       },
+       {
+        "id": "grand-dauphin",
+        "nom": "Grand dauphin",
+        "masse_kg": 230,
+        "effectif": 25380,
+        "proies_t": 1103489,
+        "par_10t": 0.23,
+        "attendu": 0.295,
+        "ecart_log10": -0.108
+       },
+       {
+        "id": "lynx-pardelle",
+        "nom": "Lynx pardelle",
+        "masse_kg": 10.225,
+        "effectif": 1788,
+        "proies_t": 2774,
+        "par_10t": 6.446,
+        "attendu": 7.758,
+        "ecart_log10": -0.08,
+        "tenu_par_les_hommes": true
+       },
+       {
+        "id": "chat-forestier",
+        "nom": "Chat forestier",
+        "masse_kg": 5.037,
+        "effectif": 105244,
+        "proies_t": 77512,
+        "par_10t": 13.578,
+        "attendu": 16.315,
+        "ecart_log10": -0.08
+       },
+       {
+        "id": "renard-polaire",
+        "nom": "Renard polaire",
+        "masse_kg": 3.6,
+        "effectif": 3113,
+        "proies_t": 1535,
+        "par_10t": 20.279,
+        "attendu": 23.215,
+        "ecart_log10": -0.059
+       },
+       {
+        "id": "orque",
+        "nom": "Orque",
+        "masse_kg": 4300,
+        "effectif": 382,
+        "proies_t": 207051,
+        "par_10t": 0.018,
+        "attendu": 0.014,
+        "ecart_log10": 0.131
+       },
+       {
+        "id": "marsouin",
+        "nom": "Marsouin commun",
+        "masse_kg": 52.731,
+        "effectif": 576474,
+        "proies_t": 2734777,
+        "par_10t": 2.108,
+        "attendu": 1.386,
+        "ecart_log10": 0.182
+       },
+       {
+        "id": "chacal-dore",
+        "nom": "Chacal doré",
+        "masse_kg": 11,
+        "effectif": 229898,
+        "proies_t": 171713,
+        "par_10t": 13.388,
+        "attendu": 7.185,
+        "ecart_log10": 0.27
+       },
+       {
+        "id": "herisson",
+        "nom": "Hérisson d'Europe",
+        "masse_kg": 0.778,
+        "effectif": 8677859,
+        "proies_t": 374158,
+        "par_10t": 231.93,
+        "attendu": 115.971,
+        "ecart_log10": 0.301
+       },
+       {
+        "id": "phoque-moine",
+        "nom": "Phoque moine de Méditerranée",
+        "masse_kg": 284.941,
+        "effectif": 117,
+        "proies_t": 2315,
+        "par_10t": 0.506,
+        "attendu": 0.236,
+        "ecart_log10": 0.331
+       },
+       {
+        "id": "phoque-veau-marin",
+        "nom": "Phoque veau-marin",
+        "masse_kg": 94.283,
+        "effectif": 254657,
+        "proies_t": 1002846,
+        "par_10t": 2.539,
+        "attendu": 0.753,
+        "ecart_log10": 0.528
+       },
+       {
+        "id": "phoque-gris",
+        "nom": "Phoque gris",
+        "masse_kg": 197.57,
+        "effectif": 152359,
+        "proies_t": 955125,
+        "par_10t": 1.595,
+        "attendu": 0.346,
+        "ecart_log10": 0.663
+       },
+       {
+        "id": "dauphin-commun",
+        "nom": "Dauphin commun",
+        "masse_kg": 77.818,
+        "effectif": 535812,
+        "proies_t": 1156349,
+        "par_10t": 4.634,
+        "attendu": 0.921,
+        "ecart_log10": 0.702
+       }
+      ]
+     },
+     "source": "Carbone & Gittleman 2002, Science 295 : 89,1 × M^−1,05 carnivores par 10 000 kg de proies. Les grands carnivores d'Europe sont tenus sous la loi par les hommes : ils sont dits à part (grands_carnivores), et doivent remonter vers elle dans un monde sans joueurs"
+    },
+    {
+     "id": "grands-carnivores",
+     "nom": "Les grands carnivores remontent (sans joueurs, rien ne les tient bas)",
+     "valeur": 0.4,
+     "valeur_dite": "loup +7.8 %/an, lynx-boreal +1.6 %/an, lynx-pardelle -4.2 %/an, ours-brun +5.3 %/an, glouton -4.1 %/an",
+     "cible": "chacun croît d'au moins 2 % par an",
+     "etat": "echec",
+     "detail": {
+      "grands": [
+       {
+        "id": "loup",
+        "par_an": 1.078,
+        "loi": {
+         "id": "loup",
+         "depart": 0.042,
+         "fin": 0.036
+        }
+       },
+       {
+        "id": "lynx-boreal",
+        "par_an": 1.016,
+        "loi": {
+         "id": "lynx-boreal",
+         "depart": 0.161,
+         "fin": 0.146
+        }
+       },
+       {
+        "id": "lynx-pardelle",
+        "par_an": 0.958,
+        "loi": {
+         "id": "lynx-pardelle",
+         "depart": 0.832,
+         "fin": 0.355
+        }
+       },
+       {
+        "id": "ours-brun",
+        "par_an": 1.053,
+        "loi": null
+       },
+       {
+        "id": "glouton",
+        "par_an": 0.959,
+        "loi": null
+       }
+      ]
+     },
+     "source": "le loup remonte de 5 à 10 % par an en Europe, là où on le laisse (LCIE)"
+    },
+    {
+     "id": "rendement",
+     "nom": "Garde-fou : le rendement des chasseurs",
+     "garde_fou": true,
+     "valeur": {
+      "chaud": 0.0153,
+      "froid": 0.1054
+     },
+     "valeur_dite": "à sang chaud 1.5 %, à sang froid 10.5 % de ce qu'ils mangent devient des petits",
+     "cible": "de 0.5 à 5 % (sang chaud), de 5 à 40 % (sang froid)",
+     "etat": "ok",
+     "source": "Humphreys 1979 (J. Anim. Ecol. 48) : une bête à sang chaud fait de sa chair 1 à 3 % de ce qu'elle assimile, une à sang froid de 10 à 40 % ; le reste part en chaleur (Lindeman 1942). Plus serait créer de la chair de rien"
+    },
+    {
+     "id": "diversite",
+     "nom": "Garde-fou : la diversité des lieux",
+     "garde_fou": true,
+     "valeur": 0.964,
+     "valeur_dite": "Shannon 1.316 (au départ 1.366) : ×0.96",
+     "cible": "au moins ×0.9",
+     "etat": "ok",
+     "source": "un monde sans joueurs, au même climat, ne s'appauvrit pas en silence : l'entropie de Shannon des parts de biomasse de chaque lieu garde au moins 90 % de ce qu'elle était"
+    },
+    {
+     "id": "damuth",
+     "nom": "Garde-fou : la loi de Damuth",
+     "garde_fou": true,
+     "valeur": -0.704,
+     "valeur_dite": "pente -0.704 (au départ -0.697, 69 espèces)",
+     "cible": "-0.75 ± 0.15",
+     "etat": "ok",
+     "detail": {
+      "depart": {
+       "pente": -0.697,
+       "especes": 69
+      },
+      "fin": {
+       "pente": -0.704,
+       "especes": 69
+      }
+     },
+     "source": "Damuth 1981 : la densité des mammifères ∝ masse^−0,75 (l'assemblage l'a posée : le moteur ne doit pas la défaire)"
+    }
+   ]
+  },
+  {
+   "graine": 15839,
+   "comptes": {
+    "ok": 7,
+    "limite": 1,
+    "echec": 1
+   },
+   "tests": [
+    {
+     "id": "stabilite",
+     "nom": "La stabilité",
+     "valeur": 0.995,
+     "cible": "≥ 0.9 des espèces à moins d'un facteur 2 de leur année d'avant",
+     "etat": "ok",
+     "detail": {
+      "especes": 201,
+      "extinctions": [],
+      "plus_loin": [
+       {
+        "id": "abeilles-bourdons",
+        "nom": "Abeilles et bourdons",
+        "rapport": 2.194
+       },
+       {
+        "id": "scolytes",
+        "nom": "Scolytes",
+        "rapport": 1.915
+       },
+       {
+        "id": "colvert",
+        "nom": "Canard colvert",
+        "rapport": 1.83
+       },
+       {
+        "id": "sarcelle",
+        "nom": "Sarcelle d'hiver",
+        "rapport": 1.778
+       },
+       {
+        "id": "foulque",
+        "nom": "Foulque macroule",
+        "rapport": 1.75
+       },
+       {
+        "id": "renard-polaire",
+        "nom": "Renard polaire",
+        "rapport": 1.626
+       },
+       {
+        "id": "cygne-tubercule",
+        "nom": "Cygne tuberculé",
+        "rapport": 1.596
+       },
+       {
+        "id": "coucou",
+        "nom": "Coucou gris",
+        "rapport": 1.586
+       },
+       {
+        "id": "carabes",
+        "nom": "Carabes et coléoptères prédateurs du sol",
+        "rapport": 0.638
+       },
+       {
+        "id": "ombre",
+        "nom": "Ombre commun",
+        "rapport": 0.645
+       },
+       {
+        "id": "fuligule-morillon",
+        "nom": "Fuligule morillon",
+        "rapport": 1.518
+       },
+       {
+        "id": "meduses",
+        "nom": "Méduses",
+        "rapport": 0.667
+       }
+      ]
+     },
+     "source": "un monde sans joueurs, au même climat, garde ses espèces : chacune à moins d'un facteur 2 de sa première année"
+    },
+    {
+     "id": "hors",
+     "nom": "Aucune espèce ne fond ni ne s'emballe",
+     "valeur": 1,
+     "valeur_dite": "1 : abeilles-bourdons ×2.194",
+     "cible": "aucune espèce sous ×0.5 ni au-dessus de ×2 de son année d'avant",
+     "etat": "limite",
+     "detail": {
+      "hors": [
+       {
+        "id": "abeilles-bourdons",
+        "nom": "Abeilles et bourdons",
+        "rapport": 2.194
+       }
+      ]
+     },
+     "source": "un monde sans joueurs, au même climat, garde ses espèces : chacune à moins d'un facteur 2 de sa première année"
+    },
+    {
+     "id": "cigogne-depart",
+     "nom": "Les cigognes : le départ",
+     "valeur": 237,
+     "valeur_dite": "25/08",
+     "cible": "du 03/08 au 12/09",
+     "etat": "ok",
+     "detail": {
+      "jours": [
+       237,
+       239,
+       240
+      ]
+     },
+     "source": "les cigognes blanches quittent l’Europe de début août à début septembre"
+    },
+    {
+     "id": "cigogne-retour",
+     "nom": "Les cigognes : le retour",
+     "valeur": 67,
+     "valeur_dite": "08/03",
+     "cible": "du 14/02 au 10/04",
+     "etat": "ok",
+     "detail": {
+      "jours": [
+       67,
+       68,
+       69
+      ]
+     },
+     "source": "elles reviennent de mi-février à début avril"
+    },
+    {
+     "id": "carnivores",
+     "nom": "Les prédateurs : combien de carnivores vivent de dix tonnes de proies",
+     "valeur": 1.7,
+     "valeur_dite": "écart médian ×1.7 (au départ ×2.0)",
+     "cible": "à moins d'un facteur 3 de la loi (hors loup, ours, lynx, glouton)",
+     "etat": "ok",
+     "detail": {
+      "grands_carnivores": [
+       {
+        "id": "loup",
+        "depart": 0.042,
+        "fin": 0.036
+       },
+       {
+        "id": "lynx-boreal",
+        "depart": 0.161,
+        "fin": 0.14
+       },
+       {
+        "id": "lynx-pardelle",
+        "depart": 0.832,
+        "fin": 0.323
+       }
+      ],
+      "fin": [
+       {
+        "id": "vison-amerique",
+        "nom": "Vison d'Amérique",
+        "masse_kg": 0.9,
+        "effectif": 16103,
+        "proies_t": 911583,
+        "par_10t": 0.177,
+        "attendu": 99.523,
+        "ecart_log10": -2.751
+       },
+       {
+        "id": "loutre",
+        "nom": "Loutre d'Europe",
+        "masse_kg": 7.809,
+        "effectif": 68269,
+        "proies_t": 2951385,
+        "par_10t": 0.231,
+        "attendu": 10.296,
+        "ecart_log10": -1.648
+       },
+       {
+        "id": "loup",
+        "nom": "Loup gris",
+        "masse_kg": 29.191,
+        "effectif": 38641,
+        "proies_t": 4208566,
+        "par_10t": 0.092,
+        "attendu": 2.578,
+        "ecart_log10": -1.448,
+        "tenu_par_les_hommes": true
+       },
+       {
+        "id": "lynx-boreal",
+        "nom": "Lynx boréal",
+        "masse_kg": 21.15,
+        "effectif": 11911,
+        "proies_t": 235433,
+        "par_10t": 0.506,
+        "attendu": 3.617,
+        "ecart_log10": -0.854,
+        "tenu_par_les_hommes": true
+       },
+       {
+        "id": "putois",
+        "nom": "Putois d'Europe",
+        "masse_kg": 0.809,
+        "effectif": 1164617,
+        "proies_t": 408429,
+        "par_10t": 28.515,
+        "attendu": 111.309,
+        "ecart_log10": -0.591
+       },
+       {
+        "id": "lynx-pardelle",
+        "nom": "Lynx pardelle",
+        "masse_kg": 10.225,
+        "effectif": 1561,
+        "proies_t": 6231,
+        "par_10t": 2.505,
+        "attendu": 7.758,
+        "ecart_log10": -0.491,
+        "tenu_par_les_hommes": true
+       },
+       {
+        "id": "grand-dauphin",
+        "nom": "Grand dauphin",
+        "masse_kg": 230,
+        "effectif": 24579,
+        "proies_t": 1095706,
+        "par_10t": 0.224,
+        "attendu": 0.295,
+        "ecart_log10": -0.119
+       },
+       {
+        "id": "genette",
+        "nom": "Genette commune",
+        "masse_kg": 1.867,
+        "effectif": 118156,
+        "proies_t": 30631,
+        "par_10t": 38.574,
+        "attendu": 46.257,
+        "ecart_log10": -0.079
+       },
+       {
+        "id": "chat-forestier",
+        "nom": "Chat forestier",
+        "masse_kg": 5.037,
+        "effectif": 128757,
+        "proies_t": 94063,
+        "par_10t": 13.688,
+        "attendu": 16.315,
+        "ecart_log10": -0.076
+       },
+       {
+        "id": "phoque-veau-marin",
+        "nom": "Phoque veau-marin",
+        "masse_kg": 94.283,
+        "effectif": 206756,
+        "proies_t": 2643756,
+        "par_10t": 0.782,
+        "attendu": 0.753,
+        "ecart_log10": 0.017
+       },
+       {
+        "id": "marsouin",
+        "nom": "Marsouin commun",
+        "masse_kg": 52.731,
+        "effectif": 502015,
+        "proies_t": 3089487,
+        "par_10t": 1.625,
+        "attendu": 1.386,
+        "ecart_log10": 0.069
+       },
+       {
+        "id": "phoque-moine",
+        "nom": "Phoque moine de Méditerranée",
+        "masse_kg": 284.941,
+        "effectif": 94,
+        "proies_t": 3344,
+        "par_10t": 0.28,
+        "attendu": 0.236,
+        "ecart_log10": 0.074
+       },
+       {
+        "id": "phoque-gris",
+        "nom": "Phoque gris",
+        "masse_kg": 197.57,
+        "effectif": 131425,
+        "proies_t": 2792752,
+        "par_10t": 0.471,
+        "attendu": 0.346,
+        "ecart_log10": 0.133
+       },
+       {
+        "id": "renard-polaire",
+        "nom": "Renard polaire",
+        "masse_kg": 3.6,
+        "effectif": 13561,
+        "proies_t": 3438,
+        "par_10t": 39.445,
+        "attendu": 23.215,
+        "ecart_log10": 0.23
+       },
+       {
+        "id": "orque",
+        "nom": "Orque",
+        "masse_kg": 4300,
+        "effectif": 472,
+        "proies_t": 184194,
+        "par_10t": 0.026,
+        "attendu": 0.014,
+        "ecart_log10": 0.274
+       },
+       {
+        "id": "herisson",
+        "nom": "Hérisson d'Europe",
+        "masse_kg": 0.778,
+        "effectif": 8745412,
+        "proies_t": 388384,
+        "par_10t": 225.174,
+        "attendu": 115.971,
+        "ecart_log10": 0.288
+       },
+       {
+        "id": "chacal-dore",
+        "nom": "Chacal doré",
+        "masse_kg": 11,
+        "effectif": 354984,
+        "proies_t": 221183,
+        "par_10t": 16.049,
+        "attendu": 7.185,
+        "ecart_log10": 0.349
+       },
+       {
+        "id": "dauphin-commun",
+        "nom": "Dauphin commun",
+        "masse_kg": 77.818,
+        "effectif": 537781,
+        "proies_t": 1318847,
+        "par_10t": 4.078,
+        "attendu": 0.921,
+        "ecart_log10": 0.646
+       }
+      ],
+      "depart": [
+       {
+        "id": "vison-amerique",
+        "nom": "Vison d'Amérique",
+        "masse_kg": 0.9,
+        "effectif": 27644,
+        "proies_t": 1217756,
+        "par_10t": 0.227,
+        "attendu": 99.523,
+        "ecart_log10": -2.642
+       },
+       {
+        "id": "loutre",
+        "nom": "Loutre d'Europe",
+        "masse_kg": 7.809,
+        "effectif": 62749,
+        "proies_t": 3597891,
+        "par_10t": 0.174,
+        "attendu": 10.296,
+        "ecart_log10": -1.771
+       },
+       {
+        "id": "loup",
+        "nom": "Loup gris",
+        "masse_kg": 29.191,
+        "effectif": 31053,
+        "proies_t": 2872601,
+        "par_10t": 0.108,
+        "attendu": 2.578,
+        "ecart_log10": -1.378,
+        "tenu_par_les_hommes": true
+       },
+       {
+        "id": "lynx-boreal",
+        "nom": "Lynx boréal",
+        "masse_kg": 21.15,
+        "effectif": 11926,
+        "proies_t": 204920,
+        "par_10t": 0.582,
+        "attendu": 3.617,
+        "ecart_log10": -0.793,
+        "tenu_par_les_hommes": true
+       },
+       {
+        "id": "putois",
+        "nom": "Putois d'Europe",
+        "masse_kg": 0.809,
+        "effectif": 1008375,
+        "proies_t": 445675,
+        "par_10t": 22.626,
+        "attendu": 111.309,
+        "ecart_log10": -0.692
+       },
+       {
+        "id": "genette",
+        "nom": "Genette commune",
+        "masse_kg": 1.867,
+        "effectif": 86323,
+        "proies_t": 29546,
+        "par_10t": 29.217,
+        "attendu": 46.257,
+        "ecart_log10": -0.2
+       },
+       {
+        "id": "grand-dauphin",
+        "nom": "Grand dauphin",
+        "masse_kg": 230,
+        "effectif": 25380,
+        "proies_t": 1103489,
+        "par_10t": 0.23,
+        "attendu": 0.295,
+        "ecart_log10": -0.108
+       },
+       {
+        "id": "lynx-pardelle",
+        "nom": "Lynx pardelle",
+        "masse_kg": 10.225,
+        "effectif": 1788,
+        "proies_t": 2774,
+        "par_10t": 6.446,
+        "attendu": 7.758,
+        "ecart_log10": -0.08,
+        "tenu_par_les_hommes": true
+       },
+       {
+        "id": "chat-forestier",
+        "nom": "Chat forestier",
+        "masse_kg": 5.037,
+        "effectif": 105244,
+        "proies_t": 77512,
+        "par_10t": 13.578,
+        "attendu": 16.315,
+        "ecart_log10": -0.08
+       },
+       {
+        "id": "renard-polaire",
+        "nom": "Renard polaire",
+        "masse_kg": 3.6,
+        "effectif": 3113,
+        "proies_t": 1535,
+        "par_10t": 20.279,
+        "attendu": 23.215,
+        "ecart_log10": -0.059
+       },
+       {
+        "id": "orque",
+        "nom": "Orque",
+        "masse_kg": 4300,
+        "effectif": 382,
+        "proies_t": 207051,
+        "par_10t": 0.018,
+        "attendu": 0.014,
+        "ecart_log10": 0.131
+       },
+       {
+        "id": "marsouin",
+        "nom": "Marsouin commun",
+        "masse_kg": 52.731,
+        "effectif": 576474,
+        "proies_t": 2734777,
+        "par_10t": 2.108,
+        "attendu": 1.386,
+        "ecart_log10": 0.182
+       },
+       {
+        "id": "chacal-dore",
+        "nom": "Chacal doré",
+        "masse_kg": 11,
+        "effectif": 229898,
+        "proies_t": 171713,
+        "par_10t": 13.388,
+        "attendu": 7.185,
+        "ecart_log10": 0.27
+       },
+       {
+        "id": "herisson",
+        "nom": "Hérisson d'Europe",
+        "masse_kg": 0.778,
+        "effectif": 8677859,
+        "proies_t": 374158,
+        "par_10t": 231.93,
+        "attendu": 115.971,
+        "ecart_log10": 0.301
+       },
+       {
+        "id": "phoque-moine",
+        "nom": "Phoque moine de Méditerranée",
+        "masse_kg": 284.941,
+        "effectif": 117,
+        "proies_t": 2315,
+        "par_10t": 0.506,
+        "attendu": 0.236,
+        "ecart_log10": 0.331
+       },
+       {
+        "id": "phoque-veau-marin",
+        "nom": "Phoque veau-marin",
+        "masse_kg": 94.283,
+        "effectif": 254657,
+        "proies_t": 1002846,
+        "par_10t": 2.539,
+        "attendu": 0.753,
+        "ecart_log10": 0.528
+       },
+       {
+        "id": "phoque-gris",
+        "nom": "Phoque gris",
+        "masse_kg": 197.57,
+        "effectif": 152359,
+        "proies_t": 955125,
+        "par_10t": 1.595,
+        "attendu": 0.346,
+        "ecart_log10": 0.663
+       },
+       {
+        "id": "dauphin-commun",
+        "nom": "Dauphin commun",
+        "masse_kg": 77.818,
+        "effectif": 535812,
+        "proies_t": 1156349,
+        "par_10t": 4.634,
+        "attendu": 0.921,
+        "ecart_log10": 0.702
+       }
+      ]
+     },
+     "source": "Carbone & Gittleman 2002, Science 295 : 89,1 × M^−1,05 carnivores par 10 000 kg de proies. Les grands carnivores d'Europe sont tenus sous la loi par les hommes : ils sont dits à part (grands_carnivores), et doivent remonter vers elle dans un monde sans joueurs"
+    },
+    {
+     "id": "grands-carnivores",
+     "nom": "Les grands carnivores remontent (sans joueurs, rien ne les tient bas)",
+     "valeur": 0.4,
+     "valeur_dite": "loup +7.6 %/an, lynx-boreal +0.5 %/an, lynx-pardelle -4.0 %/an, ours-brun +5.1 %/an, glouton -4.3 %/an",
+     "cible": "chacun croît d'au moins 2 % par an",
+     "etat": "echec",
+     "detail": {
+      "grands": [
+       {
+        "id": "loup",
+        "par_an": 1.076,
+        "loi": {
+         "id": "loup",
+         "depart": 0.042,
+         "fin": 0.036
+        }
+       },
+       {
+        "id": "lynx-boreal",
+        "par_an": 1.005,
+        "loi": {
+         "id": "lynx-boreal",
+         "depart": 0.161,
+         "fin": 0.14
+        }
+       },
+       {
+        "id": "lynx-pardelle",
+        "par_an": 0.96,
+        "loi": {
+         "id": "lynx-pardelle",
+         "depart": 0.832,
+         "fin": 0.323
+        }
+       },
+       {
+        "id": "ours-brun",
+        "par_an": 1.051,
+        "loi": null
+       },
+       {
+        "id": "glouton",
+        "par_an": 0.957,
+        "loi": null
+       }
+      ]
+     },
+     "source": "le loup remonte de 5 à 10 % par an en Europe, là où on le laisse (LCIE)"
+    },
+    {
+     "id": "rendement",
+     "nom": "Garde-fou : le rendement des chasseurs",
+     "garde_fou": true,
+     "valeur": {
+      "chaud": 0.0153,
+      "froid": 0.1055
+     },
+     "valeur_dite": "à sang chaud 1.5 %, à sang froid 10.5 % de ce qu'ils mangent devient des petits",
+     "cible": "de 0.5 à 5 % (sang chaud), de 5 à 40 % (sang froid)",
+     "etat": "ok",
+     "source": "Humphreys 1979 (J. Anim. Ecol. 48) : une bête à sang chaud fait de sa chair 1 à 3 % de ce qu'elle assimile, une à sang froid de 10 à 40 % ; le reste part en chaleur (Lindeman 1942). Plus serait créer de la chair de rien"
+    },
+    {
+     "id": "diversite",
+     "nom": "Garde-fou : la diversité des lieux",
+     "garde_fou": true,
+     "valeur": 0.957,
+     "valeur_dite": "Shannon 1.307 (au départ 1.366) : ×0.96",
+     "cible": "au moins ×0.9",
+     "etat": "ok",
+     "source": "un monde sans joueurs, au même climat, ne s'appauvrit pas en silence : l'entropie de Shannon des parts de biomasse de chaque lieu garde au moins 90 % de ce qu'elle était"
+    },
+    {
+     "id": "damuth",
+     "nom": "Garde-fou : la loi de Damuth",
+     "garde_fou": true,
+     "valeur": -0.706,
+     "valeur_dite": "pente -0.706 (au départ -0.697, 69 espèces)",
+     "cible": "-0.75 ± 0.15",
+     "etat": "ok",
+     "detail": {
+      "depart": {
+       "pente": -0.697,
+       "especes": 69
+      },
+      "fin": {
+       "pente": -0.706,
+       "especes": 69
+      }
+     },
+     "source": "Damuth 1981 : la densité des mammifères ∝ masse^−0,75 (l'assemblage l'a posée : le moteur ne doit pas la défaire)"
+    }
+   ]
+  }
+ ]
+}

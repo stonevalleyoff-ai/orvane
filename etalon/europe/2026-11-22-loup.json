@@ -1,0 +1,723 @@
+{
+ "etalon": 1,
+ "experience": "loup",
+ "monde": "europe",
+ "date": "2026-11-22",
+ "ans": 31,
+ "lieux": 96,
+ "reel": {
+  "1992": 2,
+  "2000": 35,
+  "2005": 60,
+  "2010": 190,
+  "2015": 300,
+  "2018": 430,
+  "2020": 580,
+  "2023": 1100
+ },
+ "tests": [
+  {
+   "id": "loup-arrivee",
+   "nom": "Le loup arrive en France",
+   "valeur": [
+    1994,
+    1994,
+    1993
+   ],
+   "cible": "au plus tard en 1995 (le premier en 1992)",
+   "etat": "ok",
+   "valeur_dite": "1994 | 1994 | 1993"
+  },
+  {
+   "id": "loup-cent",
+   "nom": "Cent loups en France",
+   "valeur": [
+    2007,
+    2007,
+    2007
+   ],
+   "cible": "vers 2008 (± 6 ans)",
+   "etat": "ok",
+   "valeur_dite": "2007 | 2007 | 2007"
+  },
+  {
+   "id": "loup-2023",
+   "nom": "Les loups de France en 2023",
+   "valeur": [
+    549,
+    613,
+    604
+   ],
+   "cible": "~1100 (à moins d'un facteur 3)",
+   "etat": "ok",
+   "valeur_dite": "549 | 613 | 604"
+  }
+ ],
+ "graines": [
+  {
+   "graine": 1,
+   "tests": [
+    {
+     "id": "loup-arrivee",
+     "nom": "Le loup arrive en France",
+     "valeur": 1994,
+     "cible": "au plus tard en 1995 (le premier en 1992)",
+     "etat": "ok"
+    },
+    {
+     "id": "loup-cent",
+     "nom": "Cent loups en France",
+     "valeur": 2007,
+     "cible": "vers 2008 (± 6 ans)",
+     "etat": "ok"
+    },
+    {
+     "id": "loup-2023",
+     "nom": "Les loups de France en 2023",
+     "valeur": 549,
+     "cible": "~1100 (à moins d'un facteur 3)",
+     "etat": "ok"
+    }
+   ],
+   "serie": [
+    {
+     "an": 1992,
+     "france": 0,
+     "lieux": 0,
+     "italie": 343
+    },
+    {
+     "an": 1993,
+     "france": 0,
+     "lieux": 0,
+     "italie": 372
+    },
+    {
+     "an": 1994,
+     "france": 4,
+     "lieux": 1,
+     "italie": 406
+    },
+    {
+     "an": 1995,
+     "france": 9,
+     "lieux": 2,
+     "italie": 446
+    },
+    {
+     "an": 1996,
+     "france": 18,
+     "lieux": 4,
+     "italie": 490
+    },
+    {
+     "an": 1997,
+     "france": 21,
+     "lieux": 4,
+     "italie": 547
+    },
+    {
+     "an": 1998,
+     "france": 24,
+     "lieux": 4,
+     "italie": 609
+    },
+    {
+     "an": 1999,
+     "france": 27,
+     "lieux": 4,
+     "italie": 677
+    },
+    {
+     "an": 2000,
+     "france": 31,
+     "lieux": 4,
+     "italie": 704
+    },
+    {
+     "an": 2001,
+     "france": 41,
+     "lieux": 5,
+     "italie": 772
+    },
+    {
+     "an": 2002,
+     "france": 47,
+     "lieux": 5,
+     "italie": 852
+    },
+    {
+     "an": 2003,
+     "france": 54,
+     "lieux": 5,
+     "italie": 940
+    },
+    {
+     "an": 2004,
+     "france": 66,
+     "lieux": 6,
+     "italie": 1028
+    },
+    {
+     "an": 2005,
+     "france": 76,
+     "lieux": 6,
+     "italie": 1116
+    },
+    {
+     "an": 2006,
+     "france": 87,
+     "lieux": 6,
+     "italie": 1202
+    },
+    {
+     "an": 2007,
+     "france": 100,
+     "lieux": 6,
+     "italie": 1296
+    },
+    {
+     "an": 2008,
+     "france": 115,
+     "lieux": 6,
+     "italie": 1399
+    },
+    {
+     "an": 2009,
+     "france": 128,
+     "lieux": 7,
+     "italie": 1506
+    },
+    {
+     "an": 2010,
+     "france": 146,
+     "lieux": 8,
+     "italie": 1622
+    },
+    {
+     "an": 2011,
+     "france": 167,
+     "lieux": 8,
+     "italie": 1748
+    },
+    {
+     "an": 2012,
+     "france": 189,
+     "lieux": 8,
+     "italie": 1882
+    },
+    {
+     "an": 2013,
+     "france": 214,
+     "lieux": 8,
+     "italie": 2026
+    },
+    {
+     "an": 2014,
+     "france": 240,
+     "lieux": 8,
+     "italie": 2178
+    },
+    {
+     "an": 2015,
+     "france": 269,
+     "lieux": 9,
+     "italie": 2340
+    },
+    {
+     "an": 2016,
+     "france": 299,
+     "lieux": 9,
+     "italie": 2503
+    },
+    {
+     "an": 2017,
+     "france": 331,
+     "lieux": 9,
+     "italie": 2673
+    },
+    {
+     "an": 2018,
+     "france": 364,
+     "lieux": 10,
+     "italie": 2846
+    },
+    {
+     "an": 2019,
+     "france": 399,
+     "lieux": 10,
+     "italie": 3019
+    },
+    {
+     "an": 2020,
+     "france": 435,
+     "lieux": 11,
+     "italie": 3194
+    },
+    {
+     "an": 2021,
+     "france": 472,
+     "lieux": 12,
+     "italie": 3367
+    },
+    {
+     "an": 2022,
+     "france": 510,
+     "lieux": 13,
+     "italie": 3529
+    },
+    {
+     "an": 2023,
+     "france": 549,
+     "lieux": 14,
+     "italie": 3683
+    }
+   ]
+  },
+  {
+   "graine": 7920,
+   "tests": [
+    {
+     "id": "loup-arrivee",
+     "nom": "Le loup arrive en France",
+     "valeur": 1994,
+     "cible": "au plus tard en 1995 (le premier en 1992)",
+     "etat": "ok"
+    },
+    {
+     "id": "loup-cent",
+     "nom": "Cent loups en France",
+     "valeur": 2007,
+     "cible": "vers 2008 (± 6 ans)",
+     "etat": "ok"
+    },
+    {
+     "id": "loup-2023",
+     "nom": "Les loups de France en 2023",
+     "valeur": 613,
+     "cible": "~1100 (à moins d'un facteur 3)",
+     "etat": "ok"
+    }
+   ],
+   "serie": [
+    {
+     "an": 1992,
+     "france": 0,
+     "lieux": 0,
+     "italie": 343
+    },
+    {
+     "an": 1993,
+     "france": 0,
+     "lieux": 0,
+     "italie": 373
+    },
+    {
+     "an": 1994,
+     "france": 4,
+     "lieux": 1,
+     "italie": 404
+    },
+    {
+     "an": 1995,
+     "france": 9,
+     "lieux": 2,
+     "italie": 436
+    },
+    {
+     "an": 1996,
+     "france": 11,
+     "lieux": 2,
+     "italie": 485
+    },
+    {
+     "an": 1997,
+     "france": 16,
+     "lieux": 3,
+     "italie": 536
+    },
+    {
+     "an": 1998,
+     "france": 19,
+     "lieux": 3,
+     "italie": 598
+    },
+    {
+     "an": 1999,
+     "france": 22,
+     "lieux": 3,
+     "italie": 667
+    },
+    {
+     "an": 2000,
+     "france": 25,
+     "lieux": 3,
+     "italie": 747
+    },
+    {
+     "an": 2001,
+     "france": 38,
+     "lieux": 5,
+     "italie": 823
+    },
+    {
+     "an": 2002,
+     "france": 49,
+     "lieux": 6,
+     "italie": 904
+    },
+    {
+     "an": 2003,
+     "france": 56,
+     "lieux": 6,
+     "italie": 995
+    },
+    {
+     "an": 2004,
+     "france": 65,
+     "lieux": 6,
+     "italie": 1093
+    },
+    {
+     "an": 2005,
+     "france": 76,
+     "lieux": 6,
+     "italie": 1194
+    },
+    {
+     "an": 2006,
+     "france": 88,
+     "lieux": 6,
+     "italie": 1297
+    },
+    {
+     "an": 2007,
+     "france": 102,
+     "lieux": 6,
+     "italie": 1408
+    },
+    {
+     "an": 2008,
+     "france": 122,
+     "lieux": 7,
+     "italie": 1520
+    },
+    {
+     "an": 2009,
+     "france": 145,
+     "lieux": 9,
+     "italie": 1638
+    },
+    {
+     "an": 2010,
+     "france": 167,
+     "lieux": 9,
+     "italie": 1761
+    },
+    {
+     "an": 2011,
+     "france": 191,
+     "lieux": 11,
+     "italie": 1886
+    },
+    {
+     "an": 2012,
+     "france": 217,
+     "lieux": 11,
+     "italie": 2010
+    },
+    {
+     "an": 2013,
+     "france": 247,
+     "lieux": 11,
+     "italie": 2137
+    },
+    {
+     "an": 2014,
+     "france": 279,
+     "lieux": 12,
+     "italie": 2263
+    },
+    {
+     "an": 2015,
+     "france": 314,
+     "lieux": 12,
+     "italie": 2385
+    },
+    {
+     "an": 2016,
+     "france": 352,
+     "lieux": 12,
+     "italie": 2506
+    },
+    {
+     "an": 2017,
+     "france": 392,
+     "lieux": 12,
+     "italie": 2617
+    },
+    {
+     "an": 2018,
+     "france": 435,
+     "lieux": 12,
+     "italie": 2725
+    },
+    {
+     "an": 2019,
+     "france": 450,
+     "lieux": 12,
+     "italie": 2829
+    },
+    {
+     "an": 2020,
+     "france": 494,
+     "lieux": 12,
+     "italie": 2931
+    },
+    {
+     "an": 2021,
+     "france": 540,
+     "lieux": 13,
+     "italie": 3028
+    },
+    {
+     "an": 2022,
+     "france": 566,
+     "lieux": 14,
+     "italie": 3117
+    },
+    {
+     "an": 2023,
+     "france": 613,
+     "lieux": 14,
+     "italie": 3216
+    }
+   ]
+  },
+  {
+   "graine": 15839,
+   "tests": [
+    {
+     "id": "loup-arrivee",
+     "nom": "Le loup arrive en France",
+     "valeur": 1993,
+     "cible": "au plus tard en 1995 (le premier en 1992)",
+     "etat": "ok"
+    },
+    {
+     "id": "loup-cent",
+     "nom": "Cent loups en France",
+     "valeur": 2007,
+     "cible": "vers 2008 (± 6 ans)",
+     "etat": "ok"
+    },
+    {
+     "id": "loup-2023",
+     "nom": "Les loups de France en 2023",
+     "valeur": 604,
+     "cible": "~1100 (à moins d'un facteur 3)",
+     "etat": "ok"
+    }
+   ],
+   "serie": [
+    {
+     "an": 1992,
+     "france": 0,
+     "lieux": 0,
+     "italie": 343
+    },
+    {
+     "an": 1993,
+     "france": 4,
+     "lieux": 1,
+     "italie": 366
+    },
+    {
+     "an": 1994,
+     "france": 13,
+     "lieux": 3,
+     "italie": 395
+    },
+    {
+     "an": 1995,
+     "france": 23,
+     "lieux": 5,
+     "italie": 428
+    },
+    {
+     "an": 1996,
+     "france": 26,
+     "lieux": 5,
+     "italie": 475
+    },
+    {
+     "an": 1997,
+     "france": 29,
+     "lieux": 5,
+     "italie": 528
+    },
+    {
+     "an": 1998,
+     "france": 33,
+     "lieux": 5,
+     "italie": 583
+    },
+    {
+     "an": 1999,
+     "france": 37,
+     "lieux": 5,
+     "italie": 642
+    },
+    {
+     "an": 2000,
+     "france": 43,
+     "lieux": 5,
+     "italie": 706
+    },
+    {
+     "an": 2001,
+     "france": 48,
+     "lieux": 5,
+     "italie": 777
+    },
+    {
+     "an": 2002,
+     "france": 55,
+     "lieux": 5,
+     "italie": 852
+    },
+    {
+     "an": 2003,
+     "france": 62,
+     "lieux": 5,
+     "italie": 933
+    },
+    {
+     "an": 2004,
+     "france": 74,
+     "lieux": 6,
+     "italie": 1013
+    },
+    {
+     "an": 2005,
+     "france": 84,
+     "lieux": 6,
+     "italie": 1102
+    },
+    {
+     "an": 2006,
+     "france": 95,
+     "lieux": 6,
+     "italie": 1191
+    },
+    {
+     "an": 2007,
+     "france": 112,
+     "lieux": 7,
+     "italie": 1281
+    },
+    {
+     "an": 2008,
+     "france": 126,
+     "lieux": 7,
+     "italie": 1372
+    },
+    {
+     "an": 2009,
+     "france": 143,
+     "lieux": 7,
+     "italie": 1469
+    },
+    {
+     "an": 2010,
+     "france": 162,
+     "lieux": 7,
+     "italie": 1567
+    },
+    {
+     "an": 2011,
+     "france": 183,
+     "lieux": 7,
+     "italie": 1663
+    },
+    {
+     "an": 2012,
+     "france": 206,
+     "lieux": 8,
+     "italie": 1759
+    },
+    {
+     "an": 2013,
+     "france": 232,
+     "lieux": 8,
+     "italie": 1858
+    },
+    {
+     "an": 2014,
+     "france": 260,
+     "lieux": 8,
+     "italie": 1955
+    },
+    {
+     "an": 2015,
+     "france": 291,
+     "lieux": 8,
+     "italie": 2049
+    },
+    {
+     "an": 2016,
+     "france": 323,
+     "lieux": 8,
+     "italie": 2144
+    },
+    {
+     "an": 2017,
+     "france": 359,
+     "lieux": 9,
+     "italie": 2238
+    },
+    {
+     "an": 2018,
+     "france": 388,
+     "lieux": 9,
+     "italie": 2331
+    },
+    {
+     "an": 2019,
+     "france": 427,
+     "lieux": 9,
+     "italie": 2423
+    },
+    {
+     "an": 2020,
+     "france": 469,
+     "lieux": 10,
+     "italie": 2512
+    },
+    {
+     "an": 2021,
+     "france": 512,
+     "lieux": 10,
+     "italie": 2595
+    },
+    {
+     "an": 2022,
+     "france": 557,
+     "lieux": 13,
+     "italie": 2671
+    },
+    {
+     "an": 2023,
+     "france": 604,
+     "lieux": 14,
+     "italie": 2746
+    }
+   ]
+  }
+ ],
+ "comptes": {
+  "ok": 3,
+  "limite": 0,
+  "echec": 0
+ }
+}
