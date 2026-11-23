@@ -248,13 +248,21 @@ let inst = { orvane: Orvane.CONTRAT,
   cycle: { n: 0, date: new Date(jour - 864e5).toISOString(), pressions_recues: 0 },
   biomes, catalogue: { version: '0.1', traits: {}, ...(formesNeuves(taxons) ? { monde: { formes: formesNeuves(taxons) } } : {}) }, taxons, evenements: [],
   ...(sources.length ? { attributions: sources.map(s => ({ source: s.nom || s.source, licence: s.licence, url: s.url, usage: s.usage || s.ce_quon_en_tire })) } : {}) };
+// --- 4. les hommes (docs/56) : la part de chaque espèce que la chasse prend chaque année, pays par pays (mondes/<monde>/hommes.json),
+// rapportée à ce que l'assemblage a posé (outils/terre/hommes.js). --sans-hommes : un monde où personne ne chasse
+const PRELEVEMENTS = a.includes('--sans-hommes') ? null : lire(path.join(D, 'hommes.json'), null);
+if (PRELEVEMENTS) { const H = require('./hommes.js').taux(PRELEVEMENTS, inst); inst.monde.hommes = { especes: H.especes, sources: H.sources };
+  console.log(`les hommes : ${Object.keys(H.especes).length} espèces chassées ; ${H.bornes.length} taux bornés à ce que l'espèce peut perdre (là, l'assemblage pose trop peu de bêtes pour ce que la chasse prend : ${H.bornes.slice(0, 6).map(b => `${b.espece} ${b.pays} ${Math.round(100 * b.taux)} %`).join(', ')}…) ; ${H.absents.length} prélèvements dans un pays où l'espèce n'est pas posée`); }
+// la part qu'une espèce perd à la chasse en une année, en moyenne sur ses populations (pesée par leurs effectifs)
+const chasse = (() => { const H = inst.monde.hommes, P = new Map(inst.biomes.map(b => [b.id, b.lieu?.pays])); if (!H) return () => 0;
+  return t => { const T = H.especes[t.id]?.taux; if (!T) return 0; let s = 0, n = 0; for (const p of t.populations) { s += p.effectif * (T[P.get(p.biome)] || 0); n += p.effectif; } return n > 0 ? s / n : 0; }; })();
 inst = Meteo.eveiller(inst).inst; inst.monde.meteo = { depuis: 0 };
 // le calage par le moteur : l'équilibre observé, cette fois avec ce que le premier jour mesure vraiment — les naissances, les morts, et ce
 // que les prédateurs mangent. Chaque passe fait tourner un jour (sans rien garder) et ajuste :
 //  - un brouteur : sa place, pour que sa saturation de l'année (celle du jour, rapportée à la production moyenne) soit celle où ses
 //    naissances égalent ses morts naturelles ET les bêtes mangées : 1 − (mort + mangés) / (natalité × convenance) ;
 //  - un carnivore : son efficacité de chasse (sa part des proies devant ses concurrents), pour que sa satiété soit celle où ses naissances
-//    (natalité × satiété) égalent ses morts (la faim les multiplie, 1 + 3 (1 − satiété)²) et les siens mangés. (Ce fut d'abord son métabolisme ;
+//    (natalité × satiété) égalent ses morts (la faim les multiplie, 1 + 3 (1 − satiété)²) et les siens mangés (docs/56 : et ce que la chasse en prend). (Ce fut d'abord son métabolisme ;
 //    mais le métabolisme d'un chasseur fait aussi son poids devant les autres : relevé chez le renard, il affamait l'épervier, et l'épervier
 //    finissait au plus bas, sans rien y gagner — docs/53) ;
 // chacun entre des bornes (la place de 0,001 à 50, l'efficacité de 0,02 à 50). Quatre passes, la concurrence se répondant.
@@ -275,7 +283,7 @@ for (let pass = 0; pass < CALER; pass++) {
     o.N += x.N; o.conv += x.conv * x.N; o.pred += x.mortsPred; o.s += (x.satiete ?? 0) * x.N; o.prodsat += x.sat * x.N * (PRO.get(x.biome) ?? 1); }
   let nB = 0, nC = 0, ecart = [];
   for (const t of inst.taxons) { const o = X.get(t.id); if (!o || !(o.N > 0) || t.plan.regime === 'vegetal') continue;
-    const r = t.plan.natalite, m = 365.25 / Math.max(2, t.plan.longevite), conv = o.conv / o.N, p = o.pred / o.N * 365.25;
+    const r = t.plan.natalite, m = 365.25 / Math.max(2, t.plan.longevite), conv = o.conv / o.N, p = o.pred / o.N * 365.25 + chasse(t);   // (docs/56 : les bêtes mangées, et celles que la chasse prend dans l'année)
     if (OMNI.has(t.plan.regime)) { const sa = o.prodsat / o.N, cible = clamp(1 - (m + p) / Math.max(1e-9, r * conv), .2, .97);
       if (sa > 1e-6) { t.plan.place = +clamp((t.plan.place ?? 1) * sa / cible, .001, 50).toPrecision(4); nB++; ecart.push(Math.abs(Math.log(sa / cible))); } }
     else if (t.plan.regime === 'carnivore' && !TENUS.has(t.id)) { const s = clamp(o.s / o.N, .005, .995), cible = clamp(seq(r * conv, m, p), .02, .98), odds = x => x / (1 - x);

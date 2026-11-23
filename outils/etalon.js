@@ -114,7 +114,7 @@ if (arg('--experience') === 'loup') {
   for (const b of B) b.voisins = b.voisins.filter(v => ids.has(v));
   const T = A.taxons.filter(t => GARDE.has(t.id)).map(t => ({ ...t, populations: t.populations.filter(p => ids.has(p.biome)) })).filter(t => t.populations.length);
   const loup = T.find(t => t.id === 'loup'); loup.populations = loup.populations.filter(p => pays.get(p.biome) === 'IT').map(p => ({ ...p, effectif: +(p.effectif * .3).toFixed(4) }));
-  let E = { ...A, monde: { ...A.monde, flore: undefined, phenologie: undefined, parcelles: { ...A.monde.parcelles, types: A.monde.parcelles.types.filter(ty => B.some(b => b.type === ty.id)) } }, biomes: B, taxons: T, cycle: { ...A.cycle, date: '1992-01-01T03:17:00.000Z' } };
+  let E = { ...A, monde: { ...A.monde, flore: undefined, phenologie: undefined, hommes: undefined, parcelles: { ...A.monde.parcelles, types: A.monde.parcelles.types.filter(ty => B.some(b => b.type === ty.id)) } }, biomes: B, taxons: T, cycle: { ...A.cycle, date: '1992-01-01T03:17:00.000Z' } };
   // les proies à leur équilibre dans ce morceau d'Europe : sans les plantes ni les autres bêtes, la place que l'assemblage leur a calée dans
   // l'Europe entière ne leur convient plus (chaque recalage de l'Europe changeait le loup de France du simple au quadruple). Comme
   // l'assemblage, un jour de moteur, quatre fois : la place de chaque brouteur pour que ses naissances égalent ses morts et les siens mangés.
@@ -158,7 +158,7 @@ if (arg('--experience') === 'chacal') {
   for (const b of B) b.voisins = b.voisins.filter(v => ids.has(v));
   const T = A.taxons.filter(t => GARDE.has(t.id)).map(t => ({ ...t, populations: t.populations.filter(p => ids.has(p.biome)) })).filter(t => t.populations.length);
   const ch = T.find(t => t.id === 'chacal-dore'); ch.populations = ch.populations.filter(p => DEPART.has(pays.get(p.biome)));
-  let E = { ...A, monde: { ...A.monde, flore: undefined, phenologie: undefined, parcelles: { ...A.monde.parcelles, types: A.monde.parcelles.types.filter(ty => B.some(b => b.type === ty.id)) } }, biomes: B, taxons: T, cycle: { ...A.cycle, date: '1980-01-01T03:17:00.000Z' } };
+  let E = { ...A, monde: { ...A.monde, flore: undefined, phenologie: undefined, hommes: undefined, parcelles: { ...A.monde.parcelles, types: A.monde.parcelles.types.filter(ty => B.some(b => b.type === ty.id)) } }, biomes: B, taxons: T, cycle: { ...A.cycle, date: '1980-01-01T03:17:00.000Z' } };
   for (let pass = 0; pass < 4; pass++) { const brut = [], X = new Map(), J = Orvane.cycle(E, {}, { duree_ms: 864e5, trace: x => brut.push(x) }), PRO = new Map(J.biomes.map(b => [b.id, b.saison?.production ?? 1]));   // (les proies et le renard à leur équilibre)
     for (const x of brut) { const o = X.get(x.taxon) || X.set(x.taxon, { N: 0, conv: 0, pred: 0, ps: 0 }).get(x.taxon); o.N += x.N; o.conv += x.conv * x.N; o.pred += x.mortsPred; o.ps += x.sat * x.N * (PRO.get(x.biome) ?? 1); }
     for (const t of E.taxons) { const o = X.get(t.id); if (t.id === 'chacal-dore' || !o || !(o.N > 0) || !['herbivore', 'omnivore'].includes(t.plan.regime)) continue;
@@ -180,7 +180,8 @@ if (arg('--experience') === 'chacal') {
   process.exit(0);
 }
 // --- la vie de l'Europe, sans joueurs ---
-let I = JSON.parse(fs.readFileSync(f, 'utf8')); if (arg('--graine') != null) I.monde.graine = +arg('--graine') >>> 0;   // (une autre histoire : --graines)
+let I = JSON.parse(fs.readFileSync(f, 'utf8')); if (arg('--graine') != null) I.monde.graine = +arg('--graine') >>> 0;
+if (a.includes('--sans-hommes')) delete I.monde.hommes;   // (docs/56) un monde où personne ne chasse : ce que feraient les bêtes si les hommes cessaient   // (une autre histoire : --graines)
 const animaux = I.taxons.filter(t => t.plan.regime !== 'vegetal'), ids = animaux.map(t => t.id), JOURS = +arg('--jours', 365 * ANS), parAn = new Array(ANS).fill(0);   // (--jours : un essai plus court)
 const moyennes = Array.from({ length: ANS }, () => new Map(ids.map(id => [id, 0]))), nais = {}, cigogne = { depart: [], retour: [] }, extinctions = [];
 for (const id of Object.keys(CIBLES.naissances)) nais[id] = new Array(367).fill(0);
@@ -188,11 +189,13 @@ const car0 = carnivores(I), dam0 = damuth(I), sha0 = shannon(I), t0 = Date.now()
 // (garde-fou : le second principe) ce que les chasseurs font naître de chair, rapporté à ce qu'ils mangent (leur ration) : les vrais
 // carnivores (un omnivore naît de ses plantes, un buveur de sang ne tue pas), à part les bêtes à sang chaud et à sang froid
 const REND = { chaud: { prod: 0, mange: 0 }, froid: { prod: 0, mange: 0 } };
+// (docs/56) ce que les hommes prennent la dernière année, espèce par espèce (les retraits extérieurs : sans joueurs, c'est la chasse)
+const CHASSE = {};
 const CH = new Map(animaux.filter(t => t.plan.regime === 'carnivore' && !(t.plan.diete?.sang > 0)).map(t => [t.id, { m: t.plan.masse_kg || 1, g: (t.plan.metabolisme ?? 1) < 1 ? REND.froid : REND.chaud }]));
 for (let k = 0; k < JOURS; k++) {
   const an = Math.min(ANS - 1, Math.floor(k / 365)), parJour = {}; parAn[an]++;
   I = Orvane.cycle(I, {}, { duree_ms: 864e5, trace: x => { if (nais[x.taxon]) parJour[x.taxon] = (parJour[x.taxon] || 0) + x.nais;
-    if (an === ANS - 1) { const c = CH.get(x.taxon); if (c) { c.g.prod += (x.nais || 0) * c.m; c.g.mange += x.ration || 0; } } } });   // (le rendement des chasseurs, la dernière année)
+    if (an === ANS - 1) { const c = CH.get(x.taxon); if (c) { c.g.prod += (x.nais || 0) * c.m; c.g.mange += x.ration || 0; } if (x.mortsExt > 0) CHASSE[x.taxon] = (CHASSE[x.taxon] || 0) + x.mortsExt; } } });   // (le rendement des chasseurs, la dernière année ; la chasse)
   const j = doy(I.cycle.jour);
   for (const [id, v] of Object.entries(parJour)) nais[id][j] += v;
   const M = moyennes[an]; for (const t of I.taxons) if (M.has(t.id)) M.set(t.id, M.get(t.id) + somme(t.populations.map(p => p.effectif)));
@@ -251,6 +254,18 @@ const tests = [];
   tests.push({ id: 'grands-carnivores', nom: 'Les grands carnivores remontent (sans joueurs, rien ne les tient bas)', valeur: G.length ? r(croissent / G.length, 2) : null,
     valeur_dite: G.map(x => `${x.id} ${x.par_an >= 1 ? '+' : ''}${((x.par_an - 1) * 100).toFixed(1)} %/an`).join(', ') || '-', cible: 'chacun croît d\'au moins 2 % par an',
     etat: ANS === 1 || !G.length ? 'limite' : croissent === G.length ? 'ok' : croissent >= G.length / 2 ? 'limite' : 'echec', detail: { grands: G }, source: 'le loup remonte de 5 à 10 % par an en Europe, là où on le laisse (LCIE)' });
+}
+{ // (docs/56) les hommes : ce que la chasse du monde prend en un an, rapporté aux tableaux de chasse réels (dans les pays où l'espèce est posée).
+  // Un taux que l'assemblage a dû borner (il y pose trop peu de bêtes pour ce que la chasse y prend) fait une chasse plus petite que la vraie
+  const H = I.monde.hommes, P = (() => { try { return JSON.parse(fs.readFileSync(racine(`mondes/${MONDE}/hommes.json`), 'utf8')); } catch { return null; } })();
+  if (H && P) { const L = [];
+    for (const [cle, e] of Object.entries(P.especes || {})) { const ids = (e.taxons || [cle]).filter(id => H.especes?.[id]); if (!ids.length) continue;
+      const pays = new Set(ids.flatMap(id => Object.keys(H.especes[id].taux))), reel = Object.entries(e.prelevements || {}).filter(([c]) => pays.has(c)).reduce((s, [, x]) => s + (x.n ?? x), 0);
+      const monde = ids.reduce((s, id) => s + (CHASSE[id] || 0), 0); if (reel > 0) L.push({ id: cle, reel: Math.round(reel), monde: Math.round(monde), part: r(monde / reel, 2) }); }
+    const parts = L.map(x => x.part).sort((x, y) => x - y), med = parts.length ? parts[parts.length >> 1] : null;
+    tests.push({ id: 'chasse', nom: 'Les hommes : la chasse', valeur: med, valeur_dite: L.map(x => `${x.id} ${Math.round(100 * x.part)} %`).join(', ') || '-',
+      cible: 'le monde prend au moins la moitié de ce que disent les tableaux de chasse (en médiane sur les espèces chassées)', etat: med == null ? 'limite' : med >= .5 ? 'ok' : med >= .25 ? 'limite' : 'echec',
+      detail: { especes: L }, source: 'FACE (2025), Ungulate Harvest Report : les tableaux de chasse de 34 pays (docs/56)' }); }
 }
 { // le garde-fou
   const C = CIBLES.damuth, d1 = damuth(I);

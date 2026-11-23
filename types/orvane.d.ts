@@ -202,6 +202,18 @@ export interface Instantane {
     calendrier?: {
       hemisphere?: "nord" | "sud";
     };
+    /** (docs/56) Les hommes d'un monde réel : pour chaque espèce chassée, sa saison (deux dates MM-JJ, qui peuvent passer le 1er janvier) et la part de son effectif que la chasse prend sur la saison, pays par pays (lieu.pays). Le moteur l'ôte jour après jour, comme le retrait d'un jeu. */
+    hommes?: {
+      especes?: {
+        [cle: string]: {
+          saison?: string[];
+          taux?: {
+            [cle: string]: number;
+          };
+        };
+      };
+      sources?: string[];
+    };
     /** (docs/45) La météo : depuis quand chaque lieu a son temps du cycle. */
     meteo?: {
       depuis?: number;

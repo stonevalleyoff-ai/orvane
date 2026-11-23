@@ -25,6 +25,7 @@ moteur/diversite.js   la flore riche : quarante-sept formes de plantes, douze ca
 moteur/succession.js  les plantes sous le feu : les catastrophes et le sec leur prennent des pieds, l'herbe puis les buissons reprennent la place des arbres, le couvert suit les arbres (docs/47)
 moteur/meteo.js       la météo : le temps du cycle dans chaque lieu, parcelle par parcelle (la pluie, la neige, le gel, les orages, les canicules) (docs/45)
 moteur/calendrier.js  le calendrier d'un monde réel : un cycle est un jour, la saison de chaque lieu tirée de son climat, le soleil, la lune, le pas de temps (docs/52)
+moteur/hommes.js      les hommes d'un monde réel : la part de chaque espèce que la chasse prend, pays par pays, jour après jour pendant sa saison (docs/56)
 moteur/grammaire.js   la grammaire des effets et des conduites : une lueur qui attire, une décharge qui foudroie, un musc qui repousse (docs/32)
 moteur/castes.js      les castes : des colonies, une reine, des ouvrières, des soldats (docs/33)
 moteur/formes.js      les formes nouvelles : le corps segmenté, rayonné, à tentacules (docs/33)

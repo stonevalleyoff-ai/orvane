@@ -75,6 +75,7 @@ const FOR = typeof require === 'function' ? require('./formes.js') : racine.Orva
 const ESP = typeof require === 'function' ? require('./esprit.js') : racine.OrvaneEsprit;   // l'esprit : apprendre, transmettre, des outils (moteur/esprit.js, docs/34)
 const MEM = typeof require === 'function' ? require('./memoire.js') : racine.OrvaneMemoire;   // la mémoire : ce que les bêtes apprennent des joueurs (moteur/memoire.js, docs/50)
 const CALEN = typeof require === 'function' ? require('./calendrier.js') : racine.OrvaneCalendrier;   // le calendrier : un monde au jour, la saison de chaque lieu (moteur/calendrier.js, docs/52)
+const HOM = typeof require === 'function' ? require('./hommes.js') : racine.OrvaneHommes;   // les hommes : la chasse et la régulation d'un monde réel (moteur/hommes.js, docs/56)
 // (docs/43) la version du contrat : MAJEUR.MINEUR, celle de package.json ; chaque instantané la porte (instantane.orvane)
 const CONTRAT = '1.0';
 const AXES = ['temperature', 'humidite', 'altitude', 'lumiere', 'couvert'];
@@ -570,6 +571,8 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   // (docs/52) un monde au calendrier : le jour que vit ce cycle (la date du cycle qu'il publiera), et le nom de la saison du monde,
   // celle de son hémisphère ; chaque lieu aura la sienne, plus bas
   const d0c = Date.parse(inst.cycle.date), JOURC = CALEN && inst.monde?.calendrier ? (opt.jour != null ? +opt.jour : (Number.isFinite(d0c) ? d0c : 0) + (opt.duree_ms ?? 86400000)) : null;
+  // (docs/56) dans un monde réel au calendrier qui le dit (monde.hommes), ce que les hommes prennent ce jour à chaque population
+  const HOMJ = HOM && inst.monde?.hommes && JOURC != null ? HOM.jour(inst.monde.hommes, JOURC, JOURS || 1) : null;
   const saison = JOURC != null ? (ph => ({ phase: ph, nom: CALEN.nomSaison(ph), production: +(1 + REGLES.saisons.capacite * -Math.cos(2 * Math.PI * ph)).toFixed(3) }))(CALEN.phaseReference(JOURC, inst.monde.calendrier?.hemisphere === 'sud'))
     : saisonDe(n, inst.monde.annee), phase = saison ? saison.phase : null;
   const GEN = REGLES.genetique !== false && opt.genetique !== false && Object.keys(QUANT).length > 0;
@@ -782,8 +785,10 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
       const syn = SY && t.plan.regime === 'synthetique';                                        // (une machine : sa presse est celle de l'énergie, docs/16)
       const sat = syn ? SY.sat(bid) : Keff > 0 ? charge(B[bid], t.plan.masse_kg || 1) / (Keff * BANDE) * (SF ? SF.concurrence(t, bid) : 1) : 9;   // (docs/17 : pesée par ce qu'on mange en commun)
       pop.satC = sat;
-      const pr = prT[t.id]?.[bid] || {}, ret = pr.retrait || {};
-      const tot = pop.N.reduce((a, x) => a + x, 0) || 1;
+      const pr = prT[t.id]?.[bid] || {}, tot = pop.N.reduce((a, x) => a + x, 0) || 1;
+      let ret = pr.retrait || {};
+      // (docs/56) la chasse, la régulation : ce que les hommes prennent ce jour à la population, un retrait de plus
+      const hom = HOMJ && !syn ? HOMJ(t.id, b) : 0; if (hom > 0) ret = { ...ret, '*': (ret['*'] || 0) + hom * tot };
       // la maladie : une épidémie en cours tue selon la virulence et la résistance de chaque phénotype ; sinon, le surpeuplement
       // (et une épidémie chez les voisins) peut en faire éclore une
       let mal = pop.maladie;
