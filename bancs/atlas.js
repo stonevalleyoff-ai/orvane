@@ -7,7 +7,9 @@
 //  3. ce qu'elle lit des données se voit : la robe d'un albinos, d'un mélanique ; l'œil d'une chasseuse de nuit (une fente), d'une
 //     brouteuse à sabots (une barre), d'un insecte (des facettes) ; le serpent à sa vraie épaisseur ; le cétacé (un « poisson » qui met
 //     bas) sans écailles ni opercule ; la tête d'une bête lourde à sa mesure ; ses renvois sont dans le cadre, numérotés de 1 à 7 au plus ; l'échelle vaut une longueur ronde ;
-//  4. la vignette (léger) pèse moins que la planche ; ce que coûte une planche.
+//  4. ce que la fiche lui apporte : le sol de son milieu, ses variantes (trois au plus, d'au moins 1 % des bêtes, des traits qui se
+//     voient), ses quatre notes de couleur, nommées ;
+//  5. la vignette (léger) pèse moins que la planche ; ce que coûte une planche.
 //   node bancs/atlas.js [--court]          (--court : trois mondes)
 'use strict';
 const fs = require('fs'), path = require('path');
@@ -24,7 +26,7 @@ const lire = m => { const f = ['instantane.json', 'etat.json', 'amorce.json'].ma
 // le SVG bien formé : chaque balise ouverte est refermée, dans l'ordre ; ses identifiants
 function forme(svg) { const pile = []; for (const m of svg.matchAll(/<(\/?)([a-zA-Z]+)[^>]*?(\/?)>/g)) { if (m[3]) continue; if (m[1]) { if (pile.pop() !== m[2]) return false; } else pile.push(m[2]); } return pile.length === 0; }
 const ids = svg => [...svg.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]);
-const sansNumeros = s => s.replace(/\b(atl|sil)\d+/g, '$1');
+const sansNumeros = s => s.replace(/\b(atl|sil|pl)\d+/g, '$1');
 const geler = o => { if (o && typeof o === 'object' && !Object.isFrozen(o)) { Object.freeze(o); for (const v of Object.values(o)) geler(v); } return o; };
 const dominants = t => { const n = {}; for (const q of t.phenotypes || []) for (const x of q.traits || []) n[x] = (n[x] || 0) + q.frequence; return Object.keys(n).filter(k => n[k] >= .5); };
 
@@ -34,11 +36,11 @@ for (const m of MONDES) {
   const I = lire(m); if (!I) continue; Co.etendre(I.catalogue?.monde || null);
   for (const t of I.taxons.filter(x => x.plan?.regime !== 'vegetal' && !x.eteint)) {
     const dom = dominants(t); let F = null; try { F = Fi.ecrire(t, I).champs; } catch (e) { F = null; }
-    const o = { famille: F?.famille?.id, details: (F?.famille?.details || []).map(d => d.id), graine: t.id, taille: F?.silhouette?.taille_vue_m };
+    const o = { famille: F?.famille?.id, details: (F?.famille?.details || []).map(d => d.id), graine: t.id, taille: F?.silhouette?.taille_vue_m, fiche: F };
     const avant = JSON.stringify([t.plan, dom]), corps = geler(JSON.parse(JSON.stringify(t.plan.corps ?? null))), plan = geler(JSON.parse(JSON.stringify(t.plan))), tr = geler(dom.slice());
     try { const a = Date.now(), D = At.dessiner(corps, plan, tr, o), Pl = At.planche(corps, plan, tr, o); msP += Date.now() - a; nP++;
       const L = At.dessiner(corps, plan, tr, { ...o, leger: true }); poidsP += Pl.svg.length; poidsL += L.svg.length;
-      for (const s of [D.svg, Pl.svg, L.svg]) { if (!forme(s)) fautes.push(`${m}/${t.id} : SVG mal formé`); for (const i of ids(s)) { if (vus.has(i)) doubles++; vus.add(i); } }
+      for (const s of [D.svg, Pl.svg, L.svg, ...(Pl.variantes || []).map(v => v.svg)]) { if (!forme(s)) fautes.push(`${m}/${t.id} : SVG mal formé`); for (const i of ids(s)) { if (vus.has(i)) doubles++; vus.add(i); } }
       if (JSON.stringify([t.plan, dom]) !== avant) fautes.push(`${m}/${t.id} : ses données ont changé`);
       tous.push({ m, t, dom, o, D, Pl, corps, plan, I }); }
     catch (e) { fautes.push(`${m}/${t.id} : ${e.message}`); } }
@@ -86,7 +88,16 @@ console.log('3. Ce qu\'elle lit des données se voit');
   const RONDES = [.001, .002, .005, .01, .02, .05, .1, .2, .5, 1, 2, 5, 10, 20], ech = tous.filter(x => x.Pl.echelle);
   verif(ech.length >= tous.filter(x => x.plan.taille_m > 0).length * .95 && ech.every(x => RONDES.includes(x.Pl.echelle.m)), `${fx(ech.length)} planches ont leur échelle, d'une longueur ronde (de 1 mm à 20 m)`); }
 
-console.log('4. Ce qu\'elle pèse, ce qu\'elle coûte');
+console.log('4. Ce que la fiche lui apporte : son milieu, ses variantes, ses couleurs');
+{ const VAR = ['albinisme', 'melanisme', 'robe-doree', 'camouflage', 'palmes', 'vibrisses', 'peau-epaisse', 'crocs-allonges', 'yeux-nocturnes', 'membrane-planante', 'queue-prehensile', 'pattes-longues', 'coloration-aposematique'];
+  const avecV = tous.filter(x => x.Pl.variantes?.length), mal = tous.filter(x => (x.Pl.variantes || []).length > 3 || (x.Pl.variantes || []).some(v => !VAR.includes(v.trait) || v.part < .01 || x.dom.includes(v.trait) || !v.svg || !v.texte));
+  verif(avecV.length > 50 && !mal.length, `${fx(avecV.length)} planches montrent leurs variantes (trois au plus, d'au moins 1 % des bêtes, des traits qui se voient), chacune dessinée et légendée` + (mal.length ? ` ; ${mal.length} fautes (${mal.slice(0, 3).map(x => x.t.id).join(', ')})` : ''));
+  const auSol = tous.filter(x => x.D.sol && x.o.fiche?.milieu?.decor?.fr?.length), sansSol = auSol.filter(x => !/d="M3 86\.4/.test(x.Pl.svg));
+  verif(auSol.length && !sansSol.length, `${fx(auSol.length)} bêtes au sol ont le sol de leur milieu (le décor de leur fiche), sous elles et derrière elles`);
+  const nC = tous.filter(x => x.plan.regime !== 'synthetique' && x.D.parties), malC = nC.filter(x => (x.Pl.couleurs || []).length !== 4 || x.Pl.couleurs.some(c => !/^#[0-9A-F]{6}$/.test(c.hex) || !c.fr));
+  verif(!malC.length, `${fx(nC.length)} planches ont leurs quatre notes de couleur (robe, sombre, ventre, œil), chacune nommée`); }
+
+console.log('5. Ce qu\'elle pèse, ce qu\'elle coûte');
 verif(poidsL < poidsP * .5, `une vignette pèse ${fx(poidsL / Math.max(1, tous.length) / 1024, 1)} Ko, une planche ${fx(poidsP / Math.max(1, tous.length) / 1024, 1)} Ko ; une planche se dessine en ${fx(msP / Math.max(1, nP), 1)} ms`);
 
 console.log(`\n${ok ? 'tout passe' : 'ÉCHEC'} (${fx((Date.now() - t0) / 1000, 1)} s)`);

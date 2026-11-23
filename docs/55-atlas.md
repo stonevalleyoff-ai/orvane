@@ -78,6 +78,26 @@ Chaque bête remplit son cadre, comme dans un guide naturaliste. Deux planches n
 
   Il y en a sept au plus, numérotés de l'arrière vers l'avant.
 
+## Ce que la fiche apporte encore à la planche
+
+La fiche de créature (docs/54) décrit la lignée en entier. Trois de ses sections passent sur la planche.
+
+- **Son milieu.** Le décor de son lieu principal (`milieu.decor`) devient un sol gravé, sous la bête et derrière elle :
+  - herbes hautes ou rases ;
+  - roseaux et vase ;
+  - litière et fougère d'un sous-bois, feuilles géantes d'une jungle ;
+  - neige, sable et buissons épars, rocaille, galets, lichens.
+
+  En pleine eau, la planche montre la surface, des bulles et des herbiers, ou la nuit piquée de particules des abysses. Sa lumière (`milieu.lumiere`) devient un lavis derrière elle :
+  - dorée pour une lumière rasante d'aube ou de crépuscule ;
+  - bleutée sous l'eau ;
+  - bleue sous la lune ;
+  - verdâtre dans la pénombre.
+- **Ses variantes.** Ce sont les traits que montre une partie des bêtes (`variations`, avec leur part). La planche en dessine trois au plus, d'au moins 1 % des bêtes, parmi les traits qui se voient : « robe dorée · 3,1 % des bêtes ». Le camouflage y prend la teinte que la fiche lui donne, celle du sol.
+- **Ses couleurs.** Quatre notes de couleur, celles du dessin (la robe que montrent ses bêtes), chacune avec sa pastille et son nom (`OrvaneFiche.nomCouleur`) : « robe : gris-brun », « œil : jaune ».
+
+Il suffit de donner la fiche à la planche : `OrvaneAtlas.planche(corps, plan, traits, { fiche: OrvaneFiche.ecrire(t, I).champs, graine: t.id })`. Elle y lit aussi la famille, le tégument et la taille vue.
+
 ## La vignette du registre
 
 Le registre des espèces montre chaque lignée en vignette. Il prend la planche en léger (`leger: true`) : le trait, les volumes et les yeux, sans tégument ni hachures. Une vignette pèse environ 20 Ko et se dessine en moins d'une milliseconde. Elle est gardée par lignée, monde et cycle.
@@ -113,7 +133,11 @@ Pour juger un changement, l'atlas a son banc visuel. `node outils/galerie.js --a
    - la tête des quadrupèdes de plus de 20 kg, entre 0,3 et 0,65 de la hauteur de leur corps ;
    - des renvois numérotés de 1 à 7 au plus, posés dans le cadre ;
    - une échelle de longueur ronde.
-4. **Ce qu'elle pèse et ce qu'elle coûte.** Une vignette pèse moins de la moitié d'une planche.
+4. **Ce que la fiche lui apporte :**
+   - le sol de son milieu, pour chaque bête au sol ;
+   - ses variantes (trois au plus, d'au moins 1 % des bêtes, des traits qui se voient) ;
+   - ses quatre notes de couleur, nommées.
+5. **Ce qu'elle pèse et ce qu'elle coûte.** Une vignette pèse moins de la moitié d'une planche.
 
 ## Les limites
 

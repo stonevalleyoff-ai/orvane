@@ -437,7 +437,7 @@ function dessiner(corps, plan = {}, traits = [], o = {}) {
   // silhouette), la peau épaisse (ses plis, sur l'avant du corps)
   const livree = B => { if (!B || leger) return ''; const [x0, y0, x1, y1] = B, w = x1 - x0, h = y1 - y0; let s2 = '';
     if (traits.includes('camouflage')) { const T2 = []; for (let i = 0; i < 14; i++) { const cx = x0 + w * (.05 + .9 * R()), cy = y0 + h * (.1 + .6 * R()), rx = w * (.04 + .06 * R()), ry = h * (.06 + .08 * R()), a = Math.round(R() * 180);
-        T2.push(`<ellipse cx="${n2(cx)}" cy="${n2(cy)}" rx="${n2(rx)}" ry="${n2(ry)}" transform="rotate(${a} ${n2(cx)} ${n2(cy)})" fill="${i % 3 ? K.sombre : rgb(mel(robes?.robe || [120, 110, 90], [120, 140, 80], .35))}" opacity="${i % 3 ? .42 : .38}"/>`); }
+        T2.push(`<ellipse cx="${n2(cx)}" cy="${n2(cy)}" rx="${n2(rx)}" ry="${n2(ry)}" transform="rotate(${a} ${n2(cx)} ${n2(cy)})" fill="${i % 3 ? K.sombre : o.camouflage || rgb(mel(robes?.robe || [120, 110, 90], [120, 140, 80], .35))}" opacity="${i % 3 ? .42 : .5}"/>`); }
       s2 += T2.join(''); }
     if (traits.includes('peau-epaisse')) { const Pl2 = []; for (let i = 0; i < 6; i++) { const x = x1 - w * (.12 + i * .05), yA = y0 + h * (.2 + .05 * (i % 2)); Pl2.push(`M${P2(x, yA)}Q${P2(x - w * .03, y0 + h * .5)} ${P2(x + w * .01, y0 + h * .82)}`); }
       s2 += `<path d="${Pl2.join('')}" stroke="${ink}" stroke-width="${n2(.3 * f)}" fill="none" opacity=".4"/>`; }
@@ -533,9 +533,47 @@ function nomOrgane(o) {
   if (o.type === 'ailes') return `ailes ${FORMES_FR[o.forme] || 'de plumes'}`;
   return `${nb} ${mot}${o.forme && FORMES_FR[o.forme] ? ' ' + FORMES_FR[o.forme] : ''}${PLACES_FR[o.place] && o.type !== 'massue' && o.type !== 'aiguillon' && o.type !== 'panache' ? ' ' + PLACES_FR[o.place] : o.type === 'massue' ? ' au bout de la queue' : ''}`;
 }
+// le sol de son milieu, d'après le décor de sa fiche : herbes hautes ou rases, roseaux et vase, litière et fougère, feuilles géantes,
+// neige, sable et pierres, rocaille, galets, lichens ; en pleine eau, la surface, des bulles, des herbiers, des coraux, la nuit des abysses
+function solDuMilieu(decor, auSol, R, ink) {
+  const T = [], A = (d, w = .3, op = .5, plus = '') => T.push(`<path d="${d}" stroke="${ink}" stroke-width="${w}" fill="none" opacity="${op}"${plus}/>`), y = 86, a = re => re.test(decor);
+  const xs = (n, x0 = 4, x1 = 166) => Array.from({ length: n }, (_, i) => x0 + (x1 - x0) * (i + .2 + .6 * R()) / n);
+  if (!auSol) {   // en pleine eau
+    if (a(/noir profond|particules/)) { T.push(`<rect x="0" y="0" width="170" height="90" fill="#1d2a33" opacity=".1"/>`); const D = []; for (let i = 0; i < 40; i++) D.push(`M${n2(170 * R())} ${n2(90 * R())}h.01`); A(D.join(''), .7, .35); return T.join(''); }
+    const W = []; for (const yy of [6, 9.5]) { let d = `M2 ${yy}`; for (let x = 2; x < 168; x += 8) d += ` q2 -1.2 4 0 q2 1.2 4 0`; W.push(d); } A(W.join(''), .25, .35);
+    const B = []; for (let i = 0; i < 7; i++) { const x = 20 + 130 * R(), yy = 14 + 60 * R(), r = .6 + 1.2 * R(); B.push(`<circle cx="${n2(x)}" cy="${n2(yy)}" r="${n2(r)}" fill="none" stroke="${ink}" stroke-width=".2" opacity=".35"/>`); } T.push(B.join(''));
+    if (a(/herbiers|coraux|galets/)) { for (const x of xs(5)) { let d = `M${n2(x)} 90`; for (let k = 1; k <= 4; k++) d += ` Q${n2(x + (k % 2 ? 3 : -3))} ${n2(90 - k * 5 + 2.5)} ${n2(x)} ${n2(90 - k * 5)}`; A(d, .35, .45); } }
+    return T.join(''); }
+  // la ligne du sol, à peine tremblée
+  let base = `M3 ${y + .4}`; for (let x = 3; x < 167; x += 6) base += ` L${n2(x + 6)} ${n2(y + .4 + (R() - .5) * .5)}`; A(base, .3, .4);
+  if (a(/neige/)) { T.push(`<path d="M0 ${y + 1} Q30 ${y - 3} 60 ${y - .5} Q100 ${y - 4} 130 ${y - 1} Q155 ${y - 3} 170 ${y} L170 90 L0 90Z" fill="#fbfdff" opacity=".75"/>`); A(`M8 ${y + 1.5} Q40 ${y - 1} 70 ${y + 1}M100 ${y + .5} Q130 ${y - 2} 160 ${y + 1}`, .25, .35); }
+  if (a(/sable/)) { const D = []; for (let k = 0; k < 3; k++) { let d = `M${n2(6 + 20 * R())} ${y + 1.2 + k * 1.1}`; for (let x = 0; x < 5; x++) d += ` q4 -.6 8 0`; D.push(d); } A(D.join(''), .22, .4); }
+  if (a(/roche|rocaille|pierre|pentes rocheuses|lichens/)) for (const x of xs(3)) { const w = 5 + 5 * R(), h = 2.5 + 2.5 * R(), d = `M${n2(x - w / 2)} ${y + .3}L${n2(x - w * .3)} ${n2(y - h)}L${n2(x + w * .15)} ${n2(y - h * 1.15)}L${n2(x + w / 2)} ${y + .3}Z`;
+    T.push(`<path d="${d}" fill="#e9e2d2" stroke="${ink}" stroke-width=".3" opacity=".8"/><path d="M${n2(x + w * .05)} ${n2(y - h * .9)}l${n2(w * .3)} ${n2(h * .8)}M${n2(x + w * .18)} ${n2(y - h * .7)}l${n2(w * .22)} ${n2(h * .6)}" stroke="${ink}" stroke-width=".2" opacity=".5"/>`);
+    if (a(/lichens/)) T.push(`<circle cx="${n2(x - w * .15)}" cy="${n2(y - h * .5)}" r=".8" fill="#b9b46a" opacity=".7"/><circle cx="${n2(x + w * .1)}" cy="${n2(y - h * .7)}" r=".6" fill="#b9b46a" opacity=".7"/>`); }
+  if (a(/galets/)) for (const x of xs(6)) T.push(`<ellipse cx="${n2(x)}" cy="${n2(y - .4)}" rx="${n2(1.2 + R())}" ry=".8" fill="#ece6d8" stroke="${ink}" stroke-width=".25" opacity=".8"/>`);
+  if (a(/herbes hautes|herbiers/)) for (const x of xs(9)) { const D = []; for (let k = 0; k < 5; k++) { const dx = (k - 2) * 1.2 + (R() - .5), h = 5 + 6 * R(); D.push(`M${n2(x + k * .4)} ${y}Q${n2(x + dx * .4)} ${n2(y - h * .6)} ${n2(x + dx)} ${n2(y - h)}`); } A(D.join(''), .26, .5); }
+  if (a(/herbe rase|horizon ouvert/)) { const D = []; for (let x = 4; x < 166; x += 2.2 + 2 * R()) D.push(`M${n2(x)} ${y}l${n2((R() - .5) * .8)} ${n2(-1.2 - 1.4 * R())}`); A(D.join(''), .22, .45); }
+  if (a(/roseaux|vase|eau stagnante/)) { for (const x of xs(5)) { const h = 22 + 12 * R(); A(`M${n2(x)} ${y}Q${n2(x + 1.5)} ${n2(y - h * .5)} ${n2(x + .8)} ${n2(y - h)}M${n2(x + .3)} ${n2(y - h * .35)}q3 -3 5 -9`, .3, .45); T.push(`<ellipse cx="${n2(x + .9)}" cy="${n2(y - h + 1.5)}" rx=".9" ry="2.6" fill="#6b5232" opacity=".55"/>`); }
+    A(`M4 ${y + 1.6}q10 .8 20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0`, .22, .35); }
+  if (a(/litière|sous-bois|fougères|troncs/)) { for (const x of xs(10)) { const r = Math.round(R() * 180); T.push(`<ellipse cx="${n2(x)}" cy="${n2(y - .3)}" rx="1.3" ry=".55" transform="rotate(${r} ${n2(x)} ${n2(y - .3)})" fill="#b99b62" opacity=".55"/>`); }
+    const fx = R() < .5 ? 10 : 160, sg = fx < 85 ? 1 : -1, F = [`M${fx} ${y}Q${fx + sg * 4} ${y - 14} ${fx + sg * 12} ${y - 20}`]; for (let k = 1; k < 7; k++) { const t = k / 7, px = fx + sg * 12 * t * t + sg * 1.5, py = y - 20 * t; F.push(`M${n2(px)} ${n2(py)}l${n2(sg * 3.5)} ${n2(-1.2)}M${n2(px)} ${n2(py)}l${n2(-sg * 1.5)} ${n2(-2.8)}`); } A(F.join(''), .3, .5); }
+  if (a(/feuilles géantes|lianes/)) { const fx = R() < .5 ? 14 : 156; T.push(`<path d="M${fx} ${y}C${fx - 10} ${y - 10} ${fx - 4} ${y - 22} ${fx} ${y - 26}C${fx + 4} ${y - 22} ${fx + 10} ${y - 10} ${fx} ${y}Z" fill="#9fb07a" opacity=".45" stroke="${ink}" stroke-width=".3"/><path d="M${fx} ${y}V${y - 25}" stroke="${ink}" stroke-width=".25" opacity=".5"/>`); }
+  if (a(/buissons/)) for (const x of xs(2)) { const D = []; for (let k = 0; k < 6; k++) { const ang = -Math.PI / 2 + (k - 2.5) * .35, l = 5 + 4 * R(); D.push(`M${n2(x)} ${y}l${n2(Math.cos(ang) * l)} ${n2(Math.sin(ang) * l)}`); } A(D.join(''), .28, .45); }
+  return T.join('');
+}
 const LONGUEURS = [.001, .002, .005, .01, .02, .05, .1, .2, .5, 1, 2, 5, 10, 20];
 const longueurFR = m => m >= 1 ? `${m} m` : m >= .01 ? `${Math.round(m * 100)} cm` : `${Math.round(m * 1000)} mm`;
+// (la fiche, quand on la donne : sa famille, son tégument, sa taille vue, ses variantes, son milieu, ses couleurs)
+const VARIANTES_FR = { albinisme: 'albinos', melanisme: 'mélanique', 'robe-doree': 'robe dorée', camouflage: 'camouflage', palmes: 'pieds palmés', vibrisses: 'vibrisses',
+  'peau-epaisse': 'peau épaisse', 'crocs-allonges': 'crocs allongés', 'yeux-nocturnes': 'yeux de nuit', 'membrane-planante': 'planeuse', 'queue-prehensile': 'queue préhensile',
+  'pattes-longues': 'pattes longues', 'coloration-aposematique': "livrée d'avertissement" };
+const pourcent = x => { const v = x * 100; return v < 1 ? 'moins de 1 %' : (v < 10 ? v.toFixed(1).replace('.', ',') : Math.round(v)) + ' %'; };
+// la lumière de son milieu (la fiche : milieu.lumiere), en un lavis derrière la bête
+const LUMIERES = [[/rasante|aube|crépuscule/, '#e8b45f', .32], [/bleutée|sous l'eau/, '#79aec2', .3], [/lune/, '#7f90b8', .3], [/pénombre/, '#8b8e76', .28],
+  [/tamisée/, '#c3cba0', .24], [/franc et froid/, '#d9e5ec', .32], [/soleil franc/, '#f7e2a4', .3]];
 function planche(corps, plan = {}, traits = [], o = {}) {
+  const Fi = o.fiche || null; o = { famille: Fi?.famille?.id, details: (Fi?.famille?.details || []).map(d => d.id), taille: Fi?.silhouette?.taille_vue_m, ...o };
   const D = dessiner(corps, plan, traits, { ...o, grain: o.grain !== false }); if (!D) return null;
   const corpsSvg = D.svg.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, ''), P = D.parties, C = D.cadre;
   if (!C) return { svg: D.svg, renvois: [], echelle: null };
@@ -569,8 +607,21 @@ function planche(corps, plan = {}, traits = [], o = {}) {
     const u = m * parM, pas = u > 30 ? 4 : u > 18 ? 2 : 1, y = 97.5, x0 = 8; echelle = { m, texte: longueurFR(m) };
     for (let i = 0; i < pas; i++) barre += `<rect x="${n2(x0 + u * i / pas)}" y="${y}" width="${n2(u / pas)}" height="1.1" fill="${i % 2 ? '#f8f3e7' : ink}" stroke="${ink}" stroke-width=".2"/>`;
     barre += `<text class="echelle-t" x="${n2(x0 + u + 2.4)}" y="${y + .55}" dy=".36em" font-size="3.1" font-family="Georgia, serif" font-style="italic" fill="${ink}">${echelle.texte}</text>`; }
-  const svg = `<svg viewBox="0 0 170 102" class="planche" role="img">${corpsSvg}${marques}${barre}</svg>`;
-  return { svg, renvois: renvois.map(({ n, texte }) => ({ n, texte })), echelle, famille: D.famille, pupille: D.pupille };
+  // le lavis de la lumière, le sol de son milieu (derrière la bête)
+  const decor = (Fi?.milieu?.decor?.fr || []).join(', ').toLowerCase(), lumiere = (Fi?.milieu?.lumiere?.fr || []).join(', ').toLowerCase(), RR = hasard(String(o.graine || '') + decor);
+  const L0 = LUMIERES.find(([re]) => re.test(lumiere)), lavis = L0 ? `<defs><radialGradient id="pl${++NUM}l"><stop offset="0" stop-color="${L0[1]}" stop-opacity="${L0[2]}"/><stop offset="1" stop-color="${L0[1]}" stop-opacity="0"/></radialGradient></defs><ellipse cx="${n2(centre[0])}" cy="${n2(centre[1])}" rx="92" ry="58" fill="url(#pl${NUM}l)"/>` : '';
+  const sol = decor ? solDuMilieu(decor, D.sol, RR, ink) : '';
+  // les variantes : les traits que montre une partie des bêtes (la fiche : variations), et qui se voient ; trois au plus, d'au moins 1 %
+  const piedsV = (P?.pattes || []).length > 0, VOIT = { vibrisses: D.famille === 'pelage', palmes: piedsV, 'membrane-planante': dessin === 'quadrupede', 'crocs-allonges': ['quadrupede', 'bipede', 'bipede-tendu'].includes(dessin) && plan?.regime === 'carnivore', 'queue-prehensile': !!P?.queue, 'pattes-longues': piedsV };
+  const variantes = (Fi?.variations || []).filter(v => VARIANTES_FR[v.trait] && VOIT[v.trait] !== false && v.part >= .01 && !traits.includes(v.trait)).sort((a, b) => b.part - a.part).slice(0, 3)
+    .map(v => { const cam = v.trait === 'camouflage' ? /#[0-9a-f]{6}/i.exec(v.en || '')?.[0] : null, V = dessiner(corps, plan, [...traits, v.trait], { ...o, grain: false, ...(cam ? { camouflage: cam } : {}) });
+      return { trait: v.trait, part: v.part, texte: `${VARIANTES_FR[v.trait]} · ${pourcent(v.part)}`, svg: V?.svg || '' }; });
+  // les notes de couleur : celles du dessin (la robe que montrent ses bêtes), et leur nom
+  const c0 = racine.OrvaneCorps?.normaliser ? racine.OrvaneCorps.normaliser(corps) : null, rb = c0 ? robeDesTraits(c0.couleurs, traits) : null, nomC = racine.OrvaneFiche?.nomCouleur;
+  const hexDe = c => '#' + c.map(v => Math.round(cl(v, 0, 255)).toString(16).padStart(2, '0')).join('').toUpperCase();
+  const couleurs = rb && plan?.regime !== 'synthetique' ? [['robe', 'robe'], ['sombre', 'sombre'], ['ventre', 'ventre'], ['oeil', 'œil']].map(([k, nom]) => ({ role: nom, hex: hexDe(rb[k]), fr: nomC ? nomC(rb[k]).fr : Fi?.couleurs?.[k]?.fr || '' })) : [];
+  const svg = `<svg viewBox="0 0 170 102" class="planche" role="img">${lavis}${sol}${corpsSvg}${marques}${barre}</svg>`;
+  return { svg, renvois: renvois.map(({ n, texte }) => ({ n, texte })), echelle, variantes, couleurs, famille: D.famille, pupille: D.pupille };
 }
 // un membre : un segment arrondi, de l'épaisseur wa à wb ; bombe : le muscle, en avant (une cuisse, un bras)
 function capsule(a, b, wa, wb, bombe = 0) {

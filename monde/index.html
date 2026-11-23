@@ -502,10 +502,12 @@ function plancheAtlas(t, dom, I) {
   if (!globalThis.OrvaneAtlas || !globalThis.OrvaneCorps || !(t.plan.corps || t.plan.regime === 'synthetique')) return '';
   const cle = `${I.monde?.id}|${I.cycle?.n}|${t.id}|${dom.join(',')}`; if (PLANCHES.has(cle)) return PLANCHES.get(cle);
   let F = null; try { F = globalThis.OrvaneFiche ? OrvaneFiche.ecrire(t, I).champs : null; } catch (e) { F = null; }
-  let Pl = null; try { Pl = OrvaneAtlas.planche(t.plan.corps, t.plan, dom, { famille: F?.famille?.id, details: (F?.famille?.details || []).map(d => d.id), graine: t.id, taille: F?.silhouette?.taille_vue_m }); } catch (e) { Pl = null; }
+  let Pl = null; try { Pl = OrvaneAtlas.planche(t.plan.corps, t.plan, dom, { fiche: F, graine: t.id }); } catch (e) { Pl = null; }
   if (PLANCHES.size > 60) PLANCHES.clear();
   const vue = F?.silhouette?.taille_vue_m, h = !Pl ? '' : `<figure class="planche-atlas"><div class="planche-entete"><span>ATLAS DU VIVANT · PLANCHE ${ESC(String(I.cycle?.n ?? ''))}</span><span>${ESC([F?.famille?.tegument?.fr, (F?.famille?.details || []).find(d => !/^(robe-du-plan|parade-accent)$/.test(d.id))?.fr].filter(Boolean).join(' — '))}</span></div>${Pl.svg}`
-    + `<figcaption>${Pl.renvois.length ? `<ol>${Pl.renvois.map(r => `<li value="${r.n}">${ESC(r.texte)}</li>`).join('')}</ol>` : ''}${Pl.echelle ? `<p class="echelle">La barre vaut ${ESC(Pl.echelle.texte)}${vue && t.plan.taille_m && Math.abs(vue - t.plan.taille_m) / t.plan.taille_m > .02 ? ', à la taille que montre la plupart des bêtes' : ''}. Dessin calculé d'après le plan de la lignée ; aucune image ne le remplace.</p>` : ''}</figcaption></figure>`;
+    + `<figcaption>${Pl.renvois.length ? `<ol>${Pl.renvois.map(r => `<li value="${r.n}">${ESC(r.texte)}</li>`).join('')}</ol>` : ''}`
+    + `${Pl.variantes?.length ? `<div class="variantes"><p>Variantes observées</p>${Pl.variantes.map(v => `<figure>${v.svg}<figcaption>${ESC(v.texte)} des bêtes</figcaption></figure>`).join('')}</div>` : ''}`
+    + `${Pl.couleurs?.length ? `<ul class="notes-couleur">${Pl.couleurs.map(c => `<li><span style="background:${ESC(c.hex)}"></span>${ESC(c.role)} : ${ESC(c.fr)}</li>`).join('')}</ul>` : ''}${Pl.echelle ? `<p class="echelle">La barre vaut ${ESC(Pl.echelle.texte)}${vue && t.plan.taille_m && Math.abs(vue - t.plan.taille_m) / t.plan.taille_m > .02 ? ', à la taille que montre la plupart des bêtes' : ''}. Dessin calculé d'après le plan de la lignée ; aucune image ne le remplace.</p>` : ''}</figcaption></figure>`;
   PLANCHES.set(cle, h); return h;
 }
 const VIGNETTES = new Map();
