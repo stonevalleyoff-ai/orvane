@@ -157,12 +157,30 @@ function dessiner(corps, plan = {}, traits = [], o = {}) {
     const dY = q[0][1] - pts[0][1];
     SN = { pts: q, W, Wm, dY, piv, kH, hsz }; }
 
+  // --- la tête d'une bête à pattes, à sa mesure : le dessin des jeux la rétrécit quand la bête s'alourdit (de 30 % au plus) pendant
+  //     que son corps s'épaissit, si bien qu'une bête de 60 kg y a une tête haute du quart de son corps ; chez un mammifère, elle en
+  //     fait à peu près la moitié (un loup, un cerf, un renard). Elle grandit depuis la nuque, jamais ne rapetisse ---
+  let TT = null;
+  if (!SN && P?.tete?.rayon && P.corps?.boite && ['quadrupede', 'bipede-tendu', 'bipede'].includes(P.dessin) && !INSECTES.includes(P.dessin) && plan?.regime !== 'synthetique') {
+    const b = P.corps.boite, epais = P.dessin === 'bipede' ? b[2] - b[0] : b[3] - b[1], haute = P.tete.rayon / .55 * .92, kT = cl(.5 * epais / haute, 1, 1.8);
+    if (kT > 1.05) { const c = dansLe(P.tete.centre), r = P.tete.rayon / Lk; TT = { k: kT, ancre: [c[0] - r * .55, c[1] + r * .1], centre: c, r }; } }
+
   // --- le cadre : celui du dessin ; celui d'un serpent remis à sa mesure (plus épais, il demande sa place) ---
   let tx = L.tx, ty = L.ty, k = Lk;
   if (SN) { let B = null; SN.pts.forEach((p, i) => { B = unir(B, [p[0] - SN.W[i] / 2, p[1] - SN.W[i] / 2, p[0] + SN.W[i] / 2, p[1] + SN.W[i] / 2]); });
     const hb = P.tete ? (() => { const c = dansLe(P.tete.centre), r = P.tete.rayon / Lk, [px, py] = SN.piv, s2 = SN.kH; return [px + (c[0] - r - px) * s2, py + SN.dY + (c[1] - r * .8 - py) * s2, px + (c[0] + r * 1.9 - px) * s2, py + SN.dY + (c[1] + r * .8 - py) * s2]; })() : null;
     B = unir(B, hb); const w = B[2] - B[0], h = B[3] - B[1]; k = Math.min(2.4, 156 / Math.max(1, w), 78 / Math.max(1, h)); tx = 85 - k * (B[0] + B[2]) / 2; ty = 86 - k * B[3]; }
+  if (TT && P.boite) {   // (la tête agrandie, ses oreilles, ses cornes : le dessin se recadre pour les garder)
+    let HB = null; for (let i = P.tete.svg[0]; i <= P.tete.svg[1] && i < n; i++) HB = unir(HB, boiteEl(els[i]));
+    const c = TT.centre, r = TT.r; HB = unir(HB, [c[0] - r * 1.2, c[1] - r * 1.4, c[0] + r * 1.9, c[1] + r * 1.1]);
+    const g = p => [TT.ancre[0] + (p[0] - TT.ancre[0]) * TT.k, TT.ancre[1] + (p[1] - TT.ancre[1]) * TT.k], h0 = g([HB[0], HB[1]]), h1 = g([HB[2], HB[3]]);
+    const a0 = dansLe([P.boite[0], P.boite[1]]), a1 = dansLe([P.boite[2], P.boite[3]]), B = unir([a0[0], a0[1], a1[0], a1[1]], [h0[0], h0[1], h1[0], h1[1]]);
+    if (B[0] < a0[0] - .01 || B[1] < a0[1] - .01 || B[2] > a1[0] + .01) { const w = B[2] - B[0], h = B[3] - B[1]; k = Math.min(Lk, 156 / Math.max(1, w), 78 / Math.max(1, h)); tx = 85 - k * (B[0] + B[2]) / 2;
+      ty = so.sol ? 86 - k * (86 - L.ty) / Lk : 45 - k * (B[1] + B[3]) / 2; } }   // (au sol, le bas du dessin reste sur la ligne du bas)
   const f = 1 / k, e = (o.encre ?? .5) * f;
+
+  // (un point de la tête, là où la tête agrandie le porte)
+  const versTete = p => TT ? [TT.ancre[0] + (p[0] - TT.ancre[0]) * TT.k, TT.ancre[1] + (p[1] - TT.ancre[1]) * TT.k] : p;
 
   // --- les dégradés, les hachures de la planche (les identifiants lui sont propres) ---
   defs.push(`<linearGradient id="${id}v" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fffaf0" stop-opacity=".22"/><stop offset=".36" stop-color="#fffaf0" stop-opacity="0"/><stop offset=".6" stop-color="${ink}" stop-opacity="0"/><stop offset="1" stop-color="${ink}" stop-opacity=".32"/></linearGradient>`);
@@ -173,7 +191,7 @@ function dessiner(corps, plan = {}, traits = [], o = {}) {
 
   // --- ce qui fait la masse du corps : un seul contour pour le corps, le cou, la tête, la queue (sans couture entre eux) ---
   const masse = new Set(), forme = new Map();   // (forme : l'élément qui en remplace un autre, pour son contour)
-  if (P && !insecte && !SN) for (let i = 1; i < n; i++) { const r = role[i], el = els[i];
+  if (P && !insecte && !SN) for (let i = 1; i < n; i++) { const r = role[i], el = els[i]; if (TT && r.partie === 'tete') continue;
     if (el.nom === 'clipPath' || el.nom === 'g') continue;
     const libre = !r.partie && !r.organe;   // (la cuisse d'un sauteur : dessinée à part, elle fait corps avec lui)
     if (!libre && (!['corps', 'cou', 'tete', 'queue'].includes(r.partie) || (r.organe && r.organe !== 'trompe'))) continue;
@@ -306,7 +324,8 @@ function dessiner(corps, plan = {}, traits = [], o = {}) {
     if (E.length > 20) { let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity; for (const [x, y] of E) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
       const w = x1 - x0, h = y1 - y0, yc = (y0 + y1) / 2, bosse = (u, c, l) => Math.exp(-(((u - c) / l) ** 2)), pts = [];
       for (let i = 0; i < E.length; i += 2) { const [x, y] = E[i], u = (x - x0) / w, bas = y > yc;
-        const dy = bas ? -h * .13 * bosse(u, .44, .12) + h * .05 * bosse(u, .8, .12) : -h * .035 * bosse(u, .8, .1) + h * .03 * bosse(u, .55, .14) - h * .03 * bosse(u, .2, .12);
+        const lourd = cl((Math.log10(Math.max(.001, plan?.masse_kg || 1)) + 1.3) / 3.3), allege = h * .09 * lourd * bosse(u, .5, .32);
+        const dy = bas ? -h * .13 * bosse(u, .44, .12) + h * .05 * bosse(u, .8, .12) - allege : -h * .035 * bosse(u, .8, .1) + h * .03 * bosse(u, .55, .14) - h * .03 * bosse(u, .2, .12);
         pts.push([x, y + dy]); }
       corpsModele = lisse(pts, true); } }
   if (corpsModele) { const j = P.corps.svg[0] + 1, el = els[j]; if (el?.nom === 'path' && el.attr.fill === robeS) { const m = { nom: 'path', attr: { ...el.attr, d: corpsModele } }; forme.set(j, m); remplace.set(j, { s: balise('path', m.attr), fin: j }); } }
@@ -438,7 +457,8 @@ function dessiner(corps, plan = {}, traits = [], o = {}) {
 
   // --- les éléments du dessin, dans leur ordre : chacun repris en planche ---
   const saute = new Set(); let boiteCorps = null, dansTete = false;
-  const teteSvg = P?.tete?.svg, grandeTete = SN && teteSvg ? `translate(${n2(SN.piv[0])} ${n2(SN.piv[1] + SN.dY)}) scale(${n2(SN.kH)}) translate(${n2(-SN.piv[0])} ${n2(-SN.piv[1])})` : null;
+  const teteSvg = P?.tete?.svg, grandeTete = SN && teteSvg ? `translate(${n2(SN.piv[0])} ${n2(SN.piv[1] + SN.dY)}) scale(${n2(SN.kH)}) translate(${n2(-SN.piv[0])} ${n2(-SN.piv[1])})`
+    : TT && teteSvg ? `translate(${n2(TT.ancre[0])} ${n2(TT.ancre[1])}) scale(${n2(TT.k)}) translate(${n2(-TT.ancre[0])} ${n2(-TT.ancre[1])})` : null;
   for (let i = 0; i < n; i++) {
     if (grandeTete && i === teteSvg[0]) { out.push(`<g transform="${grandeTete}">`); dansTete = true; }
     if (cetSaute.has(i)) { if (P.tete && i === P.tete.svg[1]) out.push(cetAjout); continue; }
@@ -474,7 +494,7 @@ function dessiner(corps, plan = {}, traits = [], o = {}) {
   }
   if (dansTete) out.push('</g>');
   // ce que portent la plupart des bêtes : les vibrisses, la membrane d'une planeuse
-  if (P?.tete?.museau && traits.includes('vibrisses') && fam === 'pelage') { const [mx, my] = dansLe(P.tete.museau), r0 = (P.tete.rayon || 6) / Lk, V = [];
+  if (P?.tete?.museau && traits.includes('vibrisses') && fam === 'pelage') { const [mx, my] = versTete(dansLe(P.tete.museau)), r0 = (P.tete.rayon || 6) / Lk * (TT?.k || 1), V = [];
     for (const d of [-.25, 0, .25, .5]) V.push(`M${P2(mx - r0 * .25, my + r0 * .05)}q${P2(r0 * .6, d * r0 * .4)} ${P2(r0 * 1.25, d * r0 * .9 - r0 * .15)}`);
     out.push(`<path d="${V.join('')}" stroke="${ink}" stroke-width="${n2(.18 * f)}" fill="none" opacity=".7"/>`); }
   if (P && traits.includes('membrane-planante') && (P.pattes || []).length >= 4) { const pr = P.pattes.filter(q => q.cote === 'pres'); if (pr.length >= 2) {
@@ -486,7 +506,7 @@ function dessiner(corps, plan = {}, traits = [], o = {}) {
   const g = `<g transform="translate(${n2(tx)} ${n2(ty)}) scale(${+k.toFixed(3)})" stroke-linecap="round" stroke-linejoin="round"><defs>${defs.join('')}</defs>${out.join('')}</g>`;
   const filtre = o.grain ? `<filter id="${id}q" x="-4%" y="-4%" width="108%" height="108%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" seed="${Math.floor(R() * 90)}" result="b"/><feDisplacementMap in="SourceGraphic" in2="b" scale=".55" xChannelSelector="R" yChannelSelector="G" result="d"/><feTurbulence type="fractalNoise" baseFrequency="2.2" numOctaves="1" seed="3" result="g"/><feColorMatrix in="g" type="matrix" values="0 0 0 0 .5  0 0 0 0 .44  0 0 0 0 .36  0 0 0 -.9 .62" result="t"/><feComposite in="t" in2="d" operator="in" result="tt"/><feBlend in="tt" in2="d" mode="multiply"/></filter>` : '';
   const svg = `<svg viewBox="0 0 170 90" width="170" height="90" aria-hidden="true" class="atlas">${filtre ? `<defs>${filtre}</defs><g filter="url(#${id}q)">${g}</g>` : g}</svg>`;
-  return { svg, parties: P, cadre: { tx, ty, k, dessin: [L.tx, L.ty, Lk] }, famille: fam, pupille, yeux: so.yeux || [], sol: !!so.sol };
+  return { svg, parties: P, cadre: { tx, ty, k, dessin: [L.tx, L.ty, Lk] }, tete: TT ? { k: TT.k, ancre: TT.ancre, centre: TT.centre, r: TT.r } : null, famille: fam, pupille, yeux: so.yeux || [], sol: !!so.sol };
 
   // les mèches du dos : de courtes touffes sur le haut du contour, couchées vers l'arrière (un poil long en fait de longues)
   function meches(d, B) { const pas = (det.has('pelage-froid') ? 1.1 : 1.5) * f, Lm = (det.has('pelage-froid') ? 2.4 : det.has('pelage-chaud') ? .9 : 1.5) * f, cy = (B[1] + B[3]) / 2, cx = (B[0] + B[2]) / 2, M = [];
@@ -520,7 +540,9 @@ function planche(corps, plan = {}, traits = [], o = {}) {
   const corpsSvg = D.svg.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, ''), P = D.parties, C = D.cadre;
   if (!C) return { svg: D.svg, renvois: [], echelle: null };
   // un point des parties (le cadre du dessin des jeux) dans le cadre de la planche
-  const vers = p => { const [tx0, ty0, k0] = C.dessin, x = (p[0] - tx0) / k0, y = (p[1] - ty0) / k0; return [C.tx + C.k * x, C.ty + C.k * y]; };
+  const vers = p => { const [tx0, ty0, k0] = C.dessin; let x = (p[0] - tx0) / k0, y = (p[1] - ty0) / k0; const T = D.tete;
+    if (T && Math.hypot(x - T.centre[0], y - T.centre[1]) < T.r * 2.6) { x = T.ancre[0] + (x - T.ancre[0]) * T.k; y = T.ancre[1] + (y - T.ancre[1]) * T.k; }
+    return [C.tx + C.k * x, C.ty + C.k * y]; };
   const B = P?.boite ? [vers([P.boite[0], P.boite[1]]), vers([P.boite[2], P.boite[3]])] : [[7, 5], [163, 86]];
   const ink = '#2b231b', centre = P?.corps?.centre ? vers(P.corps.centre) : [85, 50];
   // les renvois : ses organes, ce que portent la plupart de ses bêtes, son motif

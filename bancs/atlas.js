@@ -6,7 +6,7 @@
 //     comme après une planche ;
 //  3. ce qu'elle lit des données se voit : la robe d'un albinos, d'un mélanique ; l'œil d'une chasseuse de nuit (une fente), d'une
 //     brouteuse à sabots (une barre), d'un insecte (des facettes) ; le serpent à sa vraie épaisseur ; le cétacé (un « poisson » qui met
-//     bas) sans écailles ni opercule ; ses renvois sont dans le cadre, numérotés de 1 à 7 au plus ; l'échelle vaut une longueur ronde ;
+//     bas) sans écailles ni opercule ; la tête d'une bête lourde à sa mesure ; ses renvois sont dans le cadre, numérotés de 1 à 7 au plus ; l'échelle vaut une longueur ronde ;
 //  4. la vignette (léger) pèse moins que la planche ; ce que coûte une planche.
 //   node bancs/atlas.js [--court]          (--court : trois mondes)
 'use strict';
@@ -75,6 +75,9 @@ console.log('3. Ce qu\'elle lit des données se voit');
   const ce = tous.filter(x => x.D.parties?.dessin === 'poisson' && x.plan.reproduction === 'vivipare' && x.plan.masse_kg >= 10);
   const opercule = /<path d="M[^"]*Q[^"]*" stroke="[^"]*" stroke-width="1\.2" fill="none" opacity="\.7"\/>/, dents = /fill="#fbf6ea"|fill="#3a1f1f"/;
   verif(!ce.length || ce.every(x => x.D.famille === 'peau-lisse' && !opercule.test(x.D.svg) && !dents.test(x.D.svg)), `${ce.length} cétacés (des « poissons » qui mettent bas) : la peau lisse, sans écailles, sans opercule ni dents de poisson`);
+  // la tête d'une bête à pattes lourde : à sa mesure (le dessin des jeux la fait haute du quart de son corps)
+  const lourdes = tous.filter(x => x.D.parties?.dessin === 'quadrupede' && x.plan.masse_kg > 20 && x.D.parties.tete?.rayon), part = x => { const P = x.D.parties, b = P.corps.boite; return P.tete.rayon / .55 * .92 * (x.D.tete?.k || 1) / (b[3] - b[1]); };
+  verif(lourdes.length && lourdes.every(x => part(x) >= .3 && part(x) <= .65), `${lourdes.length} quadrupèdes de plus de 20 kg : leur tête fait de ${fx(Math.min(...lourdes.map(part)), 2)} à ${fx(Math.max(...lourdes.map(part)), 2)} de la hauteur de leur corps (le dessin des jeux : le quart)`);
   // les renvois, l'échelle
   const R = tous.flatMap(x => (x.Pl.renvois || []).map(r => ({ ...r, x })));
   verif(tous.every(x => (x.Pl.renvois || []).length <= 7 && (x.Pl.renvois || []).every((r, i) => r.n === i + 1 && r.texte)), `${fx(R.length)} renvois, numérotés de 1 à 7 au plus par planche, chacun avec son texte`);

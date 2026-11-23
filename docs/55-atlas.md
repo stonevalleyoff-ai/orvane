@@ -63,6 +63,7 @@ Les robes passent au dessin lui-même : tout ce qu'il colore change avec elles.
 **Les vraies proportions, là où le dessin des jeux simplifie.**
 - **Un serpent** est redessiné à l'épaisseur que donnent sa masse et sa longueur, comme un cylindre de la densité de l'eau : son diamètre vaut √(4 m / (1 000 π L)). Son corps est un ruban qui s'effile vers la queue et se resserre au cou. On y voit le ventre clair et ses plaques en travers, le motif du dos (les bandes, une raie, des taches, la livrée d'avertissement) et une tête à la mesure du corps. La planche se recadre à sa nouvelle taille.
 - **Un cétacé.** Les données d'un dauphin ou d'un marsouin disent « serpent qui ne fait que nager », c'est-à-dire un poisson. Mais un « poisson » qui met bas (`reproduction` vivipare) et pèse 10 kg ou plus est un cétacé. Il perd ce que le dessin des poissons lui donne et qu'il n'a pas : les écailles, l'opercule, les dents d'un poisson chasseur, la nageoire du ventre. Il prend ce qu'il a : la peau lisse et lustrée, les nageoires de la queue à plat, l'évent, une bouche en sourire, et le masque blanc d'une orque quand son motif le dit.
+- **La tête d'une bête à pattes.** Le dessin des jeux la rétrécit quand la bête s'alourdit (de 30 % au plus) pendant que son corps s'épaissit : une bête de 60 kg y a une tête haute du quart de son corps. Chez un mammifère, la tête en fait à peu près la moitié (un loup, un cerf, un renard). La planche la ramène à cette mesure en la faisant grandir depuis la nuque, de 1,8 fois au plus. Elle ne la rapetisse jamais, et le dessin se recadre pour garder les oreilles et les cornes. Le ventre d'une bête lourde est un peu allégé.
 - **Un mollusque** (un escargot, une moule) a la peau nue et humide, pas les écailles d'un serpent.
 
 ## La planche entière : l'échelle, les renvois
@@ -109,6 +110,7 @@ Pour juger un changement, l'atlas a son banc visuel. `node outils/galerie.js --a
    - la fente, la barre et les facettes, chez qui les doit ;
    - chaque serpent en ruban à son épaisseur ;
    - chaque cétacé sans écailles, sans opercule ni dents de poisson ;
+   - la tête des quadrupèdes de plus de 20 kg, entre 0,3 et 0,65 de la hauteur de leur corps ;
    - des renvois numérotés de 1 à 7 au plus, posés dans le cadre ;
    - une échelle de longueur ronde.
 4. **Ce qu'elle pèse et ce qu'elle coûte.** Une vignette pèse moins de la moitié d'une planche.
