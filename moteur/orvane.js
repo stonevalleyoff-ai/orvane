@@ -165,6 +165,11 @@ const REGLES = {
   // territoire (Palomares et Caro 1999 ; Donadio et Buskirk 2006). Le poids d'un concurrent devant un chasseur est multiplié par le rapport de
   // leurs masses à cette puissance : le renard pèse moins devant le lynx, le lynx plus devant le renard. 0 : tous à égalité
   domination: 0,
+  // (docs/53) un monde réel : deux chasseurs ne se disputent que ce qu'ils cherchent tous deux. Sur une proie qu'ils mangent l'un et l'autre, le
+  // concurrent ne pèse que de la part de sa quête qu'il y met, au plus celle du chasseur (le recouvrement de Schoener, 1970). Sans cela, il
+  // pesait de toute sa quête dès qu'il pouvait la manger : le renard et le sanglier, qui cherchent surtout des vers de terre et des limaces,
+  // prenaient au lynx pardelle 89 % de ses lapins, qu'ils ne tuaient pas (leur prise suit leur quête). false : comme avant (les mondes d'Orvane)
+  recouvrement: false,
   // (docs/52) un monde réel : la part des morts du lieu (les bêtes d'au moins 10 g, mortes de vieillesse ce jour) que trouvent les mangeurs de
   // charogne (plan.charogne : le vautour, le milan, le glouton, les corvidés). Une proie de plus, qu'on ne tue pas. 0 : les morts ne
   // nourrissent personne (les mondes d'Orvane)
@@ -594,6 +599,7 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
   const CMP = REGLES.concurrence_masse > 0 ? (m1, m2) => { const d = Math.log10((m1 || 1) / (m2 || 1)); return Math.exp(-(d * d) / (2 * REGLES.concurrence_masse ** 2)); } : null;
   // (docs/53) ce qu'une proie offre en un cycle de référence : ce qui est sur pied, et ce qui en naît dans ce temps (sa natalité de l'année)
   const DOM = REGLES.domination > 0 ? (a, b) => (a.metabolisme ?? 1) < 1 || (b.metabolisme ?? 1) < 1 ? 1 : Math.pow((b.masse_kg || 1) / (a.masse_kg || 1), REGLES.domination) : null;   // (le poids de b devant a ; entre bêtes à sang chaud)
+  const REC = !!REGLES.recouvrement;   // (docs/53 : la concurrence suit la quête de chacun, plus bas dans commune)
   const REN = REGLES.renouvellement > 0 ? pl => 1 + Math.max(0, pl.natalite ?? 0) * REGLES.renouvellement / 365.25 : null;
   const DIA = REGLES.diapause && SL ? (pl, b) => (pl.metabolisme ?? 1) < 1 && b ? clamp((prodS(b) - .3) / .7, REGLES.diapause.plancher ?? .1, 1) : 1 : null;
   // l'hiver et l'été d'un lieu (les routes de l'hiver) : dans un monde au calendrier, ceux de son climat
@@ -722,7 +728,9 @@ function cycleBrut(inst, pressions = {}, opt = {}) {
     const NW = (T.length + 31) >> 5;
     for (const p of preds) { p.mor = DT ? new Array(T.length) : null; p.bits = new Uint32Array(NW); p.pbits = new Uint32Array(NW); for (let k = 0; k < T.length; k++) { if (p.part[k]) p.pbits[k >> 5] |= 1 << (k & 31); if (p.x[k]) { p.bits[k >> 5] |= 1 << (k & 31); if (DT) p.mor[k] = DI.mortel(p.t.plan, T[k].t.plan); } } }
     // la part commune : les proies de p (sa part) que q mange aussi, dans l'ordre croissant, bit après bit
-    const commune = (p, q) => { let c = 0; for (let w = 0; w < NW; w++) { let m = p.pbits[w] & q.bits[w]; while (m) { const b = m & -m, k = (w << 5) + 31 - Math.clz32(b); m ^= b; if (!DT || p.mor[k] === q.mor[k]) c += p.part[k]; } } return c; };
+    // (docs/53 : dans un monde qui le dit, REGLES.recouvrement, sur chacune la part que q y met de sa quête, au plus celle de p — le renard,
+    //  qui peut prendre un lapin mais cherche surtout des vers de terre, ne pèse plus sur le lynx pardelle de toute sa quête)
+    const commune = (p, q) => { let c = 0; for (let w = 0; w < NW; w++) { let m = p.pbits[w] & q.bits[w]; while (m) { const b = m & -m, k = (w << 5) + 31 - Math.clz32(b); m ^= b; if (!DT || p.mor[k] === q.mor[k]) c += REC ? Math.min(p.part[k], q.part[k]) : p.part[k]; } } return c; };
     for (const p of preds) {
       let C = 0;
       if (p.A > 0) for (const q of preds) { if (q === p || q.A <= 0) continue; const commun = commune(p, q); C += q.Nt * (p.besoinMoy > 0 ? q.besoinMoy / p.besoinMoy : 0) * q.effMoy * commun * PAIRE(p.t.plan, q.t.plan, 0) * PAIRE(p.t.plan, q.t.plan, 1); }

@@ -117,10 +117,11 @@ Object.assign(Orvane.REGLES, { mutation: .01, nouveau_trait: .08, menace: 20, ma
 // de ces morts les nourrit : sur deux graines, 3 000 cycles, ils tiennent (11 à 13 lignées) et les carnivores gardent leurs lignées ;
 // toutes les morts (1) leur en coûtaient trois. --regles '{"cadavres": 0}' revient à la genèse d'avant
 // (docs/53) --ecologie terre : une genèse aux constantes du monde réel (la ration d'un prédateur, la viande qui fait des petits, la
-// demi-satiété : celles de l'Europe) et à ses règles (les petites proies, la concurrence et la domination selon la masse, la part de chair).
+// demi-satiété : celles de l'Europe) et à ses règles (les petites proies, la concurrence et la domination selon la masse, la part de chair,
+// le recouvrement des quêtes).
 // Dans Orvane, les carnivores faisaient naître 32 % de ce qu'ils mangent, dix fois une vraie bête à sang chaud : la genèse suivante d'Orvane
 // part de celles-ci. Sans l'option, la genèse d'avant
-const ECOLOGIE_TERRE = arg('--ecologie', null) === 'terre' ? { besoin: 6, conversion: .06, demi_satiete: 5, petites_proies: true, concurrence_masse: .7, domination: .5, viande_part: true } : {};
+const ECOLOGIE_TERRE = arg('--ecologie', null) === 'terre' ? { besoin: 6, conversion: .06, demi_satiete: 5, petites_proies: true, concurrence_masse: .7, domination: .5, viande_part: true, recouvrement: true } : {};
 const reglesMonde = { cadavres: .5, ...ECOLOGIE_TERRE, ...(arg('--regles', null) ? JSON.parse(arg('--regles', '{}')) : {}) };   // gardées par le monde (monde.regles) : elles valent ensuite à chacun de ses cycles
 if (reglesMonde) for (const [k, v] of Object.entries(reglesMonde)) { const b = Orvane.REGLES[k]; Orvane.REGLES[k] = v && typeof v === 'object' && !Array.isArray(v) && b && typeof b === 'object' && !Array.isArray(b) ? { ...b, ...v } : v; }   // (d'un niveau, comme le moteur : { derive: { tolerance: .3 } } garde le reste de la dérive)
 const rarete = +arg('--rarete', .0005);   // une lignée installée qui reste sous cette part de la BIOMASSE du monde est rayée : la place se libère

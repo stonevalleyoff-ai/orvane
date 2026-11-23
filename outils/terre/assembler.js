@@ -54,6 +54,7 @@ const REGLES = {
   diapause: { plancher: .1 },  // une bête à sang froid passe l'hiver en diapause : elle meurt, mange, se montre dix fois moins (docs/53)
   viande_part: true,         // un omnivore ne cherche en proies que sa part de chair (docs/53)
   domination: .5,            // entre chasseurs à sang chaud, le plus grand domine le plus petit (docs/53)
+  recouvrement: true,        // deux chasseurs ne se disputent que ce qu'ils cherchent tous deux : la part de sa quête que chacun met sur leurs proies (docs/53)
   charognes: .5,             // la moitié des morts de vertébrés nourrit les charognards (DeVault et al. 2003 : souvent plus de la moitié des carcasses)
   renouvellement: 120,       // une proie offre ce qui est sur pied et ce qui en naît pendant les ~120 jours où se compte le besoin d'un chasseur (docs/53)
   longevite_predateur: 0,
@@ -67,7 +68,7 @@ const REGLES = {
 // des mondes réels), pour voir ce que donnent les réglages d'Orvane devant la réalité. Le calendrier, la saison des naissances, les
 // migrations et la colonisation lente restent : ils tiennent au jour, non à l'écologie
 if (process.argv.includes('--regles') && process.argv[process.argv.indexOf('--regles') + 1] === 'orvane')
-  for (const k of ['besoin', 'conversion', 'demi_satiete', 'petites_proies', 'concurrence_masse', 'diapause', 'renouvellement', 'viande_part', 'domination', 'charognes']) delete REGLES[k];
+  for (const k of ['besoin', 'conversion', 'demi_satiete', 'petites_proies', 'concurrence_masse', 'diapause', 'renouvellement', 'viande_part', 'domination', 'recouvrement', 'charognes']) delete REGLES[k];
 const U = Object.fromEntries(require('../../moteur/biomes-universels.json').map(b => [b.id, b]));
 const CORPS_OK = new Set(Object.keys(require('../../schemas/instantane.schema.json').properties.taxons.items.properties.plan.properties.corps.properties));
 const carte = lire(path.join(D, 'lieux.json')), vivant = lire(path.join(D, 'especes.json')), sources = lire(path.join(D, 'sources.json'), []);
