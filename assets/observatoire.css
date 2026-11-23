@@ -206,3 +206,17 @@ tr.rabote td { background: #f6f1e4; }
 
 /* Le bandeau du portail StoneValley : au-dessus de l'en-tête, sur toutes les pages (le même dans orvane.css et observatoire.css) */
 .portail-sv{background:#0b0e16;color:#e9e4d6;font:500 13px/1.2 'Segoe UI',Arial,sans-serif;position:relative;z-index:40}.portail-sv-in{width:min(1240px,calc(100% - 32px));margin-inline:auto;min-height:38px;display:flex;align-items:center;justify-content:space-between;gap:16px}.portail-sv a{display:inline-flex;align-items:center;gap:9px;color:#f3efe6;text-decoration:none;padding:6px 10px 6px 4px;margin-left:-4px;border-radius:6px}.portail-sv a:hover{background:rgba(255,255,255,.08);color:#fff}.portail-sv a:focus-visible{outline:2px solid #f2a54a;outline-offset:2px}.portail-sv svg{width:22px;height:22px;border-radius:5px;flex:none}.portail-sv b{color:#f2a54a;font-weight:700}.portail-sv-fleche{color:#f2a54a;font-size:15px;transition:transform .15s}.portail-sv a:hover .portail-sv-fleche{transform:translateX(-3px)}.portail-sv-note{color:#8f96a6;font-size:12px;letter-spacing:.02em}@media(max-width:640px){.portail-sv-note{display:none}}
+
+/* La planche d'atlas (monde/atlas.js, docs/55) : le dessin d'une lignée en planche de naturaliste, sur un papier ivoire, sous un double filet ;
+   son entête, sa légende numérotée et son échelle */
+.fiche header.species-plate.solo{grid-template-columns:minmax(0,1fr)}
+.planche-atlas{margin:20px 0 6px;padding:12px 18px 12px;border:1px solid #d6cbaf;background-color:#f6f0e2;box-shadow:inset 0 0 0 5px #f6f0e2,inset 0 0 0 6px #e1d6bb;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .35 0 0 0 0 .22 0 0 0 .1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),radial-gradient(ellipse at 50% 45%,#fbf7ec 0,#f6f0e2 60%,#eee5d0 100%)}
+.planche-entete{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;font:600 8px/1.5 var(--sans);letter-spacing:.18em;color:#7a6847;text-transform:uppercase;border-bottom:1px solid #e0d4b8;padding:2px 0 7px}
+.planche-entete span:last-child{letter-spacing:.06em;text-transform:none;font:italic 12px/1.5 var(--serif);color:#6d5c3f}
+.planche-atlas svg.planche{display:block;width:100%;height:auto;margin:4px 0 0;overflow:visible}
+.planche-atlas figcaption{border-top:1px solid #e0d4b8;padding-top:8px;margin-top:2px}
+.planche-atlas ol{margin:0;padding:0 0 0 20px;columns:2;column-gap:30px;font:italic 13.5px/1.7 var(--serif);color:#3f3424}
+.planche-atlas li{break-inside:avoid}.planche-atlas li::marker{font:italic 12px var(--serif);color:#8a744c}
+.planche-atlas .echelle{margin:6px 0 0;font:10.5px/1.55 var(--sans);color:#7a6847}
+@media(max-width:650px){.planche-atlas{padding:10px 10px 10px}.planche-atlas ol{columns:1}.planche-atlas .renvoi{r:3.6px}.planche-atlas .renvoi-n{font-size:4.8px}.planche-atlas .echelle-t{font-size:4.6px}}

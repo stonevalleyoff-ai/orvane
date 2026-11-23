@@ -47,6 +47,7 @@ monde/sante.js        la vue Santé de l'observatoire : le rapport de chaque sem
 outils/sante.js       les mesures du rapport de santé d'un monde publié, et ses alertes ; --indexer : l'index des rapports (docs/51)
 monde/silhouette.js   les silhouettes de l'observatoire : chaque lignée dessinée d'après son corps et sa façon de vivre (masse, déplacements, régime, heure), chaque forme à son dessin, les machines d'après leurs modules ; un jeu peut le reprendre
 monde/herbier.js      l'herbier : chaque plante dessinée d'après sa forme, son stade, son feuillage, ce qu'elle a subi ; publié à chaque cycle dans morceaux/herbier/ (docs/49)
+monde/atlas.js        l'atlas : chaque lignée en planche de naturaliste dans l'Observatoire, d'après son dessin, ses parties et sa fiche (l'encre, le tégument, l'œil, l'échelle, les renvois) ; le dessin des jeux ne change pas (docs/55)
 monde/fiche.js        la fiche de créature : chaque lignée décrite pour la DA 2D et 3D, sa famille visuelle, ses interdits, sa parenté, ses prompts ; dans le paquet (docs/54)
 outils/fiches.js      toutes les fiches de créature d'un instantané dans un dossier : Markdown, JSON, un index (docs/54)
 BRANCHER-UN-JEU.md    brancher un jeu, pas à pas : s'inscrire, lire le monde, traduire, régler l'exposition, déposer des lots, les erreurs
