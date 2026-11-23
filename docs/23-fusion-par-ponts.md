@@ -54,6 +54,14 @@ node bancs/ponts.js            # 80 cycles, environ 4 minutes
 node bancs/ponts.js --court    # 40 cycles
 ```
 
+**Une genèse née d'un autre moteur.** Un monde versé garde ce que son évolution a fait de lui sous les règles de son temps. La genèse 7 a tourné 3 000 cycles avec le moteur du 28 octobre, où un carnivore à l'estomac large tirait des plantes autant qu'un herbivore. Dans ses soixante lignées carnivores, toutes les bêtes portent donc « estomac-large », et elles vivent deux fois moins que les carnivores d'Orvane. Le moteur du 29 octobre ne leur laisse plus que `omnivore_vegetal` de ce que tire un herbivore. Versées dans Orvane, qui le réglait à 20 %, elles ont perdu la moitié de leurs bêtes en vingt cycles (docs/53, « Orvane : les carnivores venus de la genèse 7 »).
+
+Avant de verser une genèse ancienne, faites-la tourner quelques cycles chez elle avec le moteur du jour : elle dira ce qu'elle deviendra.
+
+```
+node hebergement/cycle.js genese-7 --sans-reseau --cycles 3 --forcer   # sur une copie du dépôt : le dossier du monde est réécrit
+```
+
 ## Ce qui reste ouvert
 
 - **Des ponts qui naissent et se rompent.** Un pont est posé une fois pour toutes. Un isthme qui se ferme, une mer qui monte, un pont de glace pendant l'hiver viendraient avec le milieu transformé (docs/22).
