@@ -19,7 +19,7 @@ const JOBS = +arg('--jobs', Math.max(1, os.cpus().length)), DELAI = +arg('--dela
 const noms = a.filter((x, i) => !x.startsWith('--') && !(i > 0 && ['--jobs', '--delai', '--part'].includes(a[i - 1])));
 // ce que dure chaque banc, en secondes, dans sa version courte, quatre à la fois sur quatre cœurs (mesuré le 6 novembre) : de quoi
 // faire des parts égales ; un banc qu'on ne connaît pas compte pour deux minutes
-const DUREES = { esprit: 1096, parcelles: 756, dietes: 717, formes: 612, climat: 564, stades: 564, corps: 461, invention: 340, pathogenes: 318,
+const DUREES = { atlas: 9, esprit: 1096, parcelles: 756, dietes: 717, formes: 612, climat: 564, stades: 564, corps: 461, invention: 340, pathogenes: 318,
   derives: 262, flore: 245, meteo: 140, phenologie: 300, succession: 250, diversite: 300, herbier: 20, ponte: 232, stabilite: 227, temps: 215, grammaire: 213, synthetique: 208, ponts: 206, milieu: 154, fusion: 114,
   catalogues: 108, natures: 72, chronique: 33, morceaux: 11, individus: 7, planches: 5, collectif: 3, lisiere: 1, tampon: 1, memoire: 80, simulateur: 3, sante: 3, terre: 5, fiche: 7, bilan: 25 };
 

@@ -55,6 +55,8 @@
 <script src="../tampon/tampon.js"></script>
 <script src="../moteur/parcelles.js"></script>
 <script src="silhouette.js"></script>
+<script src="fiche.js"></script>
+<script src="atlas.js"></script>
 <script src="herbier.js"></script>
 <script src="../tampon/directeur.js"></script>
 <script src="../moteur/solo.js"></script>
@@ -375,7 +377,7 @@ function vueEspeces() {
   L.sort(E.tri === 'nom' ? (a, b) => nomEsp(a).localeCompare(nomEsp(b), 'fr') : E.tri === 'apparition' ? (a, b) => ordreApparu(b) - ordreApparu(a) || effectif(b) - effectif(a) : (a, b) => effectif(b) - effectif(a));
   if (!E.espece || !I.taxons.some(t => t.id === E.espece)) E.espece = L[0]?.id || I.taxons[0]?.id || null;
   const rangee = t => { const [st, cl] = STATUT[t.statut] || [t.statut, ''];
-    return `<li><button data-choix="${ESC(t.id)}" title="${ESC(nomEsp(t))}" aria-current="${t.id === E.espece}">${(t.plan.corps || t.plan.regime === 'synthetique') && globalThis.OrvaneCorps ? croquis(t.plan.corps, [], t.plan) : `<span class="pt" style="background:${couleur(t.id)}"></span>`}<span><span class="nom">${ESC(nomEsp(t))}</span><span class="sous">${ESC(REGIME[t.plan.regime] || t.plan.regime || '')} · ${fx(t.plan.masse_kg, 3)} kg</span></span><span class="chiffre">${nb(effectif(t))}<small class="${cl}">${st}</small></span></button></li>`; };
+    return `<li><button data-choix="${ESC(t.id)}" title="${ESC(nomEsp(t))}" aria-current="${t.id === E.espece}">${(t.plan.corps || t.plan.regime === 'synthetique') && globalThis.OrvaneCorps ? vignette(t, I) : `<span class="pt" style="background:${couleur(t.id)}"></span>`}<span><span class="nom">${ESC(nomEsp(t))}</span><span class="sous">${ESC(REGIME[t.plan.regime] || t.plan.regime || '')} · ${fx(t.plan.masse_kg, 3)} kg</span></span><span class="chiffre">${nb(effectif(t))}<small class="${cl}">${st}</small></span></button></li>`; };
   const n = f => I.taxons.filter(f[2]).length;
   $('#contenu').innerHTML = `<div class="especes ${E.ouverte ? 'ouverte' : ''}">
     <aside class="registre"><div class="register-heading"><p class="atlas-kicker">LE REGISTRE DU VIVANT</p><h2>Les espèces</h2></div><label class="sr" for="cherche">Chercher une espèce</label><input class="cherche" id="cherche" type="search" placeholder="Chercher une espèce" value="${ESC(E.recherche)}" autocomplete="off">
@@ -404,9 +406,9 @@ function fiche() {
   const par = t.parent && I.taxons.find(z => z.id === t.parent), enfants = I.taxons.filter(z => z.parent === t.id);
   const dom = (() => { const n = {}; for (const q of t.phenotypes) for (const id of q.traits) n[id] = (n[id] || 0) + q.frequence; return Object.keys(n).filter(k => n[k] >= .5); })();
   let h = `<button class="lien retour" id="retour">‹ Toutes les espèces</button>
-    <header class="species-plate">${(p.corps || p.regime === 'synthetique') && globalThis.OrvaneCorps ? `<div class="silhouette-plate"><span>SILHOUETTE CALCULÉE</span>${croquis(p.corps, dom, p)}<small>PLAN CORPOREL · ${ESC(t.id)}</small></div>` : ''}<div><p class="atlas-kicker">FICHE NATURALISTE</p><h2 class="species-name">${ESC(nomEsp(t))}</h2>${t.nom_commun ? `<p class="nom-commun">nom savant : <i>${ESC(t.nom || t.id)}</i> · nommée par ${ESC(t.decrit?.par || 'un joueur')}${t.decrit?.jeu ? ` (${ESC(t.decrit.jeu)})` : ''}${t.decrit?.cycle != null ? `, au cycle ${t.decrit.cycle}` : ''}</p>` : ''}
+    ${(() => { const PA = plancheAtlas(t, dom, I); return PA ? `<header class="species-plate solo"><div>` : `<header class="species-plate">${(p.corps || p.regime === 'synthetique') && globalThis.OrvaneCorps ? `<div class="silhouette-plate"><span>SILHOUETTE CALCULÉE</span>${croquis(p.corps, dom, p)}<small>PLAN CORPOREL · ${ESC(t.id)}</small></div>` : ''}<div>`; })()}<p class="atlas-kicker">FICHE NATURALISTE</p><h2 class="species-name">${ESC(nomEsp(t))}</h2>${t.nom_commun ? `<p class="nom-commun">nom savant : <i>${ESC(t.nom || t.id)}</i> · nommée par ${ESC(t.decrit?.par || 'un joueur')}${t.decrit?.jeu ? ` (${ESC(t.decrit.jeu)})` : ''}${t.decrit?.cycle != null ? `, au cycle ${t.decrit.cycle}` : ''}</p>` : ''}
       <div class="ident"><span class="etiq ${cl}">${st}</span> ${nb(effectif(t))} ${t.plan.regime === 'synthetique' ? 'machines' : 'bêtes'} · ${deGenese(t, I) ? `née pendant la genèse${t.apparu < 0 ? ` (cycle ${cyc(t.apparu)})` : ''}` : `apparue au cycle ${t.apparu}`}${t.plan.regime === 'synthetique' && !t.parent ? ` · assemblée par ${ESC(I.monde.mere?.nom || 'la Mère')}` : ''}${t.eteint ? `, éteinte au cycle ${t.eteint}` : ''}${par ? ` · issue de <button data-esp="${ESC(par.id)}">${ESC(nomEsp(par))}</button>` : ''}${t.origine ? ` · arrivée de ${ESC(t.origine.nom || t.origine.monde)} par une fusion (là-bas : ${ESC(t.origine.id || t.id)}, apparue au cycle ${t.origine.apparu ?? '?'})` : ''}</div>
-      ${p.corps && globalThis.OrvaneCorps ? `<p class="note">${ESC(OrvaneCorps.decrire(OrvaneCorps.normaliser(p.corps), p))}</p>` : ''}</div></header>
+      ${p.corps && globalThis.OrvaneCorps ? `<p class="note">${ESC(OrvaneCorps.decrire(OrvaneCorps.normaliser(p.corps), p))}</p>` : ''}</div></header>${plancheAtlas(t, dom, I)}
     <dl class="faits">${[['Régime', REGIME[p.regime] || p.regime], ['Masse', fx(p.masse_kg, 3) + ' kg'], ['Taille', fx(p.taille_m, 3) + ' m'], ['Vitesse', p.vitesse_rel != null ? fx(p.vitesse_rel) + ' corps/s' : '—'], ['Activité', p.activite || '—'], ['Se déplace', (p.locomotion || []).join(', ')],
       ['Longévité', fx(p.longevite) + ' cycles'], ...(p.modules ? [['Rôle', { regulateur: 'régulatrice', foreuse: 'foreuse', recycleur: 'recycleuse', capteur: 'capteuse' }[p.role] || p.role || '—'],   // (docs/16) une machine : ses modules
         ['Modules', Object.entries(p.modules).filter(([, v]) => v >= .05).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${fx(v, 2)}`).join(', ')]]
@@ -492,6 +494,28 @@ function fiche() {
 }
 // (monde/silhouette.js) la silhouette d'une lignée : son corps, et sa façon de vivre (sa masse, ses déplacements, son régime, son heure) ;
 // une machine de la Mère, d'après ses modules
+// (monde/atlas.js, docs/55) la planche d'atlas d'une lignée : son dessin en planche de naturaliste (le trait, les volumes, le tégument de sa
+// famille, les traits que porte la plupart de ses bêtes), l'échelle de sa taille vraie, et ses renvois numérotés ; la fiche de créature
+// (monde/fiche.js) lui donne sa famille visuelle et sa taille vue. Faite une fois par lignée, monde et cycle (deux appels par fiche)
+const PLANCHES = new Map();
+function plancheAtlas(t, dom, I) {
+  if (!globalThis.OrvaneAtlas || !globalThis.OrvaneCorps || !(t.plan.corps || t.plan.regime === 'synthetique')) return '';
+  const cle = `${I.monde?.id}|${I.cycle?.n}|${t.id}|${dom.join(',')}`; if (PLANCHES.has(cle)) return PLANCHES.get(cle);
+  let F = null; try { F = globalThis.OrvaneFiche ? OrvaneFiche.ecrire(t, I).champs : null; } catch (e) { F = null; }
+  let Pl = null; try { Pl = OrvaneAtlas.planche(t.plan.corps, t.plan, dom, { fiche: F, graine: t.id }); } catch (e) { Pl = null; }
+  if (PLANCHES.size > 60) PLANCHES.clear();
+  const vue = F?.silhouette?.taille_vue_m, h = !Pl ? '' : `<figure class="planche-atlas"><div class="planche-entete"><span>ATLAS DU VIVANT · PLANCHE ${ESC(String(I.cycle?.n ?? ''))}</span><span>${ESC([F?.famille?.tegument?.fr, (F?.famille?.details || []).find(d => !/^(robe-du-plan|parade-accent)$/.test(d.id))?.fr].filter(Boolean).join(' — '))}</span></div>${Pl.svg}`
+    + `<figcaption>${Pl.renvois.length ? `<ol>${Pl.renvois.map(r => `<li value="${r.n}">${ESC(r.texte)}</li>`).join('')}</ol>` : ''}`
+    + `${Pl.variantes?.length ? `<div class="variantes"><p>Variantes observées</p>${Pl.variantes.map(v => `<figure>${v.svg}<figcaption>${ESC(v.texte)} des bêtes</figcaption></figure>`).join('')}</div>` : ''}`
+    + `${Pl.couleurs?.length ? `<ul class="notes-couleur">${Pl.couleurs.map(c => `<li><span style="background:${ESC(c.hex)}"></span>${ESC(c.role)} : ${ESC(c.fr)}</li>`).join('')}</ul>` : ''}${Pl.echelle ? `<p class="echelle">La barre vaut ${ESC(Pl.echelle.texte)}${vue && t.plan.taille_m && Math.abs(vue - t.plan.taille_m) / t.plan.taille_m > .02 ? ', à la taille que montre la plupart des bêtes' : ''}. Dessin calculé d'après le plan de la lignée ; aucune image ne le remplace.</p>` : ''}</figcaption></figure>`;
+  PLANCHES.set(cle, h); return h;
+}
+const VIGNETTES = new Map();
+function vignette(t, I) {
+  if (!globalThis.OrvaneAtlas) return croquis(t.plan.corps, [], t.plan);
+  const cle = `${I.monde?.id}|${I.cycle?.n}|${t.id}`; if (!VIGNETTES.has(cle)) { if (VIGNETTES.size > 2000) VIGNETTES.clear(); let s = ''; try { s = OrvaneAtlas.dessiner(t.plan.corps, t.plan, [], { graine: t.id, leger: true, encre: 1.5 })?.svg || ''; } catch (e) { s = ''; } VIGNETTES.set(cle, s || croquis(t.plan.corps, [], t.plan)); }
+  return VIGNETTES.get(cle);
+}
 function croquis(c, traits = [], plan = null) { return globalThis.OrvaneSilhouette ? OrvaneSilhouette.dessiner(c, plan || {}, traits) : ''; }
 
 // === LIGNÉES : qui descend de qui, et quand ===
