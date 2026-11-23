@@ -98,7 +98,8 @@ const gout = (R, k) => { let g = 1; for (const d of PHENOS[k][1]) g *= 1 - REGLE
 // supporte que du phénotype de la plante, ce qu'il en tire part par part des deux ; chaque calcul est fait une fois par brouteur,
 // non une fois par plante : les mêmes nombres, des centaines de fois moins souvent
 // Un même brouteur (le plan d'un phénotype, le même objet dans tous ses lieux) se retrouve devant les plantes de chacun de ses lieux :
-// ce qu'il en tire est gardé le temps du cycle (VC, refait à chaque preparer), pour ce plan et ces traits-là.
+// ce qu'il en tire est gardé le temps du cycle (VC, refait à chaque preparer ; pendant la pousse, le temps d'un biome), pour ce plan et
+// ces traits-là.
 let VC = new WeakMap();
 function devant(h, traits, R) {
   const A = new Map(), P = new Map(), PV = new Map(), G = [0, 1, 2, 3].map(k => gout(R, k));
@@ -179,8 +180,13 @@ function parLieu(inst) { const L = {}; for (const t of inst.taxons) if (estPlant
 const calageDe = p => p.reference_diete ? p.reference_diete.perte : p.reference?.perte_diete;
 const caler = (p, c) => { if (p.reference_diete) p.reference_diete.perte = c; else if (p.reference) p.reference.perte_diete = c; };
 function pousser(inst, H, prod, disp, PH, SU) {
-  const L = parLieu(inst);
+  const L = parLieu(inst); let biome = null;
   for (const [bid, plantes] of Object.entries(L)) {
+    // (mémoire) ce que chaque brouteur tire des plantes (VC) n'est gardé que le temps d'un biome, ses parcelles ensemble : gardé tout
+    // le cycle, il grossissait de biome en biome comme les brouteurs fois les plantes, et un monde aux dizaines de milliers de
+    // phénotypes le temps d'un cycle (le monde aube, 22 novembre : les combinaisons nées, fondues en fin de cycle) manquait de
+    // mémoire. Les mêmes nombres, refaits au besoin : le monde ne change pas, au bit près
+    const b = bid.split('~')[0]; if (b !== biome) { if (biome !== null) VC = new WeakMap(); biome = b; }
     const ph = PH ? PH.parts(bid) : null, dent = PH ? PH.dent(bid) : 1;   // (docs/46) ce que chaque part donne en cette saison ; la dent, qui la suit
     const herb = H[bid] || [], perte = plantes.map(() => [0, 0, 0, 0]);
     const parts_ = DIE && herb.some(h => h.plan.diete), perteC = parts_ && plantes.some(({ p }) => !calageDe(p) && (p.reference_diete || p.reference)) ? plantes.map(() => [0, 0, 0, 0]) : null;
