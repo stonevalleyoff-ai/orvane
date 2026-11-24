@@ -56,6 +56,7 @@
 <script src="../moteur/noyau/plan.js"></script>
 <script src="../moteur/noyau/genetique.js"></script>
 <script src="../moteur/noyau/predation.js"></script>
+<script src="../moteur/noyau/dynamique.js"></script>
 <script src="../moteur/orvane.js"></script>
 <script src="../tampon/tampon.js"></script>
 <script src="../moteur/parcelles.js"></script>
@@ -96,7 +97,7 @@ const nomEsp = t => t ? (t.nom_commun || t.nom || t.id) : '';   // (docs/37) le 
 // ordre (bancs/simulateur.js ; docs/59 : sans moteur/calendrier.js, un monde au jour y tournait sans son calendrier)
 const MODULES = ['moteur/catalogue.js', 'moteur/corps.js', 'moteur/dietes.js', 'moteur/phenologie.js', 'moteur/flore.js', 'moteur/derives.js', 'moteur/pathogenes.js', 'moteur/milieu.js', 'moteur/synthetique.js',
   'moteur/ponte.js', 'moteur/stades.js', 'moteur/invention.js', 'moteur/natures.js', 'moteur/climat.js', 'moteur/meteo.js', 'moteur/calendrier.js', 'moteur/hommes.js', 'moteur/succession.js', 'moteur/diversite.js', 'moteur/grammaire.js', 'moteur/castes.js', 'moteur/formes.js', 'moteur/esprit.js', 'moteur/memoire.js',
-  'moteur/noyau/outils.js', 'moteur/noyau/plan.js', 'moteur/noyau/genetique.js', 'moteur/noyau/predation.js', 'moteur/orvane.js'];
+  'moteur/noyau/outils.js', 'moteur/noyau/plan.js', 'moteur/noyau/genetique.js', 'moteur/noyau/predation.js', 'moteur/noyau/dynamique.js', 'moteur/orvane.js'];
 const SAISON_EN = { printemps: 'au printemps', 'été': 'en été', automne: 'en automne', hiver: 'en hiver' }, enSaison = nom => SAISON_EN[nom] || `en ${nom}`;
 const cyc = n => String(n).replace('-', '−');   // un cycle d'avant le cycle 0 (la genèse) : avec un vrai signe moins
 // une lignée née pendant la genèse : avant le cycle 0 (apparu négatif) ; ou, dans un monde publié avant que ses dates soient recalées,
