@@ -35,7 +35,7 @@ verif(!inconnus.length, `chaque test de l'étalon est au protocole${inconnus.len
 verif(!/note\([^)]*,\s*\d/.test(src) && !/<=\s*(1995|2000|2008)\b/.test(src) && !/fac\([^)]*\)\s*<=\s*\d/.test(src), "l'étalon n'a plus de seuil écrit en dur : il les lit au protocole (SE)");
 const A = fs.readFileSync(racine('outils/terre/assembler.js'), 'utf8').match(/efficacite: \[([\d.]+), ([\d.]+)\]/), bornes = P.tests['calage-adresse'].seuils.bornes;
 verif(A && +A[1] === bornes[0] && +A[2] === bornes[1], `les bornes de l'adresse sont celles de l'assemblage (×${bornes[0]} et ×${bornes[1]})`);
-const IR = JSON.parse(fs.readFileSync(racine('mondes/amerique/isle-royale.json'), 'utf8')), Sp = P.tests['ir-predation'].seuils, Sk = P.tests['ir-kill'].seuils;
+const IR = JSON.parse(fs.readFileSync(racine('etalon/experiences/isle-royale.json'), 'utf8')), Sp = P.tests['ir-predation'].seuils, Sk = P.tests['ir-kill'].seuils;
 verif(IR.predation.de === Sp.de && IR.predation.a === Sp.a && IR.kill.moyenne === Sk.cible, "les données d'Isle Royale disent les mêmes seuils que le protocole (6 à 13 %, 0,7 orignal par loup et par mois)");
 
 console.log('\n4. Le verrou mord');

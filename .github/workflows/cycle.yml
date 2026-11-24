@@ -73,6 +73,7 @@ jobs:
           echec=0
           for m in mondes/*/; do
             id="$(basename "$m")"
+            [ -f "${m}profil.json" ] || { echo "$id : pas un monde hébergé (pas de profil.json), passé"; continue; }   # (des données, pas un monde)
             if printf '%s' "$CYCLES" | grep -Eq '^[0-9]{1,4}$'; then set -- --cycles "$CYCLES"; else set -- --auto; fi
             c=0; node hebergement/cycle.js "$id" "$@" || c=$?
             if [ "$c" = 2 ]; then echec=1                     # le monde a tourné, mais sans les lots en ligne (le message dit pourquoi)

@@ -195,7 +195,7 @@ if (arg('--experience') === 'chacal') {
 // --- une expérience : Isle Royale (--experience isle-royale, docs/57) ---
 // Le premier pas vers l'Amérique. Isle Royale, une île de 544 km² au milieu du lac Supérieur : des loups et des orignaux, comptés chaque
 // hiver depuis 1958, la plus longue étude d'un prédateur et de sa proie. Le monde de l'expérience : l'île (sa forêt boréale, son climat
-// de CRU 1991–2020 : mondes/amerique/isle-royale.json) et les espèces de l'Europe qui y vivent — l'orignal (l'élan), le loup, le renard ;
+// de CRU 1991–2020 : etalon/experiences/isle-royale.json) et les espèces de l'Europe qui y vivent — l'orignal (l'élan), le loup, le renard ;
 // le castor et le lièvre variable pour le castor du Canada et le lièvre d'Amérique. Chacune garde ce que l'assemblage de l'Europe lui a
 // donné : rien n'est calé sur l'île, sauf le castor, le lièvre et le renard, mis à leur équilibre comme les proies du retour du loup.
 // Elle part de l'hiver 1980 (664 orignaux, 50 loups) ; les dix-neuf loups lâchés en 2018 et 2019 y sont lâchés. Ce que le moteur ne
@@ -204,7 +204,7 @@ if (arg('--experience') === 'chacal') {
 // moyenne, la part des orignaux que les loups tuent chaque année, et ce que les orignaux fluctuent.
 if (arg('--experience') === 'isle-royale') {
   const A = JSON.parse(fs.readFileSync(f, 'utf8')); if (arg('--graine') != null) A.monde.graine = +arg('--graine') >>> 0;
-  const C = require('../moteur/calendrier.js'), IR = JSON.parse(fs.readFileSync(racine('mondes/amerique/isle-royale.json'), 'utf8')), L = IR.ile;
+  const C = require('../moteur/calendrier.js'), IR = JSON.parse(fs.readFileSync(racine('etalon/experiences/isle-royale.json'), 'utf8')), L = IR.ile;
   const T0 = somme(L.normales.t) / 12, P0 = somme(L.normales.p), E0 = somme(L.normales.etp), npp = C.npp(T0, P0), K = Math.round(5 * npp * L.surface_km2);   // (la capacité d'un lieu de l'assemblage)
   const ile = { id: `${L.type}~isle-royale`, nom: IR.nom, type: L.type, milieu: 'terrestre',
     axes: { temperature: C.axeTemperature(T0), humidite: C.axeHumidite(P0, E0), altitude: C.axeAltitude(L.altitude_m), lumiere: C.axeLumiere(L.lat, L.couvert), couvert: L.couvert },
