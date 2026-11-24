@@ -125,6 +125,17 @@ console.log('\n5. Le contexte explicite (moteur/orvane.js, contexte)');
     'le contexte d\'un monde : son pas (1/120), ses axes, ses règles par-dessus celles du moteur (une règle-objet complétée d\'un niveau), qui ne changent pas');
   const p = { natalite: 2, masse_kg: 1 };
   verif(Orvane.croissance(p) !== Orvane.croissance(p, C) && Orvane.croissance(p, C) === 2 / 365.25, 'hors d\'un cycle, une fonction du moteur prend le contexte qu\'on lui donne (la croissance d\'un monde au jour), sinon celui du moteur');
+  // (docs/59) le corps et la mémoire d'un monde : une instance à lui, dans son contexte (son catalogue d'organes, les règles de sa mémoire) ;
+  // deux cycles d'un monde qui a les siens n'étendent ni ne règlent rien de global, et laissent le corps et la mémoire du module tels quels
+  { const Corps = require(racine('moteur/corps.js')), Memoire = require(racine('moteur/memoire.js')), n = { etendre: 0, regler: 0 }, e0 = Corps.etendre, r0 = Memoire.regler;
+    const W0 = clone(E0); W0.catalogue = { ...(W0.catalogue || {}), monde: { ...(W0.catalogue?.monde || {}), organes: { lueur: { places: ['dos'], nombre: [1, 2], formes: ['simple'], fonction: 'parade', mot: ['lueur', 'lueurs'], fem: 1 } } } };
+    W0.monde = { ...W0.monde, memoire: { depuis: W0.cycle.n }, regles: { ...(W0.monde.regles || {}), memoire: { pas: .2, traque: { demi_vie: 40 } } } };
+    const cat0 = JSON.stringify(Corps.catalogueOrganes()), reg0 = JSON.stringify(Memoire.REGLES), Cw = Orvane.contexte(W0); let W = W0;
+    Corps.etendre = (...a) => { n.etendre++; return e0(...a); }; Memoire.regler = (...a) => { n.regler++; return r0(...a); };
+    try { for (let k = 0; k < 2; k++) W = Orvane.cycle(W, {}, { duree_ms: JOUR }); } finally { Corps.etendre = e0; Memoire.regler = r0; }
+    verif(n.etendre === 0 && n.regler === 0 && JSON.stringify(Corps.catalogueOrganes()) === cat0 && JSON.stringify(Memoire.REGLES) === reg0 && !!W.catalogue?.organes?.lueur
+      && Cw.CORPS !== Corps && !!Cw.CORPS.catalogueOrganes().lueur && !Corps.catalogueOrganes().lueur && Cw.MEM !== Memoire && Memoire.REGLES.pas !== .2,
+      `le corps et la mémoire d'un monde sont dans son contexte : deux cycles d'un monde qui a les siens (un organe, des règles de mémoire) n'étendent ni ne règlent rien de global (etendre ×${n.etendre}, regler ×${n.regler}) ; son instantané publie son organe`); }
 }
 
 console.log(`\n${ok ? 'le rejeu tient' : 'LE REJEU NE TIENT PAS'} (${((Date.now() - t0) / 1000).toFixed(0)} s)`);
