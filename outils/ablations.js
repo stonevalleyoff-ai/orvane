@@ -57,8 +57,11 @@ function lire(bruts, T, cycles) {
     if (e.erreurs?.length) return { ...base, par_graine: e.par_graine, erreurs: e.erreurs, lecture: 'investiguer : le monde ne tourne plus sans elle' };
     const mesures = {}, ecarts = {}, bouge = [];
     for (const k of [...CLES, 'duree_s']) { const v = M.map(m => m[k]).filter(x => x != null); mesures[k] = r(moy(v)); ecarts[k] = mesures[k] != null && temoin.moyenne[k] != null ? r(mesures[k] - temoin.moyenne[k]) : null; }
+    // (un compte de lignées : aussi le bruit de Poisson des événements dont il dépend, les naissances et les extinctions — plan, version 2)
+    const lambda = (X, ev) => Math.max(.5, somme(ev.map(c => X[c] ?? 0))), ng = Math.max(1, M.length);
     for (const k of CLES) { const d = ecarts[k], t = temoin.moyenne[k]; if (d == null) continue;
-      const bruit = 2 * (temoin.ecart[k] || 0), seuil = REL.has(k) ? S[k] * Math.abs(t || 0) : S[k]; if (Math.abs(d) > Math.max(bruit, seuil ?? 0)) bouge.push(k); }
+      const ev = PLAN.lecture.comptes?.[k], poisson = ev ? 2 * Math.sqrt((lambda(temoin.moyenne, ev) + lambda(mesures, ev)) / ng) : 0;
+      const bruit = Math.max(2 * (temoin.ecart[k] || 0), poisson), seuil = REL.has(k) ? S[k] * Math.abs(t || 0) : S[k]; if (Math.abs(d) > Math.max(bruit, seuil ?? 0)) bouge.push(k); }
     // (ce que la règle coûte : la part du cycle qu'on gagne sans elle, contre le témoin de la même machine ; lue seulement au-delà du bruit
     //  des durées, que dit l'écart entre les graines du témoin, et de 10 % : plusieurs essais à la fois se disputent la machine)
     const td = e.temoin_duree_s ?? temoin.moyenne.duree_s, cout = td > 0 && mesures.duree_s != null ? r((td - mesures.duree_s) / td, 3) : null;
@@ -75,7 +78,7 @@ const ecrire = R0 => {
   const { temoin, essais: rapport, laisses } = R0, NG = R0.graines.length;
   const fx = (x, d = 2) => x == null ? '–' : (x > 0 ? '+' : '') + (+x).toLocaleString('fr-FR', { maximumFractionDigits: d }), nb = (x, d) => x == null ? '–' : (+x).toLocaleString('fr-FR', { maximumFractionDigits: d });
   const notes = [`## Les ablations : ${R0.monde.id}, cycle ${R0.monde.cycle} (${R0.cycles} cycles, ${NG} graine${NG > 1 ? 's' : ''})`, '',
-    `Le témoin : ${nb(temoin.moyenne.lignees, 1)} lignées animales (écart entre graines ${nb(temoin.ecart.lignees, 1)}), ${nb(temoin.moyenne.predateurs, 1)} carnivores, ${nb(temoin.moyenne.biomasse_t, 0)} t, Shannon ${nb(temoin.moyenne.shannon, 3)}, ${nb(100 * (temoin.moyenne.stables ?? 0), 0)} % de lignées stables, ${nb(temoin.moyenne.eteintes, 1)} éteintes, ${nb(temoin.moyenne.nees, 1)} nées ; un cycle en ${nb(temoin.moyenne.duree_s, 2)} s. Plan ${R0.plan.version} (${R0.plan.empreinte.slice(0, 12)}…).`, '',
+    `Le témoin : ${nb(temoin.moyenne.lignees, 1)} lignées animales (écart entre graines ${nb(temoin.ecart.lignees, 1)}), ${nb(temoin.moyenne.predateurs, 1)} carnivores, ${nb(temoin.moyenne.biomasse_t, 0)} t, Shannon ${nb(temoin.moyenne.shannon, 3)}, ${nb(100 * (temoin.moyenne.stables ?? 0), 0)} % de lignées stables, ${nb(temoin.moyenne.eteintes, 1)} éteintes, ${nb(temoin.moyenne.nees, 1)} nées ; un cycle en ${nb(temoin.moyenne.duree_s, 2)} s. Lu selon le plan ${R0.plan.version} (${R0.plan.empreinte.slice(0, 12)}…)${R0.plan_des_essais ? `, les essais faits selon le plan ${R0.plan_des_essais.version} (${R0.plan_des_essais.empreinte.slice(0, 12)}…)` : ''}.`, '',
     '| essai | nature | lignées | carnivores | biomasse | Shannon | stables | éteintes | nées | coût | lecture |', '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |',
     ...rapport.map(x => x.erreurs ? `| ${x.essai} | ${x.nature} | | | | | | | | | ${x.lecture} |`
       : `| ${x.essai} | ${x.nature} | ${fx(x.ecarts.lignees, 1)} | ${fx(x.ecarts.predateurs, 1)} | ${temoin.moyenne.biomasse_t ? fx(100 * x.ecarts.biomasse_t / temoin.moyenne.biomasse_t, 1) + ' %' : '–'} | ${fx(x.ecarts.shannon, 3)} | ${fx(x.ecarts.stables, 3)} | ${fx(x.ecarts.eteintes, 1)} | ${fx(x.ecarts.nees, 1)} | ${x.cout_lu == null ? '≈' : fx(100 * x.cout_lu, 0) + ' %'} | ${x.lecture} |`),
@@ -96,7 +99,9 @@ if (a[0] === '--fusionner') {
   const laisses = P.flatMap(x => x.laisses).filter(l => { const k = l.regle + '|' + (l.essai || ''); return !cles.has(k) && cles.add(k); });
   const ordre = Object.keys(PLAN.regles);
   const L = lire(bruts.sort((x, y) => ordre.indexOf(x.regle) - ordre.indexOf(y.regle) || (x.essai < y.essai ? -1 : 1)), A.temoin.par_graine, A.cycles);
-  ecrire({ ...A, part: undefined, parts: P.length, date: new Date().toISOString(), temoin: L.temoin, essais: L.essais, laisses, duree_min: r(somme(P.map(x => x.duree_min || 0)), 1) });
+  // (la lecture est celle du plan d'aujourd'hui ; s'il a changé depuis les essais, le rapport le dit : plan_des_essais)
+  const plan = { fichier: path.relative(racine, path.resolve(fPlan)), version: PLAN.version, empreinte: empreintePlan };
+  ecrire({ ...A, part: undefined, parts: P.length, plan, ...(A.plan.empreinte !== empreintePlan ? { plan_des_essais: A.plan } : {}), date: new Date().toISOString(), temoin: L.temoin, essais: L.essais, laisses, duree_min: r(somme(P.map(x => x.duree_min || 0)), 1) });
   process.exit(L.essais.some(x => x.erreurs) ? 1 : 0);
 }
 
