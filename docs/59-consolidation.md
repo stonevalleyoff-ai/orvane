@@ -107,6 +107,19 @@ node outils/reference.js <dossier qui contient mondes/> --sortie reference.json 
 
 Chaque archive porte la sienne : d'un mois à l'autre, on compare deux époques d'un monde, ou deux versions du moteur.
 
+**La première référence** (`etalon/reference/2026-11-24.json`) : l'état publié le 24 novembre 2026 à 8 h 27, mesuré avec le moteur du contexte explicite, sur une machine de quatre cœurs (les archives la mesureront chaque mois sur celle de l'action) :
+
+| monde | cycle | lignées animales | bêtes | biomasse (t) | Shannon | stables à 30 cycles | éteintes | un cycle | rejeu |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| aube | 35 | 112 | 42 812 901 | 5 997 | 2,057 | 98,2 % (sur 4 cycles) | 0 | 50,6 s, 3 844 Mo | ✓ identique |
+| europe | 5 | 201 | 3,2 × 10¹⁷ | 262 496 173 | 1,364 | 100 % (sur 4 cycles) | 0 | 5,7 s, 494 Mo | ✓ identique |
+| genese-2026 | 3179 | 148 | 77 592 507 | 17 701 | 1,936 | 92,4 % (sur 29 cycles) | 2 | 4,7 s, 317 Mo | ✓ identique |
+| genese-7 | 3004 | 99 | 24 763 567 | 3 756 | 2,944 | 100 % (sur 3 cycles) | 0 | 0,4 s, 109 Mo | ✓ identique |
+| orvane | 64 | 305 | 127 424 071 | 19 358 | 2,184 | 80,2 % (sur 19 cycles) | 1 | 14,4 s, 1 045 Mo | ✓ identique |
+| sv-1 | 3 | 30 | 78 201 | 900 | 1,654 | 100 % (sur 2 cycles) | 0 | 0,1 s, 61 Mo | ✓ identique |
+
+Chaque monde rend le même cycle, deux fois, dans deux processus. La stabilité ne porte que sur l'historique que chaque monde garde (de 2 à 29 cycles ici). À surveiller : un cycle d'Aube prend 3,8 Go de mémoire, près des 4 Go de l'action (son cycle en a déjà manqué, docs/17).
+
 ## 04, la première étape : le contexte explicite
 
 Le cœur du moteur gardait son état dans des variables globales : les règles du monde qui tournait (copiées dans `REGLES` au début de chaque cycle, remises à la fin), son pas de temps (`PAS`, `JOURS`) et ses axes (`AX`). Une fonction appelée hors d'un cycle lisait celles du moteur sans le dire, et deux mondes ne pouvaient pas tourner côte à côte.

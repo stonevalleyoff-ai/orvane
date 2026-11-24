@@ -10,11 +10,12 @@
 //  - sa performance et sa reproductibilité (sauf --sans-cycle) : le cycle suivant, sans joueurs, deux fois, chacun dans son processus :
 //    la durée, la mémoire, et la même empreinte les deux fois.
 //   node outils/reference.js <dossier qui contient mondes/> [--mondes orvane,europe] [--sortie reference.json] [--notes notes.md] [--sans-cycle]
+//     [--source "d'où vient cet état"]
 // Lancé chaque mois avec les archives (.github/workflows/archives.yml). Node, sans dépendance.
 'use strict';
 const fs = require('fs'), path = require('path'), os = require('os'), { execFileSync } = require('child_process');
 const racine = path.join(__dirname, '..'), Journal = require(path.join(racine, 'hebergement/journal.js')), { periodeDe } = require(path.join(racine, 'hebergement/rythme.js'));
-const a = process.argv.slice(2), OPTS = ['--sortie', '--notes', '--mondes'], arg = (k, d) => { const i = a.indexOf(k); return i >= 0 && a[i + 1] != null ? a[i + 1] : d; };
+const a = process.argv.slice(2), OPTS = ['--sortie', '--notes', '--mondes', '--source'], arg = (k, d) => { const i = a.indexOf(k); return i >= 0 && a[i + 1] != null ? a[i + 1] : d; };
 const somme = L => L.reduce((s, x) => s + x, 0), r = (x, d = 3) => x == null || !isFinite(x) ? null : +Number(x).toFixed(d);
 const lireJ = f => fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : null;
 const FENETRE = 30;
@@ -58,7 +59,7 @@ if (require.main === module) {
   if (!dossier) { console.error('node outils/reference.js <dossier qui contient mondes/> [--mondes a,b] [--sortie f.json] [--notes f.md] [--sans-cycle]'); process.exit(2); }
   const base = fs.existsSync(path.join(dossier, 'mondes')) ? path.join(dossier, 'mondes') : dossier, choisis = arg('--mondes') ? arg('--mondes').split(',') : null;
   const ids = fs.readdirSync(base).filter(id => !id.startsWith('.') && fs.existsSync(path.join(base, id, 'etat.json')) && (!choisis || choisis.includes(id))).sort();
-  const R = { date: new Date().toISOString(), moteur: Journal.moteur(racine), machine: { processeur: os.cpus()[0]?.model ?? null, coeurs: os.cpus().length, node: process.version }, fenetre_stabilite: FENETRE, mondes: {} };
+  const R = { date: new Date().toISOString(), ...(arg('--source') ? { source: arg('--source') } : {}), moteur: Journal.moteur(racine), machine: { processeur: os.cpus()[0]?.model ?? null, coeurs: os.cpus().length, node: process.version }, fenetre_stabilite: FENETRE, mondes: {} };
   for (const id of ids) { const t0 = Date.now();
     try { R.mondes[id] = mesurer(path.join(base, id), !a.includes('--sans-cycle')); } catch (e) { R.mondes[id] = { erreur: String(e.message || e).slice(0, 300) }; }
     const M = R.mondes[id]; console.error(`${id} : ${M.erreur ? 'erreur : ' + M.erreur : `cycle ${M.cycle}, ${M.taille.lignees_vivantes} lignées${M.cycle_suivant ? `, un cycle en ${M.cycle_suivant.duree_s} s, rejeu ${M.cycle_suivant.rejeu}` : ''}`} (${((Date.now() - t0) / 1000).toFixed(0)} s)`); }

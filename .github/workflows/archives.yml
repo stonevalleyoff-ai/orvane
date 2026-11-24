@@ -48,7 +48,7 @@ jobs:
       - name: la référence (le moteur de cette archive, le même cycle rejoué deux fois)
         run: |
           git checkout -q "$MAIN" -- moteur 2>/dev/null || echo "::warning::le moteur de $MAIN n'a pas pu être repris : la référence est mesurée avec celui de main"
-          node --max-old-space-size=6000 outils/reference.js "$RUNNER_TEMP/archive" --sortie "$RUNNER_TEMP/reference.json" --notes "$RUNNER_TEMP/notes.md" || echo "::warning::la référence n'a pas pu être mesurée (l'archive est faite sans elle)"
+          node --max-old-space-size=6000 outils/reference.js "$RUNNER_TEMP/archive" --source "l'état publié le $(date -u +%Y-%m-%d), main $MAIN" --sortie "$RUNNER_TEMP/reference.json" --notes "$RUNNER_TEMP/notes.md" || echo "::warning::la référence n'a pas pu être mesurée (l'archive est faite sans elle)"
       - name: l'archive
         env:
           GH_TOKEN: ${{ github.token }}
