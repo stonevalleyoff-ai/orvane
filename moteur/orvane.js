@@ -196,7 +196,7 @@ const REGLES = {
 // (docs/59) le contexte d'un cycle : les règles de son monde (celles du moteur, et les siennes par-dessus), son pas de temps, ses axes
 // (contexte, plus bas). Le cycle ne change rien de global : chaque fonction qui en dépend le reçoit en dernier argument (CTX) ; sans
 // lui, elle prend le contexte par défaut, les règles du moteur au pas de référence, comme un appel hors d'un cycle
-const DEFAUT = { R: REGLES, PAS: 1, JOURS: null, AX: AXES };
+const DEFAUT = { R: REGLES, PAS: 1, JOURS: null, AX: AXES, CORPS, MEM };   // (hors d'un cycle : le corps et la mémoire du module)
 const parPas = (p, CTX = DEFAUT) => CTX.PAS === 1 ? p : 1 - Math.pow(1 - p, CTX.PAS);
 // --- la génétique (docs/8, 9, 10) : les traits continus, Mendel et les allèles, les portées, la parenté (moteur/noyau/genetique.js, docs/59) ---
 const GENE = typeof require === 'function' ? require('./noyau/genetique.js') : racine.OrvaneGenetique;
@@ -226,7 +226,7 @@ function isolement(A, B, T, n, CTX = DEFAUT) {
   const fa = A.plan.corps?.forme, fb = B.plan.corps?.forme; if (fa && fb && fa !== fb) return 1;
   const lien = parente(A, B, T); if (!lien || !Number.isFinite(lien.depuis)) return 1;
   const H = CTX.R.hybride, dm = Math.abs(Math.log((A.plan.masse_kg || 1) / (B.plan.masse_kg || 1))),
-    dc = CORPS && A.plan.corps && B.plan.corps ? CORPS.distance(A.plan.corps, B.plan.corps) : 0, dn = A.plan.niche && B.plan.niche ? dist(A.plan.niche, B.plan.niche, CTX) : 0;
+    dc = CTX.CORPS && A.plan.corps && B.plan.corps ? CTX.CORPS.distance(A.plan.corps, B.plan.corps) : 0, dn = A.plan.niche && B.plan.niche ? dist(A.plan.niche, B.plan.niche, CTX) : 0;
   return 1 - Math.exp(-(Math.max(0, n - lien.depuis) / H.tau + H.masse * dm + H.corps * dc + H.niche * dn));
 }
 // --- les outils du cœur (moteur/noyau/outils.js) ; le plan d'une lignée, ses lieux et son calendrier (moteur/noyau/plan.js) : des fonctions pures
@@ -288,8 +288,8 @@ function deriver(plan, b, R, CTX = DEFAUT) {
   if (p.regime === 'carnivore' && CTX.R.longevite_predateur) { const Lmin = CTX.R.longevite_predateur / (CTX.R.conversion * CTX.R.besoin * Math.pow(Math.max(.001, p.masse_kg), -.25));
     if (p.longevite < Lmin) { p.maturite = +(p.maturite * Math.min(2, Lmin / p.longevite) ** .5).toFixed(2); p.longevite = +Lmin.toFixed(2); } }
   // le corps suit : la silhouette dérive vers ce que le biome favorise, et garde la marque d'un mode de déplacement gagné
-  if (plan.corps && CORPS) { const avant = new Set(plan.locomotion || ['marche']);
-    p.corps = CORPS.deriver(plan.corps, p, b, R, D.corps ?? 1, p.locomotion.filter(l => !avant.has(l)), k, D.formes || 0, D.organes || 0);
+  if (plan.corps && CTX.CORPS) { const avant = new Set(plan.locomotion || ['marche']);
+    p.corps = CTX.CORPS.deriver(plan.corps, p, b, R, D.corps ?? 1, p.locomotion.filter(l => !avant.has(l)), k, D.formes || 0, D.organes || 0);
     if (volait && p.corps) p.corps = { ...p.corps, ailes: 0, organes: (p.corps.organes || []).filter(o => o.type !== 'ailes'), forme: p.corps.forme === 'oiseau' ? 'bipede' : p.corps.forme }; }
   return p;
 }
@@ -369,27 +369,29 @@ const MODULES = [['mere', SYN, 'synthetique'], ['flore', FLO, 'flore'], ['pathog
   ['natures', NAT, 'natures'], ['derives', DER, 'derives'], ['dietes', DI, 'dietes'], ['climat', CLI, 'climat'], ['meteo', MET, 'meteo'], ['phenologie', PHE, 'phenologie'], ['succession', SUC, 'succession'], ['diversite', DIV, 'diversite'], ['grammaire', GRA, 'grammaire'], ['castes', CAS, 'castes'], ['formes', FOR, 'formes'], ['esprit', ESP, 'esprit'], ['memoire', MEM, 'memoire'], ['calendrier', CALEN, 'calendrier']], AVERTIS = new Set();
 function cycle(inst, pressions = {}, opt = {}) {
   for (const [cle, M, f] of MODULES) if (inst?.monde?.[cle] && !M && !AVERTIS.has(cle)) { AVERTIS.add(cle); if (typeof console !== 'undefined') console.warn(`Orvane : ce monde a éveillé « ${cle} », mais moteur/${f}.js n'est pas chargé (avant orvane.js) : ce mécanisme est ignoré (docs/19).`); }
-  const CTX = contexte(inst), ext = CORPS?.etendre ? CORPS.etendre(inst?.catalogue?.monde) : null;   // (docs/59) le contexte de ce monde
-  const rendre = MEM && inst?.monde?.memoire ? MEM.regler(CTX.R.memoire) : null;   // (docs/50) les règles de la mémoire que le monde s'est choisies (regles.memoire)
-  // (le corps et la mémoire gardent encore leur réglage du monde le temps du cycle, et le rendent après : docs/59, ce qui reste)
-  try { return cycleBrut(inst, pressions, opt, CTX); } finally { if (rendre) rendre(); if (CORPS?.etendre) CORPS.etendre(ext); }
+  // (docs/59) le contexte de ce monde : ses règles, son pas, ses axes, le catalogue propre de ses corps, les règles de sa mémoire ;
+  // le cycle ne règle rien de global, et n'a rien à rendre
+  return cycleBrut(inst, pressions, opt, contexte(inst));
 }
 // (docs/59) le contexte d'un monde : les règles du moteur, et les siennes par-dessus (une règle qui est un objet se complète d'un niveau :
 // { separation: { chance: 1 } } garde les autres clés de la séparation ; sans cela, une règle partielle effaçait ses voisines — un flux
 // indéfini, une durée de maladie absente) ; son pas de temps (monde.temps, docs/52) ; ses axes (catalogue.monde.axes, docs/20). Rien n'y
-// est global : deux mondes peuvent tourner l'un après l'autre, ou côte à côte, dans le même processus
+// est global : deux mondes peuvent tourner l'un après l'autre, ou côte à côte, dans le même processus. Et le corps (moteur/corps.js) d'après
+// le catalogue propre du monde (catalogue.monde : ses organes, ses formes), la mémoire (moteur/memoire.js) d'après ses règles
+// (regles.memoire, docs/50), chacun dans une instance à ce monde : ni l'un ni l'autre ne garde rien d'un monde à l'autre
 function contexte(inst) {
   const propres = inst?.monde?.regles, M = inst?.catalogue?.monde, T = inst?.monde?.temps, R = { ...REGLES };
   if (propres && typeof propres === 'object') { for (const k in propres) { if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
     const v = propres[k], b = REGLES[k]; R[k] = v && typeof v === 'object' && !Array.isArray(v) && b && typeof b === 'object' && !Array.isArray(b) ? { ...b, ...v } : v; } }
   const auJour = !!(T && T.jours > 0);
-  return { R, PAS: auJour ? T.jours / (T.reference || 120) : 1, JOURS: auJour ? T.jours : null, AX: M?.axes ? [...AXES, ...Object.keys(M.axes).filter(k => !AXES.includes(k))] : AXES };
+  return { R, PAS: auJour ? T.jours / (T.reference || 120) : 1, JOURS: auJour ? T.jours : null, AX: M?.axes ? [...AXES, ...Object.keys(M.axes).filter(k => !AXES.includes(k))] : AXES,
+    CORPS: CORPS ? CORPS.pour(M) : null, MEM: MEM && inst?.monde?.memoire ? MEM.avec(R.memoire) : MEM };
 }
 // les fonctions du moteur qui dépendent du contexte, telles qu'elles sont : le cycle les lie au sien (plus bas)
 const FC = { parPas, ecrireQ, attraitDe, apprendre, isolement, saisonDe, axesSaison, productionSaison, deriver, appetence, dist, croissance, convenance, routeHiver };
 function cycleBrut(inst, pressions = {}, opt = {}, CTX = contexte(inst)) {
   // (docs/59) le contexte de ce cycle : ses règles, son pas de temps, ses axes ; et les fonctions du moteur qui en dépendent, liées à lui
-  const REGLES = CTX.R, PAS = CTX.PAS, JOURS = CTX.JOURS, AX = CTX.AX;
+  const REGLES = CTX.R, PAS = CTX.PAS, JOURS = CTX.JOURS, AX = CTX.AX, CORPS = CTX.CORPS, MEM = CTX.MEM;   // (le corps et la mémoire de ce monde)
   const parPas = p => FC.parPas(p, CTX), ecrireQ = Q => FC.ecrireQ(Q, CTX), attraitDe = (t, c) => FC.attraitDe(t, c, CTX), apprendre = (m, h, c, za = 0) => FC.apprendre(m, h, c, za, CTX),
     isolement = (A, B, T, k) => FC.isolement(A, B, T, k, CTX), saisonDe = (k, an) => FC.saisonDe(k, an, CTX), axesSaison = (b, ph) => FC.axesSaison(b, ph, CTX),
     productionSaison = (b, ph) => FC.productionSaison(b, ph, CTX), deriver = (p, b, Rg) => FC.deriver(p, b, Rg, CTX), appetence = (p, q) => FC.appetence(p, q, CTX), dist = (a, b) => FC.dist(a, b, CTX),

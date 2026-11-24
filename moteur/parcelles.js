@@ -128,10 +128,9 @@ function moyenne(objs, poids) {
 // (docs/50) l'attitude d'une population se relit avec les règles que le monde s'est choisies (regles.memoire), comme dans son cycle
 function regrouper(inst) {
   if (!estParcellaire(inst)) return inst;
-  const rendre = MEM && inst.monde?.memoire ? MEM.regler(inst.monde.regles?.memoire) : null;
-  try { return regrouperBrut(inst); } finally { if (rendre) rendre(); }
+  return regrouperBrut(inst, MEM && inst.monde?.memoire ? MEM.avec(inst.monde.regles?.memoire) : MEM);   // (docs/59 : ses règles, à lui seul)
 }
-function regrouperBrut(inst) {
+function regrouperBrut(inst, MEM) {
   const P = inst.monde.parcelles, types = P.types, parId = new Map(inst.biomes.map(b => [b.id, b])), out = { ...inst };
   out.biomes = types.map(b => { const L = inst.biomes.filter(p => typeDe(p) === b.id), x = { ...clone(b) };
     if (L.length) { x.capacite = +L.reduce((s, p) => s + (p.capacite || 0), 0).toFixed(2); if (b.capacite_base != null) x.capacite_base = +L.reduce((s, p) => s + (p.capacite_base || 0), 0).toFixed(2);
