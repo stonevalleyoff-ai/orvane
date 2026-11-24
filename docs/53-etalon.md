@@ -178,6 +178,43 @@ Un omnivore naît désormais de ce qu'il mange, dans la part où il le mange (do
 
 **La vie des oiseaux.** L'aigle royal et le pygargue ne manquaient pas de nourriture (satiété 0,84 et 0,88) : la vie sauvage de l'assemblage (3 × masse^0,3 années, posée pour les mammifères) faisait mourir l'aigle à 4,7 ans, mûr à 4. Un oiseau vit environ deux fois plus (Lindstedt et Calder 1976) : 6 × masse^0,3, et toute vie dure au moins deux fois l'âge de la maturité. Recalé : 90 % des espèces sous ×1,33 d'une année à l'autre (×1,45 avant) ; l'adresse de l'aigle royal tombe de la borne (50) à 5,8, celle du pygargue à 9,1 (la buse, l'autour, l'épervier, le milan y restent). Deux années sur trois graines : 9 ✓, 1 ≈, 1 ✗ ; **le lynx boréal remonte** (−0,2 à +1,0 % par an), le glouton décline moins (−4,3 à −4,5 %), le lynx pardelle −2,6 à −3,2 % ; le rendement des chasseurs 1,5 % et 10,4 %, la diversité ×0,97. Le loup de France : 549, 613, 604 bêtes en 2023.
 
+## Le sixième rapport : la concurrence suit la quête
+
+**Ce qui restait.** Le rapport du 22 novembre (trois années, trois graines) laissait le lynx pardelle à −4,0 à −4,2 % par an et le glouton à −4,1 à −4,3 %, quand leurs proies croissaient : celles du lynx pardelle étaient multipliées par 3,7 en trois ans. Une année d'Europe instrumentée (le partage des proies de chaque population, jour après jour) dit pourquoi :
+- le lynx pardelle laisse 90 % de ses lapins à ses « concurrents », le renard (61 %) et le sanglier (39 %). Or la quête du renard et celle du sanglier vont à 65 % aux vers de terre et à 13 à 15 % aux limaces : ils ne prennent presque pas de lapins ;
+- le glouton en laisse 98 %, au lynx boréal, au loup, au pygargue et à l'aigle royal, pour les morts du lieu et les lièvres variables.
+
+**Le défaut.** Dans le partage des proies, un concurrent pesait de toute sa quête dès qu'il *pouvait* manger les proies d'un chasseur. Pourtant, ce qu'il tue suit sa quête. Le moteur comptait donc des concurrents qui ne tuaient pas ce qu'ils disputaient. C'est aussi ce que le calage compensait en poussant l'adresse des rapaces à la borne : « une adresse à la borne est un mécanisme qui manque » (le cinquième rapport).
+
+**Le recouvrement des quêtes** (`regles.recouvrement`, docs/52). Sur chaque proie que deux chasseurs mangent l'un et l'autre, le concurrent ne pèse plus que de la part de sa quête qu'il y met, au plus celle du chasseur : c'est le recouvrement de Schoener (1970). Au premier jour, la satiété du lynx pardelle passe de 0,61 à 0,93, celle du lynx boréal de 0,51 à 0,92, celle du glouton de 0,34 à 0,61.
+
+**Recalée** (un jour, puis trois passes d'un an), l'Europe tient comme avant : 90 % des espèces à moins de ×1,33 d'une année à l'autre. Les rapaces retrouvent presque l'adresse du moteur :
+
+| | l'adresse calée, avant | avec le recouvrement |
+| --- | --- | --- |
+| l'aigle royal | 5,8 | 1,0 |
+| le pygargue | 9,1 | 1,1 |
+| le balbuzard | 17,8 | 3,0 |
+| l'épervier | 50 (la borne) | 4,9 |
+
+La buse, l'autour et le milan royal quittent aussi la borne. À l'inverse, le calage donne aux chasseurs de la mer (les dauphins, le thon, le saumon, le bar, le maquereau) cinq à six fois plus d'adresse pour qu'ils tiennent. Ce qu'ils chassent, d'autres chasseurs moins gênés en prennent sans doute davantage ; c'est à vérifier.
+
+**L'étalon**, deux années sur trois graines (qui s'accordent) : **9 ✓, 2 ≈, 0 ✗**, contre 7 ✓, 1 ≈, 1 ✗ au rapport du 22 novembre.
+
+| | le 22 novembre | avec le recouvrement |
+| --- | --- | --- |
+| le lynx pardelle | −4,0 à −4,2 % par an | **+16,4 à +17,2 %** |
+| le lynx boréal | +0,5 à +1,9 % | **+27,5 à +27,7 %** |
+| le loup | +7,6 à +7,8 % | +10,9 à +11,0 % |
+| l'ours | +4,8 à +5,3 % | +4,8 à +5,1 % |
+| le glouton | −4,1 à −4,3 % | −2,1 à −2,4 % |
+| la stabilité | 99,5 % | 98,5 % |
+| aucune espèce ne fond ni ne s'emballe | 1 (les bourdons ×2,2) | 3, au bord (les méduses ×0,45, les araignées ×0,49, les papillons ×2,2) |
+| les prédateurs (la loi de Carbone et Gittleman) | ×1,7 à ×1,9 | ×1,7 à ×1,8 |
+| le rendement des chasseurs, la diversité, Damuth | 1,5 % ; ×0,96 ; −0,705 | 1,5 % ; ×0,97 ; −0,708 |
+
+Les lynx remontent enfin : le pardelle à peu près comme le vrai depuis dix ans, quand on lâche des lynx et des lapins pour lui. Le boréal monte presque aussi vite que sa natalité le permet : c'est ce qu'il ferait si les hommes cessaient de le tuer. Le glouton recule deux fois moins ; il lui faudrait une satiété de 0,84 pour se remplacer (sa natalité, 0,23 par an, couvre de peu sa mort, 0,155), et ses concurrents en prennent encore une part.
+
 ## Une expérience : le retour du loup
 
 `node outils/etalon.js --experience loup` prend un morceau de l'Europe (la France, l'Italie, la Suisse, Monaco : 96 lieux) en 1992. La France et la Suisse n'ont plus un loup, l'Italie en a environ 30 % d'aujourd'hui (≈ 350, ils étaient environ 400 vers 1990). Avec le loup, on garde ses grandes proies : les ongulés, les lièvres, le lapin, la marmotte, le castor. On laisse les autres carnivores et les plantes, pour aller vite : 31 ans en quatre minutes. On compare ensuite à ce qu'a vu l'Office français de la biodiversité :
@@ -259,6 +296,49 @@ Une modification du moteur peut aussi passer l'étalon à la main avant d'arrive
 ¹ les petites proies, la concurrence et la domination selon la masse, la part de chair d'un omnivore (le repos d'hiver, le renouvellement, les charognes n'y font rien : ils veulent un calendrier, une natalité, une part de charogne). ² la ration, la conversion, la demi-satiété de l'Europe.
 
 **Ce que cela dit.** Les règles réelles sont un gain sans contrepartie : un monde un peu plus stable et plus divers, des carnivores qui tiennent mieux. Les constantes réelles corrigent un défaut d'Orvane — ses carnivores font naître 32 % de ce qu'ils mangent, dix fois une vraie bête à sang chaud : il crée de la chair de rien —, mais elles secouent le monde des joueurs, construit avec les anciennes : elles demanderaient une genèse nouvelle.
+
+## Orvane : les carnivores venus de la genèse 7 (23 novembre 2026)
+
+Le rapport de santé le montrait : les carnivores venus des genèses fondaient depuis la fusion, de 2,77 millions au cycle 44 à 1,34 million au cycle 63, de −5 % à −2,5 % par cycle. Leurs proies, elles, croissaient. Un cycle instrumenté (le partage des proies, les naissances et les morts de chaque population) dit pourquoi.
+
+**Ce n'est pas le manque de proies.** Seuls, ils seraient rassasiés à 0,78. Mais soixante lignées se partagent les mêmes petites proies des prairies de la genèse : 88 % de leur part va aux autres, et 90 % de cette concurrence vient d'autres carnivores des genèses.
+
+**Ce ne sont pas non plus les règles réelles du 20 novembre.** Elles ont ralenti le déclin, de −3,5 % à −2,6 % par cycle. Sans la domination ni la concurrence selon la masse, il serait de −2,5 %.
+
+**Ce sont des carnivores de nom.** Dans leurs soixante lignées, toutes les bêtes portent « estomac-large » ; le phénotype carnivore pur n'en compte plus que 0,01 %. Ce sont des omnivores. La genèse 7 a tourné 3 000 cycles avec le moteur du 28 octobre, où un carnivore à l'estomac large tirait des plantes autant qu'un herbivore. Depuis le 29 octobre, il n'en tire plus que `omnivore_vegetal` (40 % dans le moteur), et Orvane réglait cette part à 20 %.
+
+La bissection le montre sur la genèse 7 chez elle, du cycle 3004 au cycle 3005 :
+
+| le moteur | les carnivores de la genèse 7 |
+| --- | --- |
+| du 28 octobre | +0,4 % |
+| du 29 octobre (`omnivore_vegetal`) | −6,5 % |
+| d'aujourd'hui | −7,2 % |
+
+**Elles vivent aussi deux fois moins longtemps** que les carnivores d'Orvane : 13 cycles contre 26. Leur viande leur donne autant de petits (4,2 % par cycle, contre 4,4 %), mais elles meurent deux fois plus vite (7,8 % contre 4,1 %). Les plantes ne leur apportent plus que 2,0 %.
+
+Sur un cycle, depuis l'état publié du cycle 63 :
+
+| `omnivore_vegetal` | les carnivores des genèses | ceux d'Orvane |
+| --- | --- | --- |
+| 0,2 (le réglage d'Orvane) | −2,4 % | +0,4 % |
+| 0,4 (la valeur du moteur) | −0,5 % | +0,7 % |
+| 1 (le moteur d'avant le 29 octobre) | +5,3 % | +1,6 % |
+
+**Les deux corrections** (`mondes/orvane/profil.json`) : `omnivore_vegetal` remis à 0,4, la valeur du moteur, et le recouvrement des quêtes (`regles.recouvrement`, docs/52). Le recouvrement fait passer la satiété des carnivores des genèses de 0,29 à 0,35 ; celle des carnivores d'Orvane ne bouge pas.
+
+Une copie d'Orvane a tourné une année entière (120 cycles, du cycle 63 au cycle 183), sans joueurs, avec et sans les deux corrections :
+
+| | au départ | le creux d'hiver (cycle 134) | après un an | sans les corrections, après un an |
+| --- | --- | --- | --- | --- |
+| les carnivores des genèses | 1,34 M | 0,88 M | **1,29 M** | 0,61 M (au plus bas 0,42 M) |
+| les carnivores d'Orvane | 0,23 M | 0,22 M | **0,25 M**, 23 lignées | 0,20 M, 18 lignées |
+| les carnivores de la mer | 0,05 M | 0,07 M | **0,11 M** | 0,04 M |
+| les lignées animales | 300 | 313 | **333** | 324 |
+
+Sans les corrections, les soixante lignées des genèses survivaient toutes, mais perdaient 72 % de leurs bêtes avant de remonter au printemps. Avec elles, l'hiver n'en prend qu'un tiers, et l'été suivant les ramène presque à leur nombre de départ. Les brouteurs et les omnivores ne changent presque pas.
+
+Une autre chose se voit dans les deux projections : un petit omnivore d'Orvane, le vael (43 g), passe de 2,4 millions à 41 000 bêtes dans l'année, avec ou sans les corrections. C'est à regarder à part.
 
 ## Ce qui reste à faire pour qu'il étalonne vraiment Orvane
 

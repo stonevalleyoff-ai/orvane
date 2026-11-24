@@ -164,6 +164,21 @@ Elle fait aussi ses naissances : un omnivore naît de ce qu'il mange, dans la pa
 
 **La domination entre chasseurs** (`regles.domination = 0,5`). Entre deux chasseurs à sang chaud, le plus grand domine : il tue le plus petit qu'il croise et le chasse de son territoire, surtout quand il pèse de deux à cinq fois sa masse (Palomares et Caro 1999 ; Donadio et Buskirk 2006). Le poids d'un concurrent devant un chasseur est multiplié par le rapport de leurs masses, à la puissance 0,5 : le renard pèse moins devant le lynx pardelle, le lynx plus devant le renard. Pas entre insectes : les coccinelles y perdaient devant les araignées. Au premier jour, la satiété du lynx pardelle passe de 0,39 à 0,51, celle de la buse de 0,56 à 0,71.
 
+**Le recouvrement des quêtes** (`regles.recouvrement`). Deux chasseurs ne se disputent que ce qu'ils cherchent tous deux. Sur chaque proie qu'ils mangent l'un et l'autre, le concurrent ne pèse que de la part de sa quête qu'il y met, au plus celle du chasseur : c'est le recouvrement de Schoener (1970), que l'écologie mesure entre deux régimes. Avant, un concurrent pesait de toute sa quête dès qu'il *pouvait* manger les proies d'un chasseur.
+
+Or ce qu'il tue suit sa quête. Le renard et le sanglier cherchent surtout des vers de terre (65 %) et des limaces (13 à 15 %), et ne prennent presque pas de lapins. Ils comptaient pourtant pour 89 % des concurrents du lynx pardelle, qui laissait ses lapins à des bêtes qui ne les tuaient pas. Au premier jour, avec cette règle :
+
+| | satiété | avec le recouvrement | seul |
+| --- | --- | --- | --- |
+| le lynx pardelle | 0,61 | 0,93 | 0,93 |
+| le lynx boréal | 0,51 | 0,92 | 0,93 |
+| le loup | 0,87 | 0,97 | 0,97 |
+| le glouton | 0,34 | 0,61 | 0,93 |
+| le pygargue | 0,72 | 0,89 | 0,95 |
+| l'aigle royal | 0,72 | 0,83 | 0,89 |
+
+Les petits chasseurs, qui cherchent vraiment les mêmes proies que leurs concurrents (le putois, le chat forestier, la genette, la loutre), ne bougent presque pas. Le moteur ne change pas sans la règle : les autres mondes restent les mêmes, au caractère près.
+
 **Les migrateurs** (`regles.hivernage.photoperiode`). Ils partent quand les jours raccourcissent sous 13 h 30 après l'été, à la latitude de leur lieu (fin août à 50° N), et reviennent quand ils repassent au-dessus de 11 h 30 (début mars). C'est un seuil pour tous, tiré de ce que font la plupart des migrateurs d'Europe, pas réglé sur une espèce. Avant, ils partaient avec le froid, fin octobre.
 
 Un oiseau qui vole a aussi la niche de l'été, quand il niche : à la moyenne de l'année, son hiver lui paraissait aussi doux que l'été, et il ne partait jamais.
