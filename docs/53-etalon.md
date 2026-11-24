@@ -6,7 +6,7 @@ Cette dernière condition est toute la difficulté. L'assemblage cale la place d
 
 ## Les tests
 
-`outils/etalon.js` :
+`outils/etalon.js`. Depuis le 24 novembre 2026, leurs cibles et leurs tolérances sont celles du protocole (`etalon/protocole.json`, docs/59) : fixées avant de lancer l'étalon, verrouillées par version, et chaque test y dit ce qu'il prouve (une validation, un guide, un réglage, un garde-fou, le calage).
 
 | test | ce qui est mesuré | la cible | la source |
 | --- | --- | --- | --- |
@@ -215,6 +215,39 @@ La buse, l'autour et le milan royal quittent aussi la borne. À l'inverse, le ca
 
 Les lynx remontent enfin : le pardelle à peu près comme le vrai depuis dix ans, quand on lâche des lynx et des lapins pour lui. Le boréal monte presque aussi vite que sa natalité le permet : c'est ce qu'il ferait si les hommes cessaient de le tuer. Le glouton recule deux fois moins ; il lui faudrait une satiété de 0,84 pour se remplacer (sa natalité, 0,23 par an, couvre de peu sa mort, 0,155), et ses concurrents en prennent encore une part.
 
+## Le septième rapport : la ration de ce que brûlent les bêtes
+
+**Ce qui restait.** Isle Royale (docs/57) a montré qu'un loup du moteur mangeait trop peu : 0,63 kg de proies par jour, quand un loup de 29 kg brûle de quoi en tuer 2,2. La ration de l'Europe (`regles.besoin = 6`) était réglée à la main.
+
+**La ration** (`regles.besoin = 20,6`, docs/58) vient désormais du métabolisme de terrain, mesuré sur des bêtes en liberté (Nagy 2005), payé en proies (5,6 kJ par gramme, dont le chasseur mange les quatre cinquièmes). Un oiseau brûle de 1,4 à 1,9 fois ce que brûle un mammifère de sa masse (`plan.metabolisme`). Rien n'a été réglé sur l'étalon : la ration vient d'une mesure indépendante.
+
+**Recalée** (un jour, puis trois passes d'un an, depuis l'amorce des hommes), l'Europe tient un peu moins bien : au bout d'un an, 90 % des espèces sont à moins de ×1,51 de leurs effectifs comptés, contre ×1,33. Surtout, le calage ne nourrit plus les chasseurs qu'en les rendant adroits : 45 sur 84 ont leur adresse à la borne, 50 fois celle du moteur, contre 32 avant. Les rapaces et les chasseurs de la mer montent le plus : l'aigle royal de 0,83 à 17, le pygargue de 0,89 à 15, le balbuzard de 2,7 à 36, le marsouin de 2,1 à 17.
+
+**L'étalon**, deux années sur trois graines (qui s'accordent) : **9 ✓, 2 ≈, 1 ✗**, contre 10 ✓, 2 ≈, 0 ✗ avec les hommes (docs/56).
+
+| | avec les hommes | avec la ration |
+| --- | --- | --- |
+| la stabilité | 97,5 à 98 % | 96 % |
+| aucune espèce ne fond ni ne s'emballe | ≈ 4 ou 5 | ✗ 8 : les araignées ×0,27, les carabes ×0,36, les coccinelles ×0,42, l'ombre ×0,47, la truite ×0,49 ; les syrphes, les papillons et le colvert ×2 |
+| les prédateurs (Carbone et Gittleman) | ×1,6 à ×1,8 | ×1,5 à ×1,7 |
+| le loup | +10,9 % par an | +10,0 % |
+| le lynx boréal | +27,6 à +27,9 % | +17,5 à +17,7 % |
+| le lynx pardelle | +16,4 à +17,2 % | +9,3 à +10,1 % |
+| l'ours | +4,6 % | +4,6 à +4,9 % |
+| le glouton | −2,1 à −2,5 % | −6,1 à −6,4 % |
+| la chasse (en médiane) | 54 % | 54 % |
+| le rendement des chasseurs | ✓ 1,5 % (sang chaud), 10,4 % (sang froid) | ≈ 0,4 % et 4,5 % |
+| la diversité ; Damuth | ×0,96 ; −0,706 à −0,71 | ×0,95 ; −0,697 à −0,70 |
+
+**Ce que cela dit.** La ration est juste, et elle ne cache plus ce que cachait l'ancienne : les proies que fait le moteur ne suffisent pas aux chasseurs comptés.
+- Les chasseurs d'insectes (les araignées, les carabes, les coccinelles) et les poissons chasseurs (l'ombre, la truite) fondent, et ce qu'ils mangent (les syrphes, les papillons) s'emballe.
+- Les chasseurs mangent trois fois et demie plus, et ne font pas plus de petits, que leur natalité borne. Leur rendement tombe d'autant, de 1,5 % à 0,4 %, sous ce que mesurent les vraies bêtes (1 à 3 % de ce qu'elles assimilent). Ce garde-fou passait parce que la conversion avait été réglée avec l'ancienne ration (docs/52).
+- Le calage ne tient plus ses chasseurs qu'à la borne de leur adresse.
+
+Ce sont le deuxième et le troisième défaut de docs/58, la démographie des proies et les effectifs posés, que la ration ne masque plus. On ne règle rien pour les cacher : c'est ce que la consolidation (docs/59) doit d'abord éprouver.
+
+**Le retour du loup** (une graine) : il arrive toujours en 1994, la centaine est atteinte en 2012, et la France compte 314 loups en 2023, contre 497 avec l'ancienne ration (~1 100 en vrai) : ✓, ✓, ≈. **Isle Royale** (trois graines) : 25,5 loups (18 en vrai) et 7,7 % des orignaux tués chaque année ; deux erreurs s'y compensent (docs/57).
+
 ## Une expérience : le retour du loup
 
 `node outils/etalon.js --experience loup` prend un morceau de l'Europe (la France, l'Italie, la Suisse, Monaco : 96 lieux) en 1992. La France et la Suisse n'ont plus un loup, l'Italie en a environ 30 % d'aujourd'hui (≈ 350, ils étaient environ 400 vers 1990). Avec le loup, on garde ses grandes proies : les ongulés, les lièvres, le lapin, la marmotte, le castor. On laisse les autres carnivores et les plantes, pour aller vite : 31 ans en quatre minutes. On compare ensuite à ce qu'a vu l'Office français de la biodiversité :
@@ -253,6 +286,15 @@ Les trois tests du loup passent : il arrive en 1994, la centaine est atteinte en
 | loups de France, réels (OFB) | ~20 | ~60 | ~150 | ~300 | ~430 | ~580 | ~1 100 |
 
 Les trois tests passent : il arrive en 1994, la centaine est atteinte en 2008, il y en a 497 en 2023, sous le réel mais à moins d'un facteur 3. Le front ralentit après 2010, quand le vrai loup gagne les Alpes du Nord, le Jura et les Vosges. L'Italie atteint 2 400 loups en 2023 (~3 300 en vrai).
+
+**Avec la ration de ce que brûlent les bêtes** (le septième rapport), chaque loup mange trois fois et demie plus, et les mêmes proies en nourrissent moins :
+
+| | 1996 | 2005 | 2008 | 2014 | 2018 | 2020 | 2023 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| loups de France, simulés (la ration) | 18 | 51 | 70 | 133 | 200 | 240 | 314 |
+| loups de France, réels (OFB) | ~20 | ~60 | ~150 | ~300 | ~430 | ~580 | ~1 100 |
+
+La centaine est atteinte en 2012 ; en 2023, il y en a 3,5 fois moins qu'en vrai (≈). L'Italie compte 1 612 loups en 2023 (~3 300 en vrai).
 
 **Ce que vaut ce résultat.** La seule constante libre, le « / 25 », a été posée d'avance d'après la vitesse connue du front du loup en France (20 à 30 km par an). Elle a marché du premier coup, sans qu'on la retouche. Le loup a donc servi à la régler, et ne la prouve pas. Il faut une autre expansion pour la vérifier.
 

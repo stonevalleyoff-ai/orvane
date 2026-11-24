@@ -32,6 +32,10 @@ const A = {
   tolerance: [.2, .7],
   plancher: 4,                // une population de moins de bêtes n'est pas posée
   sang_chaud: new Set(['Mammalia', 'Aves']), sang_froid: .15,   // ce que brûlent les autres, rapporté à un mammifère de leur masse
+  // (docs/58) ce que brûlent les bêtes en liberté, le métabolisme de terrain mesuré à l'eau doublement marquée : en kJ par jour, a × M^b,
+  // M en grammes (Nagy 2005, J. Exp. Biol. 208 : 79 mammifères, 95 oiseaux). Une proie rend 5,6 kJ par gramme mangé (18 % de protéines,
+  // 7 % de graisse, aux facteurs d'Atwater), et le chasseur en mange les quatre cinquièmes (les os, la peau, ce qu'il laisse)
+  terrain: { mammiferes: [4.82, .734], oiseaux: [10.5, .681] }, proie_kj: 5.6 * .8 * 1000,   // (kJ par kg de proie tuée)
   natalite_pontes: [0, 1.2],
   front: 25,                  // le front d'une espèce qui s'étend avance chaque année de sa plus longue dispersion / 25 (calé sur le loup)
   dispersion_oiseau: 300,     // la plus longue dispersion d'un oiseau qui vole (km)
@@ -47,7 +51,10 @@ const REGLES = {
   separation: { chance: 0 },  // … ni ne se sépare en deux (à l'échelle d'une vie humaine)
   maladie: { chance: 0 },    // les maladies seront des souches réelles (docs/52, plus tard), pas des épidémies tirées au hasard
   hybride: { actif: false },
-  besoin: 6, conversion: .06, // un prédateur mange chaque jour ce que mange une vraie bête (un loup ~1 kg/jour), et peu de cette viande fait des petits
+  // un prédateur tue chaque jour ce qu'il brûle (docs/58) : son métabolisme de terrain, payé en proies. À un kilo, 0,17 kg de proies par
+  // jour, soit 20,6 par cycle de référence de 120 jours (un loup de 29 kg : 2,1 kg par jour ; c'était 6, et 0,63 kg). Peu de cette
+  // viande fait des petits (conversion)
+  besoin: +(120 * A.terrain.mammiferes[0] * Math.pow(1000, A.terrain.mammiferes[1]) / A.proie_kj).toFixed(1), conversion: .06,
   demi_satiete: 5,           // … et il est rassasié à moitié quand il a cinq fois ce besoin à sa portée (le besoin a grandi : trente fois, il crevait de faim)
   petites_proies: true,      // un mangeur d'insectes prend les insectes, si petits soient-ils
   concurrence_masse: .7,       // deux chasseurs se gênent d'autant moins que leurs masses diffèrent (0,7 décade : l'araignée et la mésange presque pas)
@@ -55,6 +62,7 @@ const REGLES = {
   viande_part: true,         // un omnivore ne cherche en proies que sa part de chair (docs/53)
   domination: .5,            // entre chasseurs à sang chaud, le plus grand domine le plus petit (docs/53)
   recouvrement: true,        // deux chasseurs ne se disputent que ce qu'ils cherchent tous deux : la part de sa quête que chacun met sur leurs proies (docs/53)
+  meute_proie: 2.5,          // une meute abat jusqu'à deux fois et demie sa masse : la meute de loups l'orignal, deux fois la sienne (docs/57)
   charognes: .5,             // la moitié des morts de vertébrés nourrit les charognards (DeVault et al. 2003 : souvent plus de la moitié des carcasses)
   renouvellement: 120,       // une proie offre ce qui est sur pied et ce qui en naît pendant les ~120 jours où se compte le besoin d'un chasseur (docs/53)
   longevite_predateur: 0,
@@ -68,7 +76,7 @@ const REGLES = {
 // des mondes réels), pour voir ce que donnent les réglages d'Orvane devant la réalité. Le calendrier, la saison des naissances, les
 // migrations et la colonisation lente restent : ils tiennent au jour, non à l'écologie
 if (process.argv.includes('--regles') && process.argv[process.argv.indexOf('--regles') + 1] === 'orvane')
-  for (const k of ['besoin', 'conversion', 'demi_satiete', 'petites_proies', 'concurrence_masse', 'diapause', 'renouvellement', 'viande_part', 'domination', 'recouvrement', 'charognes']) delete REGLES[k];
+  for (const k of ['besoin', 'conversion', 'demi_satiete', 'petites_proies', 'concurrence_masse', 'diapause', 'renouvellement', 'viande_part', 'domination', 'recouvrement', 'meute_proie', 'charognes']) delete REGLES[k];
 const U = Object.fromEntries(require('../../moteur/biomes-universels.json').map(b => [b.id, b]));
 const CORPS_OK = new Set(Object.keys(require('../../schemas/instantane.schema.json').properties.taxons.items.properties.plan.properties.corps.properties));
 const carte = lire(path.join(D, 'lieux.json')), vivant = lire(path.join(D, 'especes.json')), sources = lire(path.join(D, 'sources.json'), []);
@@ -164,6 +172,9 @@ for (const e of vivant.especes || vivant.taxons || vivant) {
   //  (seulement celles qui vivent au moins deux ans, et jamais moins qu'elles n'avaient : un insecte d'une saison a déjà la sienne)
   if ((plan.portee || 0) > 50 && plan.longevite >= 730) plan.natalite = r4(Math.max(plan.natalite, clamp(Math.min(5 / (plan.longevite / 365.25), 2 / (Math.max(30, plan.maturite) / 365.25)), A.natalite_pontes[0], A.natalite_pontes[1])));
   if (plan.metabolisme == null && !A.sang_chaud.has(e.reel?.classe ?? String(e.reel?.groupe || '').split(' ')[0])) plan.metabolisme = A.sang_froid;   // (un poisson, un reptile, un insecte brûlent peu)
+  // (docs/58) un oiseau brûle plus qu'un mammifère de sa masse : leurs métabolismes de terrain, rapportés (Nagy 2005) — 1,9 fois à 10 g,
+  // 1,5 à un kilo, 1,35 à dix
+  if (plan.metabolisme == null && oiseau) { const g = mkg * 1000, [a1, b1] = A.terrain.oiseaux, [a0, b0] = A.terrain.mammiferes; plan.metabolisme = r4(a1 * Math.pow(g, b1) / (a0 * Math.pow(g, b0))); }
   // (la dispersion : ce que l'espèce porte loin ses jeunes. La plus longue dispersion d'un mammifère suit sa masse (Sutherland et al. 2000,
   //  Conservation Ecology 4 : 40,7 × M^0,81 km pour un carnivore, 3,31 × M^0,65 pour un herbivore ou un omnivore) ; un oiseau qui vole, 300 km ;
   //  le front d'une espèce qui gagne du terrain avance d'environ cette distance / A.front chaque année (calé sur le retour du loup en
@@ -248,13 +259,21 @@ let inst = { orvane: Orvane.CONTRAT,
   cycle: { n: 0, date: new Date(jour - 864e5).toISOString(), pressions_recues: 0 },
   biomes, catalogue: { version: '0.1', traits: {}, ...(formesNeuves(taxons) ? { monde: { formes: formesNeuves(taxons) } } : {}) }, taxons, evenements: [],
   ...(sources.length ? { attributions: sources.map(s => ({ source: s.nom || s.source, licence: s.licence, url: s.url, usage: s.usage || s.ce_quon_en_tire })) } : {}) };
+// --- 4. les hommes (docs/56) : la part de chaque espèce que la chasse prend chaque année, pays par pays (mondes/<monde>/hommes.json),
+// rapportée à ce que l'assemblage a posé (outils/terre/hommes.js). --sans-hommes : un monde où personne ne chasse
+const PRELEVEMENTS = a.includes('--sans-hommes') ? null : lire(path.join(D, 'hommes.json'), null);
+if (PRELEVEMENTS) { const H = require('./hommes.js').taux(PRELEVEMENTS, inst); inst.monde.hommes = { especes: H.especes, sources: H.sources };
+  console.log(`les hommes : ${Object.keys(H.especes).length} espèces chassées ; ${H.bornes.length} taux bornés à ce que l'espèce peut perdre (là, l'assemblage pose trop peu de bêtes pour ce que la chasse prend : ${H.bornes.slice(0, 6).map(b => `${b.espece} ${b.pays} ${Math.round(100 * b.taux)} %`).join(', ')}…) ; ${H.absents.length} prélèvements dans un pays où l'espèce n'est pas posée`); }
+// la part qu'une espèce perd à la chasse en une année, en moyenne sur ses populations (pesée par leurs effectifs)
+const chasse = (() => { const H = inst.monde.hommes, P = new Map(inst.biomes.map(b => [b.id, b.lieu?.pays])); if (!H) return () => 0;
+  return t => { const T = H.especes[t.id]?.taux; if (!T) return 0; let s = 0, n = 0; for (const p of t.populations) { s += p.effectif * (T[P.get(p.biome)] || 0); n += p.effectif; } return n > 0 ? s / n : 0; }; })();
 inst = Meteo.eveiller(inst).inst; inst.monde.meteo = { depuis: 0 };
 // le calage par le moteur : l'équilibre observé, cette fois avec ce que le premier jour mesure vraiment — les naissances, les morts, et ce
 // que les prédateurs mangent. Chaque passe fait tourner un jour (sans rien garder) et ajuste :
 //  - un brouteur : sa place, pour que sa saturation de l'année (celle du jour, rapportée à la production moyenne) soit celle où ses
 //    naissances égalent ses morts naturelles ET les bêtes mangées : 1 − (mort + mangés) / (natalité × convenance) ;
 //  - un carnivore : son efficacité de chasse (sa part des proies devant ses concurrents), pour que sa satiété soit celle où ses naissances
-//    (natalité × satiété) égalent ses morts (la faim les multiplie, 1 + 3 (1 − satiété)²) et les siens mangés. (Ce fut d'abord son métabolisme ;
+//    (natalité × satiété) égalent ses morts (la faim les multiplie, 1 + 3 (1 − satiété)²) et les siens mangés (docs/56 : et ce que la chasse en prend). (Ce fut d'abord son métabolisme ;
 //    mais le métabolisme d'un chasseur fait aussi son poids devant les autres : relevé chez le renard, il affamait l'épervier, et l'épervier
 //    finissait au plus bas, sans rien y gagner — docs/53) ;
 // chacun entre des bornes (la place de 0,001 à 50, l'efficacité de 0,02 à 50). Quatre passes, la concurrence se répondant.
@@ -275,7 +294,7 @@ for (let pass = 0; pass < CALER; pass++) {
     o.N += x.N; o.conv += x.conv * x.N; o.pred += x.mortsPred; o.s += (x.satiete ?? 0) * x.N; o.prodsat += x.sat * x.N * (PRO.get(x.biome) ?? 1); }
   let nB = 0, nC = 0, ecart = [];
   for (const t of inst.taxons) { const o = X.get(t.id); if (!o || !(o.N > 0) || t.plan.regime === 'vegetal') continue;
-    const r = t.plan.natalite, m = 365.25 / Math.max(2, t.plan.longevite), conv = o.conv / o.N, p = o.pred / o.N * 365.25;
+    const r = t.plan.natalite, m = 365.25 / Math.max(2, t.plan.longevite), conv = o.conv / o.N, p = o.pred / o.N * 365.25 + chasse(t);   // (docs/56 : les bêtes mangées, et celles que la chasse prend dans l'année)
     if (OMNI.has(t.plan.regime)) { const sa = o.prodsat / o.N, cible = clamp(1 - (m + p) / Math.max(1e-9, r * conv), .2, .97);
       if (sa > 1e-6) { t.plan.place = +clamp((t.plan.place ?? 1) * sa / cible, .001, 50).toPrecision(4); nB++; ecart.push(Math.abs(Math.log(sa / cible))); } }
     else if (t.plan.regime === 'carnivore' && !TENUS.has(t.id)) { const s = clamp(o.s / o.N, .005, .995), cible = clamp(seq(r * conv, m, p), .02, .98), odds = x => x / (1 - x);

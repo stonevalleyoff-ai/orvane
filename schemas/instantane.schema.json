@@ -409,6 +409,43 @@
             }
           }
         },
+        "hommes": {
+          "type": "object",
+          "description": "(docs/56) Les hommes d'un monde réel : pour chaque espèce chassée, sa saison (deux dates MM-JJ, qui peuvent passer le 1er janvier) et la part de son effectif que la chasse prend sur la saison, pays par pays (lieu.pays). Le moteur l'ôte jour après jour, comme le retrait d'un jeu.",
+          "properties": {
+            "especes": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "saison": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[0-1][0-9]-[0-3][0-9]$"
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  },
+                  "taux": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    }
+                  }
+                }
+              }
+            },
+            "sources": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
         "meteo": {
           "type": "object",
           "description": "(docs/45) La météo : depuis quand chaque lieu a son temps du cycle.",
