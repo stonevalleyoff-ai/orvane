@@ -36,7 +36,9 @@ La même limite touchait l'Europe : le loup de Scandinavie, de Finlande et de Ru
 
 **La meute et sa plus grosse proie** (`regles.meute_proie = 2,5`, un monde réel). Une meute abat jusqu'à deux fois et demie sa masse. La meute de loups prend ainsi l'orignal, deux fois la sienne. Le bison d'Europe, trois fois et demie plus lourd que la meute, reste hors de portée. Un chasseur seul garde la limite de 1,5 fois sa masse. Dans les mondes d'Orvane, rien ne change.
 
-## Ce que l'île dit ensuite (trois graines, qui s'accordent)
+## Ce que l'île a montré ensuite : le loup mangeait trop peu
+
+Avec la ration réglée à la main (trois graines, qui s'accordent) :
 
 | | le moteur | la réalité |
 | --- | --- | --- |
@@ -48,13 +50,36 @@ La même limite touchait l'Europe : le loup de Scandinavie, de Finlande et de Ru
 
 **Le loup du moteur mange trop peu.** Un loup de l'île tue en hiver 0,7 orignal par mois ; celui du moteur, 0,03. Sur l'année, d'après les comptages et la part des orignaux tuée, un loup de l'île tue environ 5,7 orignaux (10 % de 1 026 orignaux, pour 18 loups). Un loup du moteur, rassasié, mange 0,63 kg par jour, 229 kg par an : deux tiers d'un orignal, quand celui de l'île en tue près de six. Il en faut donc quatre fois plus pour tuer la même part des orignaux, et l'île en porte 69 au lieu de 18. Le castor y ajoute : le loup du moteur en mange aussi l'hiver, quand le vrai castor est sous la glace.
 
-C'est la ration de l'Europe (`regles.besoin = 6`, docs/52), réglée avec la conversion (`0,06`) pour que les chasseurs fassent naître de 1 à 3 % de ce qu'ils mangent. L'étalon de l'Europe le montrait déjà d'une autre façon : ses carnivores sont près de deux fois plus nombreux que la loi de Carbone et Gittleman ne le dit pour leurs proies. La ration et la conversion sont à revoir ensemble, et l'Europe à recaler.
+C'est la ration de l'Europe (`regles.besoin = 6`, docs/52), réglée avec la conversion (`0,06`) pour que les chasseurs fassent naître de 1 à 3 % de ce qu'ils mangent. L'étalon de l'Europe le montrait déjà d'une autre façon : ses carnivores sont près de deux fois plus nombreux que la loi de Carbone et Gittleman ne le dit pour leurs proies. La ration vient désormais de ce que brûlent les bêtes en liberté (docs/58), et l'Europe est recalée avec elle.
 
 **L'orignal tient moins de place que sur l'île vraie.** Sans loups, il s'arrête à 660 bêtes (1,2 par km²). L'île en a porté 2 400 en 1995 (4,4 par km²). Sa place est celle que l'Europe lui a calée, où il partage la forêt avec le cerf et le chevreuil, et où l'on compte souvent moins de bêtes qu'il n'y en a.
 
+## Avec la ration de ce que brûlent les bêtes
+
+Sur l'Europe recalée avec la nouvelle ration (trois graines, qui s'accordent) : **2 ✓, 2 ≈, 1 ✗**.
+
+| | le moteur | la réalité |
+| --- | --- | --- |
+| les orignaux (1980–2018) | 409 (0,75 par km²) ≈ | 1 026 (1,9 par km²) |
+| les loups | 25,5 ✓ | 18 |
+| la part des orignaux tuée chaque année | 7,7 % ✓ | 6 à 13 % |
+| ce qu'un loup tue en hiver | 0,10 orignal par mois ✗ | 0,7 |
+| les fluctuations des orignaux | 0,17 ≈ | 0,44 |
+
+**Les loups tombent juste, mais en partie pour de mauvaises raisons.** Deux erreurs se compensent :
+- l'île porte 2,5 fois trop peu d'orignaux : 409 pour 1 026 ;
+- un loup du moteur en tue 4,6 fois trop peu : 1,2 orignal par an, quand celui de l'île en tue 5,7 (10 % de 1 026 orignaux, pour 18 loups).
+
+Avec les vrais orignaux et ce que tue un vrai loup, l'île porterait bien 18 loups. Avec les vrais orignaux et le loup du moteur, elle en porterait plus de quatre-vingts.
+
+**Ce qu'un loup tue n'est pas ce qu'il mange.** La ration du moteur est ce que le loup brûle : 2,2 kg de proies par jour, dont il mange les quatre cinquièmes. Sur l'île, au début des années 1970, les loups disposaient de 4,4 à 10 kg d'orignal par loup et par jour (Peterson 1977). Un loup ne mange ni les os, ni la panse, ni la peau d'un orignal. Les corbeaux, présents à presque chaque carcasse, en emportent une grande part : 17 % de ce que tue une meute de six loups, 37 % de ce que tue un couple (Vucetich, Peterson et Waite 2004). Le moteur, lui, fait manger au chasseur les quatre cinquièmes de ce qu'il tue, que ce soit un campagnol ou un orignal. Et rien de ce qu'il laisse ne nourrit les charognards : ceux-ci ne vivent que des morts naturelles (`regles.charognes`).
+
+**Les orignaux fluctuent moins qu'en vrai** (0,17 pour 0,44). Le moteur ne connaît ni les hivers rudes, ni les tiques, ni les épidémies qui ont fait l'histoire de l'île.
+
 ## Ce qui reste à faire
 
-- **La ration des prédateurs**, avec la conversion, sur l'île et en Europe.
+- **Ce qu'un chasseur tue et ce qu'il mange** : la part d'une proie que mange son chasseur, selon sa taille (le campagnol entier, une part de l'orignal), et ce qui en reste aux charognards (docs/58).
+- **La place de l'orignal** sur l'île : elle vient de l'Europe, où les effectifs comptés sont souvent sous les vrais (docs/58).
 - **Les comptages de 1959 à 1979**, quand les loups montaient de 20 à 50 : ils sont dans les rapports annuels du projet loups-orignaux.
 - **L'Amérique du Nord entière** : la carte et les espèces, par le pipeline de l'Europe ; puis le cycle du lynx et du lièvre, l'expansion du coyote, les tendances du Breeding Bird Survey.
 

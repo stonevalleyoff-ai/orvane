@@ -63,6 +63,7 @@ Pour s'inscrire, recevoir ses clés et faire ses premiers appels au Supabase d'O
 | [55. L'atlas](55-atlas.md) | chaque lignée en planche de naturaliste dans l'Observatoire (`monde/atlas.js`) : le dessin des jeux repris à l'encre, en volumes et hachures, le tégument de sa famille visuelle, l'œil selon la bête, les pattes sur leurs articulations, ce que porte la plupart de ses bêtes (l'albinisme, les palmes…), le serpent à son épaisseur, le cétacé sans écailles ; l'échelle de sa taille vraie et ses renvois numérotés ; le dessin des jeux ne change pas |
 | [56. Les hommes](56-les-hommes.md) | dans un monde réel, la part que les hommes prennent : la chasse de chaque ongulé, pays par pays, pendant sa saison (`moteur/hommes.js`) ; les tableaux de chasse de 34 pays, le calage qui les compte, ce que l'étalon en dit ; ce qui reste à faire (la régulation des grands carnivores, le braconnage, les lâchers) |
 | [57. L'Amérique, en commençant par Isle Royale](57-amerique.md) | ce que l'Amérique du Nord apprendra à l'étalon ; Isle Royale, son île de loups et d'orignaux comptés depuis 1958 (`--experience isle-royale`) : la meute qui abat l'orignal, et un loup qui mange trop peu |
+| [58. Vers l'étalon Monde](58-etalon-monde.md) | un étalon pour le monde entier : d'abord ce qui est faux partout (la ration des prédateurs, d'après ce que brûlent les bêtes en liberté ; la démographie des proies ; les effectifs posés), puis une fédération de continents, chacun son étalon, réunis dans un rapport Monde |
 
 ## En une page
 

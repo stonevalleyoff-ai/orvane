@@ -59,7 +59,7 @@ Ce que le pas ne change pas, parce que cela vit au rythme du joueur et non à ce
 - `metabolisme` : ce que la bête brûle, rapporté à un mammifère de sa masse. Il vaut 1 par défaut, et l'assemblage met 0,15 aux poissons, aux reptiles, aux amphibiens et aux invertébrés. La bête mange d'autant moins, et fait d'autant plus de petits de ce qu'elle mange.
 
 **Ce qu'un prédateur mange, dans un monde réel.**
-- **La ration** : un prédateur mange chaque jour ce que mange une vraie bête (`regles.besoin = 6` : un loup ~1 kg par jour, une buse ~50 g), et peu de cette viande fait des petits (`conversion = 0,06`).
+- **La ration** : un prédateur tue chaque jour ce qu'il brûle, son métabolisme de terrain payé en proies (`regles.besoin = 20,6`, docs/58 : un loup de 29 kg, 2,2 kg de proies par jour ; un oiseau brûle 1,4 à 1,9 fois un mammifère de sa masse, `plan.metabolisme`). Peu de cette viande fait des petits (`conversion = 0,06`). La ration était d'abord réglée à la main (`6` : un loup ~0,6 kg par jour) ; Isle Royale a montré qu'elle faisait vivre quatre fois trop de loups (docs/57).
 - **La satiété** : il est rassasié à moitié quand il a cinq fois ce besoin à sa portée (`demi_satiete = 5`). Avec les trente fois d'Orvane et une ration réelle, presque tous les prédateurs d'Europe crevaient de faim : la satiété médiane était de 0,01. Elle est de 0,4 désormais.
 - **Les petites proies** (`regles.petites_proies`) : un mangeur d'insectes prend les insectes, si petits soient-ils (la mésange les chenilles, la truite les larves). Dans l'eau, un chasseur qui nage avale des proies qui nagent jusqu'à cinq mille fois plus petites que lui (le thon le hareng, le phoque le cabillaud). Ailleurs, rien de plus petit qu'un cinquantième de sa masse, comme dans Orvane.
 
