@@ -182,12 +182,23 @@ Ce qui suit l'écriture reste dans le cycle : les crochets des mécanismes évei
 
 Le code est déplacé mot pour mot (vérifié ligne à ligne), et l'analyseur de portées ne trouve dans aucun module du cœur un nom qu'il ne reçoive ou n'importe. Le même monde au bit près, sur les sept mondes, entrelacés, et le monde à l'axe propre ; et, les séparations étant rares en seize cycles, deux essais qui les sollicitent : des règles qui font naître des lignées à chaque cycle (837 séparations), puis un tiers des lignées réduites à une bête par lieu (170 extinctions) ; l'ancien moteur et le nouveau y rendent le même monde. `moteur/orvane.js` : 602 lignes (1 183 avant les modules).
 
-**La suite**, une étape à la fois, chacune au bit près : l'habitat (1), l'état de départ (2), le catalogue (7). Deux modules gardent encore un état propre au monde qui tourne, posé pendant le cycle puis rendu (`corps.etendre`, `memoire.regler`) ; et quelques outils (la genèse, des bancs, le simulateur) changent les règles par défaut du moteur au lieu de donner les leurs.
+## 04, la septième étape : l'habitat, l'état de départ, les traits portés
+
+Ce qui restait d'écologie dans le cycle sort à son tour :
+- **`moteur/noyau/habitat.js`** (l'étape 1) : `capacites`, la capacité de chaque lieu (ce que les joueurs lui ont fait, puis un lent retour vers sa capacité de base, que le milieu transformé rend plus ou moins fertile) ; `catastrophes`, l'incendie, la crue ou la sécheresse qui frappe un lieu selon ses axes du jour et le temps qu'il fait, et les lieux frappés qu'il rend.
+- **`moteur/noyau/depart.js`** (l'étape 2) : `etatDeDepart`, ce que le cycle lit de chaque lignée (ses phénotypes, leurs plans et ce que coûtent leurs traits ; ses populations, leurs allèles, leurs traits continus, ce qu'elles ont appris), et la biomasse qui pèse sur chaque lieu ; `presences`, qui vit où au début du cycle, pour les croisements entre lignées.
+- **`traitsPortes`**, dans `moteur/noyau/lignees.js` (l'étape 7) : le catalogue de l'instantané, les traits que portent les lignées publiées, dans l'ordre du catalogue.
+
+Le cycle (`cycleBrut`) ne fait plus que trois choses : il lie le contexte du monde aux fonctions qui en dépendent ; il câble les mécanismes que le monde a éveillés (le climat, la succession, le milieu, les natures, la saison de chaque lieu, la météo, la ponte, les stades, les castes, l'esprit, la mémoire ; les machines, la grammaire, la flore, les souches), dans l'ordre où ils agissent ; et il appelle les modules du cœur, étape après étape, avant de publier l'instantané. `moteur/orvane.js` : 566 lignes, contre 1 183 avant les modules.
+
+Le code est déplacé mot pour mot (vérifié ligne à ligne) ; le même monde au bit près sur les sept mondes, entrelacés, et le monde à l'axe propre ; et, l'ancien moteur contre le nouveau, des catastrophes et des pressions sur l'habitat à chaque cycle (54 catastrophes), les séparations forcées et les extinctions provoquées : le même monde.
+
+**La suite.** Deux modules gardent encore un état propre au monde qui tourne, posé pendant le cycle puis rendu (`corps.etendre`, `memoire.regler`) ; quelques outils (la genèse, des bancs, le simulateur) changent les règles par défaut du moteur au lieu de donner les leurs. Puis les ablations (03), règle par règle ; le découpage permet aussi d'essayer la variante d'un module du cœur sans toucher au reste.
 
 ## Ce qui vient
 
 1. **Les ablations (03).** Chaque règle retirée seule, sur Orvane (30 cycles, 3 graines) puis sur l'Europe (une année), puis par paires : ce qu'elle tient, ce qu'elle coûte. La matrice : conserver, modifier, supprimer, investiguer.
-2. **Modulariser le moteur (04)**, après le contexte explicite et les modules du cœur (plus haut : le partage des proies, la génétique, les outils et le plan, la dynamique, les arrivées, les lignées) : les autres étapes du cycle, chacune dans son module, sans état global. Le rejeu garde le moteur identique au bit près pendant le découpage, l'étalon le juge ensuite.
+2. **Modulariser le moteur (04)**, après le contexte explicite et les modules du cœur (plus haut : le partage des proies, la génétique, les outils et le plan, la dynamique, les arrivées, les lignées, l'habitat, l'état de départ) : les autres étapes du cycle, chacune dans son module, sans état global. Le rejeu garde le moteur identique au bit près pendant le découpage, l'étalon le juge ensuite.
 3. **L'évolution ouverte (05)** : des populations sans évolution, puis avec la génétique seule. Les réseaux neuronaux sont la phase 3 du plan d'évolution ouverte : Orvane n'en a pas aujourd'hui (l'esprit, docs/34, fait vivre des savoirs et des traditions).
 4. **L'intérêt pour les jeux (06)** : Stone Valley comme démonstrateur, avec les lots d'un jeu rejoués sur une copie du monde à côté d'un témoin sans lots (docs/5).
 5. **La revue indépendante.** Le protocole verrouille les critères ; il ne remplace pas un regard extérieur. Il faudrait un écologue des populations pour relire les règles, et une relecture humaine obligatoire des PR (la protection de la branche `main`).
