@@ -14,11 +14,14 @@
 // (taxons) et leur état (etat), les lieux, ce que les joueurs ont fait (prT), les mécanismes éveillés, et les modules que le moteur a
 // chargés ou non (les dérives DER, les diètes DI, les formes FOR, la ponte PON). Ce qu'elles rendent : separer, rien (les lignées
 // neuves rejoignent taxons et etat) ; ecrire, les lignées à publier (sans les plantes, que la flore écrit ensuite).
+// Et traitsPortes : le catalogue de l'instantané, les traits que portent les lignées publiées (cat, sortie), dans l'ordre du catalogue
+// (c'est lui qui dit qui masque qui, docs/9), chacun copié : un jeu qui modifie l'instantané ne touche pas au catalogue.
 'use strict';
 (function (racine) {
   const { clamp, clone } = typeof require === 'function' ? require('./outils.js') : racine.OrvaneOutils;
   const { ecartsDe, planDe } = typeof require === 'function' ? require('./plan.js') : racine.OrvanePlan;
   const { divergence, replierQ } = typeof require === 'function' ? require('./genetique.js') : racine.OrvaneGenetique;
+  const CAT = typeof require === 'function' ? require('../catalogue.js') : racine.OrvaneCatalogue;   // les traits (moteur/catalogue.js)
   function separer(X) {
     const { DT, GEN, PAS, R, REGLES, SR, biomes, cat, deriver, dist, etat, ev, inst, n, parPas, taxons, tousT, DER, DI, FOR, PON } = X;
     const nouveaux = []; let vivantsN = taxons.filter(t => !t.eteint).length, formesVues = null;
@@ -137,6 +140,12 @@
     }
     return sortie;
   }
-  const API = { separer, ecrire };
+  function traitsPortes(X) {
+    const { cat, sortie } = X;
+    const portes = new Set(); for (const t of sortie) for (const p of t.phenotypes) for (const id of p.traits) if (cat[id]) portes.add(id);
+    const ORD = Object.keys(CAT.TRAITS), traits = {}; for (const id of [...portes].sort((x, y) => ((ORD.indexOf(x) + 1) || 999) - ((ORD.indexOf(y) + 1) || 999) || (x < y ? -1 : 1))) traits[id] = clone(cat[id]);   // (une copie : un jeu qui modifie l'instantané reçu ne touche pas au catalogue du moteur)
+    return traits;
+  }
+  const API = { separer, ecrire, traitsPortes };
   if (typeof module === 'object' && module.exports) module.exports = API; else racine.OrvaneLignees = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

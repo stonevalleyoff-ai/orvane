@@ -56,6 +56,8 @@ const CAT = typeof require === 'function' ? require('./catalogue.js') : racine.O
 const CORPS = typeof require === 'function' ? require('./corps.js') : racine.OrvaneCorps;   // la silhouette (moteur/corps.js)
 // (docs/59) le cœur du moteur, module par module (moteur/noyau/) : sans eux, pas de cycle (dans un navigateur, chacun se charge par sa
 // balise <script>, avant orvane.js)
+const HAB = typeof require === 'function' ? require('./noyau/habitat.js') : racine.OrvaneHabitat;   // l'habitat : la capacité des lieux, les catastrophes (moteur/noyau/habitat.js, docs/59)
+const DEP = typeof require === 'function' ? require('./noyau/depart.js') : racine.OrvaneDepart;   // l'état de départ d'un cycle (moteur/noyau/depart.js, docs/59)
 const PRED = typeof require === 'function' ? require('./noyau/predation.js') : racine.OrvanePredation;   // le partage des proies
 const DYN = typeof require === 'function' ? require('./noyau/dynamique.js') : racine.OrvaneDynamique;   // la dynamique de chaque lignée (moteur/noyau/dynamique.js, docs/59)
 const ARR = typeof require === 'function' ? require('./noyau/arrivees.js') : racine.OrvaneArrivees;   // les arrivées (moteur/noyau/arrivees.js, docs/59)
@@ -198,7 +200,7 @@ const DEFAUT = { R: REGLES, PAS: 1, JOURS: null, AX: AXES };
 const parPas = (p, CTX = DEFAUT) => CTX.PAS === 1 ? p : 1 - Math.pow(1 - p, CTX.PAS);
 // --- la génétique (docs/8, 9, 10) : les traits continus, Mendel et les allèles, les portées, la parenté (moteur/noyau/genetique.js, docs/59) ---
 const GENE = typeof require === 'function' ? require('./noyau/genetique.js') : racine.OrvaneGenetique;
-const { QUANT, lireQ, copieQ, optimumQ, penteQ, chargeQ, evoluerQ, melangerQ, domDe, mendel, allelesDe, portees, divergence, parente } = GENE;
+const { QUANT, lireQ, optimumQ, penteQ, chargeQ, evoluerQ, melangerQ, domDe, mendel, allelesDe, portees, divergence, parente } = GENE;
 // (ce qui dépend des règles du monde reste ici : l'écriture au pas du monde, l'attrait, la méfiance, l'isolement reproductif)
 // (docs/52 : au pas d'un monde au jour, ce qui change d'un cycle est cent fois plus petit : on l'écrit avec quatre chiffres de plus,
 //  sans quoi l'arrondi le perdrait chaque jour et rien ne bougerait plus)
@@ -233,7 +235,7 @@ function isolement(A, B, T, n, CTX = DEFAUT) {
 const OUTILS = typeof require === 'function' ? require('./noyau/outils.js') : racine.OrvaneOutils;
 const { clamp, clone, hasard, rng } = OUTILS;
 const PLAN = typeof require === 'function' ? require('./noyau/plan.js') : racine.OrvanePlan;
-const { SAISONS, PART_K, facteur, recouvrement, charge, BANDE, planDe, coutDe, mortalite, CHAROGNE, eauDouce, eauSalee, lieuType, memeMilieu, plafonner, fenetreDe, biomasse } = PLAN;
+const { SAISONS, PART_K, recouvrement, charge, BANDE, planDe, coutDe, mortalite, CHAROGNE, eauDouce, eauSalee, lieuType, memeMilieu, plafonner, fenetreDe, biomasse } = PLAN;
 // la phase de l'année (0 = plein hiver, 0,5 = plein été) et son nom
 const saisonDe = (n, annee, CTX = DEFAUT) => { if (!annee) return null; const phase = (n % annee) / annee; return { phase: +phase.toFixed(4), nom: SAISONS[Math.floor(((phase + .125) % 1) * 4)], production: +(1 + CTX.R.saisons.capacite * -Math.cos(2 * Math.PI * phase)).toFixed(3) }; };
 // les axes d'un biome à une phase de l'année : froid et sombre en hiver, chaud et lumineux en été, un peu plus humide en hiver
@@ -446,55 +448,19 @@ function cycleBrut(inst, pressions = {}, opt = {}, CTX = contexte(inst)) {
   const SCa = CAS && inst.monde?.castes ? CAS.preparer() : null;   // (docs/33) les colonies
   const ES = ESP && inst.monde?.esprit ? ESP.preparer({ taxons: inst.taxons, biomes }) : null;   // (docs/34) ce que savent les populations
   const ME = MEM && inst.monde?.memoire ? MEM.preparer({ appetence, mefiance: apprendre }) : null;   // (docs/50) ce que les populations ont appris des joueurs ; rien n'y touche aux effectifs
-  for (const b of Object.values(biomes)) {
-    b.capacite_base ??= b.capacite;
-    b.capacite = Math.max(0, b.capacite + (prB[b.id]?.habitat || 0) * (opt.unite_habitat ?? 1));
-    b.capacite += (b.capacite_base * (SM ? SM.fertilite(b.id) : 1) - b.capacite) * parPas(REGLES.regain_habitat);
-  }
+  // la capacité de chaque lieu (moteur/noyau/habitat.js, docs/59 : l'habitat est un module du cœur ; le câblage des mécanismes, ici)
+  HAB.capacites({ REGLES, SM, biomes, opt, parPas, prB });
 
   // 1b. les catastrophes : un incendie, une crue, une sécheresse peut frapper un biome ; sa capacité tombe (elle regagnera
   //     lentement sa valeur de base) et une part des bêtes qui ne peuvent s'y soustraire meurt sur le coup
-  const sinistres = {};
-  for (const b of Object.values(biomes)) {
-    if (b.catastrophes === false) continue;
-    const ax = axesCycle(b), cause = SMe ? SMe.causes(b) : null, C = REGLES.catastrophes, phb = phaseDe(b), ete = phb != null ? Math.max(0, -Math.cos(2 * Math.PI * phb)) : .5, printemps = phb != null ? Math.max(0, Math.sin(2 * Math.PI * phb)) : .5;
-    const chances = {
-      incendie: C.incendie.chance * Math.max(0, ax.couvert - .3) * Math.max(0, 1 - ax.humidite) * 4 * (.5 + ete) * (cause ? cause.incendie : 1),
-      crue: C.crue.chance * Math.max(0, ax.humidite - .5) * Math.max(0, 1 - ax.altitude) * 4 * (.5 + printemps) * (cause ? cause.crue : 1),
-      secheresse: C.secheresse.chance * Math.max(0, .6 - ax.humidite) * 4 * ete * (cause ? cause.secheresse : 1)
-    };
-    for (const [type, p0] of Object.entries(chances)) { const p = p0 * PAS; if (p > 0 && R() < p) {
-      b.capacite = Math.max(0, b.capacite * (1 - C[type].capacite)); sinistres[b.id] = type;
-      ev.push({ type: 'catastrophe', taxon: b.id, biome: b.id, detail: `${type} : ${C[type].detail}${cause ? ', ' + cause.dit[type] : ''} ; capacité −${Math.round(C[type].capacite * 100)} %` });
-      break;
-    } }
-  }
+  // (moteur/noyau/habitat.js, docs/59)
+  const sinistres = HAB.catastrophes({ PAS, R, REGLES, SMe, axesCycle, biomes, ev, phaseDe });
 
   // 2. l'état de départ : par taxon, les plans de chaque phénotype ; par biome, la biomasse qui pèse sur la capacité
   //    (les herbivores en entier, les omnivores et les charognards en partie, les carnivores pas du tout : eux vivent des proies)
-  const etat = new Map(), B = {};
-  for (const t of taxons) {
-    if (t.eteint) continue;
-    const plans = t.phenotypes.map(p => planDe(t.plan, p.traits, cat));
-    const pops = {}, syn = t.plan.regime === 'synthetique';   // (une machine n'a ni allèles ni traits continus : docs/16)
-    for (const pop of t.populations) {
-      // (les fréquences publiées sont arrondies : rapportées à leur somme, elles redonnent tout l'effectif — sans cela, des milliers
-      // de bêtes se perdaient chaque cycle dans les arrondis, sans mourir)
-      const F = t.phenotypes.map(p => Math.max(0, +(p.frequence_par_biome?.[pop.biome] ?? p.frequence) || 0)), SF = F.reduce((a, x) => a + x, 0);
-      const N = F.map(f => SF > 0 ? pop.effectif * f / SF : 0); if (SF <= 0 && N.length) N[0] = pop.effectif;
-      pops[pop.biome] = { N, depuis: pop.depuis ?? t.apparu, avant: pop.effectif, predation: new Array(N.length).fill(0), ration: new Array(N.length).fill(0), satiete: null, maladie: pop.maladie ? { ...pop.maladie } : null, malade0: !!pop.maladie };
-      if (SEX && !syn) pops[pop.biome].A = allelesDe(t.phenotypes, N, cat, pop.alleles);   // les fréquences d'allèles (un monde d'avant : déduites des phénotypes)
-      // (docs/50, dans un monde à la mémoire éveillée : Mp, ce que la population publiait ; M, ce que ses migrants y mêleront ; att0, son attitude)
-      Object.assign(pops[pop.biome], { flux0: pop.flux ?? 0, hyb0: pop.hybride?.part ?? 0, immig: 0, mef0: pop.mefiance ?? 0, hab0: pop.habituation ?? 0 }); if (ME) { const P = pops[pop.biome]; P.Mp = ME.lire(pop.memoire); if (pop.memoire) P.M = { ...P.Mp }; P.att0 = pop.attitude; } if (pop.hivernants) pops[pop.biome].hiv = { ...pop.hivernants }; if (pop.savoirs?.routes) pops[pop.biome].routes = pop.savoirs.routes; if (pop.recouvrement != null) pops[pop.biome].rec0 = pop.recouvrement; if (pop.recouvrement_avant != null) pops[pop.biome].recAvant = pop.recouvrement_avant; if (pop.infection) pops[pop.biome].inf0 = pop.infection;
-      if (GEN && !syn) { const P = pops[pop.biome], Q = P.Q = lireQ(pop.quant);   // ce que ses traits continus pèsent : risque d'être mangé, naissances, maladie
-        P.fp = penteQ(Q, 'predation'); P.ff = penteQ(Q, 'fecondite') * chargeQ(Q, t.plan, biomes[pop.biome]); P.fm = penteQ(Q, 'maladie'); }
-      const s0 = pop.satiete ?? 0;   // (la satiété du cycle précédent : un omnivore qui trouve des proies pèse moins sur la place)
-      (B[pop.biome] ??= []).push({ masse: t.plan.masse_kg || 1, biomasse: N.reduce((s, n, i) => s + n * (plans[i].masse_kg || 1) * (plans[i].regime === 'omnivore' ? 1 - .3 * s0 : plans[i].regime === 'detritivore' && REGLES.cadavres > 0 ? 0 : PART_K[plans[i].regime] ?? 1), 0) });   // (un charognard qui vit des morts ne pèse pas sur les plantes)
-    }
-    etat.set(t.id, { plans, pops, couts: t.phenotypes.map(p => coutDe(p.traits, cat)),
-      vuln: t.phenotypes.map(p => facteur(p.traits, cat, 'vulnerabilite')), chasse: t.phenotypes.map(p => facteur(p.traits, cat, 'chasse')),
-      resist: t.phenotypes.map(p => facteur(p.traits, cat, 'resistance')) });
-  }
+  // (moteur/noyau/depart.js, docs/59 : l'état de départ est un module du cœur ; il reçoit ce qu'il lit, et rend l'état de chaque lignée
+  //  et la biomasse de chaque lieu)
+  const { etat, B } = DEP.etatDeDepart({ GEN, ME, REGLES, SEX, biomes, cat, taxons });
 
   // 2c. la vie synthétique (docs/16) : rien, s'il n'y a ni Mère ni machine
   const SY = SYN ? SYN.preparer({ inst, n, biomes, taxons, etat, phase, axesSaison, charge, BANDE, PART_K, REGLES, ev, convenance }) : null;
@@ -508,10 +474,8 @@ function cycleBrut(inst, pressions = {}, opt = {}, CTX = contexte(inst)) {
 
   // 2b. qui vit où, et ce que chacun porte au début du cycle (les croisements entre lignées lisent cet état-là : l'ordre des
   //     taxons ne change rien)
-  const HYB = SEX && REGLES.hybride?.actif !== false && opt.hybride !== false, Tmap = new Map(taxons.map(t => [t.id, t])), presents = {}, isoCache = new Map();
-  const isoDe = (a, b) => { const k = a.id < b.id ? a.id + '|' + b.id : b.id + '|' + a.id; if (!isoCache.has(k)) isoCache.set(k, isolement(a, b, Tmap, n)); return isoCache.get(k); };
-  if (HYB) for (const t of taxons) { if (t.eteint || t.plan.regime === 'synthetique') continue; for (const [bid, P] of Object.entries(etat.get(t.id).pops)) { const Nt = P.N.reduce((a, x) => a + x, 0); if (Nt < 1) continue;
-    (presents[bid] ??= []).push({ t, N: Nt, A0: P.A ? { ...P.A } : null, Q0: P.Q ? copieQ(P.Q) : null }); } }
+  // (moteur/noyau/depart.js, docs/59)
+  const { HYB, Tmap, presents, isoDe } = DEP.presences({ REGLES, SEX, etat, isolement, n, opt, taxons });
 
   // 3. la chaîne alimentaire, biome par biome : chaque prédateur prélève des proies selon ce qui est à sa portée ;
   //    sa satiété décide de ses naissances et de sa faim ; la vulnérabilité de chaque phénotype de proie décide qui est mangé.
@@ -562,8 +526,8 @@ function cycleBrut(inst, pressions = {}, opt = {}, CTX = contexte(inst)) {
 
   // 7. le catalogue de l'instantané : les traits réellement portés
   // (dans l'ordre du catalogue : c'est lui qui dit qui masque qui, docs/9)
-  const portes = new Set(); for (const t of sortie) for (const p of t.phenotypes) for (const id of p.traits) if (cat[id]) portes.add(id);
-  const ORD = Object.keys(CAT.TRAITS), traits = {}; for (const id of [...portes].sort((x, y) => ((ORD.indexOf(x) + 1) || 999) - ((ORD.indexOf(y) + 1) || 999) || (x < y ? -1 : 1))) traits[id] = clone(cat[id]);   // (une copie : un jeu qui modifie l'instantané reçu ne touche pas au catalogue du moteur)
+  // (moteur/noyau/lignees.js, docs/59)
+  const traits = LIG.traitsPortes({ cat, sortie });
   const duree = opt.duree_ms ?? 86400000, d0 = Date.parse(inst.cycle.date);
   return {
     orvane: CONTRAT, monde: (m => m === inst.monde ? clone(m) : m)((m => SDi ? SDi.monde(m) : m)((m => SP ? SP.monde(m) : m)((m => SY ? SY.monde(m) : m)(SN ? SN.monde(SC ? SC.monde(inst.monde) : inst.monde) : SC ? SC.monde(inst.monde) : inst.monde)))),

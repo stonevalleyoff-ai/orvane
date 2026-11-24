@@ -37,7 +37,7 @@ console.log('2. Une genèse naissante');
 }
 
 console.log('3. Ce qu\'ils mangent');
-{ const src = ['moteur/orvane.js', 'moteur/noyau/predation.js'].map(f => fs.readFileSync(racine(f), 'utf8')).join('\n');   // (docs/59 : le partage des proies est un module du cœur)
+{ const src = ['moteur/orvane.js', ...fs.readdirSync(racine('moteur/noyau')).filter(f => f.endsWith('.js')).sort().map(f => 'moteur/noyau/' + f)].map(f => fs.readFileSync(racine(f), 'utf8')).join('\n');   // (docs/59 : le cœur du moteur, et ses modules)
   verif(/q\.regime !== 'detritivore' && q\.regime !== 'vegetal'/.test(src) && /'detritivore' && REGLES\.cadavres > 0 \? 0/.test(src),
     'leur offre ne vient que des bêtes (ni des plantes, ni d\'eux-mêmes), et un charognard qui vit des morts ne pèse pas sur les plantes');
 }
