@@ -6,7 +6,7 @@
 'use strict';
 (function (racine) {
   const CAT = typeof require === 'function' ? require('../catalogue.js') : racine.OrvaneCatalogue;   // le catalogue des traits (moteur/catalogue.js)
-  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const { clamp } = typeof require === 'function' ? require('./outils.js') : racine.OrvaneOutils;   // (moteur/noyau/outils.js)
   // --- les traits continus (docs/8) : par population, Q[trait] = { m : moyenne génétique, G : variance additive }, en
   // écarts-types naturels de la génération 0 ; la variance phénotypique est P = G + (1 − h2), l'environnement ne change pas ---
   const QUANT = CAT.QUANT || {};

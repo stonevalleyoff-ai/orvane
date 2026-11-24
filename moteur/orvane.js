@@ -224,8 +224,14 @@ function isolement(A, B, T, n, CTX = DEFAUT) {
     dc = CORPS && A.plan.corps && B.plan.corps ? CORPS.distance(A.plan.corps, B.plan.corps) : 0, dn = A.plan.niche && B.plan.niche ? dist(A.plan.niche, B.plan.niche, CTX) : 0;
   return 1 - Math.exp(-(Math.max(0, n - lien.depuis) / H.tau + H.masse * dm + H.corps * dc + H.niche * dn));
 }
+// --- les outils du cœur (moteur/noyau/outils.js) ; le plan d'une lignée, ses lieux et son calendrier (moteur/noyau/plan.js) : des fonctions pures
+// (docs/59) ; ce qui dépend du contexte d'un monde (les saisons d'un lieu, la dérive, l'appétence, la croissance, la convenance, la route de
+// l'hiver) reste ici ---
+const OUTILS = typeof require === 'function' ? require('./noyau/outils.js') : racine.OrvaneOutils;
+const { clamp, clone, hasard, rng } = OUTILS;
+const PLAN = typeof require === 'function' ? require('./noyau/plan.js') : racine.OrvanePlan;
+const { SAISONS, PART_K, facteur, SIGMA_BANDE, recouvrement, charge, BANDE, planDe, coutDe, ecartsDe, mortalite, CHAROGNE, eauDouce, eauSalee, lieuType, memeMilieu, plafonner, photoperiode, fenetreDe, biomasse } = PLAN;
 // la phase de l'année (0 = plein hiver, 0,5 = plein été) et son nom
-const SAISONS = ['hiver', 'printemps', 'été', 'automne'];
 const saisonDe = (n, annee, CTX = DEFAUT) => { if (!annee) return null; const phase = (n % annee) / annee; return { phase: +phase.toFixed(4), nom: SAISONS[Math.floor(((phase + .125) % 1) * 4)], production: +(1 + CTX.R.saisons.capacite * -Math.cos(2 * Math.PI * phase)).toFixed(3) }; };
 // les axes d'un biome à une phase de l'année : froid et sombre en hiver, chaud et lumineux en été, un peu plus humide en hiver
 function axesSaison(b, phase, CTX = DEFAUT) {
@@ -235,8 +241,6 @@ function axesSaison(b, phase, CTX = DEFAUT) {
   return a;
 }
 const productionSaison = (b, phase, CTX = DEFAUT) => phase == null || b.saisons === false || b.saisons === null ? 1 : 1 + ({ ...CTX.R.saisons, ...(b.saisons || {}) }).capacite * -Math.cos(2 * Math.PI * phase);
-const PART_K = { herbivore: 1, omnivore: 1, detritivore: .3, filtreur: .3, carnivore: 0, synthetique: 0 };   // ce que chaque régime pèse sur la capacité du biome (l'omnivore : moins s'il trouve des proies)
-const facteur = (traits, cat, k) => traits.reduce((f, id) => f * (cat[id]?.[k] ?? 1), 1);
 // Une lignée qui se sépare dérive : sa masse (et avec elle maturité et longévité, allométriquement), son tempérament, sa
 // sociabilité, et sous REGLES.derive plus marqué (la genèse) son régime, sa locomotion, son heure — la niche devient le biome.
 function deriver(plan, b, R, CTX = DEFAUT) {
@@ -284,15 +288,6 @@ function deriver(plan, b, R, CTX = DEFAUT) {
     if (volait && p.corps) p.corps = { ...p.corps, ailes: 0, organes: (p.corps.organes || []).filter(o => o.type !== 'ailes'), forme: p.corps.forme === 'oiseau' ? 'bipede' : p.corps.forme }; }
   return p;
 }
-// la place qu'un taxon trouve dans un biome : les autres l'encombrent d'autant plus qu'ils ont sa taille (une bête de
-// 5 kg et une de 60 kg ne broutent pas la même chose) — recouvrement gaussien sur le logarithme des masses
-// Les ressources d'un biome s'étalent sur quatre décades de masse (0,1 kg à 1 t) ; une espèce n'en exploite qu'une bande
-// (écart-type 0,35 décade : une bête de 5 kg et une de 15 kg ne se gênent qu'à moitié, 5 kg et 60 kg presque pas) :
-// sa capacité propre est cette part de la capacité du biome, et la somme de toutes reste bornée par K.
-const SIGMA_BANDE = .35;
-const recouvrement = (m1, m2) => { const d = Math.log10(m1 / m2); return Math.exp(-(d * d) / (2 * SIGMA_BANDE * SIGMA_BANDE)); };
-const charge = (liste, masse) => liste.reduce((s, e) => s + e.biomasse * recouvrement(masse, e.masse), 0);
-const BANDE = Math.sqrt(2 * Math.PI) * SIGMA_BANDE / 4;   // ≈ 0,22 : la largeur d'une bande rapportée au spectre entier
 // l'appétence d'un prédateur pour une proie : la masse (une proie d'un tiers de sa masse est idéale ; rien au-delà de 1,5 fois,
 // rien sous un cinquantième), la vitesse (une proie plus rapide échappe), le vol (hors de portée d'un marcheur), le groupe
 // (l'alerte collective) et l'heure (un diurne croise peu un nocturne)
@@ -314,28 +309,8 @@ function appetence(pred, proie, CTX = DEFAUT) {
   const ap = pred.activite, aq = proie.activite; if (ap && aq && ap !== aq && ap !== 'continue' && aq !== 'continue' && ap !== 'crepusculaire' && aq !== 'crepusculaire') f *= .6;
   return f;
 }
-const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
-const clone = o => JSON.parse(JSON.stringify(o));
 const dist = (a, b, CTX = DEFAUT) => Math.sqrt(CTX.AX.reduce((s, k) => s + ((a[k] ?? .5) - (b[k] ?? .5)) ** 2, 0));
-// (docs/52) un tirage qui ne dépend que d'un nom, de la graine et du cycle : il ne prend rien au hasard du cycle
-const hasard = (s, g, n) => { let h = (2166136261 ^ (g >>> 0)) >>> 0; for (const c of String(s)) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0;
-  h = (Math.imul(h ^ 0x6d2b79f5, 2654435761) ^ Math.imul(n + 1, 0x85ebca6b)) >>> 0; h = Math.imul(h ^ (h >>> 15), 0x2c1b3c6d) >>> 0; return ((h ^ (h >>> 13)) >>> 0) / 4294967296; };
-function rng(graine, n) {           // un générateur par cycle, semé par la graine du monde et le numéro de cycle
-  let g = ((graine >>> 0) ^ Math.imul(n + 1, 0x9e3779b9)) >>> 0;
-  return () => { g = (Math.imul(g, 1664525) + 1013904223) >>> 0; return g / 4294967296; };
-}
 
-// --- le plan corporel d'un phénotype : plan de base × écarts de ses traits ---
-function planDe(plan, traits, cat) {
-  const p = { ...plan };
-  for (const id of traits) { const t = cat[id]; if (!t) continue;
-    for (const k in t.ecarts || {}) if (typeof p[k] === 'number') p[k] *= t.ecarts[k];
-    Object.assign(p, t.fixe || {}); }
-  for (const k of ['sociabilite', 'temperament', 'perception']) if (typeof p[k] === 'number') p[k] = clamp(p[k], 0, 1);
-  return p;
-}
-const coutDe = (traits, cat) => clamp(traits.reduce((s, id) => s + (cat[id]?.cout || 0), 0), 0, .95);
-const ecartsDe = (traits, cat) => { const e = {}; for (const id of traits) for (const k in cat[id]?.ecarts || {}) e[k] = (e[k] ?? 1) * cat[id].ecarts[k]; return e; };
 // taux intrinsèques, par cycle
 // (la masse ramène tout : une bête de 100 kg ne se multiplie pas comme une de 1 kg — loi de Fenchel, r ∝ masse^-1/4 ;
 //  on garde la différence entre les stratégies, portée et maturité, à l'intérieur de ce que la masse permet)
@@ -344,30 +319,10 @@ const ecartsDe = (traits, cat) => { const e = {}; for (const id of traits) for (
 const croissance = (p, CTX = DEFAUT) => { if (CTX.JOURS && Number.isFinite(p.natalite)) return Math.max(0, p.natalite) * CTX.JOURS / 365.25;
   const rmax = .35 * Math.pow(Math.max(.1, p.masse_kg || 1), -.25), r = .6 * Math.log(1 + (p.portee || 2)) / Math.max(1, p.maturite || 1);
   return CTX.PAS === 1 ? clamp(r * Math.min(1, rmax / .35), .01, rmax) : clamp(r * Math.min(1, rmax / .35), .01 * CTX.PAS, rmax * CTX.PAS); };
-const mortalite = p => 1 / Math.max(2, p.longevite || 20);
-const CHAROGNE = { id: '(les morts du lieu)', plan: { regime: 'vegetal', masse_kg: 1 } };   // (docs/52 : une proie de plus, qu'on ne tue pas)
-// convenance d'un biome (0..1) : 1 dans la niche, décroît avec la distance ; nulle si le milieu est impossible
-// L'eau : un nageur vit en eau douce (plan.eau absent, ou 'douce'), en mer ('salee'), ou dans les deux ('mixte', comme
-// les poissons qui remontent les fleuves) ; une côte, une mangrove, un estuaire (amphibie) accueillent tous les nageurs.
-const eauDouce = plan => plan.eau !== 'salee', eauSalee = plan => plan.eau === 'salee' || plan.eau === 'mixte';
 // (docs/38) la route de l'hiver d'une population : null, ou { vers, ici, la, part } — P son plan, b son lieu, lieu(id) → un lieu,
 // s sa sociabilité, routes la part des siens qui savent les routes (docs/34), H les seuils (ceux du moteur, ou d'un monde). Sans
 // hasard : le moteur s'en sert pour faire partir les bêtes (REGLES.hivernage.actif), collectif.js pour le dire aux jeux. (Une mer ne
 // se traverse qu'en volant, nageant, dérivant.)
-const lieuType = id => String(id ?? '').split('~')[0];
-// (docs/52) deux lieux d'un même milieu, pour qui essaime : la terre et la terre, l'eau et l'eau ; les rives (amphibie) touchent les deux
-const memeMilieu = b => v => v.milieu === b.milieu || v.milieu === 'amphibie' || b.milieu === 'amphibie';
-// trop de variantes : le plan de base et les plus fréquentes restent ; chacune des autres rejoint la gardée la plus proche (le moins
-// de traits en plus ou en moins ; à égalité, la première gardée), avec sa fréquence, partout où elle vit
-function plafonner(t, max) {
-  const P = t.phenotypes; if (P.length <= max) return;
-  const tri = P.map((p, i) => i).slice(1).sort((x, y) => (P[y].frequence || 0) - (P[x].frequence || 0) || x - y), gardes = [0, ...tri.slice(0, max - 1)];
-  const TS = P.map(p => new Set(p.traits)), ecart = (a, b) => { let d = 0; for (const x of TS[a]) if (!TS[b].has(x)) d++; for (const x of TS[b]) if (!TS[a].has(x)) d++; return d; };
-  for (const i of tri.slice(max - 1)) { let j = 0, dj = Infinity; for (const g of gardes) { const d = ecart(i, g); if (d < dj) { dj = d; j = g; } }
-    const a = P[i], b = P[j]; b.frequence = +((b.frequence || 0) + (a.frequence || 0)).toFixed(6);
-    if (a.frequence_par_biome) { b.frequence_par_biome ??= {}; for (const k in a.frequence_par_biome) b.frequence_par_biome[k] = +((b.frequence_par_biome[k] || 0) + a.frequence_par_biome[k]).toFixed(6); } }
-  const g = new Set(gardes); t.phenotypes = P.filter((p, i) => g.has(i));
-}
 
 // (docs/52) axesA(x, phase) : les axes d'un lieu à une phase de SON année (un monde au calendrier : son hiver vient de son climat) ;
 // dans un monde réel (des lieux qui ont lieu.lat), une parcelle du même type peut avoir un autre hiver : elle compte
@@ -387,19 +342,7 @@ function routeHiver(P, b, lieu, s = 0, routes = 0, H, axesA, CTX = DEFAUT) {
   if (!best) return null;
   return { vers: best.v, ici, la: best.la, part: clamp((best.la - ici) / best.la * (.5 + .5 * s) + .3 * routes, H.part_min, H.part_max) };
 }
-// une fenêtre de l'année, en cycles : null hors d'elle ; sinon { long, rang, reste } (reste : les cycles qu'il y reste, celui-ci compris)
-// (docs/53) le jour de l'année (0 : le 1er janvier) où, à une latitude, les jours passent sous P.depart heures après l'été, et celui où ils
-// repassent au-dessus de P.retour heures après l'hiver ; gardés une fois pour toutes (au demi-degré)
-const PHOTO = new Map();
-function photoperiode(lat, P) { const cle = `${Math.round(lat * 2) / 2}|${P.depart}|${P.retour}`; if (PHOTO.has(cle)) return PHOTO.get(cle);
-  const L = d => CALEN.dureeJour(Math.round(lat * 2) / 2, Date.UTC(2027, 0, 1 + d, 12)); let dep = null, ret = null;
-  for (let d = 172; d < 365 && dep == null; d++) if (L(d) < P.depart) dep = d;
-  for (let d = 0; d < 172 && ret == null; d++) if (L(d) >= P.retour) ret = d;
-  const v = dep != null && ret != null && ret < dep ? { dep, ret } : null; PHOTO.set(cle, v); return v; }
-function fenetreDe(k, A, [a, b]) {
-  const d0 = Math.ceil(a * A - 1e-9), d1 = Math.ceil(b * A - 1e-9), long = ((d1 - d0) % A + A) % A, rang = ((k - d0) % A + A) % A;
-  return rang < long ? { long, rang, reste: long - rang } : null;
-}
+// convenance d'un biome (0..1) : 1 dans la niche, décroît avec la distance ; nulle si le milieu est impossible
 function convenance(plan, biome, CTX = DEFAUT) {
   const loco = plan.locomotion || [], m = biome.milieu;
   const terre = loco.some(l => ['marche', 'course', 'saut', 'reptation', 'fouissage', 'grimpe'].includes(l));
@@ -411,7 +354,6 @@ function convenance(plan, biome, CTX = DEFAUT) {
   const d = dist(plan.niche, biome.axes, CTX), tol = plan.tolerance || .35;
   return Math.exp(-(d * d) / (2 * tol * tol));
 }
-const biomasse = (plans, N) => N.reduce((s, n, i) => s + n * (plans[i].masse_kg || 1), 0);
 
 // --- un cycle ---
 // un monde peut porter ses propres règles (monde.regles : celles que sa genèse a choisies) ; elles valent le temps de son cycle

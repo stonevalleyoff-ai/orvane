@@ -152,7 +152,19 @@ La dynamique de chaque lignée (l'étape 4 du cycle, 225 lignes) appelle 27 fonc
 
 Le code est déplacé, non réécrit : le même monde au bit près, sur les sept mondes et le monde à l'axe propre. `moteur/orvane.js` passe de 1 183 lignes (avant les modules) à 1 004.
 
-**La suite**, une étape à la fois, chacune au bit près : la dynamique de chaque lignée (4 : les naissances, les morts, les migrations), qui peut maintenant appeler la génétique elle-même ; l'habitat (1), l'état de départ (2), les arrivées (5), la naissance des lignées et les extinctions (6), le catalogue (7).
+## 04, la quatrième étape : les outils, le plan, le calendrier
+
+Après la génétique, la dynamique de chaque lignée dépendait encore d'une quinzaine de fonctions et de constantes du moteur qui ne demandent rien au contexte d'un monde. Elles forment deux modules :
+- **`moteur/noyau/outils.js`** : borner un nombre, copier un état, et le hasard : le générateur d'un cycle (semé par la graine du monde et le numéro du cycle) et le tirage qui ne dépend que d'un nom. Tout le hasard du cœur vient de là.
+- **`moteur/noyau/plan.js`** : le plan corporel d'un phénotype et ce que coûtent ses traits, la mortalité, la place d'une lignée parmi celles de sa taille (la bande de masse), ce que chaque régime pèse sur la capacité d'un lieu, les milieux (l'eau douce ou salée, la terre, les rives), la fenêtre d'une saison dans l'année et la photopériode d'une latitude (par `moteur/calendrier.js`).
+
+Ce qui dépend du contexte d'un monde reste dans `moteur/orvane.js` : la saison d'un lieu, la dérive d'une lignée, l'appétence, la croissance, la convenance d'un lieu, la route de l'hiver. Hors de ce contexte, la dynamique ne dépend plus que de modules : ceux du cœur, et ceux qui existaient déjà (le catalogue, le calendrier, le climat, les diètes). Elle peut devenir un module à son tour.
+
+Le code est déplacé, non réécrit : le même monde au bit près, sur les sept mondes, entrelacés, et le monde à l'axe propre. `moteur/orvane.js` : 946 lignes.
+
+**Le Web Worker de l'Observatoire chargeait un fichier de moins que la page.** Sans `moteur/calendrier.js`, un monde au jour (l'Europe) y tournait sans son calendrier : en hiver quand il est en automne, et autrement selon que le navigateur lançait le Worker ou non. Sa liste est maintenant celle des balises de la page, dans le même ordre, et `bancs/simulateur.js` le vérifie ; le Worker, imité dans Node, rend le même cycle de l'Europe que le moteur, au bit près.
+
+**La suite**, une étape à la fois, chacune au bit près : la dynamique de chaque lignée (4 : les naissances, les morts, les migrations) ; l'habitat (1), l'état de départ (2), les arrivées (5), la naissance des lignées et les extinctions (6), le catalogue (7).
 
 ## Ce qui vient
 
