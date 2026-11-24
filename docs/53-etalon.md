@@ -178,6 +178,27 @@ Un omnivore naît désormais de ce qu'il mange, dans la part où il le mange (do
 
 **La vie des oiseaux.** L'aigle royal et le pygargue ne manquaient pas de nourriture (satiété 0,84 et 0,88) : la vie sauvage de l'assemblage (3 × masse^0,3 années, posée pour les mammifères) faisait mourir l'aigle à 4,7 ans, mûr à 4. Un oiseau vit environ deux fois plus (Lindstedt et Calder 1976) : 6 × masse^0,3, et toute vie dure au moins deux fois l'âge de la maturité. Recalé : 90 % des espèces sous ×1,33 d'une année à l'autre (×1,45 avant) ; l'adresse de l'aigle royal tombe de la borne (50) à 5,8, celle du pygargue à 9,1 (la buse, l'autour, l'épervier, le milan y restent). Deux années sur trois graines : 9 ✓, 1 ≈, 1 ✗ ; **le lynx boréal remonte** (−0,2 à +1,0 % par an), le glouton décline moins (−4,3 à −4,5 %), le lynx pardelle −2,6 à −3,2 % ; le rendement des chasseurs 1,5 % et 10,4 %, la diversité ×0,97. Le loup de France : 549, 613, 604 bêtes en 2023.
 
+## Le sixième rapport : la concurrence suit la quête
+
+**Ce qui restait.** Le rapport du 22 novembre (trois années, trois graines) laissait le lynx pardelle à −4,0 à −4,2 % par an et le glouton à −4,1 à −4,3 %, quand leurs proies croissaient : celles du lynx pardelle étaient multipliées par 3,7 en trois ans. Une année d'Europe instrumentée (le partage des proies de chaque population, jour après jour) dit pourquoi :
+- le lynx pardelle laisse 90 % de ses lapins à ses « concurrents », le renard (61 %) et le sanglier (39 %). Or la quête du renard et celle du sanglier vont à 65 % aux vers de terre et à 13 à 15 % aux limaces : ils ne prennent presque pas de lapins ;
+- le glouton en laisse 98 %, au lynx boréal, au loup, au pygargue et à l'aigle royal, pour les morts du lieu et les lièvres variables.
+
+**Le défaut.** Dans le partage des proies, un concurrent pesait de toute sa quête dès qu'il *pouvait* manger les proies d'un chasseur. Pourtant, ce qu'il tue suit sa quête. Le moteur comptait donc des concurrents qui ne tuaient pas ce qu'ils disputaient. C'est aussi ce que le calage compensait en poussant l'adresse des rapaces à la borne : « une adresse à la borne est un mécanisme qui manque » (le cinquième rapport).
+
+**Le recouvrement des quêtes** (`regles.recouvrement`, docs/52). Sur chaque proie que deux chasseurs mangent l'un et l'autre, le concurrent ne pèse plus que de la part de sa quête qu'il y met, au plus celle du chasseur : c'est le recouvrement de Schoener (1970). Au premier jour, la satiété du lynx pardelle passe de 0,61 à 0,93, celle du lynx boréal de 0,51 à 0,92, celle du glouton de 0,34 à 0,61.
+
+**Recalée** (un jour, puis trois passes d'un an), l'Europe tient comme avant : 90 % des espèces à moins de ×1,33 d'une année à l'autre. Les rapaces retrouvent presque l'adresse du moteur :
+
+| | l'adresse calée, avant | avec le recouvrement |
+| --- | --- | --- |
+| l'aigle royal | 5,8 | 1,0 |
+| le pygargue | 9,1 | 1,1 |
+| le balbuzard | 17,8 | 3,0 |
+| l'épervier | 50 (la borne) | 4,9 |
+
+La buse, l'autour et le milan royal quittent aussi la borne. À l'inverse, le calage donne aux chasseurs de la mer (les dauphins, le thon, le saumon, le bar, le maquereau) cinq à six fois plus d'adresse pour qu'ils tiennent. Ce qu'ils chassent, d'autres chasseurs moins gênés en prennent sans doute davantage ; c'est à vérifier.
+
 ## Une expérience : le retour du loup
 
 `node outils/etalon.js --experience loup` prend un morceau de l'Europe (la France, l'Italie, la Suisse, Monaco : 96 lieux) en 1992. La France et la Suisse n'ont plus un loup, l'Italie en a environ 30 % d'aujourd'hui (≈ 350, ils étaient environ 400 vers 1990). Avec le loup, on garde ses grandes proies : les ongulés, les lièvres, le lapin, la marmotte, le castor. On laisse les autres carnivores et les plantes, pour aller vite : 31 ans en quatre minutes. On compare ensuite à ce qu'a vu l'Office français de la biodiversité :
