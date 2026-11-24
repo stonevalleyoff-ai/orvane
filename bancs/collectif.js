@@ -10,6 +10,7 @@
 //  6. l'hivernage qui compte (regles.hivernage.actif) : éteint, rien ne bouge ; allumé, les rennes partent à la fin de l'automne,
 //     hivernent en taïga et rentrent au printemps ; des événements de saison, pas des extinctions ; plus de rennes au sortir de l'hiver ;
 //  7. par parcelles : les hivernants d'un biome, comptés à partir de ceux de ses parcelles ; les visiteurs que lit un jeu.
+//  8. les règles d'un monde (regles.collectif) : elles valent pour lui, celles du module ne changent pas.
 //   node bancs/collectif.js
 'use strict';
 const fs = require('fs'), path = require('path');
@@ -117,6 +118,13 @@ console.log('7. Par parcelles');
   const V = Pa.regrouper(I), p = V.taxons[0].populations.find(x => x.biome === 'taiga'), D = K.decrire(V), vis = D.biomes.find(x => x.id === 'taiga').visiteurs || [];
   verif(Math.abs((p.hivernants?.toundra || 0) - (300 * .8 + 100 * .5) / 400) < 1e-4 && Object.keys(p.hivernants).length === 1, `la taïga (deux parcelles) : ${fx(p.hivernants.toundra * 100, 1)} % d'hivernants venus de la toundra, par biome et non par parcelle`);
   verif(vis.length === 1 && vis[0].de === 'toundra' && vis[0].effectif === 290, `ce que lit un jeu : ${vis.map(v => `${v.effectif} ${v.taxon} de la ${v.de}`).join(', ')} — les hivernants comptés, non une estimation`); }
+
+console.log('8. Les règles d\'un monde (regles.collectif, docs/59)');
+{ // un monde qui règle sa vie en groupe : des troupeaux deux fois plus grands ; le module garde les siennes
+  const W = monde(.4), R0 = JSON.stringify(K.REGLES), X = { ...W, monde: { ...W.monde, regles: { collectif: { taille: { troupeau: 60 } } } } };
+  const a = grp(K.decrire(W), 'renne', 'toundra').groupe, b = grp(K.decrire(X), 'renne', 'toundra').groupe, ga = K.groupeDe(W.taxons[0], W.taxons[0].populations[0], B[0], W), gb = K.groupeDe(X.taxons[0], X.taxons[0].populations[0], B[0], X);
+  verif(b.forme === 'troupeau' && b.taille.typ > a.taille.typ * 1.5 && gb.taille.typ === b.taille.typ && ga.taille.typ === a.taille.typ && JSON.stringify(K.REGLES) === R0,
+    `un monde qui règle sa vie en groupe (regles.collectif : des troupeaux de 60 en moyenne, contre 30) : ses rennes vont par ${b.taille.typ} au lieu de ${a.taille.typ}, qu'on le décrive ou qu'on lise une population ; les règles du module n'y changent pas`); }
 
 console.log(`\n${ok ? 'tout est vérifié' : 'ÉCHEC'} (${((Date.now() - t0) / 1000).toFixed(0)} s)`);
 process.exit(ok ? 0 : 1);
