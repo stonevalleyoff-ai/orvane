@@ -144,7 +144,15 @@ Le cycle du moteur (`cycleBrut`) tenait en un seul bloc de 600 lignes, en sept �
 
 Le code est déplacé, non réécrit : les mêmes opérations, dans le même ordre. Sept mondes et seize cycles, et le monde à l'axe propre, rendent le même monde au bit près. Dans un navigateur, le cœur se charge par sa balise `<script>`, avant `orvane.js` (l'Observatoire, son Web Worker, le simulateur de joueurs).
 
-**La suite**, une étape à la fois, chacune au bit près : l'habitat (1), l'état de départ (2), la dynamique de chaque lignée (4, la plus grande : les naissances, les morts, les migrations, la génétique), les arrivées (5), la naissance des lignées et les extinctions (6), le catalogue (7).
+## 04, la troisième étape : la génétique
+
+La dynamique de chaque lignée (l'étape 4 du cycle, 225 lignes) appelle 27 fonctions et constantes du moteur. Pour qu'elle puisse devenir un module, ce dont elle dépend doit d'abord en être un. Un analyseur de portées (acorn) l'a montré : la génétique en est la plus grande part.
+
+**`moteur/noyau/genetique.js`** : les traits continus d'une population (sa moyenne génétique, sa variance additive, l'équation de Lande), la reproduction sexuée (les fréquences d'allèles, Mendel, Hardy-Weinberg, les portées), la parenté et l'écart génétique de deux lignées. Des fonctions pures : ni le contexte d'un monde, ni rien de global. Ce qui dépend des règles d'un monde reste dans `moteur/orvane.js` : l'écriture au pas du monde, l'attrait, la méfiance, l'isolement reproductif. Le moteur exporte toujours ces fonctions sous les mêmes noms (`Orvane.mendel`, `Orvane.parente`…).
+
+Le code est déplacé, non réécrit : le même monde au bit près, sur les sept mondes et le monde à l'axe propre. `moteur/orvane.js` passe de 1 183 lignes (avant les modules) à 1 004.
+
+**La suite**, une étape à la fois, chacune au bit près : la dynamique de chaque lignée (4 : les naissances, les morts, les migrations), qui peut maintenant appeler la génétique elle-même ; l'habitat (1), l'état de départ (2), les arrivées (5), la naissance des lignées et les extinctions (6), le catalogue (7).
 
 ## Ce qui vient
 
