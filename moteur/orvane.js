@@ -58,6 +58,8 @@ const CORPS = typeof require === 'function' ? require('./corps.js') : racine.Orv
 // balise <script>, avant orvane.js)
 const PRED = typeof require === 'function' ? require('./noyau/predation.js') : racine.OrvanePredation;   // le partage des proies
 const DYN = typeof require === 'function' ? require('./noyau/dynamique.js') : racine.OrvaneDynamique;   // la dynamique de chaque lignée (moteur/noyau/dynamique.js, docs/59)
+const ARR = typeof require === 'function' ? require('./noyau/arrivees.js') : racine.OrvaneArrivees;   // les arrivées (moteur/noyau/arrivees.js, docs/59)
+const LIG = typeof require === 'function' ? require('./noyau/lignees.js') : racine.OrvaneLignees;   // les lignées qui naissent et celles qui s'éteignent (moteur/noyau/lignees.js, docs/59)
 const SYN = typeof require === 'function' ? require('./synthetique.js') : racine.OrvaneSynthetique;   // la vie synthétique (moteur/synthetique.js, docs/16)
 const FLO = typeof require === 'function' ? require('./flore.js') : racine.OrvaneFlore;   // la flore (moteur/flore.js, docs/17)
 const PAT = typeof require === 'function' ? require('./pathogenes.js') : racine.OrvanePathogenes;   // les souches (moteur/pathogenes.js, docs/18)
@@ -196,7 +198,7 @@ const DEFAUT = { R: REGLES, PAS: 1, JOURS: null, AX: AXES };
 const parPas = (p, CTX = DEFAUT) => CTX.PAS === 1 ? p : 1 - Math.pow(1 - p, CTX.PAS);
 // --- la génétique (docs/8, 9, 10) : les traits continus, Mendel et les allèles, les portées, la parenté (moteur/noyau/genetique.js, docs/59) ---
 const GENE = typeof require === 'function' ? require('./noyau/genetique.js') : racine.OrvaneGenetique;
-const { QUANT, lireQ, copieQ, optimumQ, penteQ, chargeQ, evoluerQ, melangerQ, domDe, mendel, allelesDe, portees, divergence, parente, replierQ } = GENE;
+const { QUANT, lireQ, copieQ, optimumQ, penteQ, chargeQ, evoluerQ, melangerQ, domDe, mendel, allelesDe, portees, divergence, parente } = GENE;
 // (ce qui dépend des règles du monde reste ici : l'écriture au pas du monde, l'attrait, la méfiance, l'isolement reproductif)
 // (docs/52 : au pas d'un monde au jour, ce qui change d'un cycle est cent fois plus petit : on l'écrit avec quatre chiffres de plus,
 //  sans quoi l'arrondi le perdrait chaque jour et rien ne bougerait plus)
@@ -231,7 +233,7 @@ function isolement(A, B, T, n, CTX = DEFAUT) {
 const OUTILS = typeof require === 'function' ? require('./noyau/outils.js') : racine.OrvaneOutils;
 const { clamp, clone, hasard, rng } = OUTILS;
 const PLAN = typeof require === 'function' ? require('./noyau/plan.js') : racine.OrvanePlan;
-const { SAISONS, PART_K, facteur, recouvrement, charge, BANDE, planDe, coutDe, ecartsDe, mortalite, CHAROGNE, eauDouce, eauSalee, lieuType, memeMilieu, plafonner, fenetreDe, biomasse } = PLAN;
+const { SAISONS, PART_K, facteur, recouvrement, charge, BANDE, planDe, coutDe, mortalite, CHAROGNE, eauDouce, eauSalee, lieuType, memeMilieu, plafonner, fenetreDe, biomasse } = PLAN;
 // la phase de l'année (0 = plein hiver, 0,5 = plein été) et son nom
 const saisonDe = (n, annee, CTX = DEFAUT) => { if (!annee) return null; const phase = (n % annee) / annee; return { phase: +phase.toFixed(4), nom: SAISONS[Math.floor(((phase + .125) % 1) * 4)], production: +(1 + CTX.R.saisons.capacite * -Math.cos(2 * Math.PI * phase)).toFixed(3) }; };
 // les axes d'un biome à une phase de l'année : froid et sombre en hiver, chaud et lumineux en été, un peu plus humide en hiver
@@ -526,146 +528,19 @@ function cycleBrut(inst, pressions = {}, opt = {}, CTX = contexte(inst)) {
   const migrations = DYN.vivre({ B, CONV, DIA, DT, ES, GEN, HOMJ, HYB, JOURC, ME, MILT, MT, PAS, R, REGLES, RM, SCa, SEX, SF, SL, SMe, SP, SR, SV, SY, attraitDe, axesA, axesCycle, biomes, cat, convenance, croissance, etat, ev, gauss, inst, isoDe, n, opt, parPas, phase, prT, presents, prodCycle, routeHiver, saison, sinistres, taxons, CALEN, CLI, DI });
 
   // 5. les arrivées
-  let fondees = null;   // (docs/52) les lieux qu'une lignée gagne ce cycle, au pas d'un monde au jour
-  for (const mg of migrations) {
-    const E = etat.get(mg.taxon), t = Tmap.get(mg.taxon);   // (vitesse : les lignées par leur nom, et non une recherche par arrivée)
-    if (!E.pops[mg.vers]) { E.pops[mg.vers] = { N: new Array(t.phenotypes.length).fill(0), depuis: n, avant: 0, maladie: null, flux0: 1, immig: 0 }; if (PAS !== 1) (fondees ??= []).push([mg.taxon, mg.vers]); }
-    const D = E.pops[mg.vers], na0 = D.N.reduce((a, x) => a + x, 0), nb0 = mg.N.reduce((a, x) => a + x, 0);   // (vitesse : les deux effectifs, une fois)
-    if (ME && D.n0 == null) D.n0 = na0;   // (docs/50) ceux qui étaient là avant toute arrivée
-    D.immig = (D.immig || 0) + nb0;   // le flux de gènes reçu
-    if (D.hiv || mg.hiv) { const na = na0, nb = nb0, tot = na + nb;   // (docs/38) la part d'hivernants
-      if (tot > 0) { const H = {}; for (const k in D.hiv || {}) H[k] = D.hiv[k] * na / tot; if (mg.hiv) H[mg.hiv] = (H[mg.hiv] || 0) + nb / tot; D.hiv = H; } }
-    if (mg.saison) D.saisonnier = true;
-    if (GEN && mg.Q) { const na = na0, nb = nb0; D.Q = D.Q && na > 0 ? melangerQ(D.Q, na, mg.Q, nb) : copieQ(mg.Q); }   // les migrants apportent leurs gènes
-    if (SEX && mg.A) { const na = na0, nb = nb0, n = na + nb;
-      if (!D.A || na <= 0) D.A = { ...mg.A }; else if (n > 0) { const o = {}; for (const id in D.A) o[id] = ((D.A[id] || 0) * na + (mg.A[id] || 0) * nb) / n; for (const id in mg.A) if (!Object.prototype.hasOwnProperty.call(o, id)) o[id] = ((D.A[id] || 0) * na + (mg.A[id] || 0) * nb) / n; D.A = o; } }
-    if (ME && 'M' in mg) ME.recevoir(D, mg.M, nb0);   // (docs/50) ce que les migrants apportent de mémoire : additionné, puis mêlé une fois (plus bas)
-    mg.N.forEach((x, i) => { D.N[i] += x; });
-  }
-  // (docs/52) au pas d'un monde au jour, ceux qui partent chaque cycle vers un lieu où la lignée n'est pas sont une fraction de bête :
-  // ils fondent un groupe de quatre, une fois sur autant que la fraction le dit (le même nombre en moyenne), sinon personne n'arrive.
-  // Sans cela, une lignée ne gagnerait jamais de lieu neuf : une population de moins de deux bêtes ne tient pas
-  if (fondees) for (const [tid, vers] of fondees) { const D = etat.get(tid).pops[vers], s = D.N.reduce((a, x) => a + x, 0); if (!(s < 4)) continue;
-    const u = hasard(`${tid}|${vers}`, inst.monde.graine, n); D.N = u < s / 4 && s > 0 ? D.N.map(x => x * 4 / s) : D.N.map(() => 0); }
-  if (ME) for (const E of etat.values()) for (const D of Object.values(E.pops)) ME.installer(D);   // (docs/50) la mémoire du lieu et celle de ses arrivants, mêlées par les effectifs, quel que soit l'ordre des arrivées
+  // (moteur/noyau/arrivees.js, docs/59 : les arrivées sont un module du cœur ; il reçoit ce qu'il lit, et écrit dans les populations)
+  ARR.arriver({ GEN, ME, PAS, SEX, Tmap, etat, inst, migrations, n });
 
   if (SP) SP.apres();   // la contagion, la guérison, les souches qui naissent et s'éteignent (docs/18)
   if (SF) SF.apres();   // la pousse des plantes, sous la dent des brouteurs (docs/17)
   if (SY) SY.apres();   // la ferraille, le minerai, la Mère, les erreurs de copie, les transferts (docs/16)
 
   // 6. séparation de lignées, extinctions, écriture des taxons
-  const nouveaux = []; let vivantsN = taxons.filter(t => !t.eteint).length, formesVues = null;
-  for (const t of taxons) {
-    if (t.eteint || vivantsN + nouveaux.length >= REGLES.max_taxons) continue;
-    const E = etat.get(t.id), effP = new Map();   // (vitesse : l'effectif de chaque population, compté une fois et non une fois par paire)
-    for (const [k, q] of Object.entries(E.pops)) effP.set(k, q.N.reduce((a, x) => a + x, 0));
-    for (const [bid, pop] of Object.entries(E.pops)) {
-      if (vivantsN + nouveaux.length >= REGLES.max_taxons) break;   // (la limite vaut pour chaque séparation, pas seulement pour chaque lignée)
-      const eff = effP.get(bid), b = biomes[bid];
-      const s = REGLES.separation, nid = `${t.id}.${bid}`;
-      // le flux de gènes reçu (une moyenne glissante de la part d'immigrants) et l'écart au reste de l'espèce
-      // (docs/52 : au pas d'un monde au jour, une moyenne sur le même temps, de la part d'immigrants par cycle de référence)
-      if (PAS === 1) pop.flux = .85 * (pop.flux0 ?? 0) + .15 * Math.min(1, (pop.immig || 0) / Math.max(1, eff));
-      else { const k = parPas(.15); pop.flux = (1 - k) * (pop.flux0 ?? 0) + k * Math.min(1, (pop.immig || 0) / Math.max(1, eff) / PAS); }
-      // (docs/52 : une lignée réelle vit dans des centaines de lieux ; au pas d'un monde au jour, le reste de l'espèce se compte une
-      //  fois pour toutes, moins le lieu lui-même — les mêmes moyennes, à l'arrondi près — au lieu d'une fois par lieu)
-      if (PAS !== 1) { const T = E.tot ??= (() => { const o = { W: 0, A: {}, Q: {} }; for (const [k, q] of Object.entries(E.pops)) { const w = effP.get(k); if (!(w >= 1)) continue; o.W += w;
-          for (const id in q.A || {}) o.A[id] = (o.A[id] || 0) + w * q.A[id]; for (const c in q.Q || {}) o.Q[c] = (o.Q[c] || 0) + w * q.Q[c].m; } return o; })();
-        const ici = eff >= 1 ? eff : 0, W = T.W - ici;
-        if (W >= 1 && (pop.A || pop.Q)) { const Ar = {}, Qr = {};
-          for (const id in T.A) Ar[id] = Math.max(0, (T.A[id] - ici * (pop.A?.[id] || 0)) / W); for (const c in T.Q) Qr[c] = { m: (T.Q[c] - ici * (pop.Q?.[c]?.m || 0)) / W };
-          pop.div = divergence(pop.A, pop.Q, Ar, Qr); } else pop.div = 0; }
-      else { const autres = Object.entries(E.pops).filter(([k]) => k !== bid && effP.get(k) >= 1);
-      if (autres.length && (pop.A || pop.Q)) { const W = autres.reduce((a, [k]) => a + effP.get(k), 0), Ar = {}, Qr = {};
-        for (const [k2, q] of autres) { const w = effP.get(k2) / W; for (const id in q.A || {}) Ar[id] = (Ar[id] || 0) + w * q.A[id]; for (const k in q.Q || {}) (Qr[k] ??= { m: 0 }).m += w * q.Q[k].m; }
-        pop.div = divergence(pop.A, pop.Q, Ar, Qr); } else pop.div = 0; }
-      const pret = n - pop.depuis >= s.cycles / PAS && eff >= s.effectif && !taxons.some(x => x.id === nid), isole = clamp(1 - Math.max(pop.flux, Object.values(pop.hiv || {}).reduce((a, x) => a + x, 0)) / s.flux, 0, 1);   // (des hivernants ne font pas une lignée : ils repartent, docs/38)
-      const ecolo = pret && t.plan.niche && dist(t.plan.niche, b.axes) >= s.distance * (t.plan.tolerance || .35), geno = pret && pop.div >= s.divergence;
-      if ((ecolo || geno) && isole > 0 && R() < s.chance * PAS * isole * ((ecolo ? 1 : 0) + (geno ? Math.min(4, pop.div / s.divergence) : 0))) {
-        const plan = deriver(t.plan, b, R), mode = SR ? PON.separer(t.plan, plan, b, nid, n) : null;   // (docs/25)
-        const glisse = DT ? DI.deriver(t.plan, plan, nid, n) : null;   // (docs/30) le spectre glisse
-        const neuve = FOR && inst.monde?.formes ? FOR.noter(t.plan, plan, formesVues ??= new Set(tousT.map(x => x.plan?.corps?.forme))) : null;   // (docs/33) une forme nouvelle
-        if (!DT && DER && inst.monde?.derives) DER.regime(t.plan, plan, nid, n);   // (docs/29) le régime dérive, un pas à la fois
-        if (GEN && pop.Q) replierQ(plan, pop.Q);   // ce que la population a acquis devient le plan de la lignée
-        nouveaux.push({ id: nid, nom: `${(t.nom || t.id).replace(/\s*\(.*\)$/, '')} (${b.nom || bid})`, parent: t.id, apparu: n, eteint: null, statut: 'croissance', plan,
-          _E: { plans: t.phenotypes.map(p => planDe(plan, p.traits, cat)), couts: E.couts.slice(), resist: E.resist.slice(), pops: { [bid]: { ...pop, N: pop.N.slice(), depuis: n, flux: 0 } } },   // (la même population, avec tout ce qu'elle porte : ses souches, sa nourriture, sa mémoire)
-          phenotypes: clone(t.phenotypes) });
-        ev.push({ type: 'separation', taxon: nid, biome: bid, detail: `lignée issue de ${t.id}, ${plan.masse_kg < t.plan.masse_kg ? 'plus petite' : 'plus grande'}${plan.regime !== t.plan.regime ? ', devenue ' + plan.regime : ''}${mode ? ', ' + mode : ''}${glisse ? ', ' + glisse : ''}${neuve ? ', ' + neuve : ''}${geno && !ecolo ? `, née de l'isolement (écart génétique ${pop.div.toFixed(2)})` : ''}` });
-        delete E.pops[bid];
-      }
-    }
-  }
-  for (const nt of nouveaux) { etat.set(nt.id, nt._E); delete nt._E; taxons.push(nt); }
+  // (moteur/noyau/lignees.js, docs/59 : la séparation des lignées, puis leur écriture et les extinctions, sont un module du cœur ;
+  //  il reçoit ce qu'il lit ; separer ajoute à taxons et à etat les lignées neuves, ecrire rend celles à publier)
+  LIG.separer({ DT, GEN, PAS, R, REGLES, SR, biomes, cat, deriver, dist, etat, ev, inst, n, parPas, taxons, tousT, DER, DI, FOR, PON });
 
-  const sortie = [];
-  for (const t of taxons) {
-    if (t.eteint) { if (n - t.eteint <= REGLES.memoire_eteint) sortie.push(t); continue; }
-    const E = etat.get(t.id), K = t.phenotypes.length, totP = new Array(K).fill(0);
-    t.populations = [];
-    for (const [bid, pop] of Object.entries(E.pops)) {
-      let eff = pop.N.reduce((a, x) => a + x, 0);
-      if (eff < 2) { if (pop.avant >= 20 && !pop.saisonnier) ev.push({ type: 'extinction', taxon: t.id, biome: bid, detail: 'la population disparaît' }); continue; }   // (un groupe de migrants qui n'a pas pris ne fait pas un événement)
-      const tend = pop.avant > 0 ? (eff - pop.avant) / pop.avant : 1;
-      if (pop.avant < 2 && !pop.saisonnier && (PAS === 1 || eff >= 20)) ev.push({ type: 'migration', taxon: t.id, biome: bid, detail: 'une population s\'installe' });   // (docs/52 : au jour, le petit groupe qui fonde ne fait pas un événement)   // (les arrivées trop maigres pour durer ne comptent pas)
-      // (docs/52 : au pas d'un monde au jour, un cycle ne fait ni effondrement ni explosion : ils se lisent sur des mois, pas encore ici)
-      if (PAS === 1 && pop.avant >= 20 && !pop.saisonnier && tend <= REGLES.effondrement) ev.push({ type: 'effondrement', taxon: t.id, biome: bid, detail: `${Math.round(tend * 100)} % sur le cycle` });
-      if (PAS === 1 && pop.avant >= 20 && !pop.saisonnier && tend >= REGLES.explosion) ev.push({ type: 'explosion', taxon: t.id, biome: bid, detail: `+${Math.round(tend * 100)} % sur le cycle` });
-      const morts = (pop.mortsNat || 0) + (pop.mortsExt || 0) + (pop.mortsPred || 0) + (pop.mortsMal || 0);
-      const p = { biome: bid, effectif: PAS === 1 ? Math.round(eff) : +eff.toFixed(4), tendance: +tend.toFixed(PAS === 1 ? 3 : 6), depuis: pop.depuis };   // (docs/52 : l'effectif exact, au pas d'un monde au jour)
-      if (pop.maladie) p.maladie = { reste: pop.maladie.reste, virulence: pop.maladie.virulence, part: +clamp((pop.mortsMal || 0) / Math.max(1e-9, morts), 0, 1).toFixed(3) };
-      if (pop.mortsExt > 0) p.pression = +clamp(pop.mortsExt / morts, 0, 1).toFixed(3);
-      if (pop.mortsPred > 0) p.predation = +clamp(pop.mortsPred / morts, 0, 1).toFixed(3);
-      if (pop.satiete != null) p.satiete = +pop.satiete.toFixed(3);
-      if (GEN && pop.Q) p.quant = ecrireQ(pop.Q);
-      if (SEX && pop.A) { const a = {}, d = PAS === 1 ? 5 : 9; for (const id of Object.keys(pop.A).sort()) if (pop.A[id] >= 1e-5) a[id] = +pop.A[id].toFixed(d); if (Object.keys(a).length) p.alleles = a; }
-      if (pop.flux != null) p.flux = +clamp(pop.flux, 0, 1).toFixed(PAS === 1 ? 4 : 8);
-      if (pop.hiv) { const h = {}; for (const k of Object.keys(pop.hiv).sort()) if (pop.hiv[k] >= 1e-4) h[k] = +Math.min(1, pop.hiv[k]).toFixed(4); if (Object.keys(h).length) p.hivernants = h; }   // (docs/38)
-      if (REGLES.mefiance.actif && opt.mefiance !== false) {                 // ce que la population a appris des joueurs (docs/12)
-        // (docs/50, dans un monde à la mémoire éveillée : une bête blessée qui survit apprend aussi, et chaque lignée à son caractère)
-        const za = GEN ? pop.Q?.audace?.m || 0 : 0, [m, h] = ME ? ME.mefiance(t.plan, pop.mef0 || 0, pop.hab0 || 0, prT[t.id]?.[bid]?.contact, prT[t.id]?.[bid]?.vecu, za, pop.Mp?.g || 0) : apprendre(pop.mef0 || 0, pop.hab0 || 0, prT[t.id]?.[bid]?.contact, za);
-        if (m >= 1e-3) p.mefiance = +m.toFixed(3); if (h >= 1e-3) p.habituation = +h.toFixed(3);
-        if (m >= REGLES.mefiance.alerte && (pop.mef0 || 0) < REGLES.mefiance.alerte) ev.push({ type: 'mefiance', taxon: t.id, biome: bid, detail: (SY && SY.texteMefiance(t, m)) || `les bêtes se méfient des joueurs (${Math.round(m * 100)} %)` }); }
-      if (ME) ME.publier(t, bid, pop, p, prT[t.id]?.[bid]?.vecu, GEN ? pop.Q?.audace?.m || 0 : 0, ev, biomes[bid]?.nom);   // (docs/50) ce qu'elle a appris des joueurs : l'attrait, la traque, la néophobie, et le mot qui la résume
-      if (SY) SY.publier(t, bid, pop, p, morts);
-      if (SF) SF.publier(t, bid, p, pop);
-      if (SP) SP.publier(t, bid, pop, p);
-      if (pop.div) p.divergence = +pop.div.toFixed(4);
-      if (pop.hyb && pop.hyb.part >= 1e-4) { p.hybride = { avec: pop.hyb.avec, part: +pop.hyb.part.toFixed(4), isolement: +pop.hyb.isolement.toFixed(3) };
-        if (pop.hyb.part >= REGLES.hybride.zone && (pop.hyb0 ?? 0) < REGLES.hybride.zone / 2) ev.push({ type: 'hybridation', taxon: t.id, biome: bid, detail: `zone hybride avec ${pop.hyb.avec} : ${(pop.hyb.part * 100).toFixed(1)} % des naissances` }); }
-      t.populations.push(p); pop.N.forEach((x, i) => { totP[i] += x; });
-    }
-    const total = totP.reduce((a, x) => a + x, 0);
-    if (!t.populations.length) { t.eteint = n; t.statut = 'eteint'; t.phenotypes.forEach(p => { p.frequence = 0; delete p.frequence_par_biome; }); ev.push({ type: 'extinction', taxon: t.id, detail: 'le taxon s\'éteint' }); sortie.push(t); continue; }
-    // les phénotypes : fréquences globales et par biome ; on oublie ceux qui ont disparu (jamais le premier, le plan de base)
-    // un phénotype qui n'a plus un demi-individu disparaît de la liste ; ses bêtes rejoignent le plan de base (elles ne
-    // disparaissent pas avec lui ; leurs allèles, eux, restent dans la population)
-    for (let i = 1; i < K; i++) if (totP[i] < .5 && totP[i] > 0) { for (const pop of Object.values(E.pops)) { pop.N[0] += pop.N[i] || 0; pop.N[i] = 0; } totP[0] += totP[i]; totP[i] = 0; }
-    // trop de variantes : les plus rares rejoignent la variante gardée la plus proche (le moins de traits en plus ou en moins), sur les
-    // comptes exacts, avant tout arrondi — ni bête perdue, ni bête renvoyée au plan de base sans raison
-    { const vifs = []; for (let i = 0; i < K; i++) if (i === 0 || totP[i] >= .5) vifs.push(i);
-      if (vifs.length > REGLES.max_phenotypes) {
-        const tri = vifs.slice(1).sort((x, y) => totP[y] - totP[x] || x - y), gardes = [0, ...tri.slice(0, REGLES.max_phenotypes - 1)];
-        const TS = t.phenotypes.map(p => new Set(p.traits));   // (vitesse : les traits de chaque phénotype, mis en ensemble une fois)
-        const ecart = (a, b) => { const A = TS[a], B = TS[b]; let d = 0; for (const x of A) if (!B.has(x)) d++; for (const x of B) if (!A.has(x)) d++; return d; };
-        for (const i of tri.slice(REGLES.max_phenotypes - 1)) { let j = 0, dj = Infinity; for (const g of gardes) { const d = ecart(i, g); if (d < dj) { dj = d; j = g; } }
-          for (const pop of Object.values(E.pops)) { pop.N[j] += pop.N[i] || 0; pop.N[i] = 0; } totP[j] += totP[i]; totP[i] = 0; } } }
-    const garde = [];
-    t.phenotypes.forEach((p, i) => {
-      if (i > 0 && totP[i] < .5) return;
-      const f = total ? totP[i] / total : 0;
-      const dF = PAS === 1 ? 4 : 8, q = { id: p.id, frequence: +f.toFixed(dF), traits: p.traits, cout_total: +E.couts[i].toFixed(3) };
-      if (t.populations.length > 1) { q.frequence_par_biome = {}; for (const pop of t.populations) { const N = E.pops[pop.biome].N, s = N.reduce((a, x) => a + x, 0); q.frequence_par_biome[pop.biome] = +(s ? N[i] / s : 0).toFixed(dF); } }
-      const ec = ecartsDe(p.traits, cat); if (Object.keys(ec).length) q.ecarts = ec;
-      q.selection = +(f - (p.frequence || 0)).toFixed(4);
-      garde.push(q);
-    });
-    t.phenotypes = garde;
-    const avant = Object.values(E.pops).reduce((a, p) => a + p.avant, 0), tend = avant > 0 ? (total - avant) / avant : 1;
-    t.statut = total < REGLES.menace ? 'menace' : tend > .05 * PAS ? 'croissance' : tend < -.05 * PAS ? 'declin' : 'stable';
-    // (docs/50) le caractère de la lignée : ce qu'elle est avant d'avoir rien appris des joueurs, lu sur son corps et son tempérament
-    if (ME) { const car = ME.caractere(t); if (car) t.caractere = car; else delete t.caractere; }
-    sortie.push(t);
-  }
+  const sortie = LIG.ecrire({ GEN, ME, PAS, REGLES, SEX, SF, SP, SY, apprendre, biomes, cat, ecrireQ, etat, ev, n, opt, prT, taxons });
 
   if (SV) for (const t of sortie) SV.publier(t);   // (docs/26) les deux vies d'une lignée qui se métamorphose
   if (SCa) for (const t of sortie) SCa.publier(t);   // (docs/33) les castes d'une lignée qui vit en colonie

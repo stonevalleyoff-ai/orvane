@@ -172,12 +172,22 @@ L'étape 4 du cycle, la plus longue (224 lignes), sort à son tour : **`moteur/n
 
 Le reste lui vient des modules du cœur : la génétique, le plan, les outils. Le code est déplacé, non réécrit : le même monde au bit près, sur les sept mondes, entrelacés, et le monde à l'axe propre. `moteur/orvane.js` passe à 727 lignes (1 183 avant les modules) ; le cycle y garde l'habitat (1), l'état de départ (2), les arrivées (5), la naissance des lignées et les extinctions (6), le catalogue (7), et appelle le partage des proies (3) et la dynamique (4).
 
-**La suite**, une étape à la fois, chacune au bit près : l'habitat (1), l'état de départ (2), les arrivées (5), la naissance des lignées et les extinctions (6), le catalogue (7). Deux modules gardent encore un état propre au monde qui tourne, posé pendant le cycle puis rendu (`corps.etendre`, `memoire.regler`) ; et quelques outils (la genèse, des bancs, le simulateur) changent les règles par défaut du moteur au lieu de donner les leurs.
+## 04, la sixième étape : les arrivées, les lignées qui naissent et celles qui s'éteignent
+
+Les deux étapes qui suivent la dynamique deviennent deux modules :
+- **`moteur/noyau/arrivees.js`** (l'étape 5) : les bêtes parties pendant la dynamique arrivent là où elles vont. Là où la lignée n'était pas, une population naît ; les arrivants apportent leurs gènes, leur part d'hivernants et leur mémoire des joueurs, mêlés à ceux du lieu par les effectifs. Il reçoit 9 noms et ne rend rien : il écrit dans les populations.
+- **`moteur/noyau/lignees.js`** (l'étape 6), en deux temps. `separer` : une population assez isolée du reste de son espèce, et assez différente (par sa niche ou par ses gènes), devient parfois une lignée à part ; il reçoit 17 noms, et les modules des dérives, des diètes, des formes et de la ponte, que le moteur a chargés ou non. `ecrire` : chaque lignée telle que le monde la publie ; une population de moins de deux bêtes disparaît, une lignée qui n'en a plus s'éteint, un phénotype trop rare rejoint le plus proche ; il reçoit 18 noms et rend les lignées à publier.
+
+Ce qui suit l'écriture reste dans le cycle : les crochets des mécanismes éveillés (les deux vies, les castes, les savoirs, l'invention, la grammaire, les dérives et la diversité des plantes, la flore), qui appartiennent chacun à son module.
+
+Le code est déplacé mot pour mot (vérifié ligne à ligne), et l'analyseur de portées ne trouve dans aucun module du cœur un nom qu'il ne reçoive ou n'importe. Le même monde au bit près, sur les sept mondes, entrelacés, et le monde à l'axe propre ; et, les séparations étant rares en seize cycles, deux essais qui les sollicitent : des règles qui font naître des lignées à chaque cycle (837 séparations), puis un tiers des lignées réduites à une bête par lieu (170 extinctions) ; l'ancien moteur et le nouveau y rendent le même monde. `moteur/orvane.js` : 602 lignes (1 183 avant les modules).
+
+**La suite**, une étape à la fois, chacune au bit près : l'habitat (1), l'état de départ (2), le catalogue (7). Deux modules gardent encore un état propre au monde qui tourne, posé pendant le cycle puis rendu (`corps.etendre`, `memoire.regler`) ; et quelques outils (la genèse, des bancs, le simulateur) changent les règles par défaut du moteur au lieu de donner les leurs.
 
 ## Ce qui vient
 
 1. **Les ablations (03).** Chaque règle retirée seule, sur Orvane (30 cycles, 3 graines) puis sur l'Europe (une année), puis par paires : ce qu'elle tient, ce qu'elle coûte. La matrice : conserver, modifier, supprimer, investiguer.
-2. **Modulariser le moteur (04)**, après le contexte explicite et les modules du cœur (plus haut : le partage des proies, la génétique, les outils et le plan, la dynamique) : les autres étapes du cycle, chacune dans son module, sans état global. Le rejeu garde le moteur identique au bit près pendant le découpage, l'étalon le juge ensuite.
+2. **Modulariser le moteur (04)**, après le contexte explicite et les modules du cœur (plus haut : le partage des proies, la génétique, les outils et le plan, la dynamique, les arrivées, les lignées) : les autres étapes du cycle, chacune dans son module, sans état global. Le rejeu garde le moteur identique au bit près pendant le découpage, l'étalon le juge ensuite.
 3. **L'évolution ouverte (05)** : des populations sans évolution, puis avec la génétique seule. Les réseaux neuronaux sont la phase 3 du plan d'évolution ouverte : Orvane n'en a pas aujourd'hui (l'esprit, docs/34, fait vivre des savoirs et des traditions).
 4. **L'intérêt pour les jeux (06)** : Stone Valley comme démonstrateur, avec les lots d'un jeu rejoués sur une copie du monde à côté d'un témoin sans lots (docs/5).
 5. **La revue indépendante.** Le protocole verrouille les critères ; il ne remplace pas un regard extérieur. Il faudrait un écologue des populations pour relire les règles, et une relecture humaine obligatoire des PR (la protection de la branche `main`).
