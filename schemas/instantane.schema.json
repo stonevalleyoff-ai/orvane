@@ -69,7 +69,7 @@
         },
         "regles": {
           "type": "object",
-          "description": "Les règles du moteur propres à ce monde (REGLES de moteur/orvane.js), choisies par sa genèse : elles valent pour chacun de ses cycles, où qu'il tourne."
+          "description": "Les règles du moteur propres à ce monde (REGLES de moteur/orvane.js), choisies par sa genèse : elles valent pour chacun de ses cycles, où qu'il tourne. Sous le nom d'un mécanisme (climat, meteo, flore, dietes, memoire…, celui de son module), les règles de ce mécanisme dans ce monde : elles complètent, d'un niveau, celles du module (docs/59)."
         },
         "genre": { "type": "string", "description": "(docs/41) Le genre pour lequel ce monde est réglé (moteur/genres.js) : ses règles sont dans regles." },
         "fusions": {

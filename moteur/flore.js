@@ -75,8 +75,10 @@ function compositionDe(b) {
 // vivent dans une instance (instance(TR)), avec tout ce qui les lit : chacune a les siens. Chaque cycle prend la sienne (preparer : le
 // catalogue et le pas que le moteur lui donne), chaque éveil aussi (eveiller : le catalogue du monde qui s'éveille) ; le module garde
 // la sienne, aux traits du moteur, pour qui lit atteinte, resistances, offre, offreD (une page, un banc) ; pour(inst) en donne une aux
-// traits d'un monde. Rien ne reste d'un monde à l'autre.
-function instance(TR = CATM) {
+// traits d'un monde. Rien ne reste d'un monde à l'autre. (Et ses règles, ses diètes et les saisons de ses plantes : celles du module, ou celles
+// d'un monde qui les règle, avec, plus bas.)
+const MODULE = { REGLES, DIE, PHE };
+function instance(TR = CATM, REGLES = MODULE.REGLES, DIE = MODULE.DIE, PHE = MODULE.PHE) {
   let PASF = 1;
   // (docs/52) le pas de temps d'un monde au jour (1 ailleurs) : la repousse, la dent, le renouveau suivent le jour, pas la « tranche de vie »
   const parPasF = p => PASF === 1 ? p : 1 - Math.pow(1 - p, PASF);
@@ -352,7 +354,14 @@ const { atteinte, resistances, offre, offreD } = instance();   // (l'instance du
 const eveiller = (inst, cfg, ctx) => instance().eveiller(inst, cfg, ctx);   // (docs/59) chaque éveil a son instance, au catalogue du monde qui s'éveille
 const preparer = ctx => instance().preparer(ctx);   // (docs/59) chaque cycle a la sienne : le catalogue de son monde, son pas de temps
 const pour = I => instance(catDe(I));   // (docs/59) une instance aux traits d'un monde (ceux du moteur, de son instantané, les siens)
+// (docs/59) la flore d'un monde qui la règle (regles.flore : les règles du module, complétées d'un niveau), avec ses diètes et les saisons de
+// ses plantes (d.dietes, d.phenologie : celles de ce monde) ; chaque cycle et chaque éveil y prennent encore leur instance
+const unNiveau = (R, o) => { const X = { ...R }; if (o && typeof o === 'object') for (const k in o) { if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
+  const v = o[k], b = R[k]; X[k] = v && typeof v === 'object' && !Array.isArray(v) && b && typeof b === 'object' && !Array.isArray(b) ? { ...b, ...v } : v; } return X; };
+const avec = (o, d = {}) => { const R = unNiveau(REGLES, o), Di = d.dietes ?? DIE, Ph = d.phenologie ?? PHE, I = instance(CATM, R, Di, Ph);
+  return { ...API, REGLES: R, atteinte: I.atteinte, resistances: I.resistances, offre: I.offre, offreD: I.offreD, instance: (TR = CATM) => instance(TR, R, Di, Ph),
+    eveiller: (inst, cfg, ctx) => instance(CATM, R, Di, Ph).eveiller(inst, cfg, ctx), preparer: ctx => instance(CATM, R, Di, Ph).preparer(ctx), pour: X => instance(catDe(X), R, Di, Ph) }; };
 
-const API = { REGLES, FORMES, TRAITS, PHENOS, portDe, rendDe, estButineur, eveiller, preparer, compositionDe, atteinte, resistances, offre, offreD, brouteursDe, estPlante, instance, pour };
+const API = { REGLES, FORMES, TRAITS, PHENOS, portDe, rendDe, estButineur, eveiller, preparer, compositionDe, atteinte, resistances, offre, offreD, brouteursDe, estPlante, instance, pour, avec };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else racine.OrvaneFlore = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

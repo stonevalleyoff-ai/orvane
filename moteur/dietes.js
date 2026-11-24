@@ -47,55 +47,65 @@ function dieteDe(p) {
   if (p.regime === 'carnivore') return m < .2 || (L.includes('vol') && m < .5) ? { insectes: 1 } : m < 5 ? arrondir({ viande: .8, insectes: .2 }) : { viande: 1 };
   return null;
 }
-const regimeDe = d => { const a = chair(d); return a <= REGLES.seuils[0] ? 'herbivore' : a >= REGLES.seuils[1] ? 'carnivore' : 'omnivore'; };
+// (docs/59) les règles d'un monde, sans toucher à celles du module : tout ce qui les lit est lié à des règles (lier). Le module se lie aux
+// siennes ; un monde qui règle ce mécanisme (regles.dietes), ou un cycle (opt.regles), en prend une instance (avec : les règles du module
+// complétées des siennes d'un niveau)
+const unNiveau = (R, o) => { const X = { ...R }; if (o && typeof o === 'object') for (const k in o) { if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
+  const v = o[k], b = R[k]; X[k] = v && typeof v === 'object' && !Array.isArray(v) && b && typeof b === 'object' && !Array.isArray(b) ? { ...b, ...v } : v; } return X; };
+function lier(REGLES) {
+  const regimeDe = d => { const a = chair(d); return a <= REGLES.seuils[0] ? 'herbivore' : a >= REGLES.seuils[1] ? 'carnivore' : 'omnivore'; };
 
-function eveiller(inst) {
-  const out = JSON.parse(JSON.stringify(inst)); if (out.monde?.dietes) return { inst: out, evenements: [] };
-  let n = 0; for (const t of out.taxons) { if (!animal(t.plan) || t.eteint) continue; const d = dieteDe(t.plan); if (!d) continue; t.plan.diete = d; t.plan.diete0 = { ...d }; n++;
-    for (const p of t.populations) if (p.recouvrement != null) { p.recouvrement_avant = p.recouvrement; delete p.recouvrement; } }   // (la concurrence se raccorde à l'éveil : moteur/flore.js)
-  for (const t of out.taxons) if (t.plan?.regime === 'vegetal') for (const p of t.populations) p.reference_diete = { effectif: p.effectif, frequences: (p.frequences || []).slice() };
-  out.monde = { ...out.monde, dietes: { depuis: out.cycle?.n ?? 0 } };
-  return { inst: out, evenements: [{ type: 'eveil', taxon: out.taxons.find(t => animal(t.plan))?.id, detail: `les régimes deviennent des spectres : ${n} lignées mangent désormais des feuilles, des fruits, des graines, du nectar, des insectes, de la viande ou du sang, en parts qui leur sont propres` }] };
-}
+  function eveiller(inst) {
+    const out = JSON.parse(JSON.stringify(inst)); if (out.monde?.dietes) return { inst: out, evenements: [] };
+    let n = 0; for (const t of out.taxons) { if (!animal(t.plan) || t.eteint) continue; const d = dieteDe(t.plan); if (!d) continue; t.plan.diete = d; t.plan.diete0 = { ...d }; n++;
+      for (const p of t.populations) if (p.recouvrement != null) { p.recouvrement_avant = p.recouvrement; delete p.recouvrement; } }   // (la concurrence se raccorde à l'éveil : moteur/flore.js)
+    for (const t of out.taxons) if (t.plan?.regime === 'vegetal') for (const p of t.populations) p.reference_diete = { effectif: p.effectif, frequences: (p.frequences || []).slice() };
+    out.monde = { ...out.monde, dietes: { depuis: out.cycle?.n ?? 0 } };
+    return { inst: out, evenements: [{ type: 'eveil', taxon: out.taxons.find(t => animal(t.plan))?.id, detail: `les régimes deviennent des spectres : ${n} lignées mangent désormais des feuilles, des fruits, des graines, du nectar, des insectes, de la viande ou du sang, en parts qui leur sont propres` }] };
+  }
 
-// --- le cycle (moteur/orvane.js) ---
-// une lignée arrivée sans spectre (une fusion, une machine devenue autre chose) en reçoit un, qui devient sa référence
-function completer(t) { if (!animal(t.plan) || t.plan.diete) return; const d = dieteDe(t.plan); if (d) { t.plan.diete = d; t.plan.diete0 = { ...d }; } }
-// ce qu'un prédateur cherche chez une proie : les insectes ou la viande, à sa part de chacun (rapportée à celle de l'éveil) ; et le
-// sang, chez les bêtes au moins 20 fois plus grandes que lui
-function affinite(d, q) { const a = chair(d); if (!(a > 0)) return 0; return ((estInsecte(q) ? d.insectes || 0 : d.viande || 0)) / a; }
-function appetence(pp, qp, f0) {
-  const d = pp.diete, d0 = pp.diete0; if (!d || !d0) return f0;
-  // (rapporté à l'éveil, adouci : une part qui naît compte, une part qui manquait ne coupe rien ; une lignée sans chair à l'éveil se
-  // rapporte à un omnivore type, sans quoi la moindre part d'insectes multipliait son appétence par onze)
-  const sans = !(chair(d0) > 0); let f = f0;
-  if (f0 > 0 && !(sans && !(chair(d) > 0))) f = f0 * (affinite(d, qp) + .1) / ((sans ? REGLES.affinite_reference : affinite(d0, qp)) + .1);
-  const s = (d.sang || 0) - (d0.sang || 0); if (s > 0 && (qp.masse_kg || 1) >= REGLES.sang.rapport * (pp.masse_kg || 1)) f += REGLES.sang.appetence * s / Math.max(.05, chair(d));
-  return f;
-}
-// une piqûre ne tue pas : ce qu'un buveur de sang prend à une bête bien plus grande que lui n'en tue qu'un dixième
-const mortel = (pp, qp) => pp.diete?.sang > 0 && (qp.masse_kg || 1) >= REGLES.sang.rapport * (pp.masse_kg || 1) ? REGLES.sang.mortel : 1;
-// la part de chair et de plantes d'un omnivore, rapportée à l'éveil : ce qu'il cherche en viande, ce qu'il tire des plantes
-const viande = p => { const a0 = chair(p.diete0); return !p.diete ? 1 : a0 > 0 ? chair(p.diete) / a0 : chair(p.diete) / REGLES.chair_reference; };
-const vegetal = p => { const v0 = 1 - chair(p.diete0); return p.diete && v0 > 0 ? (1 - chair(p.diete)) / v0 : 1; };
+  // --- le cycle (moteur/orvane.js) ---
+  // une lignée arrivée sans spectre (une fusion, une machine devenue autre chose) en reçoit un, qui devient sa référence
+  function completer(t) { if (!animal(t.plan) || t.plan.diete) return; const d = dieteDe(t.plan); if (d) { t.plan.diete = d; t.plan.diete0 = { ...d }; } }
+  // ce qu'un prédateur cherche chez une proie : les insectes ou la viande, à sa part de chacun (rapportée à celle de l'éveil) ; et le
+  // sang, chez les bêtes au moins 20 fois plus grandes que lui
+  function affinite(d, q) { const a = chair(d); if (!(a > 0)) return 0; return ((estInsecte(q) ? d.insectes || 0 : d.viande || 0)) / a; }
+  function appetence(pp, qp, f0) {
+    const d = pp.diete, d0 = pp.diete0; if (!d || !d0) return f0;
+    // (rapporté à l'éveil, adouci : une part qui naît compte, une part qui manquait ne coupe rien ; une lignée sans chair à l'éveil se
+    // rapporte à un omnivore type, sans quoi la moindre part d'insectes multipliait son appétence par onze)
+    const sans = !(chair(d0) > 0); let f = f0;
+    if (f0 > 0 && !(sans && !(chair(d) > 0))) f = f0 * (affinite(d, qp) + .1) / ((sans ? REGLES.affinite_reference : affinite(d0, qp)) + .1);
+    const s = (d.sang || 0) - (d0.sang || 0); if (s > 0 && (qp.masse_kg || 1) >= REGLES.sang.rapport * (pp.masse_kg || 1)) f += REGLES.sang.appetence * s / Math.max(.05, chair(d));
+    return f;
+  }
+  // une piqûre ne tue pas : ce qu'un buveur de sang prend à une bête bien plus grande que lui n'en tue qu'un dixième
+  const mortel = (pp, qp) => pp.diete?.sang > 0 && (qp.masse_kg || 1) >= REGLES.sang.rapport * (pp.masse_kg || 1) ? REGLES.sang.mortel : 1;
+  // la part de chair et de plantes d'un omnivore, rapportée à l'éveil : ce qu'il cherche en viande, ce qu'il tire des plantes
+  const viande = p => { const a0 = chair(p.diete0); return !p.diete ? 1 : a0 > 0 ? chair(p.diete) / a0 : chair(p.diete) / REGLES.chair_reference; };
+  const vegetal = p => { const v0 = 1 - chair(p.diete0); return p.diete && v0 > 0 ? (1 - chair(p.diete)) / v0 : 1; };
 
-// à la séparation : le spectre glisse parfois d'une part vers une voisine ; le régime d'hier suit (son hasard : le nom et le cycle)
-function deriver(parent, plan, nid, n) {
-  if (!plan.diete) return null; let g = 2166136261 >>> 0; for (const c of 'diete|' + nid + '|' + n) g = Math.imul(g ^ c.charCodeAt(0), 16777619) >>> 0;   // (salé : la ponte tire le sien du même nom et du même cycle)
-  const R = () => { g = (Math.imul(g, 1664525) + 1013904223) >>> 0; return g / 4294967296; };
-  if (R() >= REGLES.glissement.chance) return null;
-  const d = { ...plan.diete }, ks = Object.keys(d).filter(k => d[k] > 0); if (!ks.length) return null;
-  const de = ks[Math.floor(R() * ks.length)], V = VOISINES[de], vers = V[Math.floor(R() * V.length)], q = Math.min(d[de], REGLES.glissement.part);
-  d[de] -= q; d[vers] = (d[vers] || 0) + q; plan.diete = arrondir(d);
-  const avant = parent.regime, apres = regimeDe(plan.diete);
-  if (apres !== avant) { plan.regime = apres;
-    if (apres === 'carnivore') { plan.temperament = +clamp((plan.temperament ?? .5) + .15, 0, 1).toFixed(3); plan.perception = +clamp((plan.perception ?? .5) + .1, 0, 1).toFixed(3); }
-    if (apres === 'herbivore') plan.temperament = +clamp((plan.temperament ?? .5) - .1, 0, 1).toFixed(3); }
-  return `son régime glisse : un peu de ${de} devient ${vers}${apres !== avant ? `, la voilà ${apres}` : ''}`;
+  // à la séparation : le spectre glisse parfois d'une part vers une voisine ; le régime d'hier suit (son hasard : le nom et le cycle)
+  function deriver(parent, plan, nid, n) {
+    if (!plan.diete) return null; let g = 2166136261 >>> 0; for (const c of 'diete|' + nid + '|' + n) g = Math.imul(g ^ c.charCodeAt(0), 16777619) >>> 0;   // (salé : la ponte tire le sien du même nom et du même cycle)
+    const R = () => { g = (Math.imul(g, 1664525) + 1013904223) >>> 0; return g / 4294967296; };
+    if (R() >= REGLES.glissement.chance) return null;
+    const d = { ...plan.diete }, ks = Object.keys(d).filter(k => d[k] > 0); if (!ks.length) return null;
+    const de = ks[Math.floor(R() * ks.length)], V = VOISINES[de], vers = V[Math.floor(R() * V.length)], q = Math.min(d[de], REGLES.glissement.part);
+    d[de] -= q; d[vers] = (d[vers] || 0) + q; plan.diete = arrondir(d);
+    const avant = parent.regime, apres = regimeDe(plan.diete);
+    if (apres !== avant) { plan.regime = apres;
+      if (apres === 'carnivore') { plan.temperament = +clamp((plan.temperament ?? .5) + .15, 0, 1).toFixed(3); plan.perception = +clamp((plan.perception ?? .5) + .1, 0, 1).toFixed(3); }
+      if (apres === 'herbivore') plan.temperament = +clamp((plan.temperament ?? .5) - .1, 0, 1).toFixed(3); }
+    return `son régime glisse : un peu de ${de} devient ${vers}${apres !== avant ? `, la voilà ${apres}` : ''}`;
+  }
+  return { REGLES, regimeDe, eveiller, completer, affinite, appetence, mortel, viande, vegetal, deriver };
 }
+const { regimeDe, eveiller, completer, affinite, appetence, mortel, viande, vegetal, deriver } = lier(REGLES);   // (le module, lié à ses règles)
+const avec = (o, d = {}) => ({ ...API, ...lier(unNiveau(REGLES, o)) });   // (docs/59) une instance aux règles d'un monde
 // ce qu'il dit, en mots : ses deux ou trois parts principales
 function mots(d) { return Object.entries(d || {}).sort((a, b) => b[1] - a[1]).filter(([, v]) => v >= .1).slice(0, 3).map(([k, v]) => `${Math.round(v * 100)} % de ${k}`).join(', '); }
 
-const API = { REGLES, VEG, ANI, PARTS, RENDEMENT, DEFENSE, PERTE, FRUITS, VOISINES, dieteDe, regimeDe, chair, estInsecte, eveiller, completer, affinite, appetence, mortel, viande, vegetal, deriver, mots };
+const API = { REGLES, VEG, ANI, PARTS, RENDEMENT, DEFENSE, PERTE, FRUITS, VOISINES, dieteDe, regimeDe, chair, estInsecte, eveiller, completer, affinite, appetence, mortel, viande, vegetal, deriver, mots, avec };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else racine.OrvaneDietes = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

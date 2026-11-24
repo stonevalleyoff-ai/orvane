@@ -8,7 +8,8 @@
 //     (outils/rejouer.js) ; un état touché, ou d'autres pressions, ne passent pas ;
 //  4. la référence (outils/reference.js) : ce qu'est un monde, mesuré, et son cycle suivant rejoué dans deux processus ;
 //  5. le contexte explicite : deux mondes entrelacés, chacun le même que seul ; le cycle ne touche à rien de global (le corps, la mémoire
-//     et la flore d'un monde sont dans son contexte) ; les règles d'un cycle (opt.regles), sans toucher à celles du moteur.
+//     et la flore d'un monde sont dans son contexte) ; les règles d'un cycle (opt.regles), sans toucher à celles du moteur ; les règles
+//     d'un mécanisme (regles.<mécanisme>), sans toucher à celles de son module.
 //   node bancs/rejeu.js [--court]      (sans --court : aussi le monde d'Orvane, d'un processus à l'autre)
 'use strict';
 const fs = require('fs'), path = require('path'), { execFileSync } = require('child_process');
@@ -158,6 +159,19 @@ console.log('\n5. Le contexte explicite (moteur/orvane.js, contexte)');
     const C = Orvane.contexte(W0, regles), nes = A.taxons.filter(t => t.apparu === A.cycle.n).length;
     verif(Journal.empreinte(A) === Journal.empreinte(B) && nes > 0 && apres === R0 && C.R.mutation === .01 && C.R.separation.chance === 1 && C.R.separation.divergence === sep.divergence && C.R.derive.corps === 3 && C.R.derive.masse === der.masse && sep.chance !== 1,
       `les règles d'un cycle (opt.regles) : des séparations forcées (${nes} lignées naissent) et une autre dérive, données au cycle ; les règles du moteur n'y changent pas, celles du monde passent par-dessus (sa mutation), et c'est le monde que rendait le moteur quand on les lui posait`); }
+  // (docs/59) les règles d'un mécanisme (regles.<mécanisme>) : un monde qui règle son climat et sa flore les voit dans son cycle (une instance
+  // de chacun, à ses règles) ; celles des modules n'y changent pas ; le même monde que lorsqu'on les posait sur les modules
+  { const Climat = require(racine('moteur/climat.js')), Flore = require(racine('moteur/flore.js')), propres = { climat: { force: -.2 }, flore: { broutage: .2, pollinisation: { gain: .9 } } };
+    const V0 = Climat.eveiller(Flore.eveiller(clone(E0)).inst).inst; V0.monde.climat.depuis -= 5;   // (un climat éveillé depuis cinq cycles : il agit dès celui-ci)
+    const V1 = clone(V0); V1.monde.regles = { ...(V1.monde.regles || {}), ...propres };
+    const R0 = JSON.stringify([Climat.REGLES, Flore.REGLES]), A = Orvane.cycle(clone(V1), {}, { duree_ms: JOUR }), S0 = Orvane.cycle(clone(V0), {}, { duree_ms: JOUR }), apres = JSON.stringify([Climat.REGLES, Flore.REGLES]);
+    const av = { f: Climat.REGLES.force, b: Flore.REGLES.broutage, p: Flore.REGLES.pollinisation }; let B;
+    try { Climat.REGLES.force = -.2; Flore.REGLES.broutage = .2; Flore.REGLES.pollinisation = { ...av.p, gain: .9 }; B = Orvane.cycle(clone(V0), {}, { duree_ms: JOUR }); }
+    finally { Climat.REGLES.force = av.f; Flore.REGLES.broutage = av.b; Flore.REGLES.pollinisation = av.p; }
+    const C = Orvane.contexte(V1), C0 = Orvane.contexte(V0), sansPropres = X => { const Y = clone(X); for (const k in propres) delete Y.monde.regles[k]; return Y; };   // (le monde publie ses règles : les siennes en plus)
+    verif(Journal.empreinte(sansPropres(A)) === Journal.empreinte(B) && Journal.empreinte(B) !== Journal.empreinte(S0) && apres === R0 && C.M.climat !== Climat && C.M.climat.REGLES.force === -.2 && C.M.flore.REGLES.pollinisation.demi === Flore.REGLES.pollinisation.demi
+      && C0.M.climat === Climat && C0.M.flore === Flore && Climat.REGLES.force === null,
+      `les règles d'un mécanisme (regles.climat, regles.flore) : un monde qui règle son climat et sa flore les voit dans son cycle, une instance de chacun à ses règles (complétées d'un niveau) ; celles des modules n'y changent pas ; un monde qui n'en règle aucun garde les modules ; et c'est le monde que rendait le moteur quand on les posait sur les modules`); }
 }
 
 console.log(`\n${ok ? 'le rejeu tient' : 'LE REJEU NE TIENT PAS'} (${((Date.now() - t0) / 1000).toFixed(0)} s)`);

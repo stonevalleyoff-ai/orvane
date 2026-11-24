@@ -23,9 +23,9 @@ const val = (s, v, p) => { if (!s) return []; if (s.$ref) s = S.$defs[s.$ref.spl
 // (le monde d'Orvane, d'avant ce mécanisme : bancs/monde.js ; et sans les régimes en spectre, qui font dériver le régime à sa place)
 const I0 = require('./monde.js').etat(['derives', 'dietes']), V = Pa.eveiller(Fl.eveiller(I0).inst).inst, W = D.eveiller(V).inst;
 const animaux = I => I.taxons.map(t => [t.id, t.plan.regime, t.populations.map(p => [p.biome, p.effectif, p.infection])]);
-const muet = f => { const g = clone(D.REGLES); for (const k in D.REGLES.regime) D.REGLES.regime[k] = 0; D.REGLES.plantes.chance = 0; D.REGLES.souches.chance = 0;
-  try { return f(); } finally { Object.assign(D.REGLES.regime, g.regime); Object.assign(D.REGLES.plantes, g.plantes); Object.assign(D.REGLES.souches, g.souches); } };
-const avec = (o, f) => { const g = clone(D.REGLES); for (const [k, v] of Object.entries(o)) Object.assign(D.REGLES[k], v); try { return f(); } finally { for (const k of Object.keys(o)) Object.assign(D.REGLES[k], g[k]); } };
+// (docs/59) les règles des dérives, données au cycle (opt.regles.derives) ; celles du module n'y changent pas. MUET : aucune dérive
+const MUET = { regime: Object.fromEntries(Object.keys(D.REGLES.regime).map(k => [k, 0])), plantes: { chance: 0 }, souches: { chance: 0 } };
+const avec = (o, autres = {}) => ({ ...autres, regles: { ...(autres.regles || {}), derives: o } });
 const tot = (t, bid) => t.populations.filter(p => !bid || p.biome === bid).reduce((a, p) => a + p.effectif, 0);
 
 console.log('1. Le jour un');
@@ -33,7 +33,7 @@ console.log('1. Le jour un');
   vm.runInNewContext(src, { module: mod, require: p => p === './derives.js' ? null : require(racine('moteur/' + p.replace('./', ''))), console });
   let A = V, C = V; for (let k = 0; k < 3; k++) { A = Orvane.cycle(A, {}); C = mod.exports.cycle(C, {}); }
   verif(empreinte(A) === empreinte(C), 'un monde sans dérives (avec sa flore et ses souches) tourne exactement comme le moteur sans moteur/derives.js');
-  const a = Orvane.cycle(V, {}), b = muet(() => Orvane.cycle(W, {}));
+  const a = Orvane.cycle(V, {}), b = Orvane.cycle(W, {}, avec(MUET));
   verif(empreinte(animaux(a)) === empreinte(animaux(b)) && a.taxons.length === b.taxons.length, 'éveillées, les dérives ne bougent rien tant qu\'aucune ne tire : leur hasard est le leur');
 }
 
@@ -47,7 +47,7 @@ console.log('2. Les régimes');
   // les séparations forcées (le monde en fait peu), les taux de dérive forcés : des filles changent de régime ; les mêmes, sans dérives, aucune
   const forcees = { regles: { separation: { cycles: 0, distance: 0, chance: 1 } } };   // (docs/59 : les séparations forcées, données au cycle)
   const filles = X => X.taxons.filter(t => t.apparu === X.cycle.n && t.parent && t.plan.regime !== 'vegetal').map(t => [t, X.taxons.find(x => x.id === t.parent)]);
-  const X = avec({ regime: { 'herbivore>omnivore': .5, 'omnivore>herbivore': .25, 'omnivore>carnivore': .25, 'carnivore>omnivore': .5 } }, () => Orvane.cycle(W, {}, forcees)), Y = Orvane.cycle(V, {}, forcees);
+  const X = Orvane.cycle(W, {}, avec({ regime: { 'herbivore>omnivore': .5, 'omnivore>herbivore': .25, 'omnivore>carnivore': .25, 'carnivore>omnivore': .5 } }, forcees)), Y = Orvane.cycle(V, {}, forcees);
   const fx1 = filles(X), ch = fx1.filter(([f, p]) => f.plan.regime !== p.plan.regime), ex = ch[0], fy = filles(Y);
   verif(ch.length > 0 && fy.length && fy.every(([f, p]) => f.plan.regime === p.plan.regime), `${fx1.length} séparations d'un coup (forcées), les taux de dérive forcés : ${ch.length} filles changent de régime (${ex?.[0].nom}, ${ex?.[0].plan.regime}, fille d'une lignée ${ex?.[1].plan.regime}) ; les mêmes séparations sans dérives : aucune`);
 }
@@ -56,7 +56,7 @@ console.log('3. Les plantes');
 { const X0 = clone(W), t = X0.taxons.filter(x => x.plan.regime === 'vegetal' && x.plan.forme === 'herbe').sort((a, b) => tot(b) - tot(a))[0], p = t.populations[0];
   p.frequences = [.45, 0, .55, 0]; if (p.reference) p.reference.frequences = p.frequences.slice();
   const brout = X => X.taxons.filter(h => (h.plan.regime === 'herbivore') && h.populations.some(q => q.biome === p.biome)).map(h => [h.id, h.populations.find(q => q.biome === p.biome)?.nourriture ?? 1]);
-  const A = muet(() => Orvane.cycle(X0, {})), B = avec({ plantes: { chance: 1 } }, () => Orvane.cycle(X0, {}));
+  const A = Orvane.cycle(X0, {}, avec(MUET)), B = Orvane.cycle(X0, {}, avec({ plantes: { chance: 1 } }));
   const f = B.taxons.find(x => x.parent === t.id && x.plan.regime === 'vegetal'), m = B.taxons.find(x => x.id === t.id), a = A.taxons.find(x => x.id === t.id);
   // (dans le lieu où elles se séparent : le monde d'Orvane est en parcelles, et la mère vit aussi dans les autres, où rien ne change)
   const ici = x => x?.populations.find(q => q.biome === p.biome)?.frequences?.[2], e = B.evenements.find(x => x.taxon === f?.id), fp = ici(f), mp = ici(m);
@@ -64,7 +64,7 @@ console.log('3. Les plantes');
     `« ${e?.detail} » : la fille est épineuse à ${fx(fp * 100)} %, sa mère ne l'est plus qu'à ${fx(mp * 100)} % ; ensemble, elles font les pieds qu'aurait faits la mère seule`);
   const na = brout(A), nb = brout(B), ecart = Math.max(0, ...na.map(([id, r]) => Math.abs(r - (nb.find(x => x[0] === id)?.[1] ?? 1))));
   verif(na.length && ecart < .03, `la nourriture des ${na.length} brouteurs du lieu reste continue (au plus ${fx(ecart * 100, 1)} % d'écart)`);
-  const g = avec({ plantes: { chance: 1 } }, () => { let Y = B; for (let k = 0; k < 3; k++) Y = Orvane.cycle(Y, {}); return Y; });
+  const g = (() => { let Y = B; for (let k = 0; k < 3; k++) Y = Orvane.cycle(Y, {}, avec({ plantes: { chance: 1 } })); return Y; })();
   verif(g.taxons.filter(x => x.parent === t.id).length <= D.REGLES.plantes.max && g.taxons.find(x => x.id === f.id)?.populations[0]?.effectif > 0, 'la lignée fille vit ; une lignée n\'a que trois filles au plus');
 }
 
@@ -78,9 +78,9 @@ let XS;
       if (!lieu) { lieu = pv.biome; hote = s[0]; autre = o; vec = v; } } }
   X0.monde.pathogenes.souches['souche-900'] = { nom: 'Banc', virulence: .1, transmission: Pa.transmission(.1), origine: hote.id, apparu: X0.cycle.n, hotes: [hote.id] }; X0.monde.pathogenes.prochain = 901;
   for (const p of hote.populations) if (p.biome === lieu) p.infection = { 'souche-900': { i: .2, r: 0 } };
-  const M1 = avec({ souches: { chance: 1, vecteur: 0 } }, () => Orvane.cycle(X0, {})), Ss = M1.monde.pathogenes.souches, mut = Object.entries(Ss).find(([, s]) => s.parent === 'souche-900');
+  const M1 = Orvane.cycle(X0, {}, avec({ souches: { chance: 1, vecteur: 0 } })), Ss = M1.monde.pathogenes.souches, mut = Object.entries(Ss).find(([, s]) => s.parent === 'souche-900');
   verif(mut && mut[1].origine === hote.id && mut[1].virulence !== .1 && !mut[1].vecteur, `la souche Banc (10 % de virulence), chez ${hote.nom} : ${M1.evenements.find(e => /mute/.test(e.detail))?.detail}`);
-  const M2 = avec({ souches: { chance: 1, vecteur: 1 } }, () => Orvane.cycle(X0, {})), mv = Object.entries(M2.monde.pathogenes.souches).find(([, s]) => s.parent === 'souche-900' && s.vecteur);
+  const M2 = Orvane.cycle(X0, {}, avec({ souches: { chance: 1, vecteur: 1 } })), mv = Object.entries(M2.monde.pathogenes.souches).find(([, s]) => s.parent === 'souche-900' && s.vecteur);
   verif(mv?.[1].vecteur === vec.id, `née là où vit ${vec.nom}, elle peut être portée par lui : ${M2.evenements.find(e => /portée par/.test(e.detail))?.detail}`);
   // (docs/18) l'événement dit la souche (le mutant) et ce qui lui arrive ; son texte seul (un instantané d'avant ces champs) dit la même chose
   const em = M1.evenements.find(e => /mute/.test(e.detail)), ev2 = M2.evenements.find(e => /portée par/.test(e.detail)), sansChamps = e => { const { souche, nature, ...r } = e; return r; };
@@ -88,7 +88,7 @@ let XS;
   verif(em?.type === 'epidemie' && em.nature === 'mutation' && em.souche === mut[0] && ev2?.nature === 'vecteur' && ev2.souche === mv[0] && lu1.nature === 'mutation' && lu1.souche === mut[0] && lu2.nature === 'vecteur' && lu2.souche === mv[0],
     `les événements le disent : epidemie, nature « ${em?.nature} », souche ${em?.souche} (le mutant) ; « ${ev2?.nature} » pour celui que porte l'insecte ; leur texte seul, la même chose`);
   // 15 cycles : la souche portée par l'insecte passe à des lignées sans parenté ; sa mère, non ; l'insecte n'en tombe pas malade
-  let Y = M2; muet(() => { for (let k = 0; k < 15; k++) Y = Orvane.cycle(Y, {}); }); XS = Y;
+  let Y = M2; for (let k = 0; k < 15; k++) Y = Orvane.cycle(Y, {}, avec(MUET)); XS = Y;
   const Sy = Y.monde.pathogenes.souches, sv = Sy[mv[0]], sm = Sy['souche-900'], T = new Map(Y.taxons.map(x => [x.id, x]));
   const sansParente = s => (s?.hotes || []).filter(id => id !== hote.id && Orvane.parente(T.get(id), T.get(hote.id), T) == null);
   const malade = Y.taxons.find(x => x.id === vec.id).populations.some(p => p.infection?.[mv[0]]);

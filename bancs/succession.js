@@ -68,8 +68,8 @@ console.log('3. La succession');
 }
 
 console.log('4. Le sec qui dure');
-{ const N = COURT ? 14 : 20, g = clone(Me.REGLES), Wm = Me.eveiller(Wc).inst, Am = Me.eveiller(Ac).inst; let X = Wm, A = Am;
-  Object.assign(Me.REGLES, { force: { e: -1.3, t: 0 } }); try { for (let k = 0; k < N; k++) { X = Orvane.cycle(X, {}); A = Orvane.cycle(A, {}); } } finally { for (const k of Object.keys(g)) Me.REGLES[k] = g[k]; }
+{ const N = COURT ? 14 : 20, Wm = Me.eveiller(Wc).inst, Am = Me.eveiller(Ac).inst, opt = { regles: { meteo: { force: { e: -1.3, t: 0 } } } }; let X = Wm, A = Am;   // (docs/59 : un temps imposé, donné au cycle)
+  for (let k = 0; k < N; k++) { X = Orvane.cycle(X, {}, opt); A = Orvane.cycle(A, {}, opt); }
   const sec = lieu(X, 'prairie').meteo?.secheresse || 0, rh = poids(X, 'prairie', 'herbe') / poids(A, 'prairie', 'herbe'), rs = poids(X, 'desert', 'succulente') / poids(A, 'desert', 'succulente');
   verif(sec >= .5 && rh < .95 && rs > rh + .03, `${N} cycles secs (la sécheresse de la prairie à ${fx(sec, 2)}) : il reste ${fx(rh * 100)} % de l'herbe de la prairie qu'il y aurait sans la succession, ${fx(rs * 100)} % des succulentes du désert`);
 }

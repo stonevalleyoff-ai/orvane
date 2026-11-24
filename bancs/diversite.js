@@ -29,7 +29,6 @@ const bio = (I, f) => I.taxons.filter(t => !t.eteint && f(t)).reduce((s, t) => s
 // par lieu et par port : le poids des plantes, leur place
 const somme = (I, quoi) => { const o = {}; for (const t of vives(I)) for (const p of t.populations) { const k = p.biome + '|' + port(t); o[k] = (o[k] || 0) + (quoi === 'place' ? p.potentiel || 0 : p.effectif * t.plan.masse_kg); } return o; };
 const ecart = (a, b) => Math.max(0, ...Object.keys(a).filter(k => (a[k] || 0) > 1e-9 || (b[k] || 0) > 1e-9).map(k => Math.abs((b[k] || 0) / (a[k] || 1e-9) - 1)));   // (un port sans place des deux côtés ne compte pas)
-const avec = (o, f) => { const g = clone(Di.REGLES); Object.assign(Di.REGLES, o); try { return f(); } finally { for (const k of Object.keys(g)) Di.REGLES[k] = g[k]; } };
 const lieu = (I, id) => I.biomes.find(b => b.id === id), ici = (I, id) => vives(I).filter(t => t.populations.some(p => p.biome === id));
 
 console.log('1. Le jour un');
@@ -92,8 +91,10 @@ console.log('6. La flore vit');
   verif(T.separation.length > 0 && T.migration.length > 0 && D.nees > W.monde.diversite.nees && D.lignees === vives(X).length, `${N} cycles : ${T.separation.length} séparations (« ${T.separation[0]} »), ${T.migration.length} lieux gagnés (« ${T.migration[0]} ») ; de ${vives(W).length} à ${vives(X).length} lignées de plantes`);
   // la place : la vie de la flore seule (sans le moteur), forcée, trente fois de suite ; elle ne crée ni ne perd de place
   { const Z = clone(X), P = Z.taxons.filter(estPlante), Bz = Object.fromEntries(Z.biomes.map(b => [b.id, b])), avant = somme(Z, 'place'); let monde = Z.monde, sep = 0, col = 0, ext = 0;
-    avec({ concurrence: .3, separation: { ...Di.REGLES.separation, chance: .05 }, colonisation: { ...Di.REGLES.colonisation, chance: .05 }, evenements: 1e6 }, () => { for (let k = 1; k <= 30; k++) { const r = Di.vivre(P, { n: Z.cycle.n + k, biomes: Bz, monde }); monde = r.monde(monde);
-      for (const e of r.evenements) { if (e.type === 'separation') sep++; else if (e.type === 'migration') col++; else ext++; } } });
+    // (docs/59 : la flore riche à ces règles-là, une instance ; celles du module n'y changent pas)
+    const Dx = Di.avec({ concurrence: .3, separation: { chance: .05 }, colonisation: { chance: .05 }, evenements: 1e6 });
+    for (let k = 1; k <= 30; k++) { const r = Dx.vivre(P, { n: Z.cycle.n + k, biomes: Bz, monde }); monde = r.monde(monde);
+      for (const e of r.evenements) { if (e.type === 'separation') sep++; else if (e.type === 'migration') col++; else ext++; } }
     Z.taxons = [...Z.taxons.filter(t => !estPlante(t)), ...P]; const ek = ecart(avant, somme(Z, 'place')), vides = vives(Z).flatMap(t => t.populations).filter(p => !(p.potentiel >= 0) || !Number.isFinite(p.effectif)).length;
     const parLieu = {}; for (const t of vives(Z)) for (const p of t.populations) parLieu[p.biome] = (parLieu[p.biome] || 0) + 1;
     verif(ek < .005 && vides === 0 && sep > 0 && col > 0 && ext > 0 && Math.max(...Object.values(parLieu)) <= Di.REGLES.par_lieu && monde.diversite.lignees === vives(Z).length,

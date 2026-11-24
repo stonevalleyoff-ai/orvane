@@ -97,36 +97,46 @@ function preparer(ctx) {
   return { chasse: (t, b, i) => facteur(t, b, i, 'chasse'), vuln: (t, b, i) => facteur(t, b, i, 'vuln'), acces };
 }
 
-// --- l'invention d'une phrase : parfois, une lignée qui peut la dire la dit ---
-function inventer(ctx) {
-  const { sortie, biomes, n, graine, inventes = {} } = ctx, ev = [], neufs = {};
-  const R = generateur(((graine >>> 0) ^ 0x6c8e9cf5) ^ Math.imul(n + 11, 0x2545f491));
-  const dits = Object.values(inventes).filter(x => x.grammaire); if (dits.length >= REGLES.max || R() >= REGLES.chance) return { traits: neufs, evenements: ev };
-  const usage = k => dits.filter(x => x.grammaire.phrase === k).length, cand = [];
-  // (les lieux où vit un modèle, comme dans preparer : sans eux, le bluff ne pouvait jamais naître)
-  const M = new Set(); for (const t of sortie) { if (t.eteint) continue; const f = t.phenotypes.reduce((a, p) => a + (p.traits.some(x => MODELES.has(x)) ? p.frequence || 0 : 0), 0); if (f >= .1) for (const p of t.populations) if (p.effectif > 0) M.add(p.biome); }
-  for (const t of sortie) { if (t.eteint || ['vegetal', 'synthetique'].includes(t.plan?.regime)) continue; const N = t.populations.reduce((a, p) => a + p.effectif, 0); if (!(N > 0)) continue;
-    const b = biomes[t.populations.slice().sort((x, y) => y.effectif - x.effectif)[0]?.biome];
-    for (const [k, P] of Object.entries(PHRASES)) if (P.peut(t.plan) && P.ou(t.plan, b, M) >= .3 && !t.phenotypes.some(p => p.traits.some(x => inventes[x]?.grammaire?.phrase === k))) cand.push({ t, k, w: Math.sqrt(N) / (1 + 3 * usage(k)) }); }
-  if (!cand.length) return { traits: neufs, evenements: ev };
-  let u = R() * cand.reduce((a, c) => a + c.w, 0), c = cand[0]; for (const x of cand) { u -= x.w; if (u <= 0) { c = x; break; } }
-  const f = REGLES.force[0] + (REGLES.force[1] - REGLES.force[0]) * R(), def = definir(c.k, f, R, new Set([...Object.keys(inventes), ...Object.keys(ctx.cat || {})]));   // (un nom libre, si l'organe en a)
-  if (inventes[sansAccent(def.nom)] || ctx.cat?.[sansAccent(def.nom)]) { def.nom = `${def.nom} de ${(c.t.nom || c.t.id).split(' ')[0]}`; def.organe = def.nom; }   // (tous les noms de l'organe sont pris : celui de la lignée)
-  let id = sansAccent(def.nom); for (let j = 2; inventes[id] || ctx.cat?.[id]; j++) id = `${sansAccent(def.nom)}-${j}`;
-  def.origine = { lignee: c.t.id, cycle: n, de: [] }; neufs[id] = def;
-  const L = c.t, k = REGLES.part;
-  for (const p of L.phenotypes.slice()) { if (!(p.frequence > 0)) continue; const traits = [...p.traits, id].sort(), q = { id: traits.join('+'), traits, frequence: +(p.frequence * k).toFixed(6), cout_total: +((p.cout_total || 0) + def.cout).toFixed(3) };
-    if (p.frequence_par_biome) q.frequence_par_biome = Object.fromEntries(Object.entries(p.frequence_par_biome).map(([b, v]) => [b, +(v * k).toFixed(6)]));
-    if (!L.phenotypes.some(x => x.id === q.id)) { L.phenotypes.push(q); p.frequence = +(p.frequence * (1 - k)).toFixed(6); if (p.frequence_par_biome) for (const b in p.frequence_par_biome) p.frequence_par_biome[b] = +(p.frequence_par_biome[b] * (1 - k)).toFixed(6); } }
-  for (const p of L.populations) if (p.alleles) p.alleles[id] = REGLES.allele;
-  ev.push({ type: 'invention', taxon: L.id, biome: L.populations.slice().sort((a, b) => b.effectif - a.effectif)[0]?.biome, detail: `le monde invente « ${def.nom} » chez ${L.nom || L.id} : ${def.effet.toLowerCase()}` });
-  return { traits: neufs, evenements: ev };
+// (docs/59) les règles d'un monde, sans toucher à celles du module : tout ce qui les lit est lié à des règles (lier). Le module se lie aux
+// siennes ; un monde qui règle ce mécanisme (regles.grammaire), ou un cycle (opt.regles), en prend une instance (avec : les règles du module
+// complétées des siennes d'un niveau)
+const unNiveau = (R, o) => { const X = { ...R }; if (o && typeof o === 'object') for (const k in o) { if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
+  const v = o[k], b = R[k]; X[k] = v && typeof v === 'object' && !Array.isArray(v) && b && typeof b === 'object' && !Array.isArray(b) ? { ...b, ...v } : v; } return X; };
+function lier(REGLES) {
+  // --- l'invention d'une phrase : parfois, une lignée qui peut la dire la dit ---
+  function inventer(ctx) {
+    const { sortie, biomes, n, graine, inventes = {} } = ctx, ev = [], neufs = {};
+    const R = generateur(((graine >>> 0) ^ 0x6c8e9cf5) ^ Math.imul(n + 11, 0x2545f491));
+    const dits = Object.values(inventes).filter(x => x.grammaire); if (dits.length >= REGLES.max || R() >= REGLES.chance) return { traits: neufs, evenements: ev };
+    const usage = k => dits.filter(x => x.grammaire.phrase === k).length, cand = [];
+    // (les lieux où vit un modèle, comme dans preparer : sans eux, le bluff ne pouvait jamais naître)
+    const M = new Set(); for (const t of sortie) { if (t.eteint) continue; const f = t.phenotypes.reduce((a, p) => a + (p.traits.some(x => MODELES.has(x)) ? p.frequence || 0 : 0), 0); if (f >= .1) for (const p of t.populations) if (p.effectif > 0) M.add(p.biome); }
+    for (const t of sortie) { if (t.eteint || ['vegetal', 'synthetique'].includes(t.plan?.regime)) continue; const N = t.populations.reduce((a, p) => a + p.effectif, 0); if (!(N > 0)) continue;
+      const b = biomes[t.populations.slice().sort((x, y) => y.effectif - x.effectif)[0]?.biome];
+      for (const [k, P] of Object.entries(PHRASES)) if (P.peut(t.plan) && P.ou(t.plan, b, M) >= .3 && !t.phenotypes.some(p => p.traits.some(x => inventes[x]?.grammaire?.phrase === k))) cand.push({ t, k, w: Math.sqrt(N) / (1 + 3 * usage(k)) }); }
+    if (!cand.length) return { traits: neufs, evenements: ev };
+    let u = R() * cand.reduce((a, c) => a + c.w, 0), c = cand[0]; for (const x of cand) { u -= x.w; if (u <= 0) { c = x; break; } }
+    const f = REGLES.force[0] + (REGLES.force[1] - REGLES.force[0]) * R(), def = definir(c.k, f, R, new Set([...Object.keys(inventes), ...Object.keys(ctx.cat || {})]));   // (un nom libre, si l'organe en a)
+    if (inventes[sansAccent(def.nom)] || ctx.cat?.[sansAccent(def.nom)]) { def.nom = `${def.nom} de ${(c.t.nom || c.t.id).split(' ')[0]}`; def.organe = def.nom; }   // (tous les noms de l'organe sont pris : celui de la lignée)
+    let id = sansAccent(def.nom); for (let j = 2; inventes[id] || ctx.cat?.[id]; j++) id = `${sansAccent(def.nom)}-${j}`;
+    def.origine = { lignee: c.t.id, cycle: n, de: [] }; neufs[id] = def;
+    const L = c.t, k = REGLES.part;
+    for (const p of L.phenotypes.slice()) { if (!(p.frequence > 0)) continue; const traits = [...p.traits, id].sort(), q = { id: traits.join('+'), traits, frequence: +(p.frequence * k).toFixed(6), cout_total: +((p.cout_total || 0) + def.cout).toFixed(3) };
+      if (p.frequence_par_biome) q.frequence_par_biome = Object.fromEntries(Object.entries(p.frequence_par_biome).map(([b, v]) => [b, +(v * k).toFixed(6)]));
+      if (!L.phenotypes.some(x => x.id === q.id)) { L.phenotypes.push(q); p.frequence = +(p.frequence * (1 - k)).toFixed(6); if (p.frequence_par_biome) for (const b in p.frequence_par_biome) p.frequence_par_biome[b] = +(p.frequence_par_biome[b] * (1 - k)).toFixed(6); } }
+    for (const p of L.populations) if (p.alleles) p.alleles[id] = REGLES.allele;
+    ev.push({ type: 'invention', taxon: L.id, biome: L.populations.slice().sort((a, b) => b.effectif - a.effectif)[0]?.biome, detail: `le monde invente « ${def.nom} » chez ${L.nom || L.id} : ${def.effet.toLowerCase()}` });
+    return { traits: neufs, evenements: ev };
+  }
+  return { REGLES, inventer };
 }
+const { inventer } = lier(REGLES);   // (le module, lié à ses règles)
+const avec = (o, d = {}) => ({ ...API, ...lier(unNiveau(REGLES, o)) });   // (docs/59) une instance aux règles d'un monde
 
 function eveiller(inst) { const out = JSON.parse(JSON.stringify(inst)); if (out.monde?.grammaire) return { inst: out, evenements: [] };
   out.monde = { ...out.monde, grammaire: { depuis: out.cycle?.n ?? 0 } };
   return { inst: out, evenements: [{ type: 'eveil', taxon: out.taxons.find(t => t.plan?.regime !== 'vegetal')?.id, detail: 'le monde a désormais une grammaire : ses lignées peuvent luire, foudroyer, empester, appeler, entendre dans le noir' }] }; }
 
-const API = { REGLES, PHRASES, MOYENS, eveiller, preparer, inventer, definir, noir, eau };
+const API = { REGLES, PHRASES, MOYENS, eveiller, preparer, inventer, definir, noir, eau, avec };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else racine.OrvaneGrammaire = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -142,105 +142,115 @@ const baseForme = f => ({ h: FORMES[f].h, m: FORMES[f].m, r: FORMES[f].r, rendem
 const peut = (c, port, car) => CARACTERES[c] && (!CARACTERES[c].ports || CARACTERES[c].ports.includes(port)) && !car.includes(c) && !INCOMPATIBLES.some(([a, b]) => (a === c && car.includes(b)) || (b === c && car.includes(a)));
 // ce qu'une forme vaut dans un lieu (0 : elle n'y pousse pas) ; une des huit formes d'origine pousse partout où son port a sa place
 const convient = (plan, b) => FORMES[plan.forme] ? FORMES[plan.forme].ou(b) : 1;
-// la richesse d'un lieu : plus il est chaud et humide (ou, pour une eau, chaud et éclairé), plus il porte de formes
-const richesse = b => { const a = A(b), [lo, hi] = REGLES.eveil.par_port; return Math.round(lo + (hi - lo) * clamp(1.6 * a.T * (terre(b) ? a.H : a.L))); };
-const nommer = (R, forme, lieu, car) => { const nom = (SYL[Math.floor(R() * SYL.length)] + SYL[Math.floor(R() * SYL.length)]).replace(/^./, c => c.toUpperCase()); return `${nom} ${FORMES[forme]?.nom || forme}${lieu ? ` (${lieu})` : ''}`; };
+// (docs/59) les règles d'un monde, sans toucher à celles du module : tout ce qui les lit est lié à des règles (lier). Le module se lie aux
+// siennes ; un monde qui règle ce mécanisme (regles.diversite), ou un cycle (opt.regles), en prend une instance (avec : les règles du module
+// complétées des siennes d'un niveau)
+const unNiveau = (R, o) => { const X = { ...R }; if (o && typeof o === 'object') for (const k in o) { if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
+  const v = o[k], b = R[k]; X[k] = v && typeof v === 'object' && !Array.isArray(v) && b && typeof b === 'object' && !Array.isArray(b) ? { ...b, ...v } : v; } return X; };
+function lier(REGLES) {
+  // la richesse d'un lieu : plus il est chaud et humide (ou, pour une eau, chaud et éclairé), plus il porte de formes
+  const richesse = b => { const a = A(b), [lo, hi] = REGLES.eveil.par_port; return Math.round(lo + (hi - lo) * clamp(1.6 * a.T * (terre(b) ? a.H : a.L))); };
+  const nommer = (R, forme, lieu, car) => { const nom = (SYL[Math.floor(R() * SYL.length)] + SYL[Math.floor(R() * SYL.length)]).replace(/^./, c => c.toUpperCase()); return `${nom} ${FORMES[forme]?.nom || forme}${lieu ? ` (${lieu})` : ''}`; };
 
-// --- partager une population entre une mère et sa fille : les pieds (au poids), la place, et leurs références ---
-// (tout ce qui mesure une place se partage, comme à une séparation des dérives, docs/29 : le milieu recalcule le potentiel d'après
-//  reference.potentiel ; les effectifs passent au poids, la fille n'ayant pas la masse de sa mère)
-function partager(p, q, mm, mf, n) {
-  const rm = mm / mf, part = (o, x, k) => { if (!o) return o; const r = { ...o }; for (const c of ['effectif', 'succession']) if (Number.isFinite(o[c])) r[c] = r2(o[c] * x * k, k === 1 ? mm : mf); if (Number.isFinite(o.potentiel)) r.potentiel = +(o.potentiel * x).toFixed(2); return r; };
-  const { parcelles, graines, sinistre, stade, feuillage, ...reste } = p;
-  const pf = { ...JSON.parse(JSON.stringify(reste)), effectif: r2(p.effectif * q * rm, mf), tendance: 0, depuis: n, potentiel: +((p.potentiel || 0) * q).toFixed(2) };
-  if (p.reference) pf.reference = part(p.reference, q, rm); if (p.reference_diete) pf.reference_diete = part(p.reference_diete, q, rm);
-  p.effectif = r2(p.effectif * (1 - q), mm); p.potentiel = +((p.potentiel || 0) * (1 - q)).toFixed(2);
-  if (p.reference) p.reference = part(p.reference, 1 - q, 1); if (p.reference_diete) p.reference_diete = part(p.reference_diete, 1 - q, 1);
-  return pf;
-}
-const lignee = (mere, id, nom, plan, n, pops) => ({ ...JSON.parse(JSON.stringify({ ...mere, populations: [], plan: null })), id, nom, parent: mere.id, apparu: n, eteint: null, statut: 'croissance', plan, populations: pops });
-
-// --- l'éveil : la radiation ---
-function eveiller(inst) {
-  const out = JSON.parse(JSON.stringify(inst)); if (out.monde?.diversite) return { inst: out, evenements: [] };
-  const n = out.cycle?.n ?? 0, types = out.monde?.parcelles?.types || out.biomes, ids = new Set(out.taxons.map(t => t.id)), E = REGLES.eveil, graine = (out.monde?.graine ?? 1) >>> 0;
-  const lieux = new Map(out.biomes.map(b => [b.id, typeDe(b)])), neuves = [], formes = new Set();
-  for (const B of types) {
-    // les mères : dans ce type de lieu, la lignée la plus lourde de chaque port
-    const M = {}; for (const t of out.taxons) { if (!estPlante(t) || t.eteint) continue; const w = t.populations.filter(p => lieux.get(p.biome) === B.id).reduce((s, p) => s + poids(t, p), 0); if (w > 0 && (!M[portDe(t.plan)] || w > M[portDe(t.plan)].w)) M[portDe(t.plan)] = { t, w }; }
-    const cible = Math.min(E.max, Math.max(1, Math.round(richesse(B) * 3 / Math.max(1, Object.keys(M).length)))), q0 = Math.min(E.part, (1 - E.reste) / cible);   // (un lieu qui n'a qu'un ou deux ports en porte plus de chacun)
-    for (const port of Object.keys(M).sort()) { const mere = M[port].t, R = generateur(hacher(B.id + '|' + port, 0, graine ^ 0xd1e));
-      const cands = Object.keys(FORMES).filter(f => FORMES[f].port === port && f !== mere.plan.forme).map(f => [f, FORMES[f].ou(B) * (.85 + .3 * R())]).filter(x => x[1] >= E.seuil).sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1)).slice(0, cible);
-      // (un lieu riche où les formes de ce port manquent : des variantes des meilleures, qui portent un caractère de plus)
-      for (let k = 0, nf = cands.length; nf && cands.length < cible && k < 2 * nf; k++) cands.push([cands[k % nf][0], 0, true]);
-      cands.forEach(([forme, , variante], i) => { const car = (FORMES[forme].car || []).slice();
-        if (variante) { const L = Object.keys(CARACTERES).filter(c => peut(c, port, car)).sort(); if (L.length) car.push(L[Math.floor(R() * L.length)]); }
-        // un ou deux caractères de plus, une fois sur deux
-        for (let k = 0; k < 2; k++) if (R() < .5) { const L = Object.keys(CARACTERES).filter(c => peut(c, port, car)); if (L.length) car.push(L[Math.floor(R() * L.length)]); }
-        let id = `flore-${B.id}-${forme.replace(/_/g, '-')}`, j = 2; while (ids.has(id)) id = `flore-${B.id}-${forme.replace(/_/g, '-')}-${j++}`; ids.add(id);
-        const plan = planDe(mere.plan, forme, baseForme(forme), car, B.axes), q = q0 / (1 - q0 * i);   // (la i-ième part se prend sur ce qui reste : la même part de la mère d'origine chacune)
-        const pops = mere.populations.filter(p => lieux.get(p.biome) === B.id && p.effectif > 0).map(p => partager(p, q, mere.plan.masse_kg || 1, plan.masse_kg, n));
-        if (pops.length) { neuves.push(lignee(mere, id, nommer(R, forme, B.nom || B.id), plan, n, pops)); formes.add(forme); } }); }
+  // --- partager une population entre une mère et sa fille : les pieds (au poids), la place, et leurs références ---
+  // (tout ce qui mesure une place se partage, comme à une séparation des dérives, docs/29 : le milieu recalcule le potentiel d'après
+  //  reference.potentiel ; les effectifs passent au poids, la fille n'ayant pas la masse de sa mère)
+  function partager(p, q, mm, mf, n) {
+    const rm = mm / mf, part = (o, x, k) => { if (!o) return o; const r = { ...o }; for (const c of ['effectif', 'succession']) if (Number.isFinite(o[c])) r[c] = r2(o[c] * x * k, k === 1 ? mm : mf); if (Number.isFinite(o.potentiel)) r.potentiel = +(o.potentiel * x).toFixed(2); return r; };
+    const { parcelles, graines, sinistre, stade, feuillage, ...reste } = p;
+    const pf = { ...JSON.parse(JSON.stringify(reste)), effectif: r2(p.effectif * q * rm, mf), tendance: 0, depuis: n, potentiel: +((p.potentiel || 0) * q).toFixed(2) };
+    if (p.reference) pf.reference = part(p.reference, q, rm); if (p.reference_diete) pf.reference_diete = part(p.reference_diete, q, rm);
+    p.effectif = r2(p.effectif * (1 - q), mm); p.potentiel = +((p.potentiel || 0) * (1 - q)).toFixed(2);
+    if (p.reference) p.reference = part(p.reference, 1 - q, 1); if (p.reference_diete) p.reference_diete = part(p.reference_diete, 1 - q, 1);
+    return pf;
   }
-  out.taxons.push(...neuves);
-  const vivantes = out.taxons.filter(t => estPlante(t) && !t.eteint).length;
-  out.monde = { ...out.monde, diversite: { depuis: n, lignees: vivantes, nees: neuves.length, eteintes: 0 } };
-  return { inst: out, evenements: [{ type: 'eveil', taxon: neuves[0]?.id || out.taxons.find(estPlante)?.id || out.taxons[0]?.id, detail: `la flore se diversifie : ${neuves.length} lignées nouvelles, de ${formes.size} formes (${[...formes].slice(0, 6).map(f => FORMES[f].nom).join(', ')}…) ; ${vivantes} lignées de plantes en tout, qui se disputeront la place, se sépareront, gagneront les lieux voisins et s'éteindront` }] };
-}
+  const lignee = (mere, id, nom, plan, n, pops) => ({ ...JSON.parse(JSON.stringify({ ...mere, populations: [], plan: null })), id, nom, parent: mere.id, apparu: n, eteint: null, statut: 'croissance', plan, populations: pops });
 
-// --- un cycle : après la pousse. ctx : { n, biomes, monde, ids, noms } ; plantes : toutes les lignées de plantes (on y ajoute les neuves) ---
-function vivre(plantes, ctx) {
-  const { n, biomes, monde } = ctx, ev = [], neuves = [], ids = ctx.ids || new Set(plantes.map(t => t.id)), nom = id => ctx.noms?.[id] || biomes[id]?.nom || id, graine = (monde.graine ?? 1) >>> 0;
-  let nees = 0, eteintes = 0;
-  const parLieu = () => { const L = {}; for (const t of plantes) if (!t.eteint) for (const p of t.populations) ((L[p.biome] ??= {})[portDe(t.plan)] ??= []).push({ t, p }); return L; };
-  const echelle = (p, f) => { p.potentiel = +((p.potentiel || 0) * f).toFixed(2); if (p.reference && Number.isFinite(p.reference.potentiel)) p.reference.potentiel = +(p.reference.potentiel * f).toFixed(2); };
-  // 1. la concurrence pour la place, entre les lignées d'un même port dans un lieu ; 2. une population sans place disparaît
-  let L = parLieu();
-  for (const bid of Object.keys(L).sort()) for (const port of Object.keys(L[bid]).sort()) { const G = L[bid][port].filter(x => x.p.potentiel > 0); if (G.length < 2) continue;
-    const K = G.reduce((s, x) => s + x.p.potentiel, 0), rempl = G.map(x => Math.min(2, poids(x.t, x.p) / x.p.potentiel)), moy = G.reduce((s, x, i) => s + rempl[i] * x.p.potentiel, 0) / K;
-    const f = G.map((x, i) => 1 + REGLES.concurrence * clamp(rempl[i] - moy, -1, 1)), K2 = G.reduce((s, x, i) => s + x.p.potentiel * f[i], 0);
-    G.forEach((x, i) => echelle(x.p, f[i] * K / K2));
-    for (const x of G) { if (x.p.potentiel >= REGLES.disparition * K) continue; const h = G.filter(y => y !== x && y.p.potentiel > 0).sort((a, b) => b.p.potentiel - a.p.potentiel || (a.t.id < b.t.id ? -1 : 1))[0]; if (!h) continue;
-      // ce qui lui restait de place va à la plus grande de ses sœurs ; ses derniers pieds meurent
-      const fh = (h.p.potentiel + x.p.potentiel) / h.p.potentiel; echelle(h.p, fh); x.p.potentiel = 0; x.t.populations = x.t.populations.filter(q => q !== x.p);
-      if (!x.t.populations.length) { x.t.eteint = n; x.t.statut = 'eteint'; eteintes++; ev.push([3, { type: 'extinction', taxon: x.t.id, biome: bid, detail: `${x.t.nom} s'éteint : ${h.t.nom} a pris sa place` }]); } } }
-  // 3. la séparation et 4. la colonisation : rares, tirées du nom de la lignée, du lieu et du cycle
-  L = parLieu(); const vivantes = () => plantes.filter(t => !t.eteint).length + neuves.length;
-  const compte = bid => Object.values(L[bid] || {}).reduce((s, G) => s + G.length, 0);
-  for (const t of plantes.slice()) { if (t.eteint) continue; const port = portDe(t.plan);
-    for (const p of t.populations.slice()) { const b = biomes[p.biome]; if (!b || !(p.potentiel > 0)) continue; const R = generateur(hacher(t.id + '|' + p.biome, n, graine ^ 0xf10e)), x = R(), S = REGLES.separation, C = REGLES.colonisation;
-      if (x < S.chance) { if (poids(t, p) < S.min || vivantes() >= REGLES.monde || (L[p.biome][port] || []).length >= REGLES.par_port || compte(p.biome) >= REGLES.par_lieu) continue;
-        // la fille : une autre forme de son port qui se plaît ici, ou la même ; sa hauteur et sa repousse dérivent ; un caractère de plus ou de moins
-        let forme = t.plan.forme; const autres = Object.keys(FORMES).filter(f => FORMES[f].port === port && f !== forme && FORMES[f].ou(b) >= REGLES.eveil.seuil).sort();
-        const change = autres.length && R() < S.forme; if (change) forme = autres[Math.floor(R() * autres.length)];
-        // (si elle change de forme, elle prend les caractères de sa forme ; sinon elle garde ceux de sa mère, déjà cuits dans son plan)
-        const car = change ? (FORMES[forme].car || []).slice() : (t.plan.caracteres || []).slice(), neufs = change ? car.slice() : []; let dit = change ? `une autre forme, ${FORMES[forme].nom}` : '';
-        if (R() < REGLES.derive.caractere) { const plus = Object.keys(CARACTERES).filter(c => peut(c, port, car)).sort(); if (plus.length) { const c = plus[Math.floor(R() * plus.length)]; car.push(c); neufs.push(c); dit += `${dit ? ', ' : ''}elle est « ${CARACTERES[c].nom} »`; } }
-        const D = REGLES.derive, dh = D.hauteur[0] + (D.hauteur[1] - D.hauteur[0]) * R(), dr = D.croissance[0] + (D.croissance[1] - D.croissance[0]) * R();
-        const base = change ? baseForme(forme) : { h: t.plan.hauteur_m, m: t.plan.masse_kg, r: t.plan.croissance, rendement: t.plan.rendement || RENDEMENT[port], feuillage: t.plan.feuillage, appetence: t.plan.appetence, sinistres: t.plan.sinistres, vent: t.plan.vent };
-        const plan = planDe(t.plan, forme, { ...base, h: base.h * dh, m: base.m * Math.pow(dh, 2), r: base.r * dr }, neufs, b.axes, car);
-        let id = `${t.id}-${forme === t.plan.forme ? 'v' : forme.replace(/_/g, '-')}`, j = 2; while (ids.has(id)) id = `${t.id}-${forme === t.plan.forme ? 'v' : forme.replace(/_/g, '-')}-${j++}`; ids.add(id);
-        const pf = partager(p, S.part, t.plan.masse_kg || 1, plan.masse_kg, n), fille = lignee(t, id, nommer(R, forme, nom(p.biome)), plan, n, [pf]);
-        neuves.push(fille); nees++; (L[p.biome][port] ??= []).push({ t: fille, p: pf });
-        ev.push([2, { type: 'separation', taxon: id, biome: p.biome, detail: `lignée de plantes issue de ${t.id} : ${fille.nom}${dit ? ` (${dit})` : ''}, ${String(plan.hauteur_m).replace('.', ',')} m` }]);
-        continue; }
-      if (x < S.chance + C.chance) { const V = (b.voisins || []).filter(v => biomes[v] && !t.populations.some(q => q.biome === v)).sort(); if (!V.length) continue;
-        const v = V[Math.floor(R() * V.length)], bv = biomes[v], G = (L[v]?.[port] || []).filter(y => y.p.potentiel > 0);
-        if (!G.length || G.length >= REGLES.par_port || compte(v) >= REGLES.par_lieu || convient(t.plan, bv) < C.seuil) continue;
-        const h = G.slice().sort((a, c) => c.p.potentiel - a.p.potentiel || (a.t.id < c.t.id ? -1 : 1))[0], Kn = h.p.potentiel * C.part, m = t.plan.masse_kg || 1, ef = r2(Kn * C.graines / m, m), fr = (p.frequences || [1]).slice();
-        const np = { biome: v, effectif: ef, tendance: 0, depuis: n, potentiel: +Kn.toFixed(2), frequences: fr,
-          ...(h.p.reference ? { reference: { ...(Number.isFinite(h.p.reference.potentiel) ? { potentiel: +(h.p.reference.potentiel * C.part).toFixed(2) } : {}), ...(h.p.reference.capacite != null ? { capacite: h.p.reference.capacite } : {}), ...(h.p.reference.part != null ? { part: h.p.reference.part } : {}), effectif: ef, frequences: fr.slice(), ...(h.p.reference.succession != null ? { succession: ef } : {}) } } : {}),
-          ...(h.p.reference_diete ? { reference_diete: { effectif: ef, frequences: fr.slice() } } : {}) };
-        echelle(h.p, 1 - C.part); t.populations.push(np); (L[v][port] ??= []).push({ t, p: np });
-        ev.push([1, { type: 'migration', taxon: t.id, biome: v, detail: `${t.nom} gagne ${nom(v)}, depuis ${nom(p.biome)} : ses graines y prennent pied` }]); } } }
-  plantes.push(...neuves);
-  const D = { ...monde.diversite, lignees: plantes.filter(t => !t.eteint).length, nees: (monde.diversite.nees || 0) + nees, eteintes: (monde.diversite.eteintes || 0) + eteintes };
-  return { evenements: ev.sort((a, b) => b[0] - a[0]).slice(0, REGLES.evenements).map(x => x[1]), monde: m => ({ ...m, diversite: D }) };
+  // --- l'éveil : la radiation ---
+  function eveiller(inst) {
+    const out = JSON.parse(JSON.stringify(inst)); if (out.monde?.diversite) return { inst: out, evenements: [] };
+    const n = out.cycle?.n ?? 0, types = out.monde?.parcelles?.types || out.biomes, ids = new Set(out.taxons.map(t => t.id)), E = REGLES.eveil, graine = (out.monde?.graine ?? 1) >>> 0;
+    const lieux = new Map(out.biomes.map(b => [b.id, typeDe(b)])), neuves = [], formes = new Set();
+    for (const B of types) {
+      // les mères : dans ce type de lieu, la lignée la plus lourde de chaque port
+      const M = {}; for (const t of out.taxons) { if (!estPlante(t) || t.eteint) continue; const w = t.populations.filter(p => lieux.get(p.biome) === B.id).reduce((s, p) => s + poids(t, p), 0); if (w > 0 && (!M[portDe(t.plan)] || w > M[portDe(t.plan)].w)) M[portDe(t.plan)] = { t, w }; }
+      const cible = Math.min(E.max, Math.max(1, Math.round(richesse(B) * 3 / Math.max(1, Object.keys(M).length)))), q0 = Math.min(E.part, (1 - E.reste) / cible);   // (un lieu qui n'a qu'un ou deux ports en porte plus de chacun)
+      for (const port of Object.keys(M).sort()) { const mere = M[port].t, R = generateur(hacher(B.id + '|' + port, 0, graine ^ 0xd1e));
+        const cands = Object.keys(FORMES).filter(f => FORMES[f].port === port && f !== mere.plan.forme).map(f => [f, FORMES[f].ou(B) * (.85 + .3 * R())]).filter(x => x[1] >= E.seuil).sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1)).slice(0, cible);
+        // (un lieu riche où les formes de ce port manquent : des variantes des meilleures, qui portent un caractère de plus)
+        for (let k = 0, nf = cands.length; nf && cands.length < cible && k < 2 * nf; k++) cands.push([cands[k % nf][0], 0, true]);
+        cands.forEach(([forme, , variante], i) => { const car = (FORMES[forme].car || []).slice();
+          if (variante) { const L = Object.keys(CARACTERES).filter(c => peut(c, port, car)).sort(); if (L.length) car.push(L[Math.floor(R() * L.length)]); }
+          // un ou deux caractères de plus, une fois sur deux
+          for (let k = 0; k < 2; k++) if (R() < .5) { const L = Object.keys(CARACTERES).filter(c => peut(c, port, car)); if (L.length) car.push(L[Math.floor(R() * L.length)]); }
+          let id = `flore-${B.id}-${forme.replace(/_/g, '-')}`, j = 2; while (ids.has(id)) id = `flore-${B.id}-${forme.replace(/_/g, '-')}-${j++}`; ids.add(id);
+          const plan = planDe(mere.plan, forme, baseForme(forme), car, B.axes), q = q0 / (1 - q0 * i);   // (la i-ième part se prend sur ce qui reste : la même part de la mère d'origine chacune)
+          const pops = mere.populations.filter(p => lieux.get(p.biome) === B.id && p.effectif > 0).map(p => partager(p, q, mere.plan.masse_kg || 1, plan.masse_kg, n));
+          if (pops.length) { neuves.push(lignee(mere, id, nommer(R, forme, B.nom || B.id), plan, n, pops)); formes.add(forme); } }); }
+    }
+    out.taxons.push(...neuves);
+    const vivantes = out.taxons.filter(t => estPlante(t) && !t.eteint).length;
+    out.monde = { ...out.monde, diversite: { depuis: n, lignees: vivantes, nees: neuves.length, eteintes: 0 } };
+    return { inst: out, evenements: [{ type: 'eveil', taxon: neuves[0]?.id || out.taxons.find(estPlante)?.id || out.taxons[0]?.id, detail: `la flore se diversifie : ${neuves.length} lignées nouvelles, de ${formes.size} formes (${[...formes].slice(0, 6).map(f => FORMES[f].nom).join(', ')}…) ; ${vivantes} lignées de plantes en tout, qui se disputeront la place, se sépareront, gagneront les lieux voisins et s'éteindront` }] };
+  }
+
+  // --- un cycle : après la pousse. ctx : { n, biomes, monde, ids, noms } ; plantes : toutes les lignées de plantes (on y ajoute les neuves) ---
+  function vivre(plantes, ctx) {
+    const { n, biomes, monde } = ctx, ev = [], neuves = [], ids = ctx.ids || new Set(plantes.map(t => t.id)), nom = id => ctx.noms?.[id] || biomes[id]?.nom || id, graine = (monde.graine ?? 1) >>> 0;
+    let nees = 0, eteintes = 0;
+    const parLieu = () => { const L = {}; for (const t of plantes) if (!t.eteint) for (const p of t.populations) ((L[p.biome] ??= {})[portDe(t.plan)] ??= []).push({ t, p }); return L; };
+    const echelle = (p, f) => { p.potentiel = +((p.potentiel || 0) * f).toFixed(2); if (p.reference && Number.isFinite(p.reference.potentiel)) p.reference.potentiel = +(p.reference.potentiel * f).toFixed(2); };
+    // 1. la concurrence pour la place, entre les lignées d'un même port dans un lieu ; 2. une population sans place disparaît
+    let L = parLieu();
+    for (const bid of Object.keys(L).sort()) for (const port of Object.keys(L[bid]).sort()) { const G = L[bid][port].filter(x => x.p.potentiel > 0); if (G.length < 2) continue;
+      const K = G.reduce((s, x) => s + x.p.potentiel, 0), rempl = G.map(x => Math.min(2, poids(x.t, x.p) / x.p.potentiel)), moy = G.reduce((s, x, i) => s + rempl[i] * x.p.potentiel, 0) / K;
+      const f = G.map((x, i) => 1 + REGLES.concurrence * clamp(rempl[i] - moy, -1, 1)), K2 = G.reduce((s, x, i) => s + x.p.potentiel * f[i], 0);
+      G.forEach((x, i) => echelle(x.p, f[i] * K / K2));
+      for (const x of G) { if (x.p.potentiel >= REGLES.disparition * K) continue; const h = G.filter(y => y !== x && y.p.potentiel > 0).sort((a, b) => b.p.potentiel - a.p.potentiel || (a.t.id < b.t.id ? -1 : 1))[0]; if (!h) continue;
+        // ce qui lui restait de place va à la plus grande de ses sœurs ; ses derniers pieds meurent
+        const fh = (h.p.potentiel + x.p.potentiel) / h.p.potentiel; echelle(h.p, fh); x.p.potentiel = 0; x.t.populations = x.t.populations.filter(q => q !== x.p);
+        if (!x.t.populations.length) { x.t.eteint = n; x.t.statut = 'eteint'; eteintes++; ev.push([3, { type: 'extinction', taxon: x.t.id, biome: bid, detail: `${x.t.nom} s'éteint : ${h.t.nom} a pris sa place` }]); } } }
+    // 3. la séparation et 4. la colonisation : rares, tirées du nom de la lignée, du lieu et du cycle
+    L = parLieu(); const vivantes = () => plantes.filter(t => !t.eteint).length + neuves.length;
+    const compte = bid => Object.values(L[bid] || {}).reduce((s, G) => s + G.length, 0);
+    for (const t of plantes.slice()) { if (t.eteint) continue; const port = portDe(t.plan);
+      for (const p of t.populations.slice()) { const b = biomes[p.biome]; if (!b || !(p.potentiel > 0)) continue; const R = generateur(hacher(t.id + '|' + p.biome, n, graine ^ 0xf10e)), x = R(), S = REGLES.separation, C = REGLES.colonisation;
+        if (x < S.chance) { if (poids(t, p) < S.min || vivantes() >= REGLES.monde || (L[p.biome][port] || []).length >= REGLES.par_port || compte(p.biome) >= REGLES.par_lieu) continue;
+          // la fille : une autre forme de son port qui se plaît ici, ou la même ; sa hauteur et sa repousse dérivent ; un caractère de plus ou de moins
+          let forme = t.plan.forme; const autres = Object.keys(FORMES).filter(f => FORMES[f].port === port && f !== forme && FORMES[f].ou(b) >= REGLES.eveil.seuil).sort();
+          const change = autres.length && R() < S.forme; if (change) forme = autres[Math.floor(R() * autres.length)];
+          // (si elle change de forme, elle prend les caractères de sa forme ; sinon elle garde ceux de sa mère, déjà cuits dans son plan)
+          const car = change ? (FORMES[forme].car || []).slice() : (t.plan.caracteres || []).slice(), neufs = change ? car.slice() : []; let dit = change ? `une autre forme, ${FORMES[forme].nom}` : '';
+          if (R() < REGLES.derive.caractere) { const plus = Object.keys(CARACTERES).filter(c => peut(c, port, car)).sort(); if (plus.length) { const c = plus[Math.floor(R() * plus.length)]; car.push(c); neufs.push(c); dit += `${dit ? ', ' : ''}elle est « ${CARACTERES[c].nom} »`; } }
+          const D = REGLES.derive, dh = D.hauteur[0] + (D.hauteur[1] - D.hauteur[0]) * R(), dr = D.croissance[0] + (D.croissance[1] - D.croissance[0]) * R();
+          const base = change ? baseForme(forme) : { h: t.plan.hauteur_m, m: t.plan.masse_kg, r: t.plan.croissance, rendement: t.plan.rendement || RENDEMENT[port], feuillage: t.plan.feuillage, appetence: t.plan.appetence, sinistres: t.plan.sinistres, vent: t.plan.vent };
+          const plan = planDe(t.plan, forme, { ...base, h: base.h * dh, m: base.m * Math.pow(dh, 2), r: base.r * dr }, neufs, b.axes, car);
+          let id = `${t.id}-${forme === t.plan.forme ? 'v' : forme.replace(/_/g, '-')}`, j = 2; while (ids.has(id)) id = `${t.id}-${forme === t.plan.forme ? 'v' : forme.replace(/_/g, '-')}-${j++}`; ids.add(id);
+          const pf = partager(p, S.part, t.plan.masse_kg || 1, plan.masse_kg, n), fille = lignee(t, id, nommer(R, forme, nom(p.biome)), plan, n, [pf]);
+          neuves.push(fille); nees++; (L[p.biome][port] ??= []).push({ t: fille, p: pf });
+          ev.push([2, { type: 'separation', taxon: id, biome: p.biome, detail: `lignée de plantes issue de ${t.id} : ${fille.nom}${dit ? ` (${dit})` : ''}, ${String(plan.hauteur_m).replace('.', ',')} m` }]);
+          continue; }
+        if (x < S.chance + C.chance) { const V = (b.voisins || []).filter(v => biomes[v] && !t.populations.some(q => q.biome === v)).sort(); if (!V.length) continue;
+          const v = V[Math.floor(R() * V.length)], bv = biomes[v], G = (L[v]?.[port] || []).filter(y => y.p.potentiel > 0);
+          if (!G.length || G.length >= REGLES.par_port || compte(v) >= REGLES.par_lieu || convient(t.plan, bv) < C.seuil) continue;
+          const h = G.slice().sort((a, c) => c.p.potentiel - a.p.potentiel || (a.t.id < c.t.id ? -1 : 1))[0], Kn = h.p.potentiel * C.part, m = t.plan.masse_kg || 1, ef = r2(Kn * C.graines / m, m), fr = (p.frequences || [1]).slice();
+          const np = { biome: v, effectif: ef, tendance: 0, depuis: n, potentiel: +Kn.toFixed(2), frequences: fr,
+            ...(h.p.reference ? { reference: { ...(Number.isFinite(h.p.reference.potentiel) ? { potentiel: +(h.p.reference.potentiel * C.part).toFixed(2) } : {}), ...(h.p.reference.capacite != null ? { capacite: h.p.reference.capacite } : {}), ...(h.p.reference.part != null ? { part: h.p.reference.part } : {}), effectif: ef, frequences: fr.slice(), ...(h.p.reference.succession != null ? { succession: ef } : {}) } } : {}),
+            ...(h.p.reference_diete ? { reference_diete: { effectif: ef, frequences: fr.slice() } } : {}) };
+          echelle(h.p, 1 - C.part); t.populations.push(np); (L[v][port] ??= []).push({ t, p: np });
+          ev.push([1, { type: 'migration', taxon: t.id, biome: v, detail: `${t.nom} gagne ${nom(v)}, depuis ${nom(p.biome)} : ses graines y prennent pied` }]); } } }
+    plantes.push(...neuves);
+    const D = { ...monde.diversite, lignees: plantes.filter(t => !t.eteint).length, nees: (monde.diversite.nees || 0) + nees, eteintes: (monde.diversite.eteintes || 0) + eteintes };
+    return { evenements: ev.sort((a, b) => b[0] - a[0]).slice(0, REGLES.evenements).map(x => x[1]), monde: m => ({ ...m, diversite: D }) };
+  }
+  return { REGLES, eveiller, vivre };
 }
+const { eveiller, vivre } = lier(REGLES);   // (le module, lié à ses règles)
+const avec = (o, d = {}) => ({ ...API, ...lier(unNiveau(REGLES, o)) });   // (docs/59) une instance aux règles d'un monde
 // ce qu'un jeu lit des formes et des caractères (catalogue.formes_flore, catalogue.caracteres_flore)
 const catalogue = () => ({ formes: Object.fromEntries(Object.entries(FORMES).map(([k, f]) => [k, { nom: f.nom, port: f.port, hauteur_m: f.h, croissance: f.r, ...(f.feuillage ? { feuillage: f.feuillage } : {}), ...(f.rendement ? { rendement: f.rendement } : {}), ...(f.car ? { caracteres: f.car } : {}) }])),
   caracteres: Object.fromEntries(Object.entries(CARACTERES).map(([k, c]) => [k, { nom: c.nom, effet: c.effet, cout: c.cout }])) });
 
-const API = { REGLES, FORMES, CARACTERES, eveiller, vivre, planDe, convient, catalogue, portDe };
+const API = { REGLES, FORMES, CARACTERES, eveiller, vivre, planDe, convient, catalogue, portDe, avec };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else racine.OrvaneDiversite = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

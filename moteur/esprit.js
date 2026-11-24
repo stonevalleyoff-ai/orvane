@@ -49,61 +49,71 @@ function eveiller(inst) { const out = JSON.parse(JSON.stringify(inst)); if (out.
   const n = out.taxons.filter(t => !t.eteint && t.plan?.regime !== 'vegetal' && t.plan?.regime !== 'synthetique' && Object.values(SAVOIRS).some(S => S.peut(t.plan))).length;
   return { inst: out, evenements: [{ type: 'eveil', taxon: out.taxons.find(t => t.plan?.regime !== 'vegetal')?.id, detail: `l'esprit s'éveille : ${n} lignées pourraient apprendre, transmettre, se servir d'outils` }] }; }
 
-// --- le cycle : ce que pèsent les savoirs de chaque population, phénotype par phénotype (les curieux en profitent plus) ---
-function preparer(ctx) {
-  const { taxons, biomes } = ctx, P = new Map();
-  for (const t of taxons) for (const p of t.populations || []) if (p.savoirs && Object.keys(p.savoirs).length) P.set(t.id + '|' + p.biome, p.savoirs);
-  if (!P.size) return null;
-  const cache = new Map();
-  const facteur = (t, bid, i, k) => { const s = P.get(t.id + '|' + bid); if (!s) return 1; const c = t.id + '|' + bid + '|' + i + '|' + k; if (cache.has(c)) return cache.get(c);
-    const w = t.phenotypes[i]?.traits?.includes('curiosite') ? REGLES.curiosite : REGLES.autres, b = biomes[bid]; let f = 1;
-    for (const [id, q] of Object.entries(s)) { const S = SAVOIRS[id], v = S?.[k]; if (!v) continue; f *= 1 + v * Math.min(1, q * w) * S.ou(b || {}); }
-    if (k === 'place') f = 1 / f;   // (plus de nourriture : moins d'entassement)
-    cache.set(c, f); return f; };
-  // ce que la population atteint : une chasse concertée, une brindille, mettent plus de proies à sa portée (à proportion de ceux qui savent)
-  const acces = (t, bid) => { const s = P.get(t.id + '|' + bid); if (!s) return 1; const c = t.id + '|' + bid + '|acces'; if (cache.has(c)) return cache.get(c); const b = biomes[bid];
-    let f = 1; for (const [id, q] of Object.entries(s)) { const S = SAVOIRS[id]; if (S?.chasse) f *= 1 + S.chasse * q * S.ou(b || {}); } cache.set(c, f); return f; };
-  // (la chasse d'un phénotype : ce qu'il en tire de plus que les siens, les curieux surtout ; celle de la population : acces)
-  return { chasse: (t, bid, i) => facteur(t, bid, i, 'chasse'), vuln: (t, bid, i) => facteur(t, bid, i, 'vuln'), place: (t, bid, i) => facteur(t, bid, i, 'place'), acces };
-}
+// (docs/59) les règles d'un monde, sans toucher à celles du module : tout ce qui les lit est lié à des règles (lier). Le module se lie aux
+// siennes ; un monde qui règle ce mécanisme (regles.esprit), ou un cycle (opt.regles), en prend une instance (avec : les règles du module
+// complétées des siennes d'un niveau)
+const unNiveau = (R, o) => { const X = { ...R }; if (o && typeof o === 'object') for (const k in o) { if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
+  const v = o[k], b = R[k]; X[k] = v && typeof v === 'object' && !Array.isArray(v) && b && typeof b === 'object' && !Array.isArray(b) ? { ...b, ...v } : v; } return X; };
+function lier(REGLES) {
+  // --- le cycle : ce que pèsent les savoirs de chaque population, phénotype par phénotype (les curieux en profitent plus) ---
+  function preparer(ctx) {
+    const { taxons, biomes } = ctx, P = new Map();
+    for (const t of taxons) for (const p of t.populations || []) if (p.savoirs && Object.keys(p.savoirs).length) P.set(t.id + '|' + p.biome, p.savoirs);
+    if (!P.size) return null;
+    const cache = new Map();
+    const facteur = (t, bid, i, k) => { const s = P.get(t.id + '|' + bid); if (!s) return 1; const c = t.id + '|' + bid + '|' + i + '|' + k; if (cache.has(c)) return cache.get(c);
+      const w = t.phenotypes[i]?.traits?.includes('curiosite') ? REGLES.curiosite : REGLES.autres, b = biomes[bid]; let f = 1;
+      for (const [id, q] of Object.entries(s)) { const S = SAVOIRS[id], v = S?.[k]; if (!v) continue; f *= 1 + v * Math.min(1, q * w) * S.ou(b || {}); }
+      if (k === 'place') f = 1 / f;   // (plus de nourriture : moins d'entassement)
+      cache.set(c, f); return f; };
+    // ce que la population atteint : une chasse concertée, une brindille, mettent plus de proies à sa portée (à proportion de ceux qui savent)
+    const acces = (t, bid) => { const s = P.get(t.id + '|' + bid); if (!s) return 1; const c = t.id + '|' + bid + '|acces'; if (cache.has(c)) return cache.get(c); const b = biomes[bid];
+      let f = 1; for (const [id, q] of Object.entries(s)) { const S = SAVOIRS[id]; if (S?.chasse) f *= 1 + S.chasse * q * S.ou(b || {}); } cache.set(c, f); return f; };
+    // (la chasse d'un phénotype : ce qu'il en tire de plus que les siens, les curieux surtout ; celle de la population : acces)
+    return { chasse: (t, bid, i) => facteur(t, bid, i, 'chasse'), vuln: (t, bid, i) => facteur(t, bid, i, 'vuln'), place: (t, bid, i) => facteur(t, bid, i, 'place'), acces };
+  }
 
-// --- après le cycle : les savoirs naissent, se répandent, voyagent avec les migrants, se perdent ---
-function apres(ctx) {
-  const { avant, sortie, biomes, n } = ctx, ev = [], A = new Map();
-  for (const t of avant) for (const p of t.populations || []) if (p.savoirs) A.set(t.id + '|' + p.biome, p.savoirs);
-  const parLignee = id => { const L = avant.find(t => t.id === id); if (!L) return {}; let N = 0; const m = {};
-    for (const p of L.populations || []) { N += p.effectif; for (const [k, q] of Object.entries(p.savoirs || {})) m[k] = (m[k] || 0) + q * p.effectif; }
-    for (const k in m) m[k] /= N || 1; return m; };
-  for (const t of sortie) { if (t.eteint || ['vegetal', 'synthetique'].includes(t.plan?.regime)) continue;
-    const a0 = capacite(t.plan), cur = t.phenotypes.reduce((x, p) => x + (p.traits.includes('curiosite') ? p.frequence || 0 : 0), 0), a = clamp(a0 * (1 + (REGLES.curiosite - 1) * cur)), moy = parLignee(t.id);
-    for (const p of t.populations) {
-      let s = A.get(t.id + '|' + p.biome); const N = p.effectif;
-      // une population nouvelle : ce qu'apportent ses premiers migrants (la moitié de ce que sait la lignée), ou sa mère (une séparation)
-      if (!s) { const mere = t.parent && t.apparu === n ? A.get(t.parent + '|' + p.biome) : null; s = mere ? { ...mere } : Object.fromEntries(Object.entries(moy).map(([k, q]) => [k, q * REGLES.migrants]).filter(([, q]) => q >= REGLES.seuil)); }
-      else s = { ...s };
-      // les migrants mêlent ce que savent les populations de la lignée
-      const m = Math.min(.2, p.flux || 0); if (m > 0) for (const k of new Set([...Object.keys(s), ...Object.keys(moy)])) s[k] = (1 - m) * (s[k] || 0) + m * (moy[k] || 0);
-      const b = biomes[p.biome] || {};
-      for (const k of Object.keys(s)) { const S = SAVOIRS[k], q = s[k], c = S ? S.ou(b) : 0;
-        // l'imitation (là où il sert, il se répand), l'oubli (d'autant plus vite que la population est petite, ou qu'il ne sert à rien)
-        const oubli = REGLES.oubli + REGLES.perte_petite * Math.exp(-N / REGLES.petite) + (c < .1 ? .05 : 0);
-        s[k] = q + REGLES.imitation * a * c * q * (1 - q) - oubli * q; if (!(s[k] >= REGLES.seuil)) delete s[k]; else s[k] = r4(s[k]); }
-      // une invention : une bête qui peut l'apprendre, là où il sert
-      if (N >= 10) { const R = hacher(t.id + '|' + p.biome, n); if (R() < REGLES.invention * a * a * Math.min(1, Math.sqrt(N / 100))) {
-        const C = Object.entries(SAVOIRS).filter(([k, S]) => !s[k] && S.peut(t.plan) && S.ou(b) >= .3);
-        if (C.length) { const [k, S] = C[Math.floor(R() * C.length)]; s[k] = REGLES.depart;
-          ev.push({ type: 'savoir', taxon: t.id, biome: p.biome, detail: `chez ${t.nom || t.id}, à ${b.nom || p.biome}, une bête invente : ${S.nom}${S.outil ? ` (un outil : ${S.outil})` : ''}` }); } } }
-      if (Object.keys(s).length) p.savoirs = s; else delete p.savoirs;
-      // un savoir perdu : la population l'avait, elle ne l'a plus
-      const avantS = A.get(t.id + '|' + p.biome) || {}; for (const k of Object.keys(avantS)) if (avantS[k] >= .2 && !s[k]) ev.push({ type: 'savoir', taxon: t.id, biome: p.biome, detail: `à ${b.nom || p.biome}, ${t.nom || t.id} a perdu un savoir : ${SAVOIRS[k]?.nom || k}` });
-    } }
-  // le catalogue : les savoirs que le monde connaît
-  const connus = new Set(); for (const t of sortie) for (const p of t.populations || []) for (const k of Object.keys(p.savoirs || {})) connus.add(k);
-  const catalogue = Object.fromEntries([...connus].sort().map(k => { const S = SAVOIRS[k]; return [k, { nom: S.nom, geste: S.geste, ...(S.outil ? { outil: S.outil } : {}), presage: S.presage,
-    effet: [S.place ? `${Math.round(S.place * 100)} % de nourriture en plus` : '', S.chasse ? `une chasse meilleure de ${Math.round(S.chasse * 100)} %` : '', S.vuln ? `${Math.round(-S.vuln * 100)} % de pertes en moins` : ''].filter(Boolean).join(', ') + ', à ceux qui le savent' }]; }));
-  return { evenements: ev, catalogue };
+  // --- après le cycle : les savoirs naissent, se répandent, voyagent avec les migrants, se perdent ---
+  function apres(ctx) {
+    const { avant, sortie, biomes, n } = ctx, ev = [], A = new Map();
+    for (const t of avant) for (const p of t.populations || []) if (p.savoirs) A.set(t.id + '|' + p.biome, p.savoirs);
+    const parLignee = id => { const L = avant.find(t => t.id === id); if (!L) return {}; let N = 0; const m = {};
+      for (const p of L.populations || []) { N += p.effectif; for (const [k, q] of Object.entries(p.savoirs || {})) m[k] = (m[k] || 0) + q * p.effectif; }
+      for (const k in m) m[k] /= N || 1; return m; };
+    for (const t of sortie) { if (t.eteint || ['vegetal', 'synthetique'].includes(t.plan?.regime)) continue;
+      const a0 = capacite(t.plan), cur = t.phenotypes.reduce((x, p) => x + (p.traits.includes('curiosite') ? p.frequence || 0 : 0), 0), a = clamp(a0 * (1 + (REGLES.curiosite - 1) * cur)), moy = parLignee(t.id);
+      for (const p of t.populations) {
+        let s = A.get(t.id + '|' + p.biome); const N = p.effectif;
+        // une population nouvelle : ce qu'apportent ses premiers migrants (la moitié de ce que sait la lignée), ou sa mère (une séparation)
+        if (!s) { const mere = t.parent && t.apparu === n ? A.get(t.parent + '|' + p.biome) : null; s = mere ? { ...mere } : Object.fromEntries(Object.entries(moy).map(([k, q]) => [k, q * REGLES.migrants]).filter(([, q]) => q >= REGLES.seuil)); }
+        else s = { ...s };
+        // les migrants mêlent ce que savent les populations de la lignée
+        const m = Math.min(.2, p.flux || 0); if (m > 0) for (const k of new Set([...Object.keys(s), ...Object.keys(moy)])) s[k] = (1 - m) * (s[k] || 0) + m * (moy[k] || 0);
+        const b = biomes[p.biome] || {};
+        for (const k of Object.keys(s)) { const S = SAVOIRS[k], q = s[k], c = S ? S.ou(b) : 0;
+          // l'imitation (là où il sert, il se répand), l'oubli (d'autant plus vite que la population est petite, ou qu'il ne sert à rien)
+          const oubli = REGLES.oubli + REGLES.perte_petite * Math.exp(-N / REGLES.petite) + (c < .1 ? .05 : 0);
+          s[k] = q + REGLES.imitation * a * c * q * (1 - q) - oubli * q; if (!(s[k] >= REGLES.seuil)) delete s[k]; else s[k] = r4(s[k]); }
+        // une invention : une bête qui peut l'apprendre, là où il sert
+        if (N >= 10) { const R = hacher(t.id + '|' + p.biome, n); if (R() < REGLES.invention * a * a * Math.min(1, Math.sqrt(N / 100))) {
+          const C = Object.entries(SAVOIRS).filter(([k, S]) => !s[k] && S.peut(t.plan) && S.ou(b) >= .3);
+          if (C.length) { const [k, S] = C[Math.floor(R() * C.length)]; s[k] = REGLES.depart;
+            ev.push({ type: 'savoir', taxon: t.id, biome: p.biome, detail: `chez ${t.nom || t.id}, à ${b.nom || p.biome}, une bête invente : ${S.nom}${S.outil ? ` (un outil : ${S.outil})` : ''}` }); } } }
+        if (Object.keys(s).length) p.savoirs = s; else delete p.savoirs;
+        // un savoir perdu : la population l'avait, elle ne l'a plus
+        const avantS = A.get(t.id + '|' + p.biome) || {}; for (const k of Object.keys(avantS)) if (avantS[k] >= .2 && !s[k]) ev.push({ type: 'savoir', taxon: t.id, biome: p.biome, detail: `à ${b.nom || p.biome}, ${t.nom || t.id} a perdu un savoir : ${SAVOIRS[k]?.nom || k}` });
+      } }
+    // le catalogue : les savoirs que le monde connaît
+    const connus = new Set(); for (const t of sortie) for (const p of t.populations || []) for (const k of Object.keys(p.savoirs || {})) connus.add(k);
+    const catalogue = Object.fromEntries([...connus].sort().map(k => { const S = SAVOIRS[k]; return [k, { nom: S.nom, geste: S.geste, ...(S.outil ? { outil: S.outil } : {}), presage: S.presage,
+      effet: [S.place ? `${Math.round(S.place * 100)} % de nourriture en plus` : '', S.chasse ? `une chasse meilleure de ${Math.round(S.chasse * 100)} %` : '', S.vuln ? `${Math.round(-S.vuln * 100)} % de pertes en moins` : ''].filter(Boolean).join(', ') + ', à ceux qui le savent' }]; }));
+    return { evenements: ev, catalogue };
+  }
+  return { REGLES, preparer, apres };
 }
+const { preparer, apres } = lier(REGLES);   // (le module, lié à ses règles)
+const avec = (o, d = {}) => ({ ...API, ...lier(unNiveau(REGLES, o)) });   // (docs/59) une instance aux règles d'un monde
 
-const API = { REGLES, TRAITS, SAVOIRS, capacite, eveiller, preparer, apres };
+const API = { REGLES, TRAITS, SAVOIRS, capacite, eveiller, preparer, apres, avec };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else racine.OrvaneEsprit = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -109,9 +109,9 @@ console.log("5. L'immunité");
 console.log('5 bis. Une épidémie qui s\'éteint (REGLES.locale)');
 { // une petite population (150 bêtes) et une plus grande (600), seules de leur lignée : la même souche, avec et sans le seuil
   const tid = vivants(I0).filter(t => t.populations.length === 1 && t.populations[0].effectif >= 300).sort((a, b) => a.populations[0].effectif - b.populations[0].effectif)[0].id;
-  const fin = {}, essai = (N, k) => { const av = Pa.REGLES.locale; Pa.REGLES.locale = k;
-    try { let X = poser(I0, tid, I0.taxons.find(t => t.id === tid).populations[0].biome, .15, .1); const p0 = X.taxons.find(t => t.id === tid).populations[0], f = N / p0.effectif; p0.effectif = N; if (p0.N) p0.N = p0.N.map(x => x * f);
-      for (let c = 1; c <= 30; c++) { const Y = X; X = Orvane.cycle(X, {}); if (!X.monde.pathogenes.souches['souche-essai']) { Object.assign(fin, { avant: Y, apres: X }); return c; } } return 0; } finally { Pa.REGLES.locale = av; } };
+  const fin = {}, essai = (N, k) => { const opt = { regles: { pathogenes: { locale: k } } };   // (docs/59 : le seuil, donné au cycle ; les règles du module n'y changent pas)
+    let X = poser(I0, tid, I0.taxons.find(t => t.id === tid).populations[0].biome, .15, .1); const p0 = X.taxons.find(t => t.id === tid).populations[0], f = N / p0.effectif; p0.effectif = N; if (p0.N) p0.N = p0.N.map(x => x * f);
+    for (let c = 1; c <= 30; c++) { const Y = X; X = Orvane.cycle(X, {}, opt); if (!X.monde.pathogenes.souches['souche-essai']) { Object.assign(fin, { avant: Y, apres: X }); return c; } } return 0; };
   const a = essai(150, 0), b = essai(150, Pa.REGLES.locale), c = essai(600, Pa.REGLES.locale);
   verif(!a && b > 0 && !c, `dans une population de 150 bêtes, sans le seuil, la souche ne s'éteint jamais (quelques malades pour toujours) ; avec lui (moins de ${Pa.REGLES.locale} malades), elle s'éteint au cycle ${b} ; dans une population de 600 bêtes, elle reste`);
   // une extinction réelle : son événement dit la souche, sa nature, son nom, ses hôtes, ses derniers lieux ; son texte seul, la même chose

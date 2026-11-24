@@ -81,8 +81,7 @@ console.log('5. Le glissement, le contrat, le cycle de nuit');
   for (let i = 0; i < 4000; i++) { const p = clone(base), m = Di.deriver(base, p, 'essai-' + i, 3); if (!m) continue; g++;
     for (const [k, v] of Object.entries(p.diete)) if (!(k in base.diete) && !['feuilles', 'fruits'].some(x => Di.VOISINES[x].includes(k))) voisin = false; c[p.regime] = (c[p.regime] || 0) + 1; }
   verif(Math.abs(g / 4000 - .25) < .02 && voisin && c.omnivore > 0 && c.herbivore > 0, `${fx(g / 40, 1)} % des séparations glissent, vers une part voisine ; d'une lignée moitié feuilles, moitié fruits naissent ${c.omnivore} omnivores (un peu d'insectes) pour ${c.herbivore} herbivores`);
-  const gl = clone(Di.REGLES.glissement); Di.REGLES.glissement.chance = 1;   // (docs/59 : les séparations forcées, données au cycle ; le glissement, aux diètes)
-  let X; try { X = Orvane.cycle(W1, {}, { regles: { separation: { cycles: 0, distance: 0, chance: 1 } } }); } finally { Object.assign(Di.REGLES.glissement, gl); }
+  const X = Orvane.cycle(W1, {}, { regles: { separation: { cycles: 0, distance: 0, chance: 1 }, dietes: { glissement: { chance: 1 } } } });   // (docs/59 : les séparations et le glissement forcés, donnés au cycle)
   // (les filles de ce cycle : celles qui n'existaient pas avant lui)
   const avant = new Set(W1.taxons.map(t => t.id)), F = X.taxons.filter(t => !avant.has(t.id) && t.apparu === X.cycle.n && t.parent && t.plan.diete), P = F.map(f => [f, Tx(X, f.parent)]), ch = P.filter(([f, p]) => JSON.stringify(f.plan.diete) !== JSON.stringify(p.plan.diete));
   verif(F.length > 50 && ch.length === F.length && F.every(f => Di.regimeDe(f.plan.diete) === f.plan.regime && f.plan.diete0), `${F.length} séparations forcées, le glissement forcé : toutes les filles ont un spectre neuf, et leur régime le suit (${ch.filter(([f, p]) => f.plan.regime !== p.plan.regime).length} changent de régime) ; elles gardent la référence de leur mère`);

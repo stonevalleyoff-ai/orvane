@@ -37,30 +37,40 @@ function stadesDe(plan) {
     adulte: { nom: 'adulte', regime: plan.regime, locomotion: loco.slice() }, recouvrement: plan.regime === 'herbivore' ? .6 : .25 };
   return null;
 }
-// la part de l'entassement qu'une vie double épargne : les larves ne disputent aux adultes que ce qu'elles mangent en commun
-// (le recouvrement de leurs deux régimes) ; une chenille et un papillon (0,2) s'épargnent 28 %, un têtard et une grenouille herbivore (0,6), 14 %
-const soulagement = S => S ? REGLES.soulagement * (1 - S.recouvrement) : 0;
+// (docs/59) les règles d'un monde, sans toucher à celles du module : tout ce qui les lit est lié à des règles (lier). Le module se lie aux
+// siennes ; un monde qui règle ce mécanisme (regles.stades), ou un cycle (opt.regles), en prend une instance (avec : les règles du module
+// complétées des siennes d'un niveau)
+const unNiveau = (R, o) => { const X = { ...R }; if (o && typeof o === 'object') for (const k in o) { if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
+  const v = o[k], b = R[k]; X[k] = v && typeof v === 'object' && !Array.isArray(v) && b && typeof b === 'object' && !Array.isArray(b) ? { ...b, ...v } : v; } return X; };
+function lier(REGLES) {
+  // la part de l'entassement qu'une vie double épargne : les larves ne disputent aux adultes que ce qu'elles mangent en commun
+  // (le recouvrement de leurs deux régimes) ; une chenille et un papillon (0,2) s'épargnent 28 %, un têtard et une grenouille herbivore (0,6), 14 %
+  const soulagement = S => S ? REGLES.soulagement * (1 - S.recouvrement) : 0;
 
-function eveiller(inst) {
-  const out = JSON.parse(JSON.stringify(inst)); if (out.monde?.stades) return { inst: out, evenements: [] };
-  const peut = out.taxons.filter(t => estAnimal(t) && !t.eteint && stadesDe(t.plan)).length;
-  out.monde = { ...out.monde, stades: { depuis: out.cycle?.n ?? 0 } };
-  return { inst: out, evenements: [{ type: 'eveil', taxon: out.taxons.find(estAnimal)?.id, detail: `les cycles de vie s'éveillent : ${peut} lignées pourraient vivre deux vies, une larve puis un adulte, si la métamorphose leur vient` }] };
+  function eveiller(inst) {
+    const out = JSON.parse(JSON.stringify(inst)); if (out.monde?.stades) return { inst: out, evenements: [] };
+    const peut = out.taxons.filter(t => estAnimal(t) && !t.eteint && stadesDe(t.plan)).length;
+    out.monde = { ...out.monde, stades: { depuis: out.cycle?.n ?? 0 } };
+    return { inst: out, evenements: [{ type: 'eveil', taxon: out.taxons.find(estAnimal)?.id, detail: `les cycles de vie s'éveillent : ${peut} lignées pourraient vivre deux vies, une larve puis un adulte, si la métamorphose leur vient` }] };
+  }
+
+  function preparer() {
+    const cache = new Map(), S = t => { if (!cache.has(t.id)) cache.set(t.id, stadesDe(t.plan)); return cache.get(t.id); };
+    return {
+      // le facteur de l'entassement d'un phénotype : 1 sans métamorphose ; moins, avec, si elle sert à sa lignée
+      facteur(t, bid, i) { const tr = t.phenotypes[i]?.traits; if (!tr?.includes('metamorphose')) return 1; const s = S(t); return s ? 1 - soulagement(s) : 1; },
+      // ce que publie une lignée dont une part se métamorphose : ses deux vies, et cette part
+      publier(t) {
+        if (!estAnimal(t) || t.eteint) return; const part = t.phenotypes.reduce((a, p) => a + (p.traits?.includes('metamorphose') ? p.frequence || 0 : 0), 0), s = S(t);
+        if (s && part >= REGLES.publier) t.plan.stades = { larve: s.larve, adulte: s.adulte, part: +part.toFixed(3), larves: REGLES.larves }; else delete t.plan.stades;
+      }
+    };
+  }
+  return { REGLES, soulagement, eveiller, preparer };
 }
+const { soulagement, eveiller, preparer } = lier(REGLES);   // (le module, lié à ses règles)
+const avec = (o, d = {}) => ({ ...API, ...lier(unNiveau(REGLES, o)) });   // (docs/59) une instance aux règles d'un monde
 
-function preparer() {
-  const cache = new Map(), S = t => { if (!cache.has(t.id)) cache.set(t.id, stadesDe(t.plan)); return cache.get(t.id); };
-  return {
-    // le facteur de l'entassement d'un phénotype : 1 sans métamorphose ; moins, avec, si elle sert à sa lignée
-    facteur(t, bid, i) { const tr = t.phenotypes[i]?.traits; if (!tr?.includes('metamorphose')) return 1; const s = S(t); return s ? 1 - soulagement(s) : 1; },
-    // ce que publie une lignée dont une part se métamorphose : ses deux vies, et cette part
-    publier(t) {
-      if (!estAnimal(t) || t.eteint) return; const part = t.phenotypes.reduce((a, p) => a + (p.traits?.includes('metamorphose') ? p.frequence || 0 : 0), 0), s = S(t);
-      if (s && part >= REGLES.publier) t.plan.stades = { larve: s.larve, adulte: s.adulte, part: +part.toFixed(3), larves: REGLES.larves }; else delete t.plan.stades;
-    }
-  };
-}
-
-const API = { REGLES, TRAITS, stadesDe, soulagement, eveiller, preparer };
+const API = { REGLES, TRAITS, stadesDe, soulagement, eveiller, preparer, avec };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else racine.OrvaneStades = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

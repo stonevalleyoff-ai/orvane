@@ -19,7 +19,7 @@ const val = (s, v, p) => { if (!s) return []; if (s.$ref) s = S.$defs[s.$ref.spl
   if (ty === 'object') { for (const r of s.required || []) if (!(r in v)) e.push(p + ': manque ' + r); for (const k in v) { const ps = s.properties?.[k] || (typeof s.additionalProperties === 'object' ? s.additionalProperties : null); if (ps) e.push(...val(ps, v[k], p + '.' + k)); else if (s.additionalProperties === false) e.push(p + ': en trop ' + k); } }
   if (ty === 'array' && s.items) v.forEach((x, i) => e.push(...val(s.items, x, p + '[' + i + ']'))); return e; };
 const I0 = require('./monde.js').orvane({ continent: '', sans: ['grammaire'] }), W = G.eveiller(I0).inst, animaux = I => I.taxons.map(t => [t.id, t.populations.map(p => [p.biome, p.effectif]), t.phenotypes.map(p => p.id)]);
-const avec = (o, f) => { const g = clone(G.REGLES); Object.assign(G.REGLES, o); try { return f(); } finally { Object.assign(G.REGLES, g); } };
+const avec = o => ({ regles: { grammaire: o } });   // (docs/59 : les règles de la grammaire, données au cycle ; celles du module n'y changent pas)
 const B = (X, id) => X.biomes.find(b => b.id === id), Tx = (X, id) => X.taxons.find(t => t.id === id), tot = t => t.populations.reduce((a, p) => a + p.effectif, 0);
 const part = (X, tid, id) => Tx(X, tid).phenotypes.reduce((a, p) => a + (p.traits.includes(id) ? p.frequence : 0), 0);
 // greffer une phrase (force 1) à la moitié d'une lignée
@@ -36,7 +36,7 @@ console.log('1. Le jour un');
   vm.runInNewContext(src, { module: mod, require: p => p === './grammaire.js' ? null : require(racine('moteur/' + p.replace('./', ''))), console });
   let A = I0, C = I0; for (let k = 0; k < 3; k++) { A = Orvane.cycle(A, {}); C = mod.exports.cycle(C, {}); }
   verif(empreinte(A) === empreinte(C), 'un monde sans grammaire tourne exactement comme le moteur sans moteur/grammaire.js');
-  const a = Orvane.cycle(I0, {}), b = avec({ chance: 0 }, () => Orvane.cycle(W, {}));
+  const a = Orvane.cycle(I0, {}), b = Orvane.cycle(W, {}, avec({ chance: 0 }));
   verif(empreinte(animaux(a)) === empreinte(animaux(b)), 'le jour de l\'éveil, rien ne bouge : le monde n\'a encore rien dit, et son hasard est le sien');
 }
 
@@ -56,7 +56,7 @@ console.log('2. Les phrases');
 
 console.log('3. L\'invention');
 let XI;
-{ let X = W; const ev = []; avec({ chance: 1 }, () => { for (let k = 0; k < 15; k++) { X = Orvane.cycle(X, {}); ev.push(...X.evenements.filter(e => e.type === 'invention')); } });
+{ let X = W; const ev = []; for (let k = 0; k < 15; k++) { X = Orvane.cycle(X, {}, avec({ chance: 1 })); ev.push(...X.evenements.filter(e => e.type === 'invention')); }
   const M = Object.entries(X.catalogue.monde?.traits || {}), ph = new Set(M.map(([, t]) => t.grammaire.phrase)), noms = M.map(([, t]) => t.nom);
   const bien = M.every(([, t]) => { const L = Tx(X, t.origine.lignee); return G.PHRASES[t.grammaire.phrase].peut(L.plan) && t.conduite?.presage && t.cout > 0; });
   verif(ev.length === 15 && ph.size >= 8 && new Set(noms).size === noms.length && bien, `15 phrases de suite, ${ph.size} sortes, ${new Set(noms).size} noms différents, toutes chez une lignée qui peut les dire : ${ev.slice(0, 4).map(e => e.detail.replace('le monde invente ', '')).join(' ; ')}…`);
@@ -66,7 +66,7 @@ let XI;
 console.log('4. La sélection');
 { const nageur = W.taxons.filter(t => !t.eteint && t.plan.regime === 'carnivore' && (t.plan.locomotion || []).includes('nage') && t.populations.some(p => ['large', 'recif', 'lac', 'riviere'].includes(p.biome))).sort((a, b) => tot(b) - tot(a))[0];
   const marcheur = W.taxons.filter(t => !t.eteint && t.plan.regime === 'carnivore' && !(t.plan.locomotion || []).includes('nage') && t.populations.every(p => B(W, p.biome)?.milieu === 'terrestre')).sort((a, b) => tot(b) - tot(a))[0];
-  const essai = (tid, cle, n) => { let [X, id] = greffer(W, tid, cle); const a = part(X, tid, id); for (let k = 0; k < n; k++) X = avec({ chance: 0 }, () => Orvane.cycle(X, {})); return [a, part(X, tid, id)]; };
+  const essai = (tid, cle, n) => { let [X, id] = greffer(W, tid, cle); const a = part(X, tid, id); for (let k = 0; k < n; k++) X = Orvane.cycle(X, {}, avec({ chance: 0 })); return [a, part(X, tid, id)]; };
   const [a1, b1] = essai(nageur.id, 'torpille', 30), [a2, b2] = essai(marcheur.id, 'torpille', 30);
   verif(b1 >= a1 && b2 < a2 - .01 && (b1 - a1) - (b2 - a2) > .04, `un organe électrique, à la moitié d'une lignée, 30 cycles : chez ${nageur.nom}, qui chasse dans l'eau, il paie ce qu'il coûte (de ${fx(a1 * 100)} % à ${fx(b1 * 100, 1)} %) ; chez ${marcheur.nom}, qui chasse sur la terre, il coûte sans servir (de ${fx(a2 * 100)} % à ${fx(b2 * 100, 1)} %)`);
   const proie = W.taxons.filter(t => !t.eteint && t.plan.regime === 'herbivore' && (t.plan.locomotion || []).some(l => ['marche', 'course'].includes(l)) && tot(t) > 1000).sort((a, b) => tot(b) - tot(a))[0];

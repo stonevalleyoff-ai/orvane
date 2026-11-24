@@ -33,53 +33,63 @@ function modeDe(plan) {
   return (c.carapace || 0) >= .3 || (c.organes || []).some(o => o.type === 'plaques' || o.type === 'carapace') ? 'ovipare' : 'vivipare';   // une bête à carapace ou à plaques, comme une tortue ou un lézard
 }
 const couve = (plan, traits) => plan.corps?.forme === 'oiseau' || (traits || []).includes('soins-parentaux');
-// ce que donne un mode, dans un lieu : les œufs perdus au froid, et ceux que pillent les mangeurs d'œufs
-function rendement(mode, plan, traits, b, pillage) {
-  if (mode !== 'ovipare') return 1;
-  const T = b?.axes?.temperature ?? .5, garde = couve(plan, traits), froid = garde ? 0 : REGLES.froid.perte * clamp((REGLES.froid.seuil - T) / REGLES.froid.seuil);
-  return REGLES.oeufs * (1 - froid) * (1 - pillage * (garde ? REGLES.pillage.garde : 1));
-}
+// (docs/59) les règles d'un monde, sans toucher à celles du module : tout ce qui les lit est lié à des règles (lier). Le module se lie aux
+// siennes ; un monde qui règle ce mécanisme (regles.ponte), ou un cycle (opt.regles), en prend une instance (avec : les règles du module
+// complétées des siennes d'un niveau)
+const unNiveau = (R, o) => { const X = { ...R }; if (o && typeof o === 'object') for (const k in o) { if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
+  const v = o[k], b = R[k]; X[k] = v && typeof v === 'object' && !Array.isArray(v) && b && typeof b === 'object' && !Array.isArray(b) ? { ...b, ...v } : v; } return X; };
+function lier(REGLES) {
+  // ce que donne un mode, dans un lieu : les œufs perdus au froid, et ceux que pillent les mangeurs d'œufs
+  function rendement(mode, plan, traits, b, pillage) {
+    if (mode !== 'ovipare') return 1;
+    const T = b?.axes?.temperature ?? .5, garde = couve(plan, traits), froid = garde ? 0 : REGLES.froid.perte * clamp((REGLES.froid.seuil - T) / REGLES.froid.seuil);
+    return REGLES.oeufs * (1 - froid) * (1 - pillage * (garde ? REGLES.pillage.garde : 1));
+  }
 
-// l'éveil : chaque lignée reçoit son mode, qui devient aussi sa référence (reproduction0)
-function eveiller(inst) {
-  const out = JSON.parse(JSON.stringify(inst)); if (out.monde?.ponte) return { inst: out, evenements: [] };
-  let o = 0, v = 0;
-  for (const t of out.taxons) if (estAnimal(t)) { const m = t.plan.reproduction || modeDe(t.plan); t.plan.reproduction = m; t.plan.reproduction0 ??= m; m === 'ovipare' ? o++ : v++; }
-  out.monde = { ...out.monde, ponte: { depuis: out.cycle?.n ?? 0 } };
-  return { inst: out, evenements: [{ type: 'eveil', taxon: out.taxons.find(estAnimal)?.id, detail: `les lignées pondent ou mettent bas : ${o} pondeuses, ${v} vivipares ; des mangeurs d'œufs peuvent naître` }] };
-}
+  // l'éveil : chaque lignée reçoit son mode, qui devient aussi sa référence (reproduction0)
+  function eveiller(inst) {
+    const out = JSON.parse(JSON.stringify(inst)); if (out.monde?.ponte) return { inst: out, evenements: [] };
+    let o = 0, v = 0;
+    for (const t of out.taxons) if (estAnimal(t)) { const m = t.plan.reproduction || modeDe(t.plan); t.plan.reproduction = m; t.plan.reproduction0 ??= m; m === 'ovipare' ? o++ : v++; }
+    out.monde = { ...out.monde, ponte: { depuis: out.cycle?.n ?? 0 } };
+    return { inst: out, evenements: [{ type: 'eveil', taxon: out.taxons.find(estAnimal)?.id, detail: `les lignées pondent ou mettent bas : ${o} pondeuses, ${v} vivipares ; des mangeurs d'œufs peuvent naître` }] };
+  }
 
-// un cycle : ce que pèsent, dans chaque lieu, les pondeurs et les mangeurs d'œufs ; le pillage qui s'ensuit
-function preparer(ctx) {
-  const { taxons, biomes } = ctx, P = {};
-  for (const t of taxons) { if (!estAnimal(t)) continue; const m = t.plan.masse_kg || 1, ovi = t.plan.reproduction === 'ovipare', oo = mange(t.plan.regime) ? t.phenotypes.filter(p => p.traits?.includes('oophage')) : [];
-    for (const p of t.populations) { const X = P[p.biome] ??= { ovi: 0, oo: 0 }, B = p.effectif * m; if (ovi) X.ovi += B; for (const f of oo) X.oo += B * (f.frequence_par_biome?.[p.biome] ?? f.frequence ?? 0); } }
-  const pillage = {}; for (const [bid, X] of Object.entries(P)) pillage[bid] = X.oo > 0 && X.ovi > 0 ? REGLES.pillage.max * X.oo / (X.oo + REGLES.pillage.demi * X.ovi) : 0;
-  return {
-    // le facteur des naissances d'un phénotype : ce que son mode lui donne ici, rapporté à ce qu'y donnait le mode de sa lignée à
-    // l'éveil (sans pillage) ; et pour un mangeur d'œufs, le festin
-    naissances(t, bid, i) {
-      const plan = t.plan, traits = t.phenotypes[i]?.traits || [], b = biomes[bid]; if (!plan.reproduction) return 1;
-      let f = rendement(plan.reproduction, plan, traits, b, pillage[bid] || 0) / rendement(plan.reproduction0 || plan.reproduction, plan, traits, b, 0);
-      if (traits.includes('oophage') && mange(plan.regime)) { const X = P[bid]; if (X?.ovi > 0) f *= 1 + REGLES.festin * X.ovi / (X.ovi + 10 * X.oo); }
-      return f;
-    },
-    pillage: bid => pillage[bid] || 0
-  };
-}
+  // un cycle : ce que pèsent, dans chaque lieu, les pondeurs et les mangeurs d'œufs ; le pillage qui s'ensuit
+  function preparer(ctx) {
+    const { taxons, biomes } = ctx, P = {};
+    for (const t of taxons) { if (!estAnimal(t)) continue; const m = t.plan.masse_kg || 1, ovi = t.plan.reproduction === 'ovipare', oo = mange(t.plan.regime) ? t.phenotypes.filter(p => p.traits?.includes('oophage')) : [];
+      for (const p of t.populations) { const X = P[p.biome] ??= { ovi: 0, oo: 0 }, B = p.effectif * m; if (ovi) X.ovi += B; for (const f of oo) X.oo += B * (f.frequence_par_biome?.[p.biome] ?? f.frequence ?? 0); } }
+    const pillage = {}; for (const [bid, X] of Object.entries(P)) pillage[bid] = X.oo > 0 && X.ovi > 0 ? REGLES.pillage.max * X.oo / (X.oo + REGLES.pillage.demi * X.ovi) : 0;
+    return {
+      // le facteur des naissances d'un phénotype : ce que son mode lui donne ici, rapporté à ce qu'y donnait le mode de sa lignée à
+      // l'éveil (sans pillage) ; et pour un mangeur d'œufs, le festin
+      naissances(t, bid, i) {
+        const plan = t.plan, traits = t.phenotypes[i]?.traits || [], b = biomes[bid]; if (!plan.reproduction) return 1;
+        let f = rendement(plan.reproduction, plan, traits, b, pillage[bid] || 0) / rendement(plan.reproduction0 || plan.reproduction, plan, traits, b, 0);
+        if (traits.includes('oophage') && mange(plan.regime)) { const X = P[bid]; if (X?.ovi > 0) f *= 1 + REGLES.festin * X.ovi / (X.ovi + 10 * X.oo); }
+        return f;
+      },
+      pillage: bid => pillage[bid] || 0
+    };
+  }
 
-// à la séparation : la lignée fille change parfois de mode (un hasard à elle, tiré de son nom et du cycle : celui du cycle ne bouge pas)
-function separer(parent, plan, b, nid, n) {
-  if (!parent.reproduction) return null;
-  plan.reproduction = parent.reproduction; plan.reproduction0 = parent.reproduction0 || parent.reproduction;
-  let g = 2166136261; for (const ch of nid + '|' + n) { g ^= ch.charCodeAt(0); g = Math.imul(g, 16777619); } g >>>= 0;
-  const u = ((Math.imul(g, 1664525) + 1013904223) >>> 0) / 4294967296, T = b?.axes?.temperature ?? .5, Pa = REGLES.passage;
-  if (plan.corps?.forme === 'oiseau') return null;                                     // un oiseau pond toujours
-  if (plan.reproduction === 'ovipare' && u < Pa.vers_vivipare * (T < .3 ? Pa.froid : 1)) { plan.reproduction = 'vivipare'; return 'devenue vivipare'; }
-  if (plan.reproduction === 'vivipare' && u < Pa.vers_ovipare) { plan.reproduction = 'ovipare'; return 'devenue pondeuse'; }
-  return null;
+  // à la séparation : la lignée fille change parfois de mode (un hasard à elle, tiré de son nom et du cycle : celui du cycle ne bouge pas)
+  function separer(parent, plan, b, nid, n) {
+    if (!parent.reproduction) return null;
+    plan.reproduction = parent.reproduction; plan.reproduction0 = parent.reproduction0 || parent.reproduction;
+    let g = 2166136261; for (const ch of nid + '|' + n) { g ^= ch.charCodeAt(0); g = Math.imul(g, 16777619); } g >>>= 0;
+    const u = ((Math.imul(g, 1664525) + 1013904223) >>> 0) / 4294967296, T = b?.axes?.temperature ?? .5, Pa = REGLES.passage;
+    if (plan.corps?.forme === 'oiseau') return null;                                     // un oiseau pond toujours
+    if (plan.reproduction === 'ovipare' && u < Pa.vers_vivipare * (T < .3 ? Pa.froid : 1)) { plan.reproduction = 'vivipare'; return 'devenue vivipare'; }
+    if (plan.reproduction === 'vivipare' && u < Pa.vers_ovipare) { plan.reproduction = 'ovipare'; return 'devenue pondeuse'; }
+    return null;
+  }
+  return { REGLES, rendement, eveiller, preparer, separer };
 }
+const { rendement, eveiller, preparer, separer } = lier(REGLES);   // (le module, lié à ses règles)
+const avec = (o, d = {}) => ({ ...API, ...lier(unNiveau(REGLES, o)) });   // (docs/59) une instance aux règles d'un monde
 
-const API = { REGLES, TRAITS, modeDe, rendement, eveiller, preparer, separer };
+const API = { REGLES, TRAITS, modeDe, rendement, eveiller, preparer, separer, avec };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else racine.OrvanePonte = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

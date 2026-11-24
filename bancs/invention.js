@@ -19,7 +19,7 @@ const val = (s, v, p) => { if (!s) return []; if (s.$ref) s = S.$defs[s.$ref.spl
   if (ty === 'array' && s.items) v.forEach((x, i) => e.push(...val(s.items, x, p + '[' + i + ']'))); return e; };
 // (le monde d'Orvane, d'avant ce mécanisme : bancs/monde.js ; et sans la grammaire, qui invente aussi, autrement)
 const I0 = require('./monde.js').etat(['invention', 'grammaire']), W = Iv.eveiller(I0).inst, animaux = I => I.taxons.map(t => [t.id, t.populations.map(p => [p.biome, p.effectif]), t.phenotypes.map(p => p.id)]);
-const avec = (chance, f) => { const c = Iv.REGLES.chance; Iv.REGLES.chance = chance; try { return f(); } finally { Iv.REGLES.chance = c; } };
+const avec = chance => ({ regles: { invention: { chance } } });   // (docs/59 : la chance d'inventer, donnée au cycle ; les règles du module n'y changent pas)
 const part = (X, tid, id) => X.taxons.find(x => x.id === tid).phenotypes.reduce((a, p) => a + (p.traits.includes(id) ? p.frequence : 0), 0);
 
 console.log('1. Le jour un');
@@ -27,13 +27,13 @@ console.log('1. Le jour un');
   vm.runInNewContext(src, { module: mod, require: p => p === './invention.js' ? null : require(racine('moteur/' + p.replace('./', ''))), console });
   let A = I0, C = I0; for (let k = 0; k < 3; k++) { A = Orvane.cycle(A, {}); C = mod.exports.cycle(C, {}); }
   verif(empreinte(A) === empreinte(C), 'un monde qui n\'est pas inventif tourne exactement comme le moteur sans moteur/invention.js');
-  const a = Orvane.cycle(I0, {}), b = avec(0, () => Orvane.cycle(W, {}));
+  const a = Orvane.cycle(I0, {}), b = Orvane.cycle(W, {}, avec(0));
   verif(empreinte(animaux(a)) === empreinte(animaux(b)) && empreinte(b.catalogue.monde || null) === empreinte(a.catalogue.monde || null), 'le jour de l\'éveil, rien ne bouge : le monde n\'a encore rien inventé (son catalogue est celui d\'avant), et son hasard est le sien');
 }
 
 console.log('2. Une invention');
 let X1, id1, T1;
-{ X1 = avec(1, () => Orvane.cycle(W, {})); const e = X1.evenements.find(x => x.type === 'invention'); [id1, T1] = Object.entries(X1.catalogue.monde?.traits || {})[0] || [];
+{ X1 = Orvane.cycle(W, {}, avec(1)); const e = X1.evenements.find(x => x.type === 'invention'); [id1, T1] = Object.entries(X1.catalogue.monde?.traits || {})[0] || [];
   const D = ['morphologie', 'locomotion', 'sens', 'offense', 'defense', 'metabolisme', 'reproduction', 'social', 'activite'];
   verif(e && T1 && T1.nom && D.includes(T1.domaine) && T1.organe && T1.effet && T1.cout > 0 && T1.exige?.length && T1.origine?.lignee && T1.origine.cycle === X1.cycle.n && X1.catalogue.traits[id1],
     `« ${e?.detail} » : ${id1} (${T1?.domaine}, ${T1?.organe}, coût ${T1?.cout}, exige ${T1?.exige?.join(' + ')}), au catalogue du monde et parmi les traits portés`);
@@ -46,19 +46,19 @@ let X1, id1, T1;
 }
 
 console.log('3. Il dure');
-{ let X = avec(0, () => Orvane.cycle(X1, {})); const L = T1.origine.lignee;
+{ let X = Orvane.cycle(X1, {}, avec(0)); const L = T1.origine.lignee;
   verif(X.catalogue.monde?.traits?.[id1] && X.catalogue.traits[id1] && part(X, L, id1) > 0, `au cycle suivant, « ${id1} » est toujours au catalogue du monde, et porté (${fx(part(X, L, id1) * 100, 1)} %)`);
   // la moitié des porteurs de ce qu'il exige le reçoit, 30 cycles
   const t = X.taxons.find(x => x.id === L); for (const p of t.populations) p.alleles = { ...(p.alleles || {}), [id1]: .3 };
   for (const p of t.phenotypes.slice()) { if (!T1.exige.every(x => p.traits.includes(x)) || p.traits.includes(id1)) continue; const traits = [...p.traits, id1].sort(), q = traits.join('+'), fb = p.frequence_par_biome;
     const y = t.phenotypes.find(z => z.id === q) || (t.phenotypes.push({ id: q, traits, frequence: 0, ...(fb ? { frequence_par_biome: Object.fromEntries(Object.keys(fb).map(b => [b, 0])) } : {}) }), t.phenotypes.at(-1));
     y.frequence += p.frequence / 2; if (fb) for (const b in fb) { y.frequence_par_biome[b] += fb[b] / 2; fb[b] /= 2; } p.frequence /= 2; }
-  const a = part(X, L, id1); for (let k = 0; k < 30; k++) X = avec(0, () => Orvane.cycle(X, {})); const b = part(X, L, id1);
+  const a = part(X, L, id1); for (let k = 0; k < 30; k++) X = Orvane.cycle(X, {}, avec(0)); const b = part(X, L, id1);
   verif(Math.abs(b - a) > .02, `la sélection le pèse comme un autre trait : greffé à ${fx(a * 100)} % de ${t.nom}, il ${b > a ? 'gagne' : 'recule'} à ${fx(b * 100)} % en 30 cycles`);
 }
 
 console.log('4. La diversité, le contrat');
-{ let X = W; const ev = []; for (let k = 0; k < 14; k++) { X = avec(1, () => Orvane.cycle(X, {})); ev.push(...X.evenements.filter(e => e.type === 'invention')); }
+{ let X = W; const ev = []; for (let k = 0; k < 14; k++) { X = Orvane.cycle(X, {}, avec(1)); ev.push(...X.evenements.filter(e => e.type === 'invention')); }
   // (les traits que ce monde a inventés en ces 14 cycles : son catalogue en porte d'autres, venus d'avant, d'une fusion, de la grammaire)
   const avant = new Set(Object.keys(W.catalogue?.monde?.traits || {})), M = Object.fromEntries(Object.entries(X.catalogue.monde.traits).filter(([k, t]) => !avant.has(k) && Array.isArray(t.exige) && t.origine?.de)), noms = ev.map(e => e.detail.match(/« (.+?) »/)[1]), sources = new Set(Object.values(M).flatMap(t => t.origine.de)), fus = Object.values(M).filter(t => t.exige.length > 1).length;
   verif(ev.length === 14 && new Set(noms).size === noms.length && sources.size >= 5 && Object.keys(M).every(k => !/-\d+$/.test(k)),

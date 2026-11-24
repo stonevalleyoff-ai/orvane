@@ -84,6 +84,10 @@ const ESP = typeof require === 'function' ? require('./esprit.js') : racine.Orva
 const MEM = typeof require === 'function' ? require('./memoire.js') : racine.OrvaneMemoire;   // la mémoire : ce que les bêtes apprennent des joueurs (moteur/memoire.js, docs/50)
 const CALEN = typeof require === 'function' ? require('./calendrier.js') : racine.OrvaneCalendrier;   // le calendrier : un monde au jour, la saison de chaque lieu (moteur/calendrier.js, docs/52)
 const HOM = typeof require === 'function' ? require('./hommes.js') : racine.OrvaneHommes;   // les hommes : la chasse et la régulation d'un monde réel (moteur/hommes.js, docs/56)
+// (docs/59) les mécanismes, sous le nom des règles qu'un monde peut leur donner (regles.<mécanisme>, celui de leur module) ; la mémoire a les
+// siennes à part (regles.memoire, MEM : plus bas, dans le contexte)
+const MECA = { synthetique: SYN, flore: FLO, pathogenes: PAT, milieu: MIL, ponte: PON, stades: STA, invention: INV, natures: NAT, derives: DER, dietes: DI, climat: CLI,
+  meteo: MET, phenologie: PHE, succession: SUC, diversite: DIV, grammaire: GRA, castes: CAS, esprit: ESP, calendrier: CALEN };
 // (docs/43) la version du contrat : MAJEUR.MINEUR, celle de package.json ; chaque instantané la porte (instantane.orvane)
 const CONTRAT = '1.0';
 const AXES = ['temperature', 'humidite', 'altitude', 'lumiere', 'couvert'];
@@ -196,7 +200,7 @@ const REGLES = {
 // (docs/59) le contexte d'un cycle : les règles de son monde (celles du moteur, et les siennes par-dessus), son pas de temps, ses axes
 // (contexte, plus bas). Le cycle ne change rien de global : chaque fonction qui en dépend le reçoit en dernier argument (CTX) ; sans
 // lui, elle prend le contexte par défaut, les règles du moteur au pas de référence, comme un appel hors d'un cycle
-const DEFAUT = { R: REGLES, PAS: 1, JOURS: null, AX: AXES, CORPS, MEM };   // (hors d'un cycle : le corps et la mémoire du module)
+const DEFAUT = { R: REGLES, PAS: 1, JOURS: null, AX: AXES, CORPS, MEM, M: MECA };   // (hors d'un cycle : le corps, la mémoire et les mécanismes des modules)
 const parPas = (p, CTX = DEFAUT) => CTX.PAS === 1 ? p : 1 - Math.pow(1 - p, CTX.PAS);
 // --- la génétique (docs/8, 9, 10) : les traits continus, Mendel et les allèles, les portées, la parenté (moteur/noyau/genetique.js, docs/59) ---
 const GENE = typeof require === 'function' ? require('./noyau/genetique.js') : racine.OrvaneGenetique;
@@ -387,13 +391,28 @@ function contexte(inst, regles) {
     const v = C[k], b = R[k]; R[k] = v && typeof v === 'object' && !Array.isArray(v) && b && typeof b === 'object' && !Array.isArray(b) ? { ...b, ...v } : v; } }
   const auJour = !!(T && T.jours > 0);
   return { R, PAS: auJour ? T.jours / (T.reference || 120) : 1, JOURS: auJour ? T.jours : null, AX: M?.axes ? [...AXES, ...Object.keys(M.axes).filter(k => !AXES.includes(k))] : AXES,
-    CORPS: CORPS ? CORPS.pour(M) : null, MEM: MEM && inst?.monde?.memoire ? MEM.avec(R.memoire) : MEM };
+    CORPS: CORPS ? CORPS.pour(M) : null, MEM: MEM && inst?.monde?.memoire ? MEM.avec(R.memoire) : MEM, M: mecanismes(R) };
+}
+// (docs/59) les mécanismes d'un monde : leurs modules tels quels, si ni le monde ni le cycle n'en règlent aucun ; sinon, une instance de chacun
+// à ses règles (regles.<mécanisme> : celles du module, complétées d'un niveau), qui se sert des autres mécanismes de ce monde (la flore, de ses
+// diètes et des saisons de ses plantes ; les dérives, des diètes ; les souches, des dérives)
+function mecanismes(R) {
+  const regle = k => R[k] && typeof R[k] === 'object' && !Array.isArray(R[k]) ? R[k] : null;
+  if (!Object.keys(MECA).some(regle)) return MECA;
+  const M = {}, une = (k, d) => MECA[k] && MECA[k].avec ? MECA[k].avec(regle(k), d) : MECA[k];
+  M.dietes = une('dietes'); M.phenologie = une('phenologie'); M.derives = une('derives', { dietes: M.dietes }); M.pathogenes = une('pathogenes', { derives: M.derives });
+  M.flore = une('flore', { dietes: M.dietes, phenologie: M.phenologie });
+  for (const k in MECA) if (!(k in M)) M[k] = une(k);
+  return M;
 }
 // les fonctions du moteur qui dépendent du contexte, telles qu'elles sont : le cycle les lie au sien (plus bas)
 const FC = { parPas, ecrireQ, attraitDe, apprendre, isolement, saisonDe, axesSaison, productionSaison, deriver, appetence, dist, croissance, convenance, routeHiver };
 function cycleBrut(inst, pressions = {}, opt = {}, CTX = contexte(inst)) {
   // (docs/59) le contexte de ce cycle : ses règles, son pas de temps, ses axes ; et les fonctions du moteur qui en dépendent, liées à lui
   const REGLES = CTX.R, PAS = CTX.PAS, JOURS = CTX.JOURS, AX = CTX.AX, CORPS = CTX.CORPS, MEM = CTX.MEM;   // (le corps et la mémoire de ce monde)
+  // (docs/59) les mécanismes de ce monde : les modules, ou des instances à ses règles (regles.<mécanisme>)
+  const { synthetique: SYN, flore: FLO, pathogenes: PAT, milieu: MIL, ponte: PON, stades: STA, invention: INV, natures: NAT, derives: DER, dietes: DI, climat: CLI,
+    meteo: MET, phenologie: PHE, succession: SUC, diversite: DIV, grammaire: GRA, castes: CAS, esprit: ESP, calendrier: CALEN } = CTX.M;
   const parPas = p => FC.parPas(p, CTX), ecrireQ = Q => FC.ecrireQ(Q, CTX), attraitDe = (t, c) => FC.attraitDe(t, c, CTX), apprendre = (m, h, c, za = 0) => FC.apprendre(m, h, c, za, CTX),
     isolement = (A, B, T, k) => FC.isolement(A, B, T, k, CTX), saisonDe = (k, an) => FC.saisonDe(k, an, CTX), axesSaison = (b, ph) => FC.axesSaison(b, ph, CTX),
     productionSaison = (b, ph) => FC.productionSaison(b, ph, CTX), deriver = (p, b, Rg) => FC.deriver(p, b, Rg, CTX), appetence = (p, q) => FC.appetence(p, q, CTX), dist = (a, b) => FC.dist(a, b, CTX),

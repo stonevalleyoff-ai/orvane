@@ -21,17 +21,17 @@ const val = (s, v, p) => { if (!s) return []; if (s.$ref) s = S.$defs[s.$ref.spl
   if (ty === 'array' && s.items) v.forEach((x, i) => e.push(...val(s.items, x, p + '[' + i + ']'))); return e; };
 // (le monde d'Orvane, d'avant ce mécanisme : bancs/monde.js)
 const I0 = require('./monde.js').etat(['esprit']), W = E.eveiller(I0).inst, animaux = I => I.taxons.map(t => [t.id, t.populations.map(p => [p.biome, p.effectif]), t.phenotypes.map(p => p.id)]);
-const avec = (o, f) => { const g = clone(E.REGLES); Object.assign(E.REGLES, o); try { return f(); } finally { Object.assign(E.REGLES, g); } };
+const avec = o => ({ regles: { esprit: o } });   // (docs/59 : les règles de l'esprit, données au cycle ; celles du module n'y changent pas)
 const Tx = (X, id) => X.taxons.find(t => t.id === id), Bm = (X, id) => X.biomes.find(b => b.id === id), tot = t => t.populations.reduce((a, p) => a + p.effectif, 0);
 const savoir = (X, tid, bid, k) => Tx(X, tid)?.populations.find(p => p.biome === bid)?.savoirs?.[k] || 0;
-const avancer = (X, n, o = {}) => avec(o, () => { for (let k = 0; k < n; k++) X = Orvane.cycle(X, {}); return X; });
+const avancer = (X, n, o = {}) => { for (let k = 0; k < n; k++) X = Orvane.cycle(X, {}, avec(o)); return X; };
 
 console.log('1. Le jour un');
 { const src = fs.readFileSync(racine('moteur/orvane.js'), 'utf8'), mod = { exports: {} };
   vm.runInNewContext(src, { module: mod, require: p => p === './esprit.js' ? null : require(racine('moteur/' + p.replace('./', ''))), console });
   let A = I0, C = I0; for (let k = 0; k < 3; k++) { A = Orvane.cycle(A, {}); C = mod.exports.cycle(C, {}); }
   verif(empreinte(A) === empreinte(C), 'un monde sans esprit tourne exactement comme le moteur sans moteur/esprit.js');
-  const T = E.TRAITS.curiosite; delete E.TRAITS.curiosite; const a = Orvane.cycle(I0, {}), b = avec({ invention: 0 }, () => Orvane.cycle(W, {})); E.TRAITS.curiosite = T;
+  const T = E.TRAITS.curiosite; delete E.TRAITS.curiosite; const a = Orvane.cycle(I0, {}), b = Orvane.cycle(W, {}, avec({ invention: 0 })); E.TRAITS.curiosite = T;
   verif(empreinte(animaux(a)) === empreinte(animaux(b)), 'le jour de l\'éveil, rien ne bouge (le tirage de la curiosité mis à part) : personne ne sait encore rien');
 }
 

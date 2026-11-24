@@ -60,7 +60,7 @@ export interface Instantane {
     };
     /** La naissance du monde (le premier cycle, posé par hebergement/cycle.js). Avec l'id, c'est l'identité d'un monde : un monde refait de zéro garde son id mais change de date — les traducteurs repartent alors de sa nouvelle génération 0. */
     ne?: string;
-    /** Les règles du moteur propres à ce monde (REGLES de moteur/orvane.js), choisies par sa genèse : elles valent pour chacun de ses cycles, où qu'il tourne. */
+    /** Les règles du moteur propres à ce monde (REGLES de moteur/orvane.js), choisies par sa genèse : elles valent pour chacun de ses cycles, où qu'il tourne. Sous le nom d'un mécanisme (climat, meteo, flore, dietes, memoire…, celui de son module), les règles de ce mécanisme dans ce monde : elles complètent, d'un niveau, celles du module (docs/59). */
     regles?: {
       [cle: string]: unknown;
     };
@@ -1194,7 +1194,7 @@ export interface Profil {
     memoire?: boolean;
     /** (docs/41) Le genre du jeu qui fait vivre ce monde : ses règles du moteur (moteur/genres.js) passent sur celles de la genèse, celles de monde.regles par-dessus ; ses poids des joueurs passent dans l'influence. « neutre » : le moteur tel qu'il est. */
     genre?: "neutre" | "horreur" | "cozy" | "collection" | "voxel" | "survie" | "strategie" | "mmo";
-    /** Des règles du moteur (REGLES de moteur/orvane.js) réglées pour ce monde vivant : elles complètent, d'un niveau, celles de sa genèse (monde.regles de l'instantané) et ne valent que pour ce qui arrive ensuite. Exemple : { "derive": { "tolerance": 0.35, "formes": 1 } } laisse la largeur de la niche dériver à la séparation, et fait naître les formes nouvelles du monde à la séparation (docs/33). ; { "hivernage": { "actif": 1, "rude": 0.85 } } fait partir pour de bon les bêtes dont l'hiver est rude (docs/38). */
+    /** Des règles du moteur (REGLES de moteur/orvane.js) réglées pour ce monde vivant : elles complètent, d'un niveau, celles de sa genèse (monde.regles de l'instantané) et ne valent que pour ce qui arrive ensuite. Exemple : { "derive": { "tolerance": 0.35, "formes": 1 } } laisse la largeur de la niche dériver à la séparation, et fait naître les formes nouvelles du monde à la séparation (docs/33). ; { "hivernage": { "actif": 1, "rude": 0.85 } } fait partir pour de bon les bêtes dont l'hiver est rude (docs/38). Sous le nom d'un mécanisme, ses règles dans ce monde : { "climat": { "vitesse": 2 } } fait aller son climat deux fois plus vite (docs/59). */
     regles?: {
       [cle: string]: unknown;
     };

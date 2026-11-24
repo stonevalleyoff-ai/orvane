@@ -25,9 +25,9 @@ const I0 = (X => { delete X.monde.milieu; for (const b of X.biomes) { delete b.t
   W = Cl.eveiller(I0).inst, animaux = I => I.taxons.map(t => [t.id, t.populations.map(p => [p.biome, p.effectif])]);
 const B = (X, id) => X.biomes.find(b => b.id === id) || X.biomes.find(b => (b.type || b.id) === id), tot = t => t ? t.populations.reduce((a, p) => a + p.effectif, 0) : 0;
 // des réglages de banc : une onde courte et forte (le froid au cycle 30, le chaud au cycle 50), sans marche
-const avec = (o, f) => { const g = clone(Cl.REGLES); Object.assign(Cl.REGLES, o); try { return f(); } finally { for (const k of Object.keys(g)) Cl.REGLES[k] = g[k]; } };
+const avec = o => ({ regles: { climat: o } });   // (docs/59 : les règles du climat, données au cycle ; celles du module n'y changent pas)
 const ONDE = { ondes: [{ periode: 40, ampleur: .15, phase: 0 }], marche: { pas: 0, retour: 0 }, iles: { ...Cl.REGLES.iles, chance: 0 } };
-const avancer = (X, n, o = ONDE) => avec(o, () => { for (let k = 0; k < n; k++) X = Orvane.cycle(X, {}); return X; });
+const avancer = (X, n, o = ONDE) => { for (let k = 0; k < n; k++) X = Orvane.cycle(X, {}, avec(o)); return X; };
 
 console.log('1. Le jour un');
 { const src = fs.readFileSync(racine('moteur/orvane.js'), 'utf8'), mod = { exports: {} };

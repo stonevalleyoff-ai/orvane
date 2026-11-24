@@ -37,63 +37,73 @@ function generateur(graine) { let g = (graine >>> 0) || 1; return () => { g = (M
 // (le mot de l'organe, sans son article : « un esprit curieux » donne « esprit », pas « un »)
 const ARTICLES = new Set(['un', 'une', 'des', 'le', 'la', 'les', 'l', 'du', 'de', 'd']);
 const motDe = (organe, id) => String(organe || id).split(/[ ,;(’']/).filter(Boolean).find(w => !ARTICLES.has(w.toLowerCase())) || String(id);
-function dupliquer(id, T, R, pris = new Set()) {
-  const base = motDe(T.organe, id), epi = accorder(base, epitheteDe(T, R, e => !pris.has(sansAccent(`${base} ${accorder(base, e)}`))));
-  const t = { domaine: T.domaine, organe: `${T.organe || id}, ${epi}`, cout: +((T.cout || .05) * .6 + .02).toFixed(3), exige: [id],
-    effet: `${base} ${epi} : ce que fait « ${id} », en plus marqué (${T.effet || ''})` };
-  if (T.ecarts) t.ecarts = Object.fromEntries(Object.entries(T.ecarts).map(([k, v]) => [k, accent(v, REGLES.accent - 1)]));
-  for (const k of ['vulnerabilite', 'chasse', 'resistance', 'attrait']) if (typeof T[k] === 'number' && T[k] !== 1) t[k] = accent(T[k], REGLES.accent - 1);
-  if (T.flore) t.flore = Object.fromEntries(Object.entries(T.flore).map(([k, v]) => [k, typeof v === 'number' ? +clamp(v * .3, 0, 1).toFixed(2) : v]));
-  if (T.conduite) t.conduite = { ...T.conduite, force: +((T.conduite.force || 1) * 1.15).toFixed(2), presage: `${T.conduite.presage || ''}, en plus marqué`.replace(/^, /, '') };
-  // (une phrase de la grammaire, docs/32 : la copie dit la même phrase, plus fort — sans cela, elle coûtait sans rien faire)
-  if (T.grammaire) t.grammaire = { ...T.grammaire, force: +clamp((T.grammaire.force || 1) * 1.15, 0, 2).toFixed(3) };
-  return { t, nom: `${base} ${epi}` };
-}
-// la fusion de deux traits : un organe neuf, qui les exige tous deux et les renforce l'un par l'autre
-function fusionner(a, A, b, B, R, pris = new Set()) {
-  const base = motDe(A.organe, a), epi = accorder(base, epitheteDe(A, R, e => !pris.has(sansAccent(`${base} ${accorder(base, e)}`))));
-  const t = { domaine: A.domaine, organe: `${A.organe || a} et ${B.organe || b}, liés`, cout: +(((A.cout || .05) + (B.cout || .05)) * .35).toFixed(3), exige: [a, b],
-    effet: `${base} ${epi} : « ${a} » et « ${b} » ne font plus qu'un organe, chacun renforçant l'autre` };
-  const E = {}; for (const T of [A, B]) for (const [k, v] of Object.entries(T.ecarts || {})) E[k] = +((E[k] ?? 1) * accent(v, .3)).toFixed(3); if (Object.keys(E).length) t.ecarts = E;
-  for (const k of ['vulnerabilite', 'chasse', 'resistance']) { const v = [A[k], B[k]].filter(x => typeof x === 'number' && x !== 1); if (v.length) t[k] = +v.reduce((x, y) => x * accent(y, .3), 1).toFixed(3); }
-  const C = A.conduite || B.conduite; if (C) t.conduite = { ...C, force: +((C.force || 1) * 1.2).toFixed(2), presage: [A.conduite?.presage, B.conduite?.presage].filter(Boolean).join(', puis ') || C.presage };
-  return { t, nom: `${base} ${epi}` };
-}
+// (docs/59) les règles d'un monde, sans toucher à celles du module : tout ce qui les lit est lié à des règles (lier). Le module se lie aux
+// siennes ; un monde qui règle ce mécanisme (regles.invention), ou un cycle (opt.regles), en prend une instance (avec : les règles du module
+// complétées des siennes d'un niveau)
+const unNiveau = (R, o) => { const X = { ...R }; if (o && typeof o === 'object') for (const k in o) { if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
+  const v = o[k], b = R[k]; X[k] = v && typeof v === 'object' && !Array.isArray(v) && b && typeof b === 'object' && !Array.isArray(b) ? { ...b, ...v } : v; } return X; };
+function lier(REGLES) {
+  function dupliquer(id, T, R, pris = new Set()) {
+    const base = motDe(T.organe, id), epi = accorder(base, epitheteDe(T, R, e => !pris.has(sansAccent(`${base} ${accorder(base, e)}`))));
+    const t = { domaine: T.domaine, organe: `${T.organe || id}, ${epi}`, cout: +((T.cout || .05) * .6 + .02).toFixed(3), exige: [id],
+      effet: `${base} ${epi} : ce que fait « ${id} », en plus marqué (${T.effet || ''})` };
+    if (T.ecarts) t.ecarts = Object.fromEntries(Object.entries(T.ecarts).map(([k, v]) => [k, accent(v, REGLES.accent - 1)]));
+    for (const k of ['vulnerabilite', 'chasse', 'resistance', 'attrait']) if (typeof T[k] === 'number' && T[k] !== 1) t[k] = accent(T[k], REGLES.accent - 1);
+    if (T.flore) t.flore = Object.fromEntries(Object.entries(T.flore).map(([k, v]) => [k, typeof v === 'number' ? +clamp(v * .3, 0, 1).toFixed(2) : v]));
+    if (T.conduite) t.conduite = { ...T.conduite, force: +((T.conduite.force || 1) * 1.15).toFixed(2), presage: `${T.conduite.presage || ''}, en plus marqué`.replace(/^, /, '') };
+    // (une phrase de la grammaire, docs/32 : la copie dit la même phrase, plus fort — sans cela, elle coûtait sans rien faire)
+    if (T.grammaire) t.grammaire = { ...T.grammaire, force: +clamp((T.grammaire.force || 1) * 1.15, 0, 2).toFixed(3) };
+    return { t, nom: `${base} ${epi}` };
+  }
+  // la fusion de deux traits : un organe neuf, qui les exige tous deux et les renforce l'un par l'autre
+  function fusionner(a, A, b, B, R, pris = new Set()) {
+    const base = motDe(A.organe, a), epi = accorder(base, epitheteDe(A, R, e => !pris.has(sansAccent(`${base} ${accorder(base, e)}`))));
+    const t = { domaine: A.domaine, organe: `${A.organe || a} et ${B.organe || b}, liés`, cout: +(((A.cout || .05) + (B.cout || .05)) * .35).toFixed(3), exige: [a, b],
+      effet: `${base} ${epi} : « ${a} » et « ${b} » ne font plus qu'un organe, chacun renforçant l'autre` };
+    const E = {}; for (const T of [A, B]) for (const [k, v] of Object.entries(T.ecarts || {})) E[k] = +((E[k] ?? 1) * accent(v, .3)).toFixed(3); if (Object.keys(E).length) t.ecarts = E;
+    for (const k of ['vulnerabilite', 'chasse', 'resistance']) { const v = [A[k], B[k]].filter(x => typeof x === 'number' && x !== 1); if (v.length) t[k] = +v.reduce((x, y) => x * accent(y, .3), 1).toFixed(3); }
+    const C = A.conduite || B.conduite; if (C) t.conduite = { ...C, force: +((C.force || 1) * 1.2).toFixed(2), presage: [A.conduite?.presage, B.conduite?.presage].filter(Boolean).join(', puis ') || C.presage };
+    return { t, nom: `${base} ${epi}` };
+  }
 
-// un cycle : parfois, une lignée invente un trait ; il entre au catalogue du monde et naît chez quelques-unes de ses bêtes
-function inventer(ctx) {
-  const { sortie, cat, n, graine, inventes = {} } = ctx, R = generateur(((graine >>> 0) ^ 0x2545f491) ^ Math.imul(n + 7, 0x9e3779b1)), ev = [], neufs = {};
-  // (le plafond ne compte que les traits que le monde a inventés lui-même : ni ses phrases de grammaire, ni les traits de son auteur)
-  if (Object.values(inventes).filter(x => x?.origine && !x.grammaire).length >= REGLES.max || R() >= REGLES.chance) return { traits: neufs, evenements: ev };
-  // les couples (lignée, trait répandu chez au moins 30 % de ses bêtes) ; un trait rare dans le monde, et peu repris jusqu'ici, invente plus
-  // volontiers : le monde n'invente pas cent fois la même chose
-  const cand = [], porteurs = {}, usage = id => Object.values(inventes).filter(x => x.origine?.de?.includes(id)).length;
-  for (const t of sortie) { if (t.eteint || t.plan?.regime === 'vegetal' || t.plan?.regime === 'synthetique') continue;
-    const f = {}; for (const p of t.phenotypes) for (const id of p.traits) if (cat[id]) f[id] = (f[id] || 0) + (p.frequence || 0);
-    const N = t.populations.reduce((a, p) => a + p.effectif, 0); for (const id of Object.keys(f).sort()) if (f[id] >= REGLES.frequence) { cand.push({ t, a: id, N }); porteurs[id] = (porteurs[id] || 0) + 1; } }
-  if (!cand.length) return { traits: neufs, evenements: ev };
-  const w = cand.map(c => Math.sqrt(c.N) / porteurs[c.a] / (1 + 3 * usage(c.a)));
-  let u = R() * w.reduce((x, y) => x + y, 0), c = cand[0]; for (let i = 0; i < cand.length; i++) { u -= w[i]; if (u <= 0) { c = cand[i]; break; } }
-  const pris = new Set([...Object.keys(cat), ...Object.keys(inventes)]);
-  const paires = []; for (const p of c.t.phenotypes) if ((p.frequence || 0) >= REGLES.frequence / 2 && p.traits.includes(c.a)) for (const b of p.traits) if (b !== c.a && cat[b] && !paires.includes(b)) paires.push(b);
-  let id, def, nom, mode;
-  if (paires.length && R() < REGLES.fusion) { const [a, b] = [c.a, paires[Math.floor(R() * paires.length)]].sort(); ({ t: def, nom } = fusionner(a, cat[a], b, cat[b], R, pris)); mode = `de « ${a} » et « ${b} »`; }
-  else { ({ t: def, nom } = dupliquer(c.a, cat[c.a], R, pris)); mode = `à partir de « ${c.a} »`; }
-  id = sansAccent(nom); for (let k = 2; cat[id] || inventes[id]; k++) id = `${sansAccent(nom)}-${k}`;
-  def.nom = nom; def.origine = { lignee: c.t.id, cycle: n, de: def.exige.slice() }; neufs[id] = def;
-  // il naît chez quelques bêtes de la lignée : celles qui portent déjà ce qu'il exige
-  const L = c.t; for (const p of L.phenotypes.slice()) { if (!def.exige.every(x => p.traits.includes(x)) || !(p.frequence > 0)) continue;
-    const traits = [...p.traits, id].sort(), k = REGLES.part, q = { id: traits.join('+'), traits, frequence: +(p.frequence * k).toFixed(6), cout_total: +((p.cout_total || 0) + def.cout).toFixed(3) };
-    if (p.frequence_par_biome) q.frequence_par_biome = Object.fromEntries(Object.entries(p.frequence_par_biome).map(([b, v]) => [b, +(v * k).toFixed(6)]));
-    if (!L.phenotypes.some(x => x.id === q.id)) { L.phenotypes.push(q); p.frequence = +(p.frequence * (1 - k)).toFixed(6); if (p.frequence_par_biome) for (const b in p.frequence_par_biome) p.frequence_par_biome[b] = +(p.frequence_par_biome[b] * (1 - k)).toFixed(6); } }
-  for (const p of L.populations) if (p.alleles) p.alleles[id] = REGLES.allele;
-  ev.push({ type: 'invention', taxon: L.id, biome: L.populations.slice().sort((a, b) => b.effectif - a.effectif)[0]?.biome, detail: `le monde invente « ${nom} » chez ${L.nom || L.id}, ${mode}` });
-  return { traits: neufs, evenements: ev };
+  // un cycle : parfois, une lignée invente un trait ; il entre au catalogue du monde et naît chez quelques-unes de ses bêtes
+  function inventer(ctx) {
+    const { sortie, cat, n, graine, inventes = {} } = ctx, R = generateur(((graine >>> 0) ^ 0x2545f491) ^ Math.imul(n + 7, 0x9e3779b1)), ev = [], neufs = {};
+    // (le plafond ne compte que les traits que le monde a inventés lui-même : ni ses phrases de grammaire, ni les traits de son auteur)
+    if (Object.values(inventes).filter(x => x?.origine && !x.grammaire).length >= REGLES.max || R() >= REGLES.chance) return { traits: neufs, evenements: ev };
+    // les couples (lignée, trait répandu chez au moins 30 % de ses bêtes) ; un trait rare dans le monde, et peu repris jusqu'ici, invente plus
+    // volontiers : le monde n'invente pas cent fois la même chose
+    const cand = [], porteurs = {}, usage = id => Object.values(inventes).filter(x => x.origine?.de?.includes(id)).length;
+    for (const t of sortie) { if (t.eteint || t.plan?.regime === 'vegetal' || t.plan?.regime === 'synthetique') continue;
+      const f = {}; for (const p of t.phenotypes) for (const id of p.traits) if (cat[id]) f[id] = (f[id] || 0) + (p.frequence || 0);
+      const N = t.populations.reduce((a, p) => a + p.effectif, 0); for (const id of Object.keys(f).sort()) if (f[id] >= REGLES.frequence) { cand.push({ t, a: id, N }); porteurs[id] = (porteurs[id] || 0) + 1; } }
+    if (!cand.length) return { traits: neufs, evenements: ev };
+    const w = cand.map(c => Math.sqrt(c.N) / porteurs[c.a] / (1 + 3 * usage(c.a)));
+    let u = R() * w.reduce((x, y) => x + y, 0), c = cand[0]; for (let i = 0; i < cand.length; i++) { u -= w[i]; if (u <= 0) { c = cand[i]; break; } }
+    const pris = new Set([...Object.keys(cat), ...Object.keys(inventes)]);
+    const paires = []; for (const p of c.t.phenotypes) if ((p.frequence || 0) >= REGLES.frequence / 2 && p.traits.includes(c.a)) for (const b of p.traits) if (b !== c.a && cat[b] && !paires.includes(b)) paires.push(b);
+    let id, def, nom, mode;
+    if (paires.length && R() < REGLES.fusion) { const [a, b] = [c.a, paires[Math.floor(R() * paires.length)]].sort(); ({ t: def, nom } = fusionner(a, cat[a], b, cat[b], R, pris)); mode = `de « ${a} » et « ${b} »`; }
+    else { ({ t: def, nom } = dupliquer(c.a, cat[c.a], R, pris)); mode = `à partir de « ${c.a} »`; }
+    id = sansAccent(nom); for (let k = 2; cat[id] || inventes[id]; k++) id = `${sansAccent(nom)}-${k}`;
+    def.nom = nom; def.origine = { lignee: c.t.id, cycle: n, de: def.exige.slice() }; neufs[id] = def;
+    // il naît chez quelques bêtes de la lignée : celles qui portent déjà ce qu'il exige
+    const L = c.t; for (const p of L.phenotypes.slice()) { if (!def.exige.every(x => p.traits.includes(x)) || !(p.frequence > 0)) continue;
+      const traits = [...p.traits, id].sort(), k = REGLES.part, q = { id: traits.join('+'), traits, frequence: +(p.frequence * k).toFixed(6), cout_total: +((p.cout_total || 0) + def.cout).toFixed(3) };
+      if (p.frequence_par_biome) q.frequence_par_biome = Object.fromEntries(Object.entries(p.frequence_par_biome).map(([b, v]) => [b, +(v * k).toFixed(6)]));
+      if (!L.phenotypes.some(x => x.id === q.id)) { L.phenotypes.push(q); p.frequence = +(p.frequence * (1 - k)).toFixed(6); if (p.frequence_par_biome) for (const b in p.frequence_par_biome) p.frequence_par_biome[b] = +(p.frequence_par_biome[b] * (1 - k)).toFixed(6); } }
+    for (const p of L.populations) if (p.alleles) p.alleles[id] = REGLES.allele;
+    ev.push({ type: 'invention', taxon: L.id, biome: L.populations.slice().sort((a, b) => b.effectif - a.effectif)[0]?.biome, detail: `le monde invente « ${nom} » chez ${L.nom || L.id}, ${mode}` });
+    return { traits: neufs, evenements: ev };
+  }
+  return { REGLES, dupliquer, fusionner, inventer };
 }
+const { dupliquer, fusionner, inventer } = lier(REGLES);   // (le module, lié à ses règles)
+const avec = (o, d = {}) => ({ ...API, ...lier(unNiveau(REGLES, o)) });   // (docs/59) une instance aux règles d'un monde
 
 function eveiller(inst) { const out = JSON.parse(JSON.stringify(inst)); if (out.monde?.invention) return { inst: out, evenements: [] };
   out.monde = { ...out.monde, invention: { depuis: out.cycle?.n ?? 0 } };
   return { inst: out, evenements: [{ type: 'eveil', taxon: out.taxons.find(t => t.plan?.regime !== 'vegetal')?.id, detail: 'le monde devient inventif : ses lignées peuvent inventer des traits que personne n\'a décrits' }] }; }
-const API = { REGLES, eveiller, inventer, dupliquer, fusionner, accorder };
+const API = { REGLES, eveiller, inventer, dupliquer, fusionner, accorder, avec };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else racine.OrvaneInvention = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

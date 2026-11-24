@@ -24,7 +24,9 @@ const val = (s, v, p) => { if (!s) return []; if (s.$ref) s = S.$defs[s.$ref.spl
 // le monde d'Orvane vu par biome, sans le continent de la genèse 7, avec sa flore (bancs/monde.js)
 const I0 = Monde.orvane({ continent: '', sans: ['phenologie', 'meteo'] }), W = Ph.eveiller(I0).inst;
 const estPlante = t => t.plan?.regime === 'vegetal', animaux = I => I.taxons.filter(t => !estPlante(t)).map(t => [t.id, t.populations.map(p => [p.biome, p.effectif])]);
-const avec = (o, f) => { const g = clone(Ph.REGLES); Object.assign(Ph.REGLES, o); try { return f(); } finally { for (const k of Object.keys(g)) Ph.REGLES[k] = g[k]; } };
+// (docs/59) l'effet entier tout de suite (rampe 0) : la phénologie à ces règles-là (Ph.avec), ou un cycle qui les reçoit (opt.regles) ;
+// celles du module n'y changent pas
+const SANS_RAMPE = { rampe: 0 }, cycle0 = { regles: { phenologie: SANS_RAMPE } };
 const plante = (I, lieu, forme) => I.taxons.find(t => estPlante(t) && !t.eteint && t.plan.forme === forme && t.populations.some(p => p.biome === lieu)), popDe = (t, lieu) => t?.populations.find(p => p.biome === lieu);
 const bio = (I, f) => I.taxons.filter(t => !t.eteint && f(t)).reduce((s, t) => s + t.populations.reduce((x, p) => x + p.effectif, 0) * (t.plan.masse_kg || 1), 0);
 
@@ -50,10 +52,10 @@ console.log('2. Le calendrier');
   const L = W.taxons.filter(t => estPlante(t) && (t.plan.forme === 'arbre' || t.plan.forme === 'buisson')), cad = L.filter(t => t.plan.feuillage === 'caduc'), fe = (lieu, forme) => plante(W, lieu, forme)?.plan.feuillage;
   verif(L.every(t => t.plan.feuillage) && fe('foret', 'arbre') === 'caduc' && fe('taiga', 'arbre') === 'persistant' && fe('jungle', 'arbre') === 'persistant', `${cad.length} lignées d'arbres et de buissons sur ${L.length} sont caduques : les arbres de la forêt le sont, ceux de la taïga et de la jungle gardent leurs feuilles`);
   // la pousse au fil de l'année, effet entier
-  avec({ rampe: 0 }, () => { const X = { ...W, cycle: { ...W.cycle } }, pousse = (lieu, forme, ph) => Ph.preparer({ monde: { ...X.monde, annee: 1000 }, n: Math.round(ph * 1000), phase: ph, biomes: B, saisons: Orvane.REGLES.saisons }).pousse(lieu, plante(W, lieu, forme).plan);
+  { const Phr = Ph.avec(SANS_RAMPE), X = { ...W, cycle: { ...W.cycle } }, pousse = (lieu, forme, ph) => Phr.preparer({ monde: { ...X.monde, annee: 1000 }, n: Math.round(ph * 1000), phase: ph, biomes: B, saisons: Orvane.REGLES.saisons }).pousse(lieu, plante(W, lieu, forme).plan);
     const moy = (lieu, forme) => { let s = 0; for (let i = 0; i < 100; i++) s += pousse(lieu, forme, i / 100); return s / 100; };
     verif(pousse('foret', 'arbre', 0) === 0 && pousse('foret', 'arbre', .5) === 2 && Math.abs(moy('foret', 'arbre') - 1) < 1e-6 && pousse('taiga', 'arbre', 0) > .6 && Math.abs(pousse('jungle', 'arbre', 0) - 1) < .1,
-      `un arbre de la forêt ne pousse plus au cœur de l'hiver et pousse double au cœur de l'été (1 en moyenne) ; un arbre de la taïga garde ${fx(pousse('taiga', 'arbre', 0) * 100)} % de sa pousse l'hiver, un arbre de la jungle ${fx(pousse('jungle', 'arbre', 0) * 100)} %`); });
+      `un arbre de la forêt ne pousse plus au cœur de l'hiver et pousse double au cœur de l'été (1 en moyenne) ; un arbre de la taïga garde ${fx(pousse('taiga', 'arbre', 0) * 100)} % de sa pousse l'hiver, un arbre de la jungle ${fx(pousse('jungle', 'arbre', 0) * 100)} %`); }
 }
 
 console.log('3. Une année');
@@ -63,11 +65,11 @@ console.log('3. Une année');
   const pleins = new Set(W.biomes.filter(b => Ph.forceDe(b, Orvane.REGLES.saisons) === 1 && b.milieu === 'terrestre').map(b => b.id));
   const nour = (I, f) => { let s = 0, w = 0; for (const t of I.taxons) if (!t.eteint && !estPlante(t) && f(t)) for (const p of t.populations) if (pleins.has(p.biome)) { s += (p.nourriture ?? 1) * p.effectif; w += p.effectif; } return w ? s / w : 1; };
   let A = I0, X = W;
-  avec({ rampe: 0 }, () => { for (let k = 0; k < N; k++) { A = Orvane.cycle(A, {}); X = Orvane.cycle(X, {}); const ph = X.cycle.saison.phase;
+  for (let k = 0; k < N; k++) { A = Orvane.cycle(A, {}, cycle0); X = Orvane.cycle(X, {}, cycle0); const ph = X.cycle.saison.phase;
     const s = popDe(plante(X, 'foret', 'arbre'), 'foret')?.stade; if (s && st[st.length - 1] !== s) st.push(s);
     jungle.add(popDe(plante(X, 'jungle', 'arbre'), 'jungle')?.stade); taiga.add(popDe(plante(X, 'taiga', 'arbre'), 'taiga')?.stade); herbe.add(popDe(plante(X, 'prairie', 'herbe'), 'prairie')?.stade);
     const rb = nour(X, butine) / nour(A, butine), rf = nour(X, fruits) / nour(A, fruits);
-    if (ph > .25 && ph < .42) nb.p.push(rb); if (ph > .85 || ph < .1) nb.h.push(rb); if (ph > .6 && ph < .76) nf.e.push(rf); if (ph > .9 || ph < .3) nf.h.push(rf); } });
+    if (ph > .25 && ph < .42) nb.p.push(rb); if (ph > .85 || ph < .1) nb.h.push(rb); if (ph > .6 && ph < .76) nf.e.push(rf); if (ph > .9 || ph < .3) nf.h.push(rf); }
   const moy = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : NaN, ordre = COURT ? ['fleurs', 'feuilles', 'fruits', 'feuilles_tombent'] : ['fleurs', 'feuilles', 'fruits', 'feuilles_tombent', 'nu', 'bourgeons', 'fleurs'];
   let i = 0; for (const s of st) if (s === ordre[i]) i++;
   verif(i === ordre.length, `${N} cycles (${COURT ? 'une demi-année' : 'une année'}), partis du printemps : les arbres de la forêt sont ${st.map(s => Ph.STADES[s]).join(', puis ')}`);
@@ -75,7 +77,7 @@ console.log('3. Une année');
     `la jungle reste en feuilles toute l'année ; les arbres de la taïga ne sont jamais nus (${[...taiga].map(s => Ph.STADES[s]).join(', ')}) ; l'herbe de la prairie est ${[...herbe].map(s => Ph.STADES[s]).join(', ')}`);
   // ce qu'une bête trouve dans la forêt, au fil de l'année, rapporté à ce qu'elle y trouverait sans saisons (les plantes d'aujourd'hui)
   const Bm = Object.fromEntries(W.biomes.map(b => [b.id, b])), pl = W.taxons.filter(t => estPlante(t) && !t.eteint).flatMap(t => t.populations.filter(p => p.biome === 'foret').map(p => ({ t, p })));
-  const trouve = (t, ph) => { const PH = avec({ rampe: 0 }, () => Ph.preparer({ monde: { ...W.monde, annee: 1000 }, n: W.cycle.n + 5, phase: ph, biomes: Bm, saisons: Orvane.REGLES.saisons })), plan = t.plan, tr = t.phenotypes[0].traits;
+  const trouve = (t, ph) => { const PH = Ph.avec(SANS_RAMPE).preparer({ monde: { ...W.monde, annee: 1000 }, n: W.cycle.n + 5, phase: ph, biomes: Bm, saisons: Orvane.REGLES.saisons }), plan = t.plan, tr = t.phenotypes[0].traits;
     return plan.diete ? Fl.offreD(pl, plan, tr, false, PH.parts('foret')) / Fl.offreD(pl, plan, tr, false) : Fl.offre(pl, plan, tr, false, true, PH.parts('foret')) / Fl.offre(pl, plan, tr, false, true); };
   const dans = f => W.taxons.filter(t => !t.eteint && !estPlante(t) && f(t) && t.populations.some(p => p.biome === 'foret')).sort((a, b) => popDe(b, 'foret').effectif - popDe(a, 'foret').effectif)[0];
   const but = dans(butine), fru = dans(fruits), feu = dans(t => t.plan.regime === 'herbivore' && (t.plan.diete?.feuilles ?? 1) === 1);
@@ -85,7 +87,7 @@ console.log('3. Une année');
   if (!COURT) verif(moy(nb.h) < .99 && moy(nf.h) < .99 && moy(nb.p) <= 1.001 && moy(nf.e) <= 1.001, `dans le monde, où leur nourriture est déjà à son plafond, seule la disette se lit : les butineurs à ${fx(moy(nb.h) * 100, 1)} % au cœur de l'hiver, les mangeurs de fruits à ${fx(moy(nf.h) * 100, 1)} % en hiver et au début du printemps`);
   const rb = bio(X, t => !estPlante(t)) / bio(A, t => !estPlante(t)), rp = bio(X, estPlante) / bio(A, estPlante), vifs = I => I.taxons.filter(t => !t.eteint && !estPlante(t)).length;
   verif(rb > .85 && rb < 1.15 && rp > .75 && rp < 1.25 && Math.abs(vifs(X) - vifs(A)) <= 6, `au bout : les bêtes pèsent ${fx(rb * 100, 1)} % de ce qu'elles pèsent sans les saisons des plantes, les plantes ${fx(rp * 100, 1)} %, ${vifs(X)} lignées de bêtes contre ${vifs(A)}`);
-  verif(empreinte(avec({ rampe: 0 }, () => Orvane.cycle(Orvane.cycle(W, {}), {}))) === empreinte(avec({ rampe: 0 }, () => Orvane.cycle(Orvane.cycle(W, {}), {}))), 'deux fois le même monde');
+  verif(empreinte(Orvane.cycle(Orvane.cycle(W, {}, cycle0), {}, cycle0)) === empreinte(Orvane.cycle(Orvane.cycle(W, {}, cycle0), {}, cycle0)), 'deux fois le même monde');
 }
 
 console.log('4. La neige');

@@ -16,35 +16,45 @@ const TRAITS = {
     conduite: { type: 'defense-petits', presage: 'des soldats aux mandibles énormes gardent l\'entrée' } }
 };
 const estAnimal = t => t.plan?.regime !== 'vegetal' && t.plan?.regime !== 'synthetique';
-// à qui la colonie sert : un petit hexapode grégaire
-const sertA = plan => (plan.corps?.forme === 'hexapode' || plan.corps?.forme === 'segmente') && (plan.masse_kg || 1) <= REGLES.masse && (plan.sociabilite ?? 0) >= REGLES.sociabilite;
-// les castes d'une lignée, d'après son plan
-function castesDe(plan) {
-  if (!sertA(plan)) return null; const vole = (plan.locomotion || []).includes('vol');
-  return { reine: { masse_rel: 20, ailes: true, part: .001 }, ouvrieres: { masse_rel: 1, part: .85 }, soldats: { masse_rel: 2.5, organe: 'mandibules', part: .149 }, essaim: vole };
-}
+// (docs/59) les règles d'un monde, sans toucher à celles du module : tout ce qui les lit est lié à des règles (lier). Le module se lie aux
+// siennes ; un monde qui règle ce mécanisme (regles.castes), ou un cycle (opt.regles), en prend une instance (avec : les règles du module
+// complétées des siennes d'un niveau)
+const unNiveau = (R, o) => { const X = { ...R }; if (o && typeof o === 'object') for (const k in o) { if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
+  const v = o[k], b = R[k]; X[k] = v && typeof v === 'object' && !Array.isArray(v) && b && typeof b === 'object' && !Array.isArray(b) ? { ...b, ...v } : v; } return X; };
+function lier(REGLES) {
+  // à qui la colonie sert : un petit hexapode grégaire
+  const sertA = plan => (plan.corps?.forme === 'hexapode' || plan.corps?.forme === 'segmente') && (plan.masse_kg || 1) <= REGLES.masse && (plan.sociabilite ?? 0) >= REGLES.sociabilite;
+  // les castes d'une lignée, d'après son plan
+  function castesDe(plan) {
+    if (!sertA(plan)) return null; const vole = (plan.locomotion || []).includes('vol');
+    return { reine: { masse_rel: 20, ailes: true, part: .001 }, ouvrieres: { masse_rel: 1, part: .85 }, soldats: { masse_rel: 2.5, organe: 'mandibules', part: .149 }, essaim: vole };
+  }
 
-function eveiller(inst) {
-  const out = JSON.parse(JSON.stringify(inst)); if (out.monde?.castes) return { inst: out, evenements: [] };
-  const peut = out.taxons.filter(t => estAnimal(t) && !t.eteint && sertA(t.plan)).length;
-  out.monde = { ...out.monde, castes: { depuis: out.cycle?.n ?? 0 } };
-  return { inst: out, evenements: [{ type: 'eveil', taxon: out.taxons.find(estAnimal)?.id, detail: `les castes s'éveillent : ${peut} lignées de petits hexapodes grégaires pourraient vivre en colonie, si l'eusocialité leur vient` }] };
-}
+  function eveiller(inst) {
+    const out = JSON.parse(JSON.stringify(inst)); if (out.monde?.castes) return { inst: out, evenements: [] };
+    const peut = out.taxons.filter(t => estAnimal(t) && !t.eteint && sertA(t.plan)).length;
+    out.monde = { ...out.monde, castes: { depuis: out.cycle?.n ?? 0 } };
+    return { inst: out, evenements: [{ type: 'eveil', taxon: out.taxons.find(estAnimal)?.id, detail: `les castes s'éveillent : ${peut} lignées de petits hexapodes grégaires pourraient vivre en colonie, si l'eusocialité leur vient` }] };
+  }
 
-function preparer() {
-  const vit = (t, i) => !!t.phenotypes[i]?.traits?.includes('eusocialite') && sertA(t.plan);
-  return {
-    // l'entassement d'un phénotype : les ouvrières se partagent le travail
-    facteur: (t, bid, i) => vit(t, i) ? 1 - REGLES.travail : 1,
-    // la vulnérabilité d'un phénotype : les soldats gardent la colonie
-    vuln: (t, i) => vit(t, i) ? 1 - REGLES.defense : 1,
-    publier(t) {
-      if (!estAnimal(t) || t.eteint) return; const part = t.phenotypes.reduce((a, p) => a + (p.traits?.includes('eusocialite') ? p.frequence || 0 : 0), 0), c = castesDe(t.plan);
-      if (c && part >= REGLES.publier) t.plan.castes = { ...c, part: +part.toFixed(3) }; else delete t.plan.castes;
-    }
-  };
+  function preparer() {
+    const vit = (t, i) => !!t.phenotypes[i]?.traits?.includes('eusocialite') && sertA(t.plan);
+    return {
+      // l'entassement d'un phénotype : les ouvrières se partagent le travail
+      facteur: (t, bid, i) => vit(t, i) ? 1 - REGLES.travail : 1,
+      // la vulnérabilité d'un phénotype : les soldats gardent la colonie
+      vuln: (t, i) => vit(t, i) ? 1 - REGLES.defense : 1,
+      publier(t) {
+        if (!estAnimal(t) || t.eteint) return; const part = t.phenotypes.reduce((a, p) => a + (p.traits?.includes('eusocialite') ? p.frequence || 0 : 0), 0), c = castesDe(t.plan);
+        if (c && part >= REGLES.publier) t.plan.castes = { ...c, part: +part.toFixed(3) }; else delete t.plan.castes;
+      }
+    };
+  }
+  return { REGLES, sertA, castesDe, eveiller, preparer };
 }
+const { sertA, castesDe, eveiller, preparer } = lier(REGLES);   // (le module, lié à ses règles)
+const avec = (o, d = {}) => ({ ...API, ...lier(unNiveau(REGLES, o)) });   // (docs/59) une instance aux règles d'un monde
 
-const API = { REGLES, TRAITS, sertA, castesDe, eveiller, preparer };
+const API = { REGLES, TRAITS, sertA, castesDe, eveiller, preparer, avec };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else racine.OrvaneCastes = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
