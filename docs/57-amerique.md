@@ -13,7 +13,7 @@ Le premier pas est une île.
 
 Isle Royale est une île de 544 km² au milieu du lac Supérieur (Michigan). Les orignaux y sont arrivés au début du XXᵉ siècle, les loups vers 1948, sur la glace. Ils sont comptés chaque hiver depuis 1958 : c'est la plus longue étude d'un prédateur et de sa proie. Le loup est le seul prédateur de l'orignal, et l'orignal presque la seule proie du loup en hiver.
 
-`node outils/etalon.js --experience isle-royale` fait vivre l'île de 1980 à aujourd'hui (`mondes/amerique/isle-royale.json`) :
+`node outils/etalon.js --experience isle-royale` fait vivre l'île de 1980 à aujourd'hui (`etalon/experiences/isle-royale.json`) :
 - **l'île** : sa forêt boréale (un lieu de taïga, couvert à 80 %), son climat (la moyenne des quatre cases de CRU 1991–2020 qui la couvrent : −12 °C en janvier, 18 °C en juillet, 793 mm de pluie), sa capacité tirée de sa production (893 g/m²/an), comme celle d'un lieu de l'Europe ;
 - **ses bêtes, celles de l'Europe** : l'orignal (l'élan), le loup et le renard sont les mêmes espèces ; le castor d'Europe et le lièvre variable tiennent la place du castor du Canada et du lièvre d'Amérique. Chacune garde ce que l'assemblage de l'Europe lui a donné : **rien n'est calé sur l'île**. Seuls le castor, le lièvre et le renard sont mis à leur équilibre, comme les proies du retour du loup ;
 - **son histoire** : elle part de l'hiver 1980 (664 orignaux, 50 loups, d'après le Parc national). Les dix-neuf loups lâchés de l'automne 2018 à l'automne 2019 y sont lâchés aux mêmes dates : 4 du Minnesota, 4 puis 7 de l'Ontario, 4 du Michigan.
