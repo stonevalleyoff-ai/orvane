@@ -152,12 +152,32 @@ La dynamique de chaque lignée (l'étape 4 du cycle, 225 lignes) appelle 27 fonc
 
 Le code est déplacé, non réécrit : le même monde au bit près, sur les sept mondes et le monde à l'axe propre. `moteur/orvane.js` passe de 1 183 lignes (avant les modules) à 1 004.
 
-**La suite**, une étape à la fois, chacune au bit près : la dynamique de chaque lignée (4 : les naissances, les morts, les migrations), qui peut maintenant appeler la génétique elle-même ; l'habitat (1), l'état de départ (2), les arrivées (5), la naissance des lignées et les extinctions (6), le catalogue (7).
+## 04, la quatrième étape : les outils, le plan, le calendrier
+
+Après la génétique, la dynamique de chaque lignée dépendait encore d'une quinzaine de fonctions et de constantes du moteur qui ne demandent rien au contexte d'un monde. Elles forment deux modules :
+- **`moteur/noyau/outils.js`** : borner un nombre, copier un état, et le hasard : le générateur d'un cycle (semé par la graine du monde et le numéro du cycle) et le tirage qui ne dépend que d'un nom. Tout le hasard du cœur vient de là.
+- **`moteur/noyau/plan.js`** : le plan corporel d'un phénotype et ce que coûtent ses traits, la mortalité, la place d'une lignée parmi celles de sa taille (la bande de masse), ce que chaque régime pèse sur la capacité d'un lieu, les milieux (l'eau douce ou salée, la terre, les rives), la fenêtre d'une saison dans l'année et la photopériode d'une latitude (par `moteur/calendrier.js`).
+
+Ce qui dépend du contexte d'un monde reste dans `moteur/orvane.js` : la saison d'un lieu, la dérive d'une lignée, l'appétence, la croissance, la convenance d'un lieu, la route de l'hiver. Hors de ce contexte, la dynamique ne dépend plus que de modules : ceux du cœur, et ceux qui existaient déjà (le catalogue, le calendrier, le climat, les diètes). Elle peut devenir un module à son tour.
+
+Le code est déplacé, non réécrit : le même monde au bit près, sur les sept mondes, entrelacés, et le monde à l'axe propre. `moteur/orvane.js` : 946 lignes.
+
+**Le Web Worker de l'Observatoire chargeait un fichier de moins que la page.** Sans `moteur/calendrier.js`, un monde au jour (l'Europe) y tournait sans son calendrier : en hiver quand il est en automne, et autrement selon que le navigateur lançait le Worker ou non. Sa liste est maintenant celle des balises de la page, dans le même ordre, et `bancs/simulateur.js` le vérifie ; le Worker, imité dans Node, rend le même cycle de l'Europe que le moteur, au bit près.
+
+## 04, la cinquième étape : la dynamique de chaque lignée
+
+L'étape 4 du cycle, la plus longue (224 lignes), sort à son tour : **`moteur/noyau/dynamique.js`**. Lignée par lignée et lieu par lieu : les naissances et les morts (la place, la ration, la faim, la maladie, les catastrophes, la chasse des hommes), les petits et leurs allèles (Mendel, les croisements entre lignées apparentées, l'introgression), les traits continus qui évoluent, les retraits et les apports des joueurs, l'essaimage vers les voisins, l'hivernage et son retour ; puis, pour chaque lignée, les combinaisons nées sans phénotype et, parfois, un trait nouveau.
+- **Ce qu'il reçoit** : 51 noms, ceux que l'analyseur de portées a trouvés. Le contexte du monde et les fonctions qui en dépendent ; le hasard du cycle (ses générateurs continuent leur suite : le module tire les mêmes nombres, dans le même ordre) ; l'état de chaque lignée, tel que le partage des proies vient de le laisser ; ce que demandent les joueurs ; les mécanismes éveillés ; et les modules que le moteur a chargés ou non (le calendrier, le climat, les diètes : un moteur chargé sans eux tourne comme avant).
+- **Ce qu'il rend** : les migrations, que le cycle applique ensuite (5, les arrivées). Il écrit dans chaque population (ses effectifs, ses morts, ses gènes) et dans le journal du cycle.
+
+Le reste lui vient des modules du cœur : la génétique, le plan, les outils. Le code est déplacé, non réécrit : le même monde au bit près, sur les sept mondes, entrelacés, et le monde à l'axe propre. `moteur/orvane.js` passe à 727 lignes (1 183 avant les modules) ; le cycle y garde l'habitat (1), l'état de départ (2), les arrivées (5), la naissance des lignées et les extinctions (6), le catalogue (7), et appelle le partage des proies (3) et la dynamique (4).
+
+**La suite**, une étape à la fois, chacune au bit près : l'habitat (1), l'état de départ (2), les arrivées (5), la naissance des lignées et les extinctions (6), le catalogue (7). Deux modules gardent encore un état propre au monde qui tourne, posé pendant le cycle puis rendu (`corps.etendre`, `memoire.regler`) ; et quelques outils (la genèse, des bancs, le simulateur) changent les règles par défaut du moteur au lieu de donner les leurs.
 
 ## Ce qui vient
 
 1. **Les ablations (03).** Chaque règle retirée seule, sur Orvane (30 cycles, 3 graines) puis sur l'Europe (une année), puis par paires : ce qu'elle tient, ce qu'elle coûte. La matrice : conserver, modifier, supprimer, investiguer.
-2. **Modulariser le moteur (04)**, après le contexte explicite et le premier module du cœur (plus haut) : la prédation, le métabolisme, la reproduction, la génétique, les déplacements, le climat, chacun dans son module, sans état global. Le rejeu garde le moteur identique au bit près pendant le découpage, l'étalon le juge ensuite.
+2. **Modulariser le moteur (04)**, après le contexte explicite et les modules du cœur (plus haut : le partage des proies, la génétique, les outils et le plan, la dynamique) : les autres étapes du cycle, chacune dans son module, sans état global. Le rejeu garde le moteur identique au bit près pendant le découpage, l'étalon le juge ensuite.
 3. **L'évolution ouverte (05)** : des populations sans évolution, puis avec la génétique seule. Les réseaux neuronaux sont la phase 3 du plan d'évolution ouverte : Orvane n'en a pas aujourd'hui (l'esprit, docs/34, fait vivre des savoirs et des traditions).
 4. **L'intérêt pour les jeux (06)** : Stone Valley comme démonstrateur, avec les lots d'un jeu rejoués sur une copie du monde à côté d'un témoin sans lots (docs/5).
 5. **La revue indépendante.** Le protocole verrouille les critères ; il ne remplace pas un regard extérieur. Il faudrait un écologue des populations pour relire les règles, et une relecture humaine obligatoire des PR (la protection de la branche `main`).

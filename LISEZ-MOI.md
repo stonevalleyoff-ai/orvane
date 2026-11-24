@@ -4,7 +4,7 @@ Un moteur d'écosystème et d'évolution, indépendant de tout jeu. Il fait vivr
 
 ```
 moteur/orvane.js      le moteur : instantané + pressions → instantané suivant (Node ou navigateur, zéro dépendance)
-moteur/noyau/         le cœur du moteur, module par module (docs/59) : la génétique (genetique.js), le partage des proies (predation.js) ; à charger avant orvane.js dans un navigateur
+moteur/noyau/         le cœur du moteur, module par module (docs/59) : les outils et le hasard (outils.js), le plan d'une lignée, ses lieux et son calendrier (plan.js), la génétique (genetique.js), le partage des proies (predation.js), la dynamique de chaque lignée (dynamique.js) ; à charger dans cet ordre, avant orvane.js, dans un navigateur
 moteur/catalogue.js   l'univers des traits : organe, coût, effet, écarts sur le plan corporel, contraintes, conduite (ce qu'il fait faire), ce qu'il fait devant les plantes ; un monde y ajoute les siens (catalogue.monde, docs/20)
 moteur/corps.js       la silhouette d'une lignée (forme, proportions, organes, couleurs) et sa dérive à chaque séparation
 moteur/genese.js      la genèse : des biomes, des ancêtres très simples, des milliers de cycles → un monde de lignées inventées, nommées (--milieux, --ancetres : une partie des biomes, d'autres ancêtres)
