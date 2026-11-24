@@ -199,6 +199,22 @@ Un omnivore naît désormais de ce qu'il mange, dans la part où il le mange (do
 
 La buse, l'autour et le milan royal quittent aussi la borne. À l'inverse, le calage donne aux chasseurs de la mer (les dauphins, le thon, le saumon, le bar, le maquereau) cinq à six fois plus d'adresse pour qu'ils tiennent. Ce qu'ils chassent, d'autres chasseurs moins gênés en prennent sans doute davantage ; c'est à vérifier.
 
+**L'étalon**, deux années sur trois graines (qui s'accordent) : **9 ✓, 2 ≈, 0 ✗**, contre 7 ✓, 1 ≈, 1 ✗ au rapport du 22 novembre.
+
+| | le 22 novembre | avec le recouvrement |
+| --- | --- | --- |
+| le lynx pardelle | −4,0 à −4,2 % par an | **+16,4 à +17,2 %** |
+| le lynx boréal | +0,5 à +1,9 % | **+27,5 à +27,7 %** |
+| le loup | +7,6 à +7,8 % | +10,9 à +11,0 % |
+| l'ours | +4,8 à +5,3 % | +4,8 à +5,1 % |
+| le glouton | −4,1 à −4,3 % | −2,1 à −2,4 % |
+| la stabilité | 99,5 % | 98,5 % |
+| aucune espèce ne fond ni ne s'emballe | 1 (les bourdons ×2,2) | 3, au bord (les méduses ×0,45, les araignées ×0,49, les papillons ×2,2) |
+| les prédateurs (la loi de Carbone et Gittleman) | ×1,7 à ×1,9 | ×1,7 à ×1,8 |
+| le rendement des chasseurs, la diversité, Damuth | 1,5 % ; ×0,96 ; −0,705 | 1,5 % ; ×0,97 ; −0,708 |
+
+Les lynx remontent enfin : le pardelle à peu près comme le vrai depuis dix ans, quand on lâche des lynx et des lapins pour lui. Le boréal monte presque aussi vite que sa natalité le permet : c'est ce qu'il ferait si les hommes cessaient de le tuer. Le glouton recule deux fois moins ; il lui faudrait une satiété de 0,84 pour se remplacer (sa natalité, 0,23 par an, couvre de peu sa mort, 0,155), et ses concurrents en prennent encore une part.
+
 ## Une expérience : le retour du loup
 
 `node outils/etalon.js --experience loup` prend un morceau de l'Europe (la France, l'Italie, la Suisse, Monaco : 96 lieux) en 1992. La France et la Suisse n'ont plus un loup, l'Italie en a environ 30 % d'aujourd'hui (≈ 350, ils étaient environ 400 vers 1990). Avec le loup, on garde ses grandes proies : les ongulés, les lièvres, le lapin, la marmotte, le castor. On laisse les autres carnivores et les plantes, pour aller vite : 31 ans en quatre minutes. On compare ensuite à ce qu'a vu l'Office français de la biodiversité :
