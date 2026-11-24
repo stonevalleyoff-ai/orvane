@@ -1,0 +1,90 @@
+# Orvane — les ablations (outils/ablations.js, etalon/ablations.json, docs/59) : à la demande, chaque règle du moteur retirée seule sur une
+# copie d'un monde publié (son dernier état, la branche publication), autant de cycles et sur les mêmes graines que le témoin. Quatre
+# machines à la fois, chacune une part des essais (et le témoin), puis la fusion : le rapport va sur la branche etalon
+# (etalon/ablations/<monde>/AAAA-MM-JJ.json et .md), jamais sur main, et dans le résumé de l'action. Rien du monde hébergé n'est touché.
+# Les essais du plan : Orvane, 30 cycles et 3 graines (une heure et demie environ) ; l'Europe, 365 cycles et 1 graine (deux heures environ).
+name: ablations
+on:
+  workflow_dispatch:
+    inputs:
+      monde:
+        description: 'le monde publié (orvane, europe, aube…)'
+        default: 'orvane'
+      cycles:
+        description: 'les cycles de chaque essai'
+        default: '30'
+      graines:
+        description: 'les graines (le témoin et chaque essai, sur les mêmes)'
+        default: '3'
+      regles:
+        description: 'les règles à essayer, séparées par des virgules (vide : toutes celles du plan)'
+        default: ''
+permissions:
+  contents: write
+concurrency:
+  group: ablations
+  cancel-in-progress: false
+jobs:
+  parts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        part: [1, 2, 3, 4]
+    name: ablations (${{ matrix.part }}/4)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: le monde publié, une part des essais
+        env:
+          MONDE: ${{ github.event.inputs.monde }}
+          CYCLES: ${{ github.event.inputs.cycles }}
+          GRAINES: ${{ github.event.inputs.graines }}
+          REGLES: ${{ github.event.inputs.regles }}
+          PART: ${{ matrix.part }}
+        run: |
+          printf '%s' "$MONDE" | grep -Eq '^[a-z0-9-]{1,40}$' || { echo "::error::le monde : « $MONDE »"; exit 1; }
+          printf '%s' "$CYCLES" | grep -Eq '^[0-9]{1,4}$' && [ "$CYCLES" -ge 1 ] || { echo "::error::les cycles : « $CYCLES »"; exit 1; }
+          printf '%s' "$GRAINES" | grep -Eq '^[1-9]$' || { echo "::error::les graines : « $GRAINES »"; exit 1; }
+          printf '%s' "$REGLES" | grep -Eq '^[a-z_,]{0,800}$' || { echo "::error::les règles : « $REGLES »"; exit 1; }
+          git fetch -q --depth=1 origin publication
+          git show "FETCH_HEAD:mondes/$MONDE/etat.json" > "$RUNNER_TEMP/etat.json" || { echo "::error::pas de mondes/$MONDE/etat.json sur la branche publication"; exit 1; }
+          set -- --cycles "$CYCLES" --graines "$GRAINES" --jobs 4 --part "$PART/4" --sortie "$RUNNER_TEMP/part.json"
+          if [ -n "$REGLES" ]; then set -- "$@" --regles "$REGLES"; fi
+          node outils/ablations.js "$RUNNER_TEMP/etat.json" "$@" || echo "::warning::des essais de la part $PART/4 n'ont pas tourné : le rapport le dit"
+          test -s "$RUNNER_TEMP/part.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ablations-part-${{ matrix.part }}
+          path: ${{ runner.temp }}/part.json
+          retention-days: 7
+  rapport:
+    needs: parts
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ablations-part-*
+          path: ${{ runner.temp }}/parts
+      - name: la fusion
+        env:
+          MONDE: ${{ github.event.inputs.monde }}
+        run: |
+          printf '%s' "$MONDE" | grep -Eq '^[a-z0-9-]{1,40}$' || exit 1
+          jour=$(date -u +%F); mkdir -p "$RUNNER_TEMP/ablations/$MONDE"
+          node outils/ablations.js --fusionner "$RUNNER_TEMP"/parts/*/part.json --sortie "$RUNNER_TEMP/ablations/$MONDE/$jour.json" --notes "$RUNNER_TEMP/ablations/$MONDE/$jour.md" || echo "::warning::des essais n'ont pas tourné : le rapport le dit"
+          cat "$RUNNER_TEMP/ablations/$MONDE/$jour.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: le rapport (la branche etalon)
+        env:
+          MONDE: ${{ github.event.inputs.monde }}
+        run: |
+          git config user.name "orvane-ablations"; git config user.email "actions@users.noreply.github.com"
+          if git fetch -q --depth=1 origin etalon 2>/dev/null; then git checkout -q -B etalon FETCH_HEAD; else git checkout -q --orphan etalon && git rm -rq --cached . && git clean -fdq -e "$RUNNER_TEMP"; fi
+          mkdir -p "etalon/ablations/$MONDE" && cp "$RUNNER_TEMP/ablations/$MONDE"/* "etalon/ablations/$MONDE/"
+          git add etalon && git commit -qm "Les ablations de $MONDE, le $(date -u +%F)" && git push -q origin HEAD:etalon

@@ -235,6 +235,30 @@ Dans chaque module, le code qui lit ses règles passe, mot pour mot, dans une fa
 
 **Ce qui reste.** Un cycle ne lit plus rien qui ne vienne de son monde ou de ses options : les règles du moteur et celles de chaque mécanisme, complétées de celles du monde et du cycle. Les modules gardent leurs règles par défaut, que plus rien ne change pendant un cycle. La vie en groupe, que l'hébergement publie hors du cycle (`moteur/collectif.js`), lit aussi les règles de son monde (`regles.collectif` : ses seuils, la taille de ses groupes), quand on la décrit ou qu'on l'éveille ; les parcelles (`moteur/parcelles.js`) posent les leurs dans le monde (la dispersion, la fuite), qui les garde. Le découpage du moteur (04) est fait. Les ablations (03) peuvent retirer n'importe quelle règle, du moteur ou d'un mécanisme, sur une copie du monde ou par l'option du cycle, et plusieurs essais tourner côte à côte dans le même processus.
 
+## 03, la première étape : le plan et l'outil des ablations
+
+**Le plan** (`etalon/ablations.json`), écrit avant le premier essai, comme le protocole de l'étalon. Retirer une règle, c'est donner au monde la valeur qui éteint ce qu'elle fait, tout le reste égal : une seule règle à la fois, sur une copie du monde (dans ses règles, `monde.regles`, puisque celles du monde passent par-dessus celles d'un cycle), sur les mêmes graines que le témoin. Chacune des 50 règles gelées y a sa nature :
+- **39 mécanismes** : la règle fait quelque chose, et une valeur l'éteint (la chance de séparation à zéro, les saisons sans amplitude, la reproduction sexuée éteinte, les catastrophes sans chance…) ;
+- **5 constantes** : la ration d'un prédateur, la conversion de la viande en petits, la demi-satiété n'ont pas de valeur qui les éteigne (sans ration, plus de chasse) ; on les essaie à la moitié et au double de celle du monde ; le seuil de surpeuplement et le plafond des phénotypes, à deux valeurs dites ;
+- **4 comptables** : la tendance d'un effondrement ou d'une explosion, l'effectif d'une lignée menacée, la mémoire des lignées éteintes ne font que publier ; les retirer ne doit rien changer aux bêtes, et l'essai le vérifie ;
+- **1 des joueurs** : la méfiance ne vit que de ce que font les joueurs ; sans pressions, rien à mesurer ;
+- **1 inactive** : le plafond des lignées ne sert qu'à la genèse.
+
+Une règle qu'un monde a déjà retirée (sa valeur est celle qui l'éteint) ne s'y essaie pas : dans la mer, quinze le sont (les règles d'un monde réel, la vie par parcelles, l'hivernage, les cadavres). Le plan dit aussi quand chaque règle agit (chaque cycle, aux séparations, aux saisons, dans un monde au calendrier) : une règle qui n'agit qu'aux séparations ne se voit guère en trente cycles.
+
+**L'outil** (`outils/ablations.js`). Le témoin et chaque essai tournent sur les mêmes graines, chacun dans son processus, plusieurs à la fois. À la fin : les lignées animales vivantes et les carnivores, la biomasse, la diversité (Shannon, comme la référence), la part des lignées stables, les extinctions, les lignées nées ; et la durée d'un cycle, ce que la règle coûte. Une mesure bouge quand l'écart au témoin (en moyenne sur les graines) passe le double de l'écart entre les graines du témoin, et un seuil que dit le plan : le hasard d'un cycle suit ce que fait le monde, et une ablation qui tire un nombre de moins change la suite. Le rapport (JSON, et des notes en tableau) dit pour chaque essai ce qui bouge et une lecture (« elle tient », « rien de mesurable », « investiguer ») : une indication, pas un verdict. La matrice (conserver, modifier, supprimer, investiguer) reste une décision de l'auteur.
+
+```
+node outils/ablations.js <etat.json> [--cycles 30] [--graines 3] [--regles a,b] [--jobs 4] [--part k/n] --sortie r.json --notes r.md
+node outils/ablations.js --fusionner part1.json part2.json …  --sortie r.json --notes r.md
+```
+
+Une part (`--part k/n`) fait le témoin et un essai sur n : quatre machines se partagent un plan, puis la fusion rend le même rapport qu'en une fois (le coût de chaque essai, contre le témoin de sa machine).
+
+**L'action** (`.github/workflows/ablations.yml`), à la demande : Actions › ablations › Run workflow, avec le monde publié (son dernier état, la branche publication), les cycles, les graines, les règles. Quatre machines, puis le rapport sur la branche `etalon` (`etalon/ablations/<monde>/AAAA-MM-JJ.json` et `.md`), jamais sur `main`. Les essais du plan : Orvane, 30 cycles et 3 graines (une heure et demie environ) ; l'Europe, 365 cycles et une graine (deux heures environ).
+
+**Le banc** (`bancs/ablations.js`) : le plan couvre les 50 règles gelées et rien d'autre, chaque retrait ne touche que sa règle et des clés que le moteur connaît ; sur la mer, le témoin rend le monde du moteur, les saisons retirées font bouger le monde, une règle comptable ne change rien aux bêtes, une règle déjà retirée n'est pas essayée, une constante s'essaie à deux valeurs, deux passes rendent les mêmes mesures, et deux parts fusionnées le même rapport.
+
 ## Ce qui vient
 
 1. **Les ablations (03).** Chaque règle retirée seule, sur Orvane (30 cycles, 3 graines) puis sur l'Europe (une année), puis par paires : ce qu'elle tient, ce qu'elle coûte. La matrice : conserver, modifier, supprimer, investiguer.
