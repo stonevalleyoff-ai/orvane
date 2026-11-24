@@ -51,7 +51,7 @@ Ce que le pas ne change pas, parce que cela vit au rythme du joueur et non à ce
 
 **Sept champs du plan, pour une espèce réelle :**
 - `natalite` : les petits qui passent leur première année, par tête et par an. Avec elle, la croissance ne se déduit plus de la portée et de la masse : elle est celle de l'espèce (le cerf 0,25 ; le loup 0,4). L'assemblage la calcule d'après la portée, la maturité, la longévité et la survie des jeunes ;
-- `meute` : un chasseur en meute (le loup, 6) abat ce que la meute peut abattre. Seul, un prédateur ne prend pas plus de 1,5 fois sa masse ; la meute de loups vit de cerfs de 150 kg ;
+- `meute` : un chasseur en meute (le loup, 6) abat ce que la meute peut abattre. Seul, un prédateur ne prend pas plus de 1,5 fois sa masse ; une meute, jusqu'à 2,5 fois la sienne (`regles.meute_proie`, docs/57) : la meute de loups vit de cerfs de 150 kg, et de l'orignal ;
 - `naissances` : `{ centre, largeur }`, la fenêtre de l'année où naissent les petits, à la phase du lieu. Sans elle, c'est celle du monde (`regles.naissances` : vers la mi-mai, pour la force que le monde lui donne) ;
 - `place` : la part de la capacité d'un lieu que l'espèce trouve vraiment, rapportée à ce que sa bande de masse lui donnerait. L'assemblage la cale pour que ses effectifs comptés soient son équilibre (plus bas, « L'équilibre observé ») ;
 - `dispersion` : ce que l'espèce porte loin ses jeunes, rapporté à la règle du monde (`regles.colonisation`). Elle fonde d'autant plus vite un lieu voisin où elle n'est pas : le loup 5,9, le chevreuil 0,23. L'assemblage la tire de la masse (Sutherland et al. 2000), et l'étalon l'a réglée sur le retour du loup en France (docs/53) ;

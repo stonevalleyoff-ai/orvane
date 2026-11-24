@@ -179,6 +179,77 @@ if (arg('--experience') === 'chacal') {
   const so = arg('--sortie'); if (so) { fs.mkdirSync(path.dirname(path.resolve(so)), { recursive: true }); fs.writeFileSync(so, JSON.stringify(rapport, null, 1)); console.log('→', so); }
   process.exit(0);
 }
+// --- une expérience : Isle Royale (--experience isle-royale, docs/57) ---
+// Le premier pas vers l'Amérique. Isle Royale, une île de 544 km² au milieu du lac Supérieur : des loups et des orignaux, comptés chaque
+// hiver depuis 1958, la plus longue étude d'un prédateur et de sa proie. Le monde de l'expérience : l'île (sa forêt boréale, son climat
+// de CRU 1991–2020 : mondes/amerique/isle-royale.json) et les espèces de l'Europe qui y vivent — l'orignal (l'élan), le loup, le renard ;
+// le castor et le lièvre variable pour le castor du Canada et le lièvre d'Amérique. Chacune garde ce que l'assemblage de l'Europe lui a
+// donné : rien n'est calé sur l'île, sauf le castor, le lièvre et le renard, mis à leur équilibre comme les proies du retour du loup.
+// Elle part de l'hiver 1980 (664 orignaux, 50 loups) ; les dix-neuf loups lâchés en 2018 et 2019 y sont lâchés. Ce que le moteur ne
+// connaît pas : le parvovirus qui a fait tomber les loups de 50 à 14 (1981-1982), la consanguinité qui les a menés à deux (2016-2018),
+// l'hiver de 1996 et ses tiques. On compare donc des ordres de grandeur, non une histoire : les orignaux et les loups de 1980 à 2018 en
+// moyenne, la part des orignaux que les loups tuent chaque année, et ce que les orignaux fluctuent.
+if (arg('--experience') === 'isle-royale') {
+  const A = JSON.parse(fs.readFileSync(f, 'utf8')); if (arg('--graine') != null) A.monde.graine = +arg('--graine') >>> 0;
+  const C = require('../moteur/calendrier.js'), IR = JSON.parse(fs.readFileSync(racine('mondes/amerique/isle-royale.json'), 'utf8')), L = IR.ile;
+  const T0 = somme(L.normales.t) / 12, P0 = somme(L.normales.p), E0 = somme(L.normales.etp), npp = C.npp(T0, P0), K = Math.round(5 * npp * L.surface_km2);   // (la capacité d'un lieu de l'assemblage)
+  const ile = { id: `${L.type}~isle-royale`, nom: IR.nom, type: L.type, milieu: 'terrestre',
+    axes: { temperature: C.axeTemperature(T0), humidite: C.axeHumidite(P0, E0), altitude: C.axeAltitude(L.altitude_m), lumiere: C.axeLumiere(L.lat, L.couvert), couvert: L.couvert },
+    capacite: K, capacite_base: K, voisins: [], lieu: { lat: L.lat, lon: L.lon, altitude_m: L.altitude_m, surface_km2: L.surface_km2, pays: L.pays, fuseau: L.fuseau }, normales: { ...L.normales, npp: Math.round(npp) } };
+  const type = { ...A.monde.parcelles.types.find(t => t.id === L.type), axes: ile.axes, capacite: K, voisins: [] };
+  // la densité de chaque espèce dans les lieux de ce type en Europe (là où elle vit), pour ce qu'on ne compte pas sur l'île
+  const surf = new Map(A.biomes.map(b => [b.id, b.type === L.type ? b.lieu?.surface_km2 || 0 : 0]));
+  const densite = t => { let n = 0, s = 0; for (const p of t.populations) { const k = surf.get(p.biome) || 0; if (k > 0) { n += p.effectif; s += k; } } return s > 0 ? n / s : 0; };
+  const N0 = IR.comptes[0], an0 = N0.an, ESP = ['elan', 'loup', 'castor', 'lievre-variable', 'renard-roux'];
+  const T = ESP.map(id => { const t = A.taxons.find(x => x.id === id); if (!t) throw new Error(`pas de ${id} dans l'amorce`);
+    const n = id === 'elan' ? N0.orignaux : id === 'loup' ? N0.loups : Math.max(10, Math.round(densite(t) * L.surface_km2));
+    return { ...t, populations: [{ biome: ile.id, effectif: n, tendance: 0, depuis: 0 }] }; });
+  let E = { ...A, monde: { ...A.monde, flore: undefined, phenologie: undefined, hommes: undefined, parcelles: { ...A.monde.parcelles, types: [type] } },
+    biomes: [ile], taxons: T, cycle: { ...A.cycle, n: 0, date: `${an0 - 1}-12-31T03:17:00.000Z` }, evenements: [] };
+  // le castor, le lièvre et le renard à leur équilibre sur l'île (un jour de moteur, quatre fois, comme les proies du retour du loup) ;
+  // l'orignal et le loup ne sont pas touchés
+  const CALES = new Set(['castor', 'lievre-variable', 'renard-roux']);
+  for (let pass = 0; pass < 4; pass++) { const brut = [], X = new Map(), J = Orvane.cycle(E, {}, { duree_ms: 864e5, trace: x => brut.push(x) }), PRO = new Map(J.biomes.map(b => [b.id, b.saison?.production ?? 1]));
+    for (const x of brut) { const o = X.get(x.taxon) || X.set(x.taxon, { N: 0, conv: 0, pred: 0, ps: 0 }).get(x.taxon); o.N += x.N; o.conv += x.conv * x.N; o.pred += x.mortsPred; o.ps += x.sat * x.N * (PRO.get(x.biome) ?? 1); }
+    for (const t of E.taxons) { const o = X.get(t.id); if (!CALES.has(t.id) || !o || !(o.N > 0) || !['herbivore', 'omnivore'].includes(t.plan.regime)) continue;
+      const m = 365.25 / Math.max(2, t.plan.longevite), p = o.pred / o.N * 365.25, cible = clamp(1 - (m + p) / Math.max(1e-9, t.plan.natalite * o.conv / o.N), .2, .97), sa = o.ps / o.N;
+      if (sa > 1e-6) t.plan = { ...t.plan, place: +clamp((t.plan.place ?? 1) * sa / cible, .0005, 100).toPrecision(4) }; } }
+  // l'île jour après jour ; chaque hiver (le 15 février, au cœur du comptage), ses orignaux et ses loups ; chaque année, la part des
+  // orignaux que les loups ont tuée (les orignaux mangés, rapportés à leur nombre moyen)
+  const effectif = (I, id) => (I.taxons.find(t => t.id === id)?.populations || []).reduce((s, p) => s + p.effectif, 0);
+  const fin = +arg('--jusqua', IR.comptes[IR.comptes.length - 1].an), lachers = new Map((IR.lachers || []).map(x => [x.quand, x.loups]));
+  const serie = [], predation = []; let mange = 0, somN = 0, jours = 0; const t1 = Date.now();
+  // (et le taux de prédation par loup en hiver, comme le mesure le projet : les orignaux tués du 15 janvier au 1er mars, par loup et par mois)
+  const KR = IR.kill, hiver = { tues: 0, loupsJours: 0 }; let tuesJour = 0;
+  for (let an = an0; an <= fin; an++) {
+    for (let j = 0; j < (an % 4 ? 365 : 366); j++) {
+      const jour = new Date(Date.parse(E.cycle.date) + 864e5).toISOString().slice(0, 10), l = lachers.get(jour);
+      if (l) { const w = E.taxons.find(t => t.id === 'loup'); if (w) { const p = w.populations.find(q => q.biome === ile.id); if (p) p.effectif += l; else w.populations.push({ biome: ile.id, effectif: l, tendance: 0, depuis: E.cycle.n }); if (w.eteint) w.eteint = null; } }
+      tuesJour = 0; E = Orvane.cycle(E, {}, { duree_ms: 864e5, trace: x => { if (x.taxon === 'elan') { mange += x.mortsPred || 0; somN += x.N; jours++; tuesJour += x.mortsPred || 0; } } });
+      if (KR && an >= KR.de && an <= KR.a && jour.slice(5) >= '01-15' && jour.slice(5) <= '03-01') { hiver.tues += tuesJour; hiver.loupsJours += effectif(E, 'loup'); }
+      if (jour.slice(5) === '02-15') serie.push({ an, orignaux: Math.round(effectif(E, 'elan')), loups: +effectif(E, 'loup').toFixed(1) });
+    }
+    predation.push({ an, part: somN > 0 ? +(mange / (somN / Math.max(1, jours))).toFixed(4) : null }); mange = 0; somN = 0; jours = 0;
+    const s = serie[serie.length - 1]; process.stderr.write(`Isle Royale : ${an}, ${s?.orignaux} orignaux, ${s?.loups} loups (${((Date.now() - t1) / (an - an0 + 1) / 1000).toFixed(1)} s par an)\n`);
+  }
+  // ce que la réalité a vu, de 1980 à 2018 (avant les lâchers)
+  const reel = IR.comptes.filter(x => x.an <= 2018), sim = serie.filter(x => x.an <= 2018 && reel.some(y => y.an === x.an)), moy = L2 => somme(L2) / Math.max(1, L2.length);
+  const cv = L2 => { const u = moy(L2); return u > 0 ? Math.sqrt(moy(L2.map(x => (x - u) ** 2))) / u : 0; };
+  const oR = moy(reel.map(x => x.orignaux)), oS = moy(sim.map(x => x.orignaux)), lR = moy(reel.map(x => x.loups)), lS = moy(sim.map(x => x.loups));
+  const pS = moy(predation.filter(x => x.an <= 2018 && x.part != null).map(x => x.part)), cvR = cv(reel.map(x => x.orignaux)), cvS = cv(sim.map(x => x.orignaux));
+  const fac = (x, y) => x > 0 && y > 0 ? Math.max(x / y, y / x) : Infinity, kS = hiver.loupsJours > 0 ? hiver.tues / hiver.loupsJours * 30 : null;
+  const tests = [
+    { id: 'ir-orignaux', nom: "Les orignaux de l'île (1980–2018, en moyenne)", valeur: Math.round(oS), valeur_dite: `${Math.round(oS)} (${(oS / L.surface_km2).toFixed(2)} par km²) ; en vrai ${Math.round(oR)}`, cible: 'à moins d\'un facteur 1,5 de la réalité', etat: fac(oS, oR) <= 1.5 ? 'ok' : fac(oS, oR) <= 3 ? 'limite' : 'echec' },
+    { id: 'ir-loups', nom: "Les loups de l'île (1980–2018, en moyenne)", valeur: r(lS, 1), valeur_dite: `${lS.toFixed(1)} ; en vrai ${lR.toFixed(1)}`, cible: 'à moins d\'un facteur 2 (le moteur ne connaît ni le parvovirus ni la consanguinité, qui les ont tenus bas)', etat: fac(lS, lR) <= 2 ? 'ok' : fac(lS, lR) <= 4 ? 'limite' : 'echec' },
+    { id: 'ir-predation', nom: 'La part des orignaux que les loups tuent chaque année', valeur: r(pS, 3), valeur_dite: `${(100 * pS).toFixed(1)} %`, cible: `de ${IR.predation.de * 100} à ${IR.predation.a * 100} % (un orignal sur dix, la plupart des années)`, etat: pS >= IR.predation.de && pS <= IR.predation.a ? 'ok' : pS >= IR.predation.de / 2 && pS <= IR.predation.a * 2 ? 'limite' : 'echec', source: IR.predation.source },
+    ...(KR ? [{ id: 'ir-kill', nom: "Ce qu'un loup tue en hiver", valeur: kS == null ? null : r(kS, 3), valeur_dite: kS == null ? '-' : `${kS.toFixed(2)} orignal par loup et par mois (${Math.max(KR.de, an0)}–${KR.a}) ; en vrai ${KR.moyenne}`, cible: `à moins d'un facteur 2 de ${KR.moyenne} (${KR.unite})`, etat: fac(kS, KR.moyenne) <= 2 ? 'ok' : fac(kS, KR.moyenne) <= 4 ? 'limite' : 'echec', source: KR.source }] : []),
+    { id: 'ir-fluctuations', nom: 'Les orignaux fluctuent', valeur: r(cvS, 2), valeur_dite: `coefficient de variation ${cvS.toFixed(2)} ; en vrai ${cvR.toFixed(2)}`, cible: 'au moins la moitié de ce qu\'ils fluctuent en vrai', etat: cvS >= cvR / 2 ? 'ok' : cvS >= cvR / 4 ? 'limite' : 'echec' }];
+  const rapport = { etalon: 1, experience: 'isle-royale', monde: MONDE, date: arg('--date', new Date().toISOString().slice(0, 10)), de: an0, a: fin, ile: { capacite: K, npp: Math.round(npp), surface_km2: L.surface_km2 },
+    places: Object.fromEntries(E.taxons.map(t => [t.id, t.plan.place ?? null])), reel: IR.comptes, serie, predation, tests };
+  const S = { ok: '✓', limite: '≈', echec: '✗' }; console.log(`Isle Royale (${an0}–${fin}) :`); for (const t of tests) console.log(`  ${S[t.etat]} ${t.nom} : ${t.valeur_dite} — cible ${t.cible}`);
+  const so = arg('--sortie'); if (so) { fs.mkdirSync(path.dirname(path.resolve(so)), { recursive: true }); fs.writeFileSync(so, JSON.stringify(rapport, null, 1)); console.log('→', so); }
+  process.exit(0);
+}
 // --- la vie de l'Europe, sans joueurs ---
 let I = JSON.parse(fs.readFileSync(f, 'utf8')); if (arg('--graine') != null) I.monde.graine = +arg('--graine') >>> 0;
 if (a.includes('--sans-hommes')) delete I.monde.hommes;   // (docs/56) un monde où personne ne chasse : ce que feraient les bêtes si les hommes cessaient   // (une autre histoire : --graines)

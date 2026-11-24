@@ -1,0 +1,356 @@
+{
+ "nom": "Isle Royale",
+ "ce_que_cest": "l'île du lac Supérieur (Michigan, États-Unis) où loups et orignaux sont suivis depuis 1958 : la plus longue étude d'un prédateur et de sa proie",
+ "ile": {
+  "lat": 48,
+  "lon": -88.9,
+  "surface_km2": 544,
+  "altitude_m": 250,
+  "couvert": 0.8,
+  "type": "taiga",
+  "pays": "US",
+  "fuseau": "America/Detroit",
+  "normales": {
+   "t": [
+    -12.01,
+    -10.33,
+    -4.35,
+    2.7,
+    9.78,
+    15.03,
+    17.96,
+    17.28,
+    12.75,
+    6.06,
+    -1.07,
+    -7.78
+   ],
+   "p": [
+    57.37,
+    40.55,
+    44.84,
+    53,
+    74.38,
+    88.42,
+    89.29,
+    76.6,
+    79.43,
+    74.11,
+    55.32,
+    59.62
+   ],
+   "etp": [
+    10.1,
+    15.4,
+    32.73,
+    59.55,
+    93.08,
+    104.2,
+    113.2,
+    94.78,
+    62.13,
+    36.58,
+    19.33,
+    11.42
+   ]
+  },
+  "normales_source": "CRU TS 4.09, 1991–2020 : la moyenne des quatre cases de 0,5° qui couvrent l'île (47,75 et 48,25° N ; 89,25 et 88,75° O)"
+ },
+ "comptes": [
+  {
+   "an": 1980,
+   "orignaux": 664,
+   "loups": 50
+  },
+  {
+   "an": 1981,
+   "orignaux": 650,
+   "loups": 30
+  },
+  {
+   "an": 1982,
+   "orignaux": 700,
+   "loups": 14
+  },
+  {
+   "an": 1983,
+   "orignaux": 900,
+   "loups": 23
+  },
+  {
+   "an": 1984,
+   "orignaux": 811,
+   "loups": 24
+  },
+  {
+   "an": 1985,
+   "orignaux": 1062,
+   "loups": 22
+  },
+  {
+   "an": 1986,
+   "orignaux": 1025,
+   "loups": 20
+  },
+  {
+   "an": 1987,
+   "orignaux": 1380,
+   "loups": 16
+  },
+  {
+   "an": 1988,
+   "orignaux": 1653,
+   "loups": 12
+  },
+  {
+   "an": 1989,
+   "orignaux": 1397,
+   "loups": 11
+  },
+  {
+   "an": 1990,
+   "orignaux": 1216,
+   "loups": 15
+  },
+  {
+   "an": 1991,
+   "orignaux": 1313,
+   "loups": 12
+  },
+  {
+   "an": 1992,
+   "orignaux": 1600,
+   "loups": 12
+  },
+  {
+   "an": 1993,
+   "orignaux": 1880,
+   "loups": 13
+  },
+  {
+   "an": 1994,
+   "orignaux": 1800,
+   "loups": 15
+  },
+  {
+   "an": 1995,
+   "orignaux": 2400,
+   "loups": 16
+  },
+  {
+   "an": 1996,
+   "orignaux": 1200,
+   "loups": 22
+  },
+  {
+   "an": 1997,
+   "orignaux": 500,
+   "loups": 24
+  },
+  {
+   "an": 1998,
+   "orignaux": 700,
+   "loups": 14
+  },
+  {
+   "an": 1999,
+   "orignaux": 750,
+   "loups": 25
+  },
+  {
+   "an": 2000,
+   "orignaux": 850,
+   "loups": 29
+  },
+  {
+   "an": 2001,
+   "orignaux": 900,
+   "loups": 19
+  },
+  {
+   "an": 2002,
+   "orignaux": 1000,
+   "loups": 17
+  },
+  {
+   "an": 2003,
+   "orignaux": 900,
+   "loups": 19
+  },
+  {
+   "an": 2004,
+   "orignaux": 750,
+   "loups": 29
+  },
+  {
+   "an": 2005,
+   "orignaux": 540,
+   "loups": 30
+  },
+  {
+   "an": 2006,
+   "orignaux": 385,
+   "loups": 30
+  },
+  {
+   "an": 2007,
+   "orignaux": 450,
+   "loups": 21
+  },
+  {
+   "an": 2008,
+   "orignaux": 650,
+   "loups": 23
+  },
+  {
+   "an": 2009,
+   "orignaux": 530,
+   "loups": 24
+  },
+  {
+   "an": 2010,
+   "orignaux": 510,
+   "loups": 19
+  },
+  {
+   "an": 2011,
+   "orignaux": 515,
+   "loups": 16
+  },
+  {
+   "an": 2012,
+   "orignaux": 750,
+   "loups": 9
+  },
+  {
+   "an": 2013,
+   "orignaux": 975,
+   "loups": 8
+  },
+  {
+   "an": 2014,
+   "orignaux": 1050,
+   "loups": 9
+  },
+  {
+   "an": 2015,
+   "orignaux": 1250,
+   "loups": 3
+  },
+  {
+   "an": 2016,
+   "orignaux": 1300,
+   "loups": 2
+  },
+  {
+   "an": 2017,
+   "orignaux": 1600,
+   "loups": 2
+  },
+  {
+   "an": 2018,
+   "orignaux": 1500,
+   "loups": 2
+  },
+  {
+   "an": 2019,
+   "orignaux": 2060,
+   "loups": 15
+  },
+  {
+   "an": 2020,
+   "orignaux": 1876,
+   "loups": 14
+  },
+  {
+   "an": 2022,
+   "orignaux": 1346,
+   "loups": 28
+  },
+  {
+   "an": 2023,
+   "orignaux": 967,
+   "loups": 31
+  },
+  {
+   "an": 2024,
+   "orignaux": 840,
+   "loups": 30
+  },
+  {
+   "an": 2026,
+   "orignaux": 524,
+   "loups": 37
+  }
+ ],
+ "comptes_note": "le comptage de chaque hiver (janvier-mars) ; 2021 et 2025 n'ont pas eu de comptage",
+ "lachers": [
+  {
+   "quand": "2018-10-01",
+   "loups": 4,
+   "d_ou": "le Minnesota (Grand Portage)"
+  },
+  {
+   "quand": "2019-02-27",
+   "loups": 4,
+   "d_ou": "l'Ontario (Jostle Lake, l'île Michipicoten)"
+  },
+  {
+   "quand": "2019-03-24",
+   "loups": 7,
+   "d_ou": "l'Ontario"
+  },
+  {
+   "quand": "2019-09-10",
+   "loups": 4,
+   "d_ou": "la péninsule supérieure du Michigan"
+  }
+ ],
+ "lachers_note": "dix-neuf loups lâchés de l'automne 2018 à l'automne 2019 (le Parc national : Isle Royale Wolf Relocation) ; le jour de chaque lâcher est le milieu de sa période",
+ "predation": {
+  "part": 0.1,
+  "de": 0.06,
+  "a": 0.13,
+  "source": "« dans une année ordinaire, un orignal sur dix meurt d'une prédation ; la plupart des années, de 6 à 13 % » (le projet loups-orignaux d'Isle Royale, Michigan Technological University : la dynamique des populations)"
+ },
+ "sources": [
+  {
+   "nom": "National Park Service, Isle Royale : Wolf & Moose Populations 1980 to Today",
+   "url": "https://www.nps.gov/isro/learn/nature/wolf-moose-populations.htm",
+   "licence": "domaine public (une donnée du gouvernement fédéral des États-Unis)",
+   "usage": "le nombre de loups et d'orignaux de chaque hiver, de 1980 à 2026"
+  },
+  {
+   "nom": "CRU TS 4.09 (Climatic Research Unit, University of East Anglia), 0,5°, mensuel",
+   "url": "https://crudata.uea.ac.uk/cru/data/hrg/cru_ts_4.09/",
+   "licence": "Open Government Licence v3",
+   "usage": "les normales 1991–2020 de l'île : température, pluie, ETP"
+  },
+  {
+   "nom": "The Wolf-Moose Project, Isle Royale (Michigan Technological University) : Population Dynamics",
+   "url": "https://www.isleroyalewolf.org/population-dynamics",
+   "licence": "un fait publié, cité",
+   "usage": "la part des orignaux que les loups tuent chaque année ; la surface de l'île (544 km²)"
+  },
+  {
+   "nom": "National Park Service : Isle Royale Wolf Relocation",
+   "url": "https://www.nps.gov/articles/000/isle-royale-wolf-relocation.htm",
+   "licence": "domaine public (une donnée du gouvernement fédéral des États-Unis)",
+   "usage": "les quatre lâchers de loups de 2018 et 2019"
+  },
+  {
+   "nom": "Ecological Studies of Wolves on Isle Royale, Annual Report 2018-19 (Michigan Technological University)",
+   "url": "https://www.isleroyalewolf.org/annual-reports",
+   "licence": "un fait publié, cité",
+   "usage": "le taux de prédation par loup en hiver, en moyenne de 1971 à 2011 (0,7 orignal par loup et par mois)"
+  }
+ ],
+ "kill": {
+  "moyenne": 0.7,
+  "se": 0.04,
+  "de": 1971,
+  "a": 2011,
+  "unite": "orignaux par loup et par mois, en hiver (la période du comptage)",
+  "source": "« la moyenne de long terme, 0,7 (± 0,04) entre 1971 et 2011 » : Ecological Studies of Wolves on Isle Royale, Annual Report 2018-19 (Michigan Technological University)"
+ }
+}

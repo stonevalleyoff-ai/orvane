@@ -175,6 +175,10 @@ const REGLES = {
   // charogne (plan.charogne : le vautour, le milan, le glouton, les corvidés). Une proie de plus, qu'on ne tue pas. 0 : les morts ne
   // nourrissent personne (les mondes d'Orvane)
   charognes: 0,
+  // (docs/57) un monde réel : la plus grosse proie d'un chasseur en meute (plan.meute), rapportée à la masse de la meute. 1,5 : comme un
+  // chasseur seul (les mondes d'Orvane). À 1,5, une meute de six loups n'abattait rien de plus de 263 kg, ni l'orignal (351 kg), sa proie
+  // à Isle Royale comme en Scandinavie
+  meute_proie: 1.5,
   petites_proies: false      // (docs/52) un monde réel : un mangeur d'insectes prend les insectes, si petits soient-ils (plus haut, appetence)
 };
 // (docs/52) le pas de temps : la part d'un cycle de référence (une « tranche de vie » d'environ 120 jours, celle sur laquelle le
@@ -433,7 +437,7 @@ function appetence(pred, proie) {
   // (et dans l'eau, un chasseur qui nage avale des proies qui nagent, cent fois plus petites que lui : le thon le hareng, le phoque le cabillaud)
   const menu = REGLES.petites_proies && r1 < .02 && (((pred.diete?.insectes || 0) > 0 && (proie.corps?.forme === 'hexapode' || (proie.masse_kg || 1) <= .02))
     || ((pred.locomotion || []).includes('nage') && (proie.locomotion || []).includes('nage') && r1 >= 2e-4));
-  if (!menu && ((pred.meute > 1 ? (proie.masse_kg || 1) / (pred.masse_kg || 1) : rap) < .02 || rap > 1.5)) return 0;
+  if (!menu && ((pred.meute > 1 ? (proie.masse_kg || 1) / (pred.masse_kg || 1) : rap) < .02 || rap > (pred.meute > 1 ? REGLES.meute_proie ?? 1.5 : 1.5))) return 0;   // (docs/57 : la meute et sa plus grosse proie)
   const lg = Math.log10(rap) - Math.log10(.3); let f = menu ? .8 : Math.exp(-(lg * lg) / .5);
   const vp = (pred.vitesse_rel || 4) * (pred.taille_m || 1), vq = (proie.vitesse_rel || 4) * (proie.taille_m || 1);
   f *= clamp(Math.sqrt(vp / Math.max(.01, vq)), .6, 1.4);

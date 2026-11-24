@@ -121,7 +121,7 @@ Object.assign(Orvane.REGLES, { mutation: .01, nouveau_trait: .08, menace: 20, ma
 // le recouvrement des quêtes).
 // Dans Orvane, les carnivores faisaient naître 32 % de ce qu'ils mangent, dix fois une vraie bête à sang chaud : la genèse suivante d'Orvane
 // part de celles-ci. Sans l'option, la genèse d'avant
-const ECOLOGIE_TERRE = arg('--ecologie', null) === 'terre' ? { besoin: 6, conversion: .06, demi_satiete: 5, petites_proies: true, concurrence_masse: .7, domination: .5, viande_part: true, recouvrement: true } : {};
+const ECOLOGIE_TERRE = arg('--ecologie', null) === 'terre' ? { besoin: 6, conversion: .06, demi_satiete: 5, petites_proies: true, concurrence_masse: .7, domination: .5, viande_part: true, recouvrement: true, meute_proie: 2.5 } : {};
 const reglesMonde = { cadavres: .5, ...ECOLOGIE_TERRE, ...(arg('--regles', null) ? JSON.parse(arg('--regles', '{}')) : {}) };   // gardées par le monde (monde.regles) : elles valent ensuite à chacun de ses cycles
 if (reglesMonde) for (const [k, v] of Object.entries(reglesMonde)) { const b = Orvane.REGLES[k]; Orvane.REGLES[k] = v && typeof v === 'object' && !Array.isArray(v) && b && typeof b === 'object' && !Array.isArray(b) ? { ...b, ...v } : v; }   // (d'un niveau, comme le moteur : { derive: { tolerance: .3 } } garde le reste de la dérive)
 const rarete = +arg('--rarete', .0005);   // une lignée installée qui reste sous cette part de la BIOMASSE du monde est rayée : la place se libère
