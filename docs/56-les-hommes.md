@@ -73,11 +73,42 @@ L'assemblage cale désormais les effectifs comptés en équilibre **avec** la ch
 
 Un brouteur chassé reçoit ainsi la place de ce que son milieu nourrit vraiment. `--sans-hommes` assemble un monde où personne ne chasse.
 
+L'Europe recalée avec ses hommes (un jour, puis trois passes d'un an, depuis l'amorce du recouvrement des quêtes, docs/53) tient aussi bien qu'avant : 90 % des espèces à moins de ×1,33 d'une année à l'autre. Ses ongulés chassés y trouvent à peu près deux fois plus de place :
+
+| | la place sans la chasse | avec |
+| --- | --- | --- |
+| le cerf élaphe | 0,21 | 0,58 (×2,7) |
+| le daim | 0,14 | 0,32 (×2,3) |
+| le sanglier | 0,056 | 0,107 (×1,9) |
+| le chevreuil | 0,086 | 0,156 (×1,8) |
+| l'isard | 0,13 | 0,24 (×1,8) |
+| le chamois | 0,12 | 0,18 (×1,5) |
+| l'élan | 0,31 | 0,44 (×1,4) |
+| le mouflon | 0,35 | 0,44 (×1,25) |
+| le cerf sika | 0,49 | 0,58 (×1,2) |
+
+La chasse cachait près de la moitié de ce que leur milieu nourrit. Les effectifs sont les mêmes, mais ils sont désormais tenus sous ce que le milieu permet : ce que la chasse et les prédateurs prennent, les naissances le rendent.
+
 ## Dans l'étalon
 
 L'étalon fait vivre l'Europe telle que l'assemblage la donne, avec ses hommes. `--sans-hommes` les retire : ce que feraient les bêtes si les hommes cessaient. Les expériences du loup et du chacal mettent leurs proies à leur équilibre elles-mêmes, sans chasse.
 
 **La chasse** (un test de plus) : ce que la chasse du monde prend en un an, rapporté aux tableaux de chasse réels, dans les pays où l'espèce est posée. La cible : au moins la moitié, en médiane sur les espèces chassées.
+
+L'Europe recalée avec ses hommes, deux années sur trois graines (qui s'accordent) : **10 ✓, 2 ≈, 0 ✗**. Le test de la chasse passe de justesse : le monde prend 54 % des tableaux de chasse en médiane.
+
+| | ce que le monde prend des tableaux de chasse |
+| --- | --- |
+| le mouflon | 92 % |
+| le chamois et l'isard | 65 % |
+| le sanglier | 63 % |
+| le chevreuil | 54 % |
+| l'élan | 32 % |
+| le cerf sika | 27 % |
+| le cerf élaphe | 22 % |
+| le daim | 14 % |
+
+Ce qui manque est ce que les bornes retiennent : là où l'assemblage pose trop peu de bêtes, la chasse ne peut prendre ce qu'elle prend en vrai. Le reste de l'étalon ne bouge presque pas : la stabilité (98 %), les naissances, les cigognes, les prédateurs (×1,6 à ×1,8 de la loi), les grands carnivores (le loup +10,9 % par an, le lynx pardelle +16 à +17 %, le glouton −2,1 à −2,5 %), le rendement des chasseurs (1,5 %), la diversité, Damuth. Quatre ou cinq espèces sont au bord (les syrphes, les méduses, les papillons, les araignées, les carabes, de ×0,32 à ×2,2), contre trois sans les hommes.
 
 ```
 node bancs/hommes.js       # la saison, le moteur, l'assemblage : quelques secondes
