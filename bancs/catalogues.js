@@ -66,9 +66,10 @@ let W;
 { W = Flore.eveiller(L).inst; const P = W.taxons.filter(t => t.plan.regime === 'vegetal'), ou = b => P.filter(t => t.populations.some(p => p.biome === b)).map(t => t.plan.forme);
   verif(ou('cavernes-luisantes').includes('champignon') && ou('mer-de-brume').length && ou('foret-de-cristal').includes('arbre') && ou('lac-d-argent').includes('algue'),
     `${P.length} lignées de plantes : des arbres dans la forêt de cristal, des champignons dans les cavernes, des lichens et des herbes dans la mer de brume (${ou('mer-de-brume').join(', ')}), des algues dans le lac`);
-  const h = { masse_kg: 10, taille_m: .5, locomotion: ['marche'] };
-  verif(Flore.resistances(h, ['peau-de-cristal']).epineux === .7 && Flore.resistances(h, ['mangeur-de-spores']).toxique === .8 && Flore.atteinte(h, ['voile-de-brume'], 'arbre') === 1,
-    'ses traits devant les plantes : la peau de cristal supporte 70 % des épines, le mangeur de spores 80 % des toxines, le voile de brume atteint les arbres');
+  const h = { masse_kg: 10, taille_m: .5, locomotion: ['marche'] }, FW = Flore.pour(W);   // (docs/59 : la flore aux traits de Lumen ; celle du module n'a que ceux du moteur)
+  verif(FW.resistances(h, ['peau-de-cristal']).epineux === .7 && FW.resistances(h, ['mangeur-de-spores']).toxique === .8 && FW.atteinte(h, ['voile-de-brume'], 'arbre') === 1
+    && Flore.resistances(h, ['peau-de-cristal']).epineux === 0 && Flore.atteinte(h, ['voile-de-brume'], 'arbre') < 1,
+    'ses traits devant les plantes : la peau de cristal supporte 70 % des épines, le mangeur de spores 80 % des toxines, le voile de brume atteint les arbres (la flore de Lumen) ; la flore du module, aux traits du moteur, ne les connaît pas');
   let X = W; for (let k = 0; k < 5; k++) X = Orvane.cycle(X, {}); W = X;
   verif(X.taxons.some(t => t.populations.some(p => p.nourriture != null)), 'les brouteurs de Lumen se nourrissent des plantes de Lumen, cycle après cycle');
 }

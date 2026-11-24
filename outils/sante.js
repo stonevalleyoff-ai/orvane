@@ -14,7 +14,8 @@ const Climat = require('../moteur/climat.js'), Orvane = require('../moteur/orvan
 
 const SAISONS = ['hiver', 'printemps', 'été', 'automne'];
 const saisonDe = (n, annee) => SAISONS[Math.floor((((n % annee) / annee) + .125) % 1 * 4)];
-const productionDe = (n, annee) => +(1 + Orvane.REGLES.saisons.capacite * -Math.cos(2 * Math.PI * ((n % annee) / annee))).toFixed(3);
+// (la production de la saison, comme le cycle la calcule : avec les saisons de son monde, Orvane.contexte(inst).R.saisons, docs/59)
+const productionDe = (n, annee, saisons = Orvane.REGLES.saisons) => +(1 + saisons.capacite * -Math.cos(2 * Math.PI * ((n % annee) / annee))).toFixed(3);
 const r = (x, d = 3) => +Number(x).toFixed(d);
 const fr = (x, d = 3) => (x < 0 ? '−' : '') + Math.abs(+Number(x).toFixed(d)).toLocaleString('fr-FR', { maximumFractionDigits: d });   // (un nombre écrit à la française, avec un vrai signe moins)
 const somme = a => a.reduce((s, x) => s + x, 0);
@@ -39,7 +40,7 @@ const SEUILS = {
 function lire(dossier, f, defaut) { try { return JSON.parse(fs.readFileSync(path.join(dossier, f), 'utf8')); } catch (e) { if (defaut !== undefined) return defaut; throw e; } }
 
 function mesurer({ I, H = [], T = {}, J = [], P = null, C = null, precedent = null, date = null }) {
-  const n = I.cycle.n, annee = I.monde?.annee || P?.monde?.annee || null, duree = dureeDe(P?.monde?.cycle), t0 = Date.parse(I.cycle.date);
+  const n = I.cycle.n, annee = I.monde?.annee || P?.monde?.annee || null, duree = dureeDe(P?.monde?.cycle), t0 = Date.parse(I.cycle.date), saisons = Orvane.contexte(I).R.saisons;
   const dateDe = k => new Date(t0 + (k - n) * duree).toISOString();
   const info = new Map(I.taxons.map(t => [t.id, t]));
   const animaux = I.taxons.filter(t => !t.eteint && t.plan?.regime !== 'vegetal' && t.plan?.regime !== 'synthetique');
@@ -149,9 +150,9 @@ function mesurer({ I, H = [], T = {}, J = [], P = null, C = null, precedent = nu
   const calendrier = [];
   if (annee) { const q4 = annee / 4;
     for (let k = n + 1; k <= n + annee && calendrier.length < 6; k++) { const ph = (k % annee) / annee, prev = ((k - 1) % annee) / annee;
-      if (saisonDe(k, annee) !== saisonDe(k - 1, annee)) calendrier.push({ cycle: k, date: dateDe(k), quoi: `début de ${saisonDe(k, annee) === 'été' ? "l'été" : saisonDe(k, annee) === 'automne' ? "l'automne" : saisonDe(k, annee) === 'hiver' ? "l'hiver" : 'printemps'}`.replace('début de printemps', 'début du printemps'), production: productionDe(k, annee) });
-      if (prev < .5 && ph >= .5) calendrier.push({ cycle: k, date: dateDe(k), quoi: 'production au plus haut', production: productionDe(k, annee) });
-      if (ph === 0) calendrier.push({ cycle: k, date: dateDe(k), quoi: 'production au plus bas, une année nouvelle', production: productionDe(k, annee) }); }
+      if (saisonDe(k, annee) !== saisonDe(k - 1, annee)) calendrier.push({ cycle: k, date: dateDe(k), quoi: `début de ${saisonDe(k, annee) === 'été' ? "l'été" : saisonDe(k, annee) === 'automne' ? "l'automne" : saisonDe(k, annee) === 'hiver' ? "l'hiver" : 'printemps'}`.replace('début de printemps', 'début du printemps'), production: productionDe(k, annee, saisons) });
+      if (prev < .5 && ph >= .5) calendrier.push({ cycle: k, date: dateDe(k), quoi: 'production au plus haut', production: productionDe(k, annee, saisons) });
+      if (ph === 0) calendrier.push({ cycle: k, date: dateDe(k), quoi: 'production au plus bas, une année nouvelle', production: productionDe(k, annee, saisons) }); }
     calendrier.sort((a, b) => a.cycle - b.cycle); void q4; }
   if (I.monde?.mere?.prochaine > n) calendrier.push({ cycle: I.monde.mere.prochaine, date: dateDe(I.monde.mere.prochaine), quoi: 'la Mère peut concevoir une machine' });
   calendrier.sort((a, b) => a.cycle - b.cycle);

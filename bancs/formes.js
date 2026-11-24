@@ -55,8 +55,7 @@ console.log('3. Les formes');
   verif(ver.segmente > 0 && !ver.radiaire && !ver.tentaculaire && mer.radiaire > 0 && mer.tentaculaire > 0 && !mer.segmente && !lourd.radiaire && lourd.tentaculaire > 0 && Math.min(...ver._p) >= 10 && Math.max(...ver._p) <= 40,
     `sur 3 000 dérives de corps, d'un ver qui fouit : ${ver.segmente} corps segmentés (de ${Math.min(...ver._p)} à ${Math.max(...ver._p)} pattes), aucun rayonné ; d'un poisson de 500 g : ${mer.radiaire} rayonnés, ${mer.tentaculaire} à tentacules, aucun segmenté ; d'un poisson de 20 kg : aucun rayonné`);
   // dans le monde : des séparations forcées, des corps qui dérivent fort
-  const sep = clone(Orvane.REGLES.separation), co = Orvane.REGLES.derive.corps; Object.assign(Orvane.REGLES.separation, { cycles: 0, distance: 0, chance: 1 }); Orvane.REGLES.derive.corps = 6;
-  let X; try { X = Orvane.cycle(W, {}); } finally { Object.assign(Orvane.REGLES.separation, sep); Orvane.REGLES.derive.corps = co; }
+  const X = Orvane.cycle(W, {}, { regles: { separation: { cycles: 0, distance: 0, chance: 1 }, derive: { corps: 6 } } });   // (docs/59 : données au cycle)
   const ev = X.evenements.filter(e => /forme que le monde n'avait jamais vue/.test(e.detail || '')), neufs = X.taxons.filter(t => Fo.FORMES[t.plan.corps?.forme]);
   verif(ev.length > 0 && neufs.length > 0 && neufs.every(t => { const F = Fo.FORMES[t.plan.corps.forme]; return F.loco.some(l => t.plan.locomotion.includes(l)); }),
     `des séparations forcées, des corps qui dérivent fort : ${neufs.length} lignées naissent d'une forme nouvelle (« ${ev[0]?.detail.split(', ').slice(-2).join(', ')} »), toutes là où elle peut naître ; ${(Corps.etendre({ formes: Fo.FORMES }), Corps.decrire(neufs[0].plan.corps).split(',')[0])}`); Corps.etendre(null);

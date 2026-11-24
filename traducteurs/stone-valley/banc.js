@@ -247,8 +247,8 @@ const sp = id => SPEC.find(s => s.id === id);
     // de la tourbière (430 crapauds), trente cycles, avec et sans choix, sur trois graines : sur cent cycles, la dérive d'une
     // si petite population l'emporte (une histoire de plus ou de moins, et le résultat s'inverse)
     const pD = I => I.taxons.find(x => x.id === 'crapaud').populations.find(p => p.biome === 'tourbiere').alleles['robe-doree'];
-    const essai = (at, d) => { Orvane.REGLES.sexe.attrait = at; let J = { ...gen0, monde: { ...gen0.monde, graine: gen0.monde.graine + d } };
-      for (let k = 0; k < 30; k++) J = Orvane.cycle(J, {}); Orvane.REGLES.sexe.attrait = 1; return pD(J); };
+    const essai = (at, d) => { let J = { ...gen0, monde: { ...gen0.monde, graine: gen0.monde.graine + d } }; const opt = { regles: { sexe: { attrait: at } } };   // (docs/59 : l'attrait, donné au cycle)
+      for (let k = 0; k < 30; k++) J = Orvane.cycle(J, {}, opt); return pD(J); };
     const paires = [0, 1, 2].map(d => [essai(0, d), essai(1, d)]), p0 = pD(gen0), moy = k => paires.reduce((a, x) => a + x[k], 0) / 3;
     verif(paires.every(([sans, avec]) => avec > sans * 1.004), `choix du partenaire : à la tourbière, l'allèle de la robe dorée passe de ${pct(p0)} à ${pct(moy(1))} en 30 cycles, ${pct(moy(0))} si les partenaires ne choisissent pas ; plus haut avec le choix sur chacune des trois graines`);
     // dans le jeu : un petit tient de sa mère, et les taux d'ensemble ne bougent pas

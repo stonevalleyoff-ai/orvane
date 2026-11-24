@@ -11,7 +11,7 @@ moteur/genese.js      la genèse : des biomes, des ancêtres très simples, des 
 moteur/fusion.js      la fusion : verser un monde dans un autre, biome par biome (docs/14), ou le relier par quelques ponts, comme un continent (docs/23)
 moteur/parcelles.js   les parcelles : chaque biome découpé en parcelles voisines, et la vue par biome que lisent les jeux (docs/15)
 moteur/synthetique.js la vie synthétique : la Mère, ses machines, leur énergie, leur régulation, leur défense (docs/16)
-moteur/flore.js       la flore : les plantes, ce que chaque brouteur atteint et supporte, la coévolution des défenses, la pollinisation (docs/17, 18)
+moteur/flore.js       la flore : les plantes, ce que chaque brouteur atteint et supporte, la coévolution des défenses, la pollinisation (docs/17, 18) ; une instance par cycle et par éveil, aux traits de son monde (docs/59)
 moteur/pathogenes.js  les souches : des maladies qui circulent, sautent aux lignées apparentées, immunisent (docs/18)
 moteur/milieu.js      le milieu transformé : le pâturage, les terriers, les barrages, et ce que les jeux font aux lieux (docs/22)
 moteur/ponte.js       pondre ou mettre bas : les œufs, le froid, les nids pillés, les mangeurs d'œufs (docs/25)

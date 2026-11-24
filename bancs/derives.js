@@ -45,9 +45,9 @@ console.log('2. Les régimes');
     `un pas à la fois : herbivore → omnivore ${fx(q('herbivore>omnivore') * 100, 1)} % des séparations, omnivore → carnivore ${fx(q('omnivore>carnivore') * 100, 1)} %, → herbivore ${fx(q('omnivore>herbivore') * 100, 1)} %, carnivore → omnivore ${fx(q('carnivore>omnivore') * 100, 1)} % ; jamais d'herbivore à carnivore ; un filtreur garde le sien`);
   verif(carn && carn.temperament > .5 && carn.perception > .5 && carn.vitesse_rel > 2, `devenu carnivore, il gagne en audace (${carn?.temperament}), en sens (${carn?.perception}) et en vitesse (${carn?.vitesse_rel})`);
   // les séparations forcées (le monde en fait peu), les taux de dérive forcés : des filles changent de régime ; les mêmes, sans dérives, aucune
-  const sep = clone(Orvane.REGLES.separation), forcer = f => { Object.assign(Orvane.REGLES.separation, { cycles: 0, distance: 0, chance: 1 }); try { return f(); } finally { Object.assign(Orvane.REGLES.separation, sep); } };
+  const forcees = { regles: { separation: { cycles: 0, distance: 0, chance: 1 } } };   // (docs/59 : les séparations forcées, données au cycle)
   const filles = X => X.taxons.filter(t => t.apparu === X.cycle.n && t.parent && t.plan.regime !== 'vegetal').map(t => [t, X.taxons.find(x => x.id === t.parent)]);
-  const X = forcer(() => avec({ regime: { 'herbivore>omnivore': .5, 'omnivore>herbivore': .25, 'omnivore>carnivore': .25, 'carnivore>omnivore': .5 } }, () => Orvane.cycle(W, {}))), Y = forcer(() => Orvane.cycle(V, {}));
+  const X = avec({ regime: { 'herbivore>omnivore': .5, 'omnivore>herbivore': .25, 'omnivore>carnivore': .25, 'carnivore>omnivore': .5 } }, () => Orvane.cycle(W, {}, forcees)), Y = Orvane.cycle(V, {}, forcees);
   const fx1 = filles(X), ch = fx1.filter(([f, p]) => f.plan.regime !== p.plan.regime), ex = ch[0], fy = filles(Y);
   verif(ch.length > 0 && fy.length && fy.every(([f, p]) => f.plan.regime === p.plan.regime), `${fx1.length} séparations d'un coup (forcées), les taux de dérive forcés : ${ch.length} filles changent de régime (${ex?.[0].nom}, ${ex?.[0].plan.regime}, fille d'une lignée ${ex?.[1].plan.regime}) ; les mêmes séparations sans dérives : aucune`);
 }

@@ -52,9 +52,10 @@ console.log('3. Les mains servent');
 
 console.log('4. Le monde d\'Orvane qui se sépare vite, le contrat');
 { // le monde d'Orvane, avec les règles de séparation de la genèse (des lignées naissent dix fois plus souvent), pendant 100 cycles
-  const Orvane = require(racine('moteur/orvane.js')), R0 = JSON.parse(JSON.stringify(Orvane.REGLES)), N = court ? 60 : 100; let I = lireJ('mondes/orvane/etat.json');
-  Object.assign(Orvane.REGLES, { separation: { ...R0.separation, cycles: 15, effectif: 40, distance: .8, chance: .03 }, derive: { ...R0.derive, corps: 2.5 } });
-  try { for (let k = 0; k < N; k++) I = Orvane.cycle(I, {}, { duree_ms: 0 }); } finally { Object.assign(Orvane.REGLES, R0); }
+  // (docs/59 : ces règles sont données à chaque cycle, opt.regles ; celles du moteur n'y changent pas)
+  const Orvane = require(racine('moteur/orvane.js')), N = court ? 60 : 100; let I = lireJ('mondes/orvane/etat.json');
+  const opt = { duree_ms: 0, regles: { separation: { cycles: 15, effectif: 40, distance: .8, chance: .03 }, derive: { corps: 2.5 } } };
+  for (let k = 0; k < N; k++) I = Orvane.cycle(I, {}, opt);
   const V = I.taxons.filter(t => !t.eteint), sim = V.filter(t => mains(CORPS.normaliser(t.plan.corps))), ou = t => t.populations.slice().sort((a, b) => b.effectif - a.effectif)[0].biome;
   const n0 = lireJ('mondes/orvane/etat.json').cycle.n, nes = V.filter(t => t.apparu > n0).length, sec = sim.filter(t => ['desert', 'desert-froid', 'steppe'].includes(ou(t))).length;
   console.log(`     ${nes} lignées nées en ${N} cycles ; à mains : ${sim.map(t => `${t.nom} (${t.plan.masse_kg} kg, ${t.plan.regime}, ${CORPS.decrire(t.plan.corps).split(',')[0]})`).join(' ; ') || 'aucune'}`);

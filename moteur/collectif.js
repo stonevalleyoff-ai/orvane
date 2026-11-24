@@ -23,8 +23,8 @@ const REGLES = {
   seuils: { famille: .2, groupe: .45 },          // sociabilité sous laquelle on vit seul ; au-delà de laquelle on vit en groupe
   echelle_sociabilite: .08,                      // ce que vaut un écart-type de sociabilité génétique (catalogue : sociabilite.echelle)
   taille: { meute: 6, troupeau: 30, bande: 14, banc: 200, volee: 40, essaim: 900 },   // la taille habituelle d'un groupe moyen
-  // (la route de l'hiver, ses seuils et ses fenêtres sont ceux du moteur : Orvane.REGLES.hivernage, docs/38 — un monde qui a
-  // l'hivernage actif voit ses bêtes partir vraiment ; ici, on le dit)
+  // (la route de l'hiver, ses seuils et ses fenêtres sont ceux du cycle du monde : Orvane.contexte(inst).R.hivernage, docs/38 et 59 — un
+  // monde qui a l'hivernage actif voit ses bêtes partir vraiment ; ici, on le dit)
 };
 const TERRE = ['marche', 'course', 'saut', 'reptation', 'fouissage', 'grimpe'];
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
@@ -79,10 +79,11 @@ function groupeDe(t, p, b, inst) {
 // --- la migration d'une population ---
 const phaseDe = inst => inst?.cycle?.saison?.phase ?? (inst?.monde?.annee ? ((inst.cycle?.n || 0) % inst.monde.annee) / inst.monde.annee : null);
 const dans = (x, [a, b]) => a <= b ? x >= a && x < b : x >= a || x < b;
-function routeDe(t, p, b, inst, biomes) {
+// (docs/59) C : le contexte du monde (Orvane.contexte(inst)) ; la route se calcule comme dans son cycle, avec ses seuils, ses saisons, ses axes
+function routeDe(t, p, b, inst, biomes, C = Orvane?.contexte ? Orvane.contexte(inst) : undefined) {
   if (!Orvane?.routeHiver) return null;
-  const H = { ...Orvane.REGLES.hivernage, ...(inst?.monde?.regles?.hivernage || {}) };   // (les seuils d'un monde qui les règle : ceux de son cycle)
-  const r = Orvane.routeHiver(t.plan || {}, b, id => biomes.get(id), sociabiliteDe(t, p), savoir(p, 'routes'), H); if (!r) return null;
+  const H = C ? C.R.hivernage : { ...Orvane.REGLES.hivernage, ...(inst?.monde?.regles?.hivernage || {}) };   // (les seuils d'un monde qui les règle : ceux de son cycle)
+  const r = Orvane.routeHiver(t.plan || {}, b, id => biomes.get(id), sociabiliteDe(t, p), savoir(p, 'routes'), H, undefined, C); if (!r) return null;
   const ph = phaseDe(inst), F = H.fenetres;
   const etat = ph == null ? null : dans(ph, F.depart) ? 'au depart' : dans(ph, F.partie) ? 'partie' : dans(ph, F.retour) ? 'au retour' : 'au pays';
   return { vers: r.vers.id, vers_nom: r.vers.nom || r.vers.id, saison: 'hiver', part: +r.part.toFixed(3), depart: F.depart[0], retour: F.retour[1], ...(etat ? { etat } : {}),
@@ -103,10 +104,11 @@ function eveiller(inst, opt = {}) {
 function decrire(inst, opt = {}) {
   if (!inst?.monde?.collectif && !opt.forcer) return inst;
   const biomes = new Map((inst.biomes || []).map(b => [b.id, b])), visiteurs = {}, reels = (inst.taxons || []).some(t => t.populations?.some(p => p.hivernants));
+  const C = Orvane?.contexte ? Orvane.contexte(inst) : undefined;   // (docs/59 : le contexte du monde, une fois)
   const taxons = (inst.taxons || []).map(t => {
     if (!estAnimal(t) || t.eteint) return t;
     const populations = (t.populations || []).map(p => { if (!(p.effectif > 0)) return p; const b = biomes.get(p.biome) || biomes.get(typeDe(p.biome));
-      const q = { ...p, groupe: groupeDe(t, p, b, inst) }, r = routeDe(t, p, b, inst, biomes);
+      const q = { ...p, groupe: groupeDe(t, p, b, inst) }, r = routeDe(t, p, b, inst, biomes, C);
       if (r) { q.migration = r; if (r.etat === 'partie' && !reels) (visiteurs[r.vers] ||= []).push({ taxon: t.id, de: p.biome, effectif: Math.round(p.effectif * r.part), forme: q.groupe.forme }); }
       else delete q.migration;
       for (const [de, h] of Object.entries(p.hivernants || {})) { const e = Math.round(p.effectif * h); if (e >= 1) (visiteurs[p.biome] ||= []).push({ taxon: t.id, de, effectif: e, forme: q.groupe.forme }); }   // (docs/38) ceux qui sont là

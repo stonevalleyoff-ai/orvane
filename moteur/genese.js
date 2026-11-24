@@ -106,12 +106,13 @@ let inst = { orvane: Orvane.CONTRAT, monde: { id: 'genese', graine, nom, annee: 
   biomes, catalogue: { version: '0.1', traits: {}, ...(catMonde ? { monde: catMonde } : {}) }, taxons, evenements: [] };
 
 // --- l'évolution accélérée ---
-const R0 = JSON.parse(JSON.stringify(Orvane.REGLES));
+// (docs/59) les règles de la genèse : la genèse les donne à chacun de ses cycles (Orvane.cycle, opt.regles), par-dessus celles du moteur ;
+// les règles par défaut du moteur (Orvane.REGLES) n'y changent pas
 const maxTaxons = +arg('--lignees', 100);
 // (les règles de séparation complètent celles du moteur, sans les remplacer : le flux de gènes et l'écart génétique en font
 // partie depuis docs/10 — sans eux, plus rien ne se séparait)
-Object.assign(Orvane.REGLES, { mutation: .01, nouveau_trait: .08, menace: 20, max_taxons: maxTaxons, separation: { ...R0.separation, cycles: 15, effectif: 40, distance: .8, chance: .03 },
-  derive: { masse: [.4, 3], regime: .25, locomotion: .3, activite: .2, corps: 2.5 } });   // corps : la silhouette dérive deux fois et demie plus vite
+const REGLES_GENESE = { mutation: .01, nouveau_trait: .08, menace: 20, max_taxons: maxTaxons, separation: { ...Orvane.REGLES.separation, cycles: 15, effectif: 40, distance: .8, chance: .03 },
+  derive: { masse: [.4, 3], regime: .25, locomotion: .3, activite: .2, corps: 2.5 } };   // corps : la silhouette dérive deux fois et demie plus vite
 // --regles '{"cle": valeur}' : des règles du moteur propres à ce monde
 // (6 novembre) les charognards vivent des morts du lieu (REGLES.cadavres, docs/13), et le monde garde la règle. Par défaut, la moitié
 // de ces morts les nourrit : sur deux graines, 3 000 cycles, ils tiennent (11 à 13 lignées) et les carnivores gardent leurs lignées ;
@@ -123,7 +124,8 @@ Object.assign(Orvane.REGLES, { mutation: .01, nouveau_trait: .08, menace: 20, ma
 // part de celles-ci. Sans l'option, la genèse d'avant
 const ECOLOGIE_TERRE = arg('--ecologie', null) === 'terre' ? { besoin: 20.6, conversion: .06, demi_satiete: 5, petites_proies: true, concurrence_masse: .7, domination: .5, viande_part: true, recouvrement: true, meute_proie: 2.5 } : {};
 const reglesMonde = { cadavres: .5, ...ECOLOGIE_TERRE, ...(arg('--regles', null) ? JSON.parse(arg('--regles', '{}')) : {}) };   // gardées par le monde (monde.regles) : elles valent ensuite à chacun de ses cycles
-if (reglesMonde) for (const [k, v] of Object.entries(reglesMonde)) { const b = Orvane.REGLES[k]; Orvane.REGLES[k] = v && typeof v === 'object' && !Array.isArray(v) && b && typeof b === 'object' && !Array.isArray(b) ? { ...b, ...v } : v; }   // (d'un niveau, comme le moteur : { derive: { tolerance: .3 } } garde le reste de la dérive)
+// (le temps de la genèse, elles s'ajoutent aux siennes, d'un niveau, comme le moteur : { derive: { tolerance: .3 } } garde le reste de la dérive)
+if (reglesMonde) for (const [k, v] of Object.entries(reglesMonde)) { const b = k in REGLES_GENESE ? REGLES_GENESE[k] : Orvane.REGLES[k]; REGLES_GENESE[k] = v && typeof v === 'object' && !Array.isArray(v) && b && typeof b === 'object' && !Array.isArray(b) ? { ...b, ...v } : v; }
 const rarete = +arg('--rarete', .0005);   // une lignée installée qui reste sous cette part de la BIOMASSE du monde est rayée : la place se libère
 // (la rareté se juge à l'étage de la chaîne : un prédateur ne pèse naturellement qu'un dixième de ses proies — Lindeman)
 const ETAGE = { carnivore: +arg('--etage', 10), omnivore: 2, ...(arg('--etage-detritivore', null) != null ? { detritivore: +arg('--etage-detritivore') } : {}) };
@@ -147,7 +149,7 @@ const point = +arg('--point', 200), reprise = arg('--reprise', null), fichierRep
 let PARENTS = new Map();
 if (reprise) { const r = JSON.parse(fs.readFileSync(reprise, 'utf8')); inst = r.inst; bilan = r.bilan; vivantsMax = r.vivantsMax; k0 = r.k; PARENTS = new Map(r.parents || []); console.log(`reprise au cycle ${k0}`); }
 for (let k = k0; k < cycles; k++) {
-  inst = Orvane.cycle(inst, {}, { duree_ms: 0 });
+  inst = Orvane.cycle(inst, {}, { duree_ms: 0, regles: REGLES_GENESE });
   for (const t of inst.taxons) if (!PARENTS.has(t.id)) PARENTS.set(t.id, t.parent ?? null);
   for (const e of inst.evenements) if (e.type in bilan) bilan[e.type]++;
   if ((k + 1) % 25 === 0) { const total = inst.taxons.reduce((s, t) => s + (t.eteint ? 0 : biomasseDe(t)), 0), parLieu = {};
@@ -160,7 +162,6 @@ for (let k = k0; k < cycles; k++) {
   if ((k + 1) % Math.max(1, Math.round(cycles / 10)) === 0) console.log(`c${k + 1} · ${vivants} lignées vivantes · ${bilan.separation} séparations, ${bilan.extinction} extinctions, ${bilan.nouveau_trait} traits apparus`);
 }
 if (TRACE) console.log('trace', JSON.stringify({ nes: TRACE.nes, eteints: TRACE.fin, rayes_pour_rarete: TRACE.rarete }));
-Object.assign(Orvane.REGLES, R0);
 
 // --- les noms : une syllabe ou trois, et une épithète qui dit ce qu'elle est et d'où elle vient ---
 let g = (graine ^ 0x5eed) >>> 0; const R = () => { g = (Math.imul(g, 1664525) + 1013904223) >>> 0; return g / 4294967296; };

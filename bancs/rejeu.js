@@ -7,7 +7,8 @@
 //  3. le cycle hébergé (hebergement/cycle.js) écrit son journal, et un cycle se rejoue au bit près depuis l'état d'avant
 //     (outils/rejouer.js) ; un état touché, ou d'autres pressions, ne passent pas ;
 //  4. la référence (outils/reference.js) : ce qu'est un monde, mesuré, et son cycle suivant rejoué dans deux processus ;
-//  5. le contexte explicite : deux mondes entrelacés, chacun le même que seul ; le cycle ne touche à rien de global.
+//  5. le contexte explicite : deux mondes entrelacés, chacun le même que seul ; le cycle ne touche à rien de global (le corps, la mémoire
+//     et la flore d'un monde sont dans son contexte) ; les règles d'un cycle (opt.regles), sans toucher à celles du moteur.
 //   node bancs/rejeu.js [--court]      (sans --court : aussi le monde d'Orvane, d'un processus à l'autre)
 'use strict';
 const fs = require('fs'), path = require('path'), { execFileSync } = require('child_process');
@@ -136,6 +137,27 @@ console.log('\n5. Le contexte explicite (moteur/orvane.js, contexte)');
     verif(n.etendre === 0 && n.regler === 0 && JSON.stringify(Corps.catalogueOrganes()) === cat0 && JSON.stringify(Memoire.REGLES) === reg0 && !!W.catalogue?.organes?.lueur
       && Cw.CORPS !== Corps && !!Cw.CORPS.catalogueOrganes().lueur && !Corps.catalogueOrganes().lueur && Cw.MEM !== Memoire && Memoire.REGLES.pas !== .2,
       `le corps et la mémoire d'un monde sont dans son contexte : deux cycles d'un monde qui a les siens (un organe, des règles de mémoire) n'étendent ni ne règlent rien de global (etendre ×${n.etendre}, regler ×${n.regler}) ; son instantané publie son organe`); }
+  // (docs/59) la flore d'un monde : chaque cycle et chaque éveil ont leur instance (son catalogue, son pas). Un monde dont les brouteurs portent
+  // un trait à lui qui compte devant les plantes (l'écorce de verre : 70 % des épines) s'éveille et tourne deux cycles au jour ; la flore du
+  // module n'en garde rien (ses traits sont ceux du moteur), celle du monde (Flore.pour) les lit
+  { const Flore = require(racine('moteur/flore.js')), h = { masse_kg: 10, taille_m: .5, locomotion: ['marche'] }, V0 = clone(E0);
+    V0.catalogue = { ...(V0.catalogue || {}), monde: { ...(V0.catalogue?.monde || {}), traits: { 'ecorce-de-verre': { domaine: 'defense', organe: 'écorce', cout: .1, effet: 'une écorce de verre : les épines ne piquent plus', flore: { epineux: .7 } } } } };
+    V0.monde = { ...V0.monde, temps: { jours: 1 } }; for (const t of V0.taxons) if (t.plan?.regime === 'herbivore') for (const p of t.phenotypes || []) p.traits = [...(p.traits || []), 'ecorce-de-verre'];
+    const e0 = Flore.resistances(h, ['ecorce-de-verre']).epineux, deux = X => { let Y = Flore.eveiller(X).inst; for (let k = 0; k < 2; k++) Y = Orvane.cycle(Y, {}, { duree_ms: JOUR }); return Y; };
+    const V = deux(V0), plantes = V.taxons.filter(t => t.plan?.regime === 'vegetal').length, V1 = clone(V0); delete V1.catalogue.monde.traits['ecorce-de-verre'].flore;   // (le même trait, sans effet devant les plantes)
+    verif(plantes > 0 && e0 === 0 && Flore.resistances(h, ['ecorce-de-verre']).epineux === 0 && Flore.pour(V).resistances(h, ['ecorce-de-verre']).epineux === .7 && Journal.empreinte(deux(V1)) !== Journal.empreinte(V),
+      `la flore d'un monde est dans son instance : un monde à ${plantes} lignées de plantes, dont les brouteurs portent un trait à lui (l'écorce de verre : 70 % des épines), s'éveille et tourne deux cycles au jour, et son trait y compte ; la flore du module n'en garde rien (elle ne le connaît pas), celle du monde (Flore.pour) le lit`); }
+  // (docs/59) les règles d'un cycle (opt.regles : celles d'une genèse, d'un banc) complètent celles du moteur d'un niveau, et celles du monde
+  // passent par-dessus ; rien ne change dans Orvane.REGLES. Le même monde que lorsqu'on les posait sur le moteur (l'ancienne façon, une
+  // dernière fois ici, pour comparer)
+  { const regles = { separation: { cycles: 0, distance: 0, chance: 1, flux: 1 }, derive: { corps: 3 }, mutation: .02 }, W0 = clone(E0); W0.monde.regles = { ...(W0.monde.regles || {}), mutation: .01 }; delete W0.monde.regles.separation;   // (la mer a sa séparation : elle passerait par-dessus)
+    const R0 = JSON.stringify(Orvane.REGLES), A = Orvane.cycle(clone(W0), {}, { duree_ms: JOUR, regles }), apres = JSON.stringify(Orvane.REGLES);
+    const sep = Orvane.REGLES.separation, der = Orvane.REGLES.derive, mu = Orvane.REGLES.mutation; let B;
+    try { Orvane.REGLES.separation = { ...sep, ...regles.separation }; Orvane.REGLES.derive = { ...der, ...regles.derive }; Orvane.REGLES.mutation = regles.mutation; B = Orvane.cycle(clone(W0), {}, { duree_ms: JOUR }); }
+    finally { Orvane.REGLES.separation = sep; Orvane.REGLES.derive = der; Orvane.REGLES.mutation = mu; }
+    const C = Orvane.contexte(W0, regles), nes = A.taxons.filter(t => t.apparu === A.cycle.n).length;
+    verif(Journal.empreinte(A) === Journal.empreinte(B) && nes > 0 && apres === R0 && C.R.mutation === .01 && C.R.separation.chance === 1 && C.R.separation.divergence === sep.divergence && C.R.derive.corps === 3 && C.R.derive.masse === der.masse && sep.chance !== 1,
+      `les règles d'un cycle (opt.regles) : des séparations forcées (${nes} lignées naissent) et une autre dérive, données au cycle ; les règles du moteur n'y changent pas, celles du monde passent par-dessus (sa mutation), et c'est le monde que rendait le moteur quand on les lui posait`); }
 }
 
 console.log(`\n${ok ? 'le rejeu tient' : 'LE REJEU NE TIENT PAS'} (${((Date.now() - t0) / 1000).toFixed(0)} s)`);

@@ -49,18 +49,17 @@ const DISPOSITIONS = [
 // le caractère d'une lignée, dit en mots : pour chaque trait, le mot de chaque tiers (bas, entre les deux, haut)
 const MOTS = { hardiesse: ['craintive', 'posée', 'hardie'], combativite: ['fuyarde', 'entre les deux', 'combative'], opportunisme: ['difficile', 'curieuse', 'opportuniste'] };
 const motDe = (trait, v) => MOTS[trait][v < .34 ? 0 : v < .56 ? 1 : 2];
-// ce que la population publie : ce qu'il faut pour lire son attitude, et celle de chacune de ses bêtes
-const publie = b => ({ mefiance: b.m, habituation: b.h, memoire: Memoire.ecrire(b.M) || undefined });
+// ce que la population publie : ce qu'il faut pour lire son attitude, et celle de chacune de ses bêtes (Me : la mémoire de son monde)
+const publie = (b, Me = Memoire) => ({ mefiance: b.m, habituation: b.h, memoire: Me.ecrire(b.M) || undefined });
 const photo = (sim, b) => ({ nuit: sim.nuit, mefiance: b.m, habituation: b.h, attrait: b.M.a, traque: b.M.t, neophobie: b.M.o, agressivite: b.M.g, attitude: b.attitude });
 
 const cle = (tid, bid) => tid + '|' + bid;
 const clone = o => JSON.parse(JSON.stringify(o));
-// le temps d'un calcul, les règles que le monde s'est choisies (monde.regles), comme dans son cycle : la méfiance et la mémoire
-function avecRegles(inst, f) {
-  const R = inst?.monde?.regles || {}, rendre = Memoire.regler(R.memoire), avant = Orvane.REGLES.mefiance;
-  if (R.mefiance && typeof R.mefiance === 'object') Orvane.REGLES.mefiance = { ...avant, ...R.mefiance };
-  try { return f(); } finally { Orvane.REGLES.mefiance = avant; rendre(); }
-}
+// le temps d'un calcul, les règles que le monde s'est choisies (monde.regles), comme dans son cycle : la méfiance, l'appétence et la mémoire.
+// (docs/59) Elles viennent du contexte du monde (Orvane.contexte), comme dans son cycle : f(Me, C) reçoit sa mémoire (Me : réglée par
+// regles.memoire ; la copie du simulateur a toujours la mémoire éveillée) et son contexte (C : à passer aux fonctions du moteur). Rien
+// n'est réglé, ni sur le moteur ni sur la mémoire du module
+function avecRegles(inst, f) { const C = Orvane.contexte(inst); return f(C.MEM, C); }
 
 // --- une simulation : le monde lu (un instantané, entier ou réduit à quelques lieux : tampon/morceaux.js) et le profil de son tampon.
 // Si le monde n'a pas encore éveillé la mémoire, elle l'est sur cette copie (le monde publié n'est pas touché).
@@ -70,12 +69,12 @@ function creer(inst, profil) {
 }
 function etatDepart(sim, tid, bid) {
   const t = sim.inst.taxons.find(x => x.id === tid), p = t?.populations?.find(x => x.biome === bid); if (!t || !p) return null;
-  const corps = avecRegles(sim.inst, () => Memoire.corpsDe(t.plan, Orvane.appetence)), M = Memoire.lire(p.memoire);
+  const corps = avecRegles(sim.inst, (Me, C) => Me.corpsDe(t.plan, (x, y) => Orvane.appetence(x, y, C))), M = Memoire.lire(p.memoire);
   const b = { cle: cle(tid, bid), taxon: t, biome: bid, lieu: sim.inst.biomes.find(x => x.id === bid)?.nom || bid, effectif: p.effectif, corps, role: corps > 0 ? 'predateur' : 'proie',
     za: Orvane.lireQ(p.quant)?.audace?.m || 0, variance: p.quant?.audace?.v > 0 ? p.quant.audace.v : 1, satiete: p.satiete ?? null,
     m: +p.mefiance || 0, h: +p.habituation || 0, M, attitude: p.attitude || null, histoire: [], declare: null, retenu: null };
   // son caractère (celui de sa lignée, déplacé par l'audace de cette population), et la part de ses bêtes dans chaque attitude
-  b.caractere = avecRegles(sim.inst, () => Memoire.caractereDe(t.plan, b.za)); b.parts = avecRegles(sim.inst, () => Memoire.partage(publie(b), t.plan, b.variance));
+  b.caractere = avecRegles(sim.inst, Me => Me.caractereDe(t.plan, b.za)); b.parts = avecRegles(sim.inst, Me => Me.partage(publie(b, Me), t.plan, b.variance));
   b.histoire.push(photo(sim, b));
   return b;
 }
@@ -102,8 +101,8 @@ function declare(lots, b) { const d = {}; for (const l of lots) for (const e of 
 // la méfiance et l'habituation (apprendre), la mémoire et l'attitude (memoire.js, publier), le journal ---
 function nuit(sim, groupes) {
   const lots = lotsDe(sim, groupes), r = Tampon.agreger(lots, sim.inst, sim.profil, sim.tampon); sim.tampon = r.etat; sim.nuit++;
-  avecRegles(sim.inst, () => {
-    const ME = Memoire.preparer({ appetence: Orvane.appetence, mefiance: Orvane.apprendre }), alerte = Orvane.REGLES.mefiance.alerte;
+  avecRegles(sim.inst, (Me, C) => {
+    const ME = Me.preparer({ appetence: (x, y) => Orvane.appetence(x, y, C), mefiance: (m, h, c, za = 0) => Orvane.apprendre(m, h, c, za, C) }), alerte = C.R.mefiance.alerte;
     for (const b of sim.betes.values()) {
       const pr = r.pressions.taxons?.[b.taxon.id]?.[b.biome] || {}, ev = [], p = {};
       const [m, h] = ME.mefiance(b.taxon.plan, b.m, b.h, pr.contact, pr.vecu, b.za, b.M.g);
@@ -111,8 +110,8 @@ function nuit(sim, groupes) {
       if (m >= alerte && b.m < alerte) ev.push({ type: 'mefiance', taxon: b.taxon.id, biome: b.biome, detail: `les bêtes se méfient des joueurs (${Math.round(m * 100)} %)` });
       ME.publier(b.taxon, b.biome, { M: { ...b.M }, Mp: { ...b.M }, att0: b.attitude || undefined, satiete: b.satiete }, p, pr.vecu, b.za, ev, b.lieu);
       // (d'une nuit à l'autre, le moteur relit ce qu'il a publié : arrondi compris)
-      b.m = p.mefiance || 0; b.h = p.habituation || 0; b.M = Memoire.lire(p.memoire); b.attitude = p.attitude || null;
-      b.declare = declare(lots, b); b.retenu = pr.vecu || null; b.parts = Memoire.partage(publie(b), b.taxon.plan, b.variance);
+      b.m = p.mefiance || 0; b.h = p.habituation || 0; b.M = Me.lire(p.memoire); b.attitude = p.attitude || null;
+      b.declare = declare(lots, b); b.retenu = pr.vecu || null; b.parts = Me.partage(publie(b, Me), b.taxon.plan, b.variance);
       b.histoire.push(photo(sim, b));
       for (const e of ev) sim.journal.push({ nuit: sim.nuit, bete: b.cle, nom: b.taxon.nom_commun || b.taxon.nom || b.taxon.id, type: e.type, detail: e.detail });
     }

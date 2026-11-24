@@ -370,8 +370,8 @@ const MODULES = [['mere', SYN, 'synthetique'], ['flore', FLO, 'flore'], ['pathog
 function cycle(inst, pressions = {}, opt = {}) {
   for (const [cle, M, f] of MODULES) if (inst?.monde?.[cle] && !M && !AVERTIS.has(cle)) { AVERTIS.add(cle); if (typeof console !== 'undefined') console.warn(`Orvane : ce monde a éveillé « ${cle} », mais moteur/${f}.js n'est pas chargé (avant orvane.js) : ce mécanisme est ignoré (docs/19).`); }
   // (docs/59) le contexte de ce monde : ses règles, son pas, ses axes, le catalogue propre de ses corps, les règles de sa mémoire ;
-  // le cycle ne règle rien de global, et n'a rien à rendre
-  return cycleBrut(inst, pressions, opt, contexte(inst));
+  // le cycle ne règle rien de global, et n'a rien à rendre. opt.regles : les règles du moteur pour ce cycle (celles d'une genèse, d'un banc)
+  return cycleBrut(inst, pressions, opt, contexte(inst, opt.regles));
 }
 // (docs/59) le contexte d'un monde : les règles du moteur, et les siennes par-dessus (une règle qui est un objet se complète d'un niveau :
 // { separation: { chance: 1 } } garde les autres clés de la séparation ; sans cela, une règle partielle effaçait ses voisines — un flux
@@ -379,10 +379,12 @@ function cycle(inst, pressions = {}, opt = {}) {
 // est global : deux mondes peuvent tourner l'un après l'autre, ou côte à côte, dans le même processus. Et le corps (moteur/corps.js) d'après
 // le catalogue propre du monde (catalogue.monde : ses organes, ses formes), la mémoire (moteur/memoire.js) d'après ses règles
 // (regles.memoire, docs/50), chacun dans une instance à ce monde : ni l'un ni l'autre ne garde rien d'un monde à l'autre
-function contexte(inst) {
+// (docs/59) regles : les règles du moteur le temps de ce contexte (une genèse accélère l'évolution, un banc force les séparations), sans
+// toucher à REGLES : elles complètent celles du moteur de la même façon, et celles du monde passent encore par-dessus
+function contexte(inst, regles) {
   const propres = inst?.monde?.regles, M = inst?.catalogue?.monde, T = inst?.monde?.temps, R = { ...REGLES };
-  if (propres && typeof propres === 'object') { for (const k in propres) { if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
-    const v = propres[k], b = REGLES[k]; R[k] = v && typeof v === 'object' && !Array.isArray(v) && b && typeof b === 'object' && !Array.isArray(b) ? { ...b, ...v } : v; } }
+  for (const C of [regles, propres]) if (C && typeof C === 'object') { for (const k in C) { if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
+    const v = C[k], b = R[k]; R[k] = v && typeof v === 'object' && !Array.isArray(v) && b && typeof b === 'object' && !Array.isArray(b) ? { ...b, ...v } : v; } }
   const auJour = !!(T && T.jours > 0);
   return { R, PAS: auJour ? T.jours / (T.reference || 120) : 1, JOURS: auJour ? T.jours : null, AX: M?.axes ? [...AXES, ...Object.keys(M.axes).filter(k => !AXES.includes(k))] : AXES,
     CORPS: CORPS ? CORPS.pour(M) : null, MEM: MEM && inst?.monde?.memoire ? MEM.avec(R.memoire) : MEM };
