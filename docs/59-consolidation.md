@@ -136,10 +136,20 @@ Le cœur du moteur gardait son état dans des variables globales : les règles d
 
 **Un constat, que le contexte rend visible.** L'étalon mesure la loi des prédateurs avec l'appétence du moteur, et non avec celle de l'Europe : la meute y garde la limite de 1,5 fois sa masse au lieu de 2,5, et les petites proies n'y comptent pas. Le contexte permet de la mesurer avec les règles du monde. C'est un changement de mesure, donc une version du protocole ; il n'est pas fait ici.
 
+## 04, la deuxième étape : le premier module du cœur
+
+Le cycle du moteur (`cycleBrut`) tenait en un seul bloc de 600 lignes, en sept étapes. La troisième, **le partage des proies**, en sort : `moteur/noyau/predation.js`.
+- **Ce qu'il reçoit** : le contexte du monde (ses règles, son pas, l'appétence, la part d'un cycle), l'état de chaque lignée, les lieux, et ce que les mécanismes éveillés y ajoutent (les régimes en spectre, la grammaire, l'esprit, le repos d'hiver, la concurrence, la domination, le recouvrement, les machines).
+- **Ce qu'il rend** : dans chaque population, sa ration, sa satiété et ce que les prédateurs lui prennent. Il ne touche à rien d'autre.
+
+Le code est déplacé, non réécrit : les mêmes opérations, dans le même ordre. Sept mondes et seize cycles, et le monde à l'axe propre, rendent le même monde au bit près. Dans un navigateur, le cœur se charge par sa balise `<script>`, avant `orvane.js` (l'Observatoire, son Web Worker, le simulateur de joueurs).
+
+**La suite**, une étape à la fois, chacune au bit près : l'habitat (1), l'état de départ (2), la dynamique de chaque lignée (4, la plus grande : les naissances, les morts, les migrations, la génétique), les arrivées (5), la naissance des lignées et les extinctions (6), le catalogue (7).
+
 ## Ce qui vient
 
 1. **Les ablations (03).** Chaque règle retirée seule, sur Orvane (30 cycles, 3 graines) puis sur l'Europe (une année), puis par paires : ce qu'elle tient, ce qu'elle coûte. La matrice : conserver, modifier, supprimer, investiguer.
-2. **Modulariser le moteur (04)**, après le contexte explicite (plus haut) : la prédation, le métabolisme, la reproduction, la génétique, les déplacements, le climat, chacun dans son module, sans état global. Le rejeu garde le moteur identique au bit près pendant le découpage, l'étalon le juge ensuite.
+2. **Modulariser le moteur (04)**, après le contexte explicite et le premier module du cœur (plus haut) : la prédation, le métabolisme, la reproduction, la génétique, les déplacements, le climat, chacun dans son module, sans état global. Le rejeu garde le moteur identique au bit près pendant le découpage, l'étalon le juge ensuite.
 3. **L'évolution ouverte (05)** : des populations sans évolution, puis avec la génétique seule. Les réseaux neuronaux sont la phase 3 du plan d'évolution ouverte : Orvane n'en a pas aujourd'hui (l'esprit, docs/34, fait vivre des savoirs et des traditions).
 4. **L'intérêt pour les jeux (06)** : Stone Valley comme démonstrateur, avec les lots d'un jeu rejoués sur une copie du monde à côté d'un témoin sans lots (docs/5).
 5. **La revue indépendante.** Le protocole verrouille les critères ; il ne remplace pas un regard extérieur. Il faudrait un écologue des populations pour relire les règles, et une relecture humaine obligatoire des PR (la protection de la branche `main`).
