@@ -1,0 +1,68 @@
+# Orvane — les archives : une fois par mois, et à la demande, l'état publié de chaque monde, gardé sans limite de durée (docs/59).
+# Les sauvegardes de chaque passe du cycle (l'artefact « etat-mondes ») ne durent que 30 jours. Une archive est une release du dépôt,
+# « archive-AAAA-MM-JJ », marquée comme préversion. Son étiquette pointe sur le commit de main qui faisait tourner les mondes : le code et
+# l'état vont ensemble. Elle porte :
+#  - etat-mondes.tar.gz : les dossiers mondes/<id>/ tels que la publication les sert (l'état, l'historique, le journal de chaque cycle…) ;
+#  - reference.json : ce qu'est chaque monde ce jour-là (outils/reference.js : sa taille, sa diversité, sa stabilité, la durée d'un
+#    cycle, et le même cycle rejoué deux fois, dans deux processus) ;
+#  - le dernier rapport de l'étalon (la branche etalon), s'il y en a un.
+# Revenir à une archive : Actions › cycle › Run workflow, et dans « restaurer », son nom (archive-AAAA-MM-JJ).
+# Rejouer un cycle d'une archive : node outils/rejouer.js <son etat.json> <le journal.json d'une archive plus récente>.
+name: archives
+on:
+  schedule:
+    - cron: '41 6 1 * *'      # le 1er de chaque mois, après le cycle de 03:00 et les bancs de la nuit
+  workflow_dispatch:
+    inputs:
+      nom:
+        description: "le nom de l'archive (vide : archive-AAAA-MM-JJ, la date du jour)"
+        default: ''
+permissions:
+  contents: write
+concurrency:
+  group: archives
+jobs:
+  archiver:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }     # (tout main : le commit que dit la publication doit s'y trouver)
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: l'état publié des mondes, et le commit de main qui les faisait tourner
+        run: |
+          git fetch -q --depth=1 origin publication
+          mkdir -p "$RUNNER_TEMP/archive" && git archive FETCH_HEAD mondes | tar -x -C "$RUNNER_TEMP/archive"
+          court=$(git log -1 --format=%s FETCH_HEAD | sed -n 's/.*(main \([0-9a-f]\{7,40\}\)).*/\1/p')
+          main=$(git rev-parse --verify -q "${court:-none}^{commit}" || true)
+          if [ -z "$main" ]; then echo "::warning::la publication ne dit pas son commit de main : l'archive pointe sur $GITHUB_SHA"; main=$GITHUB_SHA; fi
+          echo "MAIN=$main" >> "$GITHUB_ENV"
+      - name: le dernier rapport de l'étalon
+        run: |
+          if git fetch -q --depth=1 origin etalon 2>/dev/null; then
+            mkdir -p "$RUNNER_TEMP/etalon" && git archive FETCH_HEAD | tar -x -C "$RUNNER_TEMP/etalon"
+            dernier=$(find "$RUNNER_TEMP/etalon" -name '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].json' | LC_ALL=C sort | tail -1)   # (le rapport de l'Europe, pas ceux des expériences)
+            if [ -n "$dernier" ]; then cp "$dernier" "$RUNNER_TEMP/etalon.json"; echo "le rapport de l'étalon : $dernier"; fi
+          fi
+      - name: la référence (le moteur de cette archive, le même cycle rejoué deux fois)
+        run: |
+          git checkout -q "$MAIN" -- moteur 2>/dev/null || echo "::warning::le moteur de $MAIN n'a pas pu être repris : la référence est mesurée avec celui de main"
+          node --max-old-space-size=6000 outils/reference.js "$RUNNER_TEMP/archive" --sortie "$RUNNER_TEMP/reference.json" --notes "$RUNNER_TEMP/notes.md" || echo "::warning::la référence n'a pas pu être mesurée (l'archive est faite sans elle)"
+      - name: l'archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NOM: ${{ github.event.inputs.nom }}
+        run: |
+          nom="${NOM:-archive-$(date -u +%Y-%m-%d)}"
+          printf '%s' "$nom" | grep -Eq '^archive-[0-9A-Za-z._-]{1,60}$' || { echo "::error::« $nom » : le nom d'une archive commence par archive- (lettres, chiffres, . _ -)"; exit 1; }
+          if gh release view "$nom" > /dev/null 2>&1; then echo "::error::l'archive $nom existe déjà"; exit 1; fi
+          (cd "$RUNNER_TEMP/archive" && tar -czf "$RUNNER_TEMP/etat-mondes.tar.gz" mondes)
+          set -- "$RUNNER_TEMP/etat-mondes.tar.gz"
+          [ -f "$RUNNER_TEMP/reference.json" ] && set -- "$@" "$RUNNER_TEMP/reference.json"
+          [ -f "$RUNNER_TEMP/etalon.json" ] && set -- "$@" "$RUNNER_TEMP/etalon.json"
+          { echo "L'état publié des mondes, le $(date -u +%Y-%m-%d), avec le code du commit $MAIN (docs/59)."; echo;
+            [ -f "$RUNNER_TEMP/notes.md" ] && cat "$RUNNER_TEMP/notes.md"; echo;
+            echo "Revenir à cette archive : Actions › cycle › Run workflow, « restaurer » : $nom."; } > "$RUNNER_TEMP/corps.md"
+          gh release create "$nom" "$@" --target "$MAIN" --title "Les mondes, $nom" --notes-file "$RUNNER_TEMP/corps.md" --prerelease
+          echo "archivé : $nom ($(du -h "$RUNNER_TEMP/etat-mondes.tar.gz" | cut -f1))" >> "$GITHUB_STEP_SUMMARY"

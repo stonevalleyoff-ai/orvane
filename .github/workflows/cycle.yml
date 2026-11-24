@@ -12,6 +12,7 @@
 # Les sauvegardes : chaque passe où un monde a tourné garde son état dans un artefact de l'action (« etat-mondes », 30 jours). Pour
 # revenir en arrière : Actions › cycle › Run workflow, et dans « restaurer », le numéro de la passe dont on veut l'état (le nombre à la
 # fin de l'adresse de sa page). La passe repart de cet état, puis fait les cycles dus (hebergement/LISEZ-MOI.md, « Les sauvegardes »).
+# Au-delà de 30 jours : les archives mensuelles (.github/workflows/archives.yml), restaurées de la même façon par leur nom (docs/59).
 name: cycle
 on:
   schedule:
@@ -24,7 +25,7 @@ on:
         description: 'nombre de cycles à faire tourner (vide : les cycles dus)'
         default: ''
       restaurer:
-        description: "revenir en arrière : le numéro de la passe dont on reprend l'état sauvegardé (vide : rien)"
+        description: "revenir en arrière : le numéro de la passe dont on reprend l'état sauvegardé, ou le nom d'une archive (archive-AAAA-MM-JJ) ; vide : rien"
         default: ''
 permissions:
   contents: write
@@ -52,7 +53,12 @@ jobs:
           if printf '%s' "$RESTAURER" | grep -Eq '^[0-9]{5,}$'; then
             gh run download "$RESTAURER" -n etat-mondes -D "$RUNNER_TEMP/restauration" || { echo "::error title=restauration::pas de sauvegarde « etat-mondes » dans la passe $RESTAURER (elle a peut-être plus de 30 jours, ou aucun monde n'y a tourné)"; exit 1; }
             node hebergement/publication.js restaurer "$RUNNER_TEMP/restauration"
-          elif [ -n "$RESTAURER" ]; then echo "::error title=restauration::« $RESTAURER » n'est pas un numéro de passe"; exit 1; fi
+          elif printf '%s' "$RESTAURER" | grep -Eq '^archive-[0-9A-Za-z._-]{1,60}$'; then
+            # (docs/59) une archive : une release du dépôt, faite par .github/workflows/archives.yml, gardée sans limite de durée
+            gh release download "$RESTAURER" -p etat-mondes.tar.gz -D "$RUNNER_TEMP/archive" || { echo "::error title=restauration::pas d'archive « $RESTAURER » (les releases du dépôt)"; exit 1; }
+            mkdir -p "$RUNNER_TEMP/restauration" && tar -xzf "$RUNNER_TEMP/archive/etat-mondes.tar.gz" -C "$RUNNER_TEMP/restauration"
+            node hebergement/publication.js restaurer "$RUNNER_TEMP/restauration"
+          elif [ -n "$RESTAURER" ]; then echo "::error title=restauration::« $RESTAURER » n'est ni un numéro de passe ni une archive (archive-AAAA-MM-JJ)"; exit 1; fi
           cp -a mondes "$RUNNER_TEMP/avant"            # (pour rendre à un monde en panne son dossier tel qu'il était)
         env:
           RESTAURER: ${{ github.event.inputs.restaurer }}

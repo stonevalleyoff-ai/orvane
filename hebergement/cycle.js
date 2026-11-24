@@ -13,6 +13,9 @@
 //   morceaux/          le même monde par morceaux : index.json, biomes/<id>.json, lignees/<id>.json, et les planches,
 //                      silhouettes/<id>.json : chaque lignée de chaque biome dessinée (docs/21) ; herbier/<id>.json : chaque plante (docs/49)
 //   lots/              (facultatif) des lots déposés à la main ; lus en plus de Supabase, puis déplacés dans lots/traites/
+//   journal.json       une ligne par cycle : le code qui l'a fait tourner, l'empreinte de ses règles, de l'état que le moteur a reçu et
+//                      de celui qu'il a rendu, et les pressions des jeux : de quoi rejouer un cycle au bit près (hebergement/journal.js,
+//                      outils/rejouer.js, docs/59)
 //   node hebergement/cycle.js sv-1 [--sans-reseau] [--cycles N | --auto] [--rodage N] [--forcer]   (rodage : au premier cycle seulement ;
 //   --auto : autant de cycles que le rythme du monde en doit, profil.monde.cycle et monde.heure, docs/19 ; --maintenant <date ISO> ;
 //   les fusions que commande le profil, profil.monde.fusions, sont appliquées une fois chacune, avant le cycle : docs/14 ;
@@ -38,6 +41,7 @@ let nCycles = arg('--cycles', 1) || 1;
 const auto = a.includes('--auto'), iM = a.indexOf('--maintenant'), maintenant = iM >= 0 ? Date.parse(a[iM + 1]) : Date.now();   // --maintenant <date ISO> : rejouer ou essayer une heure donnée
 const { periodeDe, dus } = require('./rythme.js');   // (le rythme d'un monde : la veille le lit de la même façon)
 const D = path.join(__dirname, '..', 'mondes', monde), f = n => path.join(D, n);
+const Journal = require('./journal.js'), CODE = Journal.moteur(path.join(__dirname, '..'));   // (docs/59) le code qui tourne : son commit
 const secretDe = Pp => Pp && (process.env[Pp.secret || 'ORVANE_LECTURE_SECRET'] || '').trim().replace(/^["']+|["']+$/g, '');
 const rpc = async (Pp, fn, corps) => { const r = await fetch(`${Pp.url.replace(/\/$/, '')}/rest/v1/rpc/${fn}`, { method: 'POST',
   headers: { apikey: Pp.cle, 'Content-Type': 'application/json' }, body: JSON.stringify(corps) });
@@ -269,7 +273,7 @@ const alleger = I => ({ cycle: I.cycle, taxons: I.taxons.map(t => ({ id: t.id, n
   let chron = chron0, museum = lire('museum.json', null) || Chronique.decrire(null, Vavant).museum;
   const ms = periodeDe(profil.monde?.cycle);
   // (docs/4) le bilan de saison : le cumul de la saison en cours, gardé dans tampon.json ; les saisons qui s'achèvent pendant ce passage
-  let bilan = tampon.bilan || null; const finies = [];
+  let bilan = tampon.bilan || null; const finies = [], lignes = [];
   for (let k = 0; k < nCycles; k++) {
     // une lecture qui échoue n'arrête pas le monde : il tourne sans les lots en ligne (ils restent dans Supabase et seront lus
     // la fois suivante, dernier_id n'avance pas), et l'action le signale en clair
@@ -283,8 +287,12 @@ const alleger = I => ({ cycle: I.cycle, taxons: I.taxons.map(t => ({ id: t.id, n
     const V = vue(etat), r = Tampon.agreger(lots, V, profil, tampon, gen0, expositions, { bilan: true });   // (le bilan : jeu par jeu, rien ne change aux pressions)
     if (r.rejetes && (r.rejetes.lots || r.rejetes.evenements)) console.log(`::warning title=${monde} · lots::${r.rejetes.lots || 0} lot(s) et ${r.rejetes.evenements || 0} événement(s) écartés (hors du contrat : schemas/pression.schema.json) ; le reste compte.`);
     if (r.doublons) console.log(`${monde} : ${r.doublons} lot(s) renvoyé(s) avec le même id, comptés une fois`);   // (docs/4)
-    const suivant = Orvane.cycle(etat, Parcelles.repartir(r.pressions, etat, Parcelles.localiser(lots, etat)), { duree_ms: ms });   // (docs/15) là où les jeux l'ont dit
+    const pressions = Parcelles.repartir(r.pressions, etat, Parcelles.localiser(lots, etat));   // (docs/15) là où les jeux l'ont dit
+    const ligne = Journal.avant({ etat, pressions, duree_ms: ms, code: CODE });   // (docs/59) ce que le moteur reçoit…
+    const suivant = Orvane.cycle(etat, pressions, { duree_ms: ms });
+    const trace = Journal.apres(ligne, suivant);   // … et ce qu'il rend, avant que l'hébergement n'y touche
     if (k === nCycles - 1) suivant.cycle.date = new Date(maintenant).toISOString();   // le dernier cycle est daté de son départ : les traducteurs s'y réfèrent
+    lignes.push({ ...trace, date: suivant.cycle.date ?? null });
     if (k === 0 && arrivees.length) suivant.evenements = [...arrivees, ...(suivant.evenements || [])];   // les arrivées d'une fusion, au journal
     // (docs/4) ce cycle dans le bilan de sa saison : chaque jeu, ce qu'il a ôté et rendu à chaque population, plafonds compris
     const rb = Bilan.noter(bilan, { orvane: Orvane.CONTRAT, monde: { id: etat.monde.id ?? null, ne: etat.monde.ne ?? null }, n: suivant.cycle.n, date: suivant.cycle.date, annee: etat.monde.annee,
@@ -329,6 +337,9 @@ const alleger = I => ({ cycle: I.cycle, taxons: I.taxons.map(t => ({ id: t.id, n
   // l'instantané publié porte le cycle d'avant, allégé : tous les traducteurs interpolent entre les deux de la même façon
   const pr = alleger(publie(avant)), F = flore(etat);
   ecrire('etat.json', etat, true); if (F) ecrire('flore.json', F, true);
+  // (docs/59) le journal : un journal illisible n'arrête pas le monde, il recommence
+  let journal = []; try { journal = lire('journal.json', []); } catch (e) { console.log(`::warning title=${monde} · journal::journal.json illisible (${e.message}) : il recommence à ce cycle.`); }
+  ecrire('journal.json', Journal.noter(journal, ...lignes), true);
   const P = Chronique.publier({ ...publie(etat), precedent: { cycle: pr.cycle.n, taxons: pr.taxons.map(t => ({ id: t.id, populations: t.populations, phenotypes: t.phenotypes.map(p => ({ id: p.id, frequence: p.frequence })) })) } }, museum);
   ecrire('instantane.json', P, true);
   // (docs/21) le même monde par morceaux : l'index, chaque biome, chaque lignée (mondes/<id>/morceaux/) ; refaits à chaque cycle

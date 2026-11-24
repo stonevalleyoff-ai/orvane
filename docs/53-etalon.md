@@ -6,7 +6,7 @@ Cette dernière condition est toute la difficulté. L'assemblage cale la place d
 
 ## Les tests
 
-`outils/etalon.js` :
+`outils/etalon.js`. Depuis le 24 novembre 2026, leurs cibles et leurs tolérances sont celles du protocole (`etalon/protocole.json`, docs/59) : fixées avant de lancer l'étalon, verrouillées par version, et chaque test y dit ce qu'il prouve (une validation, un guide, un réglage, un garde-fou, le calage).
 
 | test | ce qui est mesuré | la cible | la source |
 | --- | --- | --- | --- |

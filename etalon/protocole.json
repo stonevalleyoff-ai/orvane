@@ -1,0 +1,492 @@
+{
+ "protocole": "Le protocole de l'étalon d'Orvane",
+ "version": 1,
+ "date": "2026-11-24",
+ "empreinte": "7658e4446733289f293954357ab887e38c6e967548894baef01f30452ea93db0",
+ "lire": "docs/59 (la consolidation) ; docs/53 (l'étalon) ; outils/protocole.js",
+ "principes": [
+  "Les cibles et les tolérances sont fixées avant de lancer l'étalon, et l'étalon n'en a pas d'autres. Les changer, c'est écrire une nouvelle version du protocole, datée, avec sa raison (node outils/protocole.js --nouvelle-version).",
+  "On ne change jamais une règle ou une constante du moteur pour retrouver une population cible. On cherche la cause, on éprouve le mécanisme seul, puis on vérifie ses conséquences sur plusieurs mondes.",
+  "Une donnée qui a servi à régler le moteur ne le valide plus. Un test dont les échecs ont guidé une correction ne prouve plus rien seul : il le dit (sa nature, son historique).",
+  "Un paramètre calé à sa borne est un échec du moteur, non un réglage : il est compté comme tel.",
+  "Pas de règle nouvelle dans le moteur tant que les ablations n'ont pas dit ce que vaut chacune (le moratoire, regles_gelees)."
+ ],
+ "natures": {
+  "validation": "ni ses données ni ses échecs n'ont servi à régler le moteur : c'est lui qui le juge",
+  "guide": "ses échecs ont conduit à changer le moteur, ou sa mesure a été revue après un premier résultat : il ne prouve plus rien seul",
+  "reglage": "ses données ont servi à régler une constante ou un taux : il passe presque par construction",
+  "garde-fou": "une propriété que le monde ne doit pas perdre (sa stabilité, sa diversité, ce que l'assemblage a posé) ; pas une validation",
+  "calage": "ce que l'assemblage n'a pas su caler : un échec du moteur, compté comme tel"
+ },
+ "verdicts": "✓ dans la tolérance ; ≈ entre la tolérance et la limite (le double, sauf mention) ; ✗ au-delà.",
+ "regles_gelees": {
+  "depuis": "2026-11-24",
+  "pourquoi": "Le moratoire de la consolidation (docs/59) : le moteur garde ses 50 règles telles quelles jusqu'à ce que les ablations disent ce que vaut chacune. Une règle ajoutée ou retirée demande une version du protocole qui le dit.",
+  "regles": [
+   "mutation",
+   "nouveau_trait",
+   "migration",
+   "seuil_surpeuple",
+   "separation",
+   "memoire_eteint",
+   "regain_habitat",
+   "effondrement",
+   "explosion",
+   "menace",
+   "max_phenotypes",
+   "max_taxons",
+   "besoin",
+   "conversion",
+   "demi_satiete",
+   "predation_max",
+   "chasse_omnivore",
+   "omnivore_vegetal",
+   "omnivore_vegetal_base",
+   "longevite_predateur",
+   "viande_omnivore",
+   "faim_carnivore",
+   "detritivore_vegetal",
+   "cadavres",
+   "vers_carnivore",
+   "faim_migration",
+   "hivernage",
+   "dispersion",
+   "fuite",
+   "report_proies",
+   "saisons",
+   "maladie",
+   "catastrophes",
+   "derive",
+   "vol_masse_max",
+   "genetique",
+   "hybride",
+   "mefiance",
+   "sexe",
+   "naissances",
+   "colonisation",
+   "diapause",
+   "concurrence_masse",
+   "renouvellement",
+   "viande_part",
+   "domination",
+   "recouvrement",
+   "charognes",
+   "meute_proie",
+   "petites_proies"
+  ]
+ },
+ "donnees": {
+  "lieux": {
+   "role": "entree",
+   "quoi": "le relief, le climat et la couverture des lieux de l'Europe et d'Isle Royale",
+   "source": "ETOPO 2022, CRU TS 1991–2020, ESA WorldCover (docs/52)"
+  },
+  "traits": {
+   "role": "entree",
+   "quoi": "la masse, le régime, la natalité, la longévité de chaque espèce",
+   "source": "EltonTraits, Amniote, PanTHERIA, AnAge (docs/52)"
+  },
+  "metabolisme-terrain": {
+   "role": "entree",
+   "quoi": "ce que brûle une bête en liberté : la ration des prédateurs (regles.besoin) et le métabolisme des oiseaux",
+   "source": "Nagy 2005, J. Exp. Biol. 208 (docs/58)"
+  },
+  "effectifs-europe": {
+   "role": "calage",
+   "quoi": "les effectifs comptés de chaque espèce, lieu par lieu",
+   "a_regle": "la place de chaque brouteur et l'adresse de chaque chasseur (le calage de l'assemblage)",
+   "source": "GBIF et les recensements nationaux (docs/52)"
+  },
+  "tableaux-chasse": {
+   "role": "calage",
+   "quoi": "le prélèvement de chaque ongulé, pays par pays, la dernière saison connue",
+   "a_regle": "le taux de chasse de chaque pays (outils/terre/hommes.js)",
+   "source": "FACE 2025, Ungulate Harvest Report (docs/56)"
+  },
+  "rendement-secondaire": {
+   "role": "reglage",
+   "quoi": "la part de ce qu'il mange qu'un chasseur fait devenir de la chair : 1 à 3 % à sang chaud, 10 à 40 % à sang froid",
+   "a_regle": "la conversion (0,06) des mondes réels",
+   "source": "Humphreys 1979, J. Anim. Ecol. 48 ; Lindeman 1942"
+  },
+  "front-loup-france": {
+   "role": "reglage",
+   "quoi": "la vitesse du front du loup en France, 20 à 30 km par an",
+   "a_regle": "la dispersion (la plus longue dispersion / 25, docs/52)",
+   "source": "Office français de la biodiversité"
+  },
+  "loups-france": {
+   "role": "validation",
+   "quoi": "les loups de France : le premier en 1992, une centaine vers 2008, environ 1 100 en 2023",
+   "source": "Office français de la biodiversité"
+  },
+  "loi-predateurs": {
+   "role": "validation",
+   "quoi": "89,1 × M^−1,05 carnivores par 10 000 kg de proies (25 espèces)",
+   "source": "Carbone et Gittleman 2002, Science 295"
+  },
+  "loi-damuth": {
+   "role": "validation",
+   "quoi": "la densité des mammifères suit leur masse^−0,75",
+   "source": "Damuth 1981"
+  },
+  "naissances-cervides": {
+   "role": "validation",
+   "quoi": "les chevrillards naissent de mi-mai à mi-juin, les faons du cerf de fin mai à juin",
+   "source": "Andersen et al. 1998, The European Roe Deer ; Clutton-Brock et al. 1982, Red Deer"
+  },
+  "cigognes": {
+   "role": "validation",
+   "quoi": "les cigognes blanches quittent l'Europe de début août à début septembre, et reviennent de mi-février à début avril",
+   "source": "les fenêtres de migration de la cigogne blanche"
+  },
+  "grands-carnivores": {
+   "role": "validation",
+   "quoi": "le loup remonte de 5 à 10 % par an en Europe, là où on le laisse",
+   "source": "Large Carnivore Initiative for Europe ; Commission européenne"
+  },
+  "chacal-premieres-observations": {
+   "role": "validation",
+   "quoi": "la première observation du chacal doré dans dix pays, de l'Italie (1984) à la France (2017)",
+   "source": "Arnold et al. 2012, Mammal Review 42 ; Trouwborst et al. 2015, Biodivers. Conserv. 24"
+  },
+  "isle-royale-comptages": {
+   "role": "validation",
+   "quoi": "les loups et les orignaux d'Isle Royale, comptés chaque hiver",
+   "source": "National Park Service ; Ecological Studies of Wolves on Isle Royale (Michigan Technological University)"
+  },
+  "isle-royale-predation": {
+   "role": "validation",
+   "quoi": "la part des orignaux que les loups tuent chaque année (6 à 13 %), et ce qu'un loup tue en hiver (0,7 orignal par mois, 1971–2011)",
+   "source": "Ecological Studies of Wolves on Isle Royale, Annual Report 2018-19"
+  }
+ },
+ "tests": {
+  "stabilite": {
+   "nature": "garde-fou",
+   "donnees": [
+    "effectifs-europe"
+   ],
+   "seuils": {
+    "part": 0.9,
+    "facteur": 2,
+    "marge_limite": 0.1
+   },
+   "note": "La première année est celle du calage : le test compare la dernière année à l'avant-dernière. Une extinction le fait échouer."
+  },
+  "hors": {
+   "nature": "garde-fou",
+   "donnees": [
+    "effectifs-europe"
+   ],
+   "seuils": {
+    "limite_max": 5
+   },
+   "note": "Les espèces hors du facteur de la stabilité, d'une année à l'autre : aucune ✓, au plus cinq ≈."
+  },
+  "naissances-chevreuil": {
+   "nature": "validation",
+   "donnees": [
+    "naissances-cervides"
+   ],
+   "seuils": {
+    "de": 130,
+    "a": 175,
+    "tolerance_jours": 15
+   }
+  },
+  "naissances-cerf-elaphe": {
+   "nature": "validation",
+   "donnees": [
+    "naissances-cervides"
+   ],
+   "seuils": {
+    "de": 140,
+    "a": 185,
+    "tolerance_jours": 15
+   }
+  },
+  "cigogne-depart": {
+   "nature": "guide",
+   "donnees": [
+    "cigognes"
+   ],
+   "seuils": {
+    "de": 215,
+    "a": 255,
+    "tolerance_jours": 15
+   },
+   "historique": [
+    "Le premier rapport : le 28 octobre, ✗. Les migrateurs partent depuis quand les jours raccourcissent : un seuil commun à tous les migrateurs, non réglé sur la cigogne, mais choisi après cet échec (docs/53)."
+   ]
+  },
+  "cigogne-retour": {
+   "nature": "validation",
+   "donnees": [
+    "cigognes"
+   ],
+   "seuils": {
+    "de": 45,
+    "a": 100,
+    "tolerance_jours": 15
+   }
+  },
+  "carnivores": {
+   "nature": "guide",
+   "donnees": [
+    "loi-predateurs"
+   ],
+   "seuils": {
+    "a": 89.1,
+    "b": -1.05,
+    "facteur": 3,
+    "facteur_limite": 9
+   },
+   "historique": [
+    "Le premier rapport : ×5,8. La mesure a été revue : les poissons comptent depuis parmi les proies (docs/53)."
+   ],
+   "note": "Le loup, l'ours, les lynx et le glouton, que les hommes tiennent sous la loi, sont à part."
+  },
+  "grands-carnivores": {
+   "nature": "guide",
+   "donnees": [
+    "grands-carnivores"
+   ],
+   "seuils": {
+    "croissance_par_an": 0.02
+   },
+   "historique": [
+    "Ajouté après le deuxième rapport, quand les grands carnivores s'éloignaient de la loi.",
+    "La domination entre chasseurs (regles.domination, 20 novembre 2026), pour le lynx pardelle.",
+    "Le recouvrement des quêtes (regles.recouvrement, 23 novembre 2026), pour le lynx pardelle et le glouton."
+   ],
+   "note": "Chacun doit croître d'au moins 2 % par an : tous ✓, au moins la moitié ≈."
+  },
+  "chasse": {
+   "nature": "reglage",
+   "donnees": [
+    "tableaux-chasse"
+   ],
+   "seuils": {
+    "ok": 0.5,
+    "limite": 0.25
+   },
+   "note": "Les taux de chasse viennent des mêmes tableaux : le test dit ce que les bornes retiennent."
+  },
+  "rendement": {
+   "nature": "reglage",
+   "donnees": [
+    "rendement-secondaire"
+   ],
+   "seuils": {
+    "chaud": {
+     "de": 0.005,
+     "a": 0.05
+    },
+    "froid": {
+     "de": 0.05,
+     "a": 0.4
+    }
+   },
+   "note": "La conversion a été réglée pour que les chasseurs à sang chaud fassent naître de 1 à 3 % de ce qu'ils mangent. Limite : de la moitié au double."
+  },
+  "diversite": {
+   "nature": "garde-fou",
+   "donnees": [],
+   "seuils": {
+    "min": 0.9
+   },
+   "note": "Limite : 2 × min − 1."
+  },
+  "damuth": {
+   "nature": "garde-fou",
+   "donnees": [
+    "loi-damuth",
+    "effectifs-europe"
+   ],
+   "seuils": {
+    "pente": -0.75,
+    "tolerance": 0.15
+   },
+   "note": "L'assemblage l'a posée avec les effectifs comptés : le moteur ne doit pas la défaire."
+  },
+  "calage-adresse": {
+   "nature": "calage",
+   "donnees": [
+    "effectifs-europe"
+   ],
+   "seuils": {
+    "bornes": [
+     0.02,
+     50
+    ],
+    "limite_max": 5
+   },
+   "note": "Les chasseurs dont l'assemblage a mis l'adresse à une borne (1/50 ou 50 fois celle du moteur) pour qu'ils tiennent : aucun ✓, au plus cinq ≈."
+  },
+  "calage-chasse": {
+   "nature": "calage",
+   "donnees": [
+    "tableaux-chasse",
+    "effectifs-europe"
+   ],
+   "seuils": {
+    "limite_part": 0.1
+   },
+   "note": "Les taux de chasse que l'assemblage a dû borner, parce qu'il pose trop peu de bêtes pour ce que la chasse prend : aucun ✓, au plus un sur dix ≈."
+  },
+  "loup-arrivee": {
+   "nature": "reglage",
+   "donnees": [
+    "front-loup-france",
+    "loups-france"
+   ],
+   "seuils": {
+    "ok": 1995,
+    "limite": 2000
+   },
+   "note": "La dispersion a été réglée sur le front du loup en France (docs/53)."
+  },
+  "loup-cent": {
+   "nature": "reglage",
+   "donnees": [
+    "front-loup-france",
+    "loups-france"
+   ],
+   "seuils": {
+    "annee": 2008,
+    "ecart": 6,
+    "ecart_limite": 12
+   }
+  },
+  "loup-2023": {
+   "nature": "reglage",
+   "donnees": [
+    "front-loup-france",
+    "loups-france"
+   ],
+   "seuils": {
+    "facteur": 3,
+    "facteur_limite": 9
+   }
+  },
+  "chacal-vague": {
+   "nature": "validation",
+   "donnees": [
+    "chacal-premieres-observations"
+   ],
+   "seuils": {
+    "ecart_ans": 8,
+    "pays": 8,
+    "ecart_limite": 16,
+    "pays_limite": 5
+   },
+   "note": "Rien n'a été réglé sur le chacal."
+  },
+  "ir-orignaux": {
+   "nature": "guide",
+   "donnees": [
+    "isle-royale-comptages"
+   ],
+   "seuils": {
+    "facteur": 1.5,
+    "facteur_limite": 3
+   },
+   "historique": [
+    "La meute et sa plus grosse proie (regles.meute_proie, 24 novembre 2026).",
+    "La ration des prédateurs, d'après le métabolisme de terrain (24 novembre 2026)."
+   ]
+  },
+  "ir-loups": {
+   "nature": "guide",
+   "donnees": [
+    "isle-royale-comptages"
+   ],
+   "seuils": {
+    "facteur": 2,
+    "facteur_limite": 4
+   },
+   "historique": [
+    "La meute et sa plus grosse proie (regles.meute_proie, 24 novembre 2026).",
+    "La ration des prédateurs, d'après le métabolisme de terrain (24 novembre 2026)."
+   ]
+  },
+  "ir-predation": {
+   "nature": "guide",
+   "donnees": [
+    "isle-royale-predation"
+   ],
+   "seuils": {
+    "de": 0.06,
+    "a": 0.13
+   },
+   "note": "Limite : de la moitié au double.",
+   "historique": [
+    "La meute et sa plus grosse proie (regles.meute_proie, 24 novembre 2026).",
+    "La ration des prédateurs, d'après le métabolisme de terrain (24 novembre 2026)."
+   ]
+  },
+  "ir-kill": {
+   "nature": "guide",
+   "donnees": [
+    "isle-royale-predation"
+   ],
+   "seuils": {
+    "cible": 0.7,
+    "facteur": 2,
+    "facteur_limite": 4
+   },
+   "historique": [
+    "Ajouté le 24 novembre 2026, après la meute ; il a conduit à la ration d'après le métabolisme de terrain."
+   ]
+  },
+  "ir-fluctuations": {
+   "nature": "guide",
+   "donnees": [
+    "isle-royale-comptages"
+   ],
+   "seuils": {
+    "part": 0.5,
+    "part_limite": 0.25
+   },
+   "historique": [
+    "La meute et sa plus grosse proie (regles.meute_proie, 24 novembre 2026).",
+    "La ration des prédateurs, d'après le métabolisme de terrain (24 novembre 2026)."
+   ]
+  }
+ },
+ "reserves": [
+  {
+   "id": "ir-1959-1979",
+   "quoi": "Isle Royale de 1959 à 1979, quand les loups montaient de 20 à 50 : le nombre moyen de loups et d'orignaux",
+   "critere": "chacun à moins d'un facteur 2 de la moyenne comptée ; l'île partie de l'hiver 1959, rien de calé sur elle",
+   "donnees": "les rapports annuels du projet loups-orignaux d'Isle Royale"
+  },
+  {
+   "id": "chien-viverrin",
+   "quoi": "l'expansion du chien viverrin en Europe, depuis ses lâchers en Union soviétique : la première observation de chaque pays",
+   "critere": "comme le chacal : au moins 8 pays sur 10 atteints, à moins de 8 ans des premières observations en médiane",
+   "donnees": "Kauhala et Kowalczyk 2011 ; les premières observations nationales"
+  },
+  {
+   "id": "lynx-lievre",
+   "quoi": "le cycle du lynx du Canada et du lièvre d'Amérique (les fourrures de la Compagnie de la baie d'Hudson, 1845–1935)",
+   "critere": "une période de 8 à 11 ans, et le lynx en retard d'un à deux ans sur le lièvre",
+   "donnees": "Elton et Nicholson 1942 ; MacLulich 1937"
+  },
+  {
+   "id": "coyote",
+   "quoi": "l'expansion du coyote sur l'Amérique du Nord au XXᵉ siècle : l'arrivée dans chaque État et chaque province",
+   "critere": "à moins de 10 ans de l'arrivée réelle en médiane, et au moins 80 % des États et provinces atteints",
+   "donnees": "Hody et Kays 2018, ZooKeys 759"
+  }
+ ],
+ "historique": [
+  {
+   "version": 1,
+   "date": "2026-11-24",
+   "empreinte": "7658e4446733289f293954357ab887e38c6e967548894baef01f30452ea93db0",
+   "pourquoi": "Le protocole écrit pour la première fois (la consolidation, docs/59) : les cibles et les tolérances de l'étalon telles qu'elles étaient le 24 novembre 2026, la nature de chaque test d'après son histoire (docs/53, 56, 57), deux tests du calage, quatre tests réservés, et le moratoire sur les 50 règles du moteur."
+  }
+ ]
+}

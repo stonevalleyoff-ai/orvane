@@ -202,6 +202,10 @@ Pour revenir en arrière :
 
 Ce qu'on écrit à la main (le profil, l'amorce) vient toujours de `main`. Une sauvegarde d'un autre monde (une autre naissance) n'est pas restaurée.
 
+**Au-delà de 30 jours : les archives** (`.github/workflows/archives.yml`, docs/59). Le 1er de chaque mois, et à la demande (Actions › archives › Run workflow), l'état publié de chaque monde devient une release du dépôt, « archive-AAAA-MM-JJ », gardée sans limite de durée. Elle pointe sur le commit de `main` qui faisait tourner les mondes, et porte aussi la référence de chaque monde (`outils/reference.js`) et le dernier rapport de l'étalon. Pour y revenir : Actions › cycle › Run workflow, et dans « restaurer », son nom.
+
+**Rejouer un cycle.** Chaque monde garde un journal (`journal.json`) : pour chacun de ses 400 derniers cycles, le commit du code, l'empreinte de l'état que le moteur a reçu et de celui qu'il a rendu, les pressions des jeux. Depuis l'état d'une sauvegarde, `node outils/rejouer.js <etat.json> <journal.json>` rejoue le cycle suivant et dit s'il rend le même monde, au bit près.
+
 ## À la main
 
 ```
