@@ -6,7 +6,8 @@
 //     n'importe quel ordre ;
 //  3. le cycle hébergé (hebergement/cycle.js) écrit son journal, et un cycle se rejoue au bit près depuis l'état d'avant
 //     (outils/rejouer.js) ; un état touché, ou d'autres pressions, ne passent pas ;
-//  4. la référence (outils/reference.js) : ce qu'est un monde, mesuré, et son cycle suivant rejoué dans deux processus.
+//  4. la référence (outils/reference.js) : ce qu'est un monde, mesuré, et son cycle suivant rejoué dans deux processus ;
+//  5. le contexte explicite : deux mondes entrelacés, chacun le même que seul ; le cycle ne touche à rien de global.
 //   node bancs/rejeu.js [--court]      (sans --court : aussi le monde d'Orvane, d'un processus à l'autre)
 'use strict';
 const fs = require('fs'), path = require('path'), { execFileSync } = require('child_process');
@@ -107,6 +108,24 @@ console.log('\n4. La référence (outils/reference.js)');
       `le cycle suivant, deux fois dans deux processus : le même, et le même qu'ici (${M.cycle_suivant?.duree_s} s, ${M.cycle_suivant?.memoire_mo} Mo)`);
     verif(/\| mer \| 1200 \|/.test(fs.readFileSync(fN, 'utf8')), 'ses notes, en un tableau (celles des archives)');
   } finally { fs.rmSync(tmp, { recursive: true, force: true }); } }
+
+console.log('\n5. Le contexte explicite (moteur/orvane.js, contexte)');
+{ // deux mondes que tout distingue : la mer d'Orvane, et la même au jour, avec un axe à elle (la magie) et la meute de l'Europe
+  const B0 = clone(E0); B0.monde.temps = { jours: 1 }; B0.monde.regles = { ...(B0.monde.regles || {}), meute_proie: 2.5 };
+  B0.catalogue = { ...(B0.catalogue || {}), monde: { ...(B0.catalogue?.monde || {}), axes: { magie: { nom: 'magie' } } } }; B0.biomes.forEach((b, i) => { b.axes = { ...b.axes, magie: (i % 4) / 3 }; });
+  const R0 = JSON.stringify(Orvane.REGLES), seul = X0 => { let X = clone(X0); return [0, 1].map(() => Journal.empreinte(X = Orvane.cycle(X, {}, { duree_ms: JOUR }))); };
+  const hA = seul(E0), hB = seul(B0); let A = clone(E0), B = clone(B0); const entre = [];
+  for (let k = 0; k < 2; k++) { A = Orvane.cycle(A, {}, { duree_ms: JOUR }); B = Orvane.cycle(B, {}, { duree_ms: JOUR }); entre.push(Journal.empreinte(A), Journal.empreinte(B)); }
+  verif(entre.join() === [hA[0], hB[0], hA[1], hB[1]].join() && hA[0] !== hB[0], 'deux mondes aux règles, au pas et aux axes différents, entrelacés : chacun le même que seul');
+  verif(JSON.stringify(Orvane.REGLES) === R0, 'les règles du moteur sortent des cycles telles qu\'elles y sont entrées : le cycle ne touche à rien de global');
+  const C = Orvane.contexte(B0);
+  const sep = B0.monde.regles.separation || {}, D = Orvane.REGLES.separation;
+  verif(C.PAS === 1 / 120 && C.JOURS === 1 && C.AX.includes('magie') && C.R.meute_proie === 2.5 && Orvane.REGLES.meute_proie === 1.5 && C.R.hivernage === Orvane.REGLES.hivernage
+    && Object.keys(D).every(k => C.R.separation[k] === (k in sep ? sep[k] : D[k])) && D !== C.R.separation,
+    'le contexte d\'un monde : son pas (1/120), ses axes, ses règles par-dessus celles du moteur (une règle-objet complétée d\'un niveau), qui ne changent pas');
+  const p = { natalite: 2, masse_kg: 1 };
+  verif(Orvane.croissance(p) !== Orvane.croissance(p, C) && Orvane.croissance(p, C) === 2 / 365.25, 'hors d\'un cycle, une fonction du moteur prend le contexte qu\'on lui donne (la croissance d\'un monde au jour), sinon celui du moteur');
+}
 
 console.log(`\n${ok ? 'le rejeu tient' : 'LE REJEU NE TIENT PAS'} (${((Date.now() - t0) / 1000).toFixed(0)} s)`);
 process.exit(ok ? 0 : 1);

@@ -83,12 +83,12 @@ Sur 23 tests, **quatre seulement sont des validations indépendantes**, et l'une
 **Les données** sont rangées de même. Les entrées font les espèces et les lieux (le climat, les traits, le métabolisme de terrain) ; les données de calage règlent l'assemblage (les effectifs comptés, les tableaux de chasse) ; les données de réglage ont réglé une constante (le rendement des chasseurs, le front du loup) ; les autres valident. Une validation ne peut citer aucune donnée de calage ou de réglage : `bancs/protocole.js` le refuse.
 
 **Le calage, compté comme un échec.** Deux tests de plus disent ce que l'assemblage n'a pas su caler :
-- les chasseurs à la borne de leur adresse : 45 sur 84 dans l'amorce de l'Europe (✗) ;
+- les chasseurs à une borne de leur adresse : 46 sur 84 dans l'amorce de l'Europe, 45 à la borne haute et 1 à la basse (✗) ;
 - les taux de chasse que l'assemblage a dû borner : 66 sur 126 (✗).
 
 **Les tests réservés.** Quatre tests sont écrits d'avance, leur critère fixé avant toute simulation : Isle Royale de 1959 à 1979, l'expansion du chien viverrin en Europe, le cycle du lynx et du lièvre, l'expansion du coyote. Rien ne sera réglé sur eux.
 
-**Le même étalon qu'avant.** Avec ses seuils lus au protocole, l'étalon rend les mêmes valeurs et les mêmes verdicts qu'avant, test par test, sur la même amorce : Isle Royale (trois graines) et le retour du loup (série comprise).
+**Le même étalon qu'avant.** Avec ses seuils lus au protocole, l'étalon rend les mêmes valeurs et les mêmes verdicts qu'avant, test par test, sur la même amorce : l'Europe (deux années, trois graines : les douze tests d'avant à l'identique, et les deux du calage, ✗), Isle Royale (trois graines), le retour du loup (série comprise) et la vague du chacal.
 
 **Les bilans d'énergie et les relations trophiques** (ce que demande aussi l'étape 02) : le rendement des chasseurs (ce qu'ils font naître de ce qu'ils mangent) et la loi des prédateurs (combien de carnivores vivent de dix tonnes de proies) les mesurent déjà. Ce qui manque : ce que mange vraiment chaque grand chasseur, comparé à ce que disent les études de son régime. Ce sera une version suivante du protocole, avec ses données.
 
@@ -107,10 +107,26 @@ node outils/reference.js <dossier qui contient mondes/> --sortie reference.json 
 
 Chaque archive porte la sienne : d'un mois à l'autre, on compare deux époques d'un monde, ou deux versions du moteur.
 
+## 04, la première étape : le contexte explicite
+
+Le cœur du moteur gardait son état dans des variables globales : les règles du monde qui tournait (copiées dans `REGLES` au début de chaque cycle, remises à la fin), son pas de temps (`PAS`, `JOURS`) et ses axes (`AX`). Une fonction appelée hors d'un cycle lisait celles du moteur sans le dire, et deux mondes ne pouvaient pas tourner côte à côte.
+
+**Le contexte d'un monde** (`Orvane.contexte(inst)`) : ses règles (celles du moteur, et les siennes par-dessus, une règle-objet complétée d'un niveau), son pas de temps et ses axes. Le cycle le construit une fois et le donne aux quatorze fonctions qui en dépendent (la croissance, l'appétence, la convenance d'un lieu, la route de l'hiver, la dérive, l'apprentissage…). Il ne change plus rien de global : les règles du moteur sortent d'un cycle telles qu'elles y sont entrées.
+
+**Hors d'un cycle**, ces fonctions prennent le contexte qu'on leur donne en dernier argument (`Orvane.croissance(plan, Orvane.contexte(inst))`), et sinon celui du moteur : les règles par défaut, au pas de référence, comme avant.
+
+**Au bit près.** Sept mondes et seize cycles (la mer, Orvane au cycle 44 et au cycle 64, l'Europe au jour et ses 22 règles, sv-1, la genèse 7, Aube), deux mondes entrelacés, et un monde qui ajoute un axe à lui rendent le même monde, empreinte pour empreinte, avant et après. `bancs/rejeu.js` vérifie que deux mondes que tout distingue rendent, entrelacés, chacun le même monde que seul.
+
+**Ce qui reste global**, pour les étapes suivantes :
+- trois modules gardent un réglage par monde le temps d'un cycle, et le rendent après : le corps (les organes et les formes du monde, `corps.js`), la mémoire (ses règles, `memoire.js`), la flore (son catalogue, `flore.js`) ;
+- la genèse, quelques bancs et le simulateur de joueurs règlent encore le moteur en modifiant `Orvane.REGLES`, devenues les règles par défaut du processus : ils passeront par le monde, ou par une option du cycle.
+
+**Un constat, que le contexte rend visible.** L'étalon mesure la loi des prédateurs avec l'appétence du moteur, et non avec celle de l'Europe : la meute y garde la limite de 1,5 fois sa masse au lieu de 2,5, et les petites proies n'y comptent pas. Le contexte permet de la mesurer avec les règles du monde. C'est un changement de mesure, donc une version du protocole ; il n'est pas fait ici.
+
 ## Ce qui vient
 
 1. **Les ablations (03).** Chaque règle retirée seule, sur Orvane (30 cycles, 3 graines) puis sur l'Europe (une année), puis par paires : ce qu'elle tient, ce qu'elle coûte. La matrice : conserver, modifier, supprimer, investiguer.
-2. **Modulariser le moteur (04)** : la prédation, le métabolisme, la reproduction, la génétique, les déplacements, le climat, chacun dans son module, sans état global. Le rejeu garde le moteur identique au bit près pendant le découpage, l'étalon le juge ensuite.
+2. **Modulariser le moteur (04)**, après le contexte explicite (plus haut) : la prédation, le métabolisme, la reproduction, la génétique, les déplacements, le climat, chacun dans son module, sans état global. Le rejeu garde le moteur identique au bit près pendant le découpage, l'étalon le juge ensuite.
 3. **L'évolution ouverte (05)** : des populations sans évolution, puis avec la génétique seule. Les réseaux neuronaux sont la phase 3 du plan d'évolution ouverte : Orvane n'en a pas aujourd'hui (l'esprit, docs/34, fait vivre des savoirs et des traditions).
 4. **L'intérêt pour les jeux (06)** : Stone Valley comme démonstrateur, avec les lots d'un jeu rejoués sur une copie du monde à côté d'un témoin sans lots (docs/5).
 5. **La revue indépendante.** Le protocole verrouille les critères ; il ne remplace pas un regard extérieur. Il faudrait un écologue des populations pour relire les règles, et une relecture humaine obligatoire des PR (la protection de la branche `main`).
