@@ -1,6 +1,6 @@
 {
   "plan": "Les ablations du moteur (docs/59, 03)",
-  "version": 2,
+  "version": 3,
   "date": "2026-11-24",
   "principes": [
     "Retirer une règle, c'est donner au monde la valeur qui éteint ce qu'elle fait, tout le reste égal : une seule règle à la fois, sur une copie du monde (ses règles, monde.regles : celles du monde passent par-dessus celles d'un cycle), les mêmes graines que le témoin.",
@@ -36,6 +36,12 @@
   "essais": {
     "orvane": {"monde": "le monde d'Orvane publié (mondes/orvane/etat.json de la branche publication)", "cycles": 30, "graines": 3},
     "europe": {"monde": "l'Europe publiée (mondes/europe/etat.json de la branche publication)", "cycles": 365, "graines": 1}
+  },
+  "paires": {
+    "pourquoi": "Deux règles retirées ensemble : ce qu'elles font ensemble, au-delà de la somme de ce qu'elles font seules (leur interaction). Les paires se choisissent avant d'être essayées, par une règle : les mécanismes dont l'essai seul tient (une mesure bouge) dans le rapport entier du même monde, deux à deux ; sur les mêmes cycles, les mêmes graines et le même témoin.",
+    "natures": ["mecanisme"],
+    "seuil_interaction": 4,
+    "lecture": "L'interaction d'une mesure : l'écart de la paire au témoin, moins la somme des écarts de chacune seule. Elle compte au-delà de quatre fois l'écart entre les graines du témoin (quatre essais s'y ajoutent ou s'y retranchent), du seuil de la mesure, et, pour les comptes de lignées, du bruit de Poisson des quatre essais. Du signe de la somme, elle les renforce ; du signe contraire, elle les tempère ; sans effet seules, elles n'agissent qu'ensemble."
   },
   "regles": {
     "mutation": {"nature": "mecanisme", "retirer": {"mutation": 0}, "fait": "une part des naissances change de phénotype", "quand": "chaque cycle, dans un monde clonal (sans reproduction sexuée)"},
@@ -91,6 +97,7 @@
   },
   "historique": [
     {"version": 1, "date": "2026-11-24", "pourquoi": "le premier plan, écrit avant le premier essai (la mer, 30 cycles, 3 graines)"},
-    {"version": 2, "date": "2026-11-24", "pourquoi": "après le pilote sur Orvane (10 cycles, 2 graines) : le témoin n'y a vu naître aucune lignée sur ses deux graines, et presque chaque essai en faisait naître une ou deux ; l'écart entre les graines du témoin ne suffit pas à lire un compte d'événements rares. La lecture des comptes de lignées prend aussi le bruit de Poisson de leurs naissances et de leurs extinctions. Les essais, ce qu'on retire, ne changent pas : les rapports d'avant se relisent (outils/ablations.js --fusionner)."}
+    {"version": 2, "date": "2026-11-24", "pourquoi": "après le pilote sur Orvane (10 cycles, 2 graines) : le témoin n'y a vu naître aucune lignée sur ses deux graines, et presque chaque essai en faisait naître une ou deux ; l'écart entre les graines du témoin ne suffit pas à lire un compte d'événements rares. La lecture des comptes de lignées prend aussi le bruit de Poisson de leurs naissances et de leurs extinctions. Les essais, ce qu'on retire, ne changent pas : les rapports d'avant se relisent (outils/ablations.js --fusionner)."},
+    {"version": 3, "date": "2026-11-25", "pourquoi": "les paires : la règle qui les choisit (les mécanismes qui tiennent seuls dans le rapport entier d'un monde, deux à deux) et la lecture de leur interaction, écrites avant le premier essai de paires. Les essais seuls ne changent pas."}
   ]
 }

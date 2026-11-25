@@ -3,6 +3,12 @@
 # machines à la fois, chacune une part des essais (et le témoin), puis la fusion : le rapport va sur la branche etalon
 # (etalon/ablations/<monde>/AAAA-MM-JJ.json et .md), jamais sur main, et dans le résumé de l'action. Rien du monde hébergé n'est touché.
 # Les essais du plan : Orvane, 30 cycles et 3 graines (une heure et demie environ) ; l'Europe, 365 cycles et 1 graine (deux heures environ).
+#
+# Les paires (le plan, version 3) : deux règles retirées ensemble. Dans « paires », le numéro de la passe des essais seuls (le nombre à
+# la fin de l'adresse de sa page) : la passe garde, 30 jours, le monde de ses essais et son rapport (la branche publication, elle, est
+# réécrite à chaque passe). Les paires tournent sur ce monde-là, ses cycles et ses graines ; « cycles » et « graines » n'y comptent pas ;
+# « règles », s'il est rempli, dit les essais seuls à mettre en paires (sinon, la règle du plan : les mécanismes qui tiennent seuls).
+# Le rapport : etalon/ablations/<monde>/AAAA-MM-JJ-paires.json et .md.
 name: ablations
 on:
   workflow_dispatch:
@@ -17,10 +23,14 @@ on:
         description: 'les graines (le témoin et chaque essai, sur les mêmes)'
         default: '3'
       regles:
-        description: 'les règles à essayer, séparées par des virgules (vide : toutes celles du plan)'
+        description: 'les règles à essayer, séparées par des virgules (vide : toutes celles du plan ; avec « paires » : les essais seuls à mettre en paires)'
+        default: ''
+      paires:
+        description: "les paires : le numéro de la passe des essais seuls de ce monde (le nombre à la fin de l'adresse de sa page) ; vide : les essais seuls"
         default: ''
 permissions:
   contents: write
+  actions: read          # (les paires : lire le monde et le rapport gardés par la passe des essais seuls)
 concurrency:
   group: ablations
   cancel-in-progress: false
@@ -43,16 +53,29 @@ jobs:
           CYCLES: ${{ github.event.inputs.cycles }}
           GRAINES: ${{ github.event.inputs.graines }}
           REGLES: ${{ github.event.inputs.regles }}
+          PAIRES: ${{ github.event.inputs.paires }}
           PART: ${{ matrix.part }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          printf '%s' "$MONDE" | grep -Eq '^[a-z0-9-]{1,40}$' || { echo "::error::le monde : « $MONDE »"; exit 1; }
-          printf '%s' "$CYCLES" | grep -Eq '^[0-9]{1,4}$' && [ "$CYCLES" -ge 1 ] || { echo "::error::les cycles : « $CYCLES »"; exit 1; }
-          printf '%s' "$GRAINES" | grep -Eq '^[1-9]$' || { echo "::error::les graines : « $GRAINES »"; exit 1; }
-          printf '%s' "$REGLES" | grep -Eq '^[a-z_,]{0,800}$' || { echo "::error::les règles : « $REGLES »"; exit 1; }
-          git fetch -q --depth=1 origin publication
-          git show "FETCH_HEAD:mondes/$MONDE/etat.json" > "$RUNNER_TEMP/etat.json" || { echo "::error::pas de mondes/$MONDE/etat.json sur la branche publication"; exit 1; }
-          set -- --cycles "$CYCLES" --graines "$GRAINES" --jobs 4 --part "$PART/4" --sortie "$RUNNER_TEMP/part.json"
-          if [ -n "$REGLES" ]; then set -- "$@" --regles "$REGLES"; fi
+          # (les entrées, entières : [[ =~ ]] lit toute la valeur ; grep, ligne à ligne, ne lit rien d'une valeur vide et refuserait « règles » laissé vide)
+          [[ "$MONDE" =~ ^[a-z0-9-]{1,40}$ ]] || { echo "::error::le monde : « $MONDE »"; exit 1; }
+          [[ "$CYCLES" =~ ^[0-9]{1,4}$ ]] && [ "$CYCLES" -ge 1 ] || { echo "::error::les cycles : « $CYCLES »"; exit 1; }
+          [[ "$GRAINES" =~ ^[1-9]$ ]] || { echo "::error::les graines : « $GRAINES »"; exit 1; }
+          [[ "$REGLES" =~ ^[a-z_,]{0,800}$ ]] || { echo "::error::les règles : « $REGLES »"; exit 1; }
+          [[ "$PAIRES" =~ ^([0-9]{5,})?$ ]] || { echo "::error::les paires : « $PAIRES » (le numéro d'une passe)"; exit 1; }
+          if [ -n "$PAIRES" ]; then
+            # (le plan, version 3) le monde et le rapport des essais seuls, gardés par leur passe
+            gh run download "$PAIRES" -n ablations-monde -D "$RUNNER_TEMP/seuls" && gh run download "$PAIRES" -n ablations-rapport -D "$RUNNER_TEMP/seuls" \
+              || { echo "::error::pas de monde ni de rapport des essais seuls dans la passe $PAIRES (elle a peut-être plus de 30 jours, ou ce n'est pas une passe des ablations)"; exit 1; }
+            cp "$RUNNER_TEMP/seuls/etat.json" "$RUNNER_TEMP/etat.json"
+            set -- --paires "$RUNNER_TEMP/seuls/rapport.json" --jobs 4 --part "$PART/4" --sortie "$RUNNER_TEMP/part.json"
+            if [ -n "$REGLES" ]; then set -- "$@" --paires-de "$REGLES"; fi
+          else
+            git fetch -q --depth=1 origin publication
+            git show "FETCH_HEAD:mondes/$MONDE/etat.json" > "$RUNNER_TEMP/etat.json" || { echo "::error::pas de mondes/$MONDE/etat.json sur la branche publication"; exit 1; }
+            set -- --cycles "$CYCLES" --graines "$GRAINES" --jobs 4 --part "$PART/4" --sortie "$RUNNER_TEMP/part.json"
+            if [ -n "$REGLES" ]; then set -- "$@" --regles "$REGLES"; fi
+          fi
           node outils/ablations.js "$RUNNER_TEMP/etat.json" "$@" || echo "::warning::des essais de la part $PART/4 n'ont pas tourné : le rapport le dit"
           test -s "$RUNNER_TEMP/part.json"
       - uses: actions/upload-artifact@v4
@@ -60,6 +83,14 @@ jobs:
           name: ablations-part-${{ matrix.part }}
           path: ${{ runner.temp }}/part.json
           retention-days: 7
+      # (le monde des essais, gardé pour leurs paires : celui de la première part ; la fusion vérifie que les quatre ont eu le même)
+      - uses: actions/upload-artifact@v4
+        if: matrix.part == 1
+        with:
+          name: ablations-monde
+          path: ${{ runner.temp }}/etat.json
+          retention-days: 30
+          compression-level: 9
   rapport:
     needs: parts
     runs-on: ubuntu-latest
@@ -75,16 +106,28 @@ jobs:
       - name: la fusion
         env:
           MONDE: ${{ github.event.inputs.monde }}
+          PAIRES: ${{ github.event.inputs.paires }}
+          PASSE: ${{ github.run_id }}
         run: |
-          printf '%s' "$MONDE" | grep -Eq '^[a-z0-9-]{1,40}$' || exit 1
-          jour=$(date -u +%F); mkdir -p "$RUNNER_TEMP/ablations/$MONDE"
+          [[ "$MONDE" =~ ^[a-z0-9-]{1,40}$ ]] || exit 1
+          jour=$(date -u +%F); if [ -n "$PAIRES" ]; then jour="$jour-paires"; fi; mkdir -p "$RUNNER_TEMP/ablations/$MONDE"
           node outils/ablations.js --fusionner "$RUNNER_TEMP"/parts/*/part.json --sortie "$RUNNER_TEMP/ablations/$MONDE/$jour.json" --notes "$RUNNER_TEMP/ablations/$MONDE/$jour.md" || echo "::warning::des essais n'ont pas tourné : le rapport le dit"
+          test -s "$RUNNER_TEMP/ablations/$MONDE/$jour.json" || { echo "::error::la fusion n'a rien écrit : les parts ne vont pas ensemble (un monde publié entre deux parts ?)"; exit 1; }
+          cp "$RUNNER_TEMP/ablations/$MONDE/$jour.json" "$RUNNER_TEMP/rapport.json"
           cat "$RUNNER_TEMP/ablations/$MONDE/$jour.md" >> "$GITHUB_STEP_SUMMARY"
+          if [ -z "$PAIRES" ]; then printf '\nLeurs paires : Actions › ablations › Run workflow, le monde %s et, dans « paires », %s (30 jours).\n' "$MONDE" "$PASSE" >> "$GITHUB_STEP_SUMMARY"; fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ablations-rapport
+          path: ${{ runner.temp }}/rapport.json
+          retention-days: 30
       - name: le rapport (la branche etalon)
         env:
           MONDE: ${{ github.event.inputs.monde }}
+          PAIRES: ${{ github.event.inputs.paires }}
         run: |
           git config user.name "orvane-ablations"; git config user.email "actions@users.noreply.github.com"
           if git fetch -q --depth=1 origin etalon 2>/dev/null; then git checkout -q -B etalon FETCH_HEAD; else git checkout -q --orphan etalon && git rm -rq --cached . && git clean -fdq -e "$RUNNER_TEMP"; fi
           mkdir -p "etalon/ablations/$MONDE" && cp "$RUNNER_TEMP/ablations/$MONDE"/* "etalon/ablations/$MONDE/"
-          git add etalon && git commit -qm "Les ablations de $MONDE, le $(date -u +%F)" && git push -q origin HEAD:etalon
+          quoi="Les ablations"; if [ -n "$PAIRES" ]; then quoi="Les paires des ablations (passe $PAIRES)"; fi
+          git add etalon && git commit -qm "$quoi de $MONDE, le $(date -u +%F)" && git push -q origin HEAD:etalon

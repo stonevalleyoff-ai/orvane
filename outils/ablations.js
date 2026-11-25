@@ -40,7 +40,7 @@ if (process.argv[2] === '--essai') {
   process.exit(0);
 }
 
-const a = process.argv.slice(2), OPTS = ['--cycles', '--graines', '--regles', '--natures', '--jobs', '--plan', '--sortie', '--notes', '--part'];
+const a = process.argv.slice(2), OPTS = ['--cycles', '--graines', '--regles', '--natures', '--jobs', '--plan', '--sortie', '--notes', '--part', '--paires', '--paires-de'];
 const arg = (k, d) => { const i = a.indexOf(k); return i >= 0 && a[i + 1] != null ? a[i + 1] : d; };
 const fPlan = arg('--plan', path.join(racine, 'etalon/ablations.json')), PLAN = lireJ(fPlan), empreintePlan = crypto.createHash('sha256').update(Journal.stable(PLAN)).digest('hex');
 const moy = L => L.length ? somme(L) / L.length : null;
@@ -53,7 +53,7 @@ function lire(bruts, T, cycles) {
   for (const k of [...CLES, 'duree_s']) { const v = Tm.map(m => m[k]).filter(x => x != null); temoin.moyenne[k] = r(moy(v)); temoin.ecart[k] = v.length ? r(Math.max(...v) - Math.min(...v)) : null; }
   const BRUIT_DUREE = temoin.moyenne.duree_s > 0 ? (temoin.ecart.duree_s || 0) / temoin.moyenne.duree_s : 0;
   const essais = bruts.map(e => {
-    const base = { essai: e.essai, regle: e.regle, nature: e.nature, fait: e.fait, quand: e.quand, regles: e.regles, temoin_duree_s: e.temoin_duree_s }, M = Object.values(e.par_graine).filter(Boolean);
+    const base = { essai: e.essai, regle: e.regle, nature: e.nature, ...(e.paire ? { paire: e.paire } : {}), fait: e.fait, quand: e.quand, regles: e.regles, temoin_duree_s: e.temoin_duree_s }, M = Object.values(e.par_graine).filter(Boolean);
     if (e.erreurs?.length) return { ...base, par_graine: e.par_graine, erreurs: e.erreurs, lecture: 'investiguer : le monde ne tourne plus sans elle' };
     const mesures = {}, ecarts = {}, bouge = [];
     for (const k of [...CLES, 'duree_s']) { const v = M.map(m => m[k]).filter(x => x != null); mesures[k] = r(moy(v)); ecarts[k] = mesures[k] != null && temoin.moyenne[k] != null ? r(mesures[k] - temoin.moyenne[k]) : null; }
@@ -74,15 +74,37 @@ function lire(bruts, T, cycles) {
   });
   return { temoin, essais };
 }
+// --- les paires (plan, version 3) : l'interaction de deux règles, l'écart de la paire au témoin moins la somme des écarts de chacune seule ---
+// simples : { essai: { ecarts, mesures, bouge } }, les essais seuls (du rapport du même monde, sur le même témoin)
+function interactions(L, simples) {
+  const CLES = Object.keys(PLAN.mesures).filter(k => k !== 'duree_s'), S = PLAN.lecture.seuils, REL = new Set(PLAN.lecture.relatives || []), Q = PLAN.paires?.seuil_interaction ?? 4;
+  const T = L.temoin, ng = Math.max(1, Object.values(T.par_graine).filter(Boolean).length);
+  const lambda = (X, ev) => Math.max(.5, somme(ev.map(c => X?.[c] ?? 0)));
+  L.essais = L.essais.map(e => { if (!e.paire || e.erreurs) return e; const [A, B] = e.paire.map(x => simples[x]); const inter = {}, joue = [];
+    for (const k of CLES) { if (e.ecarts[k] == null || A?.ecarts?.[k] == null || B?.ecarts?.[k] == null) continue;
+      inter[k] = r(e.ecarts[k] - A.ecarts[k] - B.ecarts[k]);
+      const ev = PLAN.lecture.comptes?.[k], poisson = ev ? 2 * Math.sqrt((lambda(T.moyenne, ev) + lambda(e.mesures, ev) + lambda(A.mesures, ev) + lambda(B.mesures, ev)) / ng) : 0;
+      const seuil = REL.has(k) ? S[k] * Math.abs(T.moyenne[k] || 0) : S[k];
+      if (Math.abs(inter[k]) > Math.max(Q * (T.ecart[k] || 0), poisson, seuil ?? 0)) joue.push(k); }
+    // (le sens : une interaction du signe de la somme les renforce, du signe contraire les tempère ; sans effet seules — ni l'une ni l'autre
+    //  ne bouge la mesure, à la lecture des essais seuls —, elles n'agissent qu'ensemble)
+    const sens = joue.map(k => { const sum = (A.ecarts[k] || 0) + (B.ecarts[k] || 0), x = inter[k], seules = A.bouge?.includes(k) || B.bouge?.includes(k);
+      return `${k} ${!seules || Math.abs(sum) < 1e-9 ? 'n\'agit qu\'ensemble' : Math.sign(x) === Math.sign(sum) ? 'se renforce' : 'se tempère'}`; });
+    return { ...e, interaction: inter, joue, lecture: joue.length ? `elles se répondent : ${sens.join(', ')}` : 'chacune pour soi : ensemble, elles font la somme de ce qu\'elles font seules' }; });
+  return L;
+}
 const ecrire = R0 => {
   const { temoin, essais: rapport, laisses } = R0, NG = R0.graines.length;
   const fx = (x, d = 2) => x == null ? '–' : (x > 0 ? '+' : '') + (+x).toLocaleString('fr-FR', { maximumFractionDigits: d }), nb = (x, d) => x == null ? '–' : (+x).toLocaleString('fr-FR', { maximumFractionDigits: d });
-  const notes = [`## Les ablations : ${R0.monde.id}, cycle ${R0.monde.cycle} (${R0.cycles} cycles, ${NG} graine${NG > 1 ? 's' : ''})`, '',
-    `Le témoin : ${nb(temoin.moyenne.lignees, 1)} lignées animales (écart entre graines ${nb(temoin.ecart.lignees, 1)}), ${nb(temoin.moyenne.predateurs, 1)} carnivores, ${nb(temoin.moyenne.biomasse_t, 0)} t, Shannon ${nb(temoin.moyenne.shannon, 3)}, ${nb(100 * (temoin.moyenne.stables ?? 0), 0)} % de lignées stables, ${nb(temoin.moyenne.eteintes, 1)} éteintes, ${nb(temoin.moyenne.nees, 1)} nées ; un cycle en ${nb(temoin.moyenne.duree_s, 2)} s. Lu selon le plan ${R0.plan.version} (${R0.plan.empreinte.slice(0, 12)}…)${R0.plan_des_essais ? `, les essais faits selon le plan ${R0.plan_des_essais.version} (${R0.plan_des_essais.empreinte.slice(0, 12)}…)` : ''}.`, '',
-    '| essai | nature | lignées | carnivores | biomasse | Shannon | stables | éteintes | nées | coût | lecture |', '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |',
+  const PAI = R0.type === 'paires', S1 = R0.simples || {}, seules = (x, k) => x.paire ? (S1[x.paire[0]]?.ecarts?.[k] ?? 0) + (S1[x.paire[1]]?.ecarts?.[k] ?? 0) : null;
+  const cel = (x, k, d) => { const v = k === 'biomasse_t' && temoin.moyenne.biomasse_t ? 100 / temoin.moyenne.biomasse_t : 1, s = PAI ? seules(x, k) : null;
+    const u = k === 'biomasse_t' ? ' %' : ''; return `${fx(x.ecarts[k] * v, d)}${u}${PAI ? ` (${fx(s * v, d)}${u})` : ''}`; };
+  const notes = [`## Les ${PAI ? 'paires de règles' : 'ablations'} : ${R0.monde.id}, cycle ${R0.monde.cycle} (${R0.cycles} cycles, ${NG} graine${NG > 1 ? 's' : ''})`, '',
+    `Le témoin : ${nb(temoin.moyenne.lignees, 1)} lignées animales (écart entre graines ${nb(temoin.ecart.lignees, 1)}), ${nb(temoin.moyenne.predateurs, 1)} carnivores, ${nb(temoin.moyenne.biomasse_t, 0)} t, Shannon ${nb(temoin.moyenne.shannon, 3)}, ${nb(100 * (temoin.moyenne.stables ?? 0), 0)} % de lignées stables, ${nb(temoin.moyenne.eteintes, 1)} éteintes, ${nb(temoin.moyenne.nees, 1)} nées ; un cycle en ${nb(temoin.moyenne.duree_s, 2)} s. Lu selon le plan ${R0.plan.version} (${R0.plan.empreinte.slice(0, 12)}…)${R0.plan_des_essais ? `, les essais faits selon le plan ${R0.plan_des_essais.version} (${R0.plan_des_essais.empreinte.slice(0, 12)}…)` : ''}.${R0.regles_choisies ? ` Seules les règles dites (${R0.regles_choisies.join(', ')}), pas tout le plan.` : ''}`, '',
+    `| ${PAI ? 'paire' : 'essai'} | nature | lignées | carnivores | biomasse | Shannon | stables | éteintes | nées | coût | lecture |`, '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |',
     ...rapport.map(x => x.erreurs ? `| ${x.essai} | ${x.nature} | | | | | | | | | ${x.lecture} |`
-      : `| ${x.essai} | ${x.nature} | ${fx(x.ecarts.lignees, 1)} | ${fx(x.ecarts.predateurs, 1)} | ${temoin.moyenne.biomasse_t ? fx(100 * x.ecarts.biomasse_t / temoin.moyenne.biomasse_t, 1) + ' %' : '–'} | ${fx(x.ecarts.shannon, 3)} | ${fx(x.ecarts.stables, 3)} | ${fx(x.ecarts.eteintes, 1)} | ${fx(x.ecarts.nees, 1)} | ${x.cout_lu == null ? '≈' : fx(100 * x.cout_lu, 0) + ' %'} | ${x.lecture} |`),
-    '', `Les écarts sont ceux de l'essai au témoin, en moyenne sur les graines (la biomasse, en part de celle du témoin). Le coût : la part d'un cycle qu'on gagne sans la règle, au-delà du bruit des durées (≈ : dans ce bruit).`,
+      : `| ${x.essai} | ${x.nature} | ${cel(x, 'lignees', 1)} | ${cel(x, 'predateurs', 1)} | ${temoin.moyenne.biomasse_t ? cel(x, 'biomasse_t', 1) : '–'} | ${cel(x, 'shannon', 3)} | ${cel(x, 'stables', 3)} | ${cel(x, 'eteintes', 1)} | ${cel(x, 'nees', 1)} | ${x.cout_lu == null ? '≈' : fx(100 * x.cout_lu, 0) + ' %'} | ${x.lecture} |`),
+    '', `Les écarts sont ceux de l'essai au témoin, en moyenne sur les graines (la biomasse, en part de celle du témoin)${PAI ? ` ; entre parenthèses, la somme des écarts des deux règles retirées chacune seule (le rapport des essais seuls${R0.simples_de?.date ? ` du ${R0.simples_de.date.slice(0, 10)}` : ''}, ${R0.simples_de?.empreinte?.slice(0, 12) ?? '?'}…)` : ''}. Le coût : la part d'un cycle qu'on gagne sans la règle, au-delà du bruit des durées (≈ : dans ce bruit).`,
     ...(laisses.length ? ['', `Non essayées : ${laisses.map(x => `${x.essai || x.regle} (${x.pourquoi})`).join(' ; ')}.`] : [])].join('\n');
   const so = arg('--sortie'), sn = arg('--notes');
   if (so) { fs.mkdirSync(path.dirname(path.resolve(so)), { recursive: true }); fs.writeFileSync(so, JSON.stringify(R0, null, 1) + '\n'); }
@@ -93,12 +115,14 @@ const ecrire = R0 => {
 if (a[0] === '--fusionner') {
   const P = a.slice(1).filter((x, i, L) => !x.startsWith('--') && !OPTS.includes(L[i - 1])).map(lireJ), A = P[0];
   const sansDuree = T => JSON.stringify(Object.fromEntries(Object.entries(T).map(([g, m]) => [g, m && { ...m, duree_s: 0 }])));
-  const pb = P.filter(x => x.plan.empreinte !== A.plan.empreinte || x.monde.empreinte !== A.monde.empreinte || x.cycles !== A.cycles || JSON.stringify(x.graines) !== JSON.stringify(A.graines) || sansDuree(x.temoin.par_graine) !== sansDuree(A.temoin.par_graine));
-  if (pb.length) { console.error(`les parts ne vont pas ensemble (plan, monde, cycles, graines ou témoin) : ${pb.length} sur ${P.length}`); process.exit(2); }
+  const pb = P.filter(x => x.plan.empreinte !== A.plan.empreinte || x.monde.empreinte !== A.monde.empreinte || x.cycles !== A.cycles || JSON.stringify(x.graines) !== JSON.stringify(A.graines) || sansDuree(x.temoin.par_graine) !== sansDuree(A.temoin.par_graine)
+    || x.type !== A.type || x.simples_de?.empreinte !== A.simples_de?.empreinte || JSON.stringify(x.regles_choisies) !== JSON.stringify(A.regles_choisies));
+  if (pb.length) { console.error(`les parts ne vont pas ensemble (plan, monde, cycles, graines, témoin, essais seuls ou paires, règles dites) : ${pb.length} sur ${P.length}`); process.exit(2); }
   const vus = new Set(), bruts = P.flatMap(x => x.essais).filter(e => !vus.has(e.essai) && vus.add(e.essai)), cles = new Set();
   const laisses = P.flatMap(x => x.laisses).filter(l => { const k = l.regle + '|' + (l.essai || ''); return !cles.has(k) && cles.add(k); });
   const ordre = Object.keys(PLAN.regles);
-  const L = lire(bruts.sort((x, y) => ordre.indexOf(x.regle) - ordre.indexOf(y.regle) || (x.essai < y.essai ? -1 : 1)), A.temoin.par_graine, A.cycles);
+  let L = lire(bruts.sort((x, y) => ordre.indexOf(x.regle?.split('+')[0]) - ordre.indexOf(y.regle?.split('+')[0]) || (x.essai < y.essai ? -1 : 1)), A.temoin.par_graine, A.cycles);
+  if (A.type === 'paires') L = interactions(L, A.simples || {});
   // (la lecture est celle du plan d'aujourd'hui ; s'il a changé depuis les essais, le rapport le dit : plan_des_essais)
   const plan = { fichier: path.relative(racine, path.resolve(fPlan)), version: PLAN.version, empreinte: empreintePlan };
   ecrire({ ...A, part: undefined, parts: P.length, plan, ...(A.plan.empreinte !== empreintePlan ? { plan_des_essais: A.plan } : {}), date: new Date().toISOString(), temoin: L.temoin, essais: L.essais, laisses, duree_min: r(somme(P.map(x => x.duree_min || 0)), 1) });
@@ -107,12 +131,18 @@ if (a[0] === '--fusionner') {
 
 const fMonde = a.find((x, i) => !x.startsWith('--') && !OPTS.includes(a[i - 1]));
 if (!fMonde) { console.error('node outils/ablations.js <etat.json> [--cycles 30] [--graines 3] [--regles a,b] [--natures mecanisme,constante,comptable] [--jobs 4] [--part k/n] [--sortie f.json] [--notes f.md]\n'
+  + 'node outils/ablations.js <etat.json> --paires <rapport des essais seuls> [--paires-de a,b,c] [--jobs 4] [--part k/n] [--sortie f.json] [--notes f.md]\n'
   + 'node outils/ablations.js --fusionner part1.json part2.json … [--sortie f.json] [--notes f.md]'); process.exit(2); }
-const CYCLES = +arg('--cycles', 30), NG = +arg('--graines', 3), JOBS = +arg('--jobs', Math.max(1, os.cpus().length));
+// (les paires : les cycles et les graines du rapport des essais seuls, le même monde)
+const PAIRES = arg('--paires') ? lireJ(arg('--paires')) : null;
+const CYCLES = PAIRES ? PAIRES.cycles : +arg('--cycles', 30), NG = PAIRES ? PAIRES.graines.length : +arg('--graines', 3), JOBS = +arg('--jobs', Math.max(1, os.cpus().length));
 const NATURES = new Set(arg('--natures', 'mecanisme,constante,comptable').split(',')), CHOIX = arg('--regles') ? new Set(arg('--regles').split(',')) : null;
 const PART = arg('--part') ? arg('--part').split('/').map(Number) : null;
 if (PART && !(PART[0] >= 1 && PART[0] <= PART[1])) { console.error('--part k/n : 1 ≤ k ≤ n'); process.exit(2); }
-const I0 = lireJ(fMonde), R = Orvane.contexte(I0).R, graines = Array.from({ length: NG }, (_, k) => ((I0.monde.graine >>> 0) + k) >>> 0);
+const I0 = lireJ(fMonde), R = Orvane.contexte(I0).R, graines = PAIRES ? PAIRES.graines.slice() : Array.from({ length: NG }, (_, k) => ((I0.monde.graine >>> 0) + k) >>> 0);
+if (PAIRES && (PAIRES.type === 'paires' || PAIRES.part)) { console.error(`--paires : ${PAIRES.part ? `une part (${PAIRES.part}) ; les paires se choisissent dans le rapport entier (--fusionner les parts d'abord)` : 'un rapport de paires, pas d\'essais seuls'}`); process.exit(2); }
+if (PAIRES && PAIRES.monde?.empreinte !== Journal.empreinte(I0)) { console.error('--paires : le rapport des essais seuls n\'est pas celui de ce monde (son empreinte)'); process.exit(2); }
+if (PAIRES && PAIRES.regles_choisies && !arg('--paires-de')) console.error(`--paires : les essais seuls n'ont pas tout le plan (--regles ${PAIRES.regles_choisies.join(',')}) ; la règle du plan veut le rapport entier`);
 
 // --- les essais : le témoin, puis chaque règle retirée (ou chaque valeur d'une constante) ; une part : le témoin et un essai sur n ---
 let essais = [{ id: 'temoin', regle: null, nature: 'temoin', regles: {} }], laisses = [];
@@ -128,6 +158,16 @@ for (const [k, P] of Object.entries(PLAN.regles)) {
     essais.push({ id: v.id, regle: k, nature: P.nature, regles, fait: P.fait, quand: P.quand });
   }
 }
+// (les paires, plan version 3 : les mécanismes qui tiennent seuls dans le rapport du même monde, deux à deux ; --paires-de : ceux qu'on dit)
+let simples = null;
+if (PAIRES) { const de = arg('--paires-de') ? arg('--paires-de').split(',') : null, N = PLAN.paires?.natures || ['mecanisme'];
+  if (de && de.some(x => !PAIRES.essais.some(e => e.essai === x))) { console.error(`--paires-de : pas d'essai seul « ${de.find(x => !PAIRES.essais.some(e => e.essai === x))} » dans ce rapport`); process.exit(2); }
+  const choisis = PAIRES.essais.filter(e => !e.erreurs && (de ? de.includes(e.essai) : N.includes(e.nature) && e.bouge?.length));
+  simples = Object.fromEntries(choisis.map(e => [e.essai, { ecarts: e.ecarts, mesures: e.mesures, bouge: e.bouge }]));
+  essais = [essais[0]]; laisses = [];
+  for (let i = 0; i < choisis.length; i++) for (let j = i + 1; j < choisis.length; j++) { const A = choisis[i], B = choisis[j];
+    essais.push({ id: `${A.essai} + ${B.essai}`, regle: `${A.regle}+${B.regle}`, nature: 'paire', paire: [A.essai, B.essai], regles: { ...A.regles, ...B.regles }, fait: `${A.fait} ; ${B.fait}`, quand: `${A.quand} ; ${B.quand}` }); }
+  if (choisis.length < 2) console.error(`--paires : ${choisis.length} règle${choisis.length > 1 ? 's' : ''} seulement à mettre en paires (${choisis.map(e => e.essai).join(', ') || 'aucune'})`); }
 if (PART) essais = [essais[0], ...essais.slice(1).filter((_, i) => i % PART[1] === PART[0] - 1)];
 const travaux = essais.flatMap(e => graines.map(g => ({ e, g })));
 console.error(`${path.basename(path.dirname(path.resolve(fMonde)))} (cycle ${I0.cycle.n})${PART ? `, part ${PART.join('/')}` : ''} : ${essais.length - 1} essais et le témoin, ${NG} graine${NG > 1 ? 's' : ''}, ${CYCLES} cycles chacun : ${travaux.length} tâches, ${JOBS} à la fois`);
@@ -144,11 +184,14 @@ const lancer = ({ e, g }) => new Promise(fin => {
   const de = id => graines.map(g => res.find(x => x.id === id && x.g === g)), T = Object.fromEntries(de('temoin').map(x => [x.g, x.m]));
   const td = moy(Object.values(T).filter(Boolean).map(m => m.duree_s));
   const bruts = essais.slice(1).map(e => { const L = de(e.id);
-    return { essai: e.id, regle: e.regle, nature: e.nature, fait: e.fait, quand: e.quand, regles: e.regles, temoin_duree_s: r(td, 3), par_graine: Object.fromEntries(L.map(x => [x.g, x.m])),
+    return { essai: e.id, regle: e.regle, nature: e.nature, ...(e.paire ? { paire: e.paire } : {}), fait: e.fait, quand: e.quand, regles: e.regles, temoin_duree_s: r(td, 3), par_graine: Object.fromEntries(L.map(x => [x.g, x.m])),
       erreurs: L.filter(x => !x.m).map(x => ({ graine: x.g, erreur: x.erreur })) }; });
-  const L = lire(bruts, T, CYCLES);
-  const R0 = { plan: { fichier: path.relative(racine, path.resolve(fPlan)), version: PLAN.version, empreinte: empreintePlan }, date: new Date().toISOString(), moteur: Journal.moteur(racine),
-    machine: { processeur: os.cpus()[0]?.model ?? null, coeurs: os.cpus().length, node: process.version }, ...(PART ? { part: PART.join('/') } : {}),
+  // (les paires se lisent contre les essais seuls : il faut le même témoin, au bit près dans ses mesures)
+  const sansDuree = X => JSON.stringify(Object.fromEntries(Object.entries(X).map(([g, m]) => [g, m && { ...m, duree_s: 0 }])));
+  if (PAIRES && sansDuree(T) !== sansDuree(PAIRES.temoin.par_graine)) { console.error('--paires : le témoin n\'est pas celui des essais seuls (un autre moteur ?) : les paires ne se liraient pas contre eux'); process.exit(2); }
+  let L = lire(bruts, T, CYCLES); if (PAIRES) L = interactions(L, simples);
+  const R0 = { ...(PAIRES ? { type: 'paires', simples_de: { fichier: path.relative(racine, path.resolve(arg('--paires'))), date: PAIRES.date ?? null, empreinte: Journal.empreinte(PAIRES) }, simples } : {}), plan: { fichier: path.relative(racine, path.resolve(fPlan)), version: PLAN.version, empreinte: empreintePlan }, date: new Date().toISOString(), moteur: Journal.moteur(racine),
+    machine: { processeur: os.cpus()[0]?.model ?? null, coeurs: os.cpus().length, node: process.version }, ...(PART ? { part: PART.join('/') } : {}), ...(CHOIX && !PAIRES ? { regles_choisies: [...CHOIX].sort() } : {}),
     monde: { id: I0.monde.id, cycle: I0.cycle.n, empreinte: Journal.empreinte(I0), regles: Journal.empreinte(Journal.stable(I0.monde.regles ?? {})) },
     cycles: CYCLES, graines, temoin: L.temoin, essais: L.essais, laisses, duree_min: r((Date.now() - t0) / 60000, 1) };
   ecrire(R0);
