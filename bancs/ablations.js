@@ -11,7 +11,8 @@
 //     chaque jalon ce que rendrait un essai qui s'arrête là, et à sa fin ce que rend le même essai sans jalons ; en parts puis fusionnées,
 //     la même lecture en chemin ; un rapport d'essais seuls d'avant (sans les formes) sert encore aux paires ; des jalons mal dits, refusés ;
 //  5. la reprise : un rapport qui a perdu des tâches (une machine à court de mémoire), repris, rend le rapport entier, les tâches gardées
-//     telles quelles ; une reprise d'une autre passe ou d'un autre moteur, refusée ; la mémoire d'une tâche, plafonnée, rend les mêmes mesures.
+//     telles quelles ; une reprise d'une autre passe ou d'un autre moteur, refusée ; la mémoire d'une tâche, plafonnée, rend les mêmes mesures ;
+//     un essai que la machine a arrêté se dit « à relancer », un témoin qui a perdu une graine aussi.
 //   node bancs/ablations.js
 'use strict';
 const fs = require('fs'), path = require('path'), os = require('os'), { execFileSync } = require('child_process');
@@ -133,6 +134,13 @@ console.log('\n2. L\'outil, sur la mer');
       && rp('--cycles', '3', '--reprendre', mo('main.json', { commit: perdu.moteur.commit, modifie: true })) === 2
       && code('--cycles', '3', '--memoire-tache', '100', '--sortie', f('rr.json')) === 2 && !fs.existsSync(f('rr.json')),
       'une reprise d\'une autre passe (d\'autres cycles, d\'autres essais), d\'un autre code, ou d\'un moteur changé à la main qui ne dit pas son code : refusée ; une tâche à 100 Mo aussi');
+    // (la lecture d'un rapport qui a perdu des tâches : celle que la machine a arrêtée — un signal — n'est pas une règle qui casse le monde)
+    const ar = JSON.parse(JSON.stringify(perdu)); ar.essais.find(x => x.essai === 'saisons').erreurs = [{ graine: +g1, erreur: 'arrêtée par la machine (SIGKILL)', arretee: true }];
+    fs.writeFileSync(f('arretee.json'), JSON.stringify(ar)); let cAr = 0;
+    try { execFileSync(process.execPath, [racine('outils/ablations.js'), '--fusionner', f('arretee.json'), '--sortie', f('lu-ar.json'), '--notes', f('lu-ar.md')], { stdio: 'ignore' }); } catch (e) { cAr = e.status; }
+    const LA = JSON.parse(fs.readFileSync(f('lu-ar.json'), 'utf8')), LP = LA.essais.find(x => x.essai === 'saisons');
+    verif(cAr === 1 && /^à relancer/.test(LP.lecture) && /Le témoin a perdu 1 graine sur 2 : le rapport ne se lit pas avant de la relancer/.test(fs.readFileSync(f('lu-ar.md'), 'utf8')),
+      `un rapport qui a perdu des tâches le dit : un essai que la machine a arrêté, « ${LP.lecture} » ; un témoin qui a perdu une graine, à relancer avant de le lire`);
   } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
 }
 
