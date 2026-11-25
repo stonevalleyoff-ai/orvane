@@ -1,0 +1,3361 @@
+{
+ "plan": {
+  "fichier": "etalon/ablations.json",
+  "version": 3,
+  "empreinte": "667e3ac416a012381ddf66316771eb405dc70dfaefbccd390a38255dc27c721c"
+ },
+ "date": "2026-11-25T11:44:31.155Z",
+ "moteur": {
+  "commit": "5e2b91b81d8f79c3488ec815f57a3dd35b584043",
+  "modifie": false
+ },
+ "machine": {
+  "processeur": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "coeurs": 4,
+  "node": "v22.23.5"
+ },
+ "monde": {
+  "id": "orvane",
+  "cycle": 65,
+  "empreinte": "1d617f027cec78c05d711179de2baa9c3070b873b3129c504b45b7435da93d04",
+  "regles": "1d5edf24f4451b0a93dd5a6ea8f10cde22b91b031c3dd0727fba75755214ae74"
+ },
+ "cycles": 30,
+ "graines": [
+  1,
+  2,
+  3
+ ],
+ "temoin": {
+  "par_graine": {
+   "1": {
+    "lignees": 302,
+    "predateurs": 87,
+    "biomasse_t": 16928.098,
+    "shannon": 2.2539,
+    "stables": 0.92,
+    "eteintes": 1,
+    "nees": 3,
+    "duree_s": 21.43
+   },
+   "2": {
+    "lignees": 302,
+    "predateurs": 87,
+    "biomasse_t": 16822.142,
+    "shannon": 2.2649,
+    "stables": 0.9267,
+    "eteintes": 0,
+    "nees": 2,
+    "duree_s": 21.12
+   },
+   "3": {
+    "lignees": 303,
+    "predateurs": 86,
+    "biomasse_t": 16704.372,
+    "shannon": 2.2711,
+    "stables": 0.92,
+    "eteintes": 0,
+    "nees": 3,
+    "duree_s": 21.47
+   }
+  },
+  "moyenne": {
+   "lignees": 302.3333,
+   "predateurs": 86.6667,
+   "biomasse_t": 16818.204,
+   "shannon": 2.2633,
+   "stables": 0.9222,
+   "eteintes": 0.3333,
+   "nees": 2.6667,
+   "duree_s": 21.34
+  },
+  "ecart": {
+   "lignees": 1,
+   "predateurs": 1,
+   "biomasse_t": 223.726,
+   "shannon": 0.0172,
+   "stables": 0.0067,
+   "eteintes": 1,
+   "nees": 1,
+   "duree_s": 0.35
+  }
+ },
+ "essais": [
+  {
+   "essai": "mutation",
+   "regle": "mutation",
+   "nature": "mecanisme",
+   "fait": "une part des naissances change de phénotype",
+   "quand": "chaque cycle, dans un monde clonal (sans reproduction sexuée)",
+   "regles": {
+    "mutation": 0
+   },
+   "temoin_duree_s": 21.34,
+   "mesures": {
+    "lignees": 302.3333,
+    "predateurs": 86.6667,
+    "biomasse_t": 16818.204,
+    "shannon": 2.2633,
+    "stables": 0.9222,
+    "eteintes": 0.3333,
+    "nees": 2.6667,
+    "duree_s": 20.77
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 0,
+    "shannon": 0,
+    "stables": 0,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -0.57
+   },
+   "bouge": [],
+   "cout": 0.027,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16928.098,
+     "shannon": 2.2539,
+     "stables": 0.92,
+     "eteintes": 1,
+     "nees": 3,
+     "duree_s": 21.24
+    },
+    "2": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16822.142,
+     "shannon": 2.2649,
+     "stables": 0.9267,
+     "eteintes": 0,
+     "nees": 2,
+     "duree_s": 20.47
+    },
+    "3": {
+     "lignees": 303,
+     "predateurs": 86,
+     "biomasse_t": 16704.372,
+     "shannon": 2.2711,
+     "stables": 0.92,
+     "eteintes": 0,
+     "nees": 3,
+     "duree_s": 20.6
+    }
+   },
+   "lecture": "rien de mesurable en 30 cycles (chaque cycle, dans un monde clonal (sans reproduction sexuée))"
+  },
+  {
+   "essai": "nouveau_trait",
+   "regle": "nouveau_trait",
+   "nature": "mecanisme",
+   "fait": "un trait admissible apparaît parfois dans une lignée",
+   "quand": "chaque cycle",
+   "regles": {
+    "nouveau_trait": 0
+   },
+   "temoin_duree_s": 20.98,
+   "mesures": {
+    "lignees": 303.3333,
+    "predateurs": 86.3333,
+    "biomasse_t": 16805.1943,
+    "shannon": 2.263,
+    "stables": 0.9211,
+    "eteintes": 0.3333,
+    "nees": 3.6667,
+    "duree_s": 21.3633
+   },
+   "ecarts": {
+    "lignees": 1,
+    "predateurs": -0.3334,
+    "biomasse_t": -13.0097,
+    "shannon": -0.0003,
+    "stables": -0.0011,
+    "eteintes": 0,
+    "nees": 1,
+    "duree_s": 0.0233
+   },
+   "bouge": [],
+   "cout": -0.018,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16937.739,
+     "shannon": 2.2537,
+     "stables": 0.92,
+     "eteintes": 1,
+     "nees": 3,
+     "duree_s": 20.53
+    },
+    "2": {
+     "lignees": 303,
+     "predateurs": 86,
+     "biomasse_t": 16814.133,
+     "shannon": 2.2651,
+     "stables": 0.9233,
+     "eteintes": 0,
+     "nees": 3,
+     "duree_s": 21.75
+    },
+    "3": {
+     "lignees": 305,
+     "predateurs": 86,
+     "biomasse_t": 16663.711,
+     "shannon": 2.2703,
+     "stables": 0.92,
+     "eteintes": 0,
+     "nees": 5,
+     "duree_s": 21.81
+    }
+   },
+   "lecture": "rien de mesurable en 30 cycles (chaque cycle)"
+  },
+  {
+   "essai": "migration",
+   "regle": "migration",
+   "nature": "mecanisme",
+   "fait": "les bêtes d'un lieu saturé essaiment vers leurs voisins",
+   "quand": "chaque cycle",
+   "regles": {
+    "migration": 0
+   },
+   "temoin_duree_s": 21.883,
+   "mesures": {
+    "lignees": 304.6667,
+    "predateurs": 87.6667,
+    "biomasse_t": 16906.6353,
+    "shannon": 2.2232,
+    "stables": 0.9278,
+    "eteintes": 0,
+    "nees": 4.6667,
+    "duree_s": 20.7733
+   },
+   "ecarts": {
+    "lignees": 2.3334,
+    "predateurs": 1,
+    "biomasse_t": 88.4313,
+    "shannon": -0.0401,
+    "stables": 0.0056,
+    "eteintes": -0.3333,
+    "nees": 2,
+    "duree_s": -0.5667
+   },
+   "bouge": [
+    "shannon"
+   ],
+   "cout": 0.051,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 305,
+     "predateurs": 88,
+     "biomasse_t": 16916.521,
+     "shannon": 2.2159,
+     "stables": 0.9333,
+     "eteintes": 0,
+     "nees": 5,
+     "duree_s": 20.43
+    },
+    "2": {
+     "lignees": 304,
+     "predateurs": 88,
+     "biomasse_t": 16825.113,
+     "shannon": 2.2256,
+     "stables": 0.94,
+     "eteintes": 0,
+     "nees": 4,
+     "duree_s": 20.86
+    },
+    "3": {
+     "lignees": 305,
+     "predateurs": 87,
+     "biomasse_t": 16978.272,
+     "shannon": 2.2282,
+     "stables": 0.91,
+     "eteintes": 0,
+     "nees": 5,
+     "duree_s": 21.03
+    }
+   },
+   "lecture": "elle tient : sans elle, shannon bouge"
+  },
+  {
+   "essai": "seuil_surpeuple = 0.7",
+   "regle": "seuil_surpeuple",
+   "nature": "constante",
+   "fait": "la saturation au-delà de laquelle on essaime",
+   "quand": "chaque cycle",
+   "regles": {
+    "seuil_surpeuple": 0.7
+   },
+   "temoin_duree_s": 21.643,
+   "mesures": {
+    "lignees": 300.6667,
+    "predateurs": 86.6667,
+    "biomasse_t": 16727.428,
+    "shannon": 2.3564,
+    "stables": 0.8944,
+    "eteintes": 0.3333,
+    "nees": 1,
+    "duree_s": 26.2167
+   },
+   "ecarts": {
+    "lignees": -1.6666,
+    "predateurs": 0,
+    "biomasse_t": -90.776,
+    "shannon": 0.0931,
+    "stables": -0.0278,
+    "eteintes": 0,
+    "nees": -1.6667,
+    "duree_s": 4.8767
+   },
+   "bouge": [
+    "shannon",
+    "stables"
+   ],
+   "cout": -0.211,
+   "cout_lu": -0.211,
+   "par_graine": {
+    "1": {
+     "lignees": 299,
+     "predateurs": 86,
+     "biomasse_t": 16766.789,
+     "shannon": 2.3504,
+     "stables": 0.8933,
+     "eteintes": 1,
+     "nees": 0,
+     "duree_s": 26.76
+    },
+    "2": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16599.761,
+     "shannon": 2.3584,
+     "stables": 0.9033,
+     "eteintes": 0,
+     "nees": 2,
+     "duree_s": 25.95
+    },
+    "3": {
+     "lignees": 301,
+     "predateurs": 87,
+     "biomasse_t": 16815.734,
+     "shannon": 2.3603,
+     "stables": 0.8867,
+     "eteintes": 0,
+     "nees": 1,
+     "duree_s": 25.94
+    }
+   },
+   "lecture": "elle compte : à cette valeur, shannon, stables bougent"
+  },
+  {
+   "essai": "seuil_surpeuple = 0.95",
+   "regle": "seuil_surpeuple",
+   "nature": "constante",
+   "fait": "la saturation au-delà de laquelle on essaime",
+   "quand": "chaque cycle",
+   "regles": {
+    "seuil_surpeuple": 0.95
+   },
+   "temoin_duree_s": 21.34,
+   "mesures": {
+    "lignees": 303.3333,
+    "predateurs": 87.6667,
+    "biomasse_t": 16898.8743,
+    "shannon": 2.2386,
+    "stables": 0.9333,
+    "eteintes": 0.6667,
+    "nees": 4,
+    "duree_s": 19.18
+   },
+   "ecarts": {
+    "lignees": 1,
+    "predateurs": 1,
+    "biomasse_t": 80.6703,
+    "shannon": -0.0247,
+    "stables": 0.0111,
+    "eteintes": 0.3334,
+    "nees": 1.3333,
+    "duree_s": -2.16
+   },
+   "bouge": [],
+   "cout": 0.101,
+   "cout_lu": 0.101,
+   "par_graine": {
+    "1": {
+     "lignees": 304,
+     "predateurs": 88,
+     "biomasse_t": 16927.987,
+     "shannon": 2.2314,
+     "stables": 0.9333,
+     "eteintes": 1,
+     "nees": 5,
+     "duree_s": 19.11
+    },
+    "2": {
+     "lignees": 302,
+     "predateurs": 88,
+     "biomasse_t": 16831.839,
+     "shannon": 2.2396,
+     "stables": 0.9333,
+     "eteintes": 0,
+     "nees": 2,
+     "duree_s": 19.07
+    },
+    "3": {
+     "lignees": 304,
+     "predateurs": 87,
+     "biomasse_t": 16936.797,
+     "shannon": 2.2447,
+     "stables": 0.9333,
+     "eteintes": 1,
+     "nees": 5,
+     "duree_s": 19.36
+    }
+   },
+   "lecture": "rien de mesurable à cette valeur en 30 cycles"
+  },
+  {
+   "essai": "separation",
+   "regle": "separation",
+   "nature": "mecanisme",
+   "fait": "une population isolée et différente devient une lignée",
+   "quand": "chaque cycle (rarement)",
+   "regles": {
+    "separation": {
+     "cycles": 30,
+     "effectif": 60,
+     "distance": 1.2,
+     "chance": 0,
+     "flux": 0.05,
+     "divergence": 0.3
+    }
+   },
+   "temoin_duree_s": 20.98,
+   "mesures": {
+    "lignees": 299.6667,
+    "predateurs": 86,
+    "biomasse_t": 16813.7247,
+    "shannon": 2.2632,
+    "stables": 0.9211,
+    "eteintes": 0.3333,
+    "nees": 0,
+    "duree_s": 21.2067
+   },
+   "ecarts": {
+    "lignees": -2.6666,
+    "predateurs": -0.6667,
+    "biomasse_t": -4.4793,
+    "shannon": -0.0001,
+    "stables": -0.0011,
+    "eteintes": 0,
+    "nees": -2.6667,
+    "duree_s": -0.1333
+   },
+   "bouge": [
+    "lignees",
+    "nees"
+   ],
+   "cout": -0.011,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 299,
+     "predateurs": 86,
+     "biomasse_t": 16930.89,
+     "shannon": 2.2538,
+     "stables": 0.92,
+     "eteintes": 1,
+     "nees": 0,
+     "duree_s": 21.45
+    },
+    "2": {
+     "lignees": 300,
+     "predateurs": 86,
+     "biomasse_t": 16822.386,
+     "shannon": 2.2647,
+     "stables": 0.9233,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 21.73
+    },
+    "3": {
+     "lignees": 300,
+     "predateurs": 86,
+     "biomasse_t": 16687.898,
+     "shannon": 2.271,
+     "stables": 0.92,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 20.44
+    }
+   },
+   "lecture": "elle tient : sans elle, lignees, nees bougent"
+  },
+  {
+   "essai": "memoire_eteint",
+   "regle": "memoire_eteint",
+   "nature": "comptable",
+   "fait": "une lignée éteinte reste listée dix cycles",
+   "quand": "aux extinctions",
+   "regles": {
+    "memoire_eteint": 0
+   },
+   "temoin_duree_s": 21.883,
+   "mesures": {
+    "lignees": 302.3333,
+    "predateurs": 86.6667,
+    "biomasse_t": 16818.204,
+    "shannon": 2.2633,
+    "stables": 0.9222,
+    "eteintes": 0.3333,
+    "nees": 2.6667,
+    "duree_s": 22.41
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 0,
+    "shannon": 0,
+    "stables": 0,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 1.07
+   },
+   "bouge": [],
+   "cout": -0.024,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16928.098,
+     "shannon": 2.2539,
+     "stables": 0.92,
+     "eteintes": 1,
+     "nees": 3,
+     "duree_s": 22.36
+    },
+    "2": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16822.142,
+     "shannon": 2.2649,
+     "stables": 0.9267,
+     "eteintes": 0,
+     "nees": 2,
+     "duree_s": 22.51
+    },
+    "3": {
+     "lignees": 303,
+     "predateurs": 86,
+     "biomasse_t": 16704.372,
+     "shannon": 2.2711,
+     "stables": 0.92,
+     "eteintes": 0,
+     "nees": 3,
+     "duree_s": 22.36
+    }
+   },
+   "lecture": "rien ne change aux bêtes, comme attendu"
+  },
+  {
+   "essai": "regain_habitat",
+   "regle": "regain_habitat",
+   "nature": "mecanisme",
+   "fait": "la capacité d'un lieu revient lentement vers sa base",
+   "quand": "chaque cycle",
+   "regles": {
+    "regain_habitat": 0
+   },
+   "temoin_duree_s": 21.643,
+   "mesures": {
+    "lignees": 302,
+    "predateurs": 87.3333,
+    "biomasse_t": 16662.943,
+    "shannon": 2.2661,
+    "stables": 0.9156,
+    "eteintes": 0.3333,
+    "nees": 2.3333,
+    "duree_s": 20.8733
+   },
+   "ecarts": {
+    "lignees": -0.3333,
+    "predateurs": 0.6666,
+    "biomasse_t": -155.261,
+    "shannon": 0.0028,
+    "stables": -0.0066,
+    "eteintes": 0,
+    "nees": -0.3334,
+    "duree_s": -0.4667
+   },
+   "bouge": [],
+   "cout": 0.036,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 299,
+     "predateurs": 86,
+     "biomasse_t": 16701.67,
+     "shannon": 2.2581,
+     "stables": 0.9167,
+     "eteintes": 1,
+     "nees": 0,
+     "duree_s": 21.03
+    },
+    "2": {
+     "lignees": 304,
+     "predateurs": 89,
+     "biomasse_t": 16572.272,
+     "shannon": 2.2709,
+     "stables": 0.9233,
+     "eteintes": 0,
+     "nees": 4,
+     "duree_s": 20.78
+    },
+    "3": {
+     "lignees": 303,
+     "predateurs": 87,
+     "biomasse_t": 16714.887,
+     "shannon": 2.2694,
+     "stables": 0.9067,
+     "eteintes": 0,
+     "nees": 3,
+     "duree_s": 20.81
+    }
+   },
+   "lecture": "rien de mesurable en 30 cycles (chaque cycle)"
+  },
+  {
+   "essai": "effondrement",
+   "regle": "effondrement",
+   "nature": "comptable",
+   "fait": "la tendance qui fait un événement d'effondrement",
+   "quand": "chaque cycle",
+   "regles": {
+    "effondrement": -1
+   },
+   "temoin_duree_s": 21.34,
+   "mesures": {
+    "lignees": 302.3333,
+    "predateurs": 86.6667,
+    "biomasse_t": 16818.204,
+    "shannon": 2.2633,
+    "stables": 0.9222,
+    "eteintes": 0.3333,
+    "nees": 2.6667,
+    "duree_s": 20.3267
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 0,
+    "shannon": 0,
+    "stables": 0,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -1.0133
+   },
+   "bouge": [],
+   "cout": 0.047,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16928.098,
+     "shannon": 2.2539,
+     "stables": 0.92,
+     "eteintes": 1,
+     "nees": 3,
+     "duree_s": 20.13
+    },
+    "2": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16822.142,
+     "shannon": 2.2649,
+     "stables": 0.9267,
+     "eteintes": 0,
+     "nees": 2,
+     "duree_s": 20.4
+    },
+    "3": {
+     "lignees": 303,
+     "predateurs": 86,
+     "biomasse_t": 16704.372,
+     "shannon": 2.2711,
+     "stables": 0.92,
+     "eteintes": 0,
+     "nees": 3,
+     "duree_s": 20.45
+    }
+   },
+   "lecture": "rien ne change aux bêtes, comme attendu"
+  },
+  {
+   "essai": "explosion",
+   "regle": "explosion",
+   "nature": "comptable",
+   "fait": "la tendance qui fait un événement d'explosion",
+   "quand": "chaque cycle",
+   "regles": {
+    "explosion": 1000000
+   },
+   "temoin_duree_s": 20.98,
+   "mesures": {
+    "lignees": 302.3333,
+    "predateurs": 86.6667,
+    "biomasse_t": 16818.204,
+    "shannon": 2.2633,
+    "stables": 0.9222,
+    "eteintes": 0.3333,
+    "nees": 2.6667,
+    "duree_s": 20.31
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 0,
+    "shannon": 0,
+    "stables": 0,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -1.03
+   },
+   "bouge": [],
+   "cout": 0.032,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16928.098,
+     "shannon": 2.2539,
+     "stables": 0.92,
+     "eteintes": 1,
+     "nees": 3,
+     "duree_s": 20.19
+    },
+    "2": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16822.142,
+     "shannon": 2.2649,
+     "stables": 0.9267,
+     "eteintes": 0,
+     "nees": 2,
+     "duree_s": 20.2
+    },
+    "3": {
+     "lignees": 303,
+     "predateurs": 86,
+     "biomasse_t": 16704.372,
+     "shannon": 2.2711,
+     "stables": 0.92,
+     "eteintes": 0,
+     "nees": 3,
+     "duree_s": 20.54
+    }
+   },
+   "lecture": "rien ne change aux bêtes, comme attendu"
+  },
+  {
+   "essai": "menace",
+   "regle": "menace",
+   "nature": "comptable",
+   "fait": "l'effectif sous lequel une lignée est dite menacée",
+   "quand": "chaque cycle",
+   "regles": {
+    "menace": 0
+   },
+   "temoin_duree_s": 21.883,
+   "mesures": {
+    "lignees": 302.3333,
+    "predateurs": 86.6667,
+    "biomasse_t": 16818.204,
+    "shannon": 2.2633,
+    "stables": 0.9222,
+    "eteintes": 0.3333,
+    "nees": 2.6667,
+    "duree_s": 21.89
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 0,
+    "shannon": 0,
+    "stables": 0,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 0.55
+   },
+   "bouge": [],
+   "cout": 0,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16928.098,
+     "shannon": 2.2539,
+     "stables": 0.92,
+     "eteintes": 1,
+     "nees": 3,
+     "duree_s": 21.94
+    },
+    "2": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16822.142,
+     "shannon": 2.2649,
+     "stables": 0.9267,
+     "eteintes": 0,
+     "nees": 2,
+     "duree_s": 21.89
+    },
+    "3": {
+     "lignees": 303,
+     "predateurs": 86,
+     "biomasse_t": 16704.372,
+     "shannon": 2.2711,
+     "stables": 0.92,
+     "eteintes": 0,
+     "nees": 3,
+     "duree_s": 21.84
+    }
+   },
+   "lecture": "rien ne change aux bêtes, comme attendu"
+  },
+  {
+   "essai": "max_phenotypes = 10",
+   "regle": "max_phenotypes",
+   "nature": "constante",
+   "fait": "au-delà, les phénotypes les plus rares rejoignent le plus proche",
+   "quand": "chaque cycle",
+   "regles": {
+    "max_phenotypes": 10
+   },
+   "temoin_duree_s": 21.643,
+   "mesures": {
+    "lignees": 302.3333,
+    "predateurs": 87.6667,
+    "biomasse_t": 16858.102,
+    "shannon": 2.2638,
+    "stables": 0.92,
+    "eteintes": 0.3333,
+    "nees": 2.6667,
+    "duree_s": 18.6033
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 1,
+    "biomasse_t": 39.898,
+    "shannon": 0.0005,
+    "stables": -0.0022,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -2.7367
+   },
+   "bouge": [],
+   "cout": 0.14,
+   "cout_lu": 0.14,
+   "par_graine": {
+    "1": {
+     "lignees": 301,
+     "predateurs": 88,
+     "biomasse_t": 16965.084,
+     "shannon": 2.2541,
+     "stables": 0.92,
+     "eteintes": 1,
+     "nees": 2,
+     "duree_s": 18.36
+    },
+    "2": {
+     "lignees": 302,
+     "predateurs": 88,
+     "biomasse_t": 16851.567,
+     "shannon": 2.2662,
+     "stables": 0.9233,
+     "eteintes": 0,
+     "nees": 2,
+     "duree_s": 18.62
+    },
+    "3": {
+     "lignees": 304,
+     "predateurs": 87,
+     "biomasse_t": 16757.655,
+     "shannon": 2.2712,
+     "stables": 0.9167,
+     "eteintes": 0,
+     "nees": 4,
+     "duree_s": 18.83
+    }
+   },
+   "lecture": "rien de mesurable à cette valeur en 30 cycles"
+  },
+  {
+   "essai": "max_phenotypes = 40",
+   "regle": "max_phenotypes",
+   "nature": "constante",
+   "fait": "au-delà, les phénotypes les plus rares rejoignent le plus proche",
+   "quand": "chaque cycle",
+   "regles": {
+    "max_phenotypes": 40
+   },
+   "temoin_duree_s": 21.34,
+   "mesures": {
+    "lignees": 302.6667,
+    "predateurs": 87,
+    "biomasse_t": 16742.9153,
+    "shannon": 2.2643,
+    "stables": 0.9245,
+    "eteintes": 0.3333,
+    "nees": 3,
+    "duree_s": 26.18
+   },
+   "ecarts": {
+    "lignees": 0.3334,
+    "predateurs": 0.3333,
+    "biomasse_t": -75.2887,
+    "shannon": 0.001,
+    "stables": 0.0023,
+    "eteintes": 0,
+    "nees": 0.3333,
+    "duree_s": 4.84
+   },
+   "bouge": [],
+   "cout": -0.227,
+   "cout_lu": -0.227,
+   "par_graine": {
+    "1": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16878.262,
+     "shannon": 2.2538,
+     "stables": 0.9267,
+     "eteintes": 1,
+     "nees": 3,
+     "duree_s": 26.02
+    },
+    "2": {
+     "lignees": 301,
+     "predateurs": 87,
+     "biomasse_t": 16720.88,
+     "shannon": 2.2659,
+     "stables": 0.93,
+     "eteintes": 0,
+     "nees": 1,
+     "duree_s": 25.96
+    },
+    "3": {
+     "lignees": 305,
+     "predateurs": 87,
+     "biomasse_t": 16629.604,
+     "shannon": 2.2731,
+     "stables": 0.9167,
+     "eteintes": 0,
+     "nees": 5,
+     "duree_s": 26.56
+    }
+   },
+   "lecture": "rien de mesurable à cette valeur en 30 cycles"
+  },
+  {
+   "essai": "besoin ×0.5",
+   "regle": "besoin",
+   "nature": "constante",
+   "fait": "la ration d'un prédateur, par kg^0,75",
+   "quand": "chaque cycle",
+   "regles": {
+    "besoin": 0.175
+   },
+   "temoin_duree_s": 20.98,
+   "mesures": {
+    "lignees": 300.6667,
+    "predateurs": 86.6667,
+    "biomasse_t": 16943.84,
+    "shannon": 2.2153,
+    "stables": 0.8756,
+    "eteintes": 0.3333,
+    "nees": 1,
+    "duree_s": 20.5733
+   },
+   "ecarts": {
+    "lignees": -1.6666,
+    "predateurs": 0,
+    "biomasse_t": 125.636,
+    "shannon": -0.048,
+    "stables": -0.0466,
+    "eteintes": 0,
+    "nees": -1.6667,
+    "duree_s": -0.7667
+   },
+   "bouge": [
+    "shannon",
+    "stables"
+   ],
+   "cout": 0.019,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 299,
+     "predateurs": 86,
+     "biomasse_t": 16995.659,
+     "shannon": 2.2112,
+     "stables": 0.8767,
+     "eteintes": 1,
+     "nees": 0,
+     "duree_s": 20.52
+    },
+    "2": {
+     "lignees": 301,
+     "predateurs": 87,
+     "biomasse_t": 16814.205,
+     "shannon": 2.2264,
+     "stables": 0.88,
+     "eteintes": 0,
+     "nees": 1,
+     "duree_s": 20.77
+    },
+    "3": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 17021.656,
+     "shannon": 2.2084,
+     "stables": 0.87,
+     "eteintes": 0,
+     "nees": 2,
+     "duree_s": 20.43
+    }
+   },
+   "lecture": "elle compte : à cette valeur, shannon, stables bougent"
+  },
+  {
+   "essai": "besoin ×2",
+   "regle": "besoin",
+   "nature": "constante",
+   "fait": "la ration d'un prédateur, par kg^0,75",
+   "quand": "chaque cycle",
+   "regles": {
+    "besoin": 0.7
+   },
+   "temoin_duree_s": 21.883,
+   "mesures": {
+    "lignees": 302,
+    "predateurs": 86.6667,
+    "biomasse_t": 16383.419,
+    "shannon": 2.2836,
+    "stables": 0.8711,
+    "eteintes": 0,
+    "nees": 2,
+    "duree_s": 21.91
+   },
+   "ecarts": {
+    "lignees": -0.3333,
+    "predateurs": 0,
+    "biomasse_t": -434.785,
+    "shannon": 0.0203,
+    "stables": -0.0511,
+    "eteintes": -0.3333,
+    "nees": -0.6667,
+    "duree_s": 0.57
+   },
+   "bouge": [
+    "stables"
+   ],
+   "cout": -0.001,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 302,
+     "predateurs": 86,
+     "biomasse_t": 16434.129,
+     "shannon": 2.2758,
+     "stables": 0.8733,
+     "eteintes": 0,
+     "nees": 2,
+     "duree_s": 21.71
+    },
+    "2": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16289.219,
+     "shannon": 2.2885,
+     "stables": 0.8733,
+     "eteintes": 0,
+     "nees": 2,
+     "duree_s": 21.95
+    },
+    "3": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16426.909,
+     "shannon": 2.2864,
+     "stables": 0.8667,
+     "eteintes": 0,
+     "nees": 2,
+     "duree_s": 22.07
+    }
+   },
+   "lecture": "elle compte : à cette valeur, stables bouge"
+  },
+  {
+   "essai": "conversion ×0.5",
+   "regle": "conversion",
+   "nature": "constante",
+   "fait": "la part de la viande mangée qui devient des petits",
+   "quand": "chaque cycle",
+   "regles": {
+    "conversion": 0.125
+   },
+   "temoin_duree_s": 21.643,
+   "mesures": {
+    "lignees": 302.3333,
+    "predateurs": 87.6667,
+    "biomasse_t": 16717.0753,
+    "shannon": 2.2087,
+    "stables": 0.86,
+    "eteintes": 0.6667,
+    "nees": 3,
+    "duree_s": 21.4333
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 1,
+    "biomasse_t": -101.1287,
+    "shannon": -0.0546,
+    "stables": -0.0622,
+    "eteintes": 0.3334,
+    "nees": 0.3333,
+    "duree_s": 0.0933
+   },
+   "bouge": [
+    "shannon",
+    "stables"
+   ],
+   "cout": 0.01,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 301,
+     "predateurs": 88,
+     "biomasse_t": 16733.098,
+     "shannon": 2.2001,
+     "stables": 0.8667,
+     "eteintes": 1,
+     "nees": 2,
+     "duree_s": 21.13
+    },
+    "2": {
+     "lignees": 303,
+     "predateurs": 87,
+     "biomasse_t": 16584.202,
+     "shannon": 2.2135,
+     "stables": 0.8667,
+     "eteintes": 0,
+     "nees": 3,
+     "duree_s": 21.45
+    },
+    "3": {
+     "lignees": 303,
+     "predateurs": 88,
+     "biomasse_t": 16833.926,
+     "shannon": 2.2125,
+     "stables": 0.8467,
+     "eteintes": 1,
+     "nees": 4,
+     "duree_s": 21.72
+    }
+   },
+   "lecture": "elle compte : à cette valeur, shannon, stables bougent"
+  },
+  {
+   "essai": "conversion ×2",
+   "regle": "conversion",
+   "nature": "constante",
+   "fait": "la part de la viande mangée qui devient des petits",
+   "quand": "chaque cycle",
+   "regles": {
+    "conversion": 0.5
+   },
+   "temoin_duree_s": 21.34,
+   "mesures": {
+    "lignees": 304.3333,
+    "predateurs": 89.6667,
+    "biomasse_t": 17442.509,
+    "shannon": 2.3232,
+    "stables": 0.7933,
+    "eteintes": 0.3333,
+    "nees": 4.6667,
+    "duree_s": 20.6433
+   },
+   "ecarts": {
+    "lignees": 2,
+    "predateurs": 3,
+    "biomasse_t": 624.305,
+    "shannon": 0.0599,
+    "stables": -0.1289,
+    "eteintes": 0,
+    "nees": 2,
+    "duree_s": -0.6967
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon",
+    "stables"
+   ],
+   "cout": 0.033,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 304,
+     "predateurs": 90,
+     "biomasse_t": 17463.049,
+     "shannon": 2.3138,
+     "stables": 0.7933,
+     "eteintes": 1,
+     "nees": 5,
+     "duree_s": 20.32
+    },
+    "2": {
+     "lignees": 304,
+     "predateurs": 90,
+     "biomasse_t": 17347.608,
+     "shannon": 2.3263,
+     "stables": 0.7933,
+     "eteintes": 0,
+     "nees": 4,
+     "duree_s": 20.86
+    },
+    "3": {
+     "lignees": 305,
+     "predateurs": 89,
+     "biomasse_t": 17516.87,
+     "shannon": 2.3296,
+     "stables": 0.7933,
+     "eteintes": 0,
+     "nees": 5,
+     "duree_s": 20.75
+    }
+   },
+   "lecture": "elle compte : à cette valeur, biomasse_t, shannon, stables bougent"
+  },
+  {
+   "essai": "demi_satiete ×0.5",
+   "regle": "demi_satiete",
+   "nature": "constante",
+   "fait": "à combien de fois son besoin un prédateur est rassasié à moitié",
+   "quand": "chaque cycle",
+   "regles": {
+    "demi_satiete": 15
+   },
+   "temoin_duree_s": 20.98,
+   "mesures": {
+    "lignees": 303.6667,
+    "predateurs": 87.3333,
+    "biomasse_t": 16777.7313,
+    "shannon": 2.2648,
+    "stables": 0.8844,
+    "eteintes": 0.3333,
+    "nees": 4,
+    "duree_s": 20.22
+   },
+   "ecarts": {
+    "lignees": 1.3334,
+    "predateurs": 0.6666,
+    "biomasse_t": -40.4727,
+    "shannon": 0.0015,
+    "stables": -0.0378,
+    "eteintes": 0,
+    "nees": 1.3333,
+    "duree_s": -1.12
+   },
+   "bouge": [
+    "stables"
+   ],
+   "cout": 0.036,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16825.396,
+     "shannon": 2.2565,
+     "stables": 0.89,
+     "eteintes": 1,
+     "nees": 3,
+     "duree_s": 20.05
+    },
+    "2": {
+     "lignees": 303,
+     "predateurs": 88,
+     "biomasse_t": 16692.21,
+     "shannon": 2.2683,
+     "stables": 0.8833,
+     "eteintes": 0,
+     "nees": 3,
+     "duree_s": 20.24
+    },
+    "3": {
+     "lignees": 306,
+     "predateurs": 87,
+     "biomasse_t": 16815.588,
+     "shannon": 2.2697,
+     "stables": 0.88,
+     "eteintes": 0,
+     "nees": 6,
+     "duree_s": 20.37
+    }
+   },
+   "lecture": "elle compte : à cette valeur, stables bouge"
+  },
+  {
+   "essai": "demi_satiete ×2",
+   "regle": "demi_satiete",
+   "nature": "constante",
+   "fait": "à combien de fois son besoin un prédateur est rassasié à moitié",
+   "quand": "chaque cycle",
+   "regles": {
+    "demi_satiete": 60
+   },
+   "temoin_duree_s": 21.883,
+   "mesures": {
+    "lignees": 301.3333,
+    "predateurs": 86.6667,
+    "biomasse_t": 16933.131,
+    "shannon": 2.2446,
+    "stables": 0.8967,
+    "eteintes": 0.6667,
+    "nees": 2,
+    "duree_s": 21.6667
+   },
+   "ecarts": {
+    "lignees": -1,
+    "predateurs": 0,
+    "biomasse_t": 114.927,
+    "shannon": -0.0187,
+    "stables": -0.0255,
+    "eteintes": 0.3334,
+    "nees": -0.6667,
+    "duree_s": 0.3267
+   },
+   "bouge": [
+    "stables"
+   ],
+   "cout": 0.01,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16979.079,
+     "shannon": 2.2374,
+     "stables": 0.9067,
+     "eteintes": 1,
+     "nees": 3,
+     "duree_s": 21.8
+    },
+    "2": {
+     "lignees": 301,
+     "predateurs": 87,
+     "biomasse_t": 16816.131,
+     "shannon": 2.2496,
+     "stables": 0.9033,
+     "eteintes": 0,
+     "nees": 1,
+     "duree_s": 21.62
+    },
+    "3": {
+     "lignees": 301,
+     "predateurs": 86,
+     "biomasse_t": 17004.183,
+     "shannon": 2.2468,
+     "stables": 0.88,
+     "eteintes": 1,
+     "nees": 2,
+     "duree_s": 21.58
+    }
+   },
+   "lecture": "elle compte : à cette valeur, stables bouge"
+  },
+  {
+   "essai": "predation_max",
+   "regle": "predation_max",
+   "nature": "mecanisme",
+   "fait": "nul ne mange plus que cette part d'une population en un cycle",
+   "quand": "chaque cycle",
+   "regles": {
+    "predation_max": 1
+   },
+   "temoin_duree_s": 21.643,
+   "mesures": {
+    "lignees": 302.3333,
+    "predateurs": 86.6667,
+    "biomasse_t": 16818.204,
+    "shannon": 2.2633,
+    "stables": 0.9222,
+    "eteintes": 0.3333,
+    "nees": 2.6667,
+    "duree_s": 21.2867
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 0,
+    "shannon": 0,
+    "stables": 0,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -0.0533
+   },
+   "bouge": [],
+   "cout": 0.016,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16928.098,
+     "shannon": 2.2539,
+     "stables": 0.92,
+     "eteintes": 1,
+     "nees": 3,
+     "duree_s": 21.25
+    },
+    "2": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16822.142,
+     "shannon": 2.2649,
+     "stables": 0.9267,
+     "eteintes": 0,
+     "nees": 2,
+     "duree_s": 21.15
+    },
+    "3": {
+     "lignees": 303,
+     "predateurs": 86,
+     "biomasse_t": 16704.372,
+     "shannon": 2.2711,
+     "stables": 0.92,
+     "eteintes": 0,
+     "nees": 3,
+     "duree_s": 21.46
+    }
+   },
+   "lecture": "rien de mesurable en 30 cycles (chaque cycle)"
+  },
+  {
+   "essai": "chasse_omnivore",
+   "regle": "chasse_omnivore",
+   "nature": "mecanisme",
+   "fait": "un omnivore chasse moins bien qu'un carnivore",
+   "quand": "chaque cycle",
+   "regles": {
+    "chasse_omnivore": 1
+   },
+   "temoin_duree_s": 21.34,
+   "mesures": {
+    "lignees": 304,
+    "predateurs": 87.6667,
+    "biomasse_t": 16945.445,
+    "shannon": 2.2612,
+    "stables": 0.9145,
+    "eteintes": 0.3333,
+    "nees": 4.3333,
+    "duree_s": 20.9167
+   },
+   "ecarts": {
+    "lignees": 1.6667,
+    "predateurs": 1,
+    "biomasse_t": 127.241,
+    "shannon": -0.0021,
+    "stables": -0.0077,
+    "eteintes": 0,
+    "nees": 1.6666,
+    "duree_s": -0.4233
+   },
+   "bouge": [],
+   "cout": 0.02,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 305,
+     "predateurs": 88,
+     "biomasse_t": 17011.681,
+     "shannon": 2.2488,
+     "stables": 0.92,
+     "eteintes": 1,
+     "nees": 6,
+     "duree_s": 20.37
+    },
+    "2": {
+     "lignees": 303,
+     "predateurs": 87,
+     "biomasse_t": 16824.256,
+     "shannon": 2.2728,
+     "stables": 0.9267,
+     "eteintes": 0,
+     "nees": 3,
+     "duree_s": 20.58
+    },
+    "3": {
+     "lignees": 304,
+     "predateurs": 88,
+     "biomasse_t": 17000.398,
+     "shannon": 2.262,
+     "stables": 0.8967,
+     "eteintes": 0,
+     "nees": 4,
+     "duree_s": 21.8
+    }
+   },
+   "lecture": "rien de mesurable en 30 cycles (chaque cycle)"
+  },
+  {
+   "essai": "omnivore_vegetal",
+   "regle": "omnivore_vegetal",
+   "nature": "mecanisme",
+   "fait": "un carnivore devenu omnivore tire des plantes moins qu'un herbivore",
+   "quand": "chaque cycle",
+   "regles": {
+    "omnivore_vegetal": 1
+   },
+   "temoin_duree_s": 20.98,
+   "mesures": {
+    "lignees": 302,
+    "predateurs": 86.6667,
+    "biomasse_t": 17048.7093,
+    "shannon": 2.3272,
+    "stables": 0.83,
+    "eteintes": 0.3333,
+    "nees": 2.3333,
+    "duree_s": 20.4267
+   },
+   "ecarts": {
+    "lignees": -0.3333,
+    "predateurs": 0,
+    "biomasse_t": 230.5053,
+    "shannon": 0.0639,
+    "stables": -0.0922,
+    "eteintes": 0,
+    "nees": -0.3334,
+    "duree_s": -0.9133
+   },
+   "bouge": [
+    "shannon",
+    "stables"
+   ],
+   "cout": 0.026,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 17047.474,
+     "shannon": 2.3206,
+     "stables": 0.8333,
+     "eteintes": 1,
+     "nees": 3,
+     "duree_s": 20.22
+    },
+    "2": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16970.872,
+     "shannon": 2.3302,
+     "stables": 0.84,
+     "eteintes": 0,
+     "nees": 2,
+     "duree_s": 20.24
+    },
+    "3": {
+     "lignees": 302,
+     "predateurs": 86,
+     "biomasse_t": 17127.782,
+     "shannon": 2.3307,
+     "stables": 0.8167,
+     "eteintes": 0,
+     "nees": 2,
+     "duree_s": 20.82
+    }
+   },
+   "lecture": "elle tient : sans elle, shannon, stables bougent"
+  },
+  {
+   "essai": "omnivore_vegetal_base",
+   "regle": "omnivore_vegetal_base",
+   "nature": "mecanisme",
+   "fait": "un omnivore de naissance tire des plantes moins qu'un herbivore",
+   "quand": "chaque cycle",
+   "regles": {
+    "omnivore_vegetal_base": 1
+   },
+   "temoin_duree_s": 21.883,
+   "mesures": {
+    "lignees": 303.3333,
+    "predateurs": 87.3333,
+    "biomasse_t": 17625.6563,
+    "shannon": 2.2598,
+    "stables": 0.9,
+    "eteintes": 0.3333,
+    "nees": 3.6667,
+    "duree_s": 22.19
+   },
+   "ecarts": {
+    "lignees": 1,
+    "predateurs": 0.6666,
+    "biomasse_t": 807.4523,
+    "shannon": -0.0035,
+    "stables": -0.0222,
+    "eteintes": 0,
+    "nees": 1,
+    "duree_s": 0.85
+   },
+   "bouge": [
+    "biomasse_t",
+    "stables"
+   ],
+   "cout": -0.014,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 304,
+     "predateurs": 87,
+     "biomasse_t": 17635.101,
+     "shannon": 2.2507,
+     "stables": 0.9,
+     "eteintes": 1,
+     "nees": 5,
+     "duree_s": 22.19
+    },
+    "2": {
+     "lignees": 303,
+     "predateurs": 88,
+     "biomasse_t": 17508.549,
+     "shannon": 2.2653,
+     "stables": 0.9,
+     "eteintes": 0,
+     "nees": 3,
+     "duree_s": 22.13
+    },
+    "3": {
+     "lignees": 303,
+     "predateurs": 87,
+     "biomasse_t": 17733.319,
+     "shannon": 2.2633,
+     "stables": 0.9,
+     "eteintes": 0,
+     "nees": 3,
+     "duree_s": 22.25
+    }
+   },
+   "lecture": "elle tient : sans elle, biomasse_t, stables bougent"
+  },
+  {
+   "essai": "longevite_predateur",
+   "regle": "longevite_predateur",
+   "nature": "mecanisme",
+   "fait": "un carnivore né de la dérive vit assez pour remplacer ce qu'il mange",
+   "quand": "aux séparations",
+   "regles": {
+    "longevite_predateur": 0
+   },
+   "temoin_duree_s": 21.643,
+   "mesures": {
+    "lignees": 302.3333,
+    "predateurs": 86.6667,
+    "biomasse_t": 16818.204,
+    "shannon": 2.2633,
+    "stables": 0.9222,
+    "eteintes": 0.3333,
+    "nees": 2.6667,
+    "duree_s": 21.2933
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 0,
+    "shannon": 0,
+    "stables": 0,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -0.0467
+   },
+   "bouge": [],
+   "cout": 0.016,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16928.098,
+     "shannon": 2.2539,
+     "stables": 0.92,
+     "eteintes": 1,
+     "nees": 3,
+     "duree_s": 21.36
+    },
+    "2": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16822.142,
+     "shannon": 2.2649,
+     "stables": 0.9267,
+     "eteintes": 0,
+     "nees": 2,
+     "duree_s": 21.3
+    },
+    "3": {
+     "lignees": 303,
+     "predateurs": 86,
+     "biomasse_t": 16704.372,
+     "shannon": 2.2711,
+     "stables": 0.92,
+     "eteintes": 0,
+     "nees": 3,
+     "duree_s": 21.22
+    }
+   },
+   "lecture": "rien de mesurable en 30 cycles (aux séparations)"
+  },
+  {
+   "essai": "viande_omnivore",
+   "regle": "viande_omnivore",
+   "nature": "mecanisme",
+   "fait": "un omnivore ne cherche en proies qu'une part du besoin d'un carnivore",
+   "quand": "chaque cycle",
+   "regles": {
+    "viande_omnivore": 1
+   },
+   "temoin_duree_s": 21.34,
+   "mesures": {
+    "lignees": 302.3333,
+    "predateurs": 87.6667,
+    "biomasse_t": 16718.5343,
+    "shannon": 2.2577,
+    "stables": 0.9445,
+    "eteintes": 0.3333,
+    "nees": 2.6667,
+    "duree_s": 21.7167
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 1,
+    "biomasse_t": -99.6697,
+    "shannon": -0.0056,
+    "stables": 0.0223,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 0.3767
+   },
+   "bouge": [
+    "stables"
+   ],
+   "cout": -0.018,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 303,
+     "predateurs": 89,
+     "biomasse_t": 16787.004,
+     "shannon": 2.249,
+     "stables": 0.9467,
+     "eteintes": 1,
+     "nees": 4,
+     "duree_s": 21.39
+    },
+    "2": {
+     "lignees": 303,
+     "predateurs": 88,
+     "biomasse_t": 16692.191,
+     "shannon": 2.2606,
+     "stables": 0.9467,
+     "eteintes": 0,
+     "nees": 3,
+     "duree_s": 21.87
+    },
+    "3": {
+     "lignees": 301,
+     "predateurs": 86,
+     "biomasse_t": 16676.408,
+     "shannon": 2.2635,
+     "stables": 0.94,
+     "eteintes": 0,
+     "nees": 1,
+     "duree_s": 21.89
+    }
+   },
+   "lecture": "elle tient : sans elle, stables bouge"
+  },
+  {
+   "essai": "faim_carnivore",
+   "regle": "faim_carnivore",
+   "nature": "mecanisme",
+   "fait": "un carnivore affamé meurt plus",
+   "quand": "chaque cycle",
+   "regles": {
+    "faim_carnivore": 0
+   },
+   "temoin_duree_s": 20.98,
+   "mesures": {
+    "lignees": 301.6667,
+    "predateurs": 87.3333,
+    "biomasse_t": 16890.6777,
+    "shannon": 2.2679,
+    "stables": 0.9189,
+    "eteintes": 0.3333,
+    "nees": 2,
+    "duree_s": 20.6567
+   },
+   "ecarts": {
+    "lignees": -0.6666,
+    "predateurs": 0.6666,
+    "biomasse_t": 72.4737,
+    "shannon": 0.0046,
+    "stables": -0.0033,
+    "eteintes": 0,
+    "nees": -0.6667,
+    "duree_s": -0.6833
+   },
+   "bouge": [],
+   "cout": 0.015,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 301,
+     "predateurs": 88,
+     "biomasse_t": 17028.225,
+     "shannon": 2.2574,
+     "stables": 0.92,
+     "eteintes": 1,
+     "nees": 2,
+     "duree_s": 20.58
+    },
+    "2": {
+     "lignees": 302,
+     "predateurs": 88,
+     "biomasse_t": 16892.621,
+     "shannon": 2.2701,
+     "stables": 0.9233,
+     "eteintes": 0,
+     "nees": 2,
+     "duree_s": 20.69
+    },
+    "3": {
+     "lignees": 302,
+     "predateurs": 86,
+     "biomasse_t": 16751.187,
+     "shannon": 2.2763,
+     "stables": 0.9133,
+     "eteintes": 0,
+     "nees": 2,
+     "duree_s": 20.7
+    }
+   },
+   "lecture": "rien de mesurable en 30 cycles (chaque cycle)"
+  },
+  {
+   "essai": "detritivore_vegetal",
+   "regle": "detritivore_vegetal",
+   "nature": "mecanisme",
+   "fait": "un charognard tire de la place moins qu'un herbivore",
+   "quand": "chaque cycle",
+   "regles": {
+    "detritivore_vegetal": 1
+   },
+   "temoin_duree_s": 21.883,
+   "mesures": {
+    "lignees": 302,
+    "predateurs": 86.6667,
+    "biomasse_t": 16947.8217,
+    "shannon": 2.254,
+    "stables": 0.9222,
+    "eteintes": 0.3333,
+    "nees": 2.3333,
+    "duree_s": 21.64
+   },
+   "ecarts": {
+    "lignees": -0.3333,
+    "predateurs": 0,
+    "biomasse_t": 129.6177,
+    "shannon": -0.0093,
+    "stables": 0,
+    "eteintes": 0,
+    "nees": -0.3334,
+    "duree_s": 0.3
+   },
+   "bouge": [],
+   "cout": 0.011,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 300,
+     "predateurs": 86,
+     "biomasse_t": 17062.694,
+     "shannon": 2.2442,
+     "stables": 0.92,
+     "eteintes": 1,
+     "nees": 1,
+     "duree_s": 21.66
+    },
+    "2": {
+     "lignees": 304,
+     "predateurs": 88,
+     "biomasse_t": 16943.317,
+     "shannon": 2.2564,
+     "stables": 0.9267,
+     "eteintes": 0,
+     "nees": 4,
+     "duree_s": 21.66
+    },
+    "3": {
+     "lignees": 302,
+     "predateurs": 86,
+     "biomasse_t": 16837.454,
+     "shannon": 2.2613,
+     "stables": 0.92,
+     "eteintes": 0,
+     "nees": 2,
+     "duree_s": 21.6
+    }
+   },
+   "lecture": "rien de mesurable en 30 cycles (chaque cycle)"
+  },
+  {
+   "essai": "vers_carnivore",
+   "regle": "vers_carnivore",
+   "nature": "mecanisme",
+   "fait": "à la dérive du régime, un omnivore devient parfois carnivore",
+   "quand": "aux séparations, si le régime dérive",
+   "regles": {
+    "vers_carnivore": 0
+   },
+   "temoin_duree_s": 21.643,
+   "mesures": {
+    "lignees": 302.3333,
+    "predateurs": 86.6667,
+    "biomasse_t": 16818.204,
+    "shannon": 2.2633,
+    "stables": 0.9222,
+    "eteintes": 0.3333,
+    "nees": 2.6667,
+    "duree_s": 21.5167
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 0,
+    "shannon": 0,
+    "stables": 0,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 0.1767
+   },
+   "bouge": [],
+   "cout": 0.006,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16928.098,
+     "shannon": 2.2539,
+     "stables": 0.92,
+     "eteintes": 1,
+     "nees": 3,
+     "duree_s": 21.44
+    },
+    "2": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16822.142,
+     "shannon": 2.2649,
+     "stables": 0.9267,
+     "eteintes": 0,
+     "nees": 2,
+     "duree_s": 21.53
+    },
+    "3": {
+     "lignees": 303,
+     "predateurs": 86,
+     "biomasse_t": 16704.372,
+     "shannon": 2.2711,
+     "stables": 0.92,
+     "eteintes": 0,
+     "nees": 3,
+     "duree_s": 21.58
+    }
+   },
+   "lecture": "rien de mesurable en 30 cycles (aux séparations, si le régime dérive)"
+  },
+  {
+   "essai": "faim_migration",
+   "regle": "faim_migration",
+   "nature": "mecanisme",
+   "fait": "un prédateur affamé part chercher ailleurs",
+   "quand": "chaque cycle",
+   "regles": {
+    "faim_migration": 0
+   },
+   "temoin_duree_s": 21.34,
+   "mesures": {
+    "lignees": 302.6667,
+    "predateurs": 88.6667,
+    "biomasse_t": 16814.702,
+    "shannon": 2.2554,
+    "stables": 0.9211,
+    "eteintes": 0.3333,
+    "nees": 3,
+    "duree_s": 21.3367
+   },
+   "ecarts": {
+    "lignees": 0.3334,
+    "predateurs": 2,
+    "biomasse_t": -3.502,
+    "shannon": -0.0079,
+    "stables": -0.0011,
+    "eteintes": 0,
+    "nees": 0.3333,
+    "duree_s": -0.0033
+   },
+   "bouge": [],
+   "cout": 0,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 302,
+     "predateurs": 89,
+     "biomasse_t": 16926.391,
+     "shannon": 2.2465,
+     "stables": 0.92,
+     "eteintes": 1,
+     "nees": 3,
+     "duree_s": 21.24
+    },
+    "2": {
+     "lignees": 302,
+     "predateurs": 88,
+     "biomasse_t": 16824.848,
+     "shannon": 2.2591,
+     "stables": 0.9267,
+     "eteintes": 0,
+     "nees": 2,
+     "duree_s": 21.32
+    },
+    "3": {
+     "lignees": 304,
+     "predateurs": 89,
+     "biomasse_t": 16692.867,
+     "shannon": 2.2607,
+     "stables": 0.9167,
+     "eteintes": 0,
+     "nees": 4,
+     "duree_s": 21.45
+    }
+   },
+   "lecture": "rien de mesurable en 30 cycles (chaque cycle)"
+  },
+  {
+   "essai": "hivernage",
+   "regle": "hivernage",
+   "nature": "mecanisme",
+   "fait": "les bêtes dont l'hiver est rude partent vers un voisin plus doux, et reviennent",
+   "quand": "aux saisons",
+   "regles": {
+    "hivernage": {
+     "actif": 0,
+     "rude": 0.85,
+     "marge": 0.2,
+     "min": 0.2,
+     "part_min": 0.05,
+     "part_max": 0.85,
+     "masse_marcheur": 0.3,
+     "masse_volant": 0.005,
+     "fenetres": {
+      "depart": [
+       0.78,
+       0.88
+      ],
+      "partie": [
+       0.88,
+       0.12
+      ],
+      "retour": [
+       0.12,
+       0.22
+      ]
+     }
+    }
+   },
+   "temoin_duree_s": 20.98,
+   "mesures": {
+    "lignees": 302.3333,
+    "predateurs": 86.6667,
+    "biomasse_t": 16818.3163,
+    "shannon": 2.2633,
+    "stables": 0.9233,
+    "eteintes": 0.3333,
+    "nees": 2.6667,
+    "duree_s": 20.6767
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 0.1123,
+    "shannon": 0,
+    "stables": 0.0011,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -0.6633
+   },
+   "bouge": [],
+   "cout": 0.014,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16928.195,
+     "shannon": 2.2536,
+     "stables": 0.9233,
+     "eteintes": 1,
+     "nees": 3,
+     "duree_s": 20.51
+    },
+    "2": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16822.306,
+     "shannon": 2.265,
+     "stables": 0.9267,
+     "eteintes": 0,
+     "nees": 2,
+     "duree_s": 20.81
+    },
+    "3": {
+     "lignees": 303,
+     "predateurs": 86,
+     "biomasse_t": 16704.448,
+     "shannon": 2.2713,
+     "stables": 0.92,
+     "eteintes": 0,
+     "nees": 3,
+     "duree_s": 20.71
+    }
+   },
+   "lecture": "rien de mesurable en 30 cycles (aux saisons)"
+  },
+  {
+   "essai": "dispersion",
+   "regle": "dispersion",
+   "nature": "mecanisme",
+   "fait": "une part de chaque population gagne les parcelles voisines du même biome",
+   "quand": "chaque cycle, dans un monde à parcelles",
+   "regles": {
+    "dispersion": 0
+   },
+   "temoin_duree_s": 21.883,
+   "mesures": {
+    "lignees": 302.6667,
+    "predateurs": 87.6667,
+    "biomasse_t": 16892.7833,
+    "shannon": 2.2491,
+    "stables": 0.9156,
+    "eteintes": 0.3333,
+    "nees": 3,
+    "duree_s": 19.8433
+   },
+   "ecarts": {
+    "lignees": 0.3334,
+    "predateurs": 1,
+    "biomasse_t": 74.5793,
+    "shannon": -0.0142,
+    "stables": -0.0066,
+    "eteintes": 0,
+    "nees": 0.3333,
+    "duree_s": -1.4967
+   },
+   "bouge": [],
+   "cout": 0.093,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 301,
+     "predateurs": 88,
+     "biomasse_t": 16919.604,
+     "shannon": 2.2399,
+     "stables": 0.92,
+     "eteintes": 1,
+     "nees": 2,
+     "duree_s": 19.74
+    },
+    "2": {
+     "lignees": 303,
+     "predateurs": 88,
+     "biomasse_t": 16802.263,
+     "shannon": 2.2532,
+     "stables": 0.9267,
+     "eteintes": 0,
+     "nees": 3,
+     "duree_s": 19.84
+    },
+    "3": {
+     "lignees": 304,
+     "predateurs": 87,
+     "biomasse_t": 16956.483,
+     "shannon": 2.2542,
+     "stables": 0.9,
+     "eteintes": 0,
+     "nees": 4,
+     "duree_s": 19.95
+    }
+   },
+   "lecture": "rien de mesurable en 30 cycles (chaque cycle, dans un monde à parcelles)"
+  },
+  {
+   "essai": "fuite",
+   "regle": "fuite",
+   "nature": "mecanisme",
+   "fait": "au-delà de la capacité, une part de l'excès fuit vers les voisins",
+   "quand": "chaque cycle, dans un monde à parcelles",
+   "regles": {
+    "fuite": 0
+   },
+   "temoin_duree_s": 21.643,
+   "mesures": {
+    "lignees": 303.3333,
+    "predateurs": 86.6667,
+    "biomasse_t": 16828.0393,
+    "shannon": 2.2441,
+    "stables": 0.9278,
+    "eteintes": 0,
+    "nees": 3.3333,
+    "duree_s": 21.29
+   },
+   "ecarts": {
+    "lignees": 1,
+    "predateurs": 0,
+    "biomasse_t": 9.8353,
+    "shannon": -0.0192,
+    "stables": 0.0056,
+    "eteintes": -0.3333,
+    "nees": 0.6666,
+    "duree_s": -0.05
+   },
+   "bouge": [],
+   "cout": 0.016,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 301,
+     "predateurs": 86,
+     "biomasse_t": 16941.362,
+     "shannon": 2.2356,
+     "stables": 0.9267,
+     "eteintes": 0,
+     "nees": 1,
+     "duree_s": 21.41
+    },
+    "2": {
+     "lignees": 305,
+     "predateurs": 87,
+     "biomasse_t": 16841.835,
+     "shannon": 2.2474,
+     "stables": 0.9333,
+     "eteintes": 0,
+     "nees": 5,
+     "duree_s": 21.12
+    },
+    "3": {
+     "lignees": 304,
+     "predateurs": 87,
+     "biomasse_t": 16700.921,
+     "shannon": 2.2493,
+     "stables": 0.9233,
+     "eteintes": 0,
+     "nees": 4,
+     "duree_s": 21.34
+    }
+   },
+   "lecture": "rien de mesurable en 30 cycles (chaque cycle, dans un monde à parcelles)"
+  },
+  {
+   "essai": "report_proies",
+   "regle": "report_proies",
+   "nature": "mecanisme",
+   "fait": "un prédateur se reporte sur la proie abondante plus qu'au prorata",
+   "quand": "chaque cycle",
+   "regles": {
+    "report_proies": 1
+   },
+   "temoin_duree_s": 21.34,
+   "mesures": {
+    "lignees": 301.3333,
+    "predateurs": 87.3333,
+    "biomasse_t": 16914.0243,
+    "shannon": 2.1833,
+    "stables": 0.8556,
+    "eteintes": 0.6667,
+    "nees": 2,
+    "duree_s": 20.6133
+   },
+   "ecarts": {
+    "lignees": -1,
+    "predateurs": 0.6666,
+    "biomasse_t": 95.8203,
+    "shannon": -0.08,
+    "stables": -0.0666,
+    "eteintes": 0.3334,
+    "nees": -0.6667,
+    "duree_s": -0.7267
+   },
+   "bouge": [
+    "shannon",
+    "stables"
+   ],
+   "cout": 0.034,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 300,
+     "predateurs": 87,
+     "biomasse_t": 16916.886,
+     "shannon": 2.1743,
+     "stables": 0.8567,
+     "eteintes": 1,
+     "nees": 1,
+     "duree_s": 20.83
+    },
+    "2": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16798.486,
+     "shannon": 2.1863,
+     "stables": 0.8533,
+     "eteintes": 0,
+     "nees": 2,
+     "duree_s": 20.44
+    },
+    "3": {
+     "lignees": 302,
+     "predateurs": 88,
+     "biomasse_t": 17026.701,
+     "shannon": 2.1894,
+     "stables": 0.8567,
+     "eteintes": 1,
+     "nees": 3,
+     "duree_s": 20.57
+    }
+   },
+   "lecture": "elle tient : sans elle, shannon, stables bougent"
+  },
+  {
+   "essai": "saisons",
+   "regle": "saisons",
+   "nature": "mecanisme",
+   "fait": "les saisons du moteur : les axes et la production oscillent dans l'année (un lieu qui a les siennes les garde)",
+   "quand": "chaque cycle, si le monde a une année",
+   "regles": {
+    "saisons": {
+     "temperature": 0,
+     "lumiere": 0,
+     "humidite": 0,
+     "capacite": 0
+    }
+   },
+   "temoin_duree_s": 20.98,
+   "mesures": {
+    "lignees": 300.6667,
+    "predateurs": 86,
+    "biomasse_t": 16702.7813,
+    "shannon": 2.2767,
+    "stables": 0.8911,
+    "eteintes": 0.3333,
+    "nees": 1,
+    "duree_s": 17.1967
+   },
+   "ecarts": {
+    "lignees": -1.6666,
+    "predateurs": -0.6667,
+    "biomasse_t": -115.4227,
+    "shannon": 0.0134,
+    "stables": -0.0311,
+    "eteintes": 0,
+    "nees": -1.6667,
+    "duree_s": -4.1433
+   },
+   "bouge": [
+    "stables"
+   ],
+   "cout": 0.18,
+   "cout_lu": 0.18,
+   "par_graine": {
+    "1": {
+     "lignees": 302,
+     "predateurs": 86,
+     "biomasse_t": 16686.897,
+     "shannon": 2.2706,
+     "stables": 0.89,
+     "eteintes": 1,
+     "nees": 3,
+     "duree_s": 17.47
+    },
+    "2": {
+     "lignees": 300,
+     "predateurs": 86,
+     "biomasse_t": 16708.154,
+     "shannon": 2.2773,
+     "stables": 0.8933,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 16.94
+    },
+    "3": {
+     "lignees": 300,
+     "predateurs": 86,
+     "biomasse_t": 16713.293,
+     "shannon": 2.2823,
+     "stables": 0.89,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 17.18
+    }
+   },
+   "lecture": "elle tient : sans elle, stables bouge"
+  },
+  {
+   "essai": "maladie",
+   "regle": "maladie",
+   "nature": "mecanisme",
+   "fait": "une population entassée voit éclore une épidémie",
+   "quand": "chaque cycle",
+   "regles": {
+    "maladie": {
+     "chance": 0,
+     "duree": [
+      8,
+      25
+     ],
+     "virulence": [
+      0.03,
+      0.12
+     ],
+     "contagion": 0.15
+    }
+   },
+   "temoin_duree_s": 21.883,
+   "mesures": {
+    "lignees": 302.3333,
+    "predateurs": 87.3333,
+    "biomasse_t": 16818.0817,
+    "shannon": 2.2636,
+    "stables": 0.9222,
+    "eteintes": 0.3333,
+    "nees": 2.6667,
+    "duree_s": 21.4033
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0.6666,
+    "biomasse_t": -0.1223,
+    "shannon": 0.0003,
+    "stables": 0,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 0.0633
+   },
+   "bouge": [],
+   "cout": 0.022,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 301,
+     "predateurs": 87,
+     "biomasse_t": 16940.002,
+     "shannon": 2.2543,
+     "stables": 0.92,
+     "eteintes": 1,
+     "nees": 2,
+     "duree_s": 20.99
+    },
+    "2": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16811.191,
+     "shannon": 2.2652,
+     "stables": 0.9267,
+     "eteintes": 0,
+     "nees": 2,
+     "duree_s": 21.59
+    },
+    "3": {
+     "lignees": 304,
+     "predateurs": 88,
+     "biomasse_t": 16703.052,
+     "shannon": 2.2712,
+     "stables": 0.92,
+     "eteintes": 0,
+     "nees": 4,
+     "duree_s": 21.63
+    }
+   },
+   "lecture": "rien de mesurable en 30 cycles (chaque cycle)"
+  },
+  {
+   "essai": "catastrophes",
+   "regle": "catastrophes",
+   "nature": "mecanisme",
+   "fait": "l'incendie, la crue, la sécheresse frappent un lieu",
+   "quand": "chaque cycle",
+   "regles": {
+    "catastrophes": {
+     "incendie": {
+      "chance": 0,
+      "capacite": 0.4,
+      "mortalite": 0.2,
+      "detail": "le feu court dans le couvert"
+     },
+     "crue": {
+      "chance": 0,
+      "capacite": 0.2,
+      "mortalite": 0.1,
+      "detail": "les eaux montent"
+     },
+     "secheresse": {
+      "chance": 0,
+      "capacite": 0.3,
+      "mortalite": 0.05,
+      "detail": "les points d'eau tarissent"
+     }
+    }
+   },
+   "temoin_duree_s": 21.643,
+   "mesures": {
+    "lignees": 300.6667,
+    "predateurs": 86,
+    "biomasse_t": 16899.176,
+    "shannon": 2.2598,
+    "stables": 0.9211,
+    "eteintes": 0.3333,
+    "nees": 1,
+    "duree_s": 20.9233
+   },
+   "ecarts": {
+    "lignees": -1.6666,
+    "predateurs": -0.6667,
+    "biomasse_t": 80.972,
+    "shannon": -0.0035,
+    "stables": -0.0011,
+    "eteintes": 0,
+    "nees": -1.6667,
+    "duree_s": -0.4167
+   },
+   "bouge": [],
+   "cout": 0.033,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 300,
+     "predateurs": 86,
+     "biomasse_t": 16938.042,
+     "shannon": 2.254,
+     "stables": 0.92,
+     "eteintes": 1,
+     "nees": 1,
+     "duree_s": 21.01
+    },
+    "2": {
+     "lignees": 302,
+     "predateurs": 86,
+     "biomasse_t": 17041.795,
+     "shannon": 2.2575,
+     "stables": 0.9233,
+     "eteintes": 0,
+     "nees": 2,
+     "duree_s": 20.83
+    },
+    "3": {
+     "lignees": 300,
+     "predateurs": 86,
+     "biomasse_t": 16717.691,
+     "shannon": 2.268,
+     "stables": 0.92,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 20.93
+    }
+   },
+   "lecture": "rien de mesurable en 30 cycles (chaque cycle)"
+  },
+  {
+   "essai": "derive",
+   "regle": "derive",
+   "nature": "mecanisme",
+   "fait": "une lignée qui se sépare dérive : sa masse, son régime, sa locomotion, son heure, sa silhouette",
+   "quand": "aux séparations",
+   "regles": {
+    "derive": {
+     "masse": [
+      1,
+      1
+     ],
+     "regime": 0,
+     "locomotion": 0,
+     "activite": 0,
+     "corps": 0,
+     "tolerance": 0,
+     "formes": 0,
+     "organes": 0
+    }
+   },
+   "temoin_duree_s": 21.34,
+   "mesures": {
+    "lignees": 302.6667,
+    "predateurs": 86.6667,
+    "biomasse_t": 16818.1613,
+    "shannon": 2.2633,
+    "stables": 0.9222,
+    "eteintes": 0.3333,
+    "nees": 3,
+    "duree_s": 20.88
+   },
+   "ecarts": {
+    "lignees": 0.3334,
+    "predateurs": 0,
+    "biomasse_t": -0.0427,
+    "shannon": 0,
+    "stables": 0,
+    "eteintes": 0,
+    "nees": 0.3333,
+    "duree_s": -0.46
+   },
+   "bouge": [],
+   "cout": 0.022,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16928.067,
+     "shannon": 2.2538,
+     "stables": 0.92,
+     "eteintes": 1,
+     "nees": 3,
+     "duree_s": 20.65
+    },
+    "2": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16822.11,
+     "shannon": 2.265,
+     "stables": 0.9267,
+     "eteintes": 0,
+     "nees": 2,
+     "duree_s": 20.55
+    },
+    "3": {
+     "lignees": 304,
+     "predateurs": 86,
+     "biomasse_t": 16704.307,
+     "shannon": 2.2711,
+     "stables": 0.92,
+     "eteintes": 0,
+     "nees": 4,
+     "duree_s": 21.44
+    }
+   },
+   "lecture": "rien de mesurable en 30 cycles (aux séparations)"
+  },
+  {
+   "essai": "vol_masse_max",
+   "regle": "vol_masse_max",
+   "nature": "mecanisme",
+   "fait": "au-delà de 12 kg, une lignée perd le vol",
+   "quand": "aux séparations",
+   "regles": {
+    "vol_masse_max": 1000000
+   },
+   "temoin_duree_s": 20.98,
+   "mesures": {
+    "lignees": 302.3333,
+    "predateurs": 86.6667,
+    "biomasse_t": 16818.204,
+    "shannon": 2.2633,
+    "stables": 0.9222,
+    "eteintes": 0.3333,
+    "nees": 2.6667,
+    "duree_s": 20.7667
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 0,
+    "shannon": 0,
+    "stables": 0,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -0.5733
+   },
+   "bouge": [],
+   "cout": 0.01,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16928.098,
+     "shannon": 2.2539,
+     "stables": 0.92,
+     "eteintes": 1,
+     "nees": 3,
+     "duree_s": 20.65
+    },
+    "2": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16822.142,
+     "shannon": 2.2649,
+     "stables": 0.9267,
+     "eteintes": 0,
+     "nees": 2,
+     "duree_s": 20.73
+    },
+    "3": {
+     "lignees": 303,
+     "predateurs": 86,
+     "biomasse_t": 16704.372,
+     "shannon": 2.2711,
+     "stables": 0.92,
+     "eteintes": 0,
+     "nees": 3,
+     "duree_s": 20.92
+    }
+   },
+   "lecture": "rien de mesurable en 30 cycles (aux séparations)"
+  },
+  {
+   "essai": "genetique",
+   "regle": "genetique",
+   "nature": "mecanisme",
+   "fait": "la génétique continue : la taille, la vitesse, l'audace, la sociabilité évoluent dans chaque population",
+   "quand": "chaque cycle",
+   "regles": {
+    "genetique": false
+   },
+   "temoin_duree_s": 21.883,
+   "mesures": {
+    "lignees": 301.3333,
+    "predateurs": 86,
+    "biomasse_t": 16716.7807,
+    "shannon": 2.2526,
+    "stables": 0.9278,
+    "eteintes": 0.3333,
+    "nees": 1.6667,
+    "duree_s": 20.7533
+   },
+   "ecarts": {
+    "lignees": -1,
+    "predateurs": -0.6667,
+    "biomasse_t": -101.4233,
+    "shannon": -0.0107,
+    "stables": 0.0056,
+    "eteintes": 0,
+    "nees": -1,
+    "duree_s": -0.5867
+   },
+   "bouge": [],
+   "cout": 0.052,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 300,
+     "predateurs": 86,
+     "biomasse_t": 16792.299,
+     "shannon": 2.246,
+     "stables": 0.9333,
+     "eteintes": 1,
+     "nees": 1,
+     "duree_s": 20.77
+    },
+    "2": {
+     "lignees": 302,
+     "predateurs": 86,
+     "biomasse_t": 16611.485,
+     "shannon": 2.258,
+     "stables": 0.9367,
+     "eteintes": 0,
+     "nees": 2,
+     "duree_s": 20.92
+    },
+    "3": {
+     "lignees": 302,
+     "predateurs": 86,
+     "biomasse_t": 16746.558,
+     "shannon": 2.2537,
+     "stables": 0.9133,
+     "eteintes": 0,
+     "nees": 2,
+     "duree_s": 20.57
+    }
+   },
+   "lecture": "rien de mesurable en 30 cycles (chaque cycle)"
+  },
+  {
+   "essai": "hybride",
+   "regle": "hybride",
+   "nature": "mecanisme",
+   "fait": "deux lignées apparentées qui partagent un lieu se croisent",
+   "quand": "chaque cycle",
+   "regles": {
+    "hybride": {
+     "actif": false,
+     "rencontre": 0.3,
+     "tau": 200,
+     "masse": 2,
+     "corps": 3,
+     "niche": 1,
+     "zone": 0.01
+    }
+   },
+   "temoin_duree_s": 21.643,
+   "mesures": {
+    "lignees": 302,
+    "predateurs": 87,
+    "biomasse_t": 16923.9513,
+    "shannon": 2.2661,
+    "stables": 0.9133,
+    "eteintes": 0.3333,
+    "nees": 2.3333,
+    "duree_s": 20.7267
+   },
+   "ecarts": {
+    "lignees": -0.3333,
+    "predateurs": 0.3333,
+    "biomasse_t": 105.7473,
+    "shannon": 0.0028,
+    "stables": -0.0089,
+    "eteintes": 0,
+    "nees": -0.3334,
+    "duree_s": -0.6133
+   },
+   "bouge": [],
+   "cout": 0.042,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 300,
+     "predateurs": 86,
+     "biomasse_t": 16981.869,
+     "shannon": 2.2592,
+     "stables": 0.92,
+     "eteintes": 1,
+     "nees": 1,
+     "duree_s": 20.43
+    },
+    "2": {
+     "lignees": 303,
+     "predateurs": 87,
+     "biomasse_t": 16849.545,
+     "shannon": 2.2699,
+     "stables": 0.92,
+     "eteintes": 0,
+     "nees": 3,
+     "duree_s": 20.48
+    },
+    "3": {
+     "lignees": 303,
+     "predateurs": 88,
+     "biomasse_t": 16940.44,
+     "shannon": 2.2692,
+     "stables": 0.9,
+     "eteintes": 0,
+     "nees": 3,
+     "duree_s": 21.27
+    }
+   },
+   "lecture": "rien de mesurable en 30 cycles (chaque cycle)"
+  },
+  {
+   "essai": "sexe",
+   "regle": "sexe",
+   "nature": "mecanisme",
+   "fait": "la reproduction sexuée : les allèles, Mendel, le choix du partenaire",
+   "quand": "chaque cycle",
+   "regles": {
+    "sexe": {
+     "actif": false,
+     "gain": 0.0002,
+     "perte": 0.0002,
+     "attrait": 1,
+     "nouveau": {
+      "dominant": 0.001,
+      "recessif": 0.03
+     }
+    }
+   },
+   "temoin_duree_s": 21.34,
+   "mesures": {
+    "lignees": 301.6667,
+    "predateurs": 86.3333,
+    "biomasse_t": 16937.1997,
+    "shannon": 2.265,
+    "stables": 0.9211,
+    "eteintes": 0,
+    "nees": 1.6667,
+    "duree_s": 8.7067
+   },
+   "ecarts": {
+    "lignees": -0.6666,
+    "predateurs": -0.3334,
+    "biomasse_t": 118.9957,
+    "shannon": 0.0017,
+    "stables": -0.0011,
+    "eteintes": -0.3333,
+    "nees": -1,
+    "duree_s": -12.6333
+   },
+   "bouge": [],
+   "cout": 0.592,
+   "cout_lu": 0.592,
+   "par_graine": {
+    "1": {
+     "lignees": 300,
+     "predateurs": 86,
+     "biomasse_t": 16968.13,
+     "shannon": 2.2598,
+     "stables": 0.93,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 8.76
+    },
+    "2": {
+     "lignees": 301,
+     "predateurs": 86,
+     "biomasse_t": 16879.274,
+     "shannon": 2.2667,
+     "stables": 0.93,
+     "eteintes": 0,
+     "nees": 1,
+     "duree_s": 8.68
+    },
+    "3": {
+     "lignees": 304,
+     "predateurs": 87,
+     "biomasse_t": 16964.195,
+     "shannon": 2.2686,
+     "stables": 0.9033,
+     "eteintes": 0,
+     "nees": 4,
+     "duree_s": 8.68
+    }
+   },
+   "lecture": "rien de mesurable en 30 cycles (chaque cycle)"
+  },
+  {
+   "essai": "concurrence_masse",
+   "regle": "concurrence_masse",
+   "nature": "mecanisme",
+   "fait": "deux chasseurs se gênent d'autant moins que leurs masses diffèrent",
+   "quand": "chaque cycle",
+   "regles": {
+    "concurrence_masse": 0
+   },
+   "temoin_duree_s": 20.98,
+   "mesures": {
+    "lignees": 302,
+    "predateurs": 88,
+    "biomasse_t": 16896.3647,
+    "shannon": 2.2613,
+    "stables": 0.8922,
+    "eteintes": 0.6667,
+    "nees": 2.6667,
+    "duree_s": 20.5733
+   },
+   "ecarts": {
+    "lignees": -0.3333,
+    "predateurs": 1.3333,
+    "biomasse_t": 78.1607,
+    "shannon": -0.002,
+    "stables": -0.03,
+    "eteintes": 0.3334,
+    "nees": 0,
+    "duree_s": -0.7667
+   },
+   "bouge": [
+    "stables"
+   ],
+   "cout": 0.019,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 300,
+     "predateurs": 87,
+     "biomasse_t": 16934.127,
+     "shannon": 2.2527,
+     "stables": 0.9,
+     "eteintes": 1,
+     "nees": 1,
+     "duree_s": 20.46
+    },
+    "2": {
+     "lignees": 303,
+     "predateurs": 88,
+     "biomasse_t": 16851.592,
+     "shannon": 2.2645,
+     "stables": 0.8933,
+     "eteintes": 0,
+     "nees": 3,
+     "duree_s": 20.45
+    },
+    "3": {
+     "lignees": 303,
+     "predateurs": 89,
+     "biomasse_t": 16903.375,
+     "shannon": 2.2667,
+     "stables": 0.8833,
+     "eteintes": 1,
+     "nees": 4,
+     "duree_s": 20.81
+    }
+   },
+   "lecture": "elle tient : sans elle, stables bouge"
+  },
+  {
+   "essai": "viande_part",
+   "regle": "viande_part",
+   "nature": "mecanisme",
+   "fait": "un omnivore ne cherche en proies que sa part de chair",
+   "quand": "chaque cycle",
+   "regles": {
+    "viande_part": false
+   },
+   "temoin_duree_s": 21.883,
+   "mesures": {
+    "lignees": 302,
+    "predateurs": 86.6667,
+    "biomasse_t": 16723.7073,
+    "shannon": 2.2484,
+    "stables": 0.92,
+    "eteintes": 0.3333,
+    "nees": 2.3333,
+    "duree_s": 20.6533
+   },
+   "ecarts": {
+    "lignees": -0.3333,
+    "predateurs": 0,
+    "biomasse_t": -94.4967,
+    "shannon": -0.0149,
+    "stables": -0.0022,
+    "eteintes": 0,
+    "nees": -0.3334,
+    "duree_s": -0.6867
+   },
+   "bouge": [],
+   "cout": 0.056,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 300,
+     "predateurs": 86,
+     "biomasse_t": 16781.239,
+     "shannon": 2.2407,
+     "stables": 0.92,
+     "eteintes": 1,
+     "nees": 1,
+     "duree_s": 20.88
+    },
+    "2": {
+     "lignees": 304,
+     "predateurs": 88,
+     "biomasse_t": 16652.593,
+     "shannon": 2.2522,
+     "stables": 0.92,
+     "eteintes": 0,
+     "nees": 4,
+     "duree_s": 20.79
+    },
+    "3": {
+     "lignees": 302,
+     "predateurs": 86,
+     "biomasse_t": 16737.29,
+     "shannon": 2.2522,
+     "stables": 0.92,
+     "eteintes": 0,
+     "nees": 2,
+     "duree_s": 20.29
+    }
+   },
+   "lecture": "rien de mesurable en 30 cycles (chaque cycle)"
+  },
+  {
+   "essai": "domination",
+   "regle": "domination",
+   "nature": "mecanisme",
+   "fait": "entre deux chasseurs à sang chaud, le plus grand domine",
+   "quand": "chaque cycle",
+   "regles": {
+    "domination": 0
+   },
+   "temoin_duree_s": 21.643,
+   "mesures": {
+    "lignees": 303.6667,
+    "predateurs": 87.6667,
+    "biomasse_t": 16857.028,
+    "shannon": 2.2608,
+    "stables": 0.9022,
+    "eteintes": 0.3333,
+    "nees": 4,
+    "duree_s": 21.2833
+   },
+   "ecarts": {
+    "lignees": 1.3334,
+    "predateurs": 1,
+    "biomasse_t": 38.824,
+    "shannon": -0.0025,
+    "stables": -0.02,
+    "eteintes": 0,
+    "nees": 1.3333,
+    "duree_s": -0.0567
+   },
+   "bouge": [],
+   "cout": 0.017,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 303,
+     "predateurs": 88,
+     "biomasse_t": 16919.624,
+     "shannon": 2.2508,
+     "stables": 0.91,
+     "eteintes": 1,
+     "nees": 4,
+     "duree_s": 21.24
+    },
+    "2": {
+     "lignees": 304,
+     "predateurs": 89,
+     "biomasse_t": 16819.209,
+     "shannon": 2.2648,
+     "stables": 0.9067,
+     "eteintes": 0,
+     "nees": 4,
+     "duree_s": 21.39
+    },
+    "3": {
+     "lignees": 304,
+     "predateurs": 86,
+     "biomasse_t": 16832.251,
+     "shannon": 2.2667,
+     "stables": 0.89,
+     "eteintes": 0,
+     "nees": 4,
+     "duree_s": 21.22
+    }
+   },
+   "lecture": "rien de mesurable en 30 cycles (chaque cycle)"
+  },
+  {
+   "essai": "recouvrement",
+   "regle": "recouvrement",
+   "nature": "mecanisme",
+   "fait": "deux chasseurs ne se disputent que ce qu'ils cherchent tous deux",
+   "quand": "chaque cycle",
+   "regles": {
+    "recouvrement": false
+   },
+   "temoin_duree_s": 21.34,
+   "mesures": {
+    "lignees": 301.3333,
+    "predateurs": 87.6667,
+    "biomasse_t": 16919.69,
+    "shannon": 2.2678,
+    "stables": 0.9156,
+    "eteintes": 0.6667,
+    "nees": 2,
+    "duree_s": 19.6367
+   },
+   "ecarts": {
+    "lignees": -1,
+    "predateurs": 1,
+    "biomasse_t": 101.486,
+    "shannon": 0.0045,
+    "stables": -0.0066,
+    "eteintes": 0.3334,
+    "nees": -0.6667,
+    "duree_s": -1.7033
+   },
+   "bouge": [],
+   "cout": 0.08,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 300,
+     "predateurs": 86,
+     "biomasse_t": 16984.796,
+     "shannon": 2.2548,
+     "stables": 0.9267,
+     "eteintes": 1,
+     "nees": 1,
+     "duree_s": 20.03
+    },
+    "2": {
+     "lignees": 303,
+     "predateurs": 89,
+     "biomasse_t": 16858.636,
+     "shannon": 2.2693,
+     "stables": 0.9267,
+     "eteintes": 0,
+     "nees": 3,
+     "duree_s": 19.71
+    },
+    "3": {
+     "lignees": 301,
+     "predateurs": 88,
+     "biomasse_t": 16915.638,
+     "shannon": 2.2794,
+     "stables": 0.8933,
+     "eteintes": 1,
+     "nees": 2,
+     "duree_s": 19.17
+    }
+   },
+   "lecture": "rien de mesurable en 30 cycles (chaque cycle)"
+  },
+  {
+   "essai": "petites_proies",
+   "regle": "petites_proies",
+   "nature": "mecanisme",
+   "fait": "un mangeur d'insectes prend les insectes, si petits soient-ils",
+   "quand": "chaque cycle",
+   "regles": {
+    "petites_proies": false
+   },
+   "temoin_duree_s": 20.98,
+   "mesures": {
+    "lignees": 301.3333,
+    "predateurs": 86.6667,
+    "biomasse_t": 16735.0203,
+    "shannon": 2.263,
+    "stables": 0.9067,
+    "eteintes": 0.3333,
+    "nees": 1.6667,
+    "duree_s": 17.8667
+   },
+   "ecarts": {
+    "lignees": -1,
+    "predateurs": 0,
+    "biomasse_t": -83.1837,
+    "shannon": -0.0003,
+    "stables": -0.0155,
+    "eteintes": 0,
+    "nees": -1,
+    "duree_s": -3.4733
+   },
+   "bouge": [],
+   "cout": 0.148,
+   "cout_lu": 0.148,
+   "par_graine": {
+    "1": {
+     "lignees": 299,
+     "predateurs": 86,
+     "biomasse_t": 16846.366,
+     "shannon": 2.2535,
+     "stables": 0.91,
+     "eteintes": 1,
+     "nees": 0,
+     "duree_s": 18.57
+    },
+    "2": {
+     "lignees": 303,
+     "predateurs": 87,
+     "biomasse_t": 16718.297,
+     "shannon": 2.2644,
+     "stables": 0.9167,
+     "eteintes": 0,
+     "nees": 3,
+     "duree_s": 18.03
+    },
+    "3": {
+     "lignees": 302,
+     "predateurs": 87,
+     "biomasse_t": 16640.398,
+     "shannon": 2.2711,
+     "stables": 0.8933,
+     "eteintes": 0,
+     "nees": 2,
+     "duree_s": 17
+    }
+   },
+   "lecture": "rien de mesurable en 30 cycles (chaque cycle)"
+  }
+ ],
+ "laisses": [
+  {
+   "regle": "max_taxons",
+   "nature": "inactive",
+   "pourquoi": "la règle ne fait rien par défaut (la genèse s'en sert) ; rien à retirer dans un monde hébergé"
+  },
+  {
+   "regle": "cadavres",
+   "nature": "mecanisme",
+   "essai": "cadavres",
+   "pourquoi": "déjà retirée dans ce monde : sa valeur est celle qui l'éteint"
+  },
+  {
+   "regle": "mefiance",
+   "nature": "joueurs",
+   "pourquoi": "la règle ne vit que de ce que font les joueurs ; sans pressions, rien à mesurer"
+  },
+  {
+   "regle": "naissances",
+   "nature": "mecanisme",
+   "essai": "naissances",
+   "pourquoi": "déjà retirée dans ce monde : sa valeur est celle qui l'éteint"
+  },
+  {
+   "regle": "colonisation",
+   "nature": "mecanisme",
+   "essai": "colonisation",
+   "pourquoi": "déjà retirée dans ce monde : sa valeur est celle qui l'éteint"
+  },
+  {
+   "regle": "diapause",
+   "nature": "mecanisme",
+   "essai": "diapause",
+   "pourquoi": "déjà retirée dans ce monde : sa valeur est celle qui l'éteint"
+  },
+  {
+   "regle": "renouvellement",
+   "nature": "mecanisme",
+   "essai": "renouvellement",
+   "pourquoi": "déjà retirée dans ce monde : sa valeur est celle qui l'éteint"
+  },
+  {
+   "regle": "charognes",
+   "nature": "mecanisme",
+   "essai": "charognes",
+   "pourquoi": "déjà retirée dans ce monde : sa valeur est celle qui l'éteint"
+  },
+  {
+   "regle": "meute_proie",
+   "nature": "mecanisme",
+   "essai": "meute_proie",
+   "pourquoi": "déjà retirée dans ce monde : sa valeur est celle qui l'éteint"
+  }
+ ],
+ "duree_min": 396.1,
+ "parts": 4,
+ "plan_des_essais": {
+  "fichier": "etalon/ablations.json",
+  "version": 2,
+  "empreinte": "b76dcd77d84efc5cf5268c8440570d759047c19fcb8e1e5a3e9f1ec817601315"
+ }
+}
