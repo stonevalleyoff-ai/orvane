@@ -1,0 +1,2726 @@
+{
+ "type": "paires",
+ "simples_de": {
+  "fichier": "../../_temp/seuls/rapport.json",
+  "date": "2026-11-25T09:48:24.831Z",
+  "empreinte": "218eb066aa45ced914182a116c7043bb2707193508dc2e72c6ce7bf7721af3ab"
+ },
+ "simples": {
+  "predation_max": {
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -11887107.205,
+    "shannon": -0.0239,
+    "stables": -0.0149,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -2.94
+   },
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 248281182.924,
+    "shannon": 1.2945,
+    "stables": 0.9602,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 5.59
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon"
+   ]
+  },
+  "faim_carnivore": {
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 4051268.264,
+    "shannon": 0.0165,
+    "stables": 0.0249,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 0.08
+   },
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 264219558.393,
+    "shannon": 1.3349,
+    "stables": 1,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 8.61
+   },
+   "bouge": [
+    "shannon",
+    "stables"
+   ]
+  },
+  "report_proies": {
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -3847619.987,
+    "shannon": -0.0398,
+    "stables": -0.0149,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -1.65
+   },
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 256320670.142,
+    "shannon": 1.2786,
+    "stables": 0.9602,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 6.88
+   },
+   "bouge": [
+    "shannon"
+   ]
+  },
+  "naissances": {
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 6368287.887,
+    "shannon": 0.0323,
+    "stables": -0.0149,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -2.93
+   },
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 266536578.016,
+    "shannon": 1.3507,
+    "stables": 0.9602,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 5.6
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon"
+   ]
+  },
+  "colonisation": {
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -45605.92,
+    "shannon": 0.0498,
+    "stables": -0.005,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 3.57
+   },
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 260122684.209,
+    "shannon": 1.3682,
+    "stables": 0.9701,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 12.1
+   },
+   "bouge": [
+    "shannon"
+   ]
+  },
+  "diapause": {
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -30616924.855,
+    "shannon": -0.0372,
+    "stables": -0.0448,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -0.76
+   },
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 229551365.274,
+    "shannon": 1.2812,
+    "stables": 0.9303,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 7.77
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon",
+    "stables"
+   ]
+  },
+  "concurrence_masse": {
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 12170968.697,
+    "shannon": -0.0247,
+    "stables": -0.0149,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -0.28
+   },
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 272339258.826,
+    "shannon": 1.2937,
+    "stables": 0.9602,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 8.25
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon"
+   ]
+  },
+  "viande_part": {
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -12498719.195,
+    "shannon": 0.0168,
+    "stables": 0,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -1.62
+   },
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 247669570.934,
+    "shannon": 1.3352,
+    "stables": 0.9751,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 6.91
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon"
+   ]
+  },
+  "petites_proies": {
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 26464721.931,
+    "shannon": -0.0756,
+    "stables": -0.0895,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -0.92
+   },
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 286633012.06,
+    "shannon": 1.2428,
+    "stables": 0.8856,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 7.61
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon",
+    "stables"
+   ]
+  }
+ },
+ "plan": {
+  "fichier": "etalon/ablations.json",
+  "version": 3,
+  "empreinte": "667e3ac416a012381ddf66316771eb405dc70dfaefbccd390a38255dc27c721c"
+ },
+ "date": "2026-11-25T13:02:24.912Z",
+ "moteur": {
+  "commit": "c0bcdfb67ed5a99387ede157933d9b3681c31359",
+  "modifie": false
+ },
+ "machine": {
+  "processeur": "AMD EPYC 7763 64-Core Processor",
+  "coeurs": 4,
+  "node": "v22.23.5"
+ },
+ "monde": {
+  "id": "europe",
+  "cycle": 2,
+  "empreinte": "d766e564df8fa0b59a3d09d21375c82b42f24a3f3daefbbd9bb64b21e019829b",
+  "regles": "d1edcb68ca92acaaf7b7f09c108ea04b4a8234e7eaa3389c12f28b154cbb47aa"
+ },
+ "cycles": 365,
+ "graines": [
+  1
+ ],
+ "temoin": {
+  "par_graine": {
+   "1": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 260168290.129,
+    "shannon": 1.3184,
+    "stables": 0.9751,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 8.5
+   }
+  },
+  "moyenne": {
+   "lignees": 201,
+   "predateurs": 87,
+   "biomasse_t": 260168290.129,
+   "shannon": 1.3184,
+   "stables": 0.9751,
+   "eteintes": 0,
+   "nees": 0,
+   "duree_s": 8.5
+  },
+  "ecart": {
+   "lignees": 0,
+   "predateurs": 0,
+   "biomasse_t": 0,
+   "shannon": 0,
+   "stables": 0,
+   "eteintes": 0,
+   "nees": 0,
+   "duree_s": 0
+  }
+ },
+ "essais": [
+  {
+   "essai": "predation_max + colonisation",
+   "regle": "predation_max+colonisation",
+   "nature": "paire",
+   "paire": [
+    "predation_max",
+    "colonisation"
+   ],
+   "fait": "nul ne mange plus que cette part d'une population en un cycle ; une lignée qui essaime ne fonde un lieu qu'avec une chance",
+   "quand": "chaque cycle ; chaque cycle, dans un monde réel",
+   "regles": {
+    "predation_max": 1,
+    "colonisation": null
+   },
+   "temoin_duree_s": 8.79,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 247593217.901,
+    "shannon": 1.3413,
+    "stables": 0.9502,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 20.85
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -12575072.228,
+    "shannon": 0.0229,
+    "stables": -0.0249,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 12.35
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon",
+    "stables"
+   ],
+   "cout": -1.372,
+   "cout_lu": -1.372,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 247593217.901,
+     "shannon": 1.3413,
+     "stables": 0.9502,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 20.85
+    }
+   },
+   "lecture": "chacune pour soi : ensemble, elles font la somme de ce qu'elles font seules",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -642359.103,
+    "shannon": -0.003,
+    "stables": -0.005,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": []
+  },
+  {
+   "essai": "predation_max + concurrence_masse",
+   "regle": "predation_max+concurrence_masse",
+   "nature": "paire",
+   "paire": [
+    "predation_max",
+    "concurrence_masse"
+   ],
+   "fait": "nul ne mange plus que cette part d'une population en un cycle ; deux chasseurs se gênent d'autant moins que leurs masses diffèrent",
+   "quand": "chaque cycle ; chaque cycle",
+   "regles": {
+    "predation_max": 1,
+    "concurrence_masse": 0
+   },
+   "temoin_duree_s": 8.35,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 265739891.592,
+    "shannon": 1.2857,
+    "stables": 0.9502,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 8.48
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 5571601.463,
+    "shannon": -0.0327,
+    "stables": -0.0249,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -0.02
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon",
+    "stables"
+   ],
+   "cout": -0.016,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 265739891.592,
+     "shannon": 1.2857,
+     "stables": 0.9502,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 8.48
+    }
+   },
+   "lecture": "elles se répondent : biomasse_t se renforce, shannon se tempère",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 5287739.971,
+    "shannon": 0.0159,
+    "stables": 0.0049,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": [
+    "biomasse_t",
+    "shannon"
+   ]
+  },
+  {
+   "essai": "predation_max + diapause",
+   "regle": "predation_max+diapause",
+   "nature": "paire",
+   "paire": [
+    "predation_max",
+    "diapause"
+   ],
+   "fait": "nul ne mange plus que cette part d'une population en un cycle ; le repos d'hiver des bêtes à sang froid",
+   "quand": "chaque cycle ; aux saisons, dans un monde au calendrier",
+   "regles": {
+    "predation_max": 1,
+    "diapause": null
+   },
+   "temoin_duree_s": 8.5,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 215873068.594,
+    "shannon": 1.2491,
+    "stables": 0.9005,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 8.48
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -44295221.535,
+    "shannon": -0.0693,
+    "stables": -0.0746,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -0.02
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon",
+    "stables"
+   ],
+   "cout": 0.002,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 215873068.594,
+     "shannon": 1.2491,
+     "stables": 0.9005,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 8.48
+    }
+   },
+   "lecture": "chacune pour soi : ensemble, elles font la somme de ce qu'elles font seules",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -1791189.475,
+    "shannon": -0.0082,
+    "stables": -0.0149,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": []
+  },
+  {
+   "essai": "predation_max + faim_carnivore",
+   "regle": "predation_max+faim_carnivore",
+   "nature": "paire",
+   "paire": [
+    "predation_max",
+    "faim_carnivore"
+   ],
+   "fait": "nul ne mange plus que cette part d'une population en un cycle ; un carnivore affamé meurt plus",
+   "quand": "chaque cycle ; chaque cycle",
+   "regles": {
+    "predation_max": 1,
+    "faim_carnivore": 0
+   },
+   "temoin_duree_s": 8.5,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 252085897.735,
+    "shannon": 1.3113,
+    "stables": 0.9851,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 8.51
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -8082392.394,
+    "shannon": -0.0071,
+    "stables": 0.01,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 0.01
+   },
+   "bouge": [
+    "biomasse_t"
+   ],
+   "cout": -0.001,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 252085897.735,
+     "shannon": 1.3113,
+     "stables": 0.9851,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 8.51
+    }
+   },
+   "lecture": "chacune pour soi : ensemble, elles font la somme de ce qu'elles font seules",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -246553.453,
+    "shannon": 0.0003,
+    "stables": 0,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": []
+  },
+  {
+   "essai": "predation_max + naissances",
+   "regle": "predation_max+naissances",
+   "nature": "paire",
+   "paire": [
+    "predation_max",
+    "naissances"
+   ],
+   "fait": "nul ne mange plus que cette part d'une population en un cycle ; les naissances ont leur saison",
+   "quand": "chaque cycle ; chaque cycle, dans un monde au calendrier",
+   "regles": {
+    "predation_max": 1,
+    "naissances": {
+     "force": 0,
+     "centre": 0.42,
+     "largeur": 0.4,
+     "fond": 0.1
+    }
+   },
+   "temoin_duree_s": 8.22,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 244872422.369,
+    "shannon": 1.3135,
+    "stables": 0.9552,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 8.17
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -15295867.76,
+    "shannon": -0.0049,
+    "stables": -0.0199,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -0.33
+   },
+   "bouge": [
+    "biomasse_t"
+   ],
+   "cout": 0.006,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 244872422.369,
+     "shannon": 1.3135,
+     "stables": 0.9552,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 8.17
+    }
+   },
+   "lecture": "elles se répondent : biomasse_t se renforce, shannon se tempère",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -9777048.442,
+    "shannon": -0.0133,
+    "stables": 0.0099,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": [
+    "biomasse_t",
+    "shannon"
+   ]
+  },
+  {
+   "essai": "predation_max + petites_proies",
+   "regle": "predation_max+petites_proies",
+   "nature": "paire",
+   "paire": [
+    "predation_max",
+    "petites_proies"
+   ],
+   "fait": "nul ne mange plus que cette part d'une population en un cycle ; un mangeur d'insectes prend les insectes, si petits soient-ils",
+   "quand": "chaque cycle ; chaque cycle",
+   "regles": {
+    "predation_max": 1,
+    "petites_proies": false
+   },
+   "temoin_duree_s": 8.79,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 285780717.244,
+    "shannon": 1.234,
+    "stables": 0.8806,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 8.49
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 25612427.115,
+    "shannon": -0.0844,
+    "stables": -0.0945,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -0.01
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon",
+    "stables"
+   ],
+   "cout": 0.034,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 285780717.244,
+     "shannon": 1.234,
+     "stables": 0.8806,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 8.49
+    }
+   },
+   "lecture": "elles se répondent : biomasse_t se renforce, shannon se tempère",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 11034812.389,
+    "shannon": 0.0151,
+    "stables": 0.0099,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": [
+    "biomasse_t",
+    "shannon"
+   ]
+  },
+  {
+   "essai": "predation_max + report_proies",
+   "regle": "predation_max+report_proies",
+   "nature": "paire",
+   "paire": [
+    "predation_max",
+    "report_proies"
+   ],
+   "fait": "nul ne mange plus que cette part d'une population en un cycle ; un prédateur se reporte sur la proie abondante plus qu'au prorata",
+   "quand": "chaque cycle ; chaque cycle",
+   "regles": {
+    "predation_max": 1,
+    "report_proies": 1
+   },
+   "temoin_duree_s": 8.35,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 248216387.733,
+    "shannon": 1.253,
+    "stables": 0.9353,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 8.31
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -11951902.396,
+    "shannon": -0.0654,
+    "stables": -0.0398,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -0.19
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon",
+    "stables"
+   ],
+   "cout": 0.005,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 248216387.733,
+     "shannon": 1.253,
+     "stables": 0.9353,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 8.31
+    }
+   },
+   "lecture": "chacune pour soi : ensemble, elles font la somme de ce qu'elles font seules",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 3782824.796,
+    "shannon": -0.0017,
+    "stables": -0.01,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": []
+  },
+  {
+   "essai": "predation_max + viande_part",
+   "regle": "predation_max+viande_part",
+   "nature": "paire",
+   "paire": [
+    "predation_max",
+    "viande_part"
+   ],
+   "fait": "nul ne mange plus que cette part d'une population en un cycle ; un omnivore ne cherche en proies que sa part de chair",
+   "quand": "chaque cycle ; chaque cycle",
+   "regles": {
+    "predation_max": 1,
+    "viande_part": false
+   },
+   "temoin_duree_s": 8.22,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 234189065.469,
+    "shannon": 1.3056,
+    "stables": 0.9602,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 8.18
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -25979224.66,
+    "shannon": -0.0128,
+    "stables": -0.0149,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -0.32
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon"
+   ],
+   "cout": 0.005,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 234189065.469,
+     "shannon": 1.3056,
+     "stables": 0.9602,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 8.18
+    }
+   },
+   "lecture": "chacune pour soi : ensemble, elles font la somme de ce qu'elles font seules",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -1593398.26,
+    "shannon": -0.0057,
+    "stables": 0,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": []
+  },
+  {
+   "essai": "faim_carnivore + colonisation",
+   "regle": "faim_carnivore+colonisation",
+   "nature": "paire",
+   "paire": [
+    "faim_carnivore",
+    "colonisation"
+   ],
+   "fait": "un carnivore affamé meurt plus ; une lignée qui essaime ne fonde un lieu qu'avec une chance",
+   "quand": "chaque cycle ; chaque cycle, dans un monde réel",
+   "regles": {
+    "faim_carnivore": 0,
+    "colonisation": null
+   },
+   "temoin_duree_s": 8.22,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 264134130.835,
+    "shannon": 1.3823,
+    "stables": 0.995,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 19.51
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 3965840.706,
+    "shannon": 0.0639,
+    "stables": 0.0199,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 11.01
+   },
+   "bouge": [
+    "shannon"
+   ],
+   "cout": -1.373,
+   "cout_lu": -1.373,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 264134130.835,
+     "shannon": 1.3823,
+     "stables": 0.995,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 19.51
+    }
+   },
+   "lecture": "chacune pour soi : ensemble, elles font la somme de ce qu'elles font seules",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -39821.638,
+    "shannon": -0.0024,
+    "stables": 0,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": []
+  },
+  {
+   "essai": "faim_carnivore + concurrence_masse",
+   "regle": "faim_carnivore+concurrence_masse",
+   "nature": "paire",
+   "paire": [
+    "faim_carnivore",
+    "concurrence_masse"
+   ],
+   "fait": "un carnivore affamé meurt plus ; deux chasseurs se gênent d'autant moins que leurs masses diffèrent",
+   "quand": "chaque cycle ; chaque cycle",
+   "regles": {
+    "faim_carnivore": 0,
+    "concurrence_masse": 0
+   },
+   "temoin_duree_s": 8.5,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 276830009.092,
+    "shannon": 1.317,
+    "stables": 1,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 8.64
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 16661718.963,
+    "shannon": -0.0014,
+    "stables": 0.0249,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 0.14
+   },
+   "bouge": [
+    "biomasse_t",
+    "stables"
+   ],
+   "cout": -0.016,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 276830009.092,
+     "shannon": 1.317,
+     "stables": 1,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 8.64
+    }
+   },
+   "lecture": "chacune pour soi : ensemble, elles font la somme de ce qu'elles font seules",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 439482.002,
+    "shannon": 0.0068,
+    "stables": 0.0149,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": []
+  },
+  {
+   "essai": "faim_carnivore + diapause",
+   "regle": "faim_carnivore+diapause",
+   "nature": "paire",
+   "paire": [
+    "faim_carnivore",
+    "diapause"
+   ],
+   "fait": "un carnivore affamé meurt plus ; le repos d'hiver des bêtes à sang froid",
+   "quand": "chaque cycle ; aux saisons, dans un monde au calendrier",
+   "regles": {
+    "faim_carnivore": 0,
+    "diapause": null
+   },
+   "temoin_duree_s": 8.79,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 234781323.621,
+    "shannon": 1.3053,
+    "stables": 0.9602,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 8.67
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -25386966.508,
+    "shannon": -0.0131,
+    "stables": -0.0149,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 0.17
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon"
+   ],
+   "cout": 0.014,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 234781323.621,
+     "shannon": 1.3053,
+     "stables": 0.9602,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 8.67
+    }
+   },
+   "lecture": "chacune pour soi : ensemble, elles font la somme de ce qu'elles font seules",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 1178690.083,
+    "shannon": 0.0076,
+    "stables": 0.005,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": []
+  },
+  {
+   "essai": "faim_carnivore + naissances",
+   "regle": "faim_carnivore+naissances",
+   "nature": "paire",
+   "paire": [
+    "faim_carnivore",
+    "naissances"
+   ],
+   "fait": "un carnivore affamé meurt plus ; les naissances ont leur saison",
+   "quand": "chaque cycle ; chaque cycle, dans un monde au calendrier",
+   "regles": {
+    "faim_carnivore": 0,
+    "naissances": {
+     "force": 0,
+     "centre": 0.42,
+     "largeur": 0.4,
+     "fond": 0.1
+    }
+   },
+   "temoin_duree_s": 8.35,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 270426711.618,
+    "shannon": 1.3676,
+    "stables": 0.9751,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 8.35
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 10258421.489,
+    "shannon": 0.0492,
+    "stables": 0,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -0.15
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon"
+   ],
+   "cout": 0,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 270426711.618,
+     "shannon": 1.3676,
+     "stables": 0.9751,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 8.35
+    }
+   },
+   "lecture": "chacune pour soi : ensemble, elles font la somme de ce qu'elles font seules",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -161134.662,
+    "shannon": 0.0004,
+    "stables": -0.01,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": []
+  },
+  {
+   "essai": "faim_carnivore + petites_proies",
+   "regle": "faim_carnivore+petites_proies",
+   "nature": "paire",
+   "paire": [
+    "faim_carnivore",
+    "petites_proies"
+   ],
+   "fait": "un carnivore affamé meurt plus ; un mangeur d'insectes prend les insectes, si petits soient-ils",
+   "quand": "chaque cycle ; chaque cycle",
+   "regles": {
+    "faim_carnivore": 0,
+    "petites_proies": false
+   },
+   "temoin_duree_s": 8.22,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 290967443.385,
+    "shannon": 1.2691,
+    "stables": 0.9652,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 7.96
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 30799153.256,
+    "shannon": -0.0493,
+    "stables": -0.0099,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -0.54
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon"
+   ],
+   "cout": 0.032,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 290967443.385,
+     "shannon": 1.2691,
+     "stables": 0.9652,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 7.96
+    }
+   },
+   "lecture": "elles se répondent : stables se tempère",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 283163.061,
+    "shannon": 0.0098,
+    "stables": 0.0547,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": [
+    "stables"
+   ]
+  },
+  {
+   "essai": "faim_carnivore + report_proies",
+   "regle": "faim_carnivore+report_proies",
+   "nature": "paire",
+   "paire": [
+    "faim_carnivore",
+    "report_proies"
+   ],
+   "fait": "un carnivore affamé meurt plus ; un prédateur se reporte sur la proie abondante plus qu'au prorata",
+   "quand": "chaque cycle ; chaque cycle",
+   "regles": {
+    "faim_carnivore": 0,
+    "report_proies": 1
+   },
+   "temoin_duree_s": 8.5,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 259998131.186,
+    "shannon": 1.2906,
+    "stables": 0.9751,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 8.48
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -170158.943,
+    "shannon": -0.0278,
+    "stables": 0,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -0.02
+   },
+   "bouge": [
+    "shannon"
+   ],
+   "cout": 0.002,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 259998131.186,
+     "shannon": 1.2906,
+     "stables": 0.9751,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 8.48
+    }
+   },
+   "lecture": "chacune pour soi : ensemble, elles font la somme de ce qu'elles font seules",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -373807.22,
+    "shannon": -0.0045,
+    "stables": -0.01,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": []
+  },
+  {
+   "essai": "faim_carnivore + viande_part",
+   "regle": "faim_carnivore+viande_part",
+   "nature": "paire",
+   "paire": [
+    "faim_carnivore",
+    "viande_part"
+   ],
+   "fait": "un carnivore affamé meurt plus ; un omnivore ne cherche en proies que sa part de chair",
+   "quand": "chaque cycle ; chaque cycle",
+   "regles": {
+    "faim_carnivore": 0,
+    "viande_part": false
+   },
+   "temoin_duree_s": 8.35,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 251754863.962,
+    "shannon": 1.3522,
+    "stables": 1,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 8.36
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -8413426.167,
+    "shannon": 0.0338,
+    "stables": 0.0249,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -0.14
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon",
+    "stables"
+   ],
+   "cout": -0.001,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 251754863.962,
+     "shannon": 1.3522,
+     "stables": 1,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 8.36
+    }
+   },
+   "lecture": "chacune pour soi : ensemble, elles font la somme de ce qu'elles font seules",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 34024.764,
+    "shannon": 0.0005,
+    "stables": 0,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": []
+  },
+  {
+   "essai": "report_proies + colonisation",
+   "regle": "report_proies+colonisation",
+   "nature": "paire",
+   "paire": [
+    "report_proies",
+    "colonisation"
+   ],
+   "fait": "un prédateur se reporte sur la proie abondante plus qu'au prorata ; une lignée qui essaime ne fonde un lieu qu'avec une chance",
+   "quand": "chaque cycle ; chaque cycle, dans un monde réel",
+   "regles": {
+    "report_proies": 1,
+    "colonisation": null
+   },
+   "temoin_duree_s": 8.5,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 256153791.246,
+    "shannon": 1.3255,
+    "stables": 0.9602,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 16.8
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -4014498.883,
+    "shannon": 0.0071,
+    "stables": -0.0149,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 8.3
+   },
+   "bouge": [],
+   "cout": -0.976,
+   "cout_lu": -0.976,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 256153791.246,
+     "shannon": 1.3255,
+     "stables": 0.9602,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 16.8
+    }
+   },
+   "lecture": "chacune pour soi : ensemble, elles font la somme de ce qu'elles font seules",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -121272.976,
+    "shannon": -0.0029,
+    "stables": 0.005,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": []
+  },
+  {
+   "essai": "report_proies + concurrence_masse",
+   "regle": "report_proies+concurrence_masse",
+   "nature": "paire",
+   "paire": [
+    "report_proies",
+    "concurrence_masse"
+   ],
+   "fait": "un prédateur se reporte sur la proie abondante plus qu'au prorata ; deux chasseurs se gênent d'autant moins que leurs masses diffèrent",
+   "quand": "chaque cycle ; chaque cycle",
+   "regles": {
+    "report_proies": 1,
+    "concurrence_masse": 0
+   },
+   "temoin_duree_s": 8.22,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 270125786.693,
+    "shannon": 1.2715,
+    "stables": 0.9353,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 8.27
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 9957496.564,
+    "shannon": -0.0469,
+    "stables": -0.0398,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -0.23
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon",
+    "stables"
+   ],
+   "cout": -0.006,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 270125786.693,
+     "shannon": 1.2715,
+     "stables": 0.9353,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 8.27
+    }
+   },
+   "lecture": "elles se répondent : shannon se tempère",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 1634147.854,
+    "shannon": 0.0176,
+    "stables": -0.01,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": [
+    "shannon"
+   ]
+  },
+  {
+   "essai": "report_proies + diapause",
+   "regle": "report_proies+diapause",
+   "nature": "paire",
+   "paire": [
+    "report_proies",
+    "diapause"
+   ],
+   "fait": "un prédateur se reporte sur la proie abondante plus qu'au prorata ; le repos d'hiver des bêtes à sang froid",
+   "quand": "chaque cycle ; aux saisons, dans un monde au calendrier",
+   "regles": {
+    "report_proies": 1,
+    "diapause": null
+   },
+   "temoin_duree_s": 8.35,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 226114864.25,
+    "shannon": 1.2471,
+    "stables": 0.9005,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 8.24
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -34053425.879,
+    "shannon": -0.0713,
+    "stables": -0.0746,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -0.26
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon",
+    "stables"
+   ],
+   "cout": 0.013,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 226114864.25,
+     "shannon": 1.2471,
+     "stables": 0.9005,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 8.24
+    }
+   },
+   "lecture": "chacune pour soi : ensemble, elles font la somme de ce qu'elles font seules",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 411118.963,
+    "shannon": 0.0057,
+    "stables": -0.0149,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": []
+  },
+  {
+   "essai": "report_proies + naissances",
+   "regle": "report_proies+naissances",
+   "nature": "paire",
+   "paire": [
+    "report_proies",
+    "naissances"
+   ],
+   "fait": "un prédateur se reporte sur la proie abondante plus qu'au prorata ; les naissances ont leur saison",
+   "quand": "chaque cycle ; chaque cycle, dans un monde au calendrier",
+   "regles": {
+    "report_proies": 1,
+    "naissances": {
+     "force": 0,
+     "centre": 0.42,
+     "largeur": 0.4,
+     "fond": 0.1
+    }
+   },
+   "temoin_duree_s": 8.79,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 260780989.614,
+    "shannon": 1.3057,
+    "stables": 0.9353,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 8.61
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 612699.485,
+    "shannon": -0.0127,
+    "stables": -0.0398,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 0.11
+   },
+   "bouge": [
+    "shannon",
+    "stables"
+   ],
+   "cout": 0.02,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 260780989.614,
+     "shannon": 1.3057,
+     "stables": 0.9353,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 8.61
+    }
+   },
+   "lecture": "chacune pour soi : ensemble, elles font la somme de ce qu'elles font seules",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -1907968.415,
+    "shannon": -0.0052,
+    "stables": -0.01,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": []
+  },
+  {
+   "essai": "report_proies + petites_proies",
+   "regle": "report_proies+petites_proies",
+   "nature": "paire",
+   "paire": [
+    "report_proies",
+    "petites_proies"
+   ],
+   "fait": "un prédateur se reporte sur la proie abondante plus qu'au prorata ; un mangeur d'insectes prend les insectes, si petits soient-ils",
+   "quand": "chaque cycle ; chaque cycle",
+   "regles": {
+    "report_proies": 1,
+    "petites_proies": false
+   },
+   "temoin_duree_s": 8.5,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 287780296.143,
+    "shannon": 1.2341,
+    "stables": 0.8507,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 8.24
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 27612006.014,
+    "shannon": -0.0843,
+    "stables": -0.1244,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -0.26
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon",
+    "stables"
+   ],
+   "cout": 0.031,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 287780296.143,
+     "shannon": 1.2341,
+     "stables": 0.8507,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 8.24
+    }
+   },
+   "lecture": "elles se répondent : shannon se tempère",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 4994904.07,
+    "shannon": 0.0311,
+    "stables": -0.02,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": [
+    "shannon"
+   ]
+  },
+  {
+   "essai": "report_proies + viande_part",
+   "regle": "report_proies+viande_part",
+   "nature": "paire",
+   "paire": [
+    "report_proies",
+    "viande_part"
+   ],
+   "fait": "un prédateur se reporte sur la proie abondante plus qu'au prorata ; un omnivore ne cherche en proies que sa part de chair",
+   "quand": "chaque cycle ; chaque cycle",
+   "regles": {
+    "report_proies": 1,
+    "viande_part": false
+   },
+   "temoin_duree_s": 8.79,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 244662854.923,
+    "shannon": 1.2824,
+    "stables": 0.9453,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 8.63
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -15505435.206,
+    "shannon": -0.036,
+    "stables": -0.0298,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 0.13
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon",
+    "stables"
+   ],
+   "cout": 0.018,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 244662854.923,
+     "shannon": 1.2824,
+     "stables": 0.9453,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 8.63
+    }
+   },
+   "lecture": "elles se répondent : shannon se renforce",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 840903.976,
+    "shannon": -0.013,
+    "stables": -0.0149,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": [
+    "shannon"
+   ]
+  },
+  {
+   "essai": "naissances + colonisation",
+   "regle": "naissances+colonisation",
+   "nature": "paire",
+   "paire": [
+    "naissances",
+    "colonisation"
+   ],
+   "fait": "les naissances ont leur saison ; une lignée qui essaime ne fonde un lieu qu'avec une chance",
+   "quand": "chaque cycle, dans un monde au calendrier ; chaque cycle, dans un monde réel",
+   "regles": {
+    "naissances": {
+     "force": 0,
+     "centre": 0.42,
+     "largeur": 0.4,
+     "fond": 0.1
+    },
+    "colonisation": null
+   },
+   "temoin_duree_s": 8.35,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 266981490.981,
+    "shannon": 1.4004,
+    "stables": 0.9652,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 16.49
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 6813200.852,
+    "shannon": 0.082,
+    "stables": -0.0099,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 7.99
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon"
+   ],
+   "cout": -0.975,
+   "cout_lu": -0.975,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 266981490.981,
+     "shannon": 1.4004,
+     "stables": 0.9652,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 16.49
+    }
+   },
+   "lecture": "chacune pour soi : ensemble, elles font la somme de ce qu'elles font seules",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 490518.885,
+    "shannon": -0.0001,
+    "stables": 0.01,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": []
+  },
+  {
+   "essai": "naissances + concurrence_masse",
+   "regle": "naissances+concurrence_masse",
+   "nature": "paire",
+   "paire": [
+    "naissances",
+    "concurrence_masse"
+   ],
+   "fait": "les naissances ont leur saison ; deux chasseurs se gênent d'autant moins que leurs masses diffèrent",
+   "quand": "chaque cycle, dans un monde au calendrier ; chaque cycle",
+   "regles": {
+    "naissances": {
+     "force": 0,
+     "centre": 0.42,
+     "largeur": 0.4,
+     "fond": 0.1
+    },
+    "concurrence_masse": 0
+   },
+   "temoin_duree_s": 8.79,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 278744768.924,
+    "shannon": 1.3287,
+    "stables": 0.9254,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 8.81
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 18576478.795,
+    "shannon": 0.0103,
+    "stables": -0.0497,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 0.31
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon",
+    "stables"
+   ],
+   "cout": -0.002,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 278744768.924,
+     "shannon": 1.3287,
+     "stables": 0.9254,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 8.81
+    }
+   },
+   "lecture": "chacune pour soi : ensemble, elles font la somme de ce qu'elles font seules",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 37222.211,
+    "shannon": 0.0027,
+    "stables": -0.0199,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": []
+  },
+  {
+   "essai": "naissances + diapause",
+   "regle": "naissances+diapause",
+   "nature": "paire",
+   "paire": [
+    "naissances",
+    "diapause"
+   ],
+   "fait": "les naissances ont leur saison ; le repos d'hiver des bêtes à sang froid",
+   "quand": "chaque cycle, dans un monde au calendrier ; aux saisons, dans un monde au calendrier",
+   "regles": {
+    "naissances": {
+     "force": 0,
+     "centre": 0.42,
+     "largeur": 0.4,
+     "fond": 0.1
+    },
+    "diapause": null
+   },
+   "temoin_duree_s": 8.22,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 235358110.567,
+    "shannon": 1.3194,
+    "stables": 0.9303,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 8.2
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -24810179.562,
+    "shannon": 0.001,
+    "stables": -0.0448,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -0.3
+   },
+   "bouge": [
+    "biomasse_t",
+    "stables"
+   ],
+   "cout": 0.002,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 235358110.567,
+     "shannon": 1.3194,
+     "stables": 0.9303,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 8.2
+    }
+   },
+   "lecture": "chacune pour soi : ensemble, elles font la somme de ce qu'elles font seules",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -561542.594,
+    "shannon": 0.0059,
+    "stables": 0.0149,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": []
+  },
+  {
+   "essai": "naissances + petites_proies",
+   "regle": "naissances+petites_proies",
+   "nature": "paire",
+   "paire": [
+    "naissances",
+    "petites_proies"
+   ],
+   "fait": "les naissances ont leur saison ; un mangeur d'insectes prend les insectes, si petits soient-ils",
+   "quand": "chaque cycle, dans un monde au calendrier ; chaque cycle",
+   "regles": {
+    "naissances": {
+     "force": 0,
+     "centre": 0.42,
+     "largeur": 0.4,
+     "fond": 0.1
+    },
+    "petites_proies": false
+   },
+   "temoin_duree_s": 8.35,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 288399605.463,
+    "shannon": 1.2598,
+    "stables": 0.8607,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 8.02
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 28231315.334,
+    "shannon": -0.0586,
+    "stables": -0.1144,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -0.48
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon",
+    "stables"
+   ],
+   "cout": 0.04,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 288399605.463,
+     "shannon": 1.2598,
+     "stables": 0.8607,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 8.02
+    }
+   },
+   "lecture": "elles se répondent : shannon se renforce",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -4601694.484,
+    "shannon": -0.0153,
+    "stables": -0.01,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": [
+    "shannon"
+   ]
+  },
+  {
+   "essai": "naissances + viande_part",
+   "regle": "naissances+viande_part",
+   "nature": "paire",
+   "paire": [
+    "naissances",
+    "viande_part"
+   ],
+   "fait": "les naissances ont leur saison ; un omnivore ne cherche en proies que sa part de chair",
+   "quand": "chaque cycle, dans un monde au calendrier ; chaque cycle",
+   "regles": {
+    "naissances": {
+     "force": 0,
+     "centre": 0.42,
+     "largeur": 0.4,
+     "fond": 0.1
+    },
+    "viande_part": false
+   },
+   "temoin_duree_s": 8.5,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 254939173.415,
+    "shannon": 1.3645,
+    "stables": 0.9552,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 8.51
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -5229116.714,
+    "shannon": 0.0461,
+    "stables": -0.0199,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 0.01
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon"
+   ],
+   "cout": -0.001,
+   "cout_lu": null,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 254939173.415,
+     "shannon": 1.3645,
+     "stables": 0.9552,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 8.51
+    }
+   },
+   "lecture": "chacune pour soi : ensemble, elles font la somme de ce qu'elles font seules",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 901314.594,
+    "shannon": -0.003,
+    "stables": -0.005,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": []
+  },
+  {
+   "essai": "colonisation + concurrence_masse",
+   "regle": "colonisation+concurrence_masse",
+   "nature": "paire",
+   "paire": [
+    "colonisation",
+    "concurrence_masse"
+   ],
+   "fait": "une lignée qui essaime ne fonde un lieu qu'avec une chance ; deux chasseurs se gênent d'autant moins que leurs masses diffèrent",
+   "quand": "chaque cycle, dans un monde réel ; chaque cycle",
+   "regles": {
+    "colonisation": null,
+    "concurrence_masse": 0
+   },
+   "temoin_duree_s": 8.79,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 272489202.364,
+    "shannon": 1.3513,
+    "stables": 0.9552,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 14.41
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 12320912.235,
+    "shannon": 0.0329,
+    "stables": -0.0199,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 5.91
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon"
+   ],
+   "cout": -0.639,
+   "cout_lu": -0.639,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 272489202.364,
+     "shannon": 1.3513,
+     "stables": 0.9552,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 14.41
+    }
+   },
+   "lecture": "chacune pour soi : ensemble, elles font la somme de ce qu'elles font seules",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 195549.458,
+    "shannon": 0.0078,
+    "stables": 0,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": []
+  },
+  {
+   "essai": "colonisation + diapause",
+   "regle": "colonisation+diapause",
+   "nature": "paire",
+   "paire": [
+    "colonisation",
+    "diapause"
+   ],
+   "fait": "une lignée qui essaime ne fonde un lieu qu'avec une chance ; le repos d'hiver des bêtes à sang froid",
+   "quand": "chaque cycle, dans un monde réel ; aux saisons, dans un monde au calendrier",
+   "regles": {
+    "colonisation": null,
+    "diapause": null
+   },
+   "temoin_duree_s": 8.22,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 229104404.883,
+    "shannon": 1.3267,
+    "stables": 0.9403,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 12.97
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -31063885.246,
+    "shannon": 0.0083,
+    "stables": -0.0348,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 4.47
+   },
+   "bouge": [
+    "biomasse_t",
+    "stables"
+   ],
+   "cout": -0.578,
+   "cout_lu": -0.578,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 229104404.883,
+     "shannon": 1.3267,
+     "stables": 0.9403,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 12.97
+    }
+   },
+   "lecture": "chacune pour soi : ensemble, elles font la somme de ce qu'elles font seules",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -401354.471,
+    "shannon": -0.0043,
+    "stables": 0.015,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": []
+  },
+  {
+   "essai": "colonisation + petites_proies",
+   "regle": "colonisation+petites_proies",
+   "nature": "paire",
+   "paire": [
+    "colonisation",
+    "petites_proies"
+   ],
+   "fait": "une lignée qui essaime ne fonde un lieu qu'avec une chance ; un mangeur d'insectes prend les insectes, si petits soient-ils",
+   "quand": "chaque cycle, dans un monde réel ; chaque cycle",
+   "regles": {
+    "colonisation": null,
+    "petites_proies": false
+   },
+   "temoin_duree_s": 8.35,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 286363950.167,
+    "shannon": 1.2936,
+    "stables": 0.8955,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 11.82
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 26195660.038,
+    "shannon": -0.0248,
+    "stables": -0.0796,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 3.32
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon",
+    "stables"
+   ],
+   "cout": -0.416,
+   "cout_lu": -0.416,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 286363950.167,
+     "shannon": 1.2936,
+     "stables": 0.8955,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 11.82
+    }
+   },
+   "lecture": "chacune pour soi : ensemble, elles font la somme de ce qu'elles font seules",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -223455.973,
+    "shannon": 0.001,
+    "stables": 0.0149,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": []
+  },
+  {
+   "essai": "colonisation + viande_part",
+   "regle": "colonisation+viande_part",
+   "nature": "paire",
+   "paire": [
+    "colonisation",
+    "viande_part"
+   ],
+   "fait": "une lignée qui essaime ne fonde un lieu qu'avec une chance ; un omnivore ne cherche en proies que sa part de chair",
+   "quand": "chaque cycle, dans un monde réel ; chaque cycle",
+   "regles": {
+    "colonisation": null,
+    "viande_part": false
+   },
+   "temoin_duree_s": 8.5,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 247419180.696,
+    "shannon": 1.383,
+    "stables": 0.9701,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 12.78
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -12749109.433,
+    "shannon": 0.0646,
+    "stables": -0.005,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 4.28
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon"
+   ],
+   "cout": -0.504,
+   "cout_lu": -0.504,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 247419180.696,
+     "shannon": 1.383,
+     "stables": 0.9701,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 12.78
+    }
+   },
+   "lecture": "chacune pour soi : ensemble, elles font la somme de ce qu'elles font seules",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -204784.318,
+    "shannon": -0.002,
+    "stables": 0,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": []
+  },
+  {
+   "essai": "diapause + concurrence_masse",
+   "regle": "diapause+concurrence_masse",
+   "nature": "paire",
+   "paire": [
+    "diapause",
+    "concurrence_masse"
+   ],
+   "fait": "le repos d'hiver des bêtes à sang froid ; deux chasseurs se gênent d'autant moins que leurs masses diffèrent",
+   "quand": "aux saisons, dans un monde au calendrier ; chaque cycle",
+   "regles": {
+    "diapause": null,
+    "concurrence_masse": 0
+   },
+   "temoin_duree_s": 8.22,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 240916724.386,
+    "shannon": 1.2601,
+    "stables": 0.9254,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 7.12
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -19251565.743,
+    "shannon": -0.0583,
+    "stables": -0.0497,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -1.38
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon",
+    "stables"
+   ],
+   "cout": 0.134,
+   "cout_lu": 0.134,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 240916724.386,
+     "shannon": 1.2601,
+     "stables": 0.9254,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 7.12
+    }
+   },
+   "lecture": "chacune pour soi : ensemble, elles font la somme de ce qu'elles font seules",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -805609.585,
+    "shannon": 0.0036,
+    "stables": 0.01,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": []
+  },
+  {
+   "essai": "diapause + petites_proies",
+   "regle": "diapause+petites_proies",
+   "nature": "paire",
+   "paire": [
+    "diapause",
+    "petites_proies"
+   ],
+   "fait": "le repos d'hiver des bêtes à sang froid ; un mangeur d'insectes prend les insectes, si petits soient-ils",
+   "quand": "aux saisons, dans un monde au calendrier ; chaque cycle",
+   "regles": {
+    "diapause": null,
+    "petites_proies": false
+   },
+   "temoin_duree_s": 8.5,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 255799883.344,
+    "shannon": 1.2124,
+    "stables": 0.8557,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 6.37
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -4368406.785,
+    "shannon": -0.106,
+    "stables": -0.1194,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -2.13
+   },
+   "bouge": [
+    "shannon",
+    "stables"
+   ],
+   "cout": 0.251,
+   "cout_lu": 0.251,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 255799883.344,
+     "shannon": 1.2124,
+     "stables": 0.8557,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 6.37
+    }
+   },
+   "lecture": "chacune pour soi : ensemble, elles font la somme de ce qu'elles font seules",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -216203.861,
+    "shannon": 0.0068,
+    "stables": 0.0149,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": []
+  },
+  {
+   "essai": "diapause + viande_part",
+   "regle": "diapause+viande_part",
+   "nature": "paire",
+   "paire": [
+    "diapause",
+    "viande_part"
+   ],
+   "fait": "le repos d'hiver des bêtes à sang froid ; un omnivore ne cherche en proies que sa part de chair",
+   "quand": "aux saisons, dans un monde au calendrier ; chaque cycle",
+   "regles": {
+    "diapause": null,
+    "viande_part": false
+   },
+   "temoin_duree_s": 8.79,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 216409256.617,
+    "shannon": 1.2991,
+    "stables": 0.9303,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 7.56
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -43759033.512,
+    "shannon": -0.0193,
+    "stables": -0.0448,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -0.94
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon",
+    "stables"
+   ],
+   "cout": 0.14,
+   "cout_lu": 0.14,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 216409256.617,
+     "shannon": 1.2991,
+     "stables": 0.9303,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 7.56
+    }
+   },
+   "lecture": "chacune pour soi : ensemble, elles font la somme de ce qu'elles font seules",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -643389.462,
+    "shannon": 0.0011,
+    "stables": 0,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": []
+  },
+  {
+   "essai": "concurrence_masse + petites_proies",
+   "regle": "concurrence_masse+petites_proies",
+   "nature": "paire",
+   "paire": [
+    "concurrence_masse",
+    "petites_proies"
+   ],
+   "fait": "deux chasseurs se gênent d'autant moins que leurs masses diffèrent ; un mangeur d'insectes prend les insectes, si petits soient-ils",
+   "quand": "chaque cycle ; chaque cycle",
+   "regles": {
+    "concurrence_masse": 0,
+    "petites_proies": false
+   },
+   "temoin_duree_s": 8.22,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 288101604.287,
+    "shannon": 1.2453,
+    "stables": 0.8905,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 6.91
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 27933314.158,
+    "shannon": -0.0731,
+    "stables": -0.0846,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -1.59
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon",
+    "stables"
+   ],
+   "cout": 0.159,
+   "cout_lu": 0.159,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 288101604.287,
+     "shannon": 1.2453,
+     "stables": 0.8905,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 6.91
+    }
+   },
+   "lecture": "elles se répondent : biomasse_t se tempère, shannon se tempère",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": -10702376.47,
+    "shannon": 0.0272,
+    "stables": 0.0198,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": [
+    "biomasse_t",
+    "shannon"
+   ]
+  },
+  {
+   "essai": "concurrence_masse + viande_part",
+   "regle": "concurrence_masse+viande_part",
+   "nature": "paire",
+   "paire": [
+    "concurrence_masse",
+    "viande_part"
+   ],
+   "fait": "deux chasseurs se gênent d'autant moins que leurs masses diffèrent ; un omnivore ne cherche en proies que sa part de chair",
+   "quand": "chaque cycle ; chaque cycle",
+   "regles": {
+    "concurrence_masse": 0,
+    "viande_part": false
+   },
+   "temoin_duree_s": 8.35,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 270125989.449,
+    "shannon": 1.2987,
+    "stables": 0.9552,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 6.53
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 9957699.32,
+    "shannon": -0.0197,
+    "stables": -0.0199,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -1.97
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon"
+   ],
+   "cout": 0.218,
+   "cout_lu": 0.218,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 270125989.449,
+     "shannon": 1.2987,
+     "stables": 0.9552,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 6.53
+    }
+   },
+   "lecture": "elles se répondent : biomasse_t se tempère, shannon se renforce",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 10285449.818,
+    "shannon": -0.0118,
+    "stables": -0.005,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": [
+    "biomasse_t",
+    "shannon"
+   ]
+  },
+  {
+   "essai": "viande_part + petites_proies",
+   "regle": "viande_part+petites_proies",
+   "nature": "paire",
+   "paire": [
+    "viande_part",
+    "petites_proies"
+   ],
+   "fait": "un omnivore ne cherche en proies que sa part de chair ; un mangeur d'insectes prend les insectes, si petits soient-ils",
+   "quand": "chaque cycle ; chaque cycle",
+   "regles": {
+    "viande_part": false,
+    "petites_proies": false
+   },
+   "temoin_duree_s": 8.79,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 285021778.384,
+    "shannon": 1.2406,
+    "stables": 0.8806,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": 7.38
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 24853488.255,
+    "shannon": -0.0778,
+    "stables": -0.0945,
+    "eteintes": 0,
+    "nees": 0,
+    "duree_s": -1.12
+   },
+   "bouge": [
+    "biomasse_t",
+    "shannon",
+    "stables"
+   ],
+   "cout": 0.16,
+   "cout_lu": 0.16,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 285021778.384,
+     "shannon": 1.2406,
+     "stables": 0.8806,
+     "eteintes": 0,
+     "nees": 0,
+     "duree_s": 7.38
+    }
+   },
+   "lecture": "elles se répondent : biomasse_t se renforce, shannon se renforce",
+   "interaction": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 10887485.519,
+    "shannon": -0.019,
+    "stables": -0.005,
+    "eteintes": 0,
+    "nees": 0
+   },
+   "joue": [
+    "biomasse_t",
+    "shannon"
+   ]
+  }
+ ],
+ "laisses": [],
+ "duree_min": 720.8,
+ "parts": 4
+}
