@@ -5,12 +5,13 @@
 // Ce qu'on mesure à la fin : les lignées animales vivantes et les carnivores, la biomasse, la diversité (Shannon), la part des lignées
 // stables, les extinctions, les lignées nées, la variété des formes de chaque lignée ; et la durée d'un cycle. Une mesure bouge quand
 // l'écart au témoin passe le double de l'écart entre les graines du témoin, et un seuil (la lecture du plan) : une indication, pas un
-// verdict — la matrice est une décision de l'auteur. Un essai long se lit aussi en chemin (--jalons n : tous les n cycles).
+// verdict — la matrice est une décision de l'auteur. Un essai long se lit aussi en chemin (--jalons n : tous les n cycles). Les tâches
+// qu'un rapport a perdues (une machine à court de mémoire…) se relancent seules (--reprendre), sur le même moteur.
 //   node outils/ablations.js <etat.json> [--cycles 30] [--graines 3] [--regles a,b,c] [--natures mecanisme,constante,comptable]
-//     [--jobs 4] [--jalons n] [--plan etalon/ablations.json] [--sortie rapport.json] [--notes rapport.md]
+//     [--jobs 4] [--jalons n] [--memoire-tache 6000] [--reprendre rapport.json] [--plan etalon/ablations.json] [--sortie rapport.json] [--notes rapport.md]
 // Sortie : 0 si chaque essai a tourné, 1 sinon. Node, sans dépendance.
 'use strict';
-const fs = require('fs'), path = require('path'), os = require('os'), crypto = require('crypto'), { spawn } = require('child_process');
+const fs = require('fs'), path = require('path'), os = require('os'), crypto = require('crypto'), { spawn, execFileSync } = require('child_process');
 const racine = path.join(__dirname, '..'), Orvane = require(path.join(racine, 'moteur/orvane.js')), Journal = require(path.join(racine, 'hebergement/journal.js'));
 const { SAISONS } = require(path.join(racine, 'moteur/noyau/plan.js'));
 const saisonDu = (n, annee) => annee ? SAISONS[Math.floor((((n % annee) / annee + .125) % 1) * 4)] : null;   // (la saison du cycle n, comme le moteur la nomme)
@@ -19,6 +20,11 @@ const objet = v => v && typeof v === 'object' && !Array.isArray(v);
 // (une valeur de règle complétée en profondeur : celle du monde, et ce qu'on y change)
 const fusion = (a, b) => objet(a) && objet(b) ? Object.fromEntries([...new Set([...Object.keys(a), ...Object.keys(b)])].map(k => [k, k in b ? fusion(a[k], b[k]) : a[k]])) : b;
 const pareil = (a, b) => JSON.stringify(Journal.stable(a ?? null)) === JSON.stringify(Journal.stable(b ?? null));
+// (le code de ce que le cycle exécute — le moteur, le tampon, l'hébergement : chaque fichier et son contenu —, en une empreinte)
+const codeMoteur = () => { const h = crypto.createHash('sha256');
+  for (const d of ['moteur', 'tampon', 'hebergement']) for (const f of fs.readdirSync(path.join(racine, d), { recursive: true }).map(String).sort()) {
+    const p = path.join(racine, d, f); if (fs.statSync(p).isFile()) h.update(`${d}/${f.split(path.sep).join('/')}\0`).update(fs.readFileSync(p)).update('\0'); }
+  return h.digest('hex'); };
 
 // --- ce qu'est un monde, à un moment : ses lignées animales vivantes, et ce qu'on en mesure ---
 const animal = t => t.plan?.regime !== 'vegetal' && t.plan?.regime !== 'synthetique';
@@ -46,7 +52,7 @@ if (process.argv[2] === '--essai') {
   process.exit(0);
 }
 
-const a = process.argv.slice(2), OPTS = ['--cycles', '--graines', '--regles', '--natures', '--jobs', '--plan', '--sortie', '--notes', '--part', '--paires', '--paires-de', '--jalons'];
+const a = process.argv.slice(2), OPTS = ['--cycles', '--graines', '--regles', '--natures', '--jobs', '--plan', '--sortie', '--notes', '--part', '--paires', '--paires-de', '--jalons', '--reprendre', '--memoire-tache'];
 const arg = (k, d) => { const i = a.indexOf(k); return i >= 0 && a[i + 1] != null ? a[i + 1] : d; };
 const fPlan = arg('--plan', path.join(racine, 'etalon/ablations.json')), PLAN = lireJ(fPlan), empreintePlan = crypto.createHash('sha256').update(Journal.stable(PLAN)).digest('hex');
 const moy = L => L.length ? somme(L) / L.length : null;
@@ -124,7 +130,7 @@ const ecrire = R0 => {
     ...pts.flatMap(c => { const L = lu(c); return rapport.filter(x => !x.erreurs).map(x => { const y = L.essais[x.essai], T = L.temoin;
       return `| ${c} | ${x.essai} | ${CJ.map(([k, d]) => y?.ecarts?.[k] == null ? '–' : fx(y.ecarts[k] * pc(k, T), d) + u(k)).join(' | ')} | ${y?.bouge?.length ? y.bouge.join(', ') : '–'} |`; }); })];
   const notes = [`## Les ${PAI ? 'paires de règles' : 'ablations'} : ${R0.monde.id}, cycle ${R0.monde.cycle} (${R0.cycles} cycles, ${NG} graine${NG > 1 ? 's' : ''})`, '',
-    `Le témoin : ${nb(temoin.moyenne.lignees, 1)} lignées animales (écart entre graines ${nb(temoin.ecart.lignees, 1)}), ${nb(temoin.moyenne.predateurs, 1)} carnivores, ${nb(temoin.moyenne.biomasse_t, 0)} t, Shannon ${nb(temoin.moyenne.shannon, 3)}, ${nb(100 * (temoin.moyenne.stables ?? 0), 0)} % de lignées stables, ${nb(temoin.moyenne.eteintes, 1)} éteintes, ${nb(temoin.moyenne.nees, 1)} nées${temoin.moyenne.formes != null ? `, ${nb(temoin.moyenne.formes, 2)} formes par lignée` : ''} ; un cycle en ${nb(temoin.moyenne.duree_s, 2)} s. Lu selon le plan ${R0.plan.version} (${R0.plan.empreinte.slice(0, 12)}…)${R0.plan_des_essais ? `, les essais faits selon le plan ${R0.plan_des_essais.version} (${R0.plan_des_essais.empreinte.slice(0, 12)}…)` : ''}.${R0.regles_choisies ? ` Seules les règles dites (${R0.regles_choisies.join(', ')}), pas tout le plan.` : ''}`, '',
+    `Le témoin : ${nb(temoin.moyenne.lignees, 1)} lignées animales (écart entre graines ${nb(temoin.ecart.lignees, 1)}), ${nb(temoin.moyenne.predateurs, 1)} carnivores, ${nb(temoin.moyenne.biomasse_t, 0)} t, Shannon ${nb(temoin.moyenne.shannon, 3)}, ${nb(100 * (temoin.moyenne.stables ?? 0), 0)} % de lignées stables, ${nb(temoin.moyenne.eteintes, 1)} éteintes, ${nb(temoin.moyenne.nees, 1)} nées${temoin.moyenne.formes != null ? `, ${nb(temoin.moyenne.formes, 2)} formes par lignée` : ''} ; un cycle en ${nb(temoin.moyenne.duree_s, 2)} s. Lu selon le plan ${R0.plan.version} (${R0.plan.empreinte.slice(0, 12)}…)${R0.plan_des_essais ? `, les essais faits selon le plan ${R0.plan_des_essais.version} (${R0.plan_des_essais.empreinte.slice(0, 12)}…)` : ''}.${R0.regles_choisies ? ` Seules les règles dites (${R0.regles_choisies.join(', ')}), pas tout le plan.` : ''}${R0.reprises?.length ? ` ${R0.reprises.map(p => `Repris du rapport du ${p.date?.slice(0, 10) ?? '?'} (moteur ${p.moteur?.commit?.slice(0, 7) ?? '?'}) : ${p.taches} tâche${p.taches > 1 ? 's' : ''} gardée${p.taches > 1 ? 's' : ''}, ${p.relancees} relancée${p.relancees > 1 ? 's' : ''}`).join(' ; ')} ; les durées de deux passes ne se comparent pas, ni donc les coûts.` : ''}`, '',
     `| ${PAI ? 'paire' : 'essai'} | nature | lignées | carnivores | biomasse | Shannon | stables | éteintes | nées | formes | coût | lecture |`, '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |',
     ...rapport.map(x => x.erreurs ? `| ${x.essai} | ${x.nature} | | | | | | | | | | ${x.lecture} |`
       : `| ${x.essai} | ${x.nature} | ${cel(x, 'lignees', 1)} | ${cel(x, 'predateurs', 1)} | ${temoin.moyenne.biomasse_t ? cel(x, 'biomasse_t', 1) : '–'} | ${cel(x, 'shannon', 3)} | ${cel(x, 'stables', 3)} | ${cel(x, 'eteintes', 1)} | ${cel(x, 'nees', 1)} | ${cel(x, 'formes', 1)} | ${x.cout_lu == null ? '≈' : fx(100 * x.cout_lu, 0) + ' %'} | ${x.lecture} |`),
@@ -153,12 +159,12 @@ if (a[0] === '--fusionner') {
   const plan = { fichier: path.relative(racine, path.resolve(fPlan)), version: PLAN.version, empreinte: empreintePlan };
   const JR = A.jalons ? { pas: A.jalons.pas, cycles: A.jalons.cycles, annee: A.jalons.annee, temoin: A.jalons.temoin, essais: Object.assign({}, ...P.map(x => x.jalons.essais)) } : null;
   ecrire({ ...A, part: undefined, parts: P.length, plan, ...(A.plan.empreinte !== empreintePlan ? { plan_des_essais: A.plan } : {}), date: new Date().toISOString(), temoin: L.temoin, essais: L.essais, laisses,
-    jalons: JR ? { ...JR, lus: lireJalons(JR, bruts) } : undefined, duree_min: r(somme(P.map(x => x.duree_min || 0)), 1) });
+    jalons: JR ? { ...JR, lus: lireJalons(JR, bruts) } : undefined, reprises: P.some(x => x.reprises) ? P.flatMap(x => x.reprises || []) : undefined, duree_min: r(somme(P.map(x => x.duree_min || 0)), 1) });
   process.exit(L.essais.some(x => x.erreurs) ? 1 : 0);
 }
 
 const fMonde = a.find((x, i) => !x.startsWith('--') && !OPTS.includes(a[i - 1]));
-if (!fMonde) { console.error('node outils/ablations.js <etat.json> [--cycles 30] [--graines 3] [--regles a,b] [--natures mecanisme,constante,comptable] [--jobs 4] [--jalons n] [--part k/n] [--sortie f.json] [--notes f.md]\n'
+if (!fMonde) { console.error('node outils/ablations.js <etat.json> [--cycles 30] [--graines 3] [--regles a,b] [--natures mecanisme,constante,comptable] [--jobs 4] [--jalons n] [--memoire-tache Mo] [--reprendre rapport.json] [--part k/n] [--sortie f.json] [--notes f.md]\n'
   + 'node outils/ablations.js <etat.json> --paires <rapport des essais seuls> [--paires-de a,b,c] [--jobs 4] [--part k/n] [--sortie f.json] [--notes f.md]\n'
   + 'node outils/ablations.js --fusionner part1.json part2.json … [--sortie f.json] [--notes f.md]'); process.exit(2); }
 // (les paires : les cycles et les graines du rapport des essais seuls, le même monde)
@@ -171,6 +177,10 @@ if (PART && !(PART[0] >= 1 && PART[0] <= PART[1])) { console.error('--part k/n :
 const JAL = arg('--jalons') != null ? Math.floor(+arg('--jalons')) : 0;
 if (arg('--jalons') != null && (PAIRES || !(JAL >= 1))) { console.error(PAIRES ? '--jalons : pas avec --paires' : '--jalons n : un nombre de cycles, au moins 1'); process.exit(2); }
 const CJ = JAL ? Array.from({ length: Math.ceil(CYCLES / JAL) - 1 }, (_, i) => (i + 1) * JAL).filter(c => c < CYCLES) : [];
+// (la mémoire de chaque tâche, en Mo : le plafond du tas de son processus ; un essai long, plusieurs à la fois, en demande moins —
+//  le tas d'un essai d'Orvane grossit jusqu'à son plafond, quand ce qu'il garde vraiment tient en quelques centaines de Mo)
+const MEMOIRE = Math.floor(+arg('--memoire-tache', 6000));
+if (!(MEMOIRE >= 256)) { console.error('--memoire-tache Mo : la mémoire de chaque tâche, en Mo (au moins 256)'); process.exit(2); }
 const I0 = lireJ(fMonde), R = Orvane.contexte(I0).R, graines = PAIRES ? PAIRES.graines.slice() : Array.from({ length: NG }, (_, k) => ((I0.monde.graine >>> 0) + k) >>> 0);
 if (PAIRES && (PAIRES.type === 'paires' || PAIRES.part)) { console.error(`--paires : ${PAIRES.part ? `une part (${PAIRES.part}) ; les paires se choisissent dans le rapport entier (--fusionner les parts d'abord)` : 'un rapport de paires, pas d\'essais seuls'}`); process.exit(2); }
 if (PAIRES && PAIRES.monde?.empreinte !== Journal.empreinte(I0)) { console.error('--paires : le rapport des essais seuls n\'est pas celui de ce monde (son empreinte)'); process.exit(2); }
@@ -201,17 +211,38 @@ if (PAIRES) { const de = arg('--paires-de') ? arg('--paires-de').split(',') : nu
     essais.push({ id: `${A.essai} + ${B.essai}`, regle: `${A.regle}+${B.regle}`, nature: 'paire', paire: [A.essai, B.essai], regles: { ...A.regles, ...B.regles }, fait: `${A.fait} ; ${B.fait}`, quand: `${A.quand} ; ${B.quand}` }); }
   if (choisis.length < 2) console.error(`--paires : ${choisis.length} règle${choisis.length > 1 ? 's' : ''} seulement à mettre en paires (${choisis.map(e => e.essai).join(', ') || 'aucune'})`); }
 if (PART) essais = [essais[0], ...essais.slice(1).filter((_, i) => i % PART[1] === PART[0] - 1)];
-const travaux = essais.flatMap(e => graines.map(g => ({ e, g })));
-console.error(`${path.basename(path.dirname(path.resolve(fMonde)))} (cycle ${I0.cycle.n})${PART ? `, part ${PART.join('/')}` : ''} : ${essais.length - 1} essais et le témoin, ${NG} graine${NG > 1 ? 's' : ''}, ${CYCLES} cycles chacun${JAL ? ` (mesurés aussi tous les ${JAL})` : ''} : ${travaux.length} tâches, ${JOBS} à la fois`);
+// (une reprise : les tâches qu'un rapport a faites, gardées ; celles qu'il a perdues, relancées. Il faut la même passe — le plan, le monde,
+//  les essais, les cycles, les graines, les jalons — et le même moteur : le même code (son empreinte), ou, pour un rapport qui ne la dit
+//  pas, rien de changé dans moteur, tampon, hebergement entre son commit et celui-ci, ni à la main d'un côté ou de l'autre)
+const REPRISE = arg('--reprendre') ? lireJ(arg('--reprendre')) : null, MOTEUR = { ...Journal.moteur(racine), code: codeMoteur() }, repris = [];
+if (REPRISE) {
+  const ids = L => L.map(e => `${e.id ?? e.essai}|${Journal.stable(e.regles ?? {})}`).sort().join('\n');
+  const pb = [[REPRISE.plan?.empreinte !== empreintePlan, 'le plan'], [REPRISE.monde?.empreinte !== Journal.empreinte(I0), 'le monde'], [REPRISE.cycles !== CYCLES, 'les cycles'],
+    [JSON.stringify(REPRISE.graines) !== JSON.stringify(graines), 'les graines'],
+    [(REPRISE.type ?? null) !== (PAIRES ? 'paires' : null) || (REPRISE.simples_de?.empreinte ?? null) !== (PAIRES ? Journal.empreinte(PAIRES) : null), 'les paires'],
+    [(REPRISE.part ?? null) !== (PART ? PART.join('/') : null), 'la part'], [JSON.stringify(REPRISE.regles_choisies ?? null) !== JSON.stringify(CHOIX && !PAIRES ? [...CHOIX].sort() : null), 'les règles dites'],
+    [JSON.stringify(REPRISE.jalons?.cycles ?? []) !== JSON.stringify(CJ), 'les jalons'], [ids(REPRISE.essais || []) !== ids(essais.slice(1)), 'les essais']].filter(x => x[0]).map(x => x[1]);
+  if (pb.length) { console.error(`--reprendre : ce rapport n'est pas celui de cette passe (${pb.join(', ')})`); process.exit(2); }
+  const M = REPRISE.moteur || {}; let meme = !!M.code && M.code === MOTEUR.code;
+  if (!M.code && M.modifie === false && MOTEUR.modifie === false && M.commit && MOTEUR.commit)
+    try { if (M.commit !== MOTEUR.commit) execFileSync('git', ['-C', racine, 'diff', '--quiet', M.commit, MOTEUR.commit, '--', 'moteur', 'tampon', 'hebergement'], { stdio: 'ignore' }); meme = true; } catch (e) { meme = false; }
+  if (!meme) { console.error(`--reprendre : le moteur du rapport (${M.commit?.slice(0, 7) ?? '?'}${M.modifie ? ', modifié' : ''}) n'est pas sûrement celui-ci (${MOTEUR.commit?.slice(0, 7) ?? '?'}${MOTEUR.modifie ? ', modifié' : ''}) : rien ne doit changer entre les deux dans moteur, tampon, hebergement`); process.exit(2); }
+  const par = id => id === 'temoin' ? REPRISE.temoin?.par_graine : REPRISE.essais.find(x => x.essai === id)?.par_graine;
+  const jal = id => id === 'temoin' ? REPRISE.jalons?.temoin : REPRISE.jalons?.essais?.[id];
+  for (const e of essais) for (const g of graines) { const m = par(e.id)?.[g], J = JAL ? Object.fromEntries(CJ.map(c => [c, jal(e.id)?.[c]?.[g] ?? null])) : null;
+    if (m && !(J && Object.values(J).some(x => !x))) repris.push({ id: e.id, g, m, jalons: J, erreur: null }); }
+}
+const travaux = essais.flatMap(e => graines.map(g => ({ e, g }))).filter(({ e, g }) => !repris.some(x => x.id === e.id && x.g === g));
+console.error(`${path.basename(path.dirname(path.resolve(fMonde)))} (cycle ${I0.cycle.n})${PART ? `, part ${PART.join('/')}` : ''} : ${essais.length - 1} essais et le témoin, ${NG} graine${NG > 1 ? 's' : ''}, ${CYCLES} cycles chacun${JAL ? ` (mesurés aussi tous les ${JAL})` : ''} : ${travaux.length} tâches${REPRISE ? ` (${repris.length} autres reprises du rapport du ${REPRISE.date?.slice(0, 16).replace('T', ' ') ?? '?'})` : ''}, ${JOBS} à la fois${MEMOIRE !== 6000 ? `, ${MEMOIRE} Mo chacune` : ''}`);
 
 const lancer = ({ e, g }) => new Promise(fin => {
-  const p = spawn(process.execPath, ['--max-old-space-size=6000', __filename, '--essai', JSON.stringify({ monde: path.resolve(fMonde), graine: g, cycles: CYCLES, regles: e.regles, ...(JAL ? { jalons: JAL } : {}) })], { stdio: ['ignore', 'pipe', 'pipe'] });
+  const p = spawn(process.execPath, [`--max-old-space-size=${MEMOIRE}`, __filename, '--essai', JSON.stringify({ monde: path.resolve(fMonde), graine: g, cycles: CYCLES, regles: e.regles, ...(JAL ? { jalons: JAL } : {}) })], { stdio: ['ignore', 'pipe', 'pipe'] });
   let out = '', err = ''; p.stdout.on('data', d => out += d); p.stderr.on('data', d => err += d);
   p.on('close', code => { let m = null, jalons = null; try { m = code === 0 ? JSON.parse(out) : null; } catch (x) { m = null; } if (m?.jalons) { jalons = m.jalons; delete m.jalons; }
     fin({ id: e.id, g, m, jalons, erreur: m ? null : (err.trim().split('\n').slice(-3).join(' ') || `code ${code}`).slice(0, 300) }); });
 });
 (async () => {
-  const t0 = Date.now(), file = travaux.slice(), res = []; let faits = 0;
+  const t0 = Date.now(), file = travaux.slice(), res = [...repris]; let faits = 0;
   await Promise.all(Array.from({ length: Math.min(JOBS, file.length) }, async () => { while (file.length) { const x = await lancer(file.shift()); res.push(x); faits++;
     if (faits % Math.max(1, Math.round(travaux.length / 20)) === 0 || faits === travaux.length) console.error(`  ${faits}/${travaux.length} (${((Date.now() - t0) / 60000).toFixed(1)} min)`); } }));
   const de = id => graines.map(g => res.find(x => x.id === id && x.g === g)), T = Object.fromEntries(de('temoin').map(x => [x.g, x.m]));
@@ -228,10 +259,12 @@ const lancer = ({ e, g }) => new Promise(fin => {
   // (les jalons : les mesures de chaque tâche en chemin, puis la même lecture à chaque jalon)
   const parJalon = id => Object.fromEntries(CJ.map(c => [c, Object.fromEntries(de(id).map(x => [x.g, x.jalons?.[c] ?? null]))]));
   const JR = JAL ? { pas: JAL, cycles: CJ, annee: I0.monde.annee ?? null, temoin: parJalon('temoin'), essais: Object.fromEntries(essais.slice(1).map(e => [e.id, parJalon(e.id)])) } : null;
-  const R0 = { ...(PAIRES ? { type: 'paires', simples_de: { fichier: path.relative(racine, path.resolve(arg('--paires'))), date: PAIRES.date ?? null, empreinte: Journal.empreinte(PAIRES) }, simples } : {}), plan: { fichier: path.relative(racine, path.resolve(fPlan)), version: PLAN.version, empreinte: empreintePlan }, date: new Date().toISOString(), moteur: Journal.moteur(racine),
-    machine: { processeur: os.cpus()[0]?.model ?? null, coeurs: os.cpus().length, node: process.version }, ...(PART ? { part: PART.join('/') } : {}), ...(CHOIX && !PAIRES ? { regles_choisies: [...CHOIX].sort() } : {}),
+  const R0 = { ...(PAIRES ? { type: 'paires', simples_de: { fichier: path.relative(racine, path.resolve(arg('--paires'))), date: PAIRES.date ?? null, empreinte: Journal.empreinte(PAIRES) }, simples } : {}), plan: { fichier: path.relative(racine, path.resolve(fPlan)), version: PLAN.version, empreinte: empreintePlan }, date: new Date().toISOString(), moteur: MOTEUR,
+    machine: { processeur: os.cpus()[0]?.model ?? null, coeurs: os.cpus().length, node: process.version, memoire_tache_mo: MEMOIRE }, ...(PART ? { part: PART.join('/') } : {}),
+    // (une reprise : d'où viennent les tâches gardées — le rapport, son moteur, sa machine —, combien, et combien sont relancées ici)
+    ...(REPRISE ? { reprises: [...(REPRISE.reprises || []), { date: REPRISE.date ?? null, empreinte: Journal.empreinte(REPRISE), moteur: REPRISE.moteur ?? null, machine: REPRISE.machine ?? null, duree_min: REPRISE.duree_min ?? null, taches: repris.length, relancees: travaux.length }] } : {}), ...(CHOIX && !PAIRES ? { regles_choisies: [...CHOIX].sort() } : {}),
     monde: { id: I0.monde.id, cycle: I0.cycle.n, empreinte: Journal.empreinte(I0), regles: Journal.empreinte(Journal.stable(I0.monde.regles ?? {})) },
-    cycles: CYCLES, graines, temoin: L.temoin, essais: L.essais, laisses, ...(JR ? { jalons: { ...JR, lus: lireJalons(JR, bruts) } } : {}), duree_min: r((Date.now() - t0) / 60000, 1) };
+    cycles: CYCLES, graines, temoin: L.temoin, essais: L.essais, laisses, ...(JR ? { jalons: { ...JR, lus: lireJalons(JR, bruts) } } : {}), duree_min: r((Date.now() - t0) / 60000 + (REPRISE?.duree_min || 0), 1) };
   ecrire(R0);
   process.exit(L.essais.some(x => x.erreurs) || Object.values(T).some(m => !m) ? 1 : 0);
 })();

@@ -9,7 +9,9 @@
 //     ou un rapport de paires, refusés ; la lecture, sur des nombres dits : elles se tempèrent, se renforcent, n'agissent qu'ensemble ;
 //  4. les formes et les jalons (plan, version 4) : la variété des formes, celle du monde que rend le moteur ; un essai lu en chemin rend à
 //     chaque jalon ce que rendrait un essai qui s'arrête là, et à sa fin ce que rend le même essai sans jalons ; en parts puis fusionnées,
-//     la même lecture en chemin ; un rapport d'essais seuls d'avant (sans les formes) sert encore aux paires ; des jalons mal dits, refusés.
+//     la même lecture en chemin ; un rapport d'essais seuls d'avant (sans les formes) sert encore aux paires ; des jalons mal dits, refusés ;
+//  5. la reprise : un rapport qui a perdu des tâches (une machine à court de mémoire), repris, rend le rapport entier, les tâches gardées
+//     telles quelles ; une reprise d'une autre passe ou d'un autre moteur, refusée ; la mémoire d'une tâche, plafonnée, rend les mêmes mesures.
 //   node bancs/ablations.js
 'use strict';
 const fs = require('fs'), path = require('path'), os = require('os'), { execFileSync } = require('child_process');
@@ -113,6 +115,24 @@ console.log('\n2. L\'outil, sur la mer');
     const code = (...x) => { try { execFileSync(process.execPath, [racine('outils/ablations.js'), racine('mondes/marin/amorce.json'), ...x], { stdio: 'ignore' }); return 0; } catch (e) { return e.status; } };
     verif(code('--paires', f('a.json'), '--jalons', '1', '--sortie', f('rj.json')) === 2 && code('--cycles', '3', '--jalons', '0', '--sortie', f('rj.json')) === 2 && !fs.existsSync(f('rj.json')),
       'des jalons pour des paires, ou tous les zéro cycles : refusés');
+    console.log('\n5. La reprise : les tâches perdues d\'un rapport, relancées');
+    // (le rapport lu à chaque cycle, qui aurait perdu deux tâches sur six : le témoin d'une graine, les saisons d'une autre)
+    const [g1, g2] = J1.graines.map(String), perdu = JSON.parse(JSON.stringify(J1)), sp = perdu.essais.find(x => x.essai === 'saisons');
+    perdu.temoin.par_graine[g2] = null; sp.par_graine[g1] = null; sp.erreurs = [{ graine: +g1, erreur: 'tuée' }];
+    for (const c of perdu.jalons.cycles) { perdu.jalons.temoin[c][g2] = null; perdu.jalons.essais.saisons[c][g1] = null; }
+    fs.writeFileSync(f('perdu.json'), JSON.stringify(perdu));
+    const RP = run('repris', '--cycles', '3', '--jalons', '1', '--reprendre', f('perdu.json'), '--memoire-tache', '512');
+    const pg = R => JSON.stringify([R.temoin.par_graine, ...R.essais.map(x => [x.essai, x.par_graine])], (k, v) => k === 'duree_s' ? undefined : v);
+    verif(pg(RP) === pg(J1) && sl(RP) === sl(J1) && RP.essais.every(x => !x.erreurs) && RP.reprises?.length === 1 && RP.reprises[0].taches === 4 && RP.reprises[0].relancees === 2
+      && RP.temoin.par_graine[g1].duree_s === J1.temoin.par_graine[g1].duree_s && RP.machine.memoire_tache_mo === 512 && /Repris du rapport/.test(fs.readFileSync(f('repris.md'), 'utf8')),
+      'un rapport qui a perdu deux tâches sur six, repris (512 Mo par tâche) : les quatre autres gardées telles quelles, les deux relancées ; le rapport entier, au bit près, en chemin comme à la fin (les durées mises à part) ; ses notes le disent');
+    const mo = (n, m) => { const X = JSON.parse(JSON.stringify(perdu)); X.moteur = m; fs.writeFileSync(f(n), JSON.stringify(X)); return f(n); };
+    const rp = (...x) => code('--graines', '2', '--regles', 'saisons,menace', '--jalons', '1', '--sortie', f('rr.json'), ...x);
+    verif(rp('--cycles', '2', '--reprendre', f('perdu.json')) === 2 && code('--graines', '2', '--regles', 'saisons', '--cycles', '3', '--jalons', '1', '--reprendre', f('perdu.json'), '--sortie', f('rr.json')) === 2
+      && rp('--cycles', '3', '--reprendre', mo('autre.json', { ...perdu.moteur, code: 'un autre code' })) === 2
+      && rp('--cycles', '3', '--reprendre', mo('main.json', { commit: perdu.moteur.commit, modifie: true })) === 2
+      && code('--cycles', '3', '--memoire-tache', '100', '--sortie', f('rr.json')) === 2 && !fs.existsSync(f('rr.json')),
+      'une reprise d\'une autre passe (d\'autres cycles, d\'autres essais), d\'un autre code, ou d\'un moteur changé à la main qui ne dit pas son code : refusée ; une tâche à 100 Mo aussi');
   } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
 }
 
