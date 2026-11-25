@@ -3,14 +3,17 @@
 // une copie du monde, et l'on fait tourner autant de cycles, sur les mêmes graines, que le témoin (le monde tel qu'il est). Une constante de
 // structure, sans valeur qui l'éteigne, s'essaie à deux autres valeurs. Chaque essai tourne dans son processus.
 // Ce qu'on mesure à la fin : les lignées animales vivantes et les carnivores, la biomasse, la diversité (Shannon), la part des lignées
-// stables, les extinctions, les lignées nées ; et la durée d'un cycle. Une mesure bouge quand l'écart au témoin passe le double de l'écart
-// entre les graines du témoin, et un seuil (la lecture du plan) : une indication, pas un verdict — la matrice est une décision de l'auteur.
+// stables, les extinctions, les lignées nées, la variété des formes de chaque lignée ; et la durée d'un cycle. Une mesure bouge quand
+// l'écart au témoin passe le double de l'écart entre les graines du témoin, et un seuil (la lecture du plan) : une indication, pas un
+// verdict — la matrice est une décision de l'auteur. Un essai long se lit aussi en chemin (--jalons n : tous les n cycles).
 //   node outils/ablations.js <etat.json> [--cycles 30] [--graines 3] [--regles a,b,c] [--natures mecanisme,constante,comptable]
-//     [--jobs 4] [--plan etalon/ablations.json] [--sortie rapport.json] [--notes rapport.md]
+//     [--jobs 4] [--jalons n] [--plan etalon/ablations.json] [--sortie rapport.json] [--notes rapport.md]
 // Sortie : 0 si chaque essai a tourné, 1 sinon. Node, sans dépendance.
 'use strict';
 const fs = require('fs'), path = require('path'), os = require('os'), crypto = require('crypto'), { spawn } = require('child_process');
 const racine = path.join(__dirname, '..'), Orvane = require(path.join(racine, 'moteur/orvane.js')), Journal = require(path.join(racine, 'hebergement/journal.js'));
+const { SAISONS } = require(path.join(racine, 'moteur/noyau/plan.js'));
+const saisonDu = (n, annee) => annee ? SAISONS[Math.floor((((n % annee) / annee + .125) % 1) * 4)] : null;   // (la saison du cycle n, comme le moteur la nomme)
 const lireJ = f => JSON.parse(fs.readFileSync(f, 'utf8')), somme = L => L.reduce((s, x) => s + x, 0), r = (x, d = 4) => x == null || !Number.isFinite(x) ? null : +x.toFixed(d);
 const objet = v => v && typeof v === 'object' && !Array.isArray(v);
 // (une valeur de règle complétée en profondeur : celle du monde, et ce qu'on y change)
@@ -26,21 +29,24 @@ function mesurer(I0, I, secondes) {
   const L = new Map(); for (const t of V) for (const p of t.populations) if (p.effectif > 0) (L.get(p.biome) || L.set(p.biome, []).get(p.biome)).push(p.effectif * m(t));
   let H = 0; for (const B of L.values()) { const S = somme(B); for (const b of B) { const q = b / S; if (q > 0) H -= q * Math.log(q); } }
   let stables = 0, eteintes = 0; for (const [id, x] of depart) { const y = fin.get(id) || 0; if (y <= 0) eteintes++; else if (Math.max(x / y, y / x) <= 2) stables++; }
+  // (plan, version 4 : la variété des formes d'une lignée, le nombre effectif de ses phénotypes, 1 / Σ f²)
+  const formes = V.map(t => { const s = somme((t.phenotypes || []).map(p => (p.frequence || 0) ** 2)); return s > 0 ? 1 / s : 1; });
   return { lignees: V.length, predateurs: V.filter(t => t.plan?.regime === 'carnivore').length, biomasse_t: r(somme(V.map(t => effectif(t) * m(t))) / 1000, 3),
-    shannon: L.size ? r(H / L.size) : null, stables: depart.size ? r(stables / depart.size) : null, eteintes, nees: V.filter(t => t.apparu > I0.cycle.n).length, duree_s: r(secondes, 2) };
+    shannon: L.size ? r(H / L.size) : null, stables: depart.size ? r(stables / depart.size) : null, eteintes, nees: V.filter(t => t.apparu > I0.cycle.n).length,
+    formes: V.length ? r(somme(formes) / V.length) : null, duree_s: r(secondes, 2) };
 }
 
 // --- un essai, dans son processus : le monde, ses règles changées, une graine, des cycles ---
 if (process.argv[2] === '--essai') {
   const E = JSON.parse(process.argv[3]), I0 = lireJ(E.monde); let I = JSON.parse(JSON.stringify(I0));
   I.monde = { ...I.monde, graine: E.graine, regles: { ...(I.monde.regles || {}), ...(E.regles || {}) } };
-  const t0 = process.hrtime.bigint();
-  for (let k = 0; k < E.cycles; k++) I = Orvane.cycle(I, {}, { duree_ms: 864e5 });
-  process.stdout.write(JSON.stringify(mesurer(I0, I, Number(process.hrtime.bigint() - t0) / 1e9 / E.cycles)));
+  const t0 = process.hrtime.bigint(), s = k => Number(process.hrtime.bigint() - t0) / 1e9 / k, J = E.jalons > 0 ? {} : null;   // (les jalons : en chemin, tous les n cycles)
+  for (let k = 0; k < E.cycles; k++) { I = Orvane.cycle(I, {}, { duree_ms: 864e5 }); if (J && (k + 1) % E.jalons === 0 && k + 1 < E.cycles) J[k + 1] = mesurer(I0, I, s(k + 1)); }
+  process.stdout.write(JSON.stringify({ ...mesurer(I0, I, s(E.cycles)), ...(J ? { jalons: J } : {}) }));
   process.exit(0);
 }
 
-const a = process.argv.slice(2), OPTS = ['--cycles', '--graines', '--regles', '--natures', '--jobs', '--plan', '--sortie', '--notes', '--part', '--paires', '--paires-de'];
+const a = process.argv.slice(2), OPTS = ['--cycles', '--graines', '--regles', '--natures', '--jobs', '--plan', '--sortie', '--notes', '--part', '--paires', '--paires-de', '--jalons'];
 const arg = (k, d) => { const i = a.indexOf(k); return i >= 0 && a[i + 1] != null ? a[i + 1] : d; };
 const fPlan = arg('--plan', path.join(racine, 'etalon/ablations.json')), PLAN = lireJ(fPlan), empreintePlan = crypto.createHash('sha256').update(Journal.stable(PLAN)).digest('hex');
 const moy = L => L.length ? somme(L) / L.length : null;
@@ -93,18 +99,37 @@ function interactions(L, simples) {
     return { ...e, interaction: inter, joue, lecture: joue.length ? `elles se répondent : ${sens.join(', ')}` : 'chacune pour soi : ensemble, elles font la somme de ce qu\'elles font seules' }; });
   return L;
 }
+// --- les jalons (plan, version 4) : un essai long lu en chemin, à chaque jalon contre le témoin au même cycle, par la même lecture ---
+// J : { pas, cycles, annee, temoin: { cycle: { graine: mesures } }, essais: { essai: { cycle: { graine: mesures } } } } ; bruts : les essais
+function lireJalons(J, bruts) {
+  return Object.fromEntries(J.cycles.map(c => { const L = lire(bruts.map(e => ({ ...e, temoin_duree_s: null, par_graine: J.essais[e.essai]?.[c] || {} })), J.temoin[c], c);
+    return [c, { temoin: { moyenne: L.temoin.moyenne, ecart: L.temoin.ecart }, essais: Object.fromEntries(L.essais.filter(x => !x.erreurs).map(x => [x.essai, { mesures: x.mesures, ecarts: x.ecarts, bouge: x.bouge }])) }]; }));
+}
 const ecrire = R0 => {
   const { temoin, essais: rapport, laisses } = R0, NG = R0.graines.length;
   const fx = (x, d = 2) => x == null ? '–' : (x > 0 ? '+' : '') + (+x).toLocaleString('fr-FR', { maximumFractionDigits: d }), nb = (x, d) => x == null ? '–' : (+x).toLocaleString('fr-FR', { maximumFractionDigits: d });
-  const PAI = R0.type === 'paires', S1 = R0.simples || {}, seules = (x, k) => x.paire ? (S1[x.paire[0]]?.ecarts?.[k] ?? 0) + (S1[x.paire[1]]?.ecarts?.[k] ?? 0) : null;
-  const cel = (x, k, d) => { const v = k === 'biomasse_t' && temoin.moyenne.biomasse_t ? 100 / temoin.moyenne.biomasse_t : 1, s = PAI ? seules(x, k) : null;
-    const u = k === 'biomasse_t' ? ' %' : ''; return `${fx(x.ecarts[k] * v, d)}${u}${PAI ? ` (${fx(s * v, d)}${u})` : ''}`; };
+  const PAI = R0.type === 'paires', S1 = R0.simples || {}, seules = (x, k) => { if (!x.paire) return null; const u = S1[x.paire[0]]?.ecarts?.[k], v = S1[x.paire[1]]?.ecarts?.[k]; return u == null && v == null ? null : (u ?? 0) + (v ?? 0); };
+  // (une mesure relative — la biomasse, les formes — se dit en part de celle du témoin ; une mesure qu'un rapport n'a pas : –)
+  const REL = new Set(PLAN.lecture.relatives || []), pc = (k, T) => REL.has(k) && T.moyenne[k] ? 100 / T.moyenne[k] : 1, u = k => REL.has(k) ? ' %' : '';
+  const cel = (x, k, d) => { if (x.ecarts?.[k] == null) return '–'; const v = pc(k, temoin), s = PAI ? seules(x, k) : null;
+    return `${fx(x.ecarts[k] * v, d)}${u(k)}${PAI ? ` (${s == null ? '–' : fx(s * v, d) + u(k)})` : ''}`; };
+  const J = R0.jalons, pts = J ? [...J.cycles, R0.cycles] : [], lu = c => c === R0.cycles ? { temoin, essais: Object.fromEntries(rapport.map(x => [x.essai, x])) } : J.lus[c];
+  const CJ = [['lignees', 1], ['predateurs', 1], ['biomasse_t', 1], ['shannon', 3], ['stables', 3], ['eteintes', 1], ['nees', 1], ['formes', 1]];
+  const enChemin = !J ? [] : ['', `### En chemin, ${J.pas > 1 ? `tous les ${J.pas} cycles` : 'à chaque cycle'}`, '', `Le témoin au fil des cycles (entre parenthèses, le cycle du monde${J.annee ? ' ; et sa saison' : ''}) :`, '',
+    '| cycle | saison | lignées | carnivores | biomasse | Shannon | stables | formes |', '| --- | --- | --- | --- | --- | --- | --- | --- |',
+    ...pts.map(c => { const T = lu(c).temoin.moyenne;
+      return `| ${c} (${R0.monde.cycle + c}) | ${saisonDu(R0.monde.cycle + c, J.annee) ?? '–'} | ${nb(T.lignees, 1)} | ${nb(T.predateurs, 1)} | ${nb(T.biomasse_t, 0)} t | ${nb(T.shannon, 3)} | ${T.stables == null ? '–' : nb(100 * T.stables, 0) + ' %'} | ${nb(T.formes, 2)} |`; }),
+    '', 'Les écarts de chaque essai au témoin, au même cycle (la biomasse et les formes, en part de celles du témoin), et ce qui bouge, par la même lecture :', '',
+    '| cycle | essai | lignées | carnivores | biomasse | Shannon | stables | éteintes | nées | formes | ce qui bouge |', '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |',
+    ...pts.flatMap(c => { const L = lu(c); return rapport.filter(x => !x.erreurs).map(x => { const y = L.essais[x.essai], T = L.temoin;
+      return `| ${c} | ${x.essai} | ${CJ.map(([k, d]) => y?.ecarts?.[k] == null ? '–' : fx(y.ecarts[k] * pc(k, T), d) + u(k)).join(' | ')} | ${y?.bouge?.length ? y.bouge.join(', ') : '–'} |`; }); })];
   const notes = [`## Les ${PAI ? 'paires de règles' : 'ablations'} : ${R0.monde.id}, cycle ${R0.monde.cycle} (${R0.cycles} cycles, ${NG} graine${NG > 1 ? 's' : ''})`, '',
-    `Le témoin : ${nb(temoin.moyenne.lignees, 1)} lignées animales (écart entre graines ${nb(temoin.ecart.lignees, 1)}), ${nb(temoin.moyenne.predateurs, 1)} carnivores, ${nb(temoin.moyenne.biomasse_t, 0)} t, Shannon ${nb(temoin.moyenne.shannon, 3)}, ${nb(100 * (temoin.moyenne.stables ?? 0), 0)} % de lignées stables, ${nb(temoin.moyenne.eteintes, 1)} éteintes, ${nb(temoin.moyenne.nees, 1)} nées ; un cycle en ${nb(temoin.moyenne.duree_s, 2)} s. Lu selon le plan ${R0.plan.version} (${R0.plan.empreinte.slice(0, 12)}…)${R0.plan_des_essais ? `, les essais faits selon le plan ${R0.plan_des_essais.version} (${R0.plan_des_essais.empreinte.slice(0, 12)}…)` : ''}.${R0.regles_choisies ? ` Seules les règles dites (${R0.regles_choisies.join(', ')}), pas tout le plan.` : ''}`, '',
-    `| ${PAI ? 'paire' : 'essai'} | nature | lignées | carnivores | biomasse | Shannon | stables | éteintes | nées | coût | lecture |`, '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |',
-    ...rapport.map(x => x.erreurs ? `| ${x.essai} | ${x.nature} | | | | | | | | | ${x.lecture} |`
-      : `| ${x.essai} | ${x.nature} | ${cel(x, 'lignees', 1)} | ${cel(x, 'predateurs', 1)} | ${temoin.moyenne.biomasse_t ? cel(x, 'biomasse_t', 1) : '–'} | ${cel(x, 'shannon', 3)} | ${cel(x, 'stables', 3)} | ${cel(x, 'eteintes', 1)} | ${cel(x, 'nees', 1)} | ${x.cout_lu == null ? '≈' : fx(100 * x.cout_lu, 0) + ' %'} | ${x.lecture} |`),
-    '', `Les écarts sont ceux de l'essai au témoin, en moyenne sur les graines (la biomasse, en part de celle du témoin)${PAI ? ` ; entre parenthèses, la somme des écarts des deux règles retirées chacune seule (le rapport des essais seuls${R0.simples_de?.date ? ` du ${R0.simples_de.date.slice(0, 10)}` : ''}, ${R0.simples_de?.empreinte?.slice(0, 12) ?? '?'}…)` : ''}. Le coût : la part d'un cycle qu'on gagne sans la règle, au-delà du bruit des durées (≈ : dans ce bruit).`,
+    `Le témoin : ${nb(temoin.moyenne.lignees, 1)} lignées animales (écart entre graines ${nb(temoin.ecart.lignees, 1)}), ${nb(temoin.moyenne.predateurs, 1)} carnivores, ${nb(temoin.moyenne.biomasse_t, 0)} t, Shannon ${nb(temoin.moyenne.shannon, 3)}, ${nb(100 * (temoin.moyenne.stables ?? 0), 0)} % de lignées stables, ${nb(temoin.moyenne.eteintes, 1)} éteintes, ${nb(temoin.moyenne.nees, 1)} nées${temoin.moyenne.formes != null ? `, ${nb(temoin.moyenne.formes, 2)} formes par lignée` : ''} ; un cycle en ${nb(temoin.moyenne.duree_s, 2)} s. Lu selon le plan ${R0.plan.version} (${R0.plan.empreinte.slice(0, 12)}…)${R0.plan_des_essais ? `, les essais faits selon le plan ${R0.plan_des_essais.version} (${R0.plan_des_essais.empreinte.slice(0, 12)}…)` : ''}.${R0.regles_choisies ? ` Seules les règles dites (${R0.regles_choisies.join(', ')}), pas tout le plan.` : ''}`, '',
+    `| ${PAI ? 'paire' : 'essai'} | nature | lignées | carnivores | biomasse | Shannon | stables | éteintes | nées | formes | coût | lecture |`, '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |',
+    ...rapport.map(x => x.erreurs ? `| ${x.essai} | ${x.nature} | | | | | | | | | | ${x.lecture} |`
+      : `| ${x.essai} | ${x.nature} | ${cel(x, 'lignees', 1)} | ${cel(x, 'predateurs', 1)} | ${temoin.moyenne.biomasse_t ? cel(x, 'biomasse_t', 1) : '–'} | ${cel(x, 'shannon', 3)} | ${cel(x, 'stables', 3)} | ${cel(x, 'eteintes', 1)} | ${cel(x, 'nees', 1)} | ${cel(x, 'formes', 1)} | ${x.cout_lu == null ? '≈' : fx(100 * x.cout_lu, 0) + ' %'} | ${x.lecture} |`),
+    '', `Les écarts sont ceux de l'essai au témoin, en moyenne sur les graines (la biomasse et les formes, en part de celles du témoin)${PAI ? ` ; entre parenthèses, la somme des écarts des deux règles retirées chacune seule (le rapport des essais seuls${R0.simples_de?.date ? ` du ${R0.simples_de.date.slice(0, 10)}` : ''}, ${R0.simples_de?.empreinte?.slice(0, 12) ?? '?'}…)` : ''}. Les formes : le nombre effectif de phénotypes d'une lignée, en moyenne (– : un rapport fait sans elles). Le coût : la part d'un cycle qu'on gagne sans la règle, au-delà du bruit des durées (≈ : dans ce bruit).`,
+    ...enChemin,
     ...(laisses.length ? ['', `Non essayées : ${laisses.map(x => `${x.essai || x.regle} (${x.pourquoi})`).join(' ; ')}.`] : [])].join('\n');
   const so = arg('--sortie'), sn = arg('--notes');
   if (so) { fs.mkdirSync(path.dirname(path.resolve(so)), { recursive: true }); fs.writeFileSync(so, JSON.stringify(R0, null, 1) + '\n'); }
@@ -115,9 +140,10 @@ const ecrire = R0 => {
 if (a[0] === '--fusionner') {
   const P = a.slice(1).filter((x, i, L) => !x.startsWith('--') && !OPTS.includes(L[i - 1])).map(lireJ), A = P[0];
   const sansDuree = T => JSON.stringify(Object.fromEntries(Object.entries(T).map(([g, m]) => [g, m && { ...m, duree_s: 0 }])));
+  const sansDureeJ = J => J ? JSON.stringify([J.pas, J.cycles, Object.fromEntries(Object.entries(J.temoin).map(([c, T]) => [c, sansDuree(T)]))]) : null;   // (les jalons : le même témoin en chemin)
   const pb = P.filter(x => x.plan.empreinte !== A.plan.empreinte || x.monde.empreinte !== A.monde.empreinte || x.cycles !== A.cycles || JSON.stringify(x.graines) !== JSON.stringify(A.graines) || sansDuree(x.temoin.par_graine) !== sansDuree(A.temoin.par_graine)
-    || x.type !== A.type || x.simples_de?.empreinte !== A.simples_de?.empreinte || JSON.stringify(x.regles_choisies) !== JSON.stringify(A.regles_choisies));
-  if (pb.length) { console.error(`les parts ne vont pas ensemble (plan, monde, cycles, graines, témoin, essais seuls ou paires, règles dites) : ${pb.length} sur ${P.length}`); process.exit(2); }
+    || x.type !== A.type || x.simples_de?.empreinte !== A.simples_de?.empreinte || JSON.stringify(x.regles_choisies) !== JSON.stringify(A.regles_choisies) || sansDureeJ(x.jalons) !== sansDureeJ(A.jalons));
+  if (pb.length) { console.error(`les parts ne vont pas ensemble (plan, monde, cycles, graines, témoin, essais seuls ou paires, règles dites, jalons) : ${pb.length} sur ${P.length}`); process.exit(2); }
   const vus = new Set(), bruts = P.flatMap(x => x.essais).filter(e => !vus.has(e.essai) && vus.add(e.essai)), cles = new Set();
   const laisses = P.flatMap(x => x.laisses).filter(l => { const k = l.regle + '|' + (l.essai || ''); return !cles.has(k) && cles.add(k); });
   const ordre = Object.keys(PLAN.regles);
@@ -125,12 +151,14 @@ if (a[0] === '--fusionner') {
   if (A.type === 'paires') L = interactions(L, A.simples || {});
   // (la lecture est celle du plan d'aujourd'hui ; s'il a changé depuis les essais, le rapport le dit : plan_des_essais)
   const plan = { fichier: path.relative(racine, path.resolve(fPlan)), version: PLAN.version, empreinte: empreintePlan };
-  ecrire({ ...A, part: undefined, parts: P.length, plan, ...(A.plan.empreinte !== empreintePlan ? { plan_des_essais: A.plan } : {}), date: new Date().toISOString(), temoin: L.temoin, essais: L.essais, laisses, duree_min: r(somme(P.map(x => x.duree_min || 0)), 1) });
+  const JR = A.jalons ? { pas: A.jalons.pas, cycles: A.jalons.cycles, annee: A.jalons.annee, temoin: A.jalons.temoin, essais: Object.assign({}, ...P.map(x => x.jalons.essais)) } : null;
+  ecrire({ ...A, part: undefined, parts: P.length, plan, ...(A.plan.empreinte !== empreintePlan ? { plan_des_essais: A.plan } : {}), date: new Date().toISOString(), temoin: L.temoin, essais: L.essais, laisses,
+    jalons: JR ? { ...JR, lus: lireJalons(JR, bruts) } : undefined, duree_min: r(somme(P.map(x => x.duree_min || 0)), 1) });
   process.exit(L.essais.some(x => x.erreurs) ? 1 : 0);
 }
 
 const fMonde = a.find((x, i) => !x.startsWith('--') && !OPTS.includes(a[i - 1]));
-if (!fMonde) { console.error('node outils/ablations.js <etat.json> [--cycles 30] [--graines 3] [--regles a,b] [--natures mecanisme,constante,comptable] [--jobs 4] [--part k/n] [--sortie f.json] [--notes f.md]\n'
+if (!fMonde) { console.error('node outils/ablations.js <etat.json> [--cycles 30] [--graines 3] [--regles a,b] [--natures mecanisme,constante,comptable] [--jobs 4] [--jalons n] [--part k/n] [--sortie f.json] [--notes f.md]\n'
   + 'node outils/ablations.js <etat.json> --paires <rapport des essais seuls> [--paires-de a,b,c] [--jobs 4] [--part k/n] [--sortie f.json] [--notes f.md]\n'
   + 'node outils/ablations.js --fusionner part1.json part2.json … [--sortie f.json] [--notes f.md]'); process.exit(2); }
 // (les paires : les cycles et les graines du rapport des essais seuls, le même monde)
@@ -139,6 +167,10 @@ const CYCLES = PAIRES ? PAIRES.cycles : +arg('--cycles', 30), NG = PAIRES ? PAIR
 const NATURES = new Set(arg('--natures', 'mecanisme,constante,comptable').split(',')), CHOIX = arg('--regles') ? new Set(arg('--regles').split(',')) : null;
 const PART = arg('--part') ? arg('--part').split('/').map(Number) : null;
 if (PART && !(PART[0] >= 1 && PART[0] <= PART[1])) { console.error('--part k/n : 1 ≤ k ≤ n'); process.exit(2); }
+// (les jalons, plan version 4 : tous les n cycles, en chemin ; pas pour les paires, qui se lisent contre des essais seuls mesurés à leur fin)
+const JAL = arg('--jalons') != null ? Math.floor(+arg('--jalons')) : 0;
+if (arg('--jalons') != null && (PAIRES || !(JAL >= 1))) { console.error(PAIRES ? '--jalons : pas avec --paires' : '--jalons n : un nombre de cycles, au moins 1'); process.exit(2); }
+const CJ = JAL ? Array.from({ length: Math.ceil(CYCLES / JAL) - 1 }, (_, i) => (i + 1) * JAL).filter(c => c < CYCLES) : [];
 const I0 = lireJ(fMonde), R = Orvane.contexte(I0).R, graines = PAIRES ? PAIRES.graines.slice() : Array.from({ length: NG }, (_, k) => ((I0.monde.graine >>> 0) + k) >>> 0);
 if (PAIRES && (PAIRES.type === 'paires' || PAIRES.part)) { console.error(`--paires : ${PAIRES.part ? `une part (${PAIRES.part}) ; les paires se choisissent dans le rapport entier (--fusionner les parts d'abord)` : 'un rapport de paires, pas d\'essais seuls'}`); process.exit(2); }
 if (PAIRES && PAIRES.monde?.empreinte !== Journal.empreinte(I0)) { console.error('--paires : le rapport des essais seuls n\'est pas celui de ce monde (son empreinte)'); process.exit(2); }
@@ -170,12 +202,13 @@ if (PAIRES) { const de = arg('--paires-de') ? arg('--paires-de').split(',') : nu
   if (choisis.length < 2) console.error(`--paires : ${choisis.length} règle${choisis.length > 1 ? 's' : ''} seulement à mettre en paires (${choisis.map(e => e.essai).join(', ') || 'aucune'})`); }
 if (PART) essais = [essais[0], ...essais.slice(1).filter((_, i) => i % PART[1] === PART[0] - 1)];
 const travaux = essais.flatMap(e => graines.map(g => ({ e, g })));
-console.error(`${path.basename(path.dirname(path.resolve(fMonde)))} (cycle ${I0.cycle.n})${PART ? `, part ${PART.join('/')}` : ''} : ${essais.length - 1} essais et le témoin, ${NG} graine${NG > 1 ? 's' : ''}, ${CYCLES} cycles chacun : ${travaux.length} tâches, ${JOBS} à la fois`);
+console.error(`${path.basename(path.dirname(path.resolve(fMonde)))} (cycle ${I0.cycle.n})${PART ? `, part ${PART.join('/')}` : ''} : ${essais.length - 1} essais et le témoin, ${NG} graine${NG > 1 ? 's' : ''}, ${CYCLES} cycles chacun${JAL ? ` (mesurés aussi tous les ${JAL})` : ''} : ${travaux.length} tâches, ${JOBS} à la fois`);
 
 const lancer = ({ e, g }) => new Promise(fin => {
-  const p = spawn(process.execPath, ['--max-old-space-size=6000', __filename, '--essai', JSON.stringify({ monde: path.resolve(fMonde), graine: g, cycles: CYCLES, regles: e.regles })], { stdio: ['ignore', 'pipe', 'pipe'] });
+  const p = spawn(process.execPath, ['--max-old-space-size=6000', __filename, '--essai', JSON.stringify({ monde: path.resolve(fMonde), graine: g, cycles: CYCLES, regles: e.regles, ...(JAL ? { jalons: JAL } : {}) })], { stdio: ['ignore', 'pipe', 'pipe'] });
   let out = '', err = ''; p.stdout.on('data', d => out += d); p.stderr.on('data', d => err += d);
-  p.on('close', code => { let m = null; try { m = code === 0 ? JSON.parse(out) : null; } catch (x) { m = null; } fin({ id: e.id, g, m, erreur: m ? null : (err.trim().split('\n').slice(-3).join(' ') || `code ${code}`).slice(0, 300) }); });
+  p.on('close', code => { let m = null, jalons = null; try { m = code === 0 ? JSON.parse(out) : null; } catch (x) { m = null; } if (m?.jalons) { jalons = m.jalons; delete m.jalons; }
+    fin({ id: e.id, g, m, jalons, erreur: m ? null : (err.trim().split('\n').slice(-3).join(' ') || `code ${code}`).slice(0, 300) }); });
 });
 (async () => {
   const t0 = Date.now(), file = travaux.slice(), res = []; let faits = 0;
@@ -186,14 +219,19 @@ const lancer = ({ e, g }) => new Promise(fin => {
   const bruts = essais.slice(1).map(e => { const L = de(e.id);
     return { essai: e.id, regle: e.regle, nature: e.nature, ...(e.paire ? { paire: e.paire } : {}), fait: e.fait, quand: e.quand, regles: e.regles, temoin_duree_s: r(td, 3), par_graine: Object.fromEntries(L.map(x => [x.g, x.m])),
       erreurs: L.filter(x => !x.m).map(x => ({ graine: x.g, erreur: x.erreur })) }; });
-  // (les paires se lisent contre les essais seuls : il faut le même témoin, au bit près dans ses mesures)
-  const sansDuree = X => JSON.stringify(Object.fromEntries(Object.entries(X).map(([g, m]) => [g, m && { ...m, duree_s: 0 }])));
+  // (les paires se lisent contre les essais seuls : il faut le même témoin, au bit près dans ses mesures — celles qu'ont les essais seuls :
+  //  un rapport d'avant le plan 4 n'a pas les formes)
+  const cles = new Set(Object.keys(Object.values(PAIRES?.temoin?.par_graine || {}).find(Boolean) || {}));
+  const sansDuree = X => JSON.stringify(Object.fromEntries(Object.entries(X).map(([g, m]) => [g, m && Object.fromEntries(Object.entries({ ...m, duree_s: 0 }).filter(([k]) => cles.has(k)))])));
   if (PAIRES && sansDuree(T) !== sansDuree(PAIRES.temoin.par_graine)) { console.error('--paires : le témoin n\'est pas celui des essais seuls (un autre moteur ?) : les paires ne se liraient pas contre eux'); process.exit(2); }
   let L = lire(bruts, T, CYCLES); if (PAIRES) L = interactions(L, simples);
+  // (les jalons : les mesures de chaque tâche en chemin, puis la même lecture à chaque jalon)
+  const parJalon = id => Object.fromEntries(CJ.map(c => [c, Object.fromEntries(de(id).map(x => [x.g, x.jalons?.[c] ?? null]))]));
+  const JR = JAL ? { pas: JAL, cycles: CJ, annee: I0.monde.annee ?? null, temoin: parJalon('temoin'), essais: Object.fromEntries(essais.slice(1).map(e => [e.id, parJalon(e.id)])) } : null;
   const R0 = { ...(PAIRES ? { type: 'paires', simples_de: { fichier: path.relative(racine, path.resolve(arg('--paires'))), date: PAIRES.date ?? null, empreinte: Journal.empreinte(PAIRES) }, simples } : {}), plan: { fichier: path.relative(racine, path.resolve(fPlan)), version: PLAN.version, empreinte: empreintePlan }, date: new Date().toISOString(), moteur: Journal.moteur(racine),
     machine: { processeur: os.cpus()[0]?.model ?? null, coeurs: os.cpus().length, node: process.version }, ...(PART ? { part: PART.join('/') } : {}), ...(CHOIX && !PAIRES ? { regles_choisies: [...CHOIX].sort() } : {}),
     monde: { id: I0.monde.id, cycle: I0.cycle.n, empreinte: Journal.empreinte(I0), regles: Journal.empreinte(Journal.stable(I0.monde.regles ?? {})) },
-    cycles: CYCLES, graines, temoin: L.temoin, essais: L.essais, laisses, duree_min: r((Date.now() - t0) / 60000, 1) };
+    cycles: CYCLES, graines, temoin: L.temoin, essais: L.essais, laisses, ...(JR ? { jalons: { ...JR, lus: lireJalons(JR, bruts) } } : {}), duree_min: r((Date.now() - t0) / 60000, 1) };
   ecrire(R0);
   process.exit(L.essais.some(x => x.erreurs) || Object.values(T).some(m => !m) ? 1 : 0);
 })();

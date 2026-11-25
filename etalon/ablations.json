@@ -1,7 +1,7 @@
 {
   "plan": "Les ablations du moteur (docs/59, 03)",
-  "version": 3,
-  "date": "2026-11-24",
+  "version": 4,
+  "date": "2026-11-25",
   "principes": [
     "Retirer une règle, c'est donner au monde la valeur qui éteint ce qu'elle fait, tout le reste égal : une seule règle à la fois, sur une copie du monde (ses règles, monde.regles : celles du monde passent par-dessus celles d'un cycle), les mêmes graines que le témoin.",
     "Une constante de structure n'a pas de valeur qui l'éteigne (sans ration, plus de chasse) : on l'essaie à deux autres valeurs, et l'on mesure ce que le monde en sent.",
@@ -24,18 +24,22 @@
     "stables": "la part des lignées vivantes au départ qui restent à moins d'un facteur 2 de leur effectif de départ",
     "eteintes": "les lignées animales vivantes au départ et éteintes à la fin",
     "nees": "les lignées nées pendant l'essai (séparations)",
+    "formes": "la variété des formes de chaque lignée : le nombre effectif de ses phénotypes (1 / Σ f², f la part de chacun dans la lignée), en moyenne sur les lignées animales vivantes à la fin",
     "duree_s": "la durée moyenne d'un cycle (ce que la règle coûte)"
   },
   "lecture": {
     "pourquoi": "Une indication, non un verdict : une mesure bouge quand l'écart entre l'ablation et le témoin (en moyenne sur les graines) passe le double de l'écart entre les graines du témoin, un seuil propre à chaque mesure, et, pour les comptes de lignées, le bruit d'événements rares : les naissances et les extinctions de lignées se comptent comme des événements de Poisson, et l'écart entre deux ou trois graines du témoin les sous-estime (deux graines sans naissance ne disent pas qu'il n'en naît jamais).",
-    "seuils": {"lignees": 1, "predateurs": 1, "biomasse_t": 0.02, "shannon": 0.01, "stables": 0.02, "eteintes": 1, "nees": 1},
-    "relatives": ["biomasse_t"],
+    "seuils": {"lignees": 1, "predateurs": 1, "biomasse_t": 0.02, "shannon": 0.01, "stables": 0.02, "eteintes": 1, "nees": 1, "formes": 0.05},
+    "relatives": ["biomasse_t", "formes"],
     "comptes": {"nees": ["nees"], "eteintes": ["eteintes"], "lignees": ["nees", "eteintes"], "predateurs": ["nees", "eteintes"]},
-    "comptes_pourquoi": "Pour chaque compte, les événements dont il dépend : son bruit est 2 √((λ témoin + λ essai) / graines), λ la somme de ces événements en moyenne (au moins 0,5)."
+    "comptes_pourquoi": "Pour chaque compte, les événements dont il dépend : son bruit est 2 √((λ témoin + λ essai) / graines), λ la somme de ces événements en moyenne (au moins 0,5).",
+    "jalons": "Un essai long se lit aussi en chemin : tous les n cycles (outils/ablations.js --jalons n), les mêmes mesures, contre le témoin au même cycle, et la même lecture. Un essai se mesure à sa fin et dit la saison où il finit ; ses jalons disent les autres, et si l'effet d'une règle vient, grandit ou passe. La lecture du rapport reste celle de la fin."
   },
   "essais": {
     "orvane": {"monde": "le monde d'Orvane publié (mondes/orvane/etat.json de la branche publication)", "cycles": 30, "graines": 3},
-    "europe": {"monde": "l'Europe publiée (mondes/europe/etat.json de la branche publication)", "cycles": 365, "graines": 1}
+    "europe": {"monde": "l'Europe publiée (mondes/europe/etat.json de la branche publication)", "cycles": 365, "graines": 1},
+    "orvane_long": {"monde": "le monde des essais seuls d'Orvane (au cycle 65 : etalon/ablations/2026-11-25-orvane.json, son empreinte)", "cycles": 240, "graines": 3, "regles": ["sexe"], "jalons": 30,
+      "pourquoi": "La reproduction sexuée est la règle la plus chère (sans elle, un cycle d'Orvane va 59 % plus vite, un cycle de la mer 91 %), et rien de mesurable ne change sans elle : en trente cycles sur Orvane et sur la mer, en une année sur l'Europe. Son effet est lent (elle mêle les gènes de génération en génération), et il se voit d'abord aux formes des lignées : deux années d'Orvane (deux fois 120 cycles), sur les graines des essais seuls, lues à chaque saison. Les trente premiers cycles refont, au bit près, ceux des essais seuls."}
   },
   "paires": {
     "pourquoi": "Deux règles retirées ensemble : ce qu'elles font ensemble, au-delà de la somme de ce qu'elles font seules (leur interaction). Les paires se choisissent avant d'être essayées, par une règle : les mécanismes dont l'essai seul tient (une mesure bouge) dans le rapport entier du même monde, deux à deux ; sur les mêmes cycles, les mêmes graines et le même témoin.",
@@ -98,6 +102,7 @@
   "historique": [
     {"version": 1, "date": "2026-11-24", "pourquoi": "le premier plan, écrit avant le premier essai (la mer, 30 cycles, 3 graines)"},
     {"version": 2, "date": "2026-11-24", "pourquoi": "après le pilote sur Orvane (10 cycles, 2 graines) : le témoin n'y a vu naître aucune lignée sur ses deux graines, et presque chaque essai en faisait naître une ou deux ; l'écart entre les graines du témoin ne suffit pas à lire un compte d'événements rares. La lecture des comptes de lignées prend aussi le bruit de Poisson de leurs naissances et de leurs extinctions. Les essais, ce qu'on retire, ne changent pas : les rapports d'avant se relisent (outils/ablations.js --fusionner)."},
-    {"version": 3, "date": "2026-11-25", "pourquoi": "les paires : la règle qui les choisit (les mécanismes qui tiennent seuls dans le rapport entier d'un monde, deux à deux) et la lecture de leur interaction, écrites avant le premier essai de paires. Les essais seuls ne changent pas."}
+    {"version": 3, "date": "2026-11-25", "pourquoi": "les paires : la règle qui les choisit (les mécanismes qui tiennent seuls dans le rapport entier d'un monde, deux à deux) et la lecture de leur interaction, écrites avant le premier essai de paires. Les essais seuls ne changent pas."},
+    {"version": 4, "date": "2026-11-25", "pourquoi": "avant l'essai long de la reproduction sexuée (orvane_long) : ce qu'elle fait, elle le fait d'abord aux gènes, et aucune mesure ne les voyait. Une mesure de plus, la variété des formes de chaque lignée (le nombre effectif de ses phénotypes ; son seuil, 5 % de celle du témoin), et la lecture en chemin d'un essai long (ses jalons). Ce qu'on retire ne change pas, ni la lecture des autres mesures : les rapports d'avant se relisent, sans la nouvelle mesure (outils/ablations.js --fusionner), et leurs essais seuls servent encore aux paires."}
   ]
 }

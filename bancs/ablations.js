@@ -6,7 +6,10 @@
 //     deux fois, les mêmes mesures ; en parts (plusieurs machines), puis fusionnées : le même rapport ;
 //  3. les paires (plan, version 3) : choisies par la règle du plan (les mécanismes qui tiennent seuls), ou dites ; une règle qui ne fait que
 //     compter, retirée avec une autre, laisse celle-ci seule (une interaction nulle) ; en parts puis fusionnées, les mêmes paires ; une part
-//     ou un rapport de paires, refusés ; la lecture, sur des nombres dits : elles se tempèrent, se renforcent, n'agissent qu'ensemble.
+//     ou un rapport de paires, refusés ; la lecture, sur des nombres dits : elles se tempèrent, se renforcent, n'agissent qu'ensemble ;
+//  4. les formes et les jalons (plan, version 4) : la variété des formes, celle du monde que rend le moteur ; un essai lu en chemin rend à
+//     chaque jalon ce que rendrait un essai qui s'arrête là, et à sa fin ce que rend le même essai sans jalons ; en parts puis fusionnées,
+//     la même lecture en chemin ; un rapport d'essais seuls d'avant (sans les formes) sert encore aux paires ; des jalons mal dits, refusés.
 //   node bancs/ablations.js
 'use strict';
 const fs = require('fs'), path = require('path'), os = require('os'), { execFileSync } = require('child_process');
@@ -79,6 +82,37 @@ console.log('\n2. L\'outil, sur la mer');
     const LU = JSON.parse(fs.readFileSync(f('lus.json'), 'utf8')), lu = (a, b) => de(LU, a, b).lecture;
     verif(lu('saisons', 'menace') === 'elles se répondent : shannon se tempère' && lu('saisons', 'besoin ×2') === 'elles se répondent : shannon se renforce' && lu('menace', 'besoin ×2') === 'elles se répondent : lignees n\'agit qu\'ensemble',
       'la lecture, sur des nombres dits : contre la somme des seules, elles se tempèrent, se renforcent ; sans effet seules, elles n\'agissent qu\'ensemble');
+    console.log('\n4. Les formes et les jalons (plan, version 4)');
+    // la variété des formes du témoin : celle des lignées du monde que rend le moteur (le nombre effectif de leurs phénotypes, 1 / Σ f²)
+    const fo = V.map(t => { const s = t.phenotypes.reduce((a, p) => a + (p.frequence || 0) ** 2, 0); return s > 0 ? 1 / s : 1; }), formes = +(fo.reduce((a, x) => a + x, 0) / fo.length).toFixed(4);
+    verif(T0.formes === formes && A.essais.every(x => x.mesures.formes != null) && E('menace').ecarts.formes === 0,
+      `la variété des formes : celle du monde que rend le moteur (${formes.toLocaleString('fr-FR', { maximumFractionDigits: 2 })} phénotypes effectifs par lignée), pour chaque essai ; une règle comptable n'y change rien`);
+    const run = (n, ...plus) => { execFileSync(process.execPath, [racine('outils/ablations.js'), racine('mondes/marin/amorce.json'), '--graines', '2', '--regles', 'saisons,menace', '--jobs', '4', '--sortie', f(n + '.json'), '--notes', f(n + '.md'), ...plus], { stdio: 'ignore' });
+      return JSON.parse(fs.readFileSync(f(n + '.json'), 'utf8')); };
+    const sd = m => m && JSON.stringify({ ...m, duree_s: 0 }), memes = (X, Y) => Object.keys(Y).length > 0 && Object.keys(Y).every(g => sd(X?.[g]) === sd(Y[g]));
+    const J1 = run('j1', '--cycles', '3', '--jalons', '1'), C2 = run('c2', '--cycles', '2'), fin = A.essais.filter(x => ['saisons', 'menace'].includes(x.essai));
+    verif(JSON.stringify(J1.jalons?.cycles) === '[1,2]' && memes(J1.jalons.temoin[2], C2.temoin.par_graine) && C2.essais.every(x => memes(J1.jalons.essais[x.essai][2], x.par_graine))
+      && memes(J1.temoin.par_graine, A.temoin.par_graine) && fin.length === 2 && fin.every(x => memes(J1.essais.find(y => y.essai === x.essai)?.par_graine, x.par_graine)),
+      'un essai lu à chaque cycle : au cycle 2, ce que rend un essai de deux cycles, au bit près ; à sa fin, ce que rend le même essai sans jalons');
+    const sJ = C2.essais.find(x => x.essai === 'saisons');
+    verif(J1.jalons.lus[2].essais.saisons.ecarts.biomasse_t === sJ.ecarts.biomasse_t && JSON.stringify(J1.jalons.lus[2].essais.saisons.bouge) === JSON.stringify(sJ.bouge) && /### En chemin, à chaque cycle/.test(fs.readFileSync(f('j1.md'), 'utf8')),
+      `sa lecture en chemin, celle de l'essai de deux cycles (sans les saisons, au cycle 2 : ${sJ.bouge.join(', ') || 'rien'}) ; ses notes, un tableau du témoin et des écarts au fil des cycles`);
+    for (const k of [1, 2]) run(`jp${k}`, '--cycles', '3', '--jalons', '1', '--part', `${k}/2`);
+    execFileSync(process.execPath, [racine('outils/ablations.js'), '--fusionner', f('jp1.json'), f('jp2.json'), '--sortie', f('jpf.json')], { stdio: 'ignore' });
+    const JF = JSON.parse(fs.readFileSync(f('jpf.json'), 'utf8')), sl = R => JSON.stringify(R.jalons?.lus ?? null, (k, v) => k === 'duree_s' ? undefined : v);
+    verif(JF.jalons && JF.parts === 2 && sl(JF) === sl(J1), 'en deux parts, puis fusionnées : la même lecture en chemin');
+    // un rapport d'essais seuls d'avant le plan 4 (sans les formes) sert encore aux paires : le témoin s'y compare sur les mesures qu'il a
+    const vieux = JSON.parse(fs.readFileSync(f('a.json'), 'utf8')), sansF = m => { if (!m) return m; const { formes: _, ...x } = m; return x; };
+    for (const g in vieux.temoin.par_graine) vieux.temoin.par_graine[g] = sansF(vieux.temoin.par_graine[g]);
+    for (const x of vieux.essais) { for (const g in x.par_graine) x.par_graine[g] = sansF(x.par_graine[g]); x.ecarts = sansF(x.ecarts); x.mesures = sansF(x.mesures); }
+    vieux.temoin.moyenne = sansF(vieux.temoin.moyenne); vieux.temoin.ecart = sansF(vieux.temoin.ecart); fs.writeFileSync(f('vieux.json'), JSON.stringify(vieux));
+    execFileSync(process.execPath, [racine('outils/ablations.js'), racine('mondes/marin/amorce.json'), '--paires', f('vieux.json'), '--paires-de', 'saisons,besoin ×2', '--jobs', '4', '--sortie', f('pv.json')], { stdio: 'ignore' });
+    const PV = JSON.parse(fs.readFileSync(f('pv.json'), 'utf8'));
+    verif(PV.type === 'paires' && PV.essais.length === 1 && !('formes' in PV.essais[0].interaction) && 'lignees' in PV.essais[0].interaction,
+      'un rapport d\'essais seuls d\'avant le plan 4, sans les formes, sert encore aux paires (le témoin s\'y compare sur les mesures qu\'il a)');
+    const code = (...x) => { try { execFileSync(process.execPath, [racine('outils/ablations.js'), racine('mondes/marin/amorce.json'), ...x], { stdio: 'ignore' }); return 0; } catch (e) { return e.status; } };
+    verif(code('--paires', f('a.json'), '--jalons', '1', '--sortie', f('rj.json')) === 2 && code('--cycles', '3', '--jalons', '0', '--sortie', f('rj.json')) === 2 && !fs.existsSync(f('rj.json')),
+      'des jalons pour des paires, ou tous les zéro cycles : refusés');
   } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
 }
 
