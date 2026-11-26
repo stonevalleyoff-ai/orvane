@@ -1,0 +1,1299 @@
+{
+ "plan": {
+  "fichier": "etalon/ablations.json",
+  "version": 7,
+  "empreinte": "24cc70e2d0576f03c9a1638ced382b59159485f6086ce600c50ba3e6d9fc2999"
+ },
+ "date": "2026-11-26T17:59:26.764Z",
+ "moteur": {
+  "commit": "b58a521433c2bb103ac727417e9e2a047f028a26",
+  "modifie": false,
+  "code": "e932dcf7c2e93af7a8a9d919b94f99ad03f8ee9b7bb8ca6ae58c184741750df0"
+ },
+ "machine": {
+  "processeur": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "coeurs": 4,
+  "node": "v22.23.5",
+  "memoire_tache_mo": 6000
+ },
+ "regles_choisies": [
+  "dispersion"
+ ],
+ "monde": {
+  "id": "europe",
+  "cycle": 2,
+  "empreinte": "d766e564df8fa0b59a3d09d21375c82b42f24a3f3daefbbd9bb64b21e019829b",
+  "regles": "d1edcb68ca92acaaf7b7f09c108ea04b4a8234e7eaa3389c12f28b154cbb47aa"
+ },
+ "cycles": 730,
+ "graines": [
+  1,
+  2,
+  3
+ ],
+ "temoin": {
+  "par_graine": {
+   "1": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 267760506.078,
+    "shannon": 1.2935,
+    "stables": 0.8955,
+    "eteintes": 0,
+    "nees": 0,
+    "formes": 1,
+    "duree_s": 4.93
+   },
+   "2": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 267484121.148,
+    "shannon": 1.294,
+    "stables": 0.8955,
+    "eteintes": 0,
+    "nees": 0,
+    "formes": 1,
+    "duree_s": 4.87
+   },
+   "3": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 267657089.612,
+    "shannon": 1.2922,
+    "stables": 0.8955,
+    "eteintes": 0,
+    "nees": 0,
+    "formes": 1,
+    "duree_s": 4.79
+   }
+  },
+  "moyenne": {
+   "lignees": 201,
+   "predateurs": 87,
+   "biomasse_t": 267633905.6127,
+   "shannon": 1.2932,
+   "stables": 0.8955,
+   "eteintes": 0,
+   "nees": 0,
+   "formes": 1,
+   "duree_s": 4.8633
+  },
+  "ecart": {
+   "lignees": 0,
+   "predateurs": 0,
+   "biomasse_t": 276384.93,
+   "shannon": 0.0018,
+   "stables": 0,
+   "eteintes": 0,
+   "nees": 0,
+   "formes": 0,
+   "duree_s": 0.14
+  }
+ },
+ "essais": [
+  {
+   "essai": "dispersion",
+   "regle": "dispersion",
+   "nature": "mecanisme",
+   "fait": "une part de chaque population gagne les parcelles voisines du même biome",
+   "quand": "chaque cycle, dans un monde à parcelles",
+   "regles": {
+    "dispersion": 0
+   },
+   "temoin_duree_s": 4.863,
+   "mesures": {
+    "lignees": 201,
+    "predateurs": 87,
+    "biomasse_t": 267700586.9423,
+    "shannon": 1.2851,
+    "stables": 0.8955,
+    "eteintes": 0,
+    "nees": 0,
+    "formes": 1,
+    "duree_s": 3.7433
+   },
+   "ecarts": {
+    "lignees": 0,
+    "predateurs": 0,
+    "biomasse_t": 66681.3296,
+    "shannon": -0.0081,
+    "stables": 0,
+    "eteintes": 0,
+    "nees": 0,
+    "formes": 0,
+    "duree_s": -1.12
+   },
+   "bouge": [],
+   "cout": 0.23,
+   "cout_lu": 0.23,
+   "par_graine": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 267800897.221,
+     "shannon": 1.2841,
+     "stables": 0.8955,
+     "eteintes": 0,
+     "nees": 0,
+     "formes": 1,
+     "duree_s": 3.78
+    },
+    "2": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 267577462.738,
+     "shannon": 1.2874,
+     "stables": 0.8955,
+     "eteintes": 0,
+     "nees": 0,
+     "formes": 1,
+     "duree_s": 3.74
+    },
+    "3": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 267723400.868,
+     "shannon": 1.2839,
+     "stables": 0.8955,
+     "eteintes": 0,
+     "nees": 0,
+     "formes": 1,
+     "duree_s": 3.71
+    }
+   },
+   "lecture": "rien de mesurable en 730 cycles (chaque cycle, dans un monde à parcelles)"
+  }
+ ],
+ "laisses": [],
+ "jalons": {
+  "pas": 73,
+  "cycles": [
+   73,
+   146,
+   219,
+   292,
+   365,
+   438,
+   511,
+   584,
+   657
+  ],
+  "annee": 365,
+  "temoin": {
+   "73": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 242340679.983,
+     "shannon": 1.3363,
+     "stables": 0.9751,
+     "eteintes": 0,
+     "nees": 0,
+     "formes": 1,
+     "duree_s": 4.68
+    },
+    "2": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 242315834.582,
+     "shannon": 1.3402,
+     "stables": 0.9751,
+     "eteintes": 0,
+     "nees": 0,
+     "formes": 1,
+     "duree_s": 4.54
+    },
+    "3": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 242345681.61,
+     "shannon": 1.3368,
+     "stables": 0.9751,
+     "eteintes": 0,
+     "nees": 0,
+     "formes": 1,
+     "duree_s": 4.69
+    }
+   },
+   "146": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 220674690.418,
+     "shannon": 1.3066,
+     "stables": 0.9602,
+     "eteintes": 0,
+     "nees": 0,
+     "formes": 1,
+     "duree_s": 4.61
+    },
+    "2": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 220648721.99,
+     "shannon": 1.3088,
+     "stables": 0.9602,
+     "eteintes": 0,
+     "nees": 0,
+     "formes": 1,
+     "duree_s": 4.68
+    },
+    "3": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 220732731.508,
+     "shannon": 1.3074,
+     "stables": 0.9602,
+     "eteintes": 0,
+     "nees": 0,
+     "formes": 1,
+     "duree_s": 4.65
+    }
+   },
+   "219": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 293298142.086,
+     "shannon": 1.4455,
+     "stables": 0.9502,
+     "eteintes": 0,
+     "nees": 0,
+     "formes": 1,
+     "duree_s": 4.62
+    },
+    "2": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 293258393.401,
+     "shannon": 1.4395,
+     "stables": 0.9502,
+     "eteintes": 0,
+     "nees": 0,
+     "formes": 1,
+     "duree_s": 4.73
+    },
+    "3": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 293334219.2,
+     "shannon": 1.4461,
+     "stables": 0.9502,
+     "eteintes": 0,
+     "nees": 0,
+     "formes": 1,
+     "duree_s": 4.64
+    }
+   },
+   "292": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 299279366.082,
+     "shannon": 1.3781,
+     "stables": 0.9453,
+     "eteintes": 0,
+     "nees": 0,
+     "formes": 1,
+     "duree_s": 4.63
+    },
+    "2": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 299205477.348,
+     "shannon": 1.3748,
+     "stables": 0.9453,
+     "eteintes": 0,
+     "nees": 0,
+     "formes": 1,
+     "duree_s": 4.7
+    },
+    "3": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 299498927.662,
+     "shannon": 1.3798,
+     "stables": 0.9453,
+     "eteintes": 0,
+     "nees": 0,
+     "formes": 1,
+     "duree_s": 4.66
+    }
+   },
+   "365": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 260168290.129,
+     "shannon": 1.3184,
+     "stables": 0.9751,
+     "eteintes": 0,
+     "nees": 0,
+     "formes": 1,
+     "duree_s": 4.74
+    },
+    "2": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 260094834.212,
+     "shannon": 1.3131,
+     "stables": 0.9751,
+     "eteintes": 0,
+     "nees": 0,
+     "formes": 1,
+     "duree_s": 4.83
+    },
+    "3": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 260332204.898,
+     "shannon": 1.3192,
+     "stables": 0.9751,
+     "eteintes": 0,
+     "nees": 0,
+     "formes": 1,
+     "duree_s": 4.68
+    }
+   },
+   "438": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 241739211.904,
+     "shannon": 1.2952,
+     "stables": 0.9502,
+     "eteintes": 0,
+     "nees": 0,
+     "formes": 1,
+     "duree_s": 4.76
+    },
+    "2": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 241668189.392,
+     "shannon": 1.289,
+     "stables": 0.9502,
+     "eteintes": 0,
+     "nees": 0,
+     "formes": 1,
+     "duree_s": 4.87
+    },
+    "3": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 241879916.858,
+     "shannon": 1.2959,
+     "stables": 0.9502,
+     "eteintes": 0,
+     "nees": 0,
+     "formes": 1,
+     "duree_s": 4.73
+    }
+   },
+   "511": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 221824452.04,
+     "shannon": 1.2727,
+     "stables": 0.9005,
+     "eteintes": 0,
+     "nees": 0,
+     "formes": 1,
+     "duree_s": 4.79
+    },
+    "2": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 221801777.752,
+     "shannon": 1.2672,
+     "stables": 0.9005,
+     "eteintes": 0,
+     "nees": 0,
+     "formes": 1,
+     "duree_s": 4.89
+    },
+    "3": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 221988738.827,
+     "shannon": 1.2719,
+     "stables": 0.9005,
+     "eteintes": 0,
+     "nees": 0,
+     "formes": 1,
+     "duree_s": 4.77
+    }
+   },
+   "584": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 300360201.87,
+     "shannon": 1.4164,
+     "stables": 0.8856,
+     "eteintes": 0,
+     "nees": 0,
+     "formes": 1,
+     "duree_s": 4.83
+    },
+    "2": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 299793219.667,
+     "shannon": 1.4112,
+     "stables": 0.8905,
+     "eteintes": 0,
+     "nees": 0,
+     "formes": 1,
+     "duree_s": 4.86
+    },
+    "3": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 299972631.939,
+     "shannon": 1.4146,
+     "stables": 0.8856,
+     "eteintes": 0,
+     "nees": 0,
+     "formes": 1,
+     "duree_s": 4.74
+    }
+   },
+   "657": {
+    "1": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 308556882.652,
+     "shannon": 1.3528,
+     "stables": 0.8657,
+     "eteintes": 0,
+     "nees": 0,
+     "formes": 1,
+     "duree_s": 4.88
+    },
+    "2": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 308044139.754,
+     "shannon": 1.3499,
+     "stables": 0.8657,
+     "eteintes": 0,
+     "nees": 0,
+     "formes": 1,
+     "duree_s": 4.84
+    },
+    "3": {
+     "lignees": 201,
+     "predateurs": 87,
+     "biomasse_t": 308325860.058,
+     "shannon": 1.3521,
+     "stables": 0.8657,
+     "eteintes": 0,
+     "nees": 0,
+     "formes": 1,
+     "duree_s": 4.76
+    }
+   }
+  },
+  "essais": {
+   "dispersion": {
+    "73": {
+     "1": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 242341056.035,
+      "shannon": 1.3374,
+      "stables": 0.9751,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 3.77
+     },
+     "2": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 242316425.365,
+      "shannon": 1.3393,
+      "stables": 0.9751,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 3.48
+     },
+     "3": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 242346133.728,
+      "shannon": 1.3377,
+      "stables": 0.9751,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 3.84
+     }
+    },
+    "146": {
+     "1": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 220675926.275,
+      "shannon": 1.3063,
+      "stables": 0.9602,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 3.72
+     },
+     "2": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 220651490.126,
+      "shannon": 1.3066,
+      "stables": 0.9602,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 3.66
+     },
+     "3": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 220733489.766,
+      "shannon": 1.3067,
+      "stables": 0.9602,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 3.76
+     }
+    },
+    "219": {
+     "1": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 293195376.457,
+      "shannon": 1.4441,
+      "stables": 0.9502,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 3.69
+     },
+     "2": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 293249218.263,
+      "shannon": 1.442,
+      "stables": 0.9502,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 3.67
+     },
+     "3": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 293108923.291,
+      "shannon": 1.4442,
+      "stables": 0.9502,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 3.71
+     }
+    },
+    "292": {
+     "1": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 299258761.173,
+      "shannon": 1.3752,
+      "stables": 0.9453,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 3.68
+     },
+     "2": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 299216068.62,
+      "shannon": 1.3754,
+      "stables": 0.9453,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 3.68
+     },
+     "3": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 299466105.661,
+      "shannon": 1.3769,
+      "stables": 0.9453,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 3.69
+     }
+    },
+    "365": {
+     "1": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 260183668.247,
+      "shannon": 1.3139,
+      "stables": 0.9751,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 3.74
+     },
+     "2": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 260138901.946,
+      "shannon": 1.3142,
+      "stables": 0.9751,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 3.7
+     },
+     "3": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 260350765.424,
+      "shannon": 1.3134,
+      "stables": 0.9751,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 3.72
+     }
+    },
+    "438": {
+     "1": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 241759678.529,
+      "shannon": 1.291,
+      "stables": 0.9502,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 3.76
+     },
+     "2": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 241719055.216,
+      "shannon": 1.2878,
+      "stables": 0.9502,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 3.73
+     },
+     "3": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 241905763.837,
+      "shannon": 1.2887,
+      "stables": 0.9502,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 3.73
+     }
+    },
+    "511": {
+     "1": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 221845963.153,
+      "shannon": 1.2672,
+      "stables": 0.9005,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 3.78
+     },
+     "2": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 221854011.221,
+      "shannon": 1.2657,
+      "stables": 0.9005,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 3.74
+     },
+     "3": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 222017661.237,
+      "shannon": 1.2648,
+      "stables": 0.9005,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 3.73
+     }
+    },
+    "584": {
+     "1": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 299764863.971,
+      "shannon": 1.4067,
+      "stables": 0.8856,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 3.79
+     },
+     "2": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 299646598.526,
+      "shannon": 1.4073,
+      "stables": 0.8856,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 3.73
+     },
+     "3": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 299503834.625,
+      "shannon": 1.4035,
+      "stables": 0.8856,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 3.7
+     }
+    },
+    "657": {
+     "1": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 308396947.238,
+      "shannon": 1.3448,
+      "stables": 0.8657,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 3.77
+     },
+     "2": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 308050888.591,
+      "shannon": 1.3468,
+      "stables": 0.8657,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 3.71
+     },
+     "3": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 308255811.64,
+      "shannon": 1.343,
+      "stables": 0.8657,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 3.68
+     }
+    }
+   }
+  },
+  "lus": {
+   "73": {
+    "temoin": {
+     "moyenne": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 242334065.3917,
+      "shannon": 1.3378,
+      "stables": 0.9751,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 4.6367
+     },
+     "ecart": {
+      "lignees": 0,
+      "predateurs": 0,
+      "biomasse_t": 29847.028,
+      "shannon": 0.0039,
+      "stables": 0,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 0,
+      "duree_s": 0.15
+     }
+    },
+    "essais": {
+     "dispersion": {
+      "mesures": {
+       "lignees": 201,
+       "predateurs": 87,
+       "biomasse_t": 242334538.376,
+       "shannon": 1.3381,
+       "stables": 0.9751,
+       "eteintes": 0,
+       "nees": 0,
+       "formes": 1,
+       "duree_s": 3.6967
+      },
+      "ecarts": {
+       "lignees": 0,
+       "predateurs": 0,
+       "biomasse_t": 472.9843,
+       "shannon": 0.0003,
+       "stables": 0,
+       "eteintes": 0,
+       "nees": 0,
+       "formes": 0,
+       "duree_s": -0.94
+      },
+      "bouge": []
+     }
+    }
+   },
+   "146": {
+    "temoin": {
+     "moyenne": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 220685381.3053,
+      "shannon": 1.3076,
+      "stables": 0.9602,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 4.6467
+     },
+     "ecart": {
+      "lignees": 0,
+      "predateurs": 0,
+      "biomasse_t": 84009.518,
+      "shannon": 0.0022,
+      "stables": 0,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 0,
+      "duree_s": 0.07
+     }
+    },
+    "essais": {
+     "dispersion": {
+      "mesures": {
+       "lignees": 201,
+       "predateurs": 87,
+       "biomasse_t": 220686968.7223,
+       "shannon": 1.3065,
+       "stables": 0.9602,
+       "eteintes": 0,
+       "nees": 0,
+       "formes": 1,
+       "duree_s": 3.7133
+      },
+      "ecarts": {
+       "lignees": 0,
+       "predateurs": 0,
+       "biomasse_t": 1587.417,
+       "shannon": -0.0011,
+       "stables": 0,
+       "eteintes": 0,
+       "nees": 0,
+       "formes": 0,
+       "duree_s": -0.9334
+      },
+      "bouge": []
+     }
+    }
+   },
+   "219": {
+    "temoin": {
+     "moyenne": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 293296918.229,
+      "shannon": 1.4437,
+      "stables": 0.9502,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 4.6633
+     },
+     "ecart": {
+      "lignees": 0,
+      "predateurs": 0,
+      "biomasse_t": 75825.799,
+      "shannon": 0.0066,
+      "stables": 0,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 0,
+      "duree_s": 0.11
+     }
+    },
+    "essais": {
+     "dispersion": {
+      "mesures": {
+       "lignees": 201,
+       "predateurs": 87,
+       "biomasse_t": 293184506.0037,
+       "shannon": 1.4434,
+       "stables": 0.9502,
+       "eteintes": 0,
+       "nees": 0,
+       "formes": 1,
+       "duree_s": 3.69
+      },
+      "ecarts": {
+       "lignees": 0,
+       "predateurs": 0,
+       "biomasse_t": -112412.2253,
+       "shannon": -0.0003,
+       "stables": 0,
+       "eteintes": 0,
+       "nees": 0,
+       "formes": 0,
+       "duree_s": -0.9733
+      },
+      "bouge": []
+     }
+    }
+   },
+   "292": {
+    "temoin": {
+     "moyenne": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 299327923.6973,
+      "shannon": 1.3776,
+      "stables": 0.9453,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 4.6633
+     },
+     "ecart": {
+      "lignees": 0,
+      "predateurs": 0,
+      "biomasse_t": 293450.314,
+      "shannon": 0.005,
+      "stables": 0,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 0,
+      "duree_s": 0.07
+     }
+    },
+    "essais": {
+     "dispersion": {
+      "mesures": {
+       "lignees": 201,
+       "predateurs": 87,
+       "biomasse_t": 299313645.1513,
+       "shannon": 1.3758,
+       "stables": 0.9453,
+       "eteintes": 0,
+       "nees": 0,
+       "formes": 1,
+       "duree_s": 3.6833
+      },
+      "ecarts": {
+       "lignees": 0,
+       "predateurs": 0,
+       "biomasse_t": -14278.546,
+       "shannon": -0.0018,
+       "stables": 0,
+       "eteintes": 0,
+       "nees": 0,
+       "formes": 0,
+       "duree_s": -0.98
+      },
+      "bouge": []
+     }
+    }
+   },
+   "365": {
+    "temoin": {
+     "moyenne": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 260198443.0797,
+      "shannon": 1.3169,
+      "stables": 0.9751,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 4.75
+     },
+     "ecart": {
+      "lignees": 0,
+      "predateurs": 0,
+      "biomasse_t": 237370.686,
+      "shannon": 0.0061,
+      "stables": 0,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 0,
+      "duree_s": 0.15
+     }
+    },
+    "essais": {
+     "dispersion": {
+      "mesures": {
+       "lignees": 201,
+       "predateurs": 87,
+       "biomasse_t": 260224445.2057,
+       "shannon": 1.3138,
+       "stables": 0.9751,
+       "eteintes": 0,
+       "nees": 0,
+       "formes": 1,
+       "duree_s": 3.72
+      },
+      "ecarts": {
+       "lignees": 0,
+       "predateurs": 0,
+       "biomasse_t": 26002.126,
+       "shannon": -0.0031,
+       "stables": 0,
+       "eteintes": 0,
+       "nees": 0,
+       "formes": 0,
+       "duree_s": -1.03
+      },
+      "bouge": []
+     }
+    }
+   },
+   "438": {
+    "temoin": {
+     "moyenne": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 241762439.3847,
+      "shannon": 1.2934,
+      "stables": 0.9502,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 4.7867
+     },
+     "ecart": {
+      "lignees": 0,
+      "predateurs": 0,
+      "biomasse_t": 211727.466,
+      "shannon": 0.0069,
+      "stables": 0,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 0,
+      "duree_s": 0.14
+     }
+    },
+    "essais": {
+     "dispersion": {
+      "mesures": {
+       "lignees": 201,
+       "predateurs": 87,
+       "biomasse_t": 241794832.5273,
+       "shannon": 1.2892,
+       "stables": 0.9502,
+       "eteintes": 0,
+       "nees": 0,
+       "formes": 1,
+       "duree_s": 3.74
+      },
+      "ecarts": {
+       "lignees": 0,
+       "predateurs": 0,
+       "biomasse_t": 32393.1426,
+       "shannon": -0.0042,
+       "stables": 0,
+       "eteintes": 0,
+       "nees": 0,
+       "formes": 0,
+       "duree_s": -1.0467
+      },
+      "bouge": []
+     }
+    }
+   },
+   "511": {
+    "temoin": {
+     "moyenne": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 221871656.2063,
+      "shannon": 1.2706,
+      "stables": 0.9005,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 4.8167
+     },
+     "ecart": {
+      "lignees": 0,
+      "predateurs": 0,
+      "biomasse_t": 186961.075,
+      "shannon": 0.0055,
+      "stables": 0,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 0,
+      "duree_s": 0.12
+     }
+    },
+    "essais": {
+     "dispersion": {
+      "mesures": {
+       "lignees": 201,
+       "predateurs": 87,
+       "biomasse_t": 221905878.537,
+       "shannon": 1.2659,
+       "stables": 0.9005,
+       "eteintes": 0,
+       "nees": 0,
+       "formes": 1,
+       "duree_s": 3.75
+      },
+      "ecarts": {
+       "lignees": 0,
+       "predateurs": 0,
+       "biomasse_t": 34222.3307,
+       "shannon": -0.0047,
+       "stables": 0,
+       "eteintes": 0,
+       "nees": 0,
+       "formes": 0,
+       "duree_s": -1.0667
+      },
+      "bouge": []
+     }
+    }
+   },
+   "584": {
+    "temoin": {
+     "moyenne": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 300042017.8253,
+      "shannon": 1.4141,
+      "stables": 0.8872,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 4.81
+     },
+     "ecart": {
+      "lignees": 0,
+      "predateurs": 0,
+      "biomasse_t": 566982.203,
+      "shannon": 0.0052,
+      "stables": 0.0049,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 0,
+      "duree_s": 0.12
+     }
+    },
+    "essais": {
+     "dispersion": {
+      "mesures": {
+       "lignees": 201,
+       "predateurs": 87,
+       "biomasse_t": 299638432.374,
+       "shannon": 1.4058,
+       "stables": 0.8856,
+       "eteintes": 0,
+       "nees": 0,
+       "formes": 1,
+       "duree_s": 3.74
+      },
+      "ecarts": {
+       "lignees": 0,
+       "predateurs": 0,
+       "biomasse_t": -403585.4513,
+       "shannon": -0.0083,
+       "stables": -0.0016,
+       "eteintes": 0,
+       "nees": 0,
+       "formes": 0,
+       "duree_s": -1.07
+      },
+      "bouge": []
+     }
+    }
+   },
+   "657": {
+    "temoin": {
+     "moyenne": {
+      "lignees": 201,
+      "predateurs": 87,
+      "biomasse_t": 308308960.8213,
+      "shannon": 1.3516,
+      "stables": 0.8657,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 1,
+      "duree_s": 4.8267
+     },
+     "ecart": {
+      "lignees": 0,
+      "predateurs": 0,
+      "biomasse_t": 512742.898,
+      "shannon": 0.0029,
+      "stables": 0,
+      "eteintes": 0,
+      "nees": 0,
+      "formes": 0,
+      "duree_s": 0.12
+     }
+    },
+    "essais": {
+     "dispersion": {
+      "mesures": {
+       "lignees": 201,
+       "predateurs": 87,
+       "biomasse_t": 308234549.1563,
+       "shannon": 1.3449,
+       "stables": 0.8657,
+       "eteintes": 0,
+       "nees": 0,
+       "formes": 1,
+       "duree_s": 3.72
+      },
+      "ecarts": {
+       "lignees": 0,
+       "predateurs": 0,
+       "biomasse_t": -74411.665,
+       "shannon": -0.0067,
+       "stables": 0,
+       "eteintes": 0,
+       "nees": 0,
+       "formes": 0,
+       "duree_s": -1.1067
+      },
+      "bouge": []
+     }
+    }
+   }
+  }
+ },
+ "duree_min": 314.1
+}
