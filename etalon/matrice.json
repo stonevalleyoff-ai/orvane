@@ -183,9 +183,9 @@
       "pourquoi": "Elle agit sans rien faire bouger (sur la mer, Orvane et l'Europe), et semble coûter 15 % d'un cycle de l'Europe, en partie par sa place dans la file : un essai long, avec une mesure de ce qu'elle change aux traits (la taille, la vitesse, l'audace, la sociabilité)."
     },
     "hybride": {
-      "decision": "investiguer",
+      "decision": "conserver",
       "date": "2026-11-26",
-      "pourquoi": "Elle agit sans rien faire bouger (sur la mer et Orvane), et semble coûter 25 % d'un cycle de la mer, en partie par sa place dans la file : un essai long."
+      "pourquoi": "Elle agit sans rien faire bouger, et ne coûte rien qu'on mesure : en deux années de la mer, rien ne bouge, et un cycle ne va pas plus vite sans elle quand les tâches tournent une à la fois (etalon/ablations/2026-11-26-marin-hybride-long) ; les 25 % des essais seuls venaient de la place de ses tâches dans la file. Sur la mer, les hybrides sont rares ; sur Orvane, où ils sont bien plus nombreux, rien ne bouge non plus en trente cycles. On la garde."
     },
     "mefiance": {
       "decision": "conserver",
