@@ -53,9 +53,9 @@
       "pourquoi": "Elle ne fait que publier : la retirer ne change rien aux bêtes, au chiffre près, sur la mer, Orvane et l'Europe, comme attendu."
     },
     "max_phenotypes": {
-      "decision": "investiguer",
+      "decision": "conserver",
       "date": "2026-11-26",
-      "pourquoi": "À 10 phénotypes au plus (20 aujourd'hui), un cycle va 14 % plus vite sur Orvane et 19 % sur la mer, sans rien faire bouger en trente cycles ; à 40, rien ne bouge non plus. Mais la variété des formes compte, et se voit au-delà de trente cycles (l'essai long de la reproduction sexuée) : un essai long à 10, avec la mesure des formes."
+      "pourquoi": "Elle fait quelque chose : à 10 phénotypes au plus au lieu de 20, la variété des formes de chaque lignée baisse de 16 % en deux années d'Orvane, dès le premier été, sur les trois graines et à chaque saison (etalon/ablations/2026-11-26-orvane-phenotypes-long) ; ce qu'un cycle y gagne (14 % en trente cycles) ne tient pas sûrement sur deux années. On la garde à 20."
     },
     "max_taxons": {
       "decision": "conserver",
