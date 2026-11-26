@@ -1,11 +1,256 @@
 {
-  "matrice": "Ce que l'auteur décide de chaque règle du moteur, après les ablations (docs/59, 03) : la conserver, la modifier, la supprimer ou l'investiguer, avec la date et la raison. Une règle qui n'est pas ici n'a pas encore sa décision ; tant que la matrice n'est pas faite, le moratoire tient.",
+  "matrice": "Ce que l'auteur décide de chaque règle du moteur, après les ablations (docs/59, 03) : la conserver, la modifier, la supprimer ou l'investiguer, avec la date et la raison. Une règle à investiguer attend un essai de plus, et sa décision vient après ; le moratoire tient jusque-là.",
   "decisions": ["conserver", "modifier", "supprimer", "investiguer"],
   "regles": {
+    "mutation": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle n'agit pas dans les mondes essayés : sans elle, l'essai rend les mesures du témoin au chiffre près, sur chaque graine (la mer, Orvane et l'Europe). Elle sert dans un monde clonal (sans reproduction sexuée), où elle seule fait passer des naissances d'une forme à une autre, et ne coûte rien qu'on mesure : on ne la juge pas là où elle n'agit pas."
+    },
+    "nouveau_trait": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle agit (sans elle, les mesures s'écartent de celles du témoin) sans rien faire bouger au-delà du bruit, sur la mer et Orvane, et ne coûte rien qu'on mesure : rien ne demande de la retirer."
+    },
+    "migration": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle tient : sans elle, la diversité bouge sur Orvane (etalon/ablations/2026-11-25-orvane)."
+    },
+    "seuil_surpeuple": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle compte : à 0,7, les lignées vivantes, la diversité et les lignées nées bougent sur la mer ; à 0,7, la diversité et la part des lignées stables bougent sur Orvane. On garde sa valeur : une constante ne se change que d'après une mesure indépendante, jamais pour retrouver une cible (docs/59)."
+    },
+    "separation": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle tient : sans elle, les lignées vivantes et les lignées nées bougent sur Orvane (etalon/ablations/2026-11-25-orvane)."
+    },
+    "memoire_eteint": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle ne fait que publier : la retirer ne change rien aux bêtes, au chiffre près, sur la mer, Orvane et l'Europe, comme attendu."
+    },
+    "regain_habitat": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle agit (sans elle, les mesures s'écartent de celles du témoin) sans rien faire bouger au-delà du bruit, sur la mer, Orvane et l'Europe, et ne coûte rien qu'on mesure : rien ne demande de la retirer."
+    },
+    "effondrement": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle ne fait que publier : la retirer ne change rien aux bêtes, au chiffre près, sur la mer, Orvane et l'Europe, comme attendu."
+    },
+    "explosion": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle ne fait que publier : la retirer ne change rien aux bêtes, au chiffre près, sur la mer, Orvane et l'Europe, comme attendu."
+    },
+    "menace": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle ne fait que publier : la retirer ne change rien aux bêtes, au chiffre près, sur la mer, Orvane et l'Europe, comme attendu."
+    },
+    "max_phenotypes": {
+      "decision": "investiguer",
+      "date": "2026-11-26",
+      "pourquoi": "À 10 phénotypes au plus (20 aujourd'hui), un cycle va 14 % plus vite sur Orvane et 19 % sur la mer, sans rien faire bouger en trente cycles ; à 40, rien ne bouge non plus. Mais la variété des formes compte, et se voit au-delà de trente cycles (l'essai long de la reproduction sexuée) : un essai long à 10, avec la mesure des formes."
+    },
+    "max_taxons": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle ne sert qu'à la genèse : rien à retirer dans un monde hébergé."
+    },
+    "besoin": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle compte : à la moitié de sa valeur, la diversité et la part des lignées stables bougent sur Orvane ; au double de sa valeur, la part des lignées stables bouge sur Orvane ; à la moitié de sa valeur, la biomasse bouge sur l'Europe ; au double de sa valeur, la biomasse bouge sur l'Europe. On garde sa valeur : une constante ne se change que d'après une mesure indépendante, jamais pour retrouver une cible (docs/59)."
+    },
+    "conversion": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle compte : à la moitié de sa valeur, la diversité et la part des lignées stables bougent sur Orvane ; au double de sa valeur, la biomasse, la diversité et la part des lignées stables bougent sur Orvane. On garde sa valeur : une constante ne se change que d'après une mesure indépendante, jamais pour retrouver une cible (docs/59)."
+    },
+    "demi_satiete": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle compte : à la moitié de sa valeur, la part des lignées stables bouge sur Orvane ; au double de sa valeur, la part des lignées stables bouge sur Orvane ; à la moitié de sa valeur, la biomasse bouge sur l'Europe ; au double de sa valeur, la biomasse bouge sur l'Europe. On garde sa valeur : une constante ne se change que d'après une mesure indépendante, jamais pour retrouver une cible (docs/59)."
+    },
+    "predation_max": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle tient : sans elle, la biomasse et la diversité bougent sur l'Europe (etalon/ablations/europe/2026-11-25, sur la branche etalon)."
+    },
+    "chasse_omnivore": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle agit (sans elle, les mesures s'écartent de celles du témoin) sans rien faire bouger au-delà du bruit, sur la mer, Orvane et l'Europe, et ne coûte rien qu'on mesure : rien ne demande de la retirer."
+    },
+    "omnivore_vegetal": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle tient : sans elle, la diversité et la part des lignées stables bougent sur Orvane (etalon/ablations/2026-11-25-orvane)."
+    },
+    "omnivore_vegetal_base": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle tient : sans elle, la biomasse et la part des lignées stables bougent sur Orvane (etalon/ablations/2026-11-25-orvane)."
+    },
+    "longevite_predateur": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle n'agit pas dans les mondes essayés : sans elle, l'essai rend les mesures du témoin au chiffre près, sur chaque graine (la mer et Orvane). Elle sert aux séparations, quand un carnivore naît de la dérive, et ne coûte rien qu'on mesure : on ne la juge pas là où elle n'agit pas."
+    },
+    "viande_omnivore": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle tient : sans elle, la part des lignées stables bouge sur Orvane (etalon/ablations/2026-11-25-orvane)."
+    },
+    "faim_carnivore": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle tient : sans elle, la diversité et la part des lignées stables bougent sur l'Europe (etalon/ablations/europe/2026-11-25, sur la branche etalon)."
+    },
+    "detritivore_vegetal": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle agit (sans elle, les mesures s'écartent de celles du témoin) sans rien faire bouger au-delà du bruit, sur Orvane, et ne coûte rien qu'on mesure : rien ne demande de la retirer."
+    },
+    "cadavres": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Déjà retirée dans les trois mondes essayés (la mer, Orvane, l'Europe) : elle sert dans un monde où les charognards vivent des morts du lieu, et ne coûte rien là où elle est retirée. On ne la juge pas là où elle n'agit pas."
+    },
+    "vers_carnivore": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle n'agit pas dans les mondes essayés : sans elle, l'essai rend les mesures du témoin au chiffre près, sur chaque graine (la mer, Orvane et l'Europe). Elle sert aux séparations, quand le régime d'une lignée dérive, et ne coûte rien qu'on mesure : on ne la juge pas là où elle n'agit pas."
+    },
+    "faim_migration": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle agit (sans elle, les mesures s'écartent de celles du témoin) sans rien faire bouger au-delà du bruit, sur la mer, Orvane et l'Europe, et ne coûte rien qu'on mesure : rien ne demande de la retirer."
+    },
+    "hivernage": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle agit (sans elle, les mesures s'écartent de celles du témoin) sans rien faire bouger au-delà du bruit, sur Orvane et l'Europe, et ne coûte rien qu'on mesure : rien ne demande de la retirer."
+    },
+    "dispersion": {
+      "decision": "investiguer",
+      "date": "2026-11-26",
+      "pourquoi": "Elle agit sans rien faire bouger (sur Orvane et l'Europe), et coûte 15 % d'un cycle de l'Europe, un coût qui tient : un essai long dira si elle fait quelque chose sur la durée, comme la reproduction sexuée."
+    },
+    "fuite": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle agit (sans elle, les mesures s'écartent de celles du témoin) sans rien faire bouger au-delà du bruit, sur Orvane et l'Europe, et ne coûte rien qu'on mesure : rien ne demande de la retirer."
+    },
+    "report_proies": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle tient : sans elle, la diversité et la part des lignées stables bougent sur Orvane ; la diversité, sur l'Europe (etalon/ablations/2026-11-25-orvane ; etalon/ablations/europe/2026-11-25, sur la branche etalon)."
+    },
+    "saisons": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle tient : sans elle, la part des lignées stables bouge sur Orvane (etalon/ablations/2026-11-25-orvane)."
+    },
+    "maladie": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle agit (sans elle, les mesures s'écartent de celles du témoin) sans rien faire bouger au-delà du bruit, sur la mer et Orvane, et ne coûte rien qu'on mesure : rien ne demande de la retirer."
+    },
+    "catastrophes": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle agit (sans elle, les mesures s'écartent de celles du témoin) sans rien faire bouger au-delà du bruit, sur la mer, Orvane et l'Europe, et ne coûte rien qu'on mesure : rien ne demande de la retirer."
+    },
+    "derive": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle agit (sans elle, les mesures s'écartent de celles du témoin) sans rien faire bouger au-delà du bruit, sur la mer et Orvane, et ne coûte rien qu'on mesure : rien ne demande de la retirer."
+    },
+    "vol_masse_max": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle n'agit pas dans les mondes essayés : sans elle, l'essai rend les mesures du témoin au chiffre près, sur chaque graine (la mer, Orvane et l'Europe). Elle sert aux séparations, quand une lignée qui vole dépasse 12 kg, et ne coûte rien qu'on mesure : on ne la juge pas là où elle n'agit pas."
+    },
+    "genetique": {
+      "decision": "investiguer",
+      "date": "2026-11-26",
+      "pourquoi": "Elle agit sans rien faire bouger (sur la mer, Orvane et l'Europe), et semble coûter 15 % d'un cycle de l'Europe, en partie par sa place dans la file : un essai long, avec une mesure de ce qu'elle change aux traits (la taille, la vitesse, l'audace, la sociabilité)."
+    },
+    "hybride": {
+      "decision": "investiguer",
+      "date": "2026-11-26",
+      "pourquoi": "Elle agit sans rien faire bouger (sur la mer et Orvane), et semble coûter 25 % d'un cycle de la mer, en partie par sa place dans la file : un essai long."
+    },
+    "mefiance": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle ne vit que de ce que font les joueurs : sans pressions, rien à mesurer ; les jeux la diront (06)."
+    },
     "sexe": {
       "decision": "conserver",
       "date": "2026-11-26",
       "pourquoi": "Elle fait quelque chose, lentement : sans elle, la variété des formes de chaque lignée baisse de 23 % en deux années d'Orvane, sur les trois graines et à chaque saison (etalon/ablations/2026-11-25-orvane-sexe-long). On la garde pour ce qu'elle fait, malgré ce qu'elle coûte (sans elle, un cycle d'Orvane va 59 % plus vite)."
+    },
+    "naissances": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle tient : sans elle, la biomasse et la diversité bougent sur l'Europe (etalon/ablations/europe/2026-11-25, sur la branche etalon)."
+    },
+    "colonisation": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle tient : sans elle, la diversité bouge sur l'Europe (etalon/ablations/europe/2026-11-25, sur la branche etalon)."
+    },
+    "diapause": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle tient : sans elle, la biomasse, la diversité et la part des lignées stables bougent sur l'Europe (etalon/ablations/europe/2026-11-25, sur la branche etalon)."
+    },
+    "concurrence_masse": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle tient : sans elle, la part des lignées stables bouge sur Orvane ; la biomasse et la diversité, sur l'Europe (etalon/ablations/2026-11-25-orvane ; etalon/ablations/europe/2026-11-25, sur la branche etalon)."
+    },
+    "renouvellement": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle agit (sans elle, les mesures s'écartent de celles du témoin) sans rien faire bouger au-delà du bruit, sur l'Europe, et ne coûte rien qu'on mesure : rien ne demande de la retirer."
+    },
+    "viande_part": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle tient : sans elle, la biomasse et la diversité bougent sur l'Europe (etalon/ablations/europe/2026-11-25, sur la branche etalon)."
+    },
+    "domination": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle agit (sans elle, les mesures s'écartent de celles du témoin) sans rien faire bouger au-delà du bruit, sur Orvane et l'Europe, et ne coûte rien qu'on mesure : rien ne demande de la retirer."
+    },
+    "recouvrement": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle agit (sans elle, les mesures s'écartent de celles du témoin) sans rien faire bouger au-delà du bruit, sur Orvane et l'Europe, et ne coûte rien qu'on mesure : rien ne demande de la retirer."
+    },
+    "charognes": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle agit (sans elle, les mesures s'écartent de celles du témoin) sans rien faire bouger au-delà du bruit, sur l'Europe, et ne coûte rien qu'on mesure : rien ne demande de la retirer."
+    },
+    "meute_proie": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle agit (sans elle, les mesures s'écartent de celles du témoin) sans rien faire bouger au-delà du bruit, sur l'Europe, et ne coûte rien qu'on mesure : rien ne demande de la retirer."
+    },
+    "petites_proies": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle tient : sans elle, la biomasse, la diversité et la part des lignées stables bougent sur l'Europe (etalon/ablations/europe/2026-11-25, sur la branche etalon)."
     }
   }
 }

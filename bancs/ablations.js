@@ -39,7 +39,7 @@ console.log('1. Le plan');
   const MAT = JSON.parse(fs.readFileSync(racine('etalon/matrice.json'), 'utf8')), D = Object.entries(MAT.regles || {});
   const malD = D.filter(([k, d]) => !P.includes(k) || !MAT.decisions.includes(d.decision) || !/^\d{4}-\d\d-\d\d$/.test(d.date || '') || !d.pourquoi).map(([k]) => k);
   verif(MAT.decisions?.join() === 'conserver,modifier,supprimer,investiguer' && D.length && !malD.length,
-    `la matrice ne dit que des règles du plan, chacune avec l'une des quatre décisions, sa date et sa raison : ${D.length} décidée${D.length > 1 ? 's' : ''} sur ${P.length}${malD.length ? ` (pas : ${malD.join(', ')})` : ''}`);
+    `la matrice ne dit que des règles du plan, chacune avec l'une des quatre décisions, sa date et sa raison : ${(MAT.decisions || []).map(x => [x, D.filter(([, d]) => d.decision === x).length]).filter(([, n]) => n).map(([x, n]) => `${n} à ${x}`).join(', ')} (${D.length} règles sur ${P.length})${malD.length ? ` (pas : ${malD.join(', ')})` : ''}`);
 }
 
 console.log('\n2. L\'outil, sur la mer');
