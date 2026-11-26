@@ -6,7 +6,8 @@
 // stables, les extinctions, les lignées nées, la variété des formes de chaque lignée ; et la durée d'un cycle. Une mesure bouge quand
 // l'écart au témoin passe le double de l'écart entre les graines du témoin, et un seuil (la lecture du plan) : une indication, pas un
 // verdict — la matrice est une décision de l'auteur. Un essai long se lit aussi en chemin (--jalons n : tous les n cycles). Les tâches
-// qu'un rapport a perdues (une machine à court de mémoire…) se relancent seules (--reprendre), sur le même moteur.
+// qu'un rapport a perdues (une machine à court de mémoire…) se relancent seules (--reprendre), sur le même moteur. --regles dit des
+// règles, ou un seul des essais d'une constante (« max_phenotypes = 10 » : à cette valeur seulement).
 //   node outils/ablations.js <etat.json> [--cycles 30] [--graines 3] [--regles a,b,c] [--natures mecanisme,constante,comptable]
 //     [--jobs 4] [--jalons n] [--memoire-tache 6000] [--reprendre rapport.json] [--plan etalon/ablations.json] [--sortie rapport.json] [--notes rapport.md]
 // Sortie : 0 si chaque essai a tourné, 1 sinon. Node, sans dépendance.
@@ -189,18 +190,23 @@ if (PAIRES && PAIRES.regles_choisies && !arg('--paires-de')) console.error(`--pa
 
 // --- les essais : le témoin, puis chaque règle retirée (ou chaque valeur d'une constante) ; une part : le témoin et un essai sur n ---
 let essais = [{ id: 'temoin', regle: null, nature: 'temoin', regles: {} }], laisses = [];
+const connus = new Set(Object.keys(PLAN.regles));
 for (const [k, P] of Object.entries(PLAN.regles)) {
-  if (CHOIX && !CHOIX.has(k)) continue;
-  if (!NATURES.has(P.nature)) { laisses.push({ regle: k, nature: P.nature, pourquoi: PLAN.natures[P.nature] }); continue; }
   const variantes = P.retirer ? [{ id: k, change: P.retirer }]
     : P.facteurs ? P.facteurs.map(f => ({ id: `${k} ×${f}`, change: { [k]: typeof R[k] === 'number' ? +(R[k] * f).toPrecision(6) : R[k] } }))
     : (P.essais || []).map(e => ({ id: `${k} = ${JSON.stringify(Object.values(e)[0])}`, change: e }));
-  for (const v of variantes) {
+  for (const v of variantes) connus.add(v.id);
+  // (--regles dit une règle, toute entière, ou un seul de ses essais : « max_phenotypes = 10 », une constante à une seule de ses valeurs)
+  const dits = !CHOIX || CHOIX.has(k) ? variantes : variantes.filter(v => CHOIX.has(v.id));
+  if (CHOIX && !CHOIX.has(k) && !dits.length) continue;
+  if (!NATURES.has(P.nature)) { laisses.push({ regle: k, nature: P.nature, pourquoi: PLAN.natures[P.nature] }); continue; }
+  for (const v of dits) {
     const regles = Object.fromEntries(Object.entries(v.change).map(([c, x]) => [c, fusion(R[c], x)]));   // (la valeur entière de chaque règle changée)
     if (Object.entries(regles).every(([c, x]) => pareil(x, R[c]))) { laisses.push({ regle: k, nature: P.nature, essai: v.id, pourquoi: 'déjà retirée dans ce monde : sa valeur est celle qui l\'éteint' }); continue; }
     essais.push({ id: v.id, regle: k, nature: P.nature, regles, fait: P.fait, quand: P.quand });
   }
 }
+if (CHOIX && [...CHOIX].some(x => !connus.has(x))) { console.error(`--regles : « ${[...CHOIX].find(x => !connus.has(x))} » n'est ni une règle du plan ni l'un de ses essais`); process.exit(2); }
 // (les paires, plan version 3 : les mécanismes qui tiennent seuls dans le rapport du même monde, deux à deux ; --paires-de : ceux qu'on dit)
 let simples = null;
 if (PAIRES) { const de = arg('--paires-de') ? arg('--paires-de').split(',') : null, N = PLAN.paires?.natures || ['mecanisme'];

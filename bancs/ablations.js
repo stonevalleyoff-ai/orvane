@@ -3,7 +3,8 @@
 //     dire la retirer ; un retrait ne touche que sa règle, et des clés que le moteur connaît ; la matrice (etalon/matrice.json) ne parle
 //     que des règles du plan, chacune avec l'une des quatre décisions, sa date et sa raison ;
 //  2. l'outil (outils/ablations.js), sur la mer : le témoin rend le monde que rend le moteur ; une règle qui tient (les saisons) bouge,
-//     une règle comptable ne change rien aux bêtes, une règle déjà retirée n'est pas essayée, une constante s'essaie à deux valeurs ;
+//     une règle comptable ne change rien aux bêtes, une règle déjà retirée n'est pas essayée, une constante s'essaie à deux valeurs, ou à
+//     une seule qu'on dit ; un nom que le plan n'a pas, refusé ;
 //     deux fois, les mêmes mesures ; en parts (plusieurs machines), puis fusionnées : le même rapport ;
 //  3. les paires (plan, version 3) : choisies par la règle du plan (les mécanismes qui tiennent seuls), ou dites ; une règle qui ne fait que
 //     compter, retirée avec une autre, laisse celle-ci seule (une interaction nulle) ; en parts puis fusionnées, les mêmes paires ; une part
@@ -61,6 +62,12 @@ console.log('\n2. L\'outil, sur la mer');
     const sans = R => JSON.stringify(R.essais.map(x => ({ e: x.essai, m: Object.fromEntries(Object.entries(x.par_graine).map(([g, m]) => [g, { ...m, duree_s: 0 }])) })));
     verif(sans(A) === sans(B) && A.plan.empreinte === B.plan.empreinte && /\| saisons \|/.test(fs.readFileSync(f('a.md'), 'utf8')), 'deux fois, les mêmes mesures (les durées mises à part) ; le rapport dit l\'empreinte du plan ; ses notes, en un tableau');
     verif(JSON.stringify(A.regles_choisies) === JSON.stringify(['besoin', 'menace', 'recouvrement', 'saisons']) && /Seules les règles dites/.test(fs.readFileSync(f('a.md'), 'utf8')), 'un rapport fait sur quelques règles (--regles) le dit, et ses notes');
+    // (--regles dit aussi un seul essai d'une constante : à cette valeur seulement ; un nom que le plan n'a pas, refusé)
+    { execFileSync(process.execPath, [racine('outils/ablations.js'), racine('mondes/marin/amorce.json'), '--cycles', '3', '--graines', '2', '--regles', 'saisons,besoin ×2', '--jobs', '4', '--sortie', f('un.json')], { stdio: 'ignore' });
+      const U = JSON.parse(fs.readFileSync(f('un.json'), 'utf8')), ids = R => R.essais.map(x => x.essai).sort(), memes = ['besoin ×2', 'saisons'];
+      let inconnu = 0; try { execFileSync(process.execPath, [racine('outils/ablations.js'), racine('mondes/marin/amorce.json'), '--cycles', '1', '--regles', 'besoin ×3', '--sortie', f('x.json')], { stdio: 'ignore' }); } catch (e) { inconnu = e.status; }
+      verif(JSON.stringify(ids(U)) === JSON.stringify(memes) && sans({ essais: U.essais.filter(x => memes.includes(x.essai)).sort((x, y) => x.essai < y.essai ? -1 : 1) }) === sans({ essais: A.essais.filter(x => memes.includes(x.essai)).sort((x, y) => x.essai < y.essai ? -1 : 1) }) && inconnu === 2 && !fs.existsSync(f('x.json')),
+        'une constante à une seule de ses valeurs (--regles « besoin ×2 ») : cet essai seul, avec les mesures qu\'il a parmi les autres ; un nom que le plan n\'a pas (« besoin ×3 »), refusé'); }
     // (en parts, sur plusieurs machines : le témoin et un essai sur deux chacune, puis la fusion)
     for (const k of [1, 2]) execFileSync(process.execPath, [racine('outils/ablations.js'), racine('mondes/marin/amorce.json'), '--cycles', '3', '--graines', '2', '--regles', 'saisons,menace,recouvrement,besoin', '--jobs', '2', '--part', `${k}/2`, '--sortie', f(`p${k}.json`), '--notes', f(`p${k}.md`)], { stdio: 'ignore' });
     execFileSync(process.execPath, [racine('outils/ablations.js'), '--fusionner', f('p1.json'), f('p2.json'), '--sortie', f('fu.json'), '--notes', f('fu.md')], { stdio: 'ignore' });
