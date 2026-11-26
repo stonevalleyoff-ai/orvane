@@ -1,6 +1,7 @@
 // Orvane — LE BANC DES ABLATIONS (bancs/ablations.js) — docs/59, 03
 //  1. le plan (etalon/ablations.json) : chaque règle gelée par le protocole (le moratoire), et rien d'autre, avec sa nature et ce que veut
-//     dire la retirer ; un retrait ne touche que sa règle, et des clés que le moteur connaît ;
+//     dire la retirer ; un retrait ne touche que sa règle, et des clés que le moteur connaît ; la matrice (etalon/matrice.json) ne parle
+//     que des règles du plan, chacune avec l'une des quatre décisions, sa date et sa raison ;
 //  2. l'outil (outils/ablations.js), sur la mer : le témoin rend le monde que rend le moteur ; une règle qui tient (les saisons) bouge,
 //     une règle comptable ne change rien aux bêtes, une règle déjà retirée n'est pas essayée, une constante s'essaie à deux valeurs ;
 //     deux fois, les mêmes mesures ; en parts (plusieurs machines), puis fusionnées : le même rapport ;
@@ -34,6 +35,11 @@ console.log('1. Le plan');
     return L.some(o => Object.keys(o).length !== 1 || !(k in o) || !connues(k, o[k])); });
   verif(!mal.length, `chaque retrait ne touche que sa règle, et des clés que le moteur lui connaît${mal.length ? ` (pas : ${mal.join(', ')})` : ''}`);
   verif(Object.keys(PLAN.mesures).every(k => k === 'duree_s' || k in PLAN.lecture.seuils), 'chaque mesure a son seuil de lecture');
+  // la matrice (docs/59, 03) : les décisions de l'auteur, règle par règle, et seulement sur les règles du plan
+  const MAT = JSON.parse(fs.readFileSync(racine('etalon/matrice.json'), 'utf8')), D = Object.entries(MAT.regles || {});
+  const malD = D.filter(([k, d]) => !P.includes(k) || !MAT.decisions.includes(d.decision) || !/^\d{4}-\d\d-\d\d$/.test(d.date || '') || !d.pourquoi).map(([k]) => k);
+  verif(MAT.decisions?.join() === 'conserver,modifier,supprimer,investiguer' && D.length && !malD.length,
+    `la matrice ne dit que des règles du plan, chacune avec l'une des quatre décisions, sa date et sa raison : ${D.length} décidée${D.length > 1 ? 's' : ''} sur ${P.length}${malD.length ? ` (pas : ${malD.join(', ')})` : ''}`);
 }
 
 console.log('\n2. L\'outil, sur la mer');

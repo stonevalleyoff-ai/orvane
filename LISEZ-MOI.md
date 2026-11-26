@@ -100,6 +100,7 @@ outils/protocole.js   le protocole : ce qu'il dit, s'il tient ; --nouvelle-versi
 outils/rejouer.js     rejouer un cycle hébergé depuis l'état d'avant et le journal du monde : le même monde, au bit près ? (docs/59)
 outils/reference.js   la référence de chaque monde : sa taille, sa diversité, sa stabilité, la durée d'un cycle et son rejeu ; chaque mois avec les archives (docs/59)
 etalon/ablations.json le plan des ablations : pour chacune des 50 règles du moteur, sa nature et ce que veut dire la retirer ; les mesures, leur lecture ; les paires ; l'essai long de la reproduction sexuée (docs/59)
+etalon/matrice.json   la matrice : ce que l'auteur décide de chaque règle après les ablations (conserver, modifier, supprimer, investiguer), sa date et sa raison (docs/59)
 outils/ablations.js   les ablations : un monde sans chaque règle, sur les mêmes graines que le témoin, ce qui bouge et ce qu'elle coûte ; par parts, puis fusionnées ; les paires, contre les essais seuls ; un essai long, lu en chemin (--jalons) ; les tâches perdues d'un rapport, reprises (--reprendre) (docs/59)
 bancs/grammaire.js    le banc de la grammaire : qui peut dire quoi, où ça porte, des phrases variées, la sélection
 bancs/formes.js       le banc des corps et des vies nouvelles : la colonie qui gagne, le mille-pattes, l'étoile, la pieuvre, la naïade
@@ -120,7 +121,7 @@ bancs/genres.js       le banc des profils de genre : chaque promesse mesurée su
 bancs/temps.js        le banc du temps : le rythme de chaque monde (l'action horaire, le rattrapage), le monde solo (temps réel, accéléré, sauvegarde, navigateur)
 bancs/rejeu.js        le banc du rejeu : le moteur au bit près d'un processus à l'autre, le journal, un cycle hébergé rejoué, la référence (docs/59)
 bancs/protocole.js    le banc du protocole : il tient, le moratoire, l'étalon et lui se répondent, le verrou mord (docs/59)
-bancs/ablations.js    le banc des ablations : le plan couvre les règles gelées, l'outil lit juste sur la mer, en une fois comme en parts ; les paires et leur lecture ; les formes et les jalons ; la reprise (docs/59)
+bancs/ablations.js    le banc des ablations : le plan couvre les règles gelées, l'outil lit juste sur la mer, en une fois comme en parts ; les paires et leur lecture ; les formes et les jalons ; la reprise ; la matrice ne parle que des règles du plan (docs/59)
 hebergement/cycle.js  le cycle, chaque monde à son rythme (docs/19) : lots de tous les jeux → tampon → moteur → instantané publié (action GitHub .github/workflows/cycle.yml)
 hebergement/journal.js le journal d'un monde : une ligne par cycle (le code, les règles, l'état reçu et rendu, les pressions), de quoi le rejouer (docs/59)
 hebergement/publication.js  la branche publication : l'état de chaque monde repris au début de chaque passe, le site republié en un seul commit sans historique ; une sauvegarde restaurée (hebergement/LISEZ-MOI.md)

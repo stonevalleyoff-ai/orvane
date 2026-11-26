@@ -1,0 +1,11 @@
+{
+  "matrice": "Ce que l'auteur décide de chaque règle du moteur, après les ablations (docs/59, 03) : la conserver, la modifier, la supprimer ou l'investiguer, avec la date et la raison. Une règle qui n'est pas ici n'a pas encore sa décision ; tant que la matrice n'est pas faite, le moratoire tient.",
+  "decisions": ["conserver", "modifier", "supprimer", "investiguer"],
+  "regles": {
+    "sexe": {
+      "decision": "conserver",
+      "date": "2026-11-26",
+      "pourquoi": "Elle fait quelque chose, lentement : sans elle, la variété des formes de chaque lignée baisse de 23 % en deux années d'Orvane, sur les trois graines et à chaque saison (etalon/ablations/2026-11-25-orvane-sexe-long). On la garde pour ce qu'elle fait, malgré ce qu'elle coûte (sans elle, un cycle d'Orvane va 59 % plus vite)."
+    }
+  }
+}
