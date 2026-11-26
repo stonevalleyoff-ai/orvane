@@ -14,7 +14,9 @@
 //     la même lecture en chemin ; un rapport d'essais seuls d'avant (sans les formes) sert encore aux paires ; des jalons mal dits, refusés ;
 //  5. la reprise : un rapport qui a perdu des tâches (une machine à court de mémoire), repris, rend le rapport entier, les tâches gardées
 //     telles quelles ; une reprise d'une autre passe ou d'un autre moteur, refusée ; la mémoire d'une tâche, plafonnée, rend les mêmes mesures ;
-//     un essai que la machine a arrêté se dit « à relancer », un témoin qui a perdu une graine aussi.
+//     un essai que la machine a arrêté se dit « à relancer », un témoin qui a perdu une graine aussi ;
+//  6. les traits et les aires (plan, version 8) : ceux du monde que rend le moteur ; une règle comptable n'y change rien ; sans la génétique
+//     continue, chaque population est au plan de sa lignée (ses traits à zéro) ; un rapport d'avant, sans eux, sert encore aux paires.
 //   node bancs/ablations.js
 'use strict';
 const fs = require('fs'), path = require('path'), os = require('os'), { execFileSync } = require('child_process');
@@ -118,14 +120,14 @@ console.log('\n2. L\'outil, sur la mer');
     const JF = JSON.parse(fs.readFileSync(f('jpf.json'), 'utf8')), sl = R => JSON.stringify(R.jalons?.lus ?? null, (k, v) => k === 'duree_s' ? undefined : v);
     verif(JF.jalons && JF.parts === 2 && sl(JF) === sl(J1), 'en deux parts, puis fusionnées : la même lecture en chemin');
     // un rapport d'essais seuls d'avant le plan 4 (sans les formes) sert encore aux paires : le témoin s'y compare sur les mesures qu'il a
-    const vieux = JSON.parse(fs.readFileSync(f('a.json'), 'utf8')), sansF = m => { if (!m) return m; const { formes: _, ...x } = m; return x; };
+    const vieux = JSON.parse(fs.readFileSync(f('a.json'), 'utf8')), sansF = m => { if (!m) return m; const { formes: _, traits: _t, traits_par: _p, aires: _a, ...x } = m; return x; };
     for (const g in vieux.temoin.par_graine) vieux.temoin.par_graine[g] = sansF(vieux.temoin.par_graine[g]);
     for (const x of vieux.essais) { for (const g in x.par_graine) x.par_graine[g] = sansF(x.par_graine[g]); x.ecarts = sansF(x.ecarts); x.mesures = sansF(x.mesures); }
     vieux.temoin.moyenne = sansF(vieux.temoin.moyenne); vieux.temoin.ecart = sansF(vieux.temoin.ecart); fs.writeFileSync(f('vieux.json'), JSON.stringify(vieux));
     execFileSync(process.execPath, [racine('outils/ablations.js'), racine('mondes/marin/amorce.json'), '--paires', f('vieux.json'), '--paires-de', 'saisons,besoin ×2', '--jobs', '4', '--sortie', f('pv.json')], { stdio: 'ignore' });
     const PV = JSON.parse(fs.readFileSync(f('pv.json'), 'utf8'));
-    verif(PV.type === 'paires' && PV.essais.length === 1 && !('formes' in PV.essais[0].interaction) && 'lignees' in PV.essais[0].interaction,
-      'un rapport d\'essais seuls d\'avant le plan 4, sans les formes, sert encore aux paires (le témoin s\'y compare sur les mesures qu\'il a)');
+    verif(PV.type === 'paires' && PV.essais.length === 1 && ['formes', 'traits', 'aires'].every(k => !(k in PV.essais[0].interaction)) && 'lignees' in PV.essais[0].interaction,
+      'un rapport d\'essais seuls d\'avant le plan 4, sans les formes (ni les traits, ni les aires), sert encore aux paires (le témoin s\'y compare sur les mesures qu\'il a)');
     const code = (...x) => { try { execFileSync(process.execPath, [racine('outils/ablations.js'), racine('mondes/marin/amorce.json'), ...x], { stdio: 'ignore' }); return 0; } catch (e) { return e.status; } };
     verif(code('--paires', f('a.json'), '--jalons', '1', '--sortie', f('rj.json')) === 2 && code('--cycles', '3', '--jalons', '0', '--sortie', f('rj.json')) === 2 && !fs.existsSync(f('rj.json')),
       'des jalons pour des paires, ou tous les zéro cycles : refusés');
@@ -154,6 +156,20 @@ console.log('\n2. L\'outil, sur la mer');
     const LA = JSON.parse(fs.readFileSync(f('lu-ar.json'), 'utf8')), LP = LA.essais.find(x => x.essai === 'saisons');
     verif(cAr === 1 && /^à relancer/.test(LP.lecture) && /Le témoin a perdu 1 graine sur 2 : le rapport ne se lit pas avant de la relancer/.test(fs.readFileSync(f('lu-ar.md'), 'utf8')),
       `un rapport qui a perdu des tâches le dit : un essai que la machine a arrêté, « ${LP.lecture} » ; un témoin qui a perdu une graine, à relancer avant de le lire`);
+    console.log('\n6. Les traits et les aires (plan, version 8)');
+    // (ceux des lignées du monde que rend le moteur : l'écart de chaque population au plan de sa lignée, |m| en écarts-types naturels,
+    //  pondéré par l'effectif, trait par trait puis en moyenne ; et le nombre de lieux où vit chaque lignée)
+    const QK = Object.keys(Orvane.QUANT), vit = t => t.populations.filter(p => p.effectif > 0), som = L => L.reduce((s, x) => s + x, 0);
+    const parT = Object.fromEntries(QK.map(k => [k, som(V.map(t => som(vit(t).map(p => p.effectif * Math.abs(p.quant?.[k]?.m ?? 0))) / som(vit(t).map(p => p.effectif)))) / V.length]));
+    const traits = +(som(QK.map(k => parT[k])) / QK.length).toFixed(5), aires = +(som(V.map(t => vit(t).length)) / V.length).toFixed(3);
+    verif(T0.traits === traits && T0.aires === aires && QK.every(k => T0.traits_par?.[k] === +parT[k].toFixed(5)) && A.essais.every(x => x.mesures.traits != null && x.mesures.aires != null)
+      && E('menace').ecarts.traits === 0 && E('menace').ecarts.aires === 0,
+      `les traits et les aires : ceux du monde que rend le moteur (des traits à ${traits.toLocaleString('fr-FR', { maximumFractionDigits: 3 })} écart-type de leur plan, ${aires.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} lieux par lignée), pour chaque essai ; une règle comptable n'y change rien`);
+    execFileSync(process.execPath, [racine('outils/ablations.js'), racine('mondes/marin/amorce.json'), '--cycles', '2', '--graines', '2', '--regles', 'genetique', '--jobs', '4', '--sortie', f('gen.json'), '--notes', f('gen.md')], { stdio: 'ignore' });
+    const GN = JSON.parse(fs.readFileSync(f('gen.json'), 'utf8')), Gx = GN.essais.find(x => x.essai === 'genetique');
+    verif(Gx && Object.values(Gx.par_graine).every(m => m.traits === 0 && QK.every(k => m.traits_par[k] === 0)) && Object.values(GN.temoin.par_graine).every(m => m.traits > 0) && Gx.bouge.includes('traits')
+      && /\| traits \| aires \|/.test(fs.readFileSync(f('gen.md'), 'utf8')),
+      `sans la génétique continue, chaque population est au plan de sa lignée : ses traits à zéro, quand ceux du témoin s'en écartent (${GN.temoin.moyenne.traits.toLocaleString('fr-FR', { maximumFractionDigits: 3 })} écart-type, au cycle ${GN.monde.cycle + 2} de la mer) ; « ${Gx?.lecture} » ; ses notes, deux colonnes de plus`);
   } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
 }
 

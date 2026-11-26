@@ -99,7 +99,7 @@ etalon/protocole.json le protocole de l'étalon : chaque test, sa cible, sa tol�
 outils/protocole.js   le protocole : ce qu'il dit, s'il tient ; --nouvelle-version "pourquoi" pour en changer (docs/59)
 outils/rejouer.js     rejouer un cycle hébergé depuis l'état d'avant et le journal du monde : le même monde, au bit près ? (docs/59)
 outils/reference.js   la référence de chaque monde : sa taille, sa diversité, sa stabilité, la durée d'un cycle et son rejeu ; chaque mois avec les archives (docs/59)
-etalon/ablations.json le plan des ablations : pour chacune des 50 règles du moteur, sa nature et ce que veut dire la retirer ; les mesures, leur lecture ; les paires ; les essais longs (la reproduction sexuée, le plafond des phénotypes, les hybrides, la dispersion) (docs/59)
+etalon/ablations.json le plan des ablations : pour chacune des 50 règles du moteur, sa nature et ce que veut dire la retirer ; les mesures, leur lecture ; les paires ; les essais longs (la reproduction sexuée, le plafond des phénotypes, les hybrides, la dispersion, la génétique continue) (docs/59)
 etalon/matrice.json   la matrice : ce que l'auteur décide de chaque règle après les ablations (conserver, modifier, supprimer, investiguer), sa date et sa raison (docs/59)
 outils/ablations.js   les ablations : un monde sans chaque règle, sur les mêmes graines que le témoin, ce qui bouge et ce qu'elle coûte ; par parts, puis fusionnées ; les paires, contre les essais seuls ; un essai long, lu en chemin (--jalons) ; les tâches perdues d'un rapport, reprises (--reprendre) ; une constante à une seule de ses valeurs (--regles "max_phenotypes = 10") (docs/59)
 bancs/grammaire.js    le banc de la grammaire : qui peut dire quoi, où ça porte, des phrases variées, la sélection
