@@ -33,7 +33,12 @@ function verifier(P, { regles } = {}) {
     if (t.nature === 'guide' && !(t.historique || []).length) pb.push(`le test ${id} a guidé des corrections : son historique doit dire lesquelles`); }
   for (const r of P.reserves || []) if (!r.id || !r.critere || !r.donnees) pb.push(`un test réservé n'a pas d'id, de critère ou de données (${r.id || '?'})`);
   if (regles) { const G = new Set(P.regles_gelees?.regles || []), R = new Set(regles), plus = [...R].filter(k => !G.has(k)), moins = [...G].filter(k => !R.has(k));
-    if (plus.length || moins.length) pb.push(`le moratoire : ${plus.length ? `des règles nouvelles (${plus.join(', ')})` : ''}${plus.length && moins.length ? ', ' : ''}${moins.length ? `des règles retirées (${moins.join(', ')})` : ''} ; une règle ne s'ajoute ou ne se retire qu'avec une version du protocole qui le dit (docs/59)`); }
+    // (le moratoire tenu, puis levé : la liste reste celle des règles du moteur que le protocole connaît, et une règle ne s'ajoute ni ne
+    //  se retire sans une version qui le dit — et, le moratoire levé, son essai au plan des ablations, que vérifie bancs/ablations.js)
+    const quoi = `${plus.length ? `des règles nouvelles (${plus.join(', ')})` : ''}${plus.length && moins.length ? ', ' : ''}${moins.length ? `des règles retirées (${moins.join(', ')})` : ''}`;
+    if (plus.length || moins.length) pb.push(P.regles_gelees?.leve
+      ? `les règles du moteur ne sont plus celles du protocole (le moratoire levé le ${P.regles_gelees.leve}) : ${quoi} ; une règle s'ajoute ou se retire avec une version du protocole qui le dit, et son essai au plan des ablations (docs/59)`
+      : `le moratoire : ${quoi} ; une règle ne s'ajoute ou ne se retire qu'avec une version du protocole qui le dit (docs/59)`); }
   return pb;
 }
 
@@ -45,7 +50,7 @@ if (require.main === module) {
     P.historique = [...(P.historique || []), { version: P.version, date: P.date, empreinte: P.empreinte, pourquoi }];
     fs.writeFileSync(FICHIER, JSON.stringify(P, null, 1) + '\n'); console.log(`le protocole, version ${P.version} (${P.date}) : ${P.empreinte.slice(0, 16)}…`); process.exit(0); }
   const N = {}; for (const [id, t] of Object.entries(P.tests)) (N[t.nature] ||= []).push(id);
-  console.log(`${P.protocole}, version ${P.version} du ${P.date} (${String(P.empreinte).slice(0, 16)}…) : ${Object.keys(P.tests).length} tests, ${(P.reserves || []).length} réservés, ${(P.regles_gelees?.regles || []).length} règles gelées`);
+  console.log(`${P.protocole}, version ${P.version} du ${P.date} (${String(P.empreinte).slice(0, 16)}…) : ${Object.keys(P.tests).length} tests, ${(P.reserves || []).length} réservés, ${(P.regles_gelees?.regles || []).length} règles${P.regles_gelees?.leve ? ` (le moratoire levé le ${P.regles_gelees.leve})` : ' gelées'}`);
   for (const n of NATURES) if (N[n]) console.log(`  ${n} (${N[n].length}) : ${N[n].join(', ')}`);
   const pb = verifier(P, { regles: Object.keys(require('../moteur/orvane.js').REGLES) });
   for (const x of pb) console.log('  ✗ ' + x); if (!pb.length) console.log('  ✓ il tient'); process.exit(pb.length ? 1 : 0);

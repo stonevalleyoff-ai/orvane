@@ -1,7 +1,7 @@
 // Orvane — LE BANC DU PROTOCOLE (bancs/protocole.js) — docs/59
 //  1. le protocole tient (etalon/protocole.json, outils/protocole.js) : son empreinte est celle de sa dernière version, son historique
 //     se suit, chaque test a sa nature et ses seuils, aucune validation ne s'appuie sur une donnée qui a réglé le moteur ;
-//  2. le moratoire : les règles du moteur sont celles que le protocole a gelées ;
+//  2. le moratoire : les règles du moteur sont celles que le protocole a gelées ; s'il est levé, c'est que la matrice a décidé de chacune ;
 //  3. l'étalon et le protocole se répondent : chaque test du protocole est écrit par l'étalon et chaque test de l'étalon est au protocole ;
 //     les bornes du calage sont celles de l'assemblage ; les données d'Isle Royale disent les mêmes seuils que lui ;
 //  4. le verrou mord : un seuil changé sans nouvelle version, une règle ajoutée, une validation qui cite une donnée de calage, un test qui
@@ -25,6 +25,12 @@ verif(Object.keys(N).every(n => Protocole.NATURES.includes(n)), `chaque test dit
 
 console.log('\n2. Le moratoire');
 verif(REGLES.length === P.regles_gelees.regles.length && REGLES.every(k => P.regles_gelees.regles.includes(k)), `les ${REGLES.length} règles du moteur sont celles que le protocole a gelées le ${P.regles_gelees.depuis}`);
+// (le moratoire levé : il ne l'est qu'une fois que les ablations ont dit ce que vaut chaque règle — la matrice en a décidé de chacune,
+//  aucune n'attend plus d'essai)
+if (P.regles_gelees.leve) { const MAT = JSON.parse(fs.readFileSync(racine('etalon/matrice.json'), 'utf8')).regles || {};
+  const sans = REGLES.filter(k => !MAT[k] || MAT[k].decision === 'investiguer');
+  verif(/^\d{4}-\d\d-\d\d$/.test(P.regles_gelees.leve) && P.regles_gelees.leve >= P.regles_gelees.depuis && !sans.length,
+    `le moratoire, levé le ${P.regles_gelees.leve} : la matrice a décidé de chacune des ${REGLES.length} règles, aucune n'attend plus d'essai${sans.length ? ` (pas : ${sans.join(', ')})` : ''}`); }
 
 console.log("\n3. L'étalon et le protocole se répondent");
 const src = fs.readFileSync(racine('outils/etalon.js'), 'utf8');
@@ -41,8 +47,12 @@ verif(IR.predation.de === Sp.de && IR.predation.a === Sp.a && IR.kill.moyenne ==
 console.log('\n4. Le verrou mord');
 const raisons = Q => Protocole.verifier(Q, { regles: REGLES });
 { const Q = clone(P); Q.tests.stabilite.seuils.part = .8; verif(raisons(Q).some(x => /sans nouvelle version/.test(x)), 'un seuil changé sans nouvelle version (la stabilité à 80 %) : refusé'); }
-verif(raisons(P).length === 0 && Protocole.verifier(P, { regles: [...REGLES, 'regle_nouvelle'] }).some(x => /moratoire/.test(x)), 'une règle ajoutée au moteur pendant le moratoire : refusée');
+verif(raisons(P).length === 0 && Protocole.verifier(P, { regles: [...REGLES, 'regle_nouvelle'] }).some(x => /moratoire/.test(x)),
+  P.regles_gelees.leve ? 'une règle ajoutée au moteur sans une version du protocole qui la dit : refusée, le moratoire levé' : 'une règle ajoutée au moteur pendant le moratoire : refusée');
 const enRegle = Q => { Q.version = P.version + 1; Q.date = '2099-01-01'; Q.empreinte = Protocole.empreinte(Q); Q.historique = [...Q.historique, { version: Q.version, date: Q.date, empreinte: Q.empreinte, pourquoi: 'un essai' }]; return Q; };
+if (P.regles_gelees.leve) { const Q = clone(P); Q.regles_gelees.regles = [...Q.regles_gelees.regles, 'regle_nouvelle']; enRegle(Q);
+  verif(raisons(Q).some(x => /regle_nouvelle/.test(x)) && Protocole.verifier(Q, { regles: [...REGLES, 'regle_nouvelle'] }).length === 0,
+    'le moratoire levé, une règle ajoutée au moteur avec une version du protocole qui la dit : acceptée (et le protocole qui la dit sans le moteur : refusé)'); }
 { const Q = clone(P); Q.tests.chasse.nature = 'validation'; enRegle(Q); verif(raisons(Q).some(x => /se dit une validation/.test(x)), 'une validation qui cite une donnée de calage (la chasse, ses tableaux) : refusée, même en règle'); }
 { const Q = clone(P); delete Q.tests['grands-carnivores'].historique; enRegle(Q); verif(raisons(Q).some(x => /historique doit dire/.test(x)), 'un test qui a guidé des corrections sans dire lesquelles : refusé'); }
 { const Q = clone(P); Q.tests.stabilite.seuils.part = .8; enRegle(Q); verif(raisons(Q).length === 0, 'le même seuil, avec une nouvelle version datée et sa raison : accepté'); }

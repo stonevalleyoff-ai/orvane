@@ -20,7 +20,8 @@
 const fs = require('fs'), path = require('path');
 const Orvane = require('../moteur/orvane.js');
 // (docs/59) le protocole : les cibles et les tolérances de chaque test, fixées avant de lancer l'étalon, et verrouillées. L'étalon n'en a
-// pas d'autres. Un protocole changé sans nouvelle version, ou une règle du moteur ajoutée pendant le moratoire : l'étalon refuse de juger
+// pas d'autres. Un protocole changé sans nouvelle version, ou une règle du moteur que le protocole ne dit pas (pendant le moratoire, puis
+// depuis qu'il est levé, sans une version qui l'ajoute) : l'étalon refuse de juger
 // (--protocole-libre : il juge quand même, et son rapport le dit)
 const Protocole = require('./protocole.js'), PROTOCOLE = Protocole.lire(), SE = id => Protocole.seuils(PROTOCOLE, id);
 const PB = Protocole.verifier(PROTOCOLE, { regles: Object.keys(Orvane.REGLES) }), LIBRE = process.argv.includes('--protocole-libre');
