@@ -4,7 +4,7 @@ Un jeu qui se branche sur Orvane lit son instantané et lui écrit des lots. Pou
 
 ## Le numéro
 
-Orvane suit la règle des versions sémantiques : **MAJEUR.MINEUR.CORRECTIF**, dans `package.json`. La première version stable est la **1.0.0**, du 7 novembre 2026.
+Orvane suit la règle des versions sémantiques : **MAJEUR.MINEUR.CORRECTIF**, dans `package.json`. La première version stable est la **1.0.0**, du 7 novembre 2026. La dernière est la **1.1.0**, du 27 novembre 2026 : des ajouts, rien de retiré.
 
 | ce qui change | la version | ce qu'un jeu fait |
 | --- | --- | --- |
@@ -12,7 +12,7 @@ Orvane suit la règle des versions sémantiques : **MAJEUR.MINEUR.CORRECTIF**, d
 | un ajout : un champ, une valeur, un mécanisme, un lieu | MINEUR (1.0 → 1.1) | rien ; il s'en servira s'il veut |
 | un changement qui peut casser un jeu | MAJEUR (1 → 2) | il lit le journal, et s'adapte avant la date annoncée |
 
-Chaque instantané porte la version de son contrat, MAJEUR.MINEUR : `"orvane": "1.0"`. Le moteur la dit aussi (`Orvane.CONTRAT`).
+Chaque instantané porte la version de son contrat, MAJEUR.MINEUR : `"orvane": "1.1"` depuis la 1.1.0, du 27 novembre 2026 (`"1.0"` avant). Le moteur la dit aussi (`Orvane.CONTRAT`).
 
 ## Ce qui casse, et ce qui ne casse pas
 
@@ -50,7 +50,7 @@ Essayé le 6 novembre : un champ retiré de l'instantané, une action que les lo
 ## Le paquet
 
 ```
-npm install github:stonevalleyoff-ai/orvane#v1.0.0
+npm install github:stonevalleyoff-ai/orvane#v1.1.0
 ```
 
 Il contient le moteur, le tampon, les schémas, les types, le vérificateur, le traducteur d'exemple et la documentation, sans les mondes : 354 Ko compressés.

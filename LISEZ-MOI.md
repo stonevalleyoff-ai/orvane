@@ -64,7 +64,7 @@ outils/contrat.js     le garde-fou du contrat : ce qui casse un jeu, ce qui s'aj
 outils/vitesse.js     la vitesse du moteur sur un monde réel ; contre une autre version : plus vite ? le même monde, au caractère près ? (docs/44)
 kits/unity/           le kit Unity : lire le monde en classes C#, compter, déposer les lots ; essayé avec .NET (kits/LISEZ-MOI.md)
 kits/godot/           le kit Godot 4 : le singleton Orvane, lire, compter, déposer (kits/LISEZ-MOI.md)
-package.json, index.js  le paquet : npm install github:stonevalleyoff-ai/orvane#v1.0.0, puis require('orvane') (docs/43)
+package.json, index.js  le paquet : npm install github:stonevalleyoff-ai/orvane#v1.1.0, puis require('orvane') (docs/43)
 CHANGELOG.md          le journal des versions : ce qui change pour un jeu, version après version
 outils/banc-traducteur.js  le banc générique d'un traducteur : il lui fait lire sept mondes, un monde piège compris, et vérifie qu'il n'oublie aucune lignée et n'envoie que des lots conformes (docs/39)
 schemas/              le contrat : instantane, pression, profil — avec exemples (crapaud buffle)

@@ -7,7 +7,7 @@
   "required": ["orvane", "monde", "saison", "en_cours", "compte", "jeux"],
   "additionalProperties": false,
   "properties": {
-    "orvane": { "type": ["string", "null"], "description": "Version du contrat, MAJEUR.MINEUR (« 1.0 » ; docs/43)." },
+    "orvane": { "type": ["string", "null"], "description": "Version du contrat, MAJEUR.MINEUR (« 1.1 » ; docs/43)." },
     "monde": {
       "type": "object",
       "required": ["id", "ne"],

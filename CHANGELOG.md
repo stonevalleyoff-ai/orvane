@@ -5,13 +5,31 @@ Ce qui change, version après version, pour un jeu qui lit Orvane ou lui écrit.
 - **MINEUR** : un ajout (un champ, une valeur, un mécanisme). Un jeu qui ignore ce qu'il ne connaît pas n'a rien à faire.
 - **CORRECTIF** : le moteur se trompait, il ne se trompe plus. Le contrat ne bouge pas.
 
-Chaque instantané porte la version de son contrat (`"orvane": "1.0"`). Installer une version précise :
+Chaque instantané porte la version de son contrat (`"orvane": "1.1"`). Installer une version précise :
 
 ```
-npm install github:stonevalleyoff-ai/orvane#v1.0.0
+npm install github:stonevalleyoff-ai/orvane#v1.1.0
 ```
 
 ## [À venir]
+
+Rien encore.
+
+## [1.1.0] — 2026-11-27
+
+**Le contrat 1.1 : des ajouts, rien de retiré.** Un jeu fait pour la 1.0 n'a rien à changer, s'il ignore ce qu'il ne connaît pas. Le champ `orvane` de chaque instantané vaut désormais « 1.1 » ; Orvane accepte toujours les lots et les profils marqués « 1.0 » et « 0.1 ». `node outils/contrat.js --base v1.0.0` dit, champ par champ, ce qui s'ajoute.
+
+### Ce qui s'ajoute au contrat depuis la 1.0.0
+
+- **L'instantané** (57 ajouts) : le temps et le calendrier d'un monde au jour (`monde.temps`, `monde.calendrier`, `cycle.jour`, `cycle.lune`) ; le lieu réel de chaque biome, ses normales de climat, sa saison, son soleil et sa météo (`biomes[].lieu`, `normales`, `saison`, `soleil`, `meteo` ; `monde.meteo`) ; les hommes d'un monde réel, la saison et la part de chaque chasse (`monde.hommes`) ; la mémoire des populations, ce qu'elles retiennent des joueurs (`monde.memoire`, `catalogue.memoire`) ; la flore riche, ses saisons et sa succession (`monde.diversite`, `monde.phenologie`, `monde.succession`, `catalogue.flore_riche`, des formes de plantes) ; et, dans le plan de chaque lignée, ce qui règle sa vie (`natalite`, `naissances`, `metabolisme`, `rendement`, `meute`, `charogne`, `dispersion`, `place`, `efficacite`, `port`, `caracteres`, `sinistres`…).
+- **Le lot** (3 ajouts) : des actions nouvelles (`blessure`, `effarouchement`, `pillage`, `attaque`, `joueur_tombe`), le moyen d'une action (`evenements[].moyen` : de la main du joueur ou par un dispositif) et l'identifiant facultatif d'un lot (`id`), qui permet de le renvoyer sans le compter deux fois.
+- **Le profil** (7 ajouts) : la mémoire, la diversité, la succession, la phénologie et la météo d'un monde (`monde.memoire`, `monde.diversite`, `monde.succession`, `monde.phenologie`, `monde.meteo`), et un plafond, pour un jeu, de ce qu'il ôte à une population (`exposition.part_max_population_jeu`, sous celui du monde, `influence.plafonds.part_max_population_jeu`).
+
+### Le paquet
+
+- `npm install github:stonevalleyoff-ai/orvane#v1.1.0`.
+
+### Depuis la 1.0.0 (7 – 27 novembre 2026)
 
 - **Le protocole, version 2 : le moratoire levé** (`etalon/protocole.json`, `outils/protocole.js`, `bancs/protocole.js`, docs/59) : rien ne change dans la simulation, ni dans les tests de l'étalon (leurs cibles, leurs tolérances, leur nature). Les ablations ont dit ce que vaut chacune des 50 règles du moteur, et l'auteur les a toutes conservées : le moratoire, qui les gelait jusque-là, est levé le 27 novembre 2026. Le protocole garde la liste des règles du moteur : une règle ajoutée ou retirée demande toujours une version qui le dit, et son essai au plan des ablations. Le banc du protocole vérifie que le moratoire n'est levé qu'une fois que la matrice a décidé de chaque règle.
 - **Les ablations : la matrice, une constante à une seule de ses valeurs, les traits et les aires, et les plans 5 à 8** (`etalon/matrice.json`, `etalon/ablations.json`, `outils/ablations.js`, `bancs/ablations.js`, docs/59) : un ajout ; rien ne change dans la simulation. La matrice dit ce que l'auteur décide de chaque règle après les ablations (conserver, modifier, supprimer, investiguer), avec la date et la raison : les cinquante conservées (dont le plafond des phénotypes, à 20, les hybrides, la dispersion et la génétique continue, après leur essai long), aucune supprimée ni modifiée. L'outil essaie une constante à une seule de ses valeurs (`--regles "max_phenotypes = 10"`), et refuse un nom que le plan n'a pas. Le plan, version 5, ajoute l'essai long du plafond des phénotypes à 10 sur Orvane, les versions 6 et 7 ceux des hybrides sur la mer et de la dispersion sur l'Europe, chacun écrit avant de le faire tourner. La version 8 ajoute deux mesures, ce que la génétique continue fait aux traits (l'écart de chaque population au plan de sa lignée, en écarts-types naturels, et trait par trait) et l'aire de chaque lignée (le nombre de lieux où elle vit), avec l'essai long de la génétique continue sur l'Europe ; l'outil les mesure, ses notes ont deux colonnes de plus, et les rapports d'avant se relisent sans elles.

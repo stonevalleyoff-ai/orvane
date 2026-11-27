@@ -55,7 +55,7 @@ Une constante corrigée d'après une mesure indépendante reste permise : c'est 
 
 ### La version de référence
 
-`version.yml` publie une version (l'étiquette vX.Y.Z et sa page) quand `package.json` en change. La dernière est v1.0.0, du 7 novembre ; tout ce qui est venu depuis est « à venir » dans `CHANGELOG.md`. Publier une version de référence (v1.1.0 : le contrat a gagné `monde.hommes` et d'autres ajouts) est une décision de l'auteur : une version est publique, et les jeux l'installent.
+`version.yml` publie une version (l'étiquette vX.Y.Z et sa page) quand `package.json` en change. La dernière est v1.1.0, du 27 novembre (le contrat 1.1 : `monde.hommes` et d'autres ajouts, rien de retiré), après v1.0.0, du 7 novembre ; ce qui viendra ensuite est « à venir » dans `CHANGELOG.md`. Publier une version de référence est une décision de l'auteur : une version est publique, et les jeux l'installent.
 
 ## 02. Reconstruire la validation : le protocole
 

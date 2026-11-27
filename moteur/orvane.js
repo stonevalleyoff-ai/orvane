@@ -89,7 +89,7 @@ const HOM = typeof require === 'function' ? require('./hommes.js') : racine.Orva
 const MECA = { synthetique: SYN, flore: FLO, pathogenes: PAT, milieu: MIL, ponte: PON, stades: STA, invention: INV, natures: NAT, derives: DER, dietes: DI, climat: CLI,
   meteo: MET, phenologie: PHE, succession: SUC, diversite: DIV, grammaire: GRA, castes: CAS, esprit: ESP, calendrier: CALEN };
 // (docs/43) la version du contrat : MAJEUR.MINEUR, celle de package.json ; chaque instantané la porte (instantane.orvane)
-const CONTRAT = '1.0';
+const CONTRAT = '1.1';
 const AXES = ['temperature', 'humidite', 'altitude', 'lumiere', 'couvert'];
 // (docs/20) et ceux qu'un monde ajoute (catalogue.monde.axes) : dans le contexte de son cycle (contexte, plus bas)
 const REGLES = {

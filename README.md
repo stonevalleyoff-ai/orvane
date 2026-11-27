@@ -25,7 +25,7 @@ N'importe quel jeu peut s'y brancher. Il lit le monde et en fait ses créatures,
 - **Le moteur** (`moteur/`) fait évoluer des populations : effectifs par biome, chaîne alimentaire, génétique continue, reproduction, hybrides, organes, méfiance. Il est déterministe, sans dépendance, et tourne sous Node ou dans le navigateur.
 - **Le tampon** (`tampon/`) se place entre le monde et chaque jeu. Il adoucit ce que le jeu montre et plafonne ce que les joueurs pèsent : un jeu, même seul, n'ôte pas plus de 5 % d'une population par cycle, et quand plusieurs jeux chassent la même, la part d'un seul est ramenée à la moitié de la pression.
 - **Le contrat** (`schemas/`) tient en trois objets JSON : l'instantané, le lot de pressions, le profil. Il est versionné (1.0) et ne casse pas sans prévenir ; ce qui change est dans [le journal](CHANGELOG.md) (docs/43).
-- **Le paquet** : `npm install github:stonevalleyoff-ai/orvane#v1.0.0`, puis `const { Orvane, Tampon, Solo } = require('orvane')`.
+- **Le paquet** : `npm install github:stonevalleyoff-ai/orvane#v1.1.0`, puis `const { Orvane, Tampon, Solo } = require('orvane')`.
 - **Le premier client** est Stone Valley. Son traducteur complet est dans `traducteurs/stone-valley/`.
 
 ## Licence

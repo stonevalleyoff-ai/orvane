@@ -1,7 +1,7 @@
 // Orvane — LE PAQUET (index.js) — docs/43
 // Ce qu'un jeu écrit en JavaScript (Node, ou un empaqueteur pour le navigateur) prend d'un seul require :
 //   const { Orvane, Tampon, Solo, CONTRAT } = require('orvane');
-//   npm install github:stonevalleyoff-ai/orvane#v1.0.0
+//   npm install github:stonevalleyoff-ai/orvane#v1.1.0
 // Chaque module se prend aussi seul : require('orvane/moteur/solo.js'), require('orvane/tampon/individus.js')… Dans un navigateur
 // sans empaqueteur, on charge les fichiers par leurs balises <script> (docs/19) : chacun se pose sur globalThis (OrvaneSolo…).
 // Les types du contrat (TypeScript) : import type { Instantane, Lot, Profil } from 'orvane'.

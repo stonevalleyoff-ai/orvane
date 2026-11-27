@@ -40,7 +40,7 @@ export type InstantaneSoleil = {
 
 /** Orvane — instantané (sortie du moteur) — L'état du vivant d'un monde à un cycle donné. Orvane ne connaît aucun jeu : tout est biologie abstraite. Le traducteur du jeu lit ce fichier et en fait des données jouables. */
 export interface Instantane {
-  /** Version du contrat, MAJEUR.MINEUR : « 1.0 » depuis le 7 novembre 2026 (« 0.1 » avant ; docs/43). Même majeur, rien ne casse : un jeu ignore ce qu'il ne connaît pas. */
+  /** Version du contrat, MAJEUR.MINEUR : « 1.1 » depuis le 27 novembre 2026 (« 1.0 » depuis le 7 novembre, « 0.1 » avant ; docs/43). Même majeur, rien ne casse : un jeu ignore ce qu'il ne connaît pas. */
   orvane: string;
   monde: {
     /** Un monde par jeu : identifiant stable du monde. */
@@ -1078,7 +1078,7 @@ export interface Instantane {
 
 /** Orvane — lot de pressions (entrée, envoyé par le traducteur) — Ce qu'un jeu renvoie à Orvane : des comptes bruts, jamais des conclusions. Le tampon rapporte ces comptes à l'exposition (rencontres), les dénormalise selon la rareté affichée par le jeu et les plafonne avant de les donner au moteur. */
 export interface Lot {
-  /** Version du contrat que suit le lot, MAJEUR.MINEUR (« 1.0 » ; docs/43). Orvane accepte les lots des versions 0.x et 1.x. */
+  /** Version du contrat que suit le lot, MAJEUR.MINEUR (« 1.1 », ou « 1.0 » ; docs/43). Orvane accepte les lots des versions 0.x et 1.x. */
   orvane: string;
   /** Doit être l'id du monde de l'instantané lu. */
   monde: string;
@@ -1142,7 +1142,7 @@ export interface Lot {
 
 /** Orvane — profil d'un monde (réglage du tampon) — Un fichier par monde. Il règle le tampon dans le sens jeu → Orvane : comment les actes des joueurs de tous les jeux branchés pèsent sur le monde. Ce que chaque jeu montre du monde (exposition) est réglé par le jeu lui-même dans le Supabase d'Orvane (orvane_regler_jeu, hebergement/LISEZ-MOI.md) et publié dans jeux.json ; l'exposition d'un profil de monde ne sert plus qu'aux lots sans jeu (et aux mondes d'avant, comme sv-1). Rien ici ne touche à la biologie elle-même. */
 export interface Profil {
-  /** Version du contrat que suit le profil, MAJEUR.MINEUR (« 1.0 » ; docs/43). Orvane accepte les profils des versions 0.x et 1.x. */
+  /** Version du contrat que suit le profil, MAJEUR.MINEUR (« 1.1 », ou « 1.0 » ; docs/43). Orvane accepte les profils des versions 0.x et 1.x. */
   orvane: string;
   /** Le jeu pour lequel le monde a été fait (mondes d'avant, comme sv-1). Un monde universel n'en a pas. */
   jeu?: string;
@@ -1435,7 +1435,7 @@ export type BilanJeu = {
 
 /** Orvane — bilan de saison (publié par le cycle) — Ce que chaque jeu a ôté et rendu à chaque population pendant une saison, et la part de l'effectif que cela représente (docs/4). Publié par le cycle de nuit dans mondes/<id>/bilans/ : <saison>.json pour une saison finie (écrit une fois, jamais réécrit), en-cours.json pour la saison en cours (refait à chaque cycle) ; l'index est bilans/index.json (bilan-index.schema.json). En bêtes : celles que le moteur retire ou ajoute (un adulte prélevé en compte 1,2, un jeune 0,8, un œuf 0,3 ; un nourrissage rend 0,2 bête). Chaque nombre est compté au cycle où les lots sont lus, plafonds compris, avant le lissage (memoire_cycles), qui étale ensuite ce poids sur les cycles suivants sans rien y ajouter. Aucune donnée de joueur : ni compte, ni pseudonyme ; seulement chaque jeu. */
 export interface Bilan {
-  /** Version du contrat, MAJEUR.MINEUR (« 1.0 » ; docs/43). */
+  /** Version du contrat, MAJEUR.MINEUR (« 1.1 » ; docs/43). */
   orvane: string | null;
   monde: {
     /** L'id du monde. */

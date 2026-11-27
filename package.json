@@ -1,6 +1,6 @@
 {
   "name": "orvane",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Orvane : un moteur d'écosystème déterministe que plusieurs jeux partagent. Des populations qui varient, évoluent et se répondent ; chaque jeu en tire ses bêtes et lui renvoie ce que font ses joueurs.",
   "main": "index.js",
   "types": "types/orvane.d.ts",

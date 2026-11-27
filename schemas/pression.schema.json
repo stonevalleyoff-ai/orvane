@@ -7,7 +7,7 @@
   "required": ["orvane", "monde", "source", "periode", "evenements"],
   "additionalProperties": false,
   "properties": {
-    "orvane": { "type": "string", "description": "Version du contrat que suit le lot, MAJEUR.MINEUR (« 1.0 » ; docs/43). Orvane accepte les lots des versions 0.x et 1.x." },
+    "orvane": { "type": "string", "description": "Version du contrat que suit le lot, MAJEUR.MINEUR (« 1.1 », ou « 1.0 » ; docs/43). Orvane accepte les lots des versions 0.x et 1.x." },
     "monde": { "type": "string", "description": "Doit être l'id du monde de l'instantané lu." },
     "id": { "type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$", "description": "Facultatif : l'identifiant du lot, donné par le jeu, au hasard (un UUID, 32 chiffres hexadécimaux). Le jeu le garde avec le lot tant qu'il n'est pas accepté : un lot renvoyé avec le même id (la réponse d'un dépôt s'est perdue) n'est compté qu'une fois, et orvane_deposer répond { ok: true, deja: true } sans rien consommer des quotas. 1 à 64 lettres, chiffres ou « . _ : - », pas au début ; propre à chaque jeu." },
     "familles": { "type": "array", "items": { "enum": ["animale", "synthetique", "vegetale"] }, "description": "Les familles de lignées que ce jeu joue (animale seule si rien n'est dit, ni ici ni dans son exposition). Le tampon ne lit pas ses événements sur les autres : une nouveauté du monde (les machines, docs/16) ne compte pour un jeu que s'il la demande." },
