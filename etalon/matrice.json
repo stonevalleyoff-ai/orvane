@@ -178,9 +178,9 @@
       "pourquoi": "Elle n'agit pas dans les mondes essayés : sans elle, l'essai rend les mesures du témoin au chiffre près, sur chaque graine (la mer, Orvane et l'Europe). Elle sert aux séparations, quand une lignée qui vole dépasse 12 kg, et ne coûte rien qu'on mesure : on ne la juge pas là où elle n'agit pas."
     },
     "genetique": {
-      "decision": "investiguer",
-      "date": "2026-11-26",
-      "pourquoi": "Elle agit sans rien faire bouger (sur la mer, Orvane et l'Europe), et semble coûter 15 % d'un cycle de l'Europe, en partie par sa place dans la file : un essai long, avec une mesure de ce qu'elle change aux traits (la taille, la vitesse, l'audace, la sociabilité)."
+      "decision": "conserver",
+      "date": "2026-11-27",
+      "pourquoi": "Elle fait ce qu'on attend d'elle, lentement : en deux années de l'Europe, rien ne bouge par la lecture du plan, mais les traits s'écartent de leur plan (0,025 écart-type, la moitié du seuil ; la taille monte presque partout, plus au froid), surtout chez les petites bêtes qui se renouvellent vite (les moustiques, 2,8 % de longueur), et l'Europe a un peu plus de biomasse avec elle, sur chaque graine, sous le seuil (jusqu'à 1,3 % à la fin du second été, presque toute de bêtes de moins d'un gramme) (etalon/ablations/2026-11-27-europe-genetique-long). C'est par elle que la chasse des joueurs change les espèces (docs/8), ce que les ablations, sans joueurs, ne voient pas. Elle coûte 13 % d'un cycle de l'Europe, six dixièmes de seconde, pour un cycle par jour. On la garde ; reste une question pour la revue indépendante : l'attrait, qui pousse la taille au-dessus de l'optimum de chaque lieu (docs/59)."
     },
     "hybride": {
       "decision": "conserver",
