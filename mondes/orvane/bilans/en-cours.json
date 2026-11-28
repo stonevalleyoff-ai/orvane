@@ -1,0 +1,346 @@
+{
+ "orvane": "1.1",
+ "monde": {
+  "id": "orvane",
+  "ne": "2026-10-29T15:30:11.656Z"
+ },
+ "saison": {
+  "id": "an-0-ete",
+  "an": 0,
+  "nom": "été",
+  "de": 45,
+  "a": 74
+ },
+ "en_cours": true,
+ "compte": {
+  "de": 61,
+  "a": 68,
+  "cycles": 8,
+  "date_de": "2026-11-21T03:06:17.169Z",
+  "date_a": "2026-11-28T03:06:10.832Z"
+ },
+ "plafonds": {
+  "par_compte_cycle": 30,
+  "part_max_compte": 0.15,
+  "part_max_jeu": 0.5,
+  "part_max_population": 0.2,
+  "part_max_population_jeu": 0.05
+ },
+ "memoire_cycles": 5,
+ "jeux": [
+  {
+   "id": "lisiere",
+   "nom": "Lisière",
+   "plafond": 0.05,
+   "lots": 3,
+   "evenements": 112,
+   "cycles": 2,
+   "ote": {
+    "demande": 9,
+    "applique": 9,
+    "rabote": {}
+   },
+   "rendu": {
+    "demande": 0,
+    "applique": 0,
+    "rabote": {}
+   },
+   "part_max_cycle": {
+    "part": 0.012987,
+    "cycle": 63,
+    "taxon": "dunlinro",
+    "biome": "prairie"
+   },
+   "lignees": [
+    {
+     "taxon": "dunlinro",
+     "nom": "Dunlinro rôdeur de prairie",
+     "biome": "prairie",
+     "cycles": 1,
+     "effectif_moyen": 77,
+     "ote": {
+      "demande": 1,
+      "applique": 1,
+      "rabote": {},
+      "part": 0.012987,
+      "part_max_cycle": 0.012987,
+      "cycle_max": 63
+     },
+     "rendu": {
+      "demande": 0,
+      "applique": 0,
+      "rabote": {},
+      "part": 0
+     }
+    },
+    {
+     "taxon": "noufir",
+     "nom": "Noufir fureteur de marais",
+     "biome": "prairie",
+     "cycles": 1,
+     "effectif_moyen": 161,
+     "ote": {
+      "demande": 2,
+      "applique": 2,
+      "rabote": {},
+      "part": 0.012422,
+      "part_max_cycle": 0.012422,
+      "cycle_max": 63
+     },
+     "rendu": {
+      "demande": 0,
+      "applique": 0,
+      "rabote": {},
+      "part": 0
+     }
+    },
+    {
+     "taxon": "muphene",
+     "nom": "Muphéne rôdeur de prairie",
+     "biome": "steppe",
+     "cycles": 1,
+     "effectif_moyen": 205,
+     "ote": {
+      "demande": 1,
+      "applique": 1,
+      "rabote": {},
+      "part": 0.004878,
+      "part_max_cycle": 0.004878,
+      "cycle_max": 65
+     },
+     "rendu": {
+      "demande": 0,
+      "applique": 0,
+      "rabote": {},
+      "part": 0
+     }
+    },
+    {
+     "taxon": "jadunou",
+     "nom": "Jadunou guetteur de prairie",
+     "biome": "prairie",
+     "cycles": 1,
+     "effectif_moyen": 16150,
+     "ote": {
+      "demande": 2,
+      "applique": 2,
+      "rabote": {},
+      "part": 0.000124,
+      "part_max_cycle": 0.000124,
+      "cycle_max": 63
+     },
+     "rendu": {
+      "demande": 0,
+      "applique": 0,
+      "rabote": {},
+      "part": 0
+     }
+    },
+    {
+     "taxon": "orkifir",
+     "nom": "Orkifir rôdeur de prairie",
+     "biome": "prairie",
+     "cycles": 1,
+     "effectif_moyen": 8354,
+     "ote": {
+      "demande": 1,
+      "applique": 1,
+      "rabote": {},
+      "part": 0.00012,
+      "part_max_cycle": 0.00012,
+      "cycle_max": 63
+     },
+     "rendu": {
+      "demande": 0,
+      "applique": 0,
+      "rabote": {},
+      "part": 0
+     }
+    },
+    {
+     "taxon": "muphene",
+     "nom": "Muphéne rôdeur de prairie",
+     "biome": "prairie",
+     "cycles": 1,
+     "effectif_moyen": 9535,
+     "ote": {
+      "demande": 1,
+      "applique": 1,
+      "rabote": {},
+      "part": 0.000105,
+      "part_max_cycle": 0.000105,
+      "cycle_max": 65
+     },
+     "rendu": {
+      "demande": 0,
+      "applique": 0,
+      "rabote": {},
+      "part": 0
+     }
+    },
+    {
+     "taxon": "orvi",
+     "nom": "Orvi rôdeur de savane",
+     "biome": "steppe",
+     "cycles": 1,
+     "effectif_moyen": 11213,
+     "ote": {
+      "demande": 1,
+      "applique": 1,
+      "rabote": {},
+      "part": 0.000089,
+      "part_max_cycle": 0.000089,
+      "cycle_max": 65
+     },
+     "rendu": {
+      "demande": 0,
+      "applique": 0,
+      "rabote": {},
+      "part": 0
+     }
+    }
+   ]
+  },
+  {
+   "id": "stone-valley",
+   "nom": "Stone Valley",
+   "plafond": 0.05,
+   "lots": 1,
+   "evenements": 22,
+   "cycles": 1,
+   "ote": {
+    "demande": 10,
+    "applique": 1,
+    "rabote": {
+     "plafond_jeu": 9
+    }
+   },
+   "rendu": {
+    "demande": 0,
+    "applique": 0,
+    "rabote": {}
+   },
+   "part_max_cycle": {
+    "part": 0.000017,
+    "cycle": 63,
+    "taxon": "dunouro",
+    "biome": "prairie"
+   },
+   "lignees": [
+    {
+     "taxon": "dunouro",
+     "nom": "Dunouro brouteur de prairie",
+     "biome": "prairie",
+     "cycles": 1,
+     "effectif_moyen": 57401,
+     "ote": {
+      "demande": 1,
+      "applique": 1,
+      "rabote": {},
+      "part": 0.000017,
+      "part_max_cycle": 0.000017,
+      "cycle_max": 63
+     },
+     "rendu": {
+      "demande": 0,
+      "applique": 0,
+      "rabote": {},
+      "part": 0
+     }
+    },
+    {
+     "taxon": "dunouro",
+     "nom": "Dunouro brouteur de prairie",
+     "biome": "cote",
+     "cycles": 1,
+     "effectif_moyen": 0,
+     "ote": {
+      "demande": 1,
+      "applique": 0,
+      "rabote": {
+       "plafond_jeu": 1
+      },
+      "part": null,
+      "part_max_cycle": 0,
+      "cycle_max": null
+     },
+     "rendu": {
+      "demande": 0,
+      "applique": 0,
+      "rabote": {},
+      "part": null
+     }
+    },
+    {
+     "taxon": "dunouro",
+     "nom": "Dunouro brouteur de prairie",
+     "biome": "montagne",
+     "cycles": 1,
+     "effectif_moyen": 0,
+     "ote": {
+      "demande": 6,
+      "applique": 0,
+      "rabote": {
+       "plafond_jeu": 6
+      },
+      "part": null,
+      "part_max_cycle": 0,
+      "cycle_max": null
+     },
+     "rendu": {
+      "demande": 0,
+      "applique": 0,
+      "rabote": {},
+      "part": null
+     }
+    },
+    {
+     "taxon": "dunouro",
+     "nom": "Dunouro brouteur de prairie",
+     "biome": "steppe",
+     "cycles": 1,
+     "effectif_moyen": 0,
+     "ote": {
+      "demande": 1,
+      "applique": 0,
+      "rabote": {
+       "plafond_jeu": 1
+      },
+      "part": null,
+      "part_max_cycle": 0,
+      "cycle_max": null
+     },
+     "rendu": {
+      "demande": 0,
+      "applique": 0,
+      "rabote": {},
+      "part": null
+     }
+    },
+    {
+     "taxon": "grane",
+     "nom": "Grane broutard de forêt",
+     "biome": "cote",
+     "cycles": 1,
+     "effectif_moyen": 0,
+     "ote": {
+      "demande": 1,
+      "applique": 0,
+      "rabote": {
+       "plafond_jeu": 1
+      },
+      "part": null,
+      "part_max_cycle": 0,
+      "cycle_max": null
+     },
+     "rendu": {
+      "demande": 0,
+      "applique": 0,
+      "rabote": {},
+      "part": null
+     }
+    }
+   ]
+  }
+ ]
+}

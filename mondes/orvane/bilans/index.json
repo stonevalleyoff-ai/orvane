@@ -1,0 +1,25 @@
+{
+ "orvane": "1.1",
+ "monde": {
+  "id": "orvane",
+  "ne": "2026-10-29T15:30:11.656Z"
+ },
+ "saisons": [],
+ "en_cours": {
+  "id": "an-0-ete",
+  "an": 0,
+  "nom": "été",
+  "de": 45,
+  "a": 74,
+  "compte": {
+   "de": 61,
+   "a": 68,
+   "cycles": 8
+  },
+  "fichier": "en-cours.json",
+  "jeux": [
+   "lisiere",
+   "stone-valley"
+  ]
+ }
+}

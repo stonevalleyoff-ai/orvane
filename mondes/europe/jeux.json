@@ -1,0 +1,73 @@
+[
+ {
+  "id": "braise",
+  "nom": "Braise",
+  "actif": true,
+  "exposition": {}
+ },
+ {
+  "id": "cataclysm-dark-days-ahead",
+  "nom": "Cataclysm: Dark Days Ahead",
+  "actif": true,
+  "exposition": {}
+ },
+ {
+  "id": "last-embers",
+  "nom": "Last Embers",
+  "actif": true,
+  "exposition": {}
+ },
+ {
+  "id": "lisiere",
+  "nom": "Lisière",
+  "actif": true,
+  "exposition": {}
+ },
+ {
+  "id": "stone-valley",
+  "nom": "Stone Valley",
+  "actif": true,
+  "exposition": {
+   "mode": "relatif",
+   "taux_jeu": {
+    "nanisme": 0.00002222,
+    "albinisme": 0.0002924,
+    "melanisme": 0.0002924,
+    "gigantisme": 0.00003333,
+    "robe-doree": 0.0002924
+   },
+   "bestiaire": "orvane",
+   "compression": {
+    "defaut": 0.1,
+    "par_trait": {
+     "nanisme": 0.1,
+     "gigantisme": 0.1
+    },
+    "par_domaine": {
+     "morphologie": 0.1
+    }
+   },
+   "inertie_max": 0.05,
+   "quantitatifs": {
+    "rendus": [
+     "taille",
+     "vitesse",
+     "audace"
+    ],
+    "variation": 0
+   },
+   "reference_min": 0.01,
+   "traits_rendus": [
+    "albinisme",
+    "melanisme",
+    "robe-doree",
+    "gigantisme",
+    "nanisme"
+   ],
+   "propagation_cycles": 3,
+   "seuil_extinction_jeu": 40,
+   "seuil_extinction_part": 0.25,
+   "retour_apres_extinction": true
+  }
+ }
+]

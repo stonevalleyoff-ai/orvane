@@ -1,0 +1,668 @@
+{
+ "souches": [],
+ "orvane": "0.1",
+ "monde": {
+  "id": "aube",
+  "ne": "2026-11-20T10:58:20.087Z"
+ },
+ "depuis": 30,
+ "hybrides": [
+  "firtis×nousil",
+  "mevi×pheneva",
+  "belanphe×belanphe.toundra",
+  "janou×janou.mangrove",
+  "renou×renou.mer-froide",
+  "phemutor×phemutor.taiga",
+  "losoka×losoka.foret",
+  "viorgra×viorgra.foret",
+  "renou.mer-froide×renou.toundra"
+ ],
+ "records": {
+  "lourd": {
+   "id": "roren",
+   "nom": "Roren chapardeur de jungle",
+   "masse_kg": 80.12,
+   "n": 30
+  },
+  "leger": {
+   "id": "vays",
+   "nom": "Vays brouteur de marais",
+   "masse_kg": 0.009,
+   "n": 30
+  }
+ },
+ "compte": {
+  "eveil": 21,
+  "savoir": 20,
+  "naissance": 29,
+  "catastrophe": 1
+ },
+ "annees": [
+  {
+   "an": 0,
+   "de": 31,
+   "a": 39,
+   "entrees": 71
+  }
+ ],
+ "derniers": [
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "les plantes prennent les saisons : 11 lignées d'arbres et de buissons perdront leurs feuilles l'hiver, les fleurs viendront au printemps, les fruits à la fin de l'été, les graines à l'automne",
+   "taxon": "flore-banquise-lichen"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "la flore se diversifie : 207 lignées nouvelles, de 45 formes (graminée à grains, plante en coussin, lichen des rennes, lichen en croûte, arbuste à baies, bruyère…) ; 261 lignées de plantes en tout, qui se disputeront la place, se sépareront, gagneront les lieux voisins et s'éteindront",
+   "taxon": "flore-banquise-cereale"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "les plantes subissent et transforment : le feu, la crue et le sec leur prennent des pieds, l'herbe puis les buissons reprennent la place des arbres disparus, et le couvert d'un lieu suit ses arbres (1044 populations de plantes)",
+   "taxon": "flore-banquise-lichen"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "le monde a désormais une grammaire : ses lignées peuvent luire, foudroyer, empester, appeler, entendre dans le noir",
+   "taxon": "kiva"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "les castes s'éveillent : 5 lignées de petits hexapodes grégaires pourraient vivre en colonie, si l'eusocialité leur vient",
+   "taxon": "kiva"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "des formes nouvelles peuvent naître : un corps segmenté, un corps rayonné, un corps à tentacules",
+   "taxon": "kiva"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "l'esprit s'éveille : 58 lignées pourraient apprendre, transmettre, se servir d'outils",
+   "taxon": "kiva"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "la mémoire s'éveille : 110 lignées retiennent désormais ce que les joueurs leur font",
+   "taxon": "kiva"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "la vie en groupe se voit : 14 troupeaux, 18 meutes, 28 bancs, 50 volées ; 49 populations migrent avec les saisons",
+   "taxon": "kiva"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "eveil",
+   "importance": 2,
+   "titre": "Éveil",
+   "texte": "les maladies ont désormais leurs souches : chacune sa virulence, sa contagion, ses hôtes",
+   "taxon": "kiva"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Lobel picoreur de côte, à Côte 2, une bête invente : un cri pour chaque prédateur · parcelle Côte 2",
+   "taxon": "lobel",
+   "biome": "cote"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "naissance",
+   "importance": 3,
+   "titre": "Une lignée naît",
+   "texte": "Lini haute herbe (Maquis 3) : lignée de plantes issue de flore-maquis-mousse : Lini haute herbe (Maquis 3) (une autre forme, haute herbe), 2,878 m · parcelle Maquis 3",
+   "taxon": "flore-maquis-mousse-hautes-herbes",
+   "biome": "maquis",
+   "famille": "vegetale"
+  },
+  {
+   "n": 31,
+   "date": "2026-11-20T10:48:52.654Z",
+   "type": "naissance",
+   "importance": 3,
+   "titre": "Une lignée naît",
+   "texte": "Alni lichen en croûte (Sommets 1) : lignée de plantes issue de flore-sommets-lichen-rennes : Alni lichen en croûte (Sommets 1) (une autre forme, lichen en croûte, elle est « pousse vite »), 0,007 m · parcelle Sommets 1",
+   "taxon": "flore-sommets-lichen-rennes-lichen-croute",
+   "biome": "sommets",
+   "famille": "vegetale"
+  },
+  {
+   "n": 32,
+   "date": "2026-11-21T03:05:22.055Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Oumé chapardeur de savane, à Prairie 3, une bête invente : un cri pour chaque prédateur · parcelle Prairie 3",
+   "taxon": "oume",
+   "biome": "prairie"
+  },
+  {
+   "n": 32,
+   "date": "2026-11-21T03:05:22.055Z",
+   "type": "naissance",
+   "importance": 2,
+   "titre": "Une lignée naît",
+   "texte": "Sorta bruyère (Toundra 2) : lignée de plantes issue de flore-toundra-bruyere : Sorta bruyère (Toundra 2) (elle est « fécondée par le vent »), 0,424 m · parcelle Toundra 2",
+   "taxon": "flore-toundra-bruyere-v",
+   "biome": "toundra",
+   "famille": "vegetale"
+  },
+  {
+   "n": 32,
+   "date": "2026-11-21T03:05:22.055Z",
+   "type": "naissance",
+   "importance": 3,
+   "titre": "Une lignée naît",
+   "texte": "Vinou mousse (Taïga 1) : lignée de plantes issue de flore-taiga-fougere : Vinou mousse (Taïga 1) (une autre forme, mousse, elle est « mellifère »), 0,051 m · parcelle Taïga 1",
+   "taxon": "flore-taiga-fougere-mousse",
+   "biome": "taiga",
+   "famille": "vegetale"
+  },
+  {
+   "n": 32,
+   "date": "2026-11-21T03:05:22.055Z",
+   "type": "naissance",
+   "importance": 2,
+   "titre": "Une lignée naît",
+   "texte": "Belmi fougère arborescente (Mangrove 3) : lignée de plantes issue de flore-mangrove-fougere-arbre : Belmi fougère arborescente (Mangrove 3) (elle est « géante »), 8,549 m · parcelle Mangrove 3",
+   "taxon": "flore-mangrove-fougere-arbre-v",
+   "biome": "mangrove",
+   "famille": "vegetale"
+  },
+  {
+   "n": 32,
+   "date": "2026-11-21T03:05:22.055Z",
+   "type": "naissance",
+   "importance": 2,
+   "titre": "Une lignée naît",
+   "texte": "Lunemi jonc (Côte 2) : lignée de plantes issue de flore-cote-jonc-2 : Lunemi jonc (Côte 2) (elle est « fécondée par le vent »), 1,488 m · parcelle Côte 2",
+   "taxon": "flore-cote-jonc-2-v",
+   "biome": "cote",
+   "famille": "vegetale"
+  },
+  {
+   "n": 33,
+   "date": "2026-11-23T01:46:50.430Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Linnou chapardeur de prairie, à Taïga 3, une bête invente : cacher des réserves pour l'hiver · parcelle Taïga 3",
+   "taxon": "linnou",
+   "biome": "taiga"
+  },
+  {
+   "n": 33,
+   "date": "2026-11-23T01:46:50.430Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Phéneva chapardeur de savane, à Volcan 4, une bête invente : un cri pour chaque prédateur · parcelle Volcan 4",
+   "taxon": "pheneva",
+   "biome": "volcan"
+  },
+  {
+   "n": 33,
+   "date": "2026-11-23T01:46:50.430Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Kavane chapardeur de forêt, à Grotte 2, une bête invente : tisser des nids (un outil : brindilles) · parcelle Grotte 2",
+   "taxon": "kavane",
+   "biome": "grotte"
+  },
+  {
+   "n": 33,
+   "date": "2026-11-23T01:46:50.430Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Kisofir fureteur de maquis, à Montagne 3, une bête invente : cacher des réserves pour l'hiver · parcelle Montagne 3",
+   "taxon": "kisofir",
+   "biome": "montagne"
+  },
+  {
+   "n": 33,
+   "date": "2026-11-23T01:46:50.430Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Katis fureteur de prairie, à Sommets 1, une bête invente : un cri pour chaque prédateur · parcelle Sommets 1",
+   "taxon": "katis",
+   "biome": "sommets"
+  },
+  {
+   "n": 33,
+   "date": "2026-11-23T01:46:50.430Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Viorgra fureteur de prairie (Forêt), à Montagne 2, une bête invente : un cri pour chaque prédateur · parcelle Montagne 2",
+   "taxon": "viorgra.foret",
+   "biome": "montagne"
+  },
+  {
+   "n": 33,
+   "date": "2026-11-23T01:46:50.430Z",
+   "type": "naissance",
+   "importance": 3,
+   "titre": "Une lignée naît",
+   "texte": "Verbel nénuphar (Lac 2) : lignée de plantes issue de flore-lac-lentille-2 : Verbel nénuphar (Lac 2) (une autre forme, nénuphar), 0,304 m · parcelle Lac 2",
+   "taxon": "flore-lac-lentille-2-nenuphar",
+   "biome": "lac",
+   "famille": "vegetale"
+  },
+  {
+   "n": 34,
+   "date": "2026-11-23T03:05:22.464Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Nemune glaneur de forêt, à Montagne 2, une bête invente : un cri pour chaque prédateur · parcelle Montagne 2",
+   "taxon": "nemune",
+   "biome": "montagne"
+  },
+  {
+   "n": 34,
+   "date": "2026-11-23T03:05:22.464Z",
+   "type": "naissance",
+   "importance": 2,
+   "titre": "Une lignée naît",
+   "texte": "Vinro arbuste à baies (Taïga 4) : lignée de plantes issue de flore-taiga-baies : Vinro arbuste à baies (Taïga 4), 0,918 m · parcelle Taïga 4",
+   "taxon": "flore-taiga-baies-v",
+   "biome": "taiga",
+   "famille": "vegetale"
+  },
+  {
+   "n": 34,
+   "date": "2026-11-23T03:05:22.464Z",
+   "type": "naissance",
+   "importance": 3,
+   "titre": "Une lignée naît",
+   "texte": "Feys plante à bulbe (Forêt 4) : lignée de plantes issue de flore-foret-fougere : Feys plante à bulbe (Forêt 4) (une autre forme, plante à bulbe), 0,253 m · parcelle Forêt 4",
+   "taxon": "flore-foret-fougere-bulbe",
+   "biome": "foret",
+   "famille": "vegetale"
+  },
+  {
+   "n": 35,
+   "date": "2026-11-24T03:05:20.449Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Phéneva chapardeur de savane, à Steppe 4, une bête invente : cacher des réserves pour l'hiver · parcelle Steppe 4",
+   "taxon": "pheneva",
+   "biome": "steppe"
+  },
+  {
+   "n": 35,
+   "date": "2026-11-24T03:05:20.449Z",
+   "type": "naissance",
+   "importance": 3,
+   "titre": "Une lignée naît",
+   "texte": "Fevin mousse (Taïga 3) : lignée de plantes issue de flore-taiga-bulbe : Fevin mousse (Taïga 3) (une autre forme, mousse, elle est « fécondée par le vent »), 0,06 m · parcelle Taïga 3",
+   "taxon": "flore-taiga-bulbe-mousse",
+   "biome": "taiga",
+   "famille": "vegetale"
+  },
+  {
+   "n": 35,
+   "date": "2026-11-24T03:05:20.449Z",
+   "type": "naissance",
+   "importance": 3,
+   "titre": "Une lignée naît",
+   "texte": "Luneul graminée à grains (Steppe 4) : lignée de plantes issue de flore-steppe-fleur : Luneul graminée à grains (Steppe 4) (une autre forme, graminée à grains), 0,986 m · parcelle Steppe 4",
+   "taxon": "flore-steppe-fleur-cereale",
+   "biome": "steppe",
+   "famille": "vegetale"
+  },
+  {
+   "n": 35,
+   "date": "2026-11-24T03:05:20.449Z",
+   "type": "naissance",
+   "importance": 2,
+   "titre": "Une lignée naît",
+   "texte": "Mieth arbre pionnier (Prairie 4) : lignée de plantes issue de flore-prairie-pionnier-2 : Mieth arbre pionnier (Prairie 4), 11,292 m · parcelle Prairie 4",
+   "taxon": "flore-prairie-pionnier-2-v",
+   "biome": "prairie",
+   "famille": "vegetale"
+  },
+  {
+   "n": 35,
+   "date": "2026-11-24T03:05:20.449Z",
+   "type": "naissance",
+   "importance": 3,
+   "titre": "Une lignée naît",
+   "texte": "Fevin haute herbe (Prairie 4) : lignée de plantes issue de flore-prairie-bulbe : Fevin haute herbe (Prairie 4) (une autre forme, haute herbe), 2,476 m · parcelle Prairie 4",
+   "taxon": "flore-prairie-bulbe-hautes-herbes",
+   "biome": "prairie",
+   "famille": "vegetale"
+  },
+  {
+   "n": 35,
+   "date": "2026-11-24T03:05:20.449Z",
+   "type": "naissance",
+   "importance": 2,
+   "titre": "Une lignée naît",
+   "texte": "Ulon arbuste à baies (Désert froid 2) : lignée de plantes issue de flore-desert-froid-baies : Ulon arbuste à baies (Désert froid 2), 0,948 m · parcelle Désert froid 2",
+   "taxon": "flore-desert-froid-baies-v",
+   "biome": "desert-froid",
+   "famille": "vegetale"
+  },
+  {
+   "n": 36,
+   "date": "2026-11-25T03:05:36.166Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Ortor picoreur de prairie, à Sommets 2, une bête invente : cacher des réserves pour l'hiver · parcelle Sommets 2",
+   "taxon": "ortor",
+   "biome": "sommets"
+  },
+  {
+   "n": 36,
+   "date": "2026-11-25T03:05:36.166Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Viorgra fureteur de prairie (Forêt), à Mangrove 4, une bête invente : un cri pour chaque prédateur · parcelle Mangrove 4",
+   "taxon": "viorgra.foret",
+   "biome": "mangrove"
+  },
+  {
+   "n": 36,
+   "date": "2026-11-25T03:05:36.166Z",
+   "type": "naissance",
+   "importance": 3,
+   "titre": "Une lignée naît",
+   "texte": "Ethcal mousse (Taïga 3) : lignée de plantes issue de flore-taiga-herbe : Ethcal mousse (Taïga 3) (une autre forme, mousse, elle est « graines abondantes »), 0,065 m · parcelle Taïga 3",
+   "taxon": "flore-taiga-herbe-mousse",
+   "biome": "taiga",
+   "famille": "vegetale"
+  },
+  {
+   "n": 36,
+   "date": "2026-11-25T03:05:36.166Z",
+   "type": "naissance",
+   "importance": 2,
+   "titre": "Une lignée naît",
+   "texte": "Luneou plante en coussin (Volcan 1) : lignée de plantes issue de flore-volcan-coussin-3 : Luneou plante en coussin (Volcan 1), 0,066 m · parcelle Volcan 1",
+   "taxon": "flore-volcan-coussin-3-v",
+   "biome": "volcan",
+   "famille": "vegetale"
+  },
+  {
+   "n": 36,
+   "date": "2026-11-25T03:05:36.166Z",
+   "type": "naissance",
+   "importance": 2,
+   "titre": "Une lignée naît",
+   "texte": "Onfe plante en coussin (Volcan 3) : lignée de plantes issue de flore-volcan-coussin-3 : Onfe plante en coussin (Volcan 3) (elle est « graines abondantes »), 0,064 m · parcelle Volcan 3",
+   "taxon": "flore-volcan-coussin-3-v-2",
+   "biome": "volcan",
+   "famille": "vegetale"
+  },
+  {
+   "n": 37,
+   "date": "2026-11-26T03:05:22.583Z",
+   "type": "catastrophe",
+   "importance": 2,
+   "titre": "Catastrophe",
+   "texte": "Lac : crue : les eaux montent, après les pluies ; capacité −20 % · parcelle Lac 4",
+   "biome": "lac"
+  },
+  {
+   "n": 37,
+   "date": "2026-11-26T03:05:22.583Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Kisofir fureteur de maquis, à Montagne 1, une bête invente : cacher des réserves pour l'hiver · parcelle Montagne 1",
+   "taxon": "kisofir",
+   "biome": "montagne"
+  },
+  {
+   "n": 37,
+   "date": "2026-11-26T03:05:22.583Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Nelo fouisseur de jungle, à Jungle 4, une bête invente : un cri pour chaque prédateur · parcelle Jungle 4",
+   "taxon": "nelo",
+   "biome": "jungle"
+  },
+  {
+   "n": 37,
+   "date": "2026-11-26T03:05:22.583Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Nelo fouisseur de jungle, à Mangrove 4, une bête invente : un cri pour chaque prédateur · parcelle Mangrove 4",
+   "taxon": "nelo",
+   "biome": "mangrove"
+  },
+  {
+   "n": 37,
+   "date": "2026-11-26T03:05:22.583Z",
+   "type": "naissance",
+   "importance": 3,
+   "titre": "Une lignée naît",
+   "texte": "Milune plante en coussin (Sommets 1) : lignée de plantes issue de flore-sommets-cereale-2 : Milune plante en coussin (Sommets 1) (une autre forme, plante en coussin, elle est « à bulbe »), 0,056 m · parcelle Sommets 1",
+   "taxon": "flore-sommets-cereale-2-coussin",
+   "biome": "sommets",
+   "famille": "vegetale"
+  },
+  {
+   "n": 37,
+   "date": "2026-11-26T03:05:22.583Z",
+   "type": "naissance",
+   "importance": 3,
+   "titre": "Une lignée naît",
+   "texte": "Gradé riz sauvage (Rivière 1) : lignée de plantes issue de flore-riviere-bambou : Gradé riz sauvage (Rivière 1) (une autre forme, riz sauvage, elle est « feuilles coriaces »), 0,861 m · parcelle Rivière 1",
+   "taxon": "flore-riviere-bambou-riz",
+   "biome": "riviere",
+   "famille": "vegetale"
+  },
+  {
+   "n": 38,
+   "date": "2026-11-27T03:05:25.670Z",
+   "type": "naissance",
+   "importance": 2,
+   "titre": "Une lignée naît",
+   "texte": "Firneou chapardeur de prairie (Toundra 4) : lignée issue de firneou, plus grande, née de l'isolement (écart génétique 0.32) · parcelle Toundra 4",
+   "taxon": "firneou.toundra~4",
+   "biome": "toundra",
+   "famille": "animale"
+  },
+  {
+   "n": 38,
+   "date": "2026-11-27T03:05:25.670Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Dunbelou fouisseur de prairie, à Toundra 3, une bête invente : se souvenir des routes des saisons · parcelle Toundra 3",
+   "taxon": "dunbelou",
+   "biome": "toundra"
+  },
+  {
+   "n": 38,
+   "date": "2026-11-27T03:05:25.670Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Dunbelou fouisseur de prairie, à Steppe 1, une bête invente : chasser ensemble · parcelle Steppe 1",
+   "taxon": "dunbelou",
+   "biome": "steppe"
+  },
+  {
+   "n": 38,
+   "date": "2026-11-27T03:05:25.670Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Ménouki brouteur d'algues de récif, à Mangrove 4, une bête invente : laver sa nourriture · parcelle Mangrove 4",
+   "taxon": "menouki",
+   "biome": "mangrove"
+  },
+  {
+   "n": 38,
+   "date": "2026-11-27T03:05:25.670Z",
+   "type": "naissance",
+   "importance": 2,
+   "titre": "Une lignée naît",
+   "texte": "Graon palmier (Savane 3) : lignée de plantes issue de flore-savane-palmier : Graon palmier (Savane 3) (elle est « racines profondes »), 8,548 m · parcelle Savane 3",
+   "taxon": "flore-savane-palmier-v",
+   "biome": "savane",
+   "famille": "vegetale"
+  },
+  {
+   "n": 38,
+   "date": "2026-11-27T03:05:25.670Z",
+   "type": "naissance",
+   "importance": 2,
+   "titre": "Une lignée naît",
+   "texte": "Arul cactus géant (Volcan 3) : lignée de plantes issue de flore-volcan-cactus : Arul cactus géant (Volcan 3) (elle est « naine »), 2,343 m · parcelle Volcan 3",
+   "taxon": "flore-volcan-cactus-v",
+   "biome": "volcan",
+   "famille": "vegetale"
+  },
+  {
+   "n": 38,
+   "date": "2026-11-27T03:05:25.670Z",
+   "type": "naissance",
+   "importance": 3,
+   "titre": "Une lignée naît",
+   "texte": "Décal jonc (Marais 1) : lignée de plantes issue de flore-marais-bambou : Décal jonc (Marais 1) (une autre forme, jonc, elle est « racines échasses »), 0,961 m · parcelle Marais 1",
+   "taxon": "flore-marais-bambou-jonc",
+   "biome": "marais",
+   "famille": "vegetale"
+  },
+  {
+   "n": 38,
+   "date": "2026-11-27T03:05:25.670Z",
+   "type": "naissance",
+   "importance": 2,
+   "titre": "Une lignée naît",
+   "texte": "Saal nénuphar (Mangrove 2) : lignée de plantes issue de flore-mangrove-nenuphar : Saal nénuphar (Mangrove 2), 0,329 m · parcelle Mangrove 2",
+   "taxon": "flore-mangrove-nenuphar-v",
+   "biome": "mangrove",
+   "famille": "vegetale"
+  },
+  {
+   "n": 38,
+   "date": "2026-11-27T03:05:25.670Z",
+   "type": "naissance",
+   "importance": 2,
+   "titre": "Une lignée naît",
+   "texte": "Rosa plancton (Mer froide 4) : lignée de plantes issue de flore-mer-froide-plancton-2 : Rosa plancton (Mer froide 4), 0,009 m · parcelle Mer froide 4",
+   "taxon": "flore-mer-froide-plancton-2-v",
+   "biome": "mer-froide",
+   "famille": "vegetale"
+  },
+  {
+   "n": 39,
+   "date": "2026-11-28T03:05:21.408Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Oumé chapardeur de savane, à Maquis 1, une bête invente : un cri pour chaque prédateur · parcelle Maquis 1",
+   "taxon": "oume",
+   "biome": "maquis"
+  },
+  {
+   "n": 39,
+   "date": "2026-11-28T03:05:21.408Z",
+   "type": "savoir",
+   "importance": 1,
+   "titre": "Un savoir",
+   "texte": "chez Firneou chapardeur de prairie (Toundra 4), à Toundra 4, une bête invente : cacher des réserves pour l'hiver · parcelle Toundra 4",
+   "taxon": "firneou.toundra~4",
+   "biome": "toundra"
+  },
+  {
+   "n": 39,
+   "date": "2026-11-28T03:05:21.408Z",
+   "type": "naissance",
+   "importance": 2,
+   "titre": "Une lignée naît",
+   "texte": "Démor buisson d'épines (Désert 2) : lignée de plantes issue de flore-desert-epine : Démor buisson d'épines (Désert 2) (elle est « graines abondantes »), 2,539 m · parcelle Désert 2",
+   "taxon": "flore-desert-epine-v",
+   "biome": "desert",
+   "famille": "vegetale"
+  },
+  {
+   "n": 39,
+   "date": "2026-11-28T03:05:21.408Z",
+   "type": "naissance",
+   "importance": 2,
+   "titre": "Une lignée naît",
+   "texte": "Ethdé nénuphar (Marais 3) : lignée de plantes issue de flore-marais-nenuphar-3 : Ethdé nénuphar (Marais 3), 0,397 m · parcelle Marais 3",
+   "taxon": "flore-marais-nenuphar-3-v",
+   "biome": "marais",
+   "famille": "vegetale"
+  },
+  {
+   "n": 39,
+   "date": "2026-11-28T03:05:21.408Z",
+   "type": "naissance",
+   "importance": 3,
+   "titre": "Une lignée naît",
+   "texte": "Vinsa bambou (Rivière 4) : lignée de plantes issue de flore-riviere-riz : Vinsa bambou (Rivière 4) (une autre forme, bambou), 8,619 m · parcelle Rivière 4",
+   "taxon": "flore-riviere-riz-bambou",
+   "biome": "riviere",
+   "famille": "vegetale"
+  },
+  {
+   "n": 39,
+   "date": "2026-11-28T03:05:21.408Z",
+   "type": "naissance",
+   "importance": 3,
+   "titre": "Une lignée naît",
+   "texte": "Ulni herbier marin (Récif 1) : lignée de plantes issue de flore-recif-plancton-2 : Ulni herbier marin (Récif 1) (une autre forme, herbier marin, elle est « pousse vite »), 0,782 m · parcelle Récif 1",
+   "taxon": "flore-recif-plancton-2-herbier",
+   "biome": "recif",
+   "famille": "vegetale"
+  }
+ ]
+}

@@ -1,0 +1,233 @@
+{
+ "date": "2026-11-24T13:18:48.831Z",
+ "source": "l'état publié le 24 novembre 2026 à 08 h 27 (branche publication 2470dee, main 07a0bc9)",
+ "moteur": {
+  "commit": "5e4728d8b593173dfa6e4f17ad35795acc92de75",
+  "modifie": false
+ },
+ "machine": {
+  "processeur": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "coeurs": 4,
+  "node": "v22.23.5"
+ },
+ "fenetre_stabilite": 30,
+ "mondes": {
+  "aube": {
+   "cycle": 35,
+   "date": "2026-11-24T03:05:20.449Z",
+   "ne": "2026-11-20T10:58:20.087Z",
+   "graine": 2026,
+   "contrat": "1.0",
+   "empreinte": "8f96c1df43b2105b4a285986888b80f23e977b4a86c88e721895645b271477fc",
+   "regles": "faf2f0455b28f88b85f501aa4051842694f46e8953a0fd2a4f13ff05c621b95e",
+   "taille": {
+    "lignees_vivantes": 112,
+    "betes": 42812901,
+    "biomasse_t": 5996.5,
+    "plantes": 275,
+    "lieux": 96
+   },
+   "diversite": {
+    "shannon": 2.057,
+    "phenotypes": 2133,
+    "nees_dans_le_monde": 0.821
+   },
+   "stabilite": {
+    "de": 31,
+    "a": 35,
+    "lignees": 112,
+    "part_a_moins_de_x2": 0.982,
+    "eteintes": 0
+   },
+   "journal": null,
+   "cycle_suivant": {
+    "duree_s": 50.6,
+    "memoire_mo": 3844,
+    "empreinte": "dbea5f0af56eb26f2fc56e7f16a497d41e752e05332c29e07545f54cfbab423e",
+    "rejeu": "identique"
+   }
+  },
+  "europe": {
+   "cycle": 5,
+   "date": "2026-11-24T03:05:46.483Z",
+   "ne": "2026-11-20T13:39:53.027Z",
+   "graine": 1,
+   "contrat": "1.0",
+   "empreinte": "6a4ea9b2b7db4b04dc6ee0ccaf72555d0a21f68c9f9638737a49b4a2a8f6a136",
+   "regles": "8f5f085fb417bff36934fd315c95c9b05f1e9ba3b64f79a359579d13a6b7d852",
+   "taille": {
+    "lignees_vivantes": 201,
+    "betes": 318444469916079100,
+    "biomasse_t": 262496173.4,
+    "plantes": 68,
+    "lieux": 860
+   },
+   "diversite": {
+    "shannon": 1.364,
+    "phenotypes": 201,
+    "nees_dans_le_monde": 0
+   },
+   "stabilite": {
+    "de": 1,
+    "a": 5,
+    "lignees": 201,
+    "part_a_moins_de_x2": 1,
+    "eteintes": 0
+   },
+   "journal": null,
+   "cycle_suivant": {
+    "duree_s": 5.7,
+    "memoire_mo": 494,
+    "empreinte": "e58651b0fd5c4d9baa0531ffdfa3679233ba828b9ad75be5bd32173239c070d1",
+    "rejeu": "identique"
+   }
+  },
+  "genese-2026": {
+   "cycle": 3179,
+   "date": "2026-11-05T16:24:55.334Z",
+   "ne": "2026-11-05T15:17:35.988Z",
+   "graine": 2026,
+   "contrat": "0.1",
+   "empreinte": "cb16dba90c57a49e6318415d9b32656a41494fd63d5cb8bd91f5b96f36cec2ae",
+   "regles": "5c9acb1712a6b80807ba13576ff731289c6670e75a9c54ff275b507c44431b30",
+   "taille": {
+    "lignees_vivantes": 148,
+    "betes": 77592507,
+    "biomasse_t": 17701.4,
+    "plantes": 81,
+    "lieux": 96
+   },
+   "diversite": {
+    "shannon": 1.936,
+    "phenotypes": 2372,
+    "nees_dans_le_monde": 0.784
+   },
+   "stabilite": {
+    "de": 3150,
+    "a": 3179,
+    "lignees": 145,
+    "part_a_moins_de_x2": 0.924,
+    "eteintes": 2,
+    "lesquelles": [
+     "mere-7",
+     "mere-10"
+    ]
+   },
+   "journal": null,
+   "cycle_suivant": {
+    "duree_s": 4.7,
+    "memoire_mo": 317,
+    "empreinte": "3e7ee27127205c9e599c6cf0c7a82f4105d08446cd4c5cf3b39b453faa6b7d5e",
+    "rejeu": "identique"
+   }
+  },
+  "genese-7": {
+   "cycle": 3004,
+   "date": "2026-10-28T18:32:07.109Z",
+   "ne": "2026-10-28T14:43:53.951Z",
+   "graine": 7,
+   "contrat": "0.1",
+   "empreinte": "ea720ee91b5dc7cf6ef0f46000c81ed2dbf7f6269e1e579701d736fbe289ef82",
+   "regles": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+   "taille": {
+    "lignees_vivantes": 99,
+    "betes": 24763567,
+    "biomasse_t": 3756.3,
+    "plantes": 0,
+    "lieux": 16
+   },
+   "diversite": {
+    "shannon": 2.944,
+    "phenotypes": 1867,
+    "nees_dans_le_monde": 0.737
+   },
+   "stabilite": {
+    "de": 3001,
+    "a": 3004,
+    "lignees": 97,
+    "part_a_moins_de_x2": 1,
+    "eteintes": 0
+   },
+   "journal": null,
+   "cycle_suivant": {
+    "duree_s": 0.4,
+    "memoire_mo": 109,
+    "empreinte": "7ccc1c81c8eb12a5bef8de5508825b9643abd56e3c3c0ab64af474518d61af6c",
+    "rejeu": "identique"
+   }
+  },
+  "orvane": {
+   "cycle": 64,
+   "date": "2026-11-24T03:05:53.263Z",
+   "ne": "2026-10-29T15:30:11.656Z",
+   "graine": 1,
+   "contrat": "1.0",
+   "empreinte": "09c67441a2bdd45dabc9b2630aec7a7c9aa1d64a6a3b05eaf4464563dbb3b9f8",
+   "regles": "eb6263b743bfdc75a01dc77d7a08c05b7ef0a7c9a143b960db4e5760b0d9fe0a",
+   "taille": {
+    "lignees_vivantes": 305,
+    "betes": 127424071,
+    "biomasse_t": 19357.5,
+    "plantes": 608,
+    "lieux": 201
+   },
+   "diversite": {
+    "shannon": 2.184,
+    "phenotypes": 5194,
+    "nees_dans_le_monde": 0.761
+   },
+   "stabilite": {
+    "de": 45,
+    "a": 64,
+    "lignees": 243,
+    "part_a_moins_de_x2": 0.802,
+    "eteintes": 1,
+    "lesquelles": [
+     "meki"
+    ]
+   },
+   "journal": null,
+   "cycle_suivant": {
+    "duree_s": 14.4,
+    "memoire_mo": 1045,
+    "empreinte": "708d2bf69dac66e8ec69633ad44c217667c28849befc5c85d9cf741e7e4adc11",
+    "rejeu": "identique"
+   }
+  },
+  "sv-1": {
+   "cycle": 3,
+   "date": "2026-10-29T09:54:49.036Z",
+   "ne": "2026-10-28T14:43:53.650Z",
+   "graine": 7340021,
+   "contrat": "0.1",
+   "empreinte": "cd2802df1cb10c7f05b038a8ade2c42d3d05c2c10ff800f8166cdfa51c50eca1",
+   "regles": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+   "taille": {
+    "lignees_vivantes": 30,
+    "betes": 78201,
+    "biomasse_t": 899.8,
+    "plantes": 0,
+    "lieux": 16
+   },
+   "diversite": {
+    "shannon": 1.654,
+    "phenotypes": 245,
+    "nees_dans_le_monde": 0
+   },
+   "stabilite": {
+    "de": 1,
+    "a": 3,
+    "lignees": 30,
+    "part_a_moins_de_x2": 1,
+    "eteintes": 0
+   },
+   "journal": null,
+   "cycle_suivant": {
+    "duree_s": 0.1,
+    "memoire_mo": 61,
+    "empreinte": "1bbf6bcfdc82332b26ac2fe703055c0b835d42517a14549f18da96cc33bb8866",
+    "rejeu": "identique"
+   }
+  }
+ }
+}

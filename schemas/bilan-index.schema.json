@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orvane/schemas/bilan-index.schema.json",
+  "title": "Orvane — index des bilans de saison (publié par le cycle)",
+  "description": "mondes/<id>/bilans/index.json : chaque bilan de saison fini du monde, le plus récent d'abord, et celui de la saison en cours (bilan.schema.json, docs/4). Refait à chaque cycle.",
+  "type": "object",
+  "required": ["orvane", "monde", "saisons", "en_cours"],
+  "additionalProperties": false,
+  "properties": {
+    "orvane": { "type": ["string", "null"], "description": "Version du contrat, MAJEUR.MINEUR (docs/43)." },
+    "monde": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": { "id": { "type": ["string", "null"] }, "ne": { "type": ["string", "null"] } }
+    },
+    "saisons": { "type": "array", "items": { "$ref": "#/$defs/entree" }, "description": "Les saisons finies, la plus récente d'abord : leur bilan ne change plus." },
+    "en_cours": { "anyOf": [{ "$ref": "#/$defs/entree" }, { "type": "null" }], "description": "La saison en cours (en-cours.json)." }
+  },
+  "$defs": {
+    "entree": {
+      "type": "object",
+      "required": ["id", "an", "nom", "de", "a", "compte", "fichier", "jeux"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "description": "L'id de la saison (an-0-ete, tranche-3…)." },
+        "an": { "type": ["integer", "null"] },
+        "nom": { "type": ["string", "null"] },
+        "de": { "type": "integer", "description": "Le premier cycle de la saison." },
+        "a": { "type": "integer", "description": "Son dernier cycle." },
+        "compte": {
+          "type": "object",
+          "required": ["de", "a", "cycles"],
+          "additionalProperties": false,
+          "description": "Les cycles comptés dans le bilan.",
+          "properties": { "de": { "type": "integer" }, "a": { "type": "integer" }, "cycles": { "type": "integer", "minimum": 0 } }
+        },
+        "fichier": { "type": "string", "description": "Le fichier du bilan, dans bilans/ (en-cours.json pour la saison en cours)." },
+        "jeux": { "type": "array", "items": { "type": "string" }, "description": "Les ids des jeux qu'il porte." }
+      }
+    }
+  }
+}

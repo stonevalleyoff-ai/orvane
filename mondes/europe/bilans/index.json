@@ -1,0 +1,22 @@
+{
+ "orvane": "1.1",
+ "monde": {
+  "id": "europe",
+  "ne": "2026-11-24T13:38:54.994Z"
+ },
+ "saisons": [],
+ "en_cours": {
+  "id": "an-0-hiver",
+  "an": 0,
+  "nom": "hiver",
+  "de": 0,
+  "a": 45,
+  "compte": {
+   "de": 1,
+   "a": 5,
+   "cycles": 5
+  },
+  "fichier": "en-cours.json",
+  "jeux": []
+ }
+}

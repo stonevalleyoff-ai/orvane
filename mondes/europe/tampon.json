@@ -1,0 +1,35 @@
+{
+ "lisse": {},
+ "dernier_id": 0,
+ "lisseQ": {},
+ "bilan": {
+  "orvane": "1.1",
+  "monde": {
+   "id": "europe",
+   "ne": "2026-11-24T13:38:54.994Z"
+  },
+  "saison": {
+   "id": "an-0-hiver",
+   "an": 0,
+   "nom": "hiver",
+   "de": 0,
+   "a": 45
+  },
+  "compte": {
+   "de": 1,
+   "a": 5,
+   "cycles": 5,
+   "date_de": "2026-11-24T13:38:54.949Z",
+   "date_a": "2026-11-28T03:06:01.690Z"
+  },
+  "plafonds": {
+   "par_compte_cycle": 30,
+   "part_max_compte": 0.15,
+   "part_max_jeu": 0.5,
+   "part_max_population": 0.2
+  },
+  "memoire_cycles": 5,
+  "jeux": {},
+  "noms": {}
+ }
+}

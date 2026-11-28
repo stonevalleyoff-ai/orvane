@@ -1,0 +1,72 @@
+{
+  "orvane": "0.1",
+  "jeu": "stone-valley",
+  "monde": {
+    "id": "sv-1",
+    "graine": 7340021,
+    "cycle": "24h",
+    "amorce": "traducteurs/stone-valley/generation-0.json",
+    "rodage": 400,
+    "nocturne": false,
+    "annee": 120,
+    "pressions": {
+      "url": "https://ldazucyrnpewkqdneznc.supabase.co",
+      "cle": "sb_publishable_qUrfgAsAUzc3jd_tiqkY9g_EVkkQRAs",
+      "fonction": "orvane_lire_lots",
+      "secret": "ORVANE_LECTURE_SECRET"
+    }
+  },
+  "exposition": {
+    "compression": {
+      "defaut": 0.1,
+      "par_domaine": {
+        "morphologie": 0.1
+      },
+      "par_trait": {
+        "gigantisme": 0.1,
+        "nanisme": 0.1
+      }
+    },
+    "mode": "relatif",
+    "taux_jeu": {
+      "albinisme": 0.0002924,
+      "melanisme": 0.0002924,
+      "robe-doree": 0.0002924,
+      "gigantisme": 3.333e-05,
+      "nanisme": 2.222e-05
+    },
+    "reference_min": 0.01,
+    "propagation_cycles": 3,
+    "inertie_max": 0.05,
+    "traits_rendus": [
+      "albinisme",
+      "melanisme",
+      "robe-doree",
+      "gigantisme",
+      "nanisme"
+    ],
+    "seuil_extinction_jeu": 40,
+    "retour_apres_extinction": true,
+    "seuil_extinction_part": 0.25
+  },
+  "influence": {
+    "poids": {
+      "prelevement": 1,
+      "capture": 1,
+      "liberation": -1,
+      "nourrissage": -0.2,
+      "deplacement": 1,
+      "habitat_perdu": 1,
+      "habitat_gagne": -1
+    },
+    "denormaliser": true,
+    "exposition_ref": 60,
+    "plafonds": {
+      "par_compte_cycle": 30,
+      "part_max_compte": 0.15,
+      "part_max_population": 0.2
+    },
+    "memoire_cycles": 5,
+    "pseudo_comptes": 20
+  }
+}

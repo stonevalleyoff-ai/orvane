@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orvane/schemas/bilan.schema.json",
+  "title": "Orvane — bilan de saison (publié par le cycle)",
+  "description": "Ce que chaque jeu a ôté et rendu à chaque population pendant une saison, et la part de l'effectif que cela représente (docs/4). Publié par le cycle de nuit dans mondes/<id>/bilans/ : <saison>.json pour une saison finie (écrit une fois, jamais réécrit), en-cours.json pour la saison en cours (refait à chaque cycle) ; l'index est bilans/index.json (bilan-index.schema.json). En bêtes : celles que le moteur retire ou ajoute (un adulte prélevé en compte 1,2, un jeune 0,8, un œuf 0,3 ; un nourrissage rend 0,2 bête). Chaque nombre est compté au cycle où les lots sont lus, plafonds compris, avant le lissage (memoire_cycles), qui étale ensuite ce poids sur les cycles suivants sans rien y ajouter. Aucune donnée de joueur : ni compte, ni pseudonyme ; seulement chaque jeu.",
+  "type": "object",
+  "required": ["orvane", "monde", "saison", "en_cours", "compte", "jeux"],
+  "additionalProperties": false,
+  "properties": {
+    "orvane": { "type": ["string", "null"], "description": "Version du contrat, MAJEUR.MINEUR (« 1.1 » ; docs/43)." },
+    "monde": {
+      "type": "object",
+      "required": ["id", "ne"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": ["string", "null"], "description": "L'id du monde." },
+        "ne": { "type": ["string", "null"], "description": "La naissance du monde (monde.ne de l'instantané). Un monde né à nouveau repart de bilans neufs : ceux de l'autre monde ne sont plus publiés." }
+      }
+    },
+    "saison": {
+      "type": "object",
+      "required": ["id", "an", "nom", "de", "a"],
+      "additionalProperties": false,
+      "description": "La saison. Un monde qui a une année (monde.annee) : ses saisons, telles que le moteur les nomme (cycle.saison.nom de l'instantané) ; dans le monde d'Orvane (120 cycles), quatre saisons de 30 cycles, et l'hiver, centré sur le début de l'année, commence 15 cycles avant elle. Un monde sans année : des tranches de 30 cycles, comptées depuis le cycle 0.",
+      "properties": {
+        "id": { "type": "string", "description": "« an-<année>-<saison> » (an-0-ete, an-1-hiver…), ou « tranche-<k> » dans un monde sans année. C'est aussi le nom du fichier d'une saison finie (bilans/<id>.json)." },
+        "an": { "type": ["integer", "null"], "minimum": 0, "description": "L'année du monde (celle que l'hiver ouvre)." },
+        "nom": { "type": ["string", "null"], "enum": ["hiver", "printemps", "été", "automne", null] },
+        "de": { "type": "integer", "description": "Le premier cycle de la saison." },
+        "a": { "type": "integer", "description": "Son dernier cycle." }
+      }
+    },
+    "en_cours": { "type": "boolean", "description": "Vrai : la saison n'est pas finie, ce bilan change à chaque cycle (en-cours.json). Faux : la saison est finie, ce bilan ne change plus." },
+    "compte": {
+      "type": "object",
+      "required": ["de", "a", "cycles"],
+      "additionalProperties": false,
+      "description": "Les cycles comptés dans ce bilan. Moins que la saison quand le bilan a commencé en cours de saison (le premier cycle publié avec lui), ou pour la saison en cours.",
+      "properties": {
+        "de": { "type": "integer" },
+        "a": { "type": "integer" },
+        "cycles": { "type": "integer", "minimum": 0 },
+        "date_de": { "type": ["string", "null"], "format": "date-time" },
+        "date_a": { "type": ["string", "null"], "format": "date-time" }
+      }
+    },
+    "plafonds": { "type": ["object", "null"], "additionalProperties": { "type": "number" }, "description": "Les plafonds du monde au dernier cycle compté (profil.influence.plafonds, docs/5)." },
+    "memoire_cycles": { "type": ["number", "null"], "description": "Le lissage du monde (profil.influence.memoire_cycles)." },
+    "jeux": {
+      "type": "array",
+      "description": "Chaque jeu dont un lot a été lu pendant la saison, par id (« » : des lots sans jeu, déposés à la main, en dernier). Un jeu suspendu depuis garde ce qu'il a fait, et son nom.",
+      "items": { "$ref": "#/$defs/jeu" }
+    }
+  },
+  "$defs": {
+    "bete": { "type": "number", "minimum": 0, "description": "Un nombre de bêtes, au millième." },
+    "rabote": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Ce que chaque étape a ôté à la demande, dans l'ordre où le tampon les applique (docs/4, docs/5). Une étape qui n'a rien raboté n'est pas dite.",
+      "properties": {
+        "activite": { "$ref": "#/$defs/bete", "description": "L'activité d'un compte ramenée à une activité normale (influence.exposition_ref rencontres par cycle)." },
+        "compte": { "$ref": "#/$defs/bete", "description": "Le plafond par compte (plafonds.par_compte_cycle, par lignée et par cycle)." },
+        "part_compte": { "$ref": "#/$defs/bete", "description": "La part maximale d'un seul compte dans une population (plafonds.part_max_compte)." },
+        "part_jeu": { "$ref": "#/$defs/bete", "description": "La part maximale d'un seul jeu, quand plusieurs jeux montrent la population (plafonds.part_max_jeu)." },
+        "plafond_jeu": { "$ref": "#/$defs/bete", "description": "Le plafond d'un jeu, même seul (plafonds.part_max_population_jeu, ou celui, plus bas, de son exposition) : ce qu'il ôte seulement." },
+        "population": { "$ref": "#/$defs/bete", "description": "La part maximale d'une population, tous jeux confondus (plafonds.part_max_population)." }
+      }
+    },
+    "total": {
+      "type": "object",
+      "required": ["demande", "applique", "rabote"],
+      "additionalProperties": false,
+      "properties": {
+        "demande": { "$ref": "#/$defs/bete", "description": "Ce que les lots du jeu demandaient : ses comptes pesés (poids, âge) et rapportés aux fréquences réelles (son exposition), avant tout plafond." },
+        "applique": { "$ref": "#/$defs/bete", "description": "Ce qu'il en reste après tous les plafonds : ce que le jeu ajoute à la pression du monde." },
+        "rabote": { "$ref": "#/$defs/rabote" }
+      }
+    },
+    "cote": {
+      "type": "object",
+      "required": ["demande", "applique", "rabote", "part"],
+      "additionalProperties": false,
+      "properties": {
+        "demande": { "$ref": "#/$defs/bete" },
+        "applique": { "$ref": "#/$defs/bete" },
+        "rabote": { "$ref": "#/$defs/rabote" },
+        "part": { "type": ["number", "null"], "minimum": 0, "description": "applique rapporté à effectif_moyen : la part de l'effectif que le jeu a ôtée (ou rendue) sur la saison. Peut dépasser 1 : les naissances remplacent ce qui est pris." },
+        "part_max_cycle": { "type": "number", "minimum": 0, "description": "(ôté seulement) La part la plus forte ôtée en un seul cycle, rapportée à l'effectif de ce cycle : jamais plus que le plafond du jeu." },
+        "cycle_max": { "type": ["integer", "null"], "description": "(ôté seulement) Le cycle de cette part la plus forte." }
+      }
+    },
+    "lignee": {
+      "type": "object",
+      "required": ["taxon", "biome", "cycles", "effectif_moyen", "ote", "rendu"],
+      "additionalProperties": false,
+      "description": "Une population (une lignée dans un biome, toutes ses parcelles) que le jeu a touchée.",
+      "properties": {
+        "taxon": { "type": "string", "description": "L'id de la lignée (taxons[].id de l'instantané)." },
+        "nom": { "type": ["string", "null"], "description": "Son nom (taxons[].nom)." },
+        "biome": { "type": "string", "description": "Le biome (celui de l'instantané : par biome, même dans un monde à parcelles)." },
+        "cycles": { "type": "integer", "minimum": 1, "description": "Les cycles de la saison où le jeu l'a touchée." },
+        "effectif_moyen": { "type": "number", "minimum": 0, "description": "L'effectif de la population au début de chacun de ces cycles (celui sur lequel les plafonds se comptent), en moyenne." },
+        "ote": { "$ref": "#/$defs/cote", "description": "Ce qui est ôté : prélèvements, captures, déplacements vers un autre biome." },
+        "rendu": { "$ref": "#/$defs/cote", "description": "Ce qui est rendu : libérations, nourrissages, bêtes d'élevage relâchées (docs/36)." }
+      }
+    },
+    "jeu": {
+      "type": "object",
+      "required": ["id", "nom", "plafond", "lots", "evenements", "cycles", "ote", "rendu", "lignees"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "description": "L'id du jeu (jeux.json)." },
+        "nom": { "type": ["string", "null"], "description": "Son nom public (jeux.json) ; null pour un jeu qui n'y figure pas." },
+        "plafond": { "type": ["number", "null"], "minimum": 0, "maximum": 1, "description": "Son plafond par population et par cycle (le plus bas de celui du monde et de son exposition) ; null s'il n'en a pas." },
+        "lots": { "type": "integer", "minimum": 0, "description": "Les lots lus pendant la saison (un lot renvoyé compte une fois)." },
+        "evenements": { "type": "integer", "minimum": 0, "description": "Les événements comptés." },
+        "cycles": { "type": "integer", "minimum": 0, "description": "Les cycles où au moins un de ses lots a été lu." },
+        "ote": { "$ref": "#/$defs/total", "description": "Tout ce qu'il a ôté, toutes lignées confondues." },
+        "rendu": { "$ref": "#/$defs/total", "description": "Tout ce qu'il a rendu." },
+        "part_max_cycle": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "description": "La part la plus forte qu'il a ôtée à une population en un cycle, et où.",
+          "properties": { "part": { "type": "number", "minimum": 0 }, "cycle": { "type": ["integer", "null"] }, "taxon": { "type": "string" }, "biome": { "type": "string" } }
+        },
+        "lignees": { "type": "array", "items": { "$ref": "#/$defs/lignee" }, "description": "Population par population, la part de l'effectif ôtée la plus forte d'abord." }
+      }
+    }
+  }
+}
